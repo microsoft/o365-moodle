@@ -1,0 +1,39 @@
+before_install:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+language: php
+php:
+  - "5.4"
+env:
+ - DB=mysqli MOODLE_VERSION=MOODLE_25_STABLE
+ - DB=mysqli MOODLE_VERSION=master
+ - DB=pgsql MOODLE_VERSION=MOODLE_25_STABLE
+ - DB=pgsql MOODLE_VERSION=master
+before_script:
+ - git clone git://github.com/moodle/moodle ../moodle && cd ../moodle
+ - git checkout $MOODLE_VERSION
+ - sudo apt-get update > /dev/null
+ - composer self-update
+ - composer install --dev --prefer-dist
+ - mv ../moodle-auth_googleoauth2 auth/googleoauth2
+ - git clone git://github.com/mouneyrac/moodle-theme_easy theme/oauth2easy
+ - pear channel-discover pear.phpunit.de
+ - pear channel-discover pear.symfony.com
+ - pear install pear.phpunit.de/DbUnit
+ - phpenv rehash
+ - cp config-dist.php config.php
+ - sh -c "sed -i -e s/'password'/''/ -e s/example.com/localhost/ -e s%/home/example%$HOME% -e 's%\(\$CFG.*phpu\)%\n\1%' config.php"
+ - sh -c "sed -i -e s/'password'/''/ -e s/example.com/localhost/ -e s%/home/example%$HOME% -e 's%\(\$CFG.*bht\)%\n\1%' config.php"
+ - sh -c "if [ '$DB' = 'mysqli' ]; then mysql -e 'create database moodle default character set UTF8 collate UTF8_bin;'; fi"
+ - sh -c "if [ '$DB' = 'mysqli' ]; then sed -i -e s/\'pgsql\'/\'mysqli\'/ -e s/\'username\'/\'root\'/ config.php; fi"
+ - sh -c "if [ '$DB' = 'pgsql' ]; then psql -c 'create database moodle;' -U postgres; fi"
+ - sh -c "if [ '$DB' = 'pgsql' ]; then sed -i s/\'username\'/\'postgres\'/ config.php; fi"
+ - mkdir -m777 $HOME/moodledata
+ - php admin/tool/phpunit/cli/init.php
+ - "(php -S localhost:8000 &) 2> /dev/null > /dev/null"
+ - "wget http://selenium.googlecode.com/files/selenium-server-standalone-2.31.0.jar"
+ - "(java -jar selenium-server-standalone-2.31.0.jar &) 2> /dev/null > /dev/null"
+ - php admin/tool/behat/cli/init.php
+script:
+ - if [ $MOODLE_VERSION = 'master' ]; then vendor/bin/behat --config /home/travis/bht_moodledata/behat/behat.yml --tags @auth_googleoauth2; fi
+ - phpunit auth_googleoauth2_lib_testcase auth/googleoauth2/tests/lib_test.php
