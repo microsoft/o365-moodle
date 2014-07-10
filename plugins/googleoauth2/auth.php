@@ -5,7 +5,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  * @package moodle multiauth
  *
- * Authentication Plugin: Google/Facebook/Messenger Authentication
+ * Authentication Plugin: Google/Facebook/Messenger/Azure AD Authentication
  * If the email doesn't exist, then the auth plugin creates the user.
  * If the email exist (and the user has for auth plugin this current one),
  * then the plugin login the user related to this email.
@@ -18,7 +18,7 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->libdir.'/authlib.php');
 
 /**
- * Google/Facebook/Messenger Oauth2 authentication plugin.
+ * Google/Facebook/Messenger/Azure AD Oauth2 authentication plugin.
  */
 class auth_plugin_googleoauth2 extends auth_plugin_base {
 
@@ -125,6 +125,14 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     $params['code'] = $authorizationcode;
                     $params['grant_type'] = 'authorization_code';
                     break;
+                case 'azuread':
+                    $params['client_id'] = get_config('auth/googleoauth2', 'azureadclientid');
+                    $params['client_secret'] = get_config('auth/googleoauth2', 'azureadclientsecret');
+                    $requestaccesstokenurl = 'https://login.windows.net/common/oauth2/token';
+                    $params['redirect_uri'] = $CFG->wwwroot . '/auth/googleoauth2/azuread_redirect.php';
+                    $params['code'] = $authorizationcode;
+                    $params['grant_type'] = 'authorization_code';
+                    break;
                 case 'github':
                     $params['client_id'] = get_config('auth/googleoauth2', 'githubclientid');
                     $params['client_secret'] = get_config('auth/googleoauth2', 'githubclientsecret');
@@ -151,6 +159,10 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $curl = new curl();
                 $postreturnvalues = $curl->get('https://oauth.live.com/token?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
 
+            } else if ($authprovider == 'azuread') { //Azure AD returns an "Object moved" error with curl->post() encoding
+                $curl = new curl();
+                $postreturnvalues = $curl->get('https://login.windows.net/common/oauth2/token?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
+
            } else if ($authprovider == 'linkedin') {
                 $curl = new curl();
                 $postreturnvalues = $curl->get($requestaccesstokenurl . '?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
@@ -175,6 +187,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     $accesstoken = $returnvalues['access_token'];
                     break;
                 case 'messenger':
+				case 'azuread':
                     $accesstoken = json_decode($postreturnvalues)->access_token;
                     break;
                 default:
@@ -211,6 +224,16 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $postreturnvalues = $curl->get('https://apis.live.net/v5.0/me', $params);
                         $messengeruser = json_decode($postreturnvalues);
                         $useremail = $messengeruser->emails->preferred;
+                        $verified = 1; //not super good but there are no way to check it yet:
+                                       //http://social.msdn.microsoft.com/Forums/en-US/messengerconnect/thread/515d546d-1155-4775-95d8-89dadc5ee929
+                        break;
+
+                    case 'azuread':
+                        $params = array();
+                        $params['access_token'] = $accesstoken;
+                        $postreturnvalues = $curl->get('https://apis.live.net/v5.0/me', $params); // TODO: proper url
+                        $messengeruser = json_decode($postreturnvalues);
+                        $useremail = $azureaduser->emails->preferred;
                         $verified = 1; //not super good but there are no way to check it yet:
                                        //http://social.msdn.microsoft.com/Forums/en-US/messengerconnect/thread/515d546d-1155-4775-95d8-89dadc5ee929
                         break;
@@ -311,6 +334,11 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         case 'messenger':
                             $newuser->firstname =  $messengeruser->first_name;
                             $newuser->lastname =  $messengeruser->last_name;
+                            break;
+
+                        case 'azuread':
+                            $newuser->firstname =  $azureaduser->first_name;
+                            $newuser->lastname =  $azureaduser->last_name;
                             break;
 
                         case 'github':
@@ -427,6 +455,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         }
         if (!isset ($config->messengerclientsecret)) {
             $config->messengerclientsecret = '';
+        }
+        if (!isset ($config->azureadclientid)) {
+            $config->azureadclientid = '';
+        }
+        if (!isset ($config->azureadclientsecret)) {
+            $config->azureadclientsecret = '';
         }
         if (!isset ($config->githubclientid)) {
             $config->githubclientid = '';
@@ -602,6 +636,54 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         echo '</td><td>';
 
         print_string('auth_messengerclientsecret', 'auth_googleoauth2') ;
+
+        echo '</td></tr>';
+
+        // Azure AD client id
+
+        echo '<tr>
+                <td align="right"><label for="azureadclientid">';
+
+        print_string('auth_azureadclientid_key', 'auth_googleoauth2');
+
+        echo '</label></td><td>';
+
+
+        echo html_writer::empty_tag('input',
+                array('type' => 'text', 'id' => 'azureadclientid', 'name' => 'azureadclientid',
+                    'class' => 'azureadclientid', 'value' => $config->azureadclientid));
+
+        if (isset($err["azureadclientid"])) {
+            echo $OUTPUT->error_text($err["azureadclientid"]);
+        }
+
+        echo '</td><td>';
+
+        print_string('auth_azureadclientid', 'auth_googleoauth2', (object) array('domain' => $CFG->wwwroot)) ;
+
+        echo '</td></tr>';
+
+        // Azure AD client secret
+
+        echo '<tr>
+                <td align="right"><label for="azureadclientsecret">';
+
+        print_string('auth_azureadclientsecret_key', 'auth_googleoauth2');
+
+        echo '</label></td><td>';
+
+
+        echo html_writer::empty_tag('input',
+                array('type' => 'text', 'id' => 'azureadclientsecret', 'name' => 'azureadclientsecret',
+                    'class' => 'azureadclientsecret', 'value' => $config->azureadclientsecret));
+
+        if (isset($err["azureadclientsecret"])) {
+            echo $OUTPUT->error_text($err["azureadclientsecret"]);
+        }
+
+        echo '</td><td>';
+
+        print_string('auth_azureadclientsecret', 'auth_googleoauth2') ;
 
         echo '</td></tr>';
 
@@ -796,6 +878,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         if (!isset ($config->messengerclientsecret)) {
             $config->messengerclientsecret = '';
         }
+        if (!isset ($config->azureadclientid)) {
+            $config->azureadclientid = '';
+        }
+        if (!isset ($config->azureadclientsecret)) {
+            $config->azureadclientsecret = '';
+        }
         if (!isset ($config->githubclientid)) {
             $config->githubclientid = '';
         }
@@ -822,6 +910,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         set_config('facebookclientsecret', $config->facebookclientsecret, 'auth/googleoauth2');
         set_config('messengerclientid', $config->messengerclientid, 'auth/googleoauth2');
         set_config('messengerclientsecret', $config->messengerclientsecret, 'auth/googleoauth2');
+        set_config('azureadclientid', $config->azureadclientid, 'auth/googleoauth2');
+        set_config('azureadclientsecret', $config->azureadclientsecret, 'auth/googleoauth2');
         set_config('githubclientid', $config->githubclientid, 'auth/googleoauth2');
         set_config('githubclientsecret', $config->githubclientsecret, 'auth/googleoauth2');
         set_config('linkedinclientid', $config->linkedinclientid, 'auth/googleoauth2');

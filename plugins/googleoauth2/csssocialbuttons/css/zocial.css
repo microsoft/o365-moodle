@@ -331,6 +331,7 @@ a.zocial {
 .zocial.ycombinator:before {content: "\00ED";}
 .zocial.yelp:before {content: "y";}
 .zocial.youtube:before {content: "U";}
+.zocial.azuread:before {content: "Z";}
 
 /* Button background and text color */
 
@@ -433,6 +434,7 @@ a.zocial {
 .zocial.ycombinator {background-color: #ff6600;}
 .zocial.yelp {background-color: #e60010;}
 .zocial.youtube {background-color: #f00;}
+.zocial.azuread {background-color: #0052a4; color: #fff;}
 
 /*
 The Miscellaneous Buttons

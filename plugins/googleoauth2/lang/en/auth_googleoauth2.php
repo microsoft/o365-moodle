@@ -66,6 +66,12 @@ $string['auth_messengerclientid_key'] = 'Messenger Client ID';
 $string['auth_messengerclientsecret'] = 'See above.';
 $string['auth_messengerclientsecret_key'] = 'Messenger Client secret';
 
+$string['auth_azureadclientid'] = 'Your Client ID/Secret can be generated in your <a href="https://manage.windowsazure.com">Azure Management Portal</a>:
+<br/>Redirect domain: {$a->domain}';
+$string['auth_azureadclientid_key'] = 'Azure Active Directory Client ID';
+$string['auth_azureadclientsecret'] = 'See above.';
+$string['auth_azureadclientsecret_key'] = 'Azure Active Directory Client secret';
+
 $string['auth_googlesettings'] = 'Settings';
 $string['couldnotgetgoogleaccesstoken'] = 'The authentication provider sent us a communication error. Please try to sign-in again.';
 $string['emailaddressmustbeverified'] = 'Your email address is not verified by the authentication method you selected. You likely have forgotten to click on a "verify email address" link that Google or Facebook should have sent you during your subscribtion to their service.';
