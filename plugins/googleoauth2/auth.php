@@ -98,6 +98,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
             $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
 
+			printf('authprovider: %s', $authprovider);
+
             //set the params specific to the authentication provider
             $params = array();
 
@@ -194,6 +196,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     break;
             }
 
+			printf('accesstoken: %s', $accesstoken);
+			
             //with access token request by curl the email address
             if (!empty($accesstoken)) {
 
@@ -224,6 +228,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $postreturnvalues = $curl->get('https://apis.live.net/v5.0/me', $params);
                         $messengeruser = json_decode($postreturnvalues);
                         $useremail = $messengeruser->emails->preferred;
+						printf('email: %s', $useremail);
                         $verified = 1; //not super good but there are no way to check it yet:
                                        //http://social.msdn.microsoft.com/Forums/en-US/messengerconnect/thread/515d546d-1155-4775-95d8-89dadc5ee929
                         break;
@@ -231,7 +236,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     case 'azuread':
                         $params = array();
                         $params['access_token'] = $accesstoken;
-                        $postreturnvalues = $curl->get('https://apis.live.net/v5.0/me', $params); // TODO: proper url
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users?api-version=2013-04-05', $params); // TODO: check url params. how to set Authorization token into request? Also, parametrize tenant domain name.
                         $messengeruser = json_decode($postreturnvalues);
                         $useremail = $azureaduser->emails->preferred;
                         $verified = 1; //not super good but there are no way to check it yet:
