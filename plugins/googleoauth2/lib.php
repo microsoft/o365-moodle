@@ -111,7 +111,8 @@ function auth_googleoauth2_display_buttons() {
      $displayprovider = ((empty($authprovider) || $authprovider == 'azuread' || $allauthproviders) && get_config('auth/googleoauth2', 'azureadclientid'));
      $providerdisplaystyle = $displayprovider?'display:inline-block;padding:10px;':'display:none;';
      echo '<div class="singinprovider" style="'. $providerdisplaystyle .'">
-            <a class="zocial azuread" href="https://login.windows.net/common/oauth2/authorize?client_id='. get_config('auth/googleoauth2', 'azureadclientid') .'&redirect_uri='. $CFG->wwwroot .'/auth/googleoauth2/azuread_redirect.php&response_type=code">
+            <a class="zocial azuread" 
+            href="https://login.windows.net/common/oauth2/authorize?response_type=code&client_id='. get_config('auth/googleoauth2', 'azureadclientid').'">
                 Sign-in with Azure Active Directory
             </a>
         </div>
