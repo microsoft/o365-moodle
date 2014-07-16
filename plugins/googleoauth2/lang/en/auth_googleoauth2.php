@@ -71,8 +71,6 @@ $string['auth_azureadclientid'] = 'Your Client ID/Secret can be generated in you
 $string['auth_azureadclientid_key'] = 'Azure Active Directory Client ID';
 $string['auth_azureadclientsecret'] = 'See above.';
 $string['auth_azureadclientsecret_key'] = 'Azure Active Directory Client secret';
-$string['auth_azure_resource_url'] = 'Azure Resource URl';
-
 
 $string['auth_googlesettings'] = 'Settings';
 $string['couldnotgetgoogleaccesstoken'] = 'The authentication provider sent us a communication error. Please try to sign-in again.';
