@@ -237,6 +237,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users?api-version=2013-04-05');
                         $azureaduser = json_decode($postreturnvalues);
                         $useremail = $azureaduser->value[0]->mail;
+
+                        // TODO: mail may be empty, in which case use UPN instead
+                        if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
+                            $useremail = $azureaduser->value[0]->userPrincipalName;
+                        }
+
                         $verified = 1; // TODO: how to verify?
                         break;
 
@@ -289,10 +295,10 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     // deny login if setting "Prevent account creation when authenticating" is on
                     if($CFG->authpreventaccountcreation) throw new moodle_exception("noaccountyet", "auth_googleoauth2");
 
-
                     //get following incremented username
                     $lastusernumber = get_config('auth/googleoauth2', 'lastusernumber');
                     $lastusernumber = empty($lastusernumber)?1:$lastusernumber++;
+
                     //check the user doesn't exist
                     $nextuser = $DB->get_record('user',
                             array('username' => get_config('auth/googleoauth2', 'googleuserprefix').$lastusernumber));
@@ -339,7 +345,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                             break;
 
                         case 'azuread':
-                            $newuser->firstname =  $azureaduser->value[0]->given_name;
+                            $newuser->firstname =  $azureaduser->value[0]->givenName;
                             $newuser->lastname =  $azureaduser->value[0]->surname;
                             break;
 
