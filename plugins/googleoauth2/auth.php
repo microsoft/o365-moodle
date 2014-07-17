@@ -230,17 +230,25 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         break;
 
                     case 'azuread':
+                        // extract logged-in user's upn
+                        $token_decoded = base64_decode($accesstoken);	
+                        $temp1 = explode('{',$token_decoded);					
+                        $temp2 = explode('}',$temp1[2]);						
+                        $token_userdata = json_decode('{'.$temp2[0].'}');						
+                        $userupn = $token_userdata->upn;
+
+                        // use the userupn to get user data from AAD graph api
                         $params = array();
                         $params['access_token'] = $accesstoken;									
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users?api-version=2013-04-05');
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
                         $azureaduser = json_decode($postreturnvalues);
-                        $useremail = $azureaduser->value[0]->mail;
+                        $useremail = $azureaduser->mail;
 
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
-                            $useremail = $azureaduser->value[0]->userPrincipalName;
+                            $useremail = $azureaduser->userPrincipalName;
                         }
 
                         $verified = 1; // TODO: how to verify?
@@ -345,8 +353,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                             break;
 
                         case 'azuread':
-                            $newuser->firstname =  $azureaduser->value[0]->givenName;
-                            $newuser->lastname =  $azureaduser->value[0]->surname;
+                            $newuser->firstname =  $azureaduser->givenName;
+                            $newuser->lastname =  $azureaduser->surname;
                             break;
 
                         case 'github':
