@@ -16,6 +16,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 require_once($CFG->libdir.'/authlib.php');
+require_once('jwt.php');
 
 /**
  * Google/Facebook/Messenger/Azure AD Oauth2 authentication plugin.
@@ -231,11 +232,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
                     case 'azuread':
                         // extract logged-in user's upn
-                        $token_decoded = base64_decode($accesstoken);	
-                        $temp1 = explode('{',$token_decoded);					
-                        $temp2 = explode('}',$temp1[2]);						
-                        $token_userdata = json_decode('{'.$temp2[0].'}');						
-                        $userupn = $token_userdata->upn;
+                        $token_payload = JWT::decode($accesstoken, null, false);
+                        $userupn = $token_payload->upn;
 
                         // use the userupn to get user data from AAD graph api
                         $params = array();
