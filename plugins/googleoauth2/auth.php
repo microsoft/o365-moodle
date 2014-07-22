@@ -16,6 +16,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 require_once($CFG->libdir.'/authlib.php');
+require_once($CFG->dirroot.'/calendar/lib.php');
 require_once('jwt.php');
 
 /**
@@ -95,7 +96,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
         //check the Google authorization code
         $authorizationcode = optional_param('code', '', PARAM_TEXT);
-
+        
         if (!empty($authorizationcode)) {
             $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
 
@@ -133,7 +134,9 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     $requestaccesstokenurl = 'https://login.windows.net/common/oauth2/token';
                     $params['code'] = $authorizationcode;
                     $params['grant_type'] = 'authorization_code';
-                    $params['resource'] = 'https://graph.windows.net';
+					$params['state'] = 'bb706f82-215e-4836-921d-ac013e7e6ae5'; //new for office 365					
+                    //$params['resource'] = 'https://graph.windows.net';
+					$params['resource'] = 'https://outlook.office365.com';
                     break;
                 case 'github':
                     $params['client_id'] = get_config('auth/googleoauth2', 'githubclientid');
@@ -172,7 +175,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $curl = new curl();
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
             }
-           
+          
             switch ($authprovider) {
                 case 'google':
                 case 'linkedin':
@@ -194,7 +197,6 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 default:
                     break;
             }
-
             //with access token request by curl the email address
             if (!empty($accesstoken)) {
 
@@ -234,21 +236,25 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         // extract logged-in user's upn
                         $token_payload = JWT::decode($accesstoken, null, false);
                         $userupn = $token_payload->upn;
-
                         // use the userupn to get user data from AAD graph api
                         $params = array();
-                        $params['access_token'] = $accesstoken;									
+                        $params['access_token'] = $accesstoken;	
+														
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
+                      //  $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
+                       //new url to get token from office 365
+                        $postreturnvalues = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendars');
                         $azureaduser = json_decode($postreturnvalues);
-                        $useremail = $azureaduser->mail;
-
+						//to get the calender events
+						$getevent = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
+						$calenderevents = json_decode($getevent);											
+		                $useremail = $azureaduser->mail;
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
-                            $useremail = $azureaduser->userPrincipalName;
-                        }
-
+                            //$useremail = $azureaduser->userPrincipalName;
+							$useremail = $userupn;							
+                        }						
                         $verified = 1; // TODO: how to verify?
                         break;
 
@@ -294,8 +300,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 //get the user - don't bother with auth = googleoauth2 because
                 //authenticate_user_login() will fail it if it's not 'googleoauth2'
                 $user = $DB->get_record('user', array('email' => $useremail, 'deleted' => 0, 'mnethostid' => $CFG->mnet_localhost_id));
-
-                //create the user if it doesn't exist
+               // print_r($user);exit;
+				                //create the user if it doesn't exist
                 if (empty($user)) {
 
                     // deny login if setting "Prevent account creation when authenticating" is on
@@ -351,8 +357,14 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                             break;
 
                         case 'azuread':
-                            $newuser->firstname =  $azureaduser->givenName;
-                            $newuser->lastname =  $azureaduser->surname;
+							if(!empty($token_payload)) { //from access token only we were getting users detials
+								$newuser->firstname =  $token_payload->given_name;
+                            	$newuser->lastname =  $token_payload->family_name;
+							} else {
+								$newuser->firstname =  $azureaduser->givenName;
+                            	$newuser->lastname =  $azureaduser->surname;	
+							}
+                            
                             break;
 
                         case 'github':
@@ -415,7 +427,23 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     }
 
                     complete_user_login($user);
-
+					if($calenderevents) {
+					foreach ($calenderevents->value as $events_array) {
+							$event = new stdClass;
+							$event->name         = $events_array->Subject;
+							$event->id           = 2;
+							$event->userid       =$user->id;
+							$event->description  = array("text" =>$events_array->Body );
+							$event->timestart    = strtotime($events_array->Start);						
+							$event->timeduration = strtotime($events_array->End);
+							$event->eventtype    = 'user';							 
+							//calendar_event::create($event);
+						    calendar_event::update($event);	
+							//echo $value;echo "<br>";	
+							//echo $events_array->Subject;
+							//echo "hi";
+						}
+					}
                     // Redirection
                     if (user_not_fully_set_up($USER)) {
                         $urltogo = $CFG->wwwroot.'/user/edit.php';
@@ -428,6 +456,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $urltogo = $CFG->wwwroot.'/';
                         unset($SESSION->wantsurl);
                     }
+					
+					
                     redirect($urltogo);
                 }
             } else {
