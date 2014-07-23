@@ -162,7 +162,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $postreturnvalues = $curl->get('https://oauth.live.com/token?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
 
             } else if ($authprovider == 'azuread') { //Azure AD returns an "Object moved" error with curl->post() encoding
-                $curl = new curl();				
+                $curl = new curl();                
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
            } else if ($authprovider == 'linkedin') {
                 $curl = new curl();
@@ -225,7 +225,6 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $postreturnvalues = $curl->get('https://apis.live.net/v5.0/me', $params);
                         $messengeruser = json_decode($postreturnvalues);
                         $useremail = $messengeruser->emails->preferred;
-						printf('email: %s', $useremail);
                         $verified = 1; //not super good but there are no way to check it yet:
                                        //http://social.msdn.microsoft.com/Forums/en-US/messengerconnect/thread/515d546d-1155-4775-95d8-89dadc5ee929
                         break;
@@ -237,7 +236,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
                         // use the userupn to get user data from AAD graph api
                         $params = array();
-                        $params['access_token'] = $accesstoken;									
+                        $params['access_token'] = $accesstoken;                                    
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
                         $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
