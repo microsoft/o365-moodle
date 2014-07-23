@@ -175,7 +175,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $curl = new curl();
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
             }
-          
+		   
             switch ($authprovider) {
                 case 'google':
                 case 'linkedin':
@@ -238,17 +238,18 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $userupn = $token_payload->upn;
                         // use the userupn to get user data from AAD graph api
                         $params = array();
-                        $params['access_token'] = $accesstoken;	
-														
+                        $params['access_token'] = $accesstoken;															
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
                       //  $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
                        //new url to get token from office 365
                         $postreturnvalues = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendars');
                         $azureaduser = json_decode($postreturnvalues);
+						
 						//to get the calender events
 						$getevent = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
 						$calenderevents = json_decode($getevent);											
+		                
 		                $useremail = $azureaduser->mail;
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
@@ -411,8 +412,9 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $userid = empty($user)?'new user':$user->id;
                 add_to_log(SITEID, 'auth_googleoauth2', '', '', $username . '/' . $useremail . '/' . $userid);
                 $user = authenticate_user_login($username, null);
+				
                 if ($user) {
-
+					
                     //set a cookie to remember what auth provider was selected
                     setcookie('MOODLEGOOGLEOAUTH2_'.$CFG->sessioncookie, $authprovider,
                             time()+(DAYSECS*60), $CFG->sessioncookiepath,
@@ -427,23 +429,27 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     }
 
                     complete_user_login($user);
-					if($calenderevents) {
+					if($calenderevents) {						
+						$context = context_course::instance(1);						
+						//format_module_intro($events_array->Subject, $events_array, $cmid)						
 					foreach ($calenderevents->value as $events_array) {
 							$event = new stdClass;
 							$event->name         = $events_array->Subject;
-							$event->id           = 2;
-							$event->userid       =$user->id;
-							$event->description  = array("text" =>$events_array->Body );
+							$event->id           = 0;
+							$event->userid       =$user->id;							
+							$event->description  = array("text" =>"from the office 365",
+													"format" => 1
+													 );
 							$event->timestart    = strtotime($events_array->Start);						
 							$event->timeduration = strtotime($events_array->End);
-							$event->eventtype    = 'user';							 
-							//calendar_event::create($event);
-						    calendar_event::update($event);	
-							//echo $value;echo "<br>";	
-							//echo $events_array->Subject;
-							//echo "hi";
-						}
+							$event->eventtype    = 'user';
+							$event->context      = $context;
+      						$calendar_event = new calendar_event();
+							$calendar_event->update($event);							
+			    		}
 					}
+					
+					
                     // Redirection
                     if (user_not_fully_set_up($USER)) {
                         $urltogo = $CFG->wwwroot.'/user/edit.php';
