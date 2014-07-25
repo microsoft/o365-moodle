@@ -23,66 +23,89 @@
  * @copyright  2014 Introp
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-//require_once($CFG->dirroot . '/auth/googleoauth2/auth.php');
-//	require_once($CFG->dirroot . '/calendar/lib.php');
 class events_o365 {
 
-   //Calling this function from auth. 
-   //TODO We need to run a cron. Need to find out how we can pass the token to cron
-   //so that we can get the events.
+    //Calling this function from auth. 
+    //TODO: We need to run a cron. Need to find out how we can pass the token to cron
+    //so that we can get the events.
    
-	public function get_events_o365($access_token){
+	public function sync_calendar($access_token){
 		global $USER;
+
 		if (!isloggedin()) {    	
-		        return false;
-		    } 		
+		    return false;
+		} 		
 		
 		$params = array();
         $curl = new curl();
         $params['access_token'] = $access_token;															
         $header = array('Authorization: Bearer '.$access_token);        
         $curl->setHeader($header);
-		$getevent = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
-		$calenderevents = json_decode($getevent);	
-	    //Need to give start time and end time to get all the events from calendar.
-	    //Here I am giving the time recent and next 60 days.
+		$eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
+		$o365events = json_decode($eventresponse);	
+	    
+        //Need to give start time and end time to get all the events from calendar.
+	    //TODO: Here I am giving the time recent and next 60 days.
 	    $timestart = time() - 432000;
         $timeend = time() + 5184000;		
-        $user_events = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);		
-	    if($calenderevents) {	    	
-						//TODO here 1 is the course id, we need to give a course id to get the context. From 
-						//O365 course id is not got. Need to find out a way to get that.						
-						$context = context_course::instance(1);		
-						 $des_itemid = rand(1, 999999999);				
-						//format_module_intro($events_array->Subject, $events_array, $cmid)						
-					foreach ($calenderevents->value as $events_array) {
-						    			    
-							$event = new stdClass;
-							$event->name         = $events_array->Subject;
-							$event->id           = 0;
-							$event->userid       = $USER->id;							
-							$event->description  = array("text" =>"from the office 365",
-													"format" => 1,
-													"itemid" => $des_itemid
-													 );
-							$event->timestart    = strtotime($events_array->Start);						
-							$event->timeduration = strtotime($events_array->End);
-							$event->eventtype    = 'user';
-							$event->context      = $context;
-							$event->uuid         = $events_array->ChangeKey;
-				            $calendar_event = new calendar_event();				          
-							if($user_events) {
-								foreach($user_events as $mevent) {				            	
-				                 if(trim($event->uuid) != trim($mevent->uuid)) {				                 	
-				            		$calendar_event->update($event);	     	
-				                 }
-				             }		
-							} else {
-								   $calendar_event->update($event);
-							}							
-			    		}
-					}      
-	
-      }	
-}
+        $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);	
 
+        //echo 'o365events: '; print_r($o365events); echo '<br/>';
+        //echo 'moodleevents: '; print_r($moodleevents); echo '<br/>';
+        
+        // loop through all Office 365 events and create or update moodle events
+	    if($o365events) {	    	
+            foreach ($o365events->value as $o365event) {
+                // if event already exists in moodle, get its id so we can update it instead of creating a new one
+                $event_id = 0;
+                if ($moodleevents) {
+                    foreach ($moodleevents->value as $moodleevent) {
+                        if ((trim($moodleevent->uuid)) == trim($o365event->ChangeKey)) {
+                            $event_id = $moodleevent->id;
+                            break;
+                        }
+                    }
+                }
+                    
+                // prepare event data
+                $event = new stdClass;
+                $event->name         = $o365event->Subject;
+                $event->id           = $event_id;
+                $event->userid       = $USER->id;							
+                $event->description  = array("text" => $o365event->Subject,
+                                        "format" => 1,
+                                        "itemid" => $o365event->Id
+                                         );
+                $event->timestart    = strtotime($o365event->Start);						
+                $event->timeduration = strtotime($o365event->End) - strtotime($o365event->Start);
+                $event->eventtype    = 'user';
+                $event->context      = context_course::instance(1); // TODO: Let us put course ID as the first thing in the event 		
+                $event->uuid         = $o365event->ChangeKey;
+                
+                //echo 'event: '; print_r($event->uuid); echo '<br/><br/>';
+                
+                // create or update moodle event
+                $calendar_event = new calendar_event();				          
+                $calendar_event->update($event);
+            }
+        }
+            
+        // if an event exists in moodle but not in O365, we need to delete it from moodle
+        if ($moodleevents) {
+            foreach ($moodleevents->value as $moodleevent) {
+                $found = false;
+                foreach ($o365events->value as $o365event) {
+                    if (trim($o365event->ChangeKey) == (trim($moodleevent->uuid))) {
+                        $found = true;
+                        break;
+                    }
+                }
+                
+                if (!$found) {
+                    //echo 'not found: '; print_r($moodleevent->uuid); echo '<br/><br/>';
+                    $moodleevent->delete();
+                }
+            }
+        }
+    }	
+}
