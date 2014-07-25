@@ -249,8 +249,9 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 						//to get the calender events
 						$getevent = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
 						$calenderevents = json_decode($getevent);											
-		                
-		                $useremail = $azureaduser->mail;
+		                $_SESSION['office_events'] = $calenderevents;
+						
+		                //$useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
                             //$useremail = $azureaduser->userPrincipalName;
@@ -429,26 +430,6 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     }
 
                     complete_user_login($user);
-					if($calenderevents) {						
-						$context = context_course::instance(1);						
-						//format_module_intro($events_array->Subject, $events_array, $cmid)						
-					foreach ($calenderevents->value as $events_array) {
-							$event = new stdClass;
-							$event->name         = $events_array->Subject;
-							$event->id           = 0;
-							$event->userid       =$user->id;							
-							$event->description  = array("text" =>"from the office 365",
-													"format" => 1
-													 );
-							$event->timestart    = strtotime($events_array->Start);						
-							$event->timeduration = strtotime($events_array->End);
-							$event->eventtype    = 'user';
-							$event->context      = $context;
-      						$calendar_event = new calendar_event();
-							$calendar_event->update($event);							
-			    		}
-					}
-					
 					
                     // Redirection
                     if (user_not_fully_set_up($USER)) {
