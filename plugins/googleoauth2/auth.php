@@ -18,6 +18,7 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->libdir.'/authlib.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once('jwt.php');
+require_once($CFG->dirroot.'/local/oevents/lib.php');
 
 /**
  * Google/Facebook/Messenger/Azure AD Oauth2 authentication plugin.
@@ -102,7 +103,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
             //set the params specific to the authentication provider
             $params = array();
-
+			$params_office = array(); // for storing params to get o365 accesstoken.
             switch ($authprovider) {
                 case 'google':
                     $params['client_id'] = get_config('auth/googleoauth2', 'googleclientid');
@@ -129,14 +130,14 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     break;
                 case 'azuread':
                     //we need the parameters client id, requst token url, code, grant_type and resource
-                    $params['client_id'] = get_config('auth/googleoauth2', 'azureadclientid');
-                    $params['client_secret'] = get_config('auth/googleoauth2', 'azureadclientsecret');
+                    $params_office['client_id'] = $params['client_id'] = get_config('auth/googleoauth2', 'azureadclientid');
+                    $params_office['client_secret'] = $params['client_secret'] = get_config('auth/googleoauth2', 'azureadclientsecret');
                     $requestaccesstokenurl = 'https://login.windows.net/common/oauth2/token';
-                    $params['code'] = $authorizationcode;
-                    $params['grant_type'] = 'authorization_code';
-					$params['state'] = 'bb706f82-215e-4836-921d-ac013e7e6ae5'; //new for office 365					
-                    //$params['resource'] = 'https://graph.windows.net';
-					$params['resource'] = 'https://outlook.office365.com';
+                    $params_office['code'] = $params['code'] = $authorizationcode;
+                    $params_office['grant_type'] = $params['grant_type'] = 'authorization_code';
+					$params_office['state'] = 'bb706f82-215e-4836-921d-ac013e7e6ae5'; //new for office 365					
+                    $params['resource'] = 'https://graph.windows.net';
+					$params_office['resource'] = 'https://outlook.office365.com';					
                     break;
                 case 'github':
                     $params['client_id'] = get_config('auth/googleoauth2', 'githubclientid');
@@ -167,6 +168,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
             } else if ($authprovider == 'azuread') { //Azure AD returns an "Object moved" error with curl->post() encoding
                 $curl = new curl();				
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
+				$postreturnvalues_office = $curl->post($requestaccesstokenurl, $params_office);
            } else if ($authprovider == 'linkedin') {
                 $curl = new curl();
                 $postreturnvalues = $curl->get($requestaccesstokenurl . '?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
@@ -193,6 +195,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 case 'messenger':
                 case 'azuread':
                     $accesstoken = json_decode($postreturnvalues)->access_token;
+					$accesstoken_office = json_decode($postreturnvalues_office)->access_token;
                     break;
                 default:
                     break;
@@ -241,21 +244,13 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $params['access_token'] = $accesstoken;															
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                      //  $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
-                       //new url to get token from office 365
-                        $postreturnvalues = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendars');
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding                       
                         $azureaduser = json_decode($postreturnvalues);
-						
-						//to get the calender events
-						$getevent = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
-						$calenderevents = json_decode($getevent);											
-		                $_SESSION['office_events'] = $calenderevents;
-						
-		                //$useremail = $azureaduser->mail; //Need to put it back when using graph api
+		                $useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
-                            //$useremail = $azureaduser->userPrincipalName;
-							$useremail = $userupn;							
+                            $useremail = $azureaduser->userPrincipalName;
+							//$useremail = $userupn;							
                         }						
                         $verified = 1; // TODO: how to verify?
                         break;
@@ -429,8 +424,11 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $user = (object) array_merge((array) $user, (array) $newuser);
                     }
 
-                    complete_user_login($user);
-					
+                    complete_user_login($user);					
+					if($authprovider == 'azuread') {						
+						$oevents = new events_o365();
+						$oevents->get_events_o365($accesstoken_office);
+					}
                     // Redirection
                     if (user_not_fully_set_up($USER)) {
                         $urltogo = $CFG->wwwroot.'/user/edit.php';
