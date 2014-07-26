@@ -75,7 +75,7 @@ class events_o365 {
                     $event->id = 0;
                     $event->userid       = $USER->id;							
                     $event->eventtype    = 'user';
-                    $event->context      = context_course::instance(1); // TODO: Let us put course ID as the first thing in the event 		
+                    $event->context      = context_course::instance(1); // TODO: Need to figure out where to save course id in O365 event
                     $event->uuid         = $o365event->ChangeKey;
                 }
                 
@@ -90,7 +90,6 @@ class events_o365 {
                 //echo 'event id, uuid: '; print_r($event_id); echo ', '; print_r($event->uuid); echo '<br/><br/>';
                 
                 // create or update moodle event
-                // TODO: this is creating a new event every time with same values. not updating existing.
                 if ($event_id != 0) {
                     $event->update($event);
                 } else {
@@ -118,7 +117,7 @@ class events_o365 {
                 
                 if (!$found) {
                     echo 'not found: '; print_r($moodleevent->uuid); echo '<br/><br/>';
-                    $moodleevent->delete();
+                    $moodleevent->delete(); // TODO: not working
                 }
             }
         }
