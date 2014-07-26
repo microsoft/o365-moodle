@@ -50,16 +50,16 @@ class events_o365 {
         $timeend = time() + 5184000;		
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);	
 
-        //echo 'o365events: '; print_r($o365events); echo '<br/>';
-        //echo 'moodleevents: '; print_r($moodleevents); echo '<br/>';
+        //echo 'o365events: '; print_r($o365events); echo '<br/><br/>';
+        //echo 'moodleevents: '; print_r($moodleevents); echo '<br/><br/>';
         
         // loop through all Office 365 events and create or update moodle events
-	    if($o365events) {	    	
+	    if ($o365events) {	    	
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
                 $event_id = 0;
                 if ($moodleevents) {
-                    foreach ($moodleevents->value as $moodleevent) {
+                    foreach ($moodleevents as $moodleevent) {
                         if ((trim($moodleevent->uuid)) == trim($o365event->ChangeKey)) {
                             $event_id = $moodleevent->id;
                             break;
@@ -68,44 +68,60 @@ class events_o365 {
                 }
                     
                 // prepare event data
-                $event = new stdClass;
+                if ($event_id != 0) {
+                    $event = calendar_event::load($event_id);
+                } else {
+                    $event = new stdClass;
+                    $event->id = 0;
+                    $event->userid       = $USER->id;							
+                    $event->eventtype    = 'user';
+                    $event->context      = context_course::instance(1); // TODO: Let us put course ID as the first thing in the event 		
+                    $event->uuid         = $o365event->ChangeKey;
+                }
+                
                 $event->name         = $o365event->Subject;
-                $event->id           = $event_id;
-                $event->userid       = $USER->id;							
                 $event->description  = array("text" => $o365event->Subject,
                                         "format" => 1,
                                         "itemid" => $o365event->Id
                                          );
-                $event->timestart    = strtotime($o365event->Start);						
+                $event->timestart    = strtotime($o365event->Start); // TODO: time is wrong. timezone problem?						
                 $event->timeduration = strtotime($o365event->End) - strtotime($o365event->Start);
-                $event->eventtype    = 'user';
-                $event->context      = context_course::instance(1); // TODO: Let us put course ID as the first thing in the event 		
-                $event->uuid         = $o365event->ChangeKey;
                 
-                //echo 'event: '; print_r($event->uuid); echo '<br/><br/>';
+                //echo 'event id, uuid: '; print_r($event_id); echo ', '; print_r($event->uuid); echo '<br/><br/>';
                 
                 // create or update moodle event
-                $calendar_event = new calendar_event();				          
-                $calendar_event->update($event);
+                // TODO: this is creating a new event every time with same values. not updating existing.
+                if ($event_id != 0) {
+                    $event->update($event);
+                } else {
+                    $event = new calendar_event($event);
+                    $event->update($event);
+                }
             }
         }
             
         // if an event exists in moodle but not in O365, we need to delete it from moodle
         if ($moodleevents) {
-            foreach ($moodleevents->value as $moodleevent) {
+            foreach ($moodleevents as $moodleevent) {
                 $found = false;
+                echo 'checking: '; print_r($moodleevent->uuid); echo '<br/><br/>';
                 foreach ($o365events->value as $o365event) {
-                    if (trim($o365event->ChangeKey) == (trim($moodleevent->uuid))) {
+                    if (trim($moodleevent->uuid) == trim($o365event->ChangeKey)) { 
+                        if ($found) {
+                            echo 'duplicate: '; print_r($moodleevent->uuid); echo '<br/><br/>';
+                            $moodleevent->delete(); // delete duplicates
+                        }
+                        
                         $found = true;
-                        break;
                     }
                 }
                 
                 if (!$found) {
-                    //echo 'not found: '; print_r($moodleevent->uuid); echo '<br/><br/>';
+                    echo 'not found: '; print_r($moodleevent->uuid); echo '<br/><br/>';
                     $moodleevent->delete();
                 }
             }
         }
+        //exit;
     }	
 }
