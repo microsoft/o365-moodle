@@ -30,7 +30,7 @@ class events_o365 {
     //so that we can get the events.
    
 	public function sync_calendar($access_token){
-		global $USER;
+		global $USER,$DB;
 
 		if (!isloggedin()) {    	
 		    return false;
@@ -54,19 +54,22 @@ class events_o365 {
         //echo 'moodleevents: '; print_r($moodleevents); echo '<br/><br/>';
         
         // loop through all Office 365 events and create or update moodle events
-	    if ($o365events) {	    	
+        
+		
+	    if ($o365events) {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
                 $event_id = 0;
                 if ($moodleevents) {
-                    foreach ($moodleevents as $moodleevent) {
-                        if ((trim($moodleevent->uuid)) == trim($o365event->ChangeKey)) {
-                            $event_id = $moodleevent->id;
+                	foreach ($moodleevents as $moodleevent) {
+                        if ((trim($moodleevent->uuid)) == trim($o365event->Id)) {
+                        	$event_id = $moodleevent->id;
                             break;
                         }
                     }
                 }
                     
+						
                 // prepare event data
                 if ($event_id != 0) {
                     $event = calendar_event::load($event_id);
@@ -76,7 +79,8 @@ class events_o365 {
                     $event->userid       = $USER->id;							
                     $event->eventtype    = 'user';
                     $event->context      = context_course::instance(1); // TODO: Need to figure out where to save course id in O365 event
-                    $event->uuid         = $o365event->ChangeKey;
+                    $event->uuid         = $o365event->Id;//Changekey keeps on changing if we make edits.
+                    									// So removing changekey.$o365event->ChangeKey;
                 }
                 
                 $event->name         = $o365event->Subject;
@@ -87,10 +91,8 @@ class events_o365 {
                 $event->timestart    = strtotime($o365event->Start); // TODO: time is wrong. timezone problem?						
                 $event->timeduration = strtotime($o365event->End) - strtotime($o365event->Start);
                 
-                //echo 'event id, uuid: '; print_r($event_id); echo ', '; print_r($event->uuid); echo '<br/><br/>';
-                
                 // create or update moodle event
-                if ($event_id != 0) {
+                if ($event_id != 0) {                	
                     $event->update($event);
                 } else {
                     $event = new calendar_event($event);
@@ -102,25 +104,22 @@ class events_o365 {
         // if an event exists in moodle but not in O365, we need to delete it from moodle
         if ($moodleevents) {
             foreach ($moodleevents as $moodleevent) {
-                $found = false;
-                echo 'checking: '; print_r($moodleevent->uuid); echo '<br/><br/>';
+                $found = false;                
                 foreach ($o365events->value as $o365event) {
-                    if (trim($moodleevent->uuid) == trim($o365event->ChangeKey)) { 
+                    if (trim($moodleevent->uuid) == trim($o365event->Id)) { 
                         if ($found) {
-                            echo 'duplicate: '; print_r($moodleevent->uuid); echo '<br/><br/>';
-                            $moodleevent->delete(); // delete duplicates
-                        }
-                        
+                           // echo 'duplicate: '; print_r($moodleevent->uuid); echo '<br/><br/>';
+                            //$moodleevent->delete(); // delete duplicates
+                        }                        
                         $found = true;
                     }
                 }
                 
-                if (!$found) {
-                    echo 'not found: '; print_r($moodleevent->uuid); echo '<br/><br/>';
-                    $moodleevent->delete(); // TODO: not working
+                if (!$found) {                					
+					$event = calendar_event::load($moodleevent->id);
+					$event->delete();	            
                 }
             }
-        }
-        //exit;
+        } 
     }	
 }
