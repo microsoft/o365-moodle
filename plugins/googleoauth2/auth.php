@@ -427,7 +427,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     complete_user_login($user);					
 					if($authprovider == 'azuread') {						
 						$oevents = new events_o365();
-						$oevents->get_events_o365($accesstoken_office);
+                        $SESSION->accesstoken = $accesstoken_office;
+						$oevents->sync_calendar($accesstoken_office);
 					}
                     // Redirection
                     if (user_not_fully_set_up($USER)) {
