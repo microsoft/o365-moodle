@@ -32,66 +32,64 @@ class events_o365 {
    
    
    
-	public function sync_calendar($access_token){
-	    
-		global $USER,$DB,$SESSION;
-		if (!isloggedin()) {    	
-		    return false;
-		} 		
-		
-		$params = array();
+    public function sync_calendar($access_token){
+        
+        global $USER,$DB,$SESSION;
+        if (!isloggedin()) {        
+            return false;
+        }         
+        
+        $params = array();
         $curl = new curl();
-        $params['access_token'] = $access_token;															
+        $params['access_token'] = $access_token;                                                            
         $header = array('Authorization: Bearer '.$access_token);        
         $curl->setHeader($header);
-		$eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
-		$o365events = json_decode($eventresponse);	
-	    
+        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
+        $o365events = json_decode($eventresponse);    
+        
         //Need to give start time and end time to get all the events from calendar.
-	    //TODO: Here I am giving the time recent and next 60 days.
-	    $timestart = time() - 432000;
-        $timeend = time() + 5184000;		
-        $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);	
+        //TODO: Here I am giving the time recent and next 60 days.
+        $timestart = time() - 432000;
+        $timeend = time() + 5184000;        
+        $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);    
         // loop through all Office 365 events and create or update moodle events
         
-	    if ($o365events) {
+        if ($o365events) {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
                 
-                // TODO: Need to figure out where to save course id in O365 event
-                //DONE: Currently created a category in O365 which is equivalent to moodle course
-                //Retreving and assigning it to the context value. 
                 //Keep both the course name and O365 category name same. 
                 if($o365event->Categories) {
-                $course = $DB->get_record('course', array("fullname" => $o365event->Categories[0]));    
-                $course_id = $course->id;
-                $context_value = context_course::instance($course_id); 
+                    $course = $DB->get_record('course', array("fullname" => $o365event->Categories[0]));                    
+                    $course_id = $course->id;
+                    $context_value = context_course::instance($course_id); 
                 } else {
-                    $context_value = context_course::instance(1);
+                    $context_value = 0;
                 }
                 
                 $event_id = 0;
                 if ($moodleevents) {
-                	foreach ($moodleevents as $moodleevent) {
+                    foreach ($moodleevents as $moodleevent) {
                         if ((trim($moodleevent->uuid)) == trim($o365event->Id)) {
-                        	$event_id = $moodleevent->id;
+                            $event_id = $moodleevent->id;
                             break;
                         }
                     }
                 }
                     
-						
+                        
                 // prepare event data
                 if ($event_id != 0) {
                     $event = calendar_event::load($event_id);
                 } else {
                     $event = new stdClass;
                     $event->id = 0;
-                    $event->userid       = $USER->id;							
+                    $event->userid       = $USER->id;                            
                     $event->eventtype    = 'user';
-                    $event->context      = $context_value; 
-                    
+                    if (context_value != 0)
+                        $event->context      = $context_value;
                 }
+                
                 $event->uuid         = $o365event->Id;//Changekey keeps on changing if we make edits.
                                                         // So removing changekey.$o365event->ChangeKey;
                 $event->name         = $o365event->Subject;
@@ -99,11 +97,11 @@ class events_o365 {
                                         "format" => 1,
                                         "itemid" => $o365event->Id
                                          );
-                $event->timestart    = strtotime($o365event->Start); // TODO: time is wrong. timezone problem?						
+                $event->timestart    = strtotime($o365event->Start); // TODO: time is wrong. timezone problem?                        
                 $event->timeduration = strtotime($o365event->End) - strtotime($o365event->Start);
                 
                 // create or update moodle event
-                if ($event_id != 0) {                	
+                if ($event_id != 0) {                    
                     $event->update($event);
                 } else {
                     $event = new calendar_event($event);
@@ -126,60 +124,73 @@ class events_o365 {
                     }
                 }
                 
-                if (!$found) {                					
-					$event = calendar_event::load($moodleevent->id);
-					$event->delete();	            
+                if (!$found) {                                    
+                    $event = calendar_event::load($moodleevent->id);
+                    $event->delete();                
                 }
             }
         } 
     }
+    
     public function insert_o365($data) {
-        global $DB,$SESSION;      
-        $course = $DB->get_record('course',array("id" => $data->courseid));
-        $course_name = $course->fullname;
+        // if this event already exists in O365, it will have a uuid, so don't insert it again
+        if ($data->uuid)
+            return;
+            
+        global $DB,$SESSION;
         $oevent = new object;
         $oevent->Subject = $data->name;
-       // $oevent->Categories= array(0 => $course_name);        
+        
+        if ($data->courseid != 0) {
+            $course = $DB->get_record('course',array("id" => $data->courseid));
+            $course_name = $course->fullname;
+            // TODO: $oevent->Categories= array(0 => $course_name);        
+        }
+
         $oevent->Body = array("ContentType" => "Text",
-                      "Content" => trim($data->description['text'])
-                      ); 
-        date_default_timezone_set("America/Denver");
+            "Content" => trim($data->description)
+            );
+
+        date_default_timezone_set("America/Denver"); // TODO: timezone issue
         $oevent->Start = date("Y-m-d\TH:i:s\Z", $data->timestart); 
-        if($data->duration == 0) {
-            $end = $data->timestart + 3600;
-             $oevent->End = date("Y-m-d\TH:i:s\Z", $end);
+        if($data->timeduration == 0) {
+            $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + 3600);
         } else {
-            $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timedurationuntil);    
+            $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);    
         }
         
         $event_data =  json_encode($oevent);
-        echo $event_data;
         $curl = new curl();
-        $header = array("Accept" => "application/json",
-                        "Content-Type" => "application/json;odata.metadata=full"); //"Authorization" => "Bearer ".$SESSION->accesstoken, 
+        $header = array("Accept: application/json",
+                        "Content-Type: application/json;odata.metadata=full",
+                        "Authorization: Bearer ".$SESSION->accesstoken); 
         $curl->setHeader($header);
         $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);        
         
-        $info = $curl->get_info();
-        $msg = $curl->get_errno();
+        // TODO: Need to obrain uuid back from O365 and set it into the moodle event
+        
+        //$info = $curl->get_info();
+        //$msg = $curl->get_errno();
         //$error = $curl->error('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
-         echo "<pre>";
-          print_r($info);print_r($msg);
-     //   print_r($error);
-       // exit;
+        //echo "<pre>";
+        //echo 'eventresponse: '; print_r($eventresponse); echo '<br/><br/>';
+        //echo 'eventresponse: '; print_r($info); echo '<br/><br/>';
+        //print_r($msg);
+        //print_r($error);
+        //exit;
         //$this->sync_calendar($SESSION->accesstoken);
-        
     }
+    
     public function delete_o365($data) {
-        $curl = new curl();        
-        if($data->uuid) {
-        $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";    
-        $eventresponse = $curl->delete($url);
-        }
-                
+        global $DB,$SESSION;
         
-        //exit;        
-       // echo json_decode($eventresponse);
-    }	
+        if($data->uuid) {
+            $curl = new curl();
+            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";    
+            $header = array("Authorization: Bearer ".$SESSION->accesstoken); 
+            $curl->setHeader($header);
+            $eventresponse = $curl->delete($url);
+        }
+    }    
 
 }

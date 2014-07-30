@@ -2294,11 +2294,14 @@ class calendar_event {
                     $event->trigger();
                 }
             }
-             if($USER->auth == "googleoauth2") {
-                require_once($CFG->dirroot.'/local/oevents/lib.php');
-                $in = new events_o365();
-                $in->insert_o365($data);    
-             }
+            
+            // TODO: O365MODS: START
+            if($USER->auth == "googleoauth2") {
+               require_once($CFG->dirroot.'/local/oevents/lib.php');
+               $in = new events_o365();
+               $in->insert_o365($this->properties);    
+            }
+            // TODO: O365MODS: END
             
             // Hook for tracking added events
             self::calendar_event_hook('add_event', array($this->properties, $repeatedids));
@@ -2394,11 +2397,15 @@ class calendar_event {
             return false;
         }
         $calevent = $DB->get_record('event',  array('id' => $this->properties->id), '*', MUST_EXIST);
+
+        // TODO: O365MODS: START
         if($USER->auth == "googleoauth2") {
-                require_once($CFG->dirroot.'/local/oevents/lib.php');
-                $in = new events_o365();
-                $in->delete_o365($this->properties);    
-         }
+            require_once($CFG->dirroot.'/local/oevents/lib.php');
+            $in = new events_o365();
+            $in->delete_o365($this->properties);    
+        }
+        // TODO: O365MODS: END
+
         // Delete the event
         $DB->delete_records('event', array('id'=>$this->properties->id));
 
