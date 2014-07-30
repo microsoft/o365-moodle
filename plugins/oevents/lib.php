@@ -23,11 +23,14 @@
  * @copyright  2014 Introp
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 class events_o365 {
 
     //Calling this function from auth. 
     //TODO: We need to run a cron. Need to find out how we can pass the token to cron
     //so that we can get the events.
+   
+   
    
 	public function sync_calendar($access_token){
 	    
@@ -50,7 +53,7 @@ class events_o365 {
         $timeend = time() + 5184000;		
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);	
         // loop through all Office 365 events and create or update moodle events
-       
+        
 	    if ($o365events) {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
@@ -87,10 +90,10 @@ class events_o365 {
                     $event->userid       = $USER->id;							
                     $event->eventtype    = 'user';
                     $event->context      = $context_value; 
-                    $event->uuid         = $o365event->Id;//Changekey keeps on changing if we make edits.
-                    									// So removing changekey.$o365event->ChangeKey;
+                    
                 }
-                
+                $event->uuid         = $o365event->Id;//Changekey keeps on changing if we make edits.
+                                                        // So removing changekey.$o365event->ChangeKey;
                 $event->name         = $o365event->Subject;
                 $event->description  = array("text" => $o365event->Subject,
                                         "format" => 1,
@@ -131,15 +134,52 @@ class events_o365 {
         } 
     }
     public function insert_o365($data) {
-        global $SESSION;
-        echo $SESSION->accesstoken;
-        echo "<pre>";        
-        $data =  json_encode($data);
-        echo $data;
-        $curl = new curl();
-        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$data);
-        print_r($eventresponse);
+        global $DB,$SESSION;      
+        $course = $DB->get_record('course',array("id" => $data->courseid));
+        $course_name = $course->fullname;
+        $oevent = new object;
+        $oevent->Subject = $data->name;
+       // $oevent->Categories= array(0 => $course_name);        
+        $oevent->Body = array("ContentType" => "Text",
+                      "Content" => trim($data->description['text'])
+                      ); 
+        date_default_timezone_set("America/Denver");
+        $oevent->Start = date("Y-m-d\TH:i:s\Z", $data->timestart); 
+        if($data->duration == 0) {
+            $end = $data->timestart + 3600;
+             $oevent->End = date("Y-m-d\TH:i:s\Z", $end);
+        } else {
+            $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timedurationuntil);    
+        }
         
+        $event_data =  json_encode($oevent);
+        echo $event_data;
+        $curl = new curl();
+        $header = array("Accept" => "application/json",
+                        "Content-Type" => "application/json;odata.metadata=full"); //"Authorization" => "Bearer ".$SESSION->accesstoken, 
+        $curl->setHeader($header);
+        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);        
+        
+        $info = $curl->get_info();
+        $msg = $curl->get_errno();
+        //$error = $curl->error('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
+         echo "<pre>";
+          print_r($info);print_r($msg);
+     //   print_r($error);
+       // exit;
+        //$this->sync_calendar($SESSION->accesstoken);
+        
+    }
+    public function delete_o365($data) {
+        $curl = new curl();        
+        if($data->uuid) {
+        $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";    
+        $eventresponse = $curl->delete($url);
+        }
+                
+        
+        //exit;        
+       // echo json_decode($eventresponse);
     }	
 
 }
