@@ -134,6 +134,7 @@ class events_o365 {
     
     public function insert_o365($data) {
         global $DB,$SESSION;
+        
         //Students list gives the attends of the particular course.
         //TODO Plan A is to make this student as attendees. Since all of the users have
         //account in o365 they can be assigned by passing array of attendes in the 
@@ -147,34 +148,33 @@ class events_o365 {
                 AND r.shortname = 'student' ";
         $students = $DB->get_record_sql($sql);
         //print_r($students);
+        
         // if this event already exists in O365, it will have a uuid, so don't insert it again
         //$data does not provide with uuid. So for that we are retrieving each event by event id.
-        $eventdata = calendar_get_events_by_id(array($data->id));        
+        $eventdata = calendar_get_events_by_id(array($data->id));
         
         if ($eventdata[$data->id]->uuid != "") {
-                 return;           
+            return;
         }
-         
-        
         
         $oevent = new object;
         $oevent->Subject = $data->name;
         if ($data->courseid != 0) {
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
-            // TODO: $oevent->Categories= array(0 => $course_name);        
+            // TODO: $oevent->Categories= array(0 => $course_name);
         }
         
-               $oevent->Body = array("ContentType" => "Text",
+        $oevent->Body = array("ContentType" => "Text",
             "Content" => trim($data->description)
-            );
+        );
 
         date_default_timezone_set("America/Denver"); // TODO: timezone issue
-        $oevent->Start = date("Y-m-d\TH:i:s\Z", $data->timestart); 
+        $oevent->Start = date("Y-m-d\TH:i:s\Z", $data->timestart);
         if($data->timeduration == 0) {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + 3600);
         } else {
-            $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);    
+            $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
         
         $event_data =  json_encode($oevent);
@@ -182,30 +182,30 @@ class events_o365 {
         $curl = new curl();
         $header = array("Accept: application/json",
                         "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ".$SESSION->accesstoken); 
-        $curl->setHeader($header);
-        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);       
-        // TODO: Need to obrain uuid back from O365 and set it into the moodle event
-        $eventresponse = json_decode($eventresponse);        
-        if($eventresponse) {            
+                        "Authorization: Bearer ".$SESSION->accesstoken);
+                        $curl->setHeader($header);
+        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
+        
+        // obtain uuid back from O365 and set it into the moodle event
+        $eventresponse = json_decode($eventresponse);
+        if($eventresponse && $eventresponse->Id) {
             $event = calendar_event::load($data->id);
             $event->uuid = $eventresponse->Id;
             $event->update($event);
         }
-        
+
     }
-    
+
     public function delete_o365($data) {
         global $DB,$SESSION;
-               
+
         if($data->uuid) {
             $curl = new curl();
-            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";    
-            $header = array("Authorization: Bearer ".$SESSION->accesstoken); 
+            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
+            $header = array("Authorization: Bearer ".$SESSION->accesstoken);
             $curl->setHeader($header);
             $eventresponse = $curl->delete($url);
         }
-    }    
-
+    }
 }
     
