@@ -54,7 +54,7 @@ class events_o365 {
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);    
         // loop through all Office 365 events and create or update moodle events
         
-        if ($o365events) {
+        if (!($o365events->error)) {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
                 
@@ -70,7 +70,7 @@ class events_o365 {
                 $event_id = 0;
                 if ($moodleevents) {
                     foreach ($moodleevents as $moodleevent) {
-                        if ((trim($moodleevent->uuid)) == trim($o365event->Id)) {
+                        if ((trim($moodleevent->uuid)) == trim($o365event->Id)) {                            
                             $event_id = $moodleevent->id;
                             break;
                         }
@@ -79,7 +79,7 @@ class events_o365 {
                     
                         
                 // prepare event data
-                if ($event_id != 0) {
+                if ($event_id != 0) {                    
                     $event = calendar_event::load($event_id);
                 } else {
                     $event = new stdClass;
@@ -133,21 +133,39 @@ class events_o365 {
     }
     
     public function insert_o365($data) {
-        // if this event already exists in O365, it will have a uuid, so don't insert it again
-        if ($data->uuid)
-            return;
-            
         global $DB,$SESSION;
+        //Students list gives the attends of the particular course.
+        //TODO Plan A is to make this student as attendees. Since all of the users have
+        //account in o365 they can be assigned by passing array of attendes in the 
+        //curl event. 
+        
+        $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u JOIN mdl_role_assignments ra ON u.id = ra.userid
+                JOIN mdl_role r ON ra.roleid = r.id
+                JOIN mdl_context c ON ra.contextid = c.id
+                WHERE c.contextlevel = 50
+                AND c.instanceid = ".$data->courseid."
+                AND r.shortname = 'student' ";
+        $students = $DB->get_record_sql($sql);
+        //print_r($students);
+        // if this event already exists in O365, it will have a uuid, so don't insert it again
+        //$data does not provide with uuid. So for that we are retrieving each event by event id.
+        $eventdata = calendar_get_events_by_id(array($data->id));        
+        
+        if ($eventdata[$data->id]->uuid != "") {
+                 return;           
+        }
+         
+        
+        
         $oevent = new object;
         $oevent->Subject = $data->name;
-        
         if ($data->courseid != 0) {
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
             // TODO: $oevent->Categories= array(0 => $course_name);        
         }
-
-        $oevent->Body = array("ContentType" => "Text",
+        
+               $oevent->Body = array("ContentType" => "Text",
             "Content" => trim($data->description)
             );
 
@@ -160,30 +178,26 @@ class events_o365 {
         }
         
         $event_data =  json_encode($oevent);
+        
         $curl = new curl();
         $header = array("Accept: application/json",
                         "Content-Type: application/json;odata.metadata=full",
                         "Authorization: Bearer ".$SESSION->accesstoken); 
         $curl->setHeader($header);
-        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);        
-        
+        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);       
         // TODO: Need to obrain uuid back from O365 and set it into the moodle event
+        $eventresponse = json_decode($eventresponse);        
+        if($eventresponse) {            
+            $event = calendar_event::load($data->id);
+            $event->uuid = $eventresponse->Id;
+            $event->update($event);
+        }
         
-        //$info = $curl->get_info();
-        //$msg = $curl->get_errno();
-        //$error = $curl->error('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
-        //echo "<pre>";
-        //echo 'eventresponse: '; print_r($eventresponse); echo '<br/><br/>';
-        //echo 'eventresponse: '; print_r($info); echo '<br/><br/>';
-        //print_r($msg);
-        //print_r($error);
-        //exit;
-        //$this->sync_calendar($SESSION->accesstoken);
     }
     
     public function delete_o365($data) {
         global $DB,$SESSION;
-        
+               
         if($data->uuid) {
             $curl = new curl();
             $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";    
@@ -194,3 +208,4 @@ class events_o365 {
     }    
 
 }
+    
