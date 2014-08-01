@@ -44,7 +44,7 @@ class events_o365 {
         $params['access_token'] = $access_token;                                                            
         $header = array('Authorization: Bearer '.$access_token);        
         $curl->setHeader($header);
-        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');
+        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events');        
         $o365events = json_decode($eventresponse);    
         
         //Need to give start time and end time to get all the events from calendar.
@@ -53,11 +53,9 @@ class events_o365 {
         $timeend = time() + 5184000;        
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);    
         // loop through all Office 365 events and create or update moodle events
-        
         if (!($o365events->error)) {
             foreach ($o365events->value as $o365event) {
-                // if event already exists in moodle, get its id so we can update it instead of creating a new one
-                
+                // if event already exists in moodle, get its id so we can update it instead of creating a new one                
                 //Keep both the course name and O365 category name same. 
                 if($o365event->Categories) {
                     $course = $DB->get_record('course', array("fullname" => $o365event->Categories[0]));                    
@@ -146,8 +144,7 @@ class events_o365 {
                 WHERE c.contextlevel = 50
                 AND c.instanceid = ".$data->courseid."
                 AND r.shortname = 'student' ";
-        $students = $DB->get_record_sql($sql);
-        //print_r($students);
+        $students = $DB->get_record_sql($sql);        
         
         // if this event already exists in O365, it will have a uuid, so don't insert it again
         //$data does not provide with uuid. So for that we are retrieving each event by event id.
@@ -158,11 +155,15 @@ class events_o365 {
         }
         
         $oevent = new object;
-        $oevent->Subject = $data->name;
+        $oevent->Subject = $data->name;        
         if ($data->courseid != 0) {
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
-            // TODO: $oevent->Categories= array(0 => $course_name);
+            $course_name = array(0 => $course_name);
+            //I am getting correct array for categories. But while posting
+            //it takes long time to post and gets back with internal server error.
+            $oevent->Categories = $course_name;             
+            
         }
         
         $oevent->Body = array("ContentType" => "Text",
@@ -176,14 +177,13 @@ class events_o365 {
         } else {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
-        
-        $event_data =  json_encode($oevent);
-        
+        print_r($oevent);
+        $event_data =  json_encode($oevent);        
         $curl = new curl();
         $header = array("Accept: application/json",
                         "Content-Type: application/json;odata.metadata=full",
                         "Authorization: Bearer ".$SESSION->accesstoken);
-                        $curl->setHeader($header);
+        $curl->setHeader($header);
         $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
         
         // obtain uuid back from O365 and set it into the moodle event
