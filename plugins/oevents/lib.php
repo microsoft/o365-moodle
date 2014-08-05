@@ -35,6 +35,8 @@ class events_o365 {
             return false;
         }
 
+        date_default_timezone_set('UTC');
+
         $params = array();
         $curl = new curl();
         $params['access_token'] = $access_token;
@@ -48,7 +50,7 @@ class events_o365 {
         $timestart = time() - 4320000;
         $timeend = time() + 5184000;
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);
-        
+
         // loop through all Office 365 events and create or update moodle events
         if (!isset($o365events->error)) {
             foreach ($o365events->value as $o365event) {
@@ -61,6 +63,8 @@ class events_o365 {
                 } else {
                     $context_value = 0;
                 }
+
+                //echo "event: "; print_r($o365event); echo "<br/><br/>";
 
                 $event_id = 0;
                 if ($moodleevents) {
@@ -90,7 +94,7 @@ class events_o365 {
                                         "format" => 1,
                                         "itemid" => $o365event->Id
                                          );
-                $event->timestart    = strtotime($o365event->Start); // TODO: time is wrong. timezone problem?
+                $event->timestart    = strtotime($o365event->Start);
                 $event->timeduration = strtotime($o365event->End) - strtotime($o365event->Start);
 
                 // create or update moodle event
@@ -127,6 +131,8 @@ class events_o365 {
 
     public function insert_o365($data) {
         global $DB,$SESSION;
+
+        date_default_timezone_set('UTC');
 
         //Students list gives the attendees of the particular course.
         //TODO: Plan A is to make this student as attendees. Since all of the users have
@@ -167,7 +173,6 @@ class events_o365 {
             "Content" => trim($data->description)
         );
 
-        date_default_timezone_set("America/Denver"); // TODO: timezone issue
         $oevent->Start = date("Y-m-d\TH:i:s\Z", $data->timestart);
 
         if($data->timeduration == 0) {
