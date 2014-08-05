@@ -53,7 +53,7 @@ class events_o365 {
         $timeend = time() + 5184000;        
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);    
         // loop through all Office 365 events and create or update moodle events
-        if (!($o365events->error)) {
+        if ($o365events) {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one                
                 //Keep both the course name and O365 category name same. 
@@ -84,7 +84,7 @@ class events_o365 {
                     $event->id = 0;
                     $event->userid       = $USER->id;                            
                     $event->eventtype    = 'user';
-                    if (context_value != 0)
+                    if ($context_value != 0)
                         $event->context      = $context_value;
                 }
                 
@@ -99,10 +99,10 @@ class events_o365 {
                 $event->timeduration = strtotime($o365event->End) - strtotime($o365event->Start);
                 
                 // create or update moodle event
-                if ($event_id != 0) {                    
+                if ($event_id != 0) {                                  
                     $event->update($event);
                 } else {
-                    $event = new calendar_event($event);
+                    $event = new calendar_event($event);                    
                     $event->update($event);
                 }
             }//exit;
@@ -138,17 +138,22 @@ class events_o365 {
         //account in o365 they can be assigned by passing array of attendes in the 
         //curl event. 
         
+        $eventdata = calendar_get_events_by_id(array($data->id));
+        echo "<pre>";
+        print_r($eventdata);
+        
+        if($eventdata[$data->id]->courseid != "") {
         $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u JOIN mdl_role_assignments ra ON u.id = ra.userid
                 JOIN mdl_role r ON ra.roleid = r.id
                 JOIN mdl_context c ON ra.contextid = c.id
                 WHERE c.contextlevel = 50
-                AND c.instanceid = ".$data->courseid."
+                AND c.instanceid = ".$eventdata[$data->id]->courseid."
                 AND r.shortname = 'student' ";
         $students = $DB->get_record_sql($sql);        
-        
+        }
         // if this event already exists in O365, it will have a uuid, so don't insert it again
         //$data does not provide with uuid. So for that we are retrieving each event by event id.
-        $eventdata = calendar_get_events_by_id(array($data->id));
+        
         
         if ($eventdata[$data->id]->uuid != "") {
             return;
@@ -162,7 +167,9 @@ class events_o365 {
             $course_name = array(0 => $course_name);
             //I am getting correct array for categories. But while posting
             //it takes long time to post and gets back with internal server error.
-            $oevent->Categories = $course_name;             
+            //TODO when course name is send as categories, it is not inserting in 
+            //office 365 calendar. If no course send then adding it. So commenting for now
+            //$oevent->Categories = $course_name;             
             
         }
         
@@ -177,7 +184,7 @@ class events_o365 {
         } else {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
-        print_r($oevent);
+        
         $event_data =  json_encode($oevent);        
         $curl = new curl();
         $header = array("Accept: application/json",
@@ -198,7 +205,6 @@ class events_o365 {
 
     public function delete_o365($data) {
         global $DB,$SESSION;
-
         if($data->uuid) {
             $curl = new curl();
             $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
