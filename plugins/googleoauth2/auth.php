@@ -16,7 +16,9 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 require_once($CFG->libdir.'/authlib.php');
+require_once($CFG->dirroot.'/calendar/lib.php');
 require_once('jwt.php');
+require_once($CFG->dirroot.'/local/oevents/lib.php');
 
 /**
  * Google/Facebook/Messenger/Azure AD Oauth2 authentication plugin.
@@ -95,13 +97,13 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
         //check the Google authorization code
         $authorizationcode = optional_param('code', '', PARAM_TEXT);
-
+        
         if (!empty($authorizationcode)) {
             $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
 
             //set the params specific to the authentication provider
             $params = array();
-
+			$params_office = array(); // for storing params to get o365 accesstoken.
             switch ($authprovider) {
                 case 'google':
                     $params['client_id'] = get_config('auth/googleoauth2', 'googleclientid');
@@ -128,12 +130,14 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                     break;
                 case 'azuread':
                     //we need the parameters client id, requst token url, code, grant_type and resource
-                    $params['client_id'] = get_config('auth/googleoauth2', 'azureadclientid');
-                    $params['client_secret'] = get_config('auth/googleoauth2', 'azureadclientsecret');
+                    $params_office['client_id'] = $params['client_id'] = get_config('auth/googleoauth2', 'azureadclientid');
+                    $params_office['client_secret'] = $params['client_secret'] = get_config('auth/googleoauth2', 'azureadclientsecret');
                     $requestaccesstokenurl = 'https://login.windows.net/common/oauth2/token';
-                    $params['code'] = $authorizationcode;
-                    $params['grant_type'] = 'authorization_code';
+                    $params_office['code'] = $params['code'] = $authorizationcode;
+                    $params_office['grant_type'] = $params['grant_type'] = 'authorization_code';
+					$params_office['state'] = 'bb706f82-215e-4836-921d-ac013e7e6ae5'; //new for office 365					
                     $params['resource'] = 'https://graph.windows.net';
+					$params_office['resource'] = 'https://outlook.office365.com';					
                     break;
                 case 'github':
                     $params['client_id'] = get_config('auth/googleoauth2', 'githubclientid');
@@ -162,8 +166,9 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $postreturnvalues = $curl->get('https://oauth.live.com/token?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
 
             } else if ($authprovider == 'azuread') { //Azure AD returns an "Object moved" error with curl->post() encoding
-                $curl = new curl();                
+                $curl = new curl();				
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
+				$postreturnvalues_office = $curl->post($requestaccesstokenurl, $params_office);
            } else if ($authprovider == 'linkedin') {
                 $curl = new curl();
                 $postreturnvalues = $curl->get($requestaccesstokenurl . '?client_id=' . urlencode($params['client_id']) . '&redirect_uri=' . urlencode($params['redirect_uri'] ). '&client_secret=' . urlencode($params['client_secret']) . '&code=' .urlencode( $params['code']) . '&grant_type=authorization_code');
@@ -172,7 +177,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $curl = new curl();
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
             }
-           
+		   
             switch ($authprovider) {
                 case 'google':
                 case 'linkedin':
@@ -190,11 +195,11 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 case 'messenger':
                 case 'azuread':
                     $accesstoken = json_decode($postreturnvalues)->access_token;
+					$accesstoken_office = json_decode($postreturnvalues_office)->access_token;
                     break;
                 default:
                     break;
             }
-
             //with access token request by curl the email address
             if (!empty($accesstoken)) {
 
@@ -225,6 +230,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $postreturnvalues = $curl->get('https://apis.live.net/v5.0/me', $params);
                         $messengeruser = json_decode($postreturnvalues);
                         $useremail = $messengeruser->emails->preferred;
+						printf('email: %s', $useremail);
                         $verified = 1; //not super good but there are no way to check it yet:
                                        //http://social.msdn.microsoft.com/Forums/en-US/messengerconnect/thread/515d546d-1155-4775-95d8-89dadc5ee929
                         break;
@@ -233,21 +239,19 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         // extract logged-in user's upn
                         $token_payload = JWT::decode($accesstoken, null, false);
                         $userupn = $token_payload->upn;
-
                         // use the userupn to get user data from AAD graph api
                         $params = array();
-                        $params['access_token'] = $accesstoken;                                    
+                        $params['access_token'] = $accesstoken;															
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding                       
                         $azureaduser = json_decode($postreturnvalues);
-                        $useremail = $azureaduser->mail;
-
+		                $useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
                             $useremail = $azureaduser->userPrincipalName;
-                        }
-
+							//$useremail = $userupn;							
+                        }						
                         $verified = 1; // TODO: how to verify?
                         break;
 
@@ -293,8 +297,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 //get the user - don't bother with auth = googleoauth2 because
                 //authenticate_user_login() will fail it if it's not 'googleoauth2'
                 $user = $DB->get_record('user', array('email' => $useremail, 'deleted' => 0, 'mnethostid' => $CFG->mnet_localhost_id));
-
-                //create the user if it doesn't exist
+               // print_r($user);exit;
+				                //create the user if it doesn't exist
                 if (empty($user)) {
 
                     // deny login if setting "Prevent account creation when authenticating" is on
@@ -350,8 +354,14 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                             break;
 
                         case 'azuread':
-                            $newuser->firstname =  $azureaduser->givenName;
-                            $newuser->lastname =  $azureaduser->surname;
+							if(!empty($token_payload)) { //from access token only we were getting users detials
+								$newuser->firstname =  $token_payload->given_name;
+                            	$newuser->lastname =  $token_payload->family_name;
+							} else {
+								$newuser->firstname =  $azureaduser->givenName;
+                            	$newuser->lastname =  $azureaduser->surname;	
+							}
+                            
                             break;
 
                         case 'github':
@@ -398,8 +408,9 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $userid = empty($user)?'new user':$user->id;
                 add_to_log(SITEID, 'auth_googleoauth2', '', '', $username . '/' . $useremail . '/' . $userid);
                 $user = authenticate_user_login($username, null);
+				
                 if ($user) {
-
+					
                     //set a cookie to remember what auth provider was selected
                     setcookie('MOODLEGOOGLEOAUTH2_'.$CFG->sessioncookie, $authprovider,
                             time()+(DAYSECS*60), $CFG->sessioncookiepath,
@@ -413,8 +424,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $user = (object) array_merge((array) $user, (array) $newuser);
                     }
 
-                    complete_user_login($user);
-
+                    complete_user_login($user);					
+					if($authprovider == 'azuread') {						
+						$oevents = new events_o365();
+                        $SESSION->accesstoken = $accesstoken_office;
+						$oevents->sync_calendar($accesstoken_office);
+					}
                     // Redirection
                     if (user_not_fully_set_up($USER)) {
                         $urltogo = $CFG->wwwroot.'/user/edit.php';
@@ -427,6 +442,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $urltogo = $CFG->wwwroot.'/';
                         unset($SESSION->wantsurl);
                     }
+					
+					
                     redirect($urltogo);
                 }
             } else {
