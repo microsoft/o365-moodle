@@ -181,7 +181,6 @@ class events_o365 {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
 
-        print_r($oevent);
         $event_data =  json_encode($oevent);
         $curl = new curl();
         $header = array("Accept: application/json",
@@ -198,6 +197,7 @@ class events_o365 {
             $event->update($event);
         }
     }
+
     public function delete_o365($data) {
         global $DB,$SESSION;
         if($data->uuid) {
