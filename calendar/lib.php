@@ -2387,7 +2387,10 @@ class calendar_event {
         }
         $calevent = $DB->get_record('event',  array('id' => $this->properties->id), '*', MUST_EXIST);
 
-        // Delete the event
+        // Hook before delete event is called the event
+        // TODO: O365MODS: START
+        self::calendar_event_hook('pre_delete_event', array($this->properties, $deleterepeated));
+        // TODO: O365MODS: END
         $DB->delete_records('event', array('id'=>$this->properties->id));
 
         // Trigger an event for the delete action.
