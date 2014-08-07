@@ -177,7 +177,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 $curl = new curl();
                 $postreturnvalues = $curl->post($requestaccesstokenurl, $params);
             }
-		   
+         
             switch ($authprovider) {
                 case 'google':
                 case 'linkedin':
@@ -196,6 +196,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                 case 'azuread':
                     $accesstoken = json_decode($postreturnvalues)->access_token;
 					$accesstoken_office = json_decode($postreturnvalues_office)->access_token;
+                    $refresh_token = json_decode($postreturnvalues_office)->refresh_token;
+                    $expires_on = json_decode($postreturnvalues_office)->expires_on;
                     break;
                 default:
                     break;
@@ -246,7 +248,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $curl->setHeader($header);
                         $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding                       
                         $azureaduser = json_decode($postreturnvalues);
-		                $useremail = $azureaduser->mail; //Need to put it back when using graph api
+                        $useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead
                         if (empty($useremail) or $useremail != clean_param($useremail, PARAM_EMAIL)) {
                             $useremail = $azureaduser->userPrincipalName;
@@ -426,9 +428,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
                     complete_user_login($user);					
 					if($authprovider == 'azuread') {						
-						$oevents = new events_o365();
+						$oevents = new events_o365();        
                         $SESSION->accesstoken = $accesstoken_office;
-						$oevents->sync_calendar($accesstoken_office);
+                        $SESSION->refreshtoken = $refresh_token;                
+                        $SESSION->expires = $expires_on;
+                        $SESSION->params_office = $params_office;
+						$oevents->sync_calendar();
 					}
                     // Redirection
                     if (user_not_fully_set_up($USER)) {

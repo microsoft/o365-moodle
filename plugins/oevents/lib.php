@@ -28,19 +28,17 @@ class events_o365 {
     //TODO: We need to run a cron. Need to find out how we can pass the token to cron
     //so that we can get the events.
 
-    public function sync_calendar($access_token){
+    public function sync_calendar(){
 
         global $USER,$DB,$SESSION;
         if (!isloggedin()) {
             return false;
         }
-
-        date_default_timezone_set('UTC');
-
+        
         $params = array();
-        $curl = new curl();
-        $params['access_token'] = $access_token;
-        $header = array('Authorization: Bearer '.$access_token);
+        $curl = new curl();        
+        date_default_timezone_set('UTC');        
+        $header = array('Authorization: Bearer '.$SESSION->accesstoken);
         $curl->setHeader($header);
         $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
         $o365events = json_decode($eventresponse);
@@ -131,7 +129,21 @@ class events_o365 {
         global $DB,$SESSION;
 
         date_default_timezone_set('UTC');
-
+        //Checking if access token has expired, then ask for a new token
+        if(time() > $SESSION->expires) {
+            $refresh = array();
+            $refresh['client_id'] = $SESSION->params_office['client_id'];
+            $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+            $refresh['grant_type'] = "refresh_token";
+            $refresh['refresh_token'] = $SESSION->refresh_token; 
+            $refresh['resource'] = $SESSION->params_office['resource'];
+            $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
+            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
+            $access_token = json_decode($refresh_token_access)->access_token;    
+        } else {
+            $access_token = $SESSION->accesstoken;
+        }
+        
         //Students list gives the attendees of the particular course.
         //TODO: Plan A is to make this student as attendees. Since all of the users have
         //account in o365 they can be assigned by passing array of attendees in the
@@ -163,7 +175,8 @@ class events_o365 {
             $course_name = array(0 => $course_name);
             //I am getting correct array for categories. But while posting
             //it takes long time to post and gets back with internal server error.
-            $oevent->Categories = $course_name;
+            //Sending categories through api causes error and does not post
+            //$oevent->Categories = $course_name;
 
         }
 
@@ -184,7 +197,7 @@ class events_o365 {
         $curl = new curl();
         $header = array("Accept: application/json",
                         "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ".$SESSION->accesstoken);
+                        "Authorization: Bearer ". $access_token);
         $curl->setHeader($header);
         $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
 
@@ -199,10 +212,24 @@ class events_o365 {
     }
     public function delete_o365($data) {
         global $DB,$SESSION;
+         //Checking if access token has expired, then ask for a new token
+        if(time() > $SESSION->expires) {
+            $refresh = array();
+            $refresh['client_id'] = $SESSION->params_office['client_id'];
+            $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+            $refresh['grant_type'] = "refresh_token";
+            $refresh['refresh_token'] = $SESSION->refresh_token; 
+            $refresh['resource'] = $SESSION->params_office['resource'];
+            $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
+            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
+            $access_token = json_decode($refresh_token_access)->access_token;    
+        } else {
+            $access_token = $SESSION->accesstoken;
+        }
         if($data->uuid) {
             $curl = new curl();
             $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
-            $header = array("Authorization: Bearer ".$SESSION->accesstoken);
+            $header = array("Authorization: Bearer ".$access_token);
             $curl->setHeader($header);
             $eventresponse = $curl->delete($url);
         }
