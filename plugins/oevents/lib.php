@@ -211,13 +211,15 @@ class events_o365 {
         }
     }
     public function check_token_expiry() {
+        global $SESSION;
         date_default_timezone_set('UTC');
-        if(time() > $SESSION->expires) {
+        $curl = new curl();        		
+        if( time() > $SESSION->expires) {
             $refresh = array();
             $refresh['client_id'] = $SESSION->params_office['client_id'];
             $refresh['client_secret'] = $SESSION->params_office['client_secret'];
             $refresh['grant_type'] = "refresh_token";
-            $refresh['refresh_token'] = $SESSION->refresh_token; 
+            $refresh['refresh_token'] = $SESSION->refreshtoken; 
             $refresh['resource'] = $SESSION->params_office['resource'];
             $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
             $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
