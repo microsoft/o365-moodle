@@ -130,19 +130,7 @@ class events_o365 {
 
         date_default_timezone_set('UTC');
         //Checking if access token has expired, then ask for a new token
-        if(time() > $SESSION->expires) {
-            $refresh = array();
-            $refresh['client_id'] = $SESSION->params_office['client_id'];
-            $refresh['client_secret'] = $SESSION->params_office['client_secret'];
-            $refresh['grant_type'] = "refresh_token";
-            $refresh['refresh_token'] = $SESSION->refresh_token; 
-            $refresh['resource'] = $SESSION->params_office['resource'];
-            $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
-            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
-            $access_token = json_decode($refresh_token_access)->access_token;    
-        } else {
-            $access_token = $SESSION->accesstoken;
-        }
+        $this->check_token_expiry();
         
         //Students list gives the attendees of the particular course.
         //TODO: Plan A is to make this student as attendees. Since all of the users have
@@ -197,7 +185,7 @@ class events_o365 {
         $curl = new curl();
         $header = array("Accept: application/json",
                         "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ". $access_token);
+                        "Authorization: Bearer ". $SESSION->accesstoken);
         $curl->setHeader($header);
         $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
 
@@ -213,6 +201,17 @@ class events_o365 {
     public function delete_o365($data) {
         global $DB,$SESSION;
          //Checking if access token has expired, then ask for a new token
+        $this->check_token_expiry();
+        if($data->uuid) {
+            $curl = new curl();
+            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
+            $header = array("Authorization: Bearer ".$SESSION->accesstoken);
+            $curl->setHeader($header);
+            $eventresponse = $curl->delete($url);
+        }
+    }
+    public function check_token_expiry() {
+        date_default_timezone_set('UTC');
         if(time() > $SESSION->expires) {
             $refresh = array();
             $refresh['client_id'] = $SESSION->params_office['client_id'];
@@ -222,16 +221,12 @@ class events_o365 {
             $refresh['resource'] = $SESSION->params_office['resource'];
             $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
             $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
-            $access_token = json_decode($refresh_token_access)->access_token;    
-        } else {
-            $access_token = $SESSION->accesstoken;
-        }
-        if($data->uuid) {
-            $curl = new curl();
-            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
-            $header = array("Authorization: Bearer ".$access_token);
-            $curl->setHeader($header);
-            $eventresponse = $curl->delete($url);
-        }
+            $access_token = json_decode($refresh_token_access)->access_token;
+            $refresh_token = json_decode($refresh_token_access)->refresh_token;
+            $expires_on = json_decode($refresh_token_access)->expires_on;
+            $SESSION->accesstoken =  $access_token;
+            $SESSION->refreshtoken = $refresh_token;                
+            $SESSION->expires = $expires_on;    
+         } 
     }
 }
