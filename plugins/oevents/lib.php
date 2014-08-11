@@ -100,9 +100,8 @@ class events_o365 {
                     $event = new calendar_event($event);
                     $event->update($event);
                 }
-            }
-        }
-
+            }            
+        }        
         // if an event exists in moodle but not in O365, we need to delete it from moodle
         if ($moodleevents) {
             foreach ($moodleevents as $moodleevent) {
@@ -211,9 +210,9 @@ class events_o365 {
         }
     }
     public function check_token_expiry() {
-        global $SESSION;
+	    global $SESSION;
         date_default_timezone_set('UTC');
-        $curl = new curl();        		
+		$curl = new curl();        		
         if( time() > $SESSION->expires) {
             $refresh = array();
             $refresh['client_id'] = $SESSION->params_office['client_id'];
@@ -223,12 +222,16 @@ class events_o365 {
             $refresh['resource'] = $SESSION->params_office['resource'];
             $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
             $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
-            $access_token = json_decode($refresh_token_access)->access_token;
+			$access_token = json_decode($refresh_token_access)->access_token;
             $refresh_token = json_decode($refresh_token_access)->refresh_token;
             $expires_on = json_decode($refresh_token_access)->expires_on;
             $SESSION->accesstoken =  $access_token;
             $SESSION->refreshtoken = $refresh_token;                
             $SESSION->expires = $expires_on;    
          } 
+    }
+    public function local_oevents_cron() {
+       $this->check_token_expiry();
+       $this->sync_calendar();
     }
 }
