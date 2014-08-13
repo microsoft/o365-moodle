@@ -71,6 +71,10 @@ $string['auth_azureadclientid'] = 'Your Client ID/Secret can be generated in you
 $string['auth_azureadclientid_key'] = 'Azure Active Directory Client ID';
 $string['auth_azureadclientsecret'] = 'See above.';
 $string['auth_azureadclientsecret_key'] = 'Azure Active Directory Client secret';
+$string['auth_azureaddomain'] = 'This is your Azure Active Directory Domain name e.g. "contoso.onmicrosoft.com".';
+$string['auth_azureaddomain_key'] = 'Azure Active Directory Domain';
+$string['auth_azureadadminupn'] = 'This is the UPN for the administrator account for your Azure Active Directory e.g. "admin@contoso.onmicrosoft.com".';
+$string['auth_azureadadminupn_key'] = 'Azure Active Directory Administrator UPN';
 
 $string['auth_googlesettings'] = 'Settings';
 $string['couldnotgetgoogleaccesstoken'] = 'The authentication provider sent us a communication error. Please try to sign-in again.';

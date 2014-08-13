@@ -247,7 +247,7 @@ class events_o365 {
 
         $curl = curl_init();
 
-        $stsurl = 'https://login.windows.net/' . 'introptest.onmicrosoft.com' . '/oauth2/token?api-version=1.0';
+        $stsurl = 'https://login.windows.net/' . get_config('auth/googleoauth2', 'azureaddomain') . '/oauth2/token?api-version=1.0';
         curl_setopt($curl, CURLOPT_URL, $stsurl);
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -293,7 +293,7 @@ function local_oevents_cron() {
     // TOOD: get all users
     
     // TODO: Loop over all users and sync their calendars
-    $o365events = $oevents->get_calendar_events($token, 'o365admin@introptest.onmicrosoft.com');
+    $o365events = $oevents->get_calendar_events($token, get_config('auth/googleoauth2', 'azureadadminupn'));
 
     mtrace( "O365 Calendar Sync cron script completed." );
 

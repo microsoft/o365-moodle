@@ -1,4 +1,4 @@
 <?php
-$string['pluginname'] = 'O365 event plugin';
-$string['oevents'] = 'Test block for Office Calender';
-$string['oevents:addinstance'] = 'Add a new event in office calender';
+$string['pluginname'] = 'Office365 Calendar Plugin';
+$string['oevents'] = 'Test block for Office365 Calendar';
+$string['oevents:addinstance'] = 'Add a new event in Office365 calendar';

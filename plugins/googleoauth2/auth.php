@@ -246,7 +246,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $params['access_token'] = $accesstoken;															
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introptest.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding                       
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . get_config('auth/googleoauth2', 'azureaddomain') . '/users/' . $userupn . '?api-version=2013-04-05');
                         $azureaduser = json_decode($postreturnvalues);
                         $useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead
@@ -497,6 +497,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         if (!isset ($config->azureadclientsecret)) {
             $config->azureadclientsecret = '';
         }
+        if (!isset ($config->azureaddomain)) {
+            $config->azureaddomain = '';
+        }
+        if (!isset ($config->azureadadminupn)) {
+            $config->azureadadminupn = '';
+        }
         if (!isset ($config->githubclientid)) {
             $config->githubclientid = '';
         }
@@ -722,6 +728,54 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
 
         echo '</td></tr>';
 
+        // Azure AD domain
+
+        echo '<tr>
+                <td align="right"><label for="azureaddomain">';
+
+        print_string('auth_azureaddomain_key', 'auth_googleoauth2');
+
+        echo '</label></td><td>';
+
+
+        echo html_writer::empty_tag('input',
+                array('type' => 'text', 'id' => 'azureaddomain', 'name' => 'azureaddomain',
+                    'class' => 'azureaddomain', 'value' => $config->azureaddomain));
+
+        if (isset($err["azureaddomain"])) {
+            echo $OUTPUT->error_text($err["azureaddomain"]);
+        }
+
+        echo '</td><td>';
+
+        print_string('auth_azureaddomain', 'auth_googleoauth2') ;
+
+        echo '</td></tr>';
+
+        // Azure AD admin UPN
+
+        echo '<tr>
+                <td align="right"><label for="azureadadminupn">';
+
+        print_string('auth_azureadadminupn_key', 'auth_googleoauth2');
+
+        echo '</label></td><td>';
+
+
+        echo html_writer::empty_tag('input',
+                array('type' => 'text', 'id' => 'azureadadminupn', 'name' => 'azureadadminupn',
+                    'class' => 'azureadadminupn', 'value' => $config->azureadadminupn));
+
+        if (isset($err["azureadadminupn"])) {
+            echo $OUTPUT->error_text($err["azureadadminupn"]);
+        }
+
+        echo '</td><td>';
+
+        print_string('auth_azureadadminupn', 'auth_googleoauth2') ;
+
+        echo '</td></tr>';
+
         // Github client id
 
         echo '<tr>
@@ -919,6 +973,12 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         if (!isset ($config->azureadclientsecret)) {
             $config->azureadclientsecret = '';
         }
+        if (!isset ($config->azureaddomain)) {
+            $config->azureaddomain = '';
+        }
+        if (!isset ($config->azureadadminupn)) {
+            $config->azureadadminupn = '';
+        }
         if (!isset ($config->githubclientid)) {
             $config->githubclientid = '';
         }
@@ -947,6 +1007,8 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
         set_config('messengerclientsecret', $config->messengerclientsecret, 'auth/googleoauth2');
         set_config('azureadclientid', $config->azureadclientid, 'auth/googleoauth2');
         set_config('azureadclientsecret', $config->azureadclientsecret, 'auth/googleoauth2');
+        set_config('azureaddomain', $config->azureaddomain, 'auth/googleoauth2');
+        set_config('azureadadminupn', $config->azureadadminupn, 'auth/googleoauth2');
         set_config('githubclientid', $config->githubclientid, 'auth/googleoauth2');
         set_config('githubclientsecret', $config->githubclientsecret, 'auth/googleoauth2');
         set_config('linkedinclientid', $config->linkedinclientid, 'auth/googleoauth2');
