@@ -246,7 +246,7 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $params['access_token'] = $accesstoken;															
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introp.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding                       
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . 'introptest.onmicrosoft.com' . '/users/' . $userupn . '?api-version=2013-04-05'); // TODO: remove domain name hardcoding                       
                         $azureaduser = json_decode($postreturnvalues);
                         $useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead
