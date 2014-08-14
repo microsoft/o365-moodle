@@ -313,11 +313,11 @@ function on_course_deleted($data) {
     delete_course_calendar($data);
 }
 
-function on_user_enrolled($data) {
+function on_user_enrolment_created($data) {
     subscribe_to_course_calendar($data);
 }
 
-function on_user_unenrolled($data) {
+function on_user_enrolment_deleted($data) {
     unsubscribe_from_course_calendar($data);
 }
 
@@ -331,6 +331,10 @@ function on_calendar_event_deleted($data) {
 // O365 library methods
 function create_course_calendar($data) {
     global $SESSION;
+
+    error_log("create_course_calendar called");
+    error_log(print_r($data, true));
+
     $newCal = array(
                 "@odata.type" => "#Microsoft.Exchange.Services.OData.Model.Calendar",
                 "Name" => $data->fullname
@@ -350,6 +354,10 @@ function create_course_calendar($data) {
 
 function delete_course_calendar($data) {
     global $SESSION;
+
+    error_log("delete_course_calendar called");
+    error_log(print_r($data, true));
+
     //TODO Need to get the course calendar same as calendar id from office.
     //Store the id in some fields of course table
     //api for calendar delete is DELETE https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)
@@ -358,13 +366,14 @@ function delete_course_calendar($data) {
 
 function subscribe_to_course_calendar($data) {
     error_log("subscribe_to_course_calendar called");
-    echo "<pre>";
-    print_r($data);
-    exit;
+    error_log(print_r($data, true));
+    
+    // TODO: Get O365 calendar id for the course from course table
+    // TODO: Get student UPN and share the calendar with them
+    // TODO: If possible, let the student accept the request automatically. (Otherwise let them do it manually.)
 }
 
 function unsubscribe_from_course_calendar($data) {
-    echo "<pre>";
-    print_r($data);
-    exit;
+    error_log("unsubscribe_from_course_calendar called");
+    error_log(print_r($data, true));
 }

@@ -27,24 +27,27 @@ $handlers = array(
         'handlerfunction' => 'on_course_deleted',
         'schedule'        => 'instant'
     ),
-    'user_enrolled' => array(
-        'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'on_user_enrolled',
-        'schedule'        => 'instant'
+);
+
+$observers = array(
+    array(
+        'eventname'   => '\core\event\user_enrolment_created',
+        'callback'    => 'on_user_enrolment_created',
+        'includefile' => '/local/oevents/lib.php'
     ),
-    'user_unenrolled' => array(
-        'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'on_user_unenrolled',
-        'schedule'        => 'instant'
+    array(
+        'eventname'   => '\core\event\user_enrolment_deleted',
+        'callback'    => 'on_user_enrolment_deleted',
+        'includefile' => '/local/oevents/lib.php',
     ),
-    'calendar_event_created' => array(
-        'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'on_calendar_event_created',
-        'schedule'        => 'instant'
+    array(
+        'eventname'   => '\core\event\calendar_event_created',
+        'callback'    => 'on_calendar_event_created',
+        'includefile' => '/local/oevents/lib.php'
     ),
-    'calendar_event_deleted' => array(
-        'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'on_calendar_event_deleted',
-        'schedule'        => 'instant'
-    )
+    array(
+        'eventname'   => '\core\event\calendar_event_deleted',
+        'callback'    => 'on_calendar_event_deleted',
+        'includefile' => '/local/oevents/lib.php',
+    ),
 );
