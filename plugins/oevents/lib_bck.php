@@ -24,16 +24,20 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class events_o365 {
-    // TODO: Need to parametrize this so it can be called from cron as well as login hook
+    //Calling this function from auth.
+    //TODO: We need to run a cron. Need to find out how we can pass the token to cron
+    //so that we can get the events.
+
     public function sync_calendar(){
+
         global $USER,$DB,$SESSION;
         if (!isloggedin()) {
             return false;
         }
-
+        
         $params = array();
-        $curl = new curl();
-        date_default_timezone_set('UTC');
+        $curl = new curl();        
+        date_default_timezone_set('UTC');        
         $header = array('Authorization: Bearer '.$SESSION->accesstoken);
         $curl->setHeader($header);
         $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
@@ -96,9 +100,8 @@ class events_o365 {
                     $event = new calendar_event($event);
                     $event->update($event);
                 }
-            }
-        }
-
+            }            
+        }        
         // if an event exists in moodle but not in O365, we need to delete it from moodle
         if ($moodleevents) {
             foreach ($moodleevents as $moodleevent) {
@@ -127,7 +130,7 @@ class events_o365 {
         date_default_timezone_set('UTC');
         //Checking if access token has expired, then ask for a new token
         $this->check_token_expiry();
-
+        
         //Students list gives the attendees of the particular course.
         //TODO: Plan A is to make this student as attendees. Since all of the users have
         //account in o365 they can be assigned by passing array of attendees in the
@@ -161,6 +164,7 @@ class events_o365 {
             //it takes long time to post and gets back with internal server error.
             //Sending categories through api causes error and does not post
             //$oevent->Categories = $course_name;
+
         }
 
         $oevent->Body = array("ContentType" => "Text",
@@ -186,20 +190,17 @@ class events_o365 {
 
         // obtain uuid back from O365 and set it into the moodle event
         $eventresponse = json_decode($eventresponse);
-       // print_r($eventresponse);//exit;
+        print_r($eventresponse);//exit;
         if($eventresponse && $eventresponse->Id) {
             $event = calendar_event::load($data->id);
             $event->uuid = $eventresponse->Id;
             $event->update($event);
         }
     }
-
     public function delete_o365($data) {
         global $DB,$SESSION;
-
          //Checking if access token has expired, then ask for a new token
         $this->check_token_expiry();
-
         if($data->uuid) {
             $curl = new curl();
             $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
@@ -208,127 +209,29 @@ class events_o365 {
             $eventresponse = $curl->delete($url);
         }
     }
-
     public function check_token_expiry() {
-        global $SESSION;
-
+	    global $SESSION;
         date_default_timezone_set('UTC');
-
-        if (time() > $SESSION->expires) {
+		$curl = new curl();        		
+        if( time() > $SESSION->expires) {
             $refresh = array();
             $refresh['client_id'] = $SESSION->params_office['client_id'];
             $refresh['client_secret'] = $SESSION->params_office['client_secret'];
             $refresh['grant_type'] = "refresh_token";
-            $refresh['refresh_token'] = $SESSION->refreshtoken;
+            $refresh['refresh_token'] = $SESSION->refreshtoken; 
             $refresh['resource'] = $SESSION->params_office['resource'];
             $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
-
-            $curl = new curl();
-            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
-
-            $access_token = json_decode($refresh_token_access)->access_token;
+            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh); 
+			$access_token = json_decode($refresh_token_access)->access_token;
             $refresh_token = json_decode($refresh_token_access)->refresh_token;
             $expires_on = json_decode($refresh_token_access)->expires_on;
-
             $SESSION->accesstoken =  $access_token;
-            $SESSION->refreshtoken = $refresh_token;
-            $SESSION->expires = $expires_on;
-         }
+            $SESSION->refreshtoken = $refresh_token;                
+            $SESSION->expires = $expires_on;    
+         } 
     }
-
-    public function get_app_token(){
-        $clientsecret = urlencode(get_config('auth/googleoauth2', 'azureadclientsecret'));
-        $resource = urlencode('https://outlook.office365.com'); //'https://graph.windows.net' 'https://outlook.office365.com'
-        $clientid = urlencode(get_config('auth/googleoauth2', 'azureadclientid'));
-        $state = urlencode('state=bb706f82-215e-4836-921d-ac013e7e6ae5');
-
-        $fields = 'grant_type=client_credentials&client_secret='.$clientsecret
-                  .'&resource='.$resource.'&client_id='.$clientid.'&state='.$state;
-
-        $curl = curl_init();
-
-        $stsurl = 'https://login.windows.net/' . get_config('auth/googleoauth2', 'azureaddomain') . '/oauth2/token?api-version=1.0';
-        curl_setopt($curl, CURLOPT_URL, $stsurl);
-
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_POSTFIELDS,  $fields);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-
-        $output = curl_exec($curl);
-
-        curl_close($curl);
-
-        $tokenoutput = json_decode($output);
-        echo 'token: ' ; print_r($tokenoutput);
-
-        return $tokenoutput->{'access_token'};
+    public function local_oevents_cron() {
+       $this->check_token_expiry();
+       $this->sync_calendar();
     }
-
-    public function get_calendar_events($token, $upn) {
-        $curl = new curl();
-        $header = array('Authorization: Bearer ' . $token);
-        $curl->setHeader($header);
-        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/' . urlencode($upn) . '/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
-        //$eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
-
-        $o365events = json_decode($eventresponse);
-        echo 'events: '; print_r($o365events);
-
-        return $o365events;
-    }
-   
 }
-  
-    function create_course_calendar($data) {
-          global $SESSION;
-          $newCal = array(
-                        "@odata.type" => "#Microsoft.Exchange.Services.OData.Model.Calendar",
-                        "Name" => $data->fullname
-                        );
-           $calendar_name = json_encode($newCal);
-           $curl = new curl();
-           
-           $header = array("Accept: application/json",
-                        "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ". $SESSION->accesstoken);
-           $curl->setHeader($header);
-           $new_Calendar = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars", $calendar_name);
-           $new_Calendar = json_decode($new_Calendar);  
-           //TODO Need to get the course calendar same as calendar id from office.
-          //Store the id in some fields of course table                   
-       }
-    function delete_course_calendar($data) {
-          global $SESSION;
-          //TODO Need to get the course calendar same as calendar id from office.
-          //Store the id in some fields of course table
-          //api for calendar delete is DELETE https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)
-                      
-       }
-    function share_calendar($data) {
-        echo "<pre>";
-        print_r($data);
-        exit;
-    }
-
-    function local_oevents_cron() {
-        mtrace( "O365 Calendar Sync cron script is starting." );
-    
-        date_default_timezone_set('UTC');
-        
-        //$this->check_token_expiry();
-        //$this->sync_calendar();
-    
-        $oevents = new events_o365();
-        $token = $oevents->get_app_token();
-        
-        // TOOD: get all users
-        
-        // TODO: Loop over all users and sync their calendars
-        $o365events = $oevents->get_calendar_events($token, get_config('auth/googleoauth2', 'azureadadminupn'));
-    
-        mtrace( "O365 Calendar Sync cron script completed." );
-    
-        return true;
-    }
-     
