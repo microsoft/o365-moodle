@@ -277,58 +277,94 @@ class events_o365 {
 
         return $o365events;
     }
-   
-}
-  
-    function create_course_calendar($data) {
-          global $SESSION;
-          $newCal = array(
-                        "@odata.type" => "#Microsoft.Exchange.Services.OData.Model.Calendar",
-                        "Name" => $data->fullname
-                        );
-           $calendar_name = json_encode($newCal);
-           $curl = new curl();
-           
-           $header = array("Accept: application/json",
-                        "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ". $SESSION->accesstoken);
-           $curl->setHeader($header);
-           $new_Calendar = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars", $calendar_name);
-           $new_Calendar = json_decode($new_Calendar);  
-           //TODO Need to get the course calendar same as calendar id from office.
-          //Store the id in some fields of course table                   
-       }
-    function delete_course_calendar($data) {
-          global $SESSION;
-          //TODO Need to get the course calendar same as calendar id from office.
-          //Store the id in some fields of course table
-          //api for calendar delete is DELETE https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)
-                      
-       }
-    function share_calendar($data) {
-        echo "<pre>";
-        print_r($data);
-        exit;
-    }
 
-    function local_oevents_cron() {
-        mtrace( "O365 Calendar Sync cron script is starting." );
-    
-        date_default_timezone_set('UTC');
-        
-        //$this->check_token_expiry();
-        //$this->sync_calendar();
-    
-        $oevents = new events_o365();
-        $token = $oevents->get_app_token();
-        
-        // TOOD: get all users
-        
-        // TODO: Loop over all users and sync their calendars
-        $o365events = $oevents->get_calendar_events($token, get_config('auth/googleoauth2', 'azureadadminupn'));
-    
-        mtrace( "O365 Calendar Sync cron script completed." );
-    
-        return true;
-    }
-     
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+// Cron method
+function local_oevents_cron() {
+    mtrace( "O365 Calendar Sync cron script is starting." );
+
+    date_default_timezone_set('UTC');
+
+    //$this->check_token_expiry();
+    //$this->sync_calendar();
+
+    $oevents = new events_o365();
+    $token = $oevents->get_app_token();
+
+    // TOOD: get all users
+
+    // TODO: Loop over all users and sync their calendars
+    $o365events = $oevents->get_calendar_events($token, get_config('auth/googleoauth2', 'azureadadminupn'));
+
+    mtrace( "O365 Calendar Sync cron script completed." );
+
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+// Event handlers
+function on_course_created($data) {
+    create_course_calendar($data);
+}
+
+function on_course_deleted($data) {
+    delete_course_calendar($data);
+}
+
+function on_user_enrolled($data) {
+    subscribe_to_course_calendar($data);
+}
+
+function on_user_unenrolled($data) {
+    unsubscribe_from_course_calendar($data);
+}
+
+function on_calendar_event_created($data) {
+}
+
+function on_calendar_event_deleted($data) {
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+// O365 library methods
+function create_course_calendar($data) {
+    global $SESSION;
+    $newCal = array(
+                "@odata.type" => "#Microsoft.Exchange.Services.OData.Model.Calendar",
+                "Name" => $data->fullname
+                );
+    $calendar_name = json_encode($newCal);
+    $curl = new curl();
+
+    $header = array("Accept: application/json",
+                "Content-Type: application/json;odata.metadata=full",
+                "Authorization: Bearer ". $SESSION->accesstoken);
+    $curl->setHeader($header);
+    $new_Calendar = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars", $calendar_name);
+    $new_Calendar = json_decode($new_Calendar);
+    //TODO Need to get the course calendar same as calendar id from office.
+    //Store the id in some fields of course table
+}
+
+function delete_course_calendar($data) {
+    global $SESSION;
+    //TODO Need to get the course calendar same as calendar id from office.
+    //Store the id in some fields of course table
+    //api for calendar delete is DELETE https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)
+
+}
+
+function subscribe_to_course_calendar($data) {
+    error_log("subscribe_to_course_calendar called");
+    echo "<pre>";
+    print_r($data);
+    exit;
+}
+
+function unsubscribe_from_course_calendar($data) {
+    echo "<pre>";
+    print_r($data);
+    exit;
+}

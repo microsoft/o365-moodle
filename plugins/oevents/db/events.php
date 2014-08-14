@@ -19,17 +19,32 @@ defined('MOODLE_INTERNAL') || die();
 $handlers = array(
     'course_created'      => array(
         'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'create_course_calendar',
+        'handlerfunction' => 'on_course_created',
         'schedule'        => 'instant'
     ),
     'course_deleted'      => array(
         'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'delete_course_calendar',
+        'handlerfunction' => 'on_course_deleted',
         'schedule'        => 'instant'
     ),
-    'user_enrolled'       => array(
+    'user_enrolled' => array(
         'handlerfile'     => '/local/oevents/lib.php',
-        'handlerfunction' => 'share_calendar',
+        'handlerfunction' => 'on_user_enrolled',
+        'schedule'        => 'instant'
+    ),
+    'user_unenrolled' => array(
+        'handlerfile'     => '/local/oevents/lib.php',
+        'handlerfunction' => 'on_user_unenrolled',
+        'schedule'        => 'instant'
+    ),
+    'calendar_event_created' => array(
+        'handlerfile'     => '/local/oevents/lib.php',
+        'handlerfunction' => 'on_calendar_event_created',
+        'schedule'        => 'instant'
+    ),
+    'calendar_event_deleted' => array(
+        'handlerfile'     => '/local/oevents/lib.php',
+        'handlerfunction' => 'on_calendar_event_deleted',
         'schedule'        => 'instant'
     )
 );
