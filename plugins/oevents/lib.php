@@ -124,23 +124,13 @@ class events_o365 {
     public function insert_o365($data) {
         global $DB,$SESSION;
 
+        error_log('insert_o365 called');
+        error_log(print_r($data, true));
+
         date_default_timezone_set('UTC');
+        
         //Checking if access token has expired, then ask for a new token
         $this->check_token_expiry();
-
-        //Students list gives the attendees of the particular course.
-        //TODO: Plan A is to make this student as attendees. Since all of the users have
-        //account in o365 they can be assigned by passing array of attendees in the
-        //curl event.
-        // if (property_exists($data, "courseid")) {
-            // $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u JOIN mdl_role_assignments ra ON u.id = ra.userid
-                    // JOIN mdl_role r ON ra.roleid = r.id
-                    // JOIN mdl_context c ON ra.contextid = c.id
-                    // WHERE c.contextlevel = 50
-                    // AND c.instanceid = ".$data->courseid."
-                    // AND r.shortname = 'student' ";
-            // $students = $DB->get_record_sql($sql);
-        // }
 
         // if this event already exists in O365, it will have a uuid, so don't insert it again
         //$data does not provide with uuid. So for that we are retrieving each event by event id.
@@ -157,10 +147,6 @@ class events_o365 {
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
             $course_name = array(0 => $course_name);
-            //I am getting correct array for categories. But while posting
-            //it takes long time to post and gets back with internal server error.
-            //Sending categories through api causes error and does not post
-            //$oevent->Categories = $course_name;
         }
 
         $oevent->Body = array("ContentType" => "Text",
@@ -175,6 +161,17 @@ class events_o365 {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
 
+        // If this is a course event, and the logged in user is a teacher, make students in that course as attendees
+        if (property_exists($data, "courseid")) {
+            $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u JOIN mdl_role_assignments ra ON u.id = ra.userid
+                    JOIN mdl_role r ON ra.roleid = r.id
+                    JOIN mdl_context c ON ra.contextid = c.id
+                    WHERE c.contextlevel = 50
+                    AND c.instanceid = ".$data->courseid."
+                    AND r.shortname = 'student' ";
+            $students = $DB->get_record_sql($sql);
+        }
+
        // print_r($oevent);exit;
         $event_data =  json_encode($oevent);
         $curl = new curl();
@@ -186,7 +183,7 @@ class events_o365 {
 
         // obtain uuid back from O365 and set it into the moodle event
         $eventresponse = json_decode($eventresponse);
-       // print_r($eventresponse);//exit;
+
         if($eventresponse && $eventresponse->Id) {
             $event = calendar_event::load($data->id);
             $event->uuid = $eventresponse->Id;
@@ -197,7 +194,10 @@ class events_o365 {
     public function delete_o365($data) {
         global $DB,$SESSION;
 
-         //Checking if access token has expired, then ask for a new token
+        error_log('delete_o365 called');
+        error_log(print_r($data, true));
+        
+        //Checking if access token has expired, then ask for a new token
         $this->check_token_expiry();
 
         if($data->uuid) {
@@ -321,11 +321,16 @@ function on_user_enrolment_deleted($data) {
     unsubscribe_from_course_calendar($data);
 }
 
-function on_calendar_event_created($data) {
-}
+// TODO: Use this type of event hooks?
+// function on_calendar_event_created($data) {
+    // $in = new events_o365(); 
+    // $in->delete_o365($data);
+// }
 
-function on_calendar_event_deleted($data) {
-}
+// function on_calendar_event_deleted($data) {
+    // $in = new events_o365(); 
+    // $in->delete_o365($data);
+// }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 // O365 library methods

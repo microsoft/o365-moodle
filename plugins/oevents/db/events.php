@@ -40,14 +40,14 @@ $observers = array(
         'callback'    => 'on_user_enrolment_deleted',
         'includefile' => '/local/oevents/lib.php',
     ),
-    array(
-        'eventname'   => '\core\event\calendar_event_created',
-        'callback'    => 'on_calendar_event_created',
-        'includefile' => '/local/oevents/lib.php'
-    ),
-    array(
-        'eventname'   => '\core\event\calendar_event_deleted',
-        'callback'    => 'on_calendar_event_deleted',
-        'includefile' => '/local/oevents/lib.php',
-    ),
+    // array(
+        // 'eventname'   => '\core\event\calendar_event_created',
+        // 'callback'    => 'on_calendar_event_created',
+        // 'includefile' => '/local/oevents/lib.php'
+    // ),
+    // array(
+        // 'eventname'   => '\core\event\calendar_event_deleted',
+        // 'callback'    => 'on_calendar_event_deleted',
+        // 'includefile' => '/local/oevents/lib.php',
+    // ),
 );
