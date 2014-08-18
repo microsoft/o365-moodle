@@ -122,7 +122,7 @@ class events_o365 {
     }
 
     public function insert_o365($data) {
-        global $DB,$SESSION;
+        global $DB,$SESSION,$USER;
 
         error_log('insert_o365 called');
         error_log(print_r($data, true));
@@ -139,16 +139,15 @@ class events_o365 {
         if ($eventdata[$data->id]->uuid != "") {
             return;
         }
-
+        //curl object
+        $curl = new curl();
+        $header = array("Accept: application/json",
+                        "Content-Type: application/json;odata.metadata=full",
+                        "Authorization: Bearer ". $SESSION->accesstoken);
+        $curl->setHeader($header);
+        //event object to be passed
         $oevent = new object;
         $oevent->Subject = $data->name;
-
-        if ($data->courseid != 0) {
-            $course = $DB->get_record('course',array("id" => $data->courseid));
-            $course_name = $course->fullname;
-            $course_name = array(0 => $course_name);
-        }
-
         $oevent->Body = array("ContentType" => "Text",
             "Content" => trim($data->description)
         );
@@ -160,30 +159,53 @@ class events_o365 {
         } else {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
-
-        // If this is a course event, and the logged in user is a teacher, make students in that course as attendees
-        if (property_exists($data, "courseid")) {
-            $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u JOIN mdl_role_assignments ra ON u.id = ra.userid
-                    JOIN mdl_role r ON ra.roleid = r.id
-                    JOIN mdl_context c ON ra.contextid = c.id
-                    WHERE c.contextlevel = 50
-                    AND c.instanceid = ".$data->courseid."
-                    AND r.shortname = 'student' ";
-            $students = $DB->get_record_sql($sql);
+        
+        if ($data->courseid != 0) { //Course event
+            $course = $DB->get_record('course',array("id" => $data->courseid));
+            $course_name = $course->fullname;
+            $course_id = $course->idnumber;
+            $course_name = array(0 => $course_name);
+            //In moodle the roles are based on the context, to check if logged in user is a teacher
+            $context = get_context_instance(CONTEXT_COURSE, $data->courseid, true);
+            $roles = get_user_roles($context, $USER->id, true);
+            $role = key($roles);
+            $roleid = $roles[$role]->roleid;
+            //Role id of teacher is 3 and in context of course 
+            if($roleid == 3) {
+                // If this is a course event, and the logged in user is a teacher, 
+                //make students in that course as attendees
+                if (property_exists($data, "courseid")) {
+                    $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u 
+                            JOIN mdl_role_assignments ra ON u.id = ra.userid
+                            JOIN mdl_role r ON ra.roleid = r.id
+                            JOIN mdl_context c ON ra.contextid = c.id
+                            WHERE c.contextlevel = 50
+                            AND c.instanceid = ".$data->courseid."
+                            AND r.shortname = 'student' ";
+                    $students = $DB->get_records_sql($sql);
+                }
+                
+                $attendees = array();                
+                foreach ($students as $student) {                    
+                    $attend = array(
+                                   "Name" => $student->firstname." ".$student->lastname,
+                                   "Address" => $student->email,
+                                   "Type" => "Required"
+                                    );
+                    array_push($attendees,$attend);
+                }
+                $oevent->Attendees = $attendees;      
+            }
+            $event_data =  json_encode($oevent);
+            //POST https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)/Events              
+            $eventresponse = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_id."')/Events",$event_data);        
+        } else { //if user event, either teacher or student
+            $event_data =  json_encode($oevent);
+            $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
         }
-
-       // print_r($oevent);exit;
-        $event_data =  json_encode($oevent);
-        $curl = new curl();
-        $header = array("Accept: application/json",
-                        "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ". $SESSION->accesstoken);
-        $curl->setHeader($header);
-        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
-
         // obtain uuid back from O365 and set it into the moodle event
         $eventresponse = json_decode($eventresponse);
-
+        print_r($eventresponse);
         if($eventresponse && $eventresponse->Id) {
             $event = calendar_event::load($data->id);
             $event->uuid = $eventresponse->Id;
@@ -335,7 +357,7 @@ function on_user_enrolment_deleted($data) {
 //--------------------------------------------------------------------------------------------------------------------------------------------
 // O365 library methods
 function create_course_calendar($data) {
-    global $SESSION;
+    global $DB,$SESSION;
 
     error_log("create_course_calendar called");
     error_log(print_r($data, true));
@@ -346,7 +368,6 @@ function create_course_calendar($data) {
                 );
     $calendar_name = json_encode($newCal);
     $curl = new curl();
-
     $header = array("Accept: application/json",
                 "Content-Type: application/json;odata.metadata=full",
                 "Authorization: Bearer ". $SESSION->accesstoken);
@@ -355,17 +376,23 @@ function create_course_calendar($data) {
     $new_Calendar = json_decode($new_Calendar);
     //TODO Need to get the course calendar same as calendar id from office.
     //Store the id in some fields of course table
+    //idnumber is varchar type and can we use it to store our calendar id we get?
+    $update_course = new stdClass();
+    $update_course->id = $data->id;
+    $update_course->idnumber = $new_Calendar->Id;    
+    $update = $DB->update_record("course", $update_course);    
+    error_log(print_r($update, true));
+    
 }
 
 function delete_course_calendar($data) {
     global $SESSION;
-
     error_log("delete_course_calendar called");
     error_log(print_r($data, true));
-
-    //TODO Need to get the course calendar same as calendar id from office.
-    //Store the id in some fields of course table
-    //api for calendar delete is DELETE https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)
+    $curl = new curl();    
+    $header = array("Authorization: Bearer ". $SESSION->accesstoken);
+    $curl->setHeader($header);
+    $new_Calendar = $curl->delete("https://outlook.office365.com/ews/odata/Me/Calendars('".$data->idnumber."')");   
 
 }
 
