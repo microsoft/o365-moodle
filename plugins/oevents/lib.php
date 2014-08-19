@@ -34,11 +34,43 @@ class events_o365 {
         $params = array();
         $curl = new curl();
         date_default_timezone_set('UTC');
-        $header = array('Authorization: Bearer '.$SESSION->accesstoken);
+        $header = array('Authorization: Bearer '.$SESSION->accesstoken);        
         $curl->setHeader($header);
+        //to get the list of courses the user is enrolled
+        $courses = enrol_get_my_courses();        
+        if($courses) {            
+            //get the calendar course id for each of the courses and get events
+            foreach($courses as $course) {
+                $course_id = $course->id;
+                //teacher role comes with courses.                 
+                $context = get_context_instance(CONTEXT_COURSE, $course_id, true);
+                $roles = get_user_roles($context, $USER->id, true);
+                $role = key($roles);                
+                $roleid = $roles[$role]->roleid;
+                if($roleid == 3) {
+                   $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));                
+                   $courseevent = $curl->get("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_cal->calendar_course_id."')/Events");
+                   $courseevents =json_decode($courseevent);     
+                }                    
+            }             
+        }
+        
         $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
-        $o365events = json_decode($eventresponse);
-
+        $eventresponses = json_decode($eventresponse);
+        echo "<pre>";
+        //print_r($courseevents);
+        if(count($courseevents) != 0) {
+            $courseeventscal = array();
+            foreach ($courseevents->value as $event) {                  
+                $courseeventscal = array_push($courseeventscal,$event);  
+            }
+            print_r($courseeventscal);
+           $o365events = array_merge($eventresponses,$courseeventscal);
+        } else {
+            $o365events = $eventresponses;    
+        }
+        print_r($o365events);
+        exit;
         //Need to give start time and end time to get all the events from calendar.
         //TODO: Here I am giving the time recent and next 60 days.
         $timestart = time() - 4320000;
@@ -50,13 +82,13 @@ class events_o365 {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
                 //Keep both the course name and O365 category name same.
-                if($o365event->Categories) {
+                /*if($o365event->Categories) {
                     $course = $DB->get_record('course', array("fullname" => $o365event->Categories[0]));
                     $course_id = $course->id;
                     $context_value = context_course::instance($course_id);
                 } else {
                     $context_value = 0;
-                }
+                }*/
 
                 $event_id = 0;
                 if ($moodleevents) {
@@ -163,12 +195,14 @@ class events_o365 {
         if ($data->courseid != 0) { //Course event
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
-            $course_id = $course->idnumber;
+            $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $data->courseid));
+            $course_id = $course_cal->calendar_course_id;
             $course_name = array(0 => $course_name);
             //In moodle the roles are based on the context, to check if logged in user is a teacher
             $context = get_context_instance(CONTEXT_COURSE, $data->courseid, true);
             $roles = get_user_roles($context, $USER->id, true);
             $role = key($roles);
+            //print_r($roles);exit;
             $roleid = $roles[$role]->roleid;
             //Role id of teacher is 3 and in context of course 
             if($roleid == 3) {
@@ -377,23 +411,23 @@ function create_course_calendar($data) {
     //TODO Need to get the course calendar same as calendar id from office.
     //Store the id in some fields of course table
     //idnumber is varchar type and can we use it to store our calendar id we get?
-    $update_course = new stdClass();
-    $update_course->id = $data->id;
-    $update_course->idnumber = $new_Calendar->Id;    
-    $update = $DB->update_record("course", $update_course);    
-    error_log(print_r($update, true));
+    $course_calendar = new stdClass();
+    $course_calendar->course_id = $data->id;
+    $course_calendar->calendar_course_id = $new_Calendar->Id;    
+    $insert = $DB->insert_record("course_calendar_ext", $course_calendar);    
+    error_log(print_r($insert, true));
     
 }
 
 function delete_course_calendar($data) {
-    global $SESSION;
+    global $DB,$SESSION;
     error_log("delete_course_calendar called");
     error_log(print_r($data, true));
+    $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $data->id));    
     $curl = new curl();    
     $header = array("Authorization: Bearer ". $SESSION->accesstoken);
     $curl->setHeader($header);
-    $new_Calendar = $curl->delete("https://outlook.office365.com/ews/odata/Me/Calendars('".$data->idnumber."')");   
-
+    $new_Calendar = $curl->delete("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_cal->calendar_course_id."')");   
 }
 
 function subscribe_to_course_calendar($data) {
