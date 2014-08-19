@@ -44,12 +44,9 @@ class events_o365 {
             //get the calendar course id for each of the courses and get events
             foreach($courses as $course) {
                 $course_id = $course->id;
-                //teacher role comes with courses.
-                $context = get_context_instance(CONTEXT_COURSE, $course_id, true);
-                $roles = get_user_roles($context, $USER->id, true);
-                $role = key($roles);
-                $roleid = $roles[$role]->roleid;
-                if($roleid == 3) {
+
+                $is_teacher = is_teacher($course_id, $USER->id);
+                if($is_teacher) {
                    $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));
                    $courseevent = $curl->get("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_cal->calendar_course_id."')/Events");
                    $courseevents =json_decode($courseevent);
@@ -63,7 +60,7 @@ class events_o365 {
         // echo "<pre>";
         //print_r($courseevents);
 
-        if($courseevents && (count($courseevents) > 0)) {
+        if($courseevents && is_array($courseevents)) {
             $courseeventscal = array();
             foreach ($courseevents as $event) {
                 $courseeventscal = array_push($courseeventscal,$event);
@@ -192,6 +189,7 @@ class events_o365 {
                         "Content-Type: application/json;odata.metadata=full",
                         "Authorization: Bearer ". $SESSION->accesstoken);
         $curl->setHeader($header);
+
         //event object to be passed
         $oevent = new object;
         $oevent->Subject = $data->name;
@@ -211,18 +209,16 @@ class events_o365 {
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
             $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $data->courseid));
-            $course_id = $course_cal->calendar_course_id;
+            $calendar_id = $course_cal->calendar_course_id; // TODO: Rename this to calendar_id to not confuse it with course_id
             $course_name = array(0 => $course_name);
+
             //In moodle the roles are based on the context, to check if logged in user is a teacher
-            $context = get_context_instance(CONTEXT_COURSE, $data->courseid, true);
-            $roles = get_user_roles($context, $USER->id, true);
-            $role = key($roles);
-            //print_r($roles);exit;
-            $roleid = $roles[$role]->roleid;
-            //Role id of teacher is 3 and in context of course
-            if($roleid == 3) {
+            $is_teacher = is_teacher($data->courseid, $USER->id);
+
+            if($is_teacher) {
                 // If this is a course event, and the logged in user is a teacher,
-                //make students in that course as attendees
+                // make students in that course as attendees
+                // TODO: Is there a way to get this via the API instead of sql?
                 if (property_exists($data, "courseid")) {
                     $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u
                             JOIN mdl_role_assignments ra ON u.id = ra.userid
@@ -243,18 +239,22 @@ class events_o365 {
                                     );
                     array_push($attendees,$attend);
                 }
+
                 $oevent->Attendees = $attendees;
             }
+
             $event_data =  json_encode($oevent);
             //POST https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)/Events
-            $eventresponse = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_id."')/Events",$event_data);
+            $eventresponse = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars('".$calendar_id."')/Events",$event_data);
         } else { //if user event, either teacher or student
             $event_data =  json_encode($oevent);
             $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
         }
+
         // obtain uuid back from O365 and set it into the moodle event
         $eventresponse = json_decode($eventresponse);
         // print_r($eventresponse);
+
         if($eventresponse && $eventresponse->Id) {
             $event = calendar_event::load($data->id);
             $event->uuid = $eventresponse->Id;
@@ -352,6 +352,23 @@ class events_o365 {
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
+// Utility methods : TODO: Move to separate file
+// check if given user is a teacher in the given course
+function is_teacher($course_id, $user_id) {
+    //teacher role comes with courses.
+    $context = get_context_instance(CONTEXT_COURSE, $course_id, true);
+    $roles = get_user_roles($context, $user_id, true);
+
+    foreach ($roles as $role) {
+        if ($role->roleid == 3) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
 // Cron method
 function local_oevents_cron() {
     mtrace( "O365 Calendar Sync cron script is starting." );
@@ -404,7 +421,7 @@ function on_user_enrolment_deleted($data) {
 // }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
-// O365 library methods
+// O365 library methods: TODO: Move to separate file
 function create_course_calendar($data) {
     global $DB,$SESSION;
 
