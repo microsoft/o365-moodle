@@ -50,8 +50,7 @@ class events_o365 {
                 $is_teacher = is_teacher($course_id, $USER->id);
                 if($is_teacher) {
                     $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));
-
-                    $courseevent = $curl->get("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_cal->calendar_course_id."')/Events");
+                    $courseevent = $curl->get("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_cal->calendar_id."')/Events");
 
                     $courseevents_ele = json_decode($courseevent);
                     foreach($courseevents_ele->value as $ele) {
@@ -59,7 +58,6 @@ class events_o365 {
                     }
 
                     if(!isset($courseevents_ele->error) || !($courseevents_ele->error)) {
-
                         array_push($courseevents,$courseevents_ele);
                     }
                 }
@@ -200,7 +198,7 @@ class events_o365 {
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
             $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $data->courseid));
-            $calendar_id = $course_cal->calendar_course_id; // TODO: Rename this to calendar_id to not confuse it with course_id
+            $calendar_id = $course_cal->calendar_id; // TODO: Rename this to calendar_id to not confuse it with course_id
             $course_name = array(0 => $course_name);
 
             //In moodle the roles are based on the context, to check if logged in user is a teacher
@@ -343,7 +341,6 @@ class events_o365 {
 // Cron method
 function local_oevents_cron() {
     mtrace( "O365 Calendar Sync cron script is starting." );
-
     date_default_timezone_set('UTC');
 
     //$this->check_token_expiry();
@@ -352,9 +349,11 @@ function local_oevents_cron() {
     $oevents = new events_o365();
     $token = $oevents->get_app_token();
 
-    // TOOD: get all users
-
+    // TODO: get all users
+    $users = get_users();
+    error_log(print_r($users, true)); 
     // TODO: Loop over all users and sync their calendars
+    
     $o365events = $oevents->get_calendar_events($token, get_config('auth/googleoauth2', 'azureadadminupn'));
 
     mtrace( "O365 Calendar Sync cron script completed." );
@@ -403,7 +402,7 @@ function create_course_calendar($data) {
 
     $course_calendar = new stdClass();
     $course_calendar->course_id = $data->id;
-    $course_calendar->calendar_course_id = $new_calendar->Id;
+    $course_calendar->calendar_id = $new_calendar->Id;
     $insert = $DB->insert_record("course_calendar_ext", $course_calendar);
     //error_log(print_r($insert, true));
 }
@@ -416,15 +415,18 @@ function delete_course_calendar($data) {
 
     $course_ext = $DB->get_record('course_calendar_ext', array("course_id" => $data->id));
 
-    o365_delete_calendar($SESSION->accesstoken, $course_ext->calendar_course_id);
+    o365_delete_calendar($SESSION->accesstoken, $course_ext->calendar_id);
 }
 
 function subscribe_to_course_calendar($data) {
+    global $DB;
     error_log("subscribe_to_course_calendar called");
     error_log(print_r($data, true));
 
     // TODO: Get O365 calendar id for the course from course table
+       $calendar_id = $DB->get_record('course_calendar_ext', array("course_id" => $data->courseid));        
     // TODO: Get student UPN and share the calendar with them
+    
     // TODO: If possible, let the student accept the request automatically. (Otherwise let them do it manually.)
 }
 

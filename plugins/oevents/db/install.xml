@@ -16,7 +16,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="course_id" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Course id created by moodle"/>
-        <FIELD NAME="calendar_course_id" TYPE="char" LENGTH="300" NOTNULL="false" SEQUENCE="false" COMMENT="Course id created by office calendar which is passes to the moodle"/>
+        <FIELD NAME="calendar_id" TYPE="char" LENGTH="300" NOTNULL="false" SEQUENCE="false" COMMENT="Course id created by office calendar which is passes to the moodle"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

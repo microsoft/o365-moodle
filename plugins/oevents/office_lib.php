@@ -11,18 +11,17 @@ function o365_create_calendar($access_token, $calendar_name) {
                 "Name" => $calendar_name
                 );
                 
-    $encoded_param = json_encode($param);
+    $encoded_param = json_encode($param);    
     
     $curl = new curl();
     $header = array("Accept: application/json",
                 "Content-Type: application/json;odata.metadata=full",
                 "Authorization: Bearer ". $access_token);
-    $curl->setHeader($header);
+    $curl->setHeader($header);    
     
-    $response = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars", $encoded_param);
+    $response = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars", $encoded_param);    
     
-    $new_calendar = json_decode($response);
-    
+    $new_calendar = json_decode($response);    
     return $new_calendar;
 }
 
