@@ -33,6 +33,7 @@ class events_o365 {
         if (!isloggedin()) {
             return false;
         }
+
         date_default_timezone_set('UTC');
         $params = array();
         $courseevents = array();
@@ -48,11 +49,11 @@ class events_o365 {
                     $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));
                     $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->calendar_id);
 
-                    foreach($events->value as $event) {
-                        $event->course = $course_id;
-                    }
-
                     if(!isset($events->error) || !($events->error)) {
+                        foreach($events->value as $event) {
+                            $event->course = $course_id;
+                        }
+
                         array_push($courseevents,$events);
                     }
                 }
