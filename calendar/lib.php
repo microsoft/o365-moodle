@@ -2181,7 +2181,7 @@ class calendar_event {
             'context' => $this->properties->context,
             'objectid' => $this->properties->id,
             'other' => array(
-                'repeatid' => empty($this->properties->repeatid) ? 0 : $this->properties->repeatid,
+              'repeatid' => empty($this->properties->repeatid) ? 0 : $this->properties->repeatid,
                 'timestart' => $this->properties->timestart,
                 'name' => $this->properties->name
             )
@@ -2231,9 +2231,7 @@ class calendar_event {
                 }
 
                 $editor = $this->properties->description;
-				//echo "<pre>";
-				//print_r($this->properties);
-				//print_r($editor);exit;
+				
                 $this->properties->format = $this->properties->description['format'];
                 $this->properties->description = $this->properties->description['text'];
      
@@ -2294,15 +2292,6 @@ class calendar_event {
                     $event->trigger();
                 }
             }
-            
-            // TODO: O365MODS: START
-            if($USER->auth == "googleoauth2") {
-               require_once($CFG->dirroot.'/local/oevents/lib.php');
-               $in = new events_o365();
-               $in->insert_o365($this->properties);    
-            }
-            // TODO: O365MODS: END
-            
             // Hook for tracking added events
             self::calendar_event_hook('add_event', array($this->properties, $repeatedids));
             return true;
@@ -2398,15 +2387,10 @@ class calendar_event {
         }
         $calevent = $DB->get_record('event',  array('id' => $this->properties->id), '*', MUST_EXIST);
 
+        // Hook before delete event is called the event
         // TODO: O365MODS: START
-        if($USER->auth == "googleoauth2") {
-            require_once($CFG->dirroot.'/local/oevents/lib.php');
-            $in = new events_o365();
-            $in->delete_o365($this->properties);    
-        }
+        self::calendar_event_hook('pre_delete_event', array($this->properties, $deleterepeated));
         // TODO: O365MODS: END
-
-        // Delete the event
         $DB->delete_records('event', array('id'=>$this->properties->id));
 
         // Trigger an event for the delete action.

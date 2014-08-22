@@ -23,48 +23,64 @@
  * @copyright  2014 Introp
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+require_once($CFG->dirroot.'/local/oevents/office_lib.php');
+require_once($CFG->dirroot.'/local/oevents/util.php');
+
 class events_o365 {
-    //Calling this function from auth.
-    //TODO: We need to run a cron. Need to find out how we can pass the token to cron
-    //so that we can get the events.
-
-    public function sync_calendar($access_token){
-
+    // TODO: Need to parametrize this so it can be called from cron as well as login hook
+    public function sync_calendar(){
         global $USER,$DB,$SESSION;
         if (!isloggedin()) {
             return false;
         }
-
         date_default_timezone_set('UTC');
-
         $params = array();
-        $curl = new curl();
-        $params['access_token'] = $access_token;
-        $header = array('Authorization: Bearer '.$access_token);
-        $curl->setHeader($header);
-        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
-        $o365events = json_decode($eventresponse);
+        $courseevents = array();
 
-        //Need to give start time and end time to get all the events from calendar.
-        //TODO: Here I am giving the time recent and next 60 days.
+        //to get the list of courses the user is enrolled in
+        $courses = enrol_get_my_courses();
+        if($courses) {
+            //get the calendar course id for each of the courses and get events
+            foreach($courses as $course) {
+                $course_id = $course->id;
+                $is_teacher = is_teacher($course_id, $USER->id);
+                if($is_teacher) {
+                    $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));
+                    $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->calendar_id);
+
+                    foreach($events->value as $event) {
+                        $event->course = $course_id;
+                    }
+
+                    if(!isset($events->error) || !($events->error)) {
+                        array_push($courseevents,$events);
+                    }
+                }
+            }
+        }
+
+         // TODO: Restrict time range to be the same as moodle events. Use $filter?
+        $o365events = o365_get_calendar_events($SESSION->accesstoken,'');
+
+        if($courseevents && is_array($courseevents)) {
+            foreach ($courseevents[0]->value as $event) {
+                array_push($o365events->value, $event);
+            }
+        }
+
+        // Need to give start time and end time to get all the events from calendar.
+        //TODO: Here I am giving the time recent and next 60 days. What is a good range?
         $timestart = time() - 4320000;
         $timeend = time() + 5184000;
         $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);
+        $context_value = 0;
 
         // loop through all Office 365 events and create or update moodle events
         if (!isset($o365events->error)) {
             foreach ($o365events->value as $o365event) {
                 // if event already exists in moodle, get its id so we can update it instead of creating a new one
-                //Keep both the course name and O365 category name same.
-                if($o365event->Categories) {
-                    $course = $DB->get_record('course', array("fullname" => $o365event->Categories[0]));
-                    $course_id = $course->id;
-                    $context_value = context_course::instance($course_id);
-                } else {
-                    $context_value = 0;
-                }
-
-                //echo "event: "; print_r($o365event); echo "<br/><br/>";
+                if (strtotime($o365event->Start) == 0) // this happens due to some bug in O365, ignore these events
+                    continue;
 
                 $event_id = 0;
                 if ($moodleevents) {
@@ -88,9 +104,13 @@ class events_o365 {
                         $event->context      = $context_value;
                 }
 
+                if(isset($o365event->course)) {
+                    $event->courseid = $o365event->course;
+                }
+
                 $event->uuid         = $o365event->Id;
-                $event->name         = $o365event->Subject;
-                $event->description  = array("text" => $o365event->Subject,
+                $event->name         = empty($o365event->Subject) ? '<unnamed>' : $o365event->Subject;
+                $event->description  = array("text" => empty($o365event->Subject) ? '<unnamed>' : $o365event->Subject,
                                         "format" => 1,
                                         "itemid" => $o365event->Id
                                          );
@@ -110,7 +130,6 @@ class events_o365 {
         // if an event exists in moodle but not in O365, we need to delete it from moodle
         if ($moodleevents) {
             foreach ($moodleevents as $moodleevent) {
-                //echo "event: "; print_r($moodleevent); echo "<br/><br/>";
                 $found = false;
 
                 foreach ($o365events->value as $o365key => $o365event) {
@@ -129,24 +148,16 @@ class events_o365 {
         }
     }
 
-    public function insert_o365($data) {
-        global $DB,$SESSION;
+    public function insert_event_o365($data) {
+        global $DB,$SESSION,$USER;
+
+        error_log('insert_o365 called');
+        error_log(print_r($data, true));
 
         date_default_timezone_set('UTC');
 
-        //Students list gives the attendees of the particular course.
-        //TODO: Plan A is to make this student as attendees. Since all of the users have
-        //account in o365 they can be assigned by passing array of attendees in the
-        //curl event.
-        // if (property_exists($data, "courseid")) {
-            // $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u JOIN mdl_role_assignments ra ON u.id = ra.userid
-                    // JOIN mdl_role r ON ra.roleid = r.id
-                    // JOIN mdl_context c ON ra.contextid = c.id
-                    // WHERE c.contextlevel = 50
-                    // AND c.instanceid = ".$data->courseid."
-                    // AND r.shortname = 'student' ";
-            // $students = $DB->get_record_sql($sql);
-        // }
+        //Checking if access token has expired, then ask for a new token
+        $this->check_token_expiry();
 
         // if this event already exists in O365, it will have a uuid, so don't insert it again
         //$data does not provide with uuid. So for that we are retrieving each event by event id.
@@ -156,19 +167,9 @@ class events_o365 {
             return;
         }
 
+        //event object to be passed
         $oevent = new object;
         $oevent->Subject = $data->name;
-
-        if ($data->courseid != 0) {
-            $course = $DB->get_record('course',array("id" => $data->courseid));
-            $course_name = $course->fullname;
-            $course_name = array(0 => $course_name);
-            //I am getting correct array for categories. But while posting
-            //it takes long time to post and gets back with internal server error.
-            $oevent->Categories = $course_name;
-
-        }
-
         $oevent->Body = array("ContentType" => "Text",
             "Content" => trim($data->description)
         );
@@ -181,13 +182,50 @@ class events_o365 {
             $oevent->End = date("Y-m-d\TH:i:s\Z", $data->timestart + $data->timeduration);
         }
 
-        $event_data =  json_encode($oevent);
-        $curl = new curl();
-        $header = array("Accept: application/json",
-                        "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ".$SESSION->accesstoken);
-        $curl->setHeader($header);
-        $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
+        if ($data->courseid != 0) { //Course event
+            $course = $DB->get_record('course',array("id" => $data->courseid));
+            $course_name = $course->fullname;
+            $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $data->courseid));
+            $calendar_id = $course_cal->calendar_id;
+            $course_name = array(0 => $course_name);
+
+            //In moodle the roles are based on the context, to check if logged in user is a teacher
+            $is_teacher = is_teacher($data->courseid, $USER->id);
+            if($is_teacher) {
+                // If this is a course event, and the logged in user is a teacher,
+                // make students in that course as attendees
+                // TODO: Is there a way to get this via the API instead of sql?
+                if (property_exists($data, "courseid")) {
+                    $sql = "SELECT u.id,u.firstname, u.lastname, u.email FROM `mdl_user` u
+                            JOIN mdl_role_assignments ra ON u.id = ra.userid
+                            JOIN mdl_role r ON ra.roleid = r.id
+                            JOIN mdl_context c ON ra.contextid = c.id
+                            WHERE c.contextlevel = 50
+                            AND c.instanceid = ".$data->courseid."
+                            AND r.shortname = 'student' ";
+                    $students = $DB->get_records_sql($sql);
+                }
+
+                $attendees = array();
+                foreach ($students as $student) {
+                    $attend = array(
+                                   "Name" => $student->firstname." ".$student->lastname,
+                                   "Address" => $student->email,
+                                   "Type" => "Required"
+                                    );
+                    array_push($attendees,$attend);
+                }
+
+                $oevent->Attendees = $attendees;
+            }
+
+            $event_data =  json_encode($oevent);
+            $eventresponse = o365_create_calendar_event($SESSION->accesstoken,$calendar_id,$event_data);
+
+        } else { //if user event, either teacher or student
+            $event_data =  json_encode($oevent);
+            $eventresponse = o365_create_calendar_event($SESSION->accesstoken,'',$event_data);
+        }
 
         // obtain uuid back from O365 and set it into the moodle event
         $eventresponse = json_decode($eventresponse);
@@ -198,14 +236,177 @@ class events_o365 {
         }
     }
 
-    public function delete_o365($data) {
+    public function delete_event_o365($data) {
         global $DB,$SESSION;
+
+        error_log('delete_o365 called');
+        error_log(print_r($data, true));
+
+        //Checking if access token has expired, then ask for a new token
+        $this->check_token_expiry();
+
         if($data->uuid) {
-            $curl = new curl();
-            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
-            $header = array("Authorization: Bearer ".$SESSION->accesstoken);
-            $curl->setHeader($header);
-            $eventresponse = $curl->delete($url);
+            o365_delete_calendar_event($SESSION->accesstoken,$data->uuid);
         }
     }
+
+    public function check_token_expiry() {
+        global $SESSION;
+
+        date_default_timezone_set('UTC');
+
+        if (time() > $SESSION->expires) {
+            $refresh = array();
+            $refresh['client_id'] = $SESSION->params_office['client_id'];
+            $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+            $refresh['grant_type'] = "refresh_token";
+            $refresh['refresh_token'] = $SESSION->refreshtoken;
+            $refresh['resource'] = $SESSION->params_office['resource'];
+            $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
+
+            $curl = new curl();
+            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
+
+            $access_token = json_decode($refresh_token_access)->access_token;
+            $refresh_token = json_decode($refresh_token_access)->refresh_token;
+            $expires_on = json_decode($refresh_token_access)->expires_on;
+
+            $SESSION->accesstoken =  $access_token;
+            $SESSION->refreshtoken = $refresh_token;
+            $SESSION->expires = $expires_on;
+         }
+    }
+
+    public function get_app_token(){
+        $clientsecret = urlencode(get_config('auth/googleoauth2', 'azureadclientsecret'));
+        $resource = urlencode('https://outlook.office365.com'); //'https://graph.windows.net' 'https://outlook.office365.com'
+        $clientid = urlencode(get_config('auth/googleoauth2', 'azureadclientid'));
+        $state = urlencode('state=bb706f82-215e-4836-921d-ac013e7e6ae5');
+
+        $fields = 'grant_type=client_credentials&client_secret='.$clientsecret
+                  .'&resource='.$resource.'&client_id='.$clientid.'&state='.$state;
+
+        $curl = curl_init();
+
+        $stsurl = 'https://login.windows.net/' . get_config('auth/googleoauth2', 'azureaddomain') . '/oauth2/token?api-version=1.0';
+        curl_setopt($curl, CURLOPT_URL, $stsurl);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS,  $fields);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+        $output = curl_exec($curl);
+
+        curl_close($curl);
+
+        $tokenoutput = json_decode($output);
+        // echo 'token: ' ; print_r($tokenoutput);
+
+        return $tokenoutput->{'access_token'};
+    }
+
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+// Cron method
+function local_oevents_cron() {
+    mtrace( "O365 Calendar Sync cron script is starting." );
+    date_default_timezone_set('UTC');
+
+    //$this->check_token_expiry();
+    //$this->sync_calendar();
+
+    $oevents = new events_o365();
+    $token = $oevents->get_app_token();
+
+    // get all users
+    $users = get_users();
+    error_log(print_r($users, true));
+    
+    // Loop over all users and sync their calendars
+    foreach ($users as $user) {
+        $o365events = o365_get_calendar_events_upn($token, $user->upn);
+        
+        // TODO: sync calendar
+    }
+    
+    mtrace( "O365 Calendar Sync cron script completed." );
+
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+// Event handlers
+function on_course_created($data) {
+    create_course_calendar($data);
+}
+
+function on_course_deleted($data) {
+    delete_course_calendar($data);
+}
+
+function on_user_enrolment_created($data) {
+    subscribe_to_course_calendar($data);
+}
+
+function on_user_enrolment_deleted($data) {
+    unsubscribe_from_course_calendar($data);
+}
+
+// TODO: Use this type of event hooks?
+// function on_calendar_event_created($data) {
+    // $in = new events_o365();
+    // $in->delete_o365($data);
+// }
+
+// function on_calendar_event_deleted($data) {
+    // $in = new events_o365();
+    // $in->delete_o365($data);
+// }
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+// helper methods
+function create_course_calendar($data) {
+    global $DB,$SESSION;
+
+    error_log("create_course_calendar called");
+    error_log(print_r($data, true));
+
+    $new_calendar = o365_create_calendar($SESSION->accesstoken, $data->fullname);
+
+    $course_calendar = new stdClass();
+    $course_calendar->course_id = $data->id;
+    $course_calendar->calendar_id = $new_calendar->Id;
+    $insert = $DB->insert_record("course_calendar_ext", $course_calendar);
+    //error_log(print_r($insert, true));
+}
+
+function delete_course_calendar($data) {
+    global $DB,$SESSION;
+
+    error_log("delete_course_calendar called");
+    error_log(print_r($data, true));
+
+    $course_ext = $DB->get_record('course_calendar_ext', array("course_id" => $data->id));
+
+    o365_delete_calendar($SESSION->accesstoken, $course_ext->calendar_id);
+}
+
+function subscribe_to_course_calendar($data) {
+    global $DB;
+    error_log("subscribe_to_course_calendar called");
+    error_log(print_r($data, true));
+
+    // Get O365 calendar id for the course from course table
+    $calendar_id = $DB->get_record('course_calendar_ext', array("course_id" => $data->courseid));
+    
+    // TODO: Get student UPN and share the calendar with them
+
+    // TODO: If possible, let the student accept the request automatically. (Otherwise let them do it manually.)
+}
+
+function unsubscribe_from_course_calendar($data) {
+    error_log("unsubscribe_from_course_calendar called");
+    error_log(print_r($data, true));
 }
