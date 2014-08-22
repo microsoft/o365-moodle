@@ -26,19 +26,15 @@
 require_once($CFG->dirroot.'/local/oevents/office_lib.php');
 require_once($CFG->dirroot.'/local/oevents/util.php');
 
-class events_o365 {
+class events_o365 {    
     // TODO: Need to parametrize this so it can be called from cron as well as login hook
     public function sync_calendar(){
         global $USER,$DB,$SESSION;
         if (!isloggedin()) {
             return false;
         }
-
-        $params = array();
-        $curl = new curl();
         date_default_timezone_set('UTC');
-        $header = array('Authorization: Bearer '.$SESSION->accesstoken);
-        $curl->setHeader($header);
+        $params = array();        
         $courseevents = array();
 
         //to get the list of courses the user is enrolled
@@ -50,8 +46,7 @@ class events_o365 {
                 $is_teacher = is_teacher($course_id, $USER->id);
                 if($is_teacher) {
                     $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));
-                    $courseevent = $curl->get("https://outlook.office365.com/ews/odata/Me/Calendars('".$course_cal->calendar_id."')/Events");
-
+                    $courseevent = o365_get_calendar_event($SESSION->accesstoken,$course_cal->calendar_id);
                     $courseevents_ele = json_decode($courseevent);
                     foreach($courseevents_ele->value as $ele) {
                         $ele->course = $course_id;
@@ -65,7 +60,8 @@ class events_o365 {
             }
         }
         
-        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
+         // TODO: Restrict time range to be the same as moodle events
+        $eventresponse = o365_get_calendar_event($SESSION->accesstoken,''); 
         $o365events = json_decode($eventresponse);
 
         if($courseevents && is_array($courseevents)) {
@@ -154,7 +150,7 @@ class events_o365 {
         }
     }
 
-    public function insert_o365($data) {
+    public function insert_event_o365($data) {
         global $DB,$SESSION,$USER;
 
         error_log('insert_o365 called');
@@ -172,13 +168,7 @@ class events_o365 {
         if ($eventdata[$data->id]->uuid != "") {
             return;
         }
-        //curl object
-        $curl = new curl();
-        $header = array("Accept: application/json",
-                        "Content-Type: application/json;odata.metadata=full",
-                        "Authorization: Bearer ". $SESSION->accesstoken);
-        $curl->setHeader($header);
-
+        
         //event object to be passed
         $oevent = new object;
         $oevent->Subject = $data->name;
@@ -232,11 +222,11 @@ class events_o365 {
             }
 
             $event_data =  json_encode($oevent);
-            //POST https://outlook.office365.com/ews/odata/Me/Calendars(<calendar_id>)/Events
-            $eventresponse = $curl->post("https://outlook.office365.com/ews/odata/Me/Calendars('".$calendar_id."')/Events",$event_data);
+            $eventresponse = o365_create_calendar_event($SESSION->accesstoken,$calendar_id,$event_data);
+            
         } else { //if user event, either teacher or student
             $event_data =  json_encode($oevent);
-            $eventresponse = $curl->post('https://outlook.office365.com/ews/odata/Me/Calendar/Events',$event_data);
+            $eventresponse = o365_create_calendar_event($SESSION->accesstoken,'',$event_data);
         }
 
         // obtain uuid back from O365 and set it into the moodle event
@@ -248,7 +238,7 @@ class events_o365 {
         }
     }
 
-    public function delete_o365($data) {
+    public function delete_event_o365($data) {
         global $DB,$SESSION;
 
         error_log('delete_o365 called');
@@ -258,11 +248,7 @@ class events_o365 {
         $this->check_token_expiry();
 
         if($data->uuid) {
-            $curl = new curl();
-            $url = "https://outlook.office365.com/ews/odata/Me/Calendar/Events('".$data->uuid."')";
-            $header = array("Authorization: Bearer ".$SESSION->accesstoken);
-            $curl->setHeader($header);
-            $eventresponse = $curl->delete($url);
+            o365_delete_calendar_event($SESSION->accesstoken,$data->uuid);            
         }
     }
 
@@ -323,15 +309,7 @@ class events_o365 {
     }
 
     public function get_calendar_events($token, $upn) {
-        $curl = new curl();
-        $header = array('Authorization: Bearer ' . $token);
-        $curl->setHeader($header);
-        $eventresponse = $curl->get('https://outlook.office365.com/ews/odata/' . urlencode($upn) . '/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
-        //$eventresponse = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendar/Events'); // TODO: Restrict time range to be the same as moodle events
-
-        $o365events = json_decode($eventresponse);
-        // echo 'events: '; print_r($o365events);
-
+        $o365events = get_calendar_events_upn($token, $upn);
         return $o365events;
     }
 

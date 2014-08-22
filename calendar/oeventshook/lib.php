@@ -23,7 +23,7 @@ require_once($CFG->dirroot.'/local/oevents/lib.php');
           $authprovider = get_auth_provider();           
           if($authprovider == "azuread") {         
              $in = new events_o365(); 
-             $in->insert_o365($data);
+             $in->insert_event_o365($data);
           }
     }
     /*
@@ -33,7 +33,7 @@ require_once($CFG->dirroot.'/local/oevents/lib.php');
            $authprovider = get_auth_provider();         
            if($authprovider == "azuread") {         
              $in = new events_o365(); 
-             $in->delete_o365($data);
+             $in->delete_event_o365($data);
           }
     }
 ?>
