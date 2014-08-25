@@ -158,7 +158,8 @@ class events_o365 {
         date_default_timezone_set('UTC');
 
         //Checking if access token has expired, then ask for a new token
-        $this->check_token_expiry();
+        
+        check_token_expiry();
 
         // if this event already exists in O365, it will have a uuid, so don't insert it again
         //$data does not provide with uuid. So for that we are retrieving each event by event id.
@@ -244,14 +245,14 @@ class events_o365 {
         error_log(print_r($data, true));
 
         //Checking if access token has expired, then ask for a new token
-        $this->check_token_expiry();
+        check_token_expiry();
 
         if($data->uuid) {
             o365_delete_calendar_event($SESSION->accesstoken,$data->uuid);
         }
     }
 
-    public function check_token_expiry() {
+   /* public function check_token_expiry() {
         global $SESSION;
 
         date_default_timezone_set('UTC');
@@ -276,7 +277,7 @@ class events_o365 {
             $SESSION->refreshtoken = $refresh_token;
             $SESSION->expires = $expires_on;
          }
-    }
+    }*/
 
     public function get_app_token(){
         $clientsecret = urlencode(get_config('auth/googleoauth2', 'azureadclientsecret'));
