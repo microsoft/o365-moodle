@@ -29,22 +29,27 @@ class block_oemail extends block_list {
         date_default_timezone_set('UTC');
         // get email from Office365
         $messages = o365_get_messages($SESSION->accesstoken);
-        //echo "<pre>";
-      //  print_r($messages);exit;
+//        echo "<pre>";
+       // print_r($messages);exit;
         
         //error_log(print_r($messages, true));
 
         $content = new stdClass;
         $content->items = array();
         $content->icons = null; //array();
-        $content->items[] = "<table border='1'><tr><td>From</td><td>Subject</td><td>Date</td></tr>"; 
+        $content->items[] = "<table border='1' style='font-size:11px;'><tr><td style='width:30px;'>From</td><td>Subject</td><td>Date</td></tr>"; 
         foreach ($messages->value as $message) {
-            //echo "<pre>";print_r($message);exit;
-            $date_rec = strtotime($message->DateTimeReceived);
+           // echo "<pre>";print_r($message);exit;
+            $date_rec = strtotime($message->DateTimeReceived);            
             $date_rec = date("M j G:i:s",$date_rec);//"https://outlook.office365.com/EWS/OData/Me/Messages('" . $message->Id . "')"
-            $content->items[] ="<tr><td>".$message->From->Name."</td><td>". 
-                                html_writer::tag('a', $message->Subject, array('class'=> 'maillink','href' =>"mailto:".$message->ToRecipients[0]->Address.
-                                "?subject=".$message->Subject."&body=".$message->Body->Content))."</td>
+            if($message->IsRead == '') {
+                $sub = "<span style='font-weight:bold'>".$message->Subject."</span>";
+            } else {
+                $sub = $message->Subject;
+            }
+            echo $message->Isread;
+            $content->items[] ="<tr><td style='width:30px;'>".$message->From->Name."</td><td>". 
+                                html_writer::tag('a', $sub, array('href' =>"https://outlook.office365.com/EWS/OData/Me/Messages('" . $message->Id . "')"))."</td>
                                 <td>".$date_rec."</td></tr>";
             //$content->icons[] = html_writer::empty_tag('img', array('src' => 'images/icons/1.gif', 'class' => 'icon'));
         }
