@@ -1,6 +1,6 @@
 <?php
-//require_once($CFG->dirroot.'/local/oevents/office_lib.php');
-//require_once($CFG->dirroot.'/local/oevents/util.php');
+require_once($CFG->dirroot.'/blocks/yammer/yammer_lib.php');
+
 
 class block_yammer extends block_list {
     public function init() {
@@ -24,50 +24,48 @@ class block_yammer extends block_list {
 
     public function _get_content() {
         global $SESSION;
+        
         $content = new stdClass;
         $content->items = array();     
+        $content->icons = '';
         $code = optional_param('code', '', PARAM_TEXT);
+        if (!empty($code)) {
+            $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);            
+        }
+        //Yammper client application settings
         $client_id = 'Mc8gpyG9wYr7f5qSr8JoQ';
         $client_secret = 'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
-        $curl = new curl(); 
-        echo $SESSION->yammer_token;
-        if(!($SESSION->yammer_token)) {
+        $redirect_uri = 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
+        
+        $curl = new curl();        
+        if($code && $authprovider == 'yammer') {
                   
             $response = $curl->get('https://www.yammer.com/oauth2/access_token.json?client_id='.$client_id.'&client_secret='.$client_secret.'&code='.$code);
-            $response = json_decode($response);    
-        }
-         
-        //echo "<pre>";
-      //  print_r(json_decode($response));exit;
-        if($response->access_token == '' ) {
-            $content->items[] = "<a class='zocial' href='https://www.yammer.com/dialog/oauth?client_id=Mc8gpyG9wYr7f5qSr8JoQ&redirect_uri=http://localhost/moodleapp'>Sign in with Yammer</a>";    
-        }   else {
-            
-           echo $SESSION->yammertoken = $response->access_token->token;
-            $header = array("Authorization: Bearer ". $SESSION->yammertoken);
-            $curl->setHeader($header);
-           // $messages = $curl->get('https://www.yammer.com/api/v1/messages/private.json');
-            $messages = $curl->get('https://www.yammer.com/api/v1/messages.json?limit=2');
-            //echo "<pre>";
-            //print_r(json_decode($messages));
-            
-            $messages = json_decode($messages);
-           // echo "<pre>";
-           // print_r($messages->messages);
-           // print_r($messages->references);
-            $reference_arr =$messages->references; 
-            foreach($messages->messages as $message) {
-                $send = $message->sender_id;
-                if(in_array($send, $reference_arr)) {
-                   echo "string";echo $reference_arr->full_name;
-                }
-                //print_r($message->messages);
-                //print_r($message->references);exit;
-            }exit;
-            //$content->items[] = $messages;
+            $response = json_decode($response);
+            $SESSION->yammertoken = $response->access_token->token;                
         }
         
-       //https://www.yammer.com/dialog/oauth?client_id=[:client_id]&redirect_uri=[:redirect_uri]&response_type=token
+        if(!isset($SESSION->yammertoken) ) {
+            $content->items[] = "<a class='zocial' href='https://www.yammer.com/dialog/oauth?client_id=$client_id&redirect_uri=$redirect_uri'>Sign in with Yammer</a>";    
+        }  
+        else {                        
+                    
+            $messages = get_yammer_private_messages($SESSION->yammertoken);            
+            $messages = json_decode($messages);
+            $reference_array =$messages->references; 
+            
+            $content->items[] = "<table border='1' style='font-size:11px;'><tr><td style='width:30px;'>From</td><td>Subject</td><td>Date</td></tr>";
+            foreach($messages->messages as $message) {
+                foreach($reference_array as $sender) {
+                   if($message->sender_id == $sender->id) {
+                       $name = $sender->full_name;
+                   }
+                }                
+                $content->items[] ="<tr><td style='width:30px;'>".$name."</td><td>". 
+                                $message->body->plain."</td><td>".$message->created_at."</td></tr>";
+            }
+            $content->items[] = "</table>";
+        }
          return $content;
   
       }
