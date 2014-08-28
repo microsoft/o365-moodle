@@ -54,7 +54,7 @@ class block_yammer extends block_list {
             $messages = json_decode($messages);
             $reference_array =$messages->references; 
             
-            $content->items[] = "<table border='1' style='font-size:11px;'><tr><td style='width:30px;'>From</td><td>Subject</td><td>Date</td></tr>";
+            $content->items[] = "<table border='1' style='font-size:11px;'><tr><td style='width:30px;'>From</td><td>Message</td><td>Date</td></tr>";
             foreach($messages->messages as $message) {
                 foreach($reference_array as $sender) {
                    if($message->sender_id == $sender->id) {
