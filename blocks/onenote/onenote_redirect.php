@@ -8,15 +8,15 @@ require('../../config.php');
 $code = optional_param('code', '', PARAM_TEXT);
 
 if (empty($code)) {
-    throw new moodle_exception('yammer_failure');
+    throw new moodle_exception('onenote_failure');
 }
 
-$loginurl = '/'; // TODO: What should be this url to allow user to add the block on other pages?
+$loginurl = '/my/'; // TODO: What should be this url to allow user to add the block on other pages?
 if (!empty($CFG->alternateloginurl)) {
     $loginurl = $CFG->alternateloginurl;
 }
 
-$url = new moodle_url($loginurl, array('code' => $code, 'authprovider' => 'yammer'));
+$url = new moodle_url($loginurl, array('code' => $code, 'authprovider' => 'onenote'));
 redirect($url);
 
 ?>

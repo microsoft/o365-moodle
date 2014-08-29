@@ -1,6 +1,6 @@
 <?php
 require_once($CFG->dirroot.'/blocks/onenote/onenote_lib.php');
-require_once($CFG->dirroot.'/blocks/onenote/onenote.html');
+//require_once($CFG->dirroot.'/blocks/onenote/onenote.html');
 
 
 class block_onenote extends block_list {
@@ -26,24 +26,58 @@ class block_onenote extends block_list {
     public function _get_content() {
         global $SESSION;
 
+        error_log('_get_content called');
         $content = new stdClass;
         $content->items = array();
         $content->icons = '';
-       /* $code = optional_param('code', '', PARAM_TEXT);
+        $code = optional_param('code', '', PARAM_TEXT);
+
         if (!empty($code)) {
             $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
-        }*/ 
+        }
 
-        //Yammer client application settings
-     //   $client_id = '000000004C124AA0'; //'eK7Bh1rNgtYKPwDjyBOLZQ';
-      //  $client_secret = 'Qpa5MN9UK215hqRcefdtVMaSGwHoX2H5'; //'WsarbiIcRPGUuvj9ADYA4MbT9oi9ilY6NA2VQJeuw';
-       // $redirect_uri = 'http://localhost/moodleapp/blocks/onenote/onenote_redirect.php'; // 'http://localhost:88/blocks/yammer/yammer_redirect.php';
-      //  $content->items[] = ' <script src="//js.live.net/v5.0/wl.js" type="text/javascript"></script>'; 
-          
+        // OneNote client application settings
+        $client_id = '0000000048127995'; //'Mc8gpyG9wYr7f5qSr8JoQ';
+        $client_secret = 'PXNnmrSNb7RD7dnCGEpQeSG37ck9GRQH'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
+        $redirect_uri = 'http://vinlocaldomain.com:88/blocks/onenote/onenote_redirect.php'; // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
+        $scopes = 'wl.signin';
+        $response_type = 'token';
 
-        //if(!isset($SESSION->yammertoken) ) {
-            $content->items[] = "<div id='signin'></div>";
-        //}
-                 return $content;
-      }
+        $curl = new curl();
+        if($code && $authprovider == 'onenote') {
+            error_log(print_r($code, true));
+            $response = $curl->post('https://login.live.com/oauth20_token.srf?client_id='.$client_id.'&client_secret='.$client_secret.'&code='.$code.'&redirect_uri='.$redirect_uri.'&grant_type=authorization_code');
+            error_log(print_r($response, true));
+            $response = json_decode($response);
+            $SESSION->onenotetoken = $response->access_token->token;
+        }
+
+        if(!isset($SESSION->onenotetoken) ) {
+            $content->items[] = "<a class='zocial' href='https://login.live.com/oauth20_authorize.srf?client_id=$client_id&redirect_uri=$redirect_uri&scope=$scopes&response_type=$response_type'>Sign in with OneNote</a>";
+        }
+        else {
+            // $messages = get_yammer_private_messages($SESSION->yammertoken);
+            // $messages = json_decode($messages);
+            // $reference_array =$messages->references;
+
+            // $content->items[] = "<table border='0' cellpadding='4' cellspacing='4'><tr><td style='width:70px;font-weight:bold;'>From</td><td style='font-weight:bold;'>Message</td><td style='width:70px;font-weight:bold;'>Date</td></tr>";
+            // foreach($messages->messages as $message) {
+                // foreach($reference_array as $sender) {
+                    // if($message->sender_id == $sender->id) {
+                        // $name = $sender->full_name;
+                    // }
+                // }
+
+                // $created_at = strtotime($message->created_at);
+                // $created_at = date("M j G:i:s",$created_at);
+
+                // $content->items[] ="<tr><td style='vertical-align:top;width:70px;'>".$name.
+                    // "</td><td style='vertical-align:top;'>".$message->body->plain."</td><td style='vertical-align:top;width:70px;'>".$created_at."</td></tr>";
+            // }
+
+            // $content->items[] = "</table>";
+        }
+
+        return $content;
     }
+}
