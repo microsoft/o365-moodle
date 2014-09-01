@@ -35,23 +35,26 @@ class block_onenote extends block_list {
         if (!empty($code)) {
             $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
         }
-
+        echo "CODE".$code;
+        echo "<br>";
+        //echo "AACODE".$authprovider;
+      
         // OneNote client application settings
-        $client_id = '0000000048127995'; //'Mc8gpyG9wYr7f5qSr8JoQ';
-        $client_secret = 'PXNnmrSNb7RD7dnCGEpQeSG37ck9GRQH'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
-        $redirect_uri = 'http://vinlocaldomain.com:88/blocks/onenote/onenote_redirect.php'; // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
+        $client_id = '00000000401290EF'; //'Mc8gpyG9wYr7f5qSr8JoQ';
+        $client_secret = 'Qpa5MN9UK215hqRcefdtVMaSGwHoX2H5'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
+        $redirect_uri = 'http://gopikalocal.com/blocks/onenote/onenote_redirect.php';//http://vinlocaldomain.com:88 // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
         $scopes = 'wl.signin';
         $response_type = 'token';
 
         $curl = new curl();
-        if($code && $authprovider == 'onenote') {
-            error_log(print_r($code, true));
-            $response = $curl->post('https://login.live.com/oauth20_token.srf?client_id='.$client_id.'&client_secret='.$client_secret.'&code='.$code.'&redirect_uri='.$redirect_uri.'&grant_type=authorization_code');
+        if($code && $authprovider == 'onenote') {            
+            error_log(print_r($code, true));            
+            $response = $curl->get('https://login.live.com/oauth20_token.srf?client_id='.$client_id.'&client_secret='.$client_secret.'&code='.$code.'&redirect_uri='.$redirect_uri.'&grant_type=authorization_code');
+            
             error_log(print_r($response, true));
-            $response = json_decode($response);
-            $SESSION->onenotetoken = $response->access_token->token;
-        }
-
+           // $response = json_decode($response);
+            //$SESSION->onenotetoken = $response->access_token->token;
+        }  
         if(!isset($SESSION->onenotetoken) ) {
             $content->items[] = "<a class='zocial' href='https://login.live.com/oauth20_authorize.srf?client_id=$client_id&redirect_uri=$redirect_uri&scope=$scopes&response_type=$response_type'>Sign in with OneNote</a>";
         }

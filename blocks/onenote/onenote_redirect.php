@@ -1,11 +1,12 @@
 <?php
 
 /*
- * Get Yammer code and call the home page
+ * Get Onenote token and call the home page
  * Needed to add the parameter authprovider in order to identify the authentication provider
  */
 require('../../config.php');
-$code = optional_param('code', '', PARAM_TEXT);
+//echo $_GET['access_token'];exit;
+$code = optional_param('access_token', '', PARAM_TEXT);
 
 if (empty($code)) {
     throw new moodle_exception('onenote_failure');
