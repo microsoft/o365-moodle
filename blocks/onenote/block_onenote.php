@@ -37,7 +37,7 @@ class block_onenote extends block_list {
         $client_id = '00000000401290EF'; //'Mc8gpyG9wYr7f5qSr8JoQ';
         $client_secret = 'cKyZUs3chL6Z9SXTG5y9Ub2vL-5SctWm'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
         $redirect_uri = 'http://gopikalocal.com/blocks/onenote/onenote_redirect.php';//http://vinlocaldomain.com:88 // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
-        $scopes = 'wl.signin';
+        $scopes = 'office.onenote_create';
         $response_type = 'code';
 
         $curl = new curl();
@@ -53,32 +53,93 @@ class block_onenote extends block_list {
             $content->items[] = "<a class='zocial' href='https://login.live.com/oauth20_authorize.srf?client_id=$client_id&redirect_uri=$redirect_uri&scope=$scopes&response_type=$response_type'>Sign in with OneNote</a>";
         }
         else {
-            
-            $param = array(
-                      "name" => "testnote"   
-                     );
-            $encoded_param = json_encode($param);
-            $curl = new curl();
-            $header = array(
+         
+              $curl = new curl();
+              $header = array(
                         'Authorization: Bearer ' . $SESSION->onenotetoken,
                         'Content-Type: application/json'
-            );
-            $curl->setHeader($header);
-            $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks',$encoded_param); // TODO: Restrict time range to be the same as moodle events
-        
-            print_r($eventresponse);
-            //Create a link and call the ajax on submit. Uncomemtn the onenote.html to get the ajax call.                     
-            //$content->items[] = "<span>Create notebook</span>";
-            /*$content->items[] = "<div id='create'>                                 
-                                    <input id='token' type='hidden' name='token' value=".$SESSION->onenotetoken.">
-                                    <input id='newnote' type='text' name='newnote' />
-                                    <input type='submit' id='save' name='submit' value='Save'>                                
-                                </div>";*/
-           error_log(print_r($eventresponse, true));
-           $content->items[] = "Create notbook";
+                 );
+              $curl->setHeader($header);
+              
+              $noteresponse = get_oneNote_notes($SESSION->onenotetoken);                            
+              $notes_array = array();              
+              
+              if(isset($noteresponse->value)) {
+                foreach($noteresponse->value as $notes) {
+                      $note[$notes->id] = $notes->name;    
+                      array_push($notes_array,$note);                  
+                  }    
+              }
+             $courses = enrol_get_my_courses();             
+             if(count($notes_array) != ''){  
+                 foreach($notes_array as $notes) {
+                    if(!(in_array('MoodleNote', $notes))){                        
+                     $param = array(
+                          "name" => "MoodleNote"   
+                         );
+                         
+                     $note_name = json_encode($param);
+                     $created_notes = create_oneNote_notes($SESSION->onenotetoken,$note_name);                     
+                     $note_id = $created_notes->id;         
+                                 
+                     if($courses) {            
+                        foreach($courses as $course) {                            
+                            $param_section = array(
+                                     "name" => $course->fullname
+                                        );                        
+                            $section = json_encode($param_section);                            
+                            $eventresponse = create_oneNote_section($SESSION->onenotetoken, $note_id, $section);
+                        }
+                     }                            
+                 } else {                     
+                     $note_id = array_search("MoodleNote", $notes);
+                     $getsection = get_oneNote_section($SESSION->onenotetoken, $note_id);
+                     
+                     $sections = array();
+                     if(isset($getsection->value)) {
+                        foreach($getsection->value as $section) {      
+                              array_push($sections,$section->name);                  
+                          }             
+                     }
+                     if($courses) {            
+                        foreach($courses as $course) {
+                            if(!in_array($course->fullname, $sections)) {
+                                $param_section = array(
+                                     "name" => $course->fullname
+                                        );                        
+                                $section = json_encode($param_section);
+                                $eventresponse = create_oneNote_section($SESSION->onenotetoken, $note_id, $section);
+                             }
+                            }
+                         }
+                     }
+            
+                 } 
+             } else {                    
+                    $param = array(
+                          "name" => "MoodleNote"   
+                         );
+                         
+                     $note_name = json_encode($param);
+                     $created_notes = create_oneNote_notes($SESSION->onenotetoken,$note_name);
+                     $note_id = $created_notes->id;
+                  
+                     if($courses) {            
+                        foreach($courses as $course) {
+                            $param_section = array(
+                                     "name" => $course->fullname
+                                        );                        
+                            $section = json_encode($param_section);
+                            $eventresponse = create_oneNote_section($SESSION->onenotetoken, $note_id, $section);
+                            
+            
+                        }
+                     } 
+             }
+            
+           $content->items[] = "Notebook and section created";
         }
 
         return $content;
     }
 }
-//require_once($CFG->dirroot.'/blocks/onenote/onenote.html');
