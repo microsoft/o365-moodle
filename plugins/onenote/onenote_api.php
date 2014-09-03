@@ -38,12 +38,9 @@ class microsoft_onenote extends oauth2_client {
     const SCOPE = 'office.onenote_create';
     /** @var string Base url to access API */
     const API = 'https://www.onenote.com/api/v1.0';
-    /** @var cache_session cache of foldernames */
-    var $foldernamecache = null;
+    /** @var cache_session cache of notebooknames */
+    var $notebooknamecache = null;
 
-    var $notebook_id = null;
-    var $notebook_name = "Moodle Notebook";
-    
     /**
      * Construct a onenote request object
      *
@@ -53,8 +50,14 @@ class microsoft_onenote extends oauth2_client {
      */
     public function __construct($clientid, $clientsecret, $returnurl) {
         parent::__construct($clientid, $clientsecret, $returnurl, self::SCOPE);
+
+        error_log('microsoft_onenote constructor');
+        error_log(print_r($clientid, true));
+        error_log(print_r($clientsecret, true));
+        error_log(print_r($returnurl, true));
+
         // Make a session cache
-        $this->foldernamecache = cache::make('repository_onenote', 'foldername');
+        $this->notebooknamecache = cache::make('repository_onenote', 'foldername');
     }
 
     /**
@@ -66,7 +69,7 @@ class microsoft_onenote extends oauth2_client {
      * @return bool true if GET should be used
      */
     protected function use_http_get() {
-        return true;
+        return false;
     }
 
     /**
@@ -86,14 +89,14 @@ class microsoft_onenote extends oauth2_client {
     }
 
     /**
-     * Downloads a file to a  file from onenote using authenticated request
+     * Downloads a section to a  file from onenote using authenticated request
      *
-     * @param string $id id of file
-     * @param string $path path to save file to
+     * @param string $id id of section
+     * @param string $path path to save section to
      * @return array stucture for repository download_file
      */
-    public function download_file($id, $path) {
-        $url = self::API."/notebooks/".self::notebook_id."/sections";
+    public function download_section($id, $path) {
+        $url = self::API."/notebooks/".$id."/sections";
 
         // Microsoft live redirects to the real download location..
         $this->setopt(array('CURLOPT_FOLLOWLOCATION' => true, 'CURLOPT_MAXREDIRS' => 3));
@@ -103,144 +106,94 @@ class microsoft_onenote extends oauth2_client {
     }
 
     /**
-     * Returns a folder name property for a given folderid.
+     * Returns a notebook name property for a given notebookid.
      *
-     * @param string $folderid the folder id which is passed
-     * @return mixed folder name or false in case of error
+     * @param string $notebookid the notebook id which is passed
+     * @return mixed notebook name or false in case of error
      */
-    public function get_folder_name($folderid) {
-        if (empty($folderid)) {
-            throw new coding_exception('Empty folderid passed to get_folder_name');
+    public function get_notebook_name($notebookid) {
+        if (empty($notebookid)) {
+            throw new coding_exception('Empty notebookid passed to get_notebook_name');
         }
 
-        // Cache based on oauthtoken and folderid.
-        $cachekey = $this->folder_cache_key($folderid);
+        // Cache based on oauthtoken and notebookid.
+        $cachekey = $this->notebook_cache_key($notebookid);
 
-        if ($foldername = $this->foldernamecache->get($cachekey)) {
-            return $foldername;
+        if ($notebookname = $this->notebooknamecache->get($cachekey)) {
+            return $notebookname;
         }
 
-        $url = self::API."/notebooks/{$folderid}";
+        $url = self::API."/notebooks/{$notebookid}";
         $ret = json_decode($this->get($url));
         if (isset($ret->error)) {
             $this->log_out();
             return false;
         }
-        
+
         error_log(print_r($ret, true));
 
-        $this->foldernamecache->set($cachekey, $ret->name);
+        $this->notebooknamecache->set($cachekey, $ret->name);
         return $ret->name;
     }
 
     /**
-     * Returns a list of files the user has formated for files api
+     * Returns a list of items (notebooks and sections)
      *
      * @param string $path the path which we are in
-     * @return mixed Array of files formated for fileapoi
+     * @return mixed Array of items formatted for fileapi
      */
-    public function get_file_list($path = '') {
+    public function get_items_list($path = '') {
         global $OUTPUT;
 
+        error_log('get_section_list called');
+        error_log(print_r($path, true));
         $precedingpath = '';
+
         if (empty($path)) {
-            $url = self::API."/notebooks/".self::notebook_id."/sections";
+            $url = self::API."/notebooks";
         } else {
             $parts = explode('/', $path);
-            $currentnotebook = array_pop($parts);
-            $url = self::API."/{$currentnotebook}/sections/";
+            $currentnotebookid = array_pop($parts);
+            $url = self::API."/{$currentnotebookid}/sections/";
         }
 
+        error_log(print_r($url, true));
         $ret = json_decode($this->get($url));
+
+        error_log(print_r($ret, true));
 
         if (isset($ret->error)) {
             $this->log_out();
             return false;
         }
 
-        error_log(print_r($ret, true));
-        
-        $files = array();
+        $items = array();
 
-        foreach ($ret->data as $file) {
-            // switch($file->type) {
-                // case 'folder':
-                // case 'album':
-                    // // Cache the foldername for future requests.
-                    // $cachekey = $this->folder_cache_key($file->id);
-                    // $this->foldernamecache->set($cachekey, $file->name);
-
-                    // $files[] = array(
-                        // 'title' => $file->name,
-                        // 'path' => $path.'/'.$file->id,
-                        // 'size' => 0,
-                        // 'date' => strtotime($file->updated_time),
-                        // 'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                        // 'children' => array(),
-                    // );
-                    // break;
-                // case 'photo':
-                    // $files[] = array(
-                        // 'title' => $file->name,
-                        // 'size' => $file->size,
-                        // 'date' => strtotime($file->updated_time),
-                        // 'thumbnail' => $OUTPUT->pix_url(file_extension_icon($file->name, 90))->out(false),
-                        // 'realthumbnail' => $file->picture,
-                        // 'source' => $file->id,
-                        // 'url' => $file->link,
-                        // 'image_height' => $file->height,
-                        // 'image_width' => $file->width,
-                        // 'author' => $file->from->name,
-                    // );
-                    // break;
-                // case 'video':
-                    // $files[] = array(
-                        // 'title' => $file->name,
-                        // 'size' => $file->size,
-                        // 'date' => strtotime($file->updated_time),
-                        // 'thumbnail' => $OUTPUT->pix_url(file_extension_icon($file->name, 90))->out(false),
-                        // 'realthumbnail' => $file->picture,
-                        // 'source' => $file->id,
-                        // 'url' => $file->link,
-                        // 'author' => $file->from->name,
-                    // );
-                    // break;
-                // case 'audio':
-                    // $files[] = array(
-                        // 'title' => $file->name,
-                        // 'size' => $file->size,
-                        // 'date' => strtotime($file->updated_time),
-                        // 'thumbnail' => $OUTPUT->pix_url(file_extension_icon($file->name, 90))->out(false),
-                        // 'source' => $file->id,
-                        // 'url' => $file->link,
-                        // 'author' => $file->from->name,
-                    // );
-                    // break;
-                // case 'file':
-                    // $files[] = array(
-                        // 'title' => $file->name,
-                        // 'size' => $file->size,
-                        // 'date' => strtotime($file->updated_time),
-                        // 'thumbnail' => $OUTPUT->pix_url(file_extension_icon($file->name, 90))->out(false),
-                        // 'source' => $file->id,
-                        // 'url' => $file->link,
-                        // 'author' => $file->from->name,
-                    // );
-                    // break;
-            // }
+        if ($ret) {
+            foreach ($ret->value as $item) {
+                $items[] = array(
+                    'title' => $item->name,
+                    //'size' => $item->size,
+                    'date' => strtotime($item->lastModifiedTime),
+                    'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
+                    'source' => $item->id,
+                    'url' => $item->self,
+                    'author' => $item->createdBy,
+                );
+            }
         }
 
-        return $files;
+        return $items;
     }
 
     /**
-     * Returns a key for foldernane cache
+     * Returns a key for notebooknane cache
      *
-     * @param string $folderid the folder id which is to be cached
+     * @param string $notebookid the notebook id which is to be cached
      * @return string the cache key to use
      */
-    private function folder_cache_key($folderid) {
-        // Cache based on oauthtoken and folderid.
-        return $this->get_tokenname().'_'.$folderid;
+    private function notebook_cache_key($notebookid) {
+        // Cache based on oauthtoken and notebookid.
+        return $this->get_tokenname().'_'.$notebookid;
     }
 }

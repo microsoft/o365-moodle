@@ -82,13 +82,13 @@ class repository_onenote extends repository {
     }
 
     /**
-     * Given a path, and perhaps a search, get a list of files.
+     * Given a path, and perhaps a search, get a list of sections.
      *
      * See details on {@link http://docs.moodle.org/dev/Repository_plugins}
      *
      * @param string $path identifier for current path
-     * @param string $page the page number of file list
-     * @return array list of files including meta information as specified by parent.
+     * @param string $page the page number of section list
+     * @return array list of sections including meta information as specified by parent.
      */
     public function get_listing($path='', $page = '') {
         $ret = array();
@@ -96,10 +96,8 @@ class repository_onenote extends repository {
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $fileslist = $this->onenote->get_file_list($path);
-        // Filter list for accepted types. Hopefully this will be done by core some day.
-        $fileslist = array_filter($fileslist, array($this, 'filter'));
-        $ret['list'] = $fileslist;
+        $sectionslist = $this->onenote->get_items_list($path);
+        $ret['list'] = $sectionslist;
 
         // Generate path bar, always start with the plugin name.
         $ret['path']   = array();
@@ -112,7 +110,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenote->get_folder_name($folderid),
+                    $ret['path'][] = array('name' => $this->onenote->get_notebook_name($folderid),
                                            'path' => $trail);
                 }
             }
@@ -122,17 +120,17 @@ class repository_onenote extends repository {
     }
 
     /**
-     * Downloads a repository file and saves to a path.
+     * Downloads a repository section and saves to a path.
      *
-     * @param string $id identifier of file
-     * @param string $filename to save file as
+     * @param string $id identifier of section
+     * @param string $filename to save section as
      * @return array with keys:
      *          path: internal location of the file
      *          url: URL to the source
      */
     public function get_file($id, $filename = '') {
         $path = $this->prepare_file($filename);
-        return $this->onenote->download_file($id, $path);
+        return $this->onenote->download_section($id, $path);
     }
 
     /**
