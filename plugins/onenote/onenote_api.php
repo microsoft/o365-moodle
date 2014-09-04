@@ -96,6 +96,7 @@ class microsoft_onenote extends oauth2_client {
      * @return array stucture for repository download_file
      */
     public function download_section($id, $path) {
+        // TODO: how to download notebook or section?
         $url = self::API."/notebooks/".$id."/sections";
 
         // Microsoft live redirects to the real download location..
@@ -132,7 +133,7 @@ class microsoft_onenote extends oauth2_client {
 
         error_log(print_r($ret, true));
 
-        $this->notebooknamecache->set($cachekey, $ret->name);
+        $this->notebooknamecache->set($cachekey, $ret->value[0]->name);
         return $ret->name;
     }
 
@@ -145,11 +146,13 @@ class microsoft_onenote extends oauth2_client {
     public function get_items_list($path = '') {
         global $OUTPUT;
 
-        error_log('get_section_list called');
+        error_log('get_items_list called');
         error_log(print_r($path, true));
         $precedingpath = '';
+        $enumerating_notebooks = false;
 
         if (empty($path)) {
+            $enumerating_notebooks = true;
             $url = self::API."/notebooks";
         } else {
             $parts = explode('/', $path);
@@ -171,15 +174,28 @@ class microsoft_onenote extends oauth2_client {
 
         if ($ret) {
             foreach ($ret->value as $item) {
-                $items[] = array(
-                    'title' => $item->name,
-                    //'size' => $item->size,
-                    'date' => strtotime($item->lastModifiedTime),
-                    'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
-                    'source' => $item->id,
-                    'url' => $item->self,
-                    'author' => $item->createdBy,
-                );
+                if ($enumerating_notebooks) {
+                    $items[] = array(
+                        'title' => $item->name,
+                        //'size' => $item->size,
+                        'date' => strtotime($item->lastModifiedTime),
+                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
+                        'source' => $item->id,
+                        'url' => $item->self,
+                        'author' => $item->createdBy,
+                        'children' => array()
+                    );
+                } else {
+                    $items[] = array(
+                        'title' => $item->name,
+                        //'size' => $item->size,
+                        'date' => strtotime($item->lastModifiedTime),
+                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
+                        'source' => $item->id,
+                        'url' => $item->self,
+                        'author' => $item->createdBy
+                    );
+                }
             }
         }
 
