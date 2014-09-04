@@ -36,10 +36,15 @@ class block_onenote extends block_list {
         // OneNote client application settings
         $client_id = '00000000401290EF'; //'Mc8gpyG9wYr7f5qSr8JoQ';
         $client_secret = 'cKyZUs3chL6Z9SXTG5y9Ub2vL-5SctWm'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
-        $redirect_uri = 'http://gopikalocal.com/blocks/onenote/onenote_redirect.php';//http://vinlocaldomain.com:88 // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
+        //http://vinlocaldomain.com:88 // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
         $scopes = 'office.onenote_create';
         $response_type = 'code';
-
+        $returnurl = new moodle_url('/repository/repository_callback.php');
+        $returnurl->param('callback', 'yes');
+        $returnurl->param('repo_id', 9);
+        $returnurl->param('sesskey', sesskey());
+        $redirect_uri = 'http://gopikalocal.com/admin/oauth2callback.php';
+          
         $curl = new curl();
         if($code && $authprovider == 'onenote') {            
             error_log(print_r($code, true));            
@@ -53,14 +58,7 @@ class block_onenote extends block_list {
             $content->items[] = "<a class='zocial' href='https://login.live.com/oauth20_authorize.srf?client_id=$client_id&redirect_uri=$redirect_uri&scope=$scopes&response_type=$response_type'>Sign in with OneNote</a>";
         }
         else {
-         
-              $curl = new curl();
-              $header = array(
-                        'Authorization: Bearer ' . $SESSION->onenotetoken,
-                        'Content-Type: application/json'
-                 );
-              $curl->setHeader($header);
-              
+            
               $noteresponse = get_oneNote_notes($SESSION->onenotetoken);                            
               $notes_array = array();              
               

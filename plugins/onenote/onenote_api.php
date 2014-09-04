@@ -25,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/oauthlib.php');
 
+
 /**
  * A helper class to access microsoft live resources using the api.
  *
@@ -81,13 +82,22 @@ class microsoft_onenote extends oauth2_client {
     }
 
     /**
-     * Returns the token url for OAuth 2.0 request
+     * Returns the token url for OAuth 12.0 request
      * @return string the auth url
      */
-    protected function token_url() {
+    protected function token_url() {        
         return 'https://login.live.com/oauth20_token.srf';
     }
-
+      
+     public function getAccessToken($code = null,$clientid, $secret, $returnurl) {
+         $token_url = $this->token_url();
+         $curl = new curl();
+         
+         $response = $curl->get($token_url.'?client_id='.$clientid.'&client_secret='.$secret.'&code='.$code.'&redirect_uri='.$returnurl.'&grant_type=authorization_code');
+         $response = json_decode($response);              
+         return $response->access_token;
+         
+     }  
     /**
      * Downloads a section to a  file from onenote using authenticated request
      *
@@ -143,11 +153,9 @@ class microsoft_onenote extends oauth2_client {
      * @param string $path the path which we are in
      * @return mixed Array of items formatted for fileapi
      */
-    public function get_items_list($path = '') {
+    public function get_items_list($path = '',$token) {
         global $OUTPUT;
 
-        error_log('get_items_list called');
-        error_log(print_r($path, true));
         $precedingpath = '';
         $enumerating_notebooks = false;
 
@@ -158,12 +166,21 @@ class microsoft_onenote extends oauth2_client {
             $parts = explode('/', $path);
             $currentnotebookid = array_pop($parts);
             $url = self::API."/{$currentnotebookid}/sections/";
-        }
+        }       
+        
+        $curl = new curl();
+    
+        $header = array(
+                            'Authorization: Bearer ' . $token,
+                            'Content-Type: application/json'
+                     );
+        $curl->setHeader($header);
+    
+        $notes = $curl->get('https://www.onenote.com/api/v1.0/notebooks');
+        $notes = json_decode($notes);
+        
 
-        error_log(print_r($url, true));
-        $ret = json_decode($this->get($url));
-
-        error_log(print_r($ret, true));
+       
 
         if (isset($ret->error)) {
             $this->log_out();
@@ -172,8 +189,8 @@ class microsoft_onenote extends oauth2_client {
 
         $items = array();
 
-        if ($ret) {
-            foreach ($ret->value as $item) {
+        if ($notes) {
+            foreach ($notes->value as $item) {
                 if ($enumerating_notebooks) {
                     $items[] = array(
                         'title' => $item->name,

@@ -32,6 +32,8 @@ require_once('onenote_api.php');
 class repository_onenote extends repository {
     /** @var microsoft_onenote onenote oauth2 api helper object */
     private $onenote = null;
+    
+    const SESSIONKEY = 'onenote_accesstoken';
 
     /**
      * Constructor
@@ -54,14 +56,65 @@ class repository_onenote extends repository {
         $this->check_login();
     }
 
-    /**
-     * Checks whether the user is logged in or not.
+     /**
+     * Checks whether the user is authenticate or not.
      *
-     * @return bool true when logged in
+     * @return bool true when logged in.
      */
-    public function check_login() {
-        return $this->onenote->is_logged_in();
+    public function check_login() {        
+        if ($token = $this->get_access_token()) {            
+            $this->setAccessToken($token);
+            return true;
+        }
+        return false;
     }
+    
+     /**
+     * Returns the access token if any.
+     *
+     * @return string|null access token.
+     */
+    protected function get_access_token() {
+        global $SESSION;
+        if (isset($SESSION->{self::SESSIONKEY})) {
+            
+            return $SESSION->{self::SESSIONKEY};
+        }
+        return null;
+    }
+
+    /**
+     * Store the access token in the session.
+     *
+     * @param string $token token to store.
+     * @return void
+     */
+    protected function store_access_token($token) {
+          
+        global $SESSION;
+        $SESSION->{self::SESSIONKEY} = $token;
+    }
+
+    /**
+     * Callback method during authentication.
+     *
+     * @return void
+     */
+    public function callback() {
+        if ($code = optional_param('oauth2code', null, PARAM_RAW)) {
+            $clientid = get_config('onenote', 'clientid');
+            $secret = get_config('onenote', 'secret');
+            $returnurl = new moodle_url('/admin/oauth2callback.php');
+            $this->store_access_token($this->onenote->getAccessToken($code,$clientid, $secret, $returnurl));
+        }
+    }
+
+     public function setAccessToken($accessToken) {
+        if ($accessToken == null || 'null' == $accessToken) {
+          $accessToken = null;
+        }
+        //self::$auth->setAccessToken($accessToken);
+      } 
 
     /**
      * Print the login form, if required
@@ -90,13 +143,13 @@ class repository_onenote extends repository {
      * @param string $page the page number of section list
      * @return array list of sections including meta information as specified by parent.
      */
-    public function get_listing($path='', $page = '') {
+    public function get_listing($path='', $page = '') {                
         $ret = array();
         $ret['dynload'] = true;
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $sectionslist = $this->onenote->get_items_list($path);
+        $sectionslist = $this->onenote->get_items_list($path,$this->get_access_token());
         $ret['list'] = $sectionslist;
 
         // Generate path bar, always start with the plugin name.
