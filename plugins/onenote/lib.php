@@ -32,7 +32,7 @@ require_once('onenote_api.php');
 class repository_onenote extends repository {
     /** @var microsoft_onenote onenote oauth2 api helper object */
     private $onenote = null;
-    
+
     const SESSIONKEY = 'onenote_accesstoken';
 
     /**
@@ -61,14 +61,14 @@ class repository_onenote extends repository {
      *
      * @return bool true when logged in.
      */
-    public function check_login() {        
-        if ($token = $this->get_access_token()) {            
+    public function check_login() {
+        if ($token = $this->get_access_token()) {
             $this->setAccessToken($token);
             return true;
         }
         return false;
     }
-    
+
      /**
      * Returns the access token if any.
      *
@@ -77,7 +77,7 @@ class repository_onenote extends repository {
     protected function get_access_token() {
         global $SESSION;
         if (isset($SESSION->{self::SESSIONKEY})) {
-            
+
             return $SESSION->{self::SESSIONKEY};
         }
         return null;
@@ -90,7 +90,7 @@ class repository_onenote extends repository {
      * @return void
      */
     protected function store_access_token($token) {
-          
+
         global $SESSION;
         $SESSION->{self::SESSIONKEY} = $token;
     }
@@ -114,7 +114,7 @@ class repository_onenote extends repository {
           $accessToken = null;
         }
         //self::$auth->setAccessToken($accessToken);
-      } 
+      }
 
     /**
      * Print the login form, if required
@@ -143,14 +143,14 @@ class repository_onenote extends repository {
      * @param string $page the page number of section list
      * @return array list of sections including meta information as specified by parent.
      */
-    public function get_listing($path='', $page = '') {                
+    public function get_listing($path='', $page = '') {
         $ret = array();
         $ret['dynload'] = true;
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $sectionslist = $this->onenote->get_items_list($path,$this->get_access_token());
-        $ret['list'] = $sectionslist;
+        $itemslist = $this->onenote->get_items_list($path,$this->get_access_token());
+        $ret['list'] = $itemslist;
 
         // Generate path bar, always start with the plugin name.
         $ret['path']   = array();
@@ -163,7 +163,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenote->get_notebook_name($folderid),
+                    $ret['path'][] = array('name' => $this->onenote->get_notebook_name($folderid,$this->get_access_token()),
                                            'path' => $trail);
                 }
             }

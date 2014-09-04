@@ -85,19 +85,19 @@ class microsoft_onenote extends oauth2_client {
      * Returns the token url for OAuth 12.0 request
      * @return string the auth url
      */
-    protected function token_url() {        
+    protected function token_url() {
         return 'https://login.live.com/oauth20_token.srf';
     }
-      
+
      public function getAccessToken($code = null,$clientid, $secret, $returnurl) {
          $token_url = $this->token_url();
          $curl = new curl();
-         
+
          $response = $curl->get($token_url.'?client_id='.$clientid.'&client_secret='.$secret.'&code='.$code.'&redirect_uri='.$returnurl.'&grant_type=authorization_code');
-         $response = json_decode($response);              
+         $response = json_decode($response);
          return $response->access_token;
-         
-     }  
+
+     }
     /**
      * Downloads a section to a  file from onenote using authenticated request
      *
@@ -105,9 +105,11 @@ class microsoft_onenote extends oauth2_client {
      * @param string $path path to save section to
      * @return array stucture for repository download_file
      */
-    public function download_section($id, $path) {
+    public function download_section($section_id, $path) {
+        error_log('download_section called: ' . print_r($section_id, true));
+
         // TODO: how to download notebook or section?
-        $url = self::API."/notebooks/".$id."/sections";
+        $url = self::API."/sections".$section_id;
 
         // Microsoft live redirects to the real download location..
         $this->setopt(array('CURLOPT_FOLLOWLOCATION' => true, 'CURLOPT_MAXREDIRS' => 3));
@@ -122,7 +124,9 @@ class microsoft_onenote extends oauth2_client {
      * @param string $notebookid the notebook id which is passed
      * @return mixed notebook name or false in case of error
      */
-    public function get_notebook_name($notebookid) {
+    public function get_notebook_name($notebookid,$token) {
+        error_log('get_notebook_name called: ' . print_r($notebookid, true));
+
         if (empty($notebookid)) {
             throw new coding_exception('Empty notebookid passed to get_notebook_name');
         }
@@ -135,16 +139,25 @@ class microsoft_onenote extends oauth2_client {
         }
 
         $url = self::API."/notebooks/{$notebookid}";
-        $ret = json_decode($this->get($url));
-        if (isset($ret->error)) {
+        // TODO: use oauthlib. don't create your own curl obj
+//        $response = json_decode($this->get($url));
+        $curl = new curl();
+
+        // TODO: use oauthlib, it should already be setting header
+        $header = array('Authorization: Bearer ' . $token, 'Content-Type: application/json');
+        $curl->setHeader($header);
+
+        $response = $curl->get($url);
+        $response = json_decode($response);
+        error_log('response: ' . print_r($response, true));
+
+        if (isset($response->error)) {
             $this->log_out();
             return false;
         }
 
-        error_log(print_r($ret, true));
-
-        $this->notebooknamecache->set($cachekey, $ret->value[0]->name);
-        return $ret->name;
+        $this->notebooknamecache->set($cachekey, $response->value[0]->name);
+        return $response->value[0]->name;
     }
 
     /**
@@ -156,6 +169,8 @@ class microsoft_onenote extends oauth2_client {
     public function get_items_list($path = '',$token) {
         global $OUTPUT;
 
+        error_log('get_items_list called');
+
         $precedingpath = '';
         $enumerating_notebooks = false;
 
@@ -165,35 +180,33 @@ class microsoft_onenote extends oauth2_client {
         } else {
             $parts = explode('/', $path);
             $currentnotebookid = array_pop($parts);
-            $url = self::API."/{$currentnotebookid}/sections/";
-        }       
-        
+            $url = self::API."/notebooks/{$currentnotebookid}/sections/";
+        }
+
+        // TODO: use oauthlib. don't create your own curl obj
         $curl = new curl();
-    
-        $header = array(
-                            'Authorization: Bearer ' . $token,
-                            'Content-Type: application/json'
-                     );
+
+        // TODO: use oauthlib, it should already be setting header
+        $header = array('Authorization: Bearer ' . $token, 'Content-Type: application/json');
         $curl->setHeader($header);
-    
-        $notes = $curl->get('https://www.onenote.com/api/v1.0/notebooks');
-        $notes = json_decode($notes);
-        
 
-       
+        $response = $curl->get($url);
+        $response = json_decode($response);
+        error_log('response: ' . print_r($response, true));
 
-        if (isset($ret->error)) {
+        if (isset($response->error)) {
             $this->log_out();
             return false;
         }
 
         $items = array();
 
-        if ($notes) {
-            foreach ($notes->value as $item) {
+        if ($response && $response->value) {
+            foreach ($response->value as $item) {
                 if ($enumerating_notebooks) {
                     $items[] = array(
                         'title' => $item->name,
+                        'path' => $path.'/'.urlencode($item->id),
                         //'size' => $item->size,
                         'date' => strtotime($item->lastModifiedTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
