@@ -1,11 +1,13 @@
 <?php
 require_once($CFG->dirroot.'/blocks/onenote/onenote_lib.php');
+require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
+require_once($CFG->dirroot.'/lib/oauthlib.php');
 class block_onenote extends block_list {
     public function init() {
         $this->title = get_string('onenote', 'block_onenote');
     }
 
-    public function get_content() {
+    public function get_content() {        
         if (!isloggedin()) {
             return null;
 
@@ -22,43 +24,50 @@ class block_onenote extends block_list {
 
     public function _get_content() {
         global $SESSION;
-
+        //echo $SESSION->onenote_accesstoken;
         error_log('_get_content called');
         $content = new stdClass;
         $content->items = array();
         $content->icons = '';
-        $code = optional_param('code', '', PARAM_TEXT);
-
-        if (!empty($code)) {
-            $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
-        }
-      
-        // OneNote client application settings
-        $client_id = '00000000401290EF'; //'Mc8gpyG9wYr7f5qSr8JoQ';
-        $client_secret = 'cKyZUs3chL6Z9SXTG5y9Ub2vL-5SctWm'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
-        //http://vinlocaldomain.com:88 // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
-        $scopes = 'office.onenote_create';
-        $response_type = 'code';
+        $params['client_id'] = '00000000401290EF'; //'Mc8gpyG9wYr7f5qSr8JoQ';
+        $params['client_secret'] = 'cKyZUs3chL6Z9SXTG5y9Ub2vL-5SctWm'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
         $returnurl = new moodle_url('/repository/repository_callback.php');
         $returnurl->param('callback', 'yes');
         $returnurl->param('repo_id', 9);
         $returnurl->param('sesskey', sesskey());
-        $redirect_uri = 'http://gopikalocal.com/admin/oauth2callback.php';
-          
-        $curl = new curl();
-        if($code && $authprovider == 'onenote') {            
-            error_log(print_r($code, true));            
-            $response = $curl->get('https://login.live.com/oauth20_token.srf?client_id='.$client_id.'&client_secret='.$client_secret.'&code='.$code.'&redirect_uri='.$redirect_uri.'&grant_type=authorization_code');
+        $params['redirect_uri'] = 'http://gopikalocal.com/admin/oauth2callback.php';
+        $params['state'] = $returnurl->out_as_local_url(FALSE);
+        $params['scope'] = 'office.onenote_create';
+        $params['response_type'] = 'code';
+        $onenoteapi = new microsoft_onenote($params['client_id'], $params['client_secret'], $returnurl);
+        
+        if(isset($SESSION->onenote_accesstoken)) {  // && $SESSION->onenote_accesstoken != ''          
+            $notes = $onenoteapi->get_items_list('',$SESSION->onenote_accesstoken);            
+            foreach ($notes as $note) {
+                $content->items[] = $note['title'];
+            }
             
-            error_log(print_r($response, true));
-            $response = json_decode($response);            
-            $SESSION->onenotetoken = $response->access_token;
-        }  
-        if(!isset($SESSION->onenotetoken) ) {
-            $content->items[] = "<a class='zocial' href='https://login.live.com/oauth20_authorize.srf?client_id=$client_id&redirect_uri=$redirect_uri&scope=$scopes&response_type=$response_type'>Sign in with OneNote</a>";
+        } else {
+            echo $url = new moodle_url('https://login.live.com/oauth20_authorize.srf',$params);
+           // $popup = new stdClass();
+            //$popup->type = 'popup';
+            //$popup->url = $url->out(false);
+            //$val = array('login' => array($popup));
+            //print_r($val);            
+            //$content->items[] = "<a class='zocial' href='".$url."'>Sign in with OneNote</a>";
+            $content->items[] =  '<a target="_blank" href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';
+            
         }
-        else {
-            
+        return $content;
+        /*
+         
+              $curl = new curl();
+              $header = array(
+                        'Authorization: Bearer ' . $SESSION->onenotetoken,
+                        'Content-Type: application/json'
+                 );
+              $curl->setHeader($header);
+              
               $noteresponse = get_oneNote_notes($SESSION->onenotetoken);                            
               $notes_array = array();              
               
@@ -138,6 +147,6 @@ class block_onenote extends block_list {
            $content->items[] = "Notebook and section created";
         }
 
-        return $content;
+        return $content;*/
     }
 }

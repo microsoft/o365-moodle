@@ -91,10 +91,13 @@ class microsoft_onenote extends oauth2_client {
 
      public function getAccessToken($code = null,$clientid, $secret, $returnurl) {
          $token_url = $this->token_url();
-         $curl = new curl();
-
-         $response = $curl->get($token_url.'?client_id='.$clientid.'&client_secret='.$secret.'&code='.$code.'&redirect_uri='.$returnurl.'&grant_type=authorization_code');
-         $response = json_decode($response);
+         $url = $token_url.'?client_id='.$clientid.
+                            '&client_secret='.$secret.
+                            '&code='.$code.
+                            '&redirect_uri='.$returnurl.
+                            '&grant_type=authorization_code';
+         
+         $response = json_decode($this->get($url));
          return $response->access_token;
 
      }
@@ -141,13 +144,15 @@ class microsoft_onenote extends oauth2_client {
         $url = self::API."/notebooks/{$notebookid}";
         // TODO: use oauthlib. don't create your own curl obj
 //        $response = json_decode($this->get($url));
-        $curl = new curl();
+      //  $curl = new curl();
 
         // TODO: use oauthlib, it should already be setting header
         $header = array('Authorization: Bearer ' . $token, 'Content-Type: application/json');
-        $curl->setHeader($header);
-
-        $response = $curl->get($url);
+      //  $this->setHeader($header);
+        //$curl->setHeader($header);
+        //$this->setopt();
+          $this->setHeader($header); 
+        $response = $this->get($url);
         $response = json_decode($response);
         error_log('response: ' . print_r($response, true));
 

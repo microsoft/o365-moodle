@@ -224,6 +224,7 @@ class repository_onenote extends repository {
      */
     public function logout() {
         $this->onenote->log_out();
+        $this->store_access_token(null);
         return $this->print_login();
     }
 
