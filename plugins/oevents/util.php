@@ -5,7 +5,8 @@
 // check if given user is a teacher in the given course
 function is_teacher($course_id, $user_id) {
     //teacher role comes with courses.
-    $context = get_context_instance(CONTEXT_COURSE, $course_id, true);
+    $context = context_course::instance($course_id);//get_context_instance(CONTEXT_COURSE, $course_id, true);
+    
     $roles = get_user_roles($context, $user_id, true);
 
     foreach ($roles as $role) {
@@ -20,14 +21,17 @@ function check_token_expiry() {
         global $SESSION;
 
         date_default_timezone_set('UTC');
-
+        if(isset($SESSION->expires)) {
         if (time() > $SESSION->expires) {
             $refresh = array();
-            $refresh['client_id'] = $SESSION->params_office['client_id'];
-            $refresh['client_secret'] = $SESSION->params_office['client_secret'];
-            $refresh['grant_type'] = "refresh_token";
-            $refresh['refresh_token'] = $SESSION->refreshtoken;
-            $refresh['resource'] = $SESSION->params_office['resource'];
+            if(isset($SESSION->params_office)) {
+                $refresh['client_id'] = $SESSION->params_office['client_id'];
+                $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+                $refresh['grant_type'] = "refresh_token";
+                $refresh['refresh_token'] = $SESSION->refreshtoken;
+                $refresh['resource'] = $SESSION->params_office['resource'];    
+            }
+            
             $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
 
             $curl = new curl();
@@ -42,6 +46,6 @@ function check_token_expiry() {
             $SESSION->expires = $expires_on;
          }
     }
-
+  }
 
 ?>

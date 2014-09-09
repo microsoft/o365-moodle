@@ -33,8 +33,6 @@ class repository_onenote extends repository {
     /** @var microsoft_onenote onenote oauth2 api helper object */
     private $onenote = null;
 
-    const SESSIONKEY = 'onenote_accesstoken';
-
     /**
      * Constructor
      *
@@ -56,65 +54,14 @@ class repository_onenote extends repository {
         $this->check_login();
     }
 
-     /**
-     * Checks whether the user is authenticate or not.
+    /**
+     * Checks whether the user is logged in or not.
      *
-     * @return bool true when logged in.
+     * @return bool true when logged in
      */
     public function check_login() {
-        if ($token = $this->get_access_token()) {
-            $this->setAccessToken($token);
-            return true;
-        }
-        return false;
+        return $this->onenote->is_logged_in();
     }
-
-     /**
-     * Returns the access token if any.
-     *
-     * @return string|null access token.
-     */
-    protected function get_access_token() {
-        global $SESSION;
-        if (isset($SESSION->{self::SESSIONKEY})) {
-
-            return $SESSION->{self::SESSIONKEY};
-        }
-        return null;
-    }
-
-    /**
-     * Store the access token in the session.
-     *
-     * @param string $token token to store.
-     * @return void
-     */
-    protected function store_access_token($token) {
-
-        global $SESSION;
-        $SESSION->{self::SESSIONKEY} = $token;
-    }
-
-    /**
-     * Callback method during authentication.
-     *
-     * @return void
-     */
-    public function callback() {
-        if ($code = optional_param('oauth2code', null, PARAM_RAW)) {
-            $clientid = get_config('onenote', 'clientid');
-            $secret = get_config('onenote', 'secret');
-            $returnurl = new moodle_url('/admin/oauth2callback.php');
-            $this->store_access_token($this->onenote->getAccessToken($code,$clientid, $secret, $returnurl));
-        }
-    }
-
-     public function setAccessToken($accessToken) {
-        if ($accessToken == null || 'null' == $accessToken) {
-          $accessToken = null;
-        }
-        //self::$auth->setAccessToken($accessToken);
-      }
 
     /**
      * Print the login form, if required
@@ -135,13 +82,13 @@ class repository_onenote extends repository {
     }
 
     /**
-     * Given a path, and perhaps a search, get a list of sections.
+     * Given a path, and perhaps a search, get a list of files.
      *
      * See details on {@link http://docs.moodle.org/dev/Repository_plugins}
      *
      * @param string $path identifier for current path
-     * @param string $page the page number of section list
-     * @return array list of sections including meta information as specified by parent.
+     * @param string $page the page number of file list
+     * @return array list of files including meta information as specified by parent.
      */
     public function get_listing($path='', $page = '') {
         $ret = array();
@@ -149,8 +96,10 @@ class repository_onenote extends repository {
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $itemslist = $this->onenote->get_items_list($path,$this->get_access_token());
-        $ret['list'] = $itemslist;
+        $fileslist = $this->onenote->get_items_list($path);
+        // Filter list for accepted types. Hopefully this will be done by core some day.
+        $fileslist = array_filter($fileslist, array($this, 'filter'));
+        $ret['list'] = $fileslist;
 
         // Generate path bar, always start with the plugin name.
         $ret['path']   = array();
@@ -163,7 +112,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenote->get_notebook_name($folderid,$this->get_access_token()),
+                    $ret['path'][] = array('name' => $this->onenote->get_notebook_name($folderid),
                                            'path' => $trail);
                 }
             }
@@ -173,10 +122,10 @@ class repository_onenote extends repository {
     }
 
     /**
-     * Downloads a repository section and saves to a path.
+     * Downloads a repository file and saves to a path.
      *
-     * @param string $id identifier of section
-     * @param string $filename to save section as
+     * @param string $id identifier of file
+     * @param string $filename to save file as
      * @return array with keys:
      *          path: internal location of the file
      *          url: URL to the source
@@ -224,7 +173,6 @@ class repository_onenote extends repository {
      */
     public function logout() {
         $this->onenote->log_out();
-        $this->store_access_token(null);
         return $this->print_login();
     }
 

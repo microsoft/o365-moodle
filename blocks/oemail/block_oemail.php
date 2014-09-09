@@ -28,12 +28,16 @@ class block_oemail extends block_list {
 
         date_default_timezone_set('UTC');
         // get email from Office365
+        if(isset($SESSION->accesstoken)) {
         $messages = o365_get_messages($SESSION->accesstoken);
         $content = new stdClass;
         $content->items = array();
         $content->icons = ''; //array();
         $content->items[] =
-            "<table border='0' cellpadding='4' cellspacing='4'><tr><td style='width:70px;font-weight:bold;'>From</td><td style='font-weight:bold;'>Subject</td><td style='width:70px;font-weight:bold;'>Date</td></tr>";
+            "<table border='0' cellpadding='4' cellspacing='4'>
+            <tr><td style='width:70px;font-weight:bold;'>From</td>
+            <td style='font-weight:bold;'>Subject</td>
+            <td style='width:70px;font-weight:bold;'>Date</td></tr>";
 
         foreach ($messages->value as $message) {
             $date_rec = strtotime($message->DateTimeReceived);
@@ -52,7 +56,9 @@ class block_oemail extends block_list {
         }
         $content->items[] = "</table>";
         $content->footer = (is_array($messages->value) && (count($messages->value) > 0)) ? (count($messages->value) . " Messages.") : "No messages.";
-
+        } else {
+            $content->items[] = "";
+        } 
         return $content;
     }
     //TODO install outlook in local, then need to pass the items to the function.

@@ -1,7 +1,9 @@
 <?php
 require_once($CFG->dirroot.'/blocks/onenote/onenote_lib.php');
+require_once($CFG->dirroot.'/blocks/onenote/onenote.html');
 require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
 require_once($CFG->dirroot.'/lib/oauthlib.php');
+
 class block_onenote extends block_list {
     public function init() {
         $this->title = get_string('onenote', 'block_onenote');
@@ -23,62 +25,36 @@ class block_onenote extends block_list {
     }
 
     public function _get_content() {
-        global $SESSION;
-        //echo $SESSION->onenote_accesstoken;
+        global $SESSION;        
         error_log('_get_content called');
         $content = new stdClass;
         $content->items = array();
         $content->icons = '';
-        $params['client_id'] = '00000000401290EF'; //'Mc8gpyG9wYr7f5qSr8JoQ';
-        $params['client_secret'] = 'cKyZUs3chL6Z9SXTG5y9Ub2vL-5SctWm'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
+        
+        $params['client_id'] = get_config('onenote', 'clientid'); //'Mc8gpyG9wYr7f5qSr8JoQ';
+        $params['client_secret'] = get_config('onenote', 'secret'); //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';        
         $returnurl = new moodle_url('/repository/repository_callback.php');
         $returnurl->param('callback', 'yes');
         $returnurl->param('repo_id', 9);
-        $returnurl->param('sesskey', sesskey());
-        $params['redirect_uri'] = 'http://gopikalocal.com/admin/oauth2callback.php';
+        $returnurl->param('sesskey', sesskey());         
         $params['state'] = $returnurl->out_as_local_url(FALSE);
-        $params['scope'] = 'office.onenote_create';
+        $params['scope'] = 'office.onenote_update';
         $params['response_type'] = 'code';
         $onenoteapi = new microsoft_onenote($params['client_id'], $params['client_secret'], $returnurl);
+        $params['redirect_uri'] = $onenoteapi->callback_url();
+        $access_token = $onenoteapi->get_accesstoken();        
         
-        if(isset($SESSION->onenote_accesstoken)) {  // && $SESSION->onenote_accesstoken != ''          
-            $notes = $onenoteapi->get_items_list('',$SESSION->onenote_accesstoken);            
-            foreach ($notes as $note) {
-                $content->items[] = $note['title'];
+        if(isset($access_token->token)) {            
+            $notes = $onenoteapi->get_items_list('',$access_token->token);
+            $notes_array = array();
+            if($notes) {
+              foreach ($notes as $note) {
+                $not[$note['id']] = $note['title'];                
+                array_push($notes_array,$not);                
+               }    
             }
-            
-        } else {
-            echo $url = new moodle_url('https://login.live.com/oauth20_authorize.srf',$params);
-           // $popup = new stdClass();
-            //$popup->type = 'popup';
-            //$popup->url = $url->out(false);
-            //$val = array('login' => array($popup));
-            //print_r($val);            
-            //$content->items[] = "<a class='zocial' href='".$url."'>Sign in with OneNote</a>";
-            $content->items[] =  '<a target="_blank" href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';
-            
-        }
-        return $content;
-        /*
-         
-              $curl = new curl();
-              $header = array(
-                        'Authorization: Bearer ' . $SESSION->onenotetoken,
-                        'Content-Type: application/json'
-                 );
-              $curl->setHeader($header);
-              
-              $noteresponse = get_oneNote_notes($SESSION->onenotetoken);                            
-              $notes_array = array();              
-              
-              if(isset($noteresponse->value)) {
-                foreach($noteresponse->value as $notes) {
-                      $note[$notes->id] = $notes->name;    
-                      array_push($notes_array,$note);                  
-                  }    
-              }
-             $courses = enrol_get_my_courses();             
-             if(count($notes_array) != ''){  
+            $courses = enrol_get_my_courses();
+            if(count($notes_array) != ''){  
                  foreach($notes_array as $notes) {
                     if(!(in_array('MoodleNote', $notes))){                        
                      $param = array(
@@ -86,21 +62,23 @@ class block_onenote extends block_list {
                          );
                          
                      $note_name = json_encode($param);
-                     $created_notes = create_oneNote_notes($SESSION->onenotetoken,$note_name);                     
-                     $note_id = $created_notes->id;         
-                                 
+                     $created_notes = create_oneNote_notes($access_token->token,$note_name);                     
+                     if(isset($created_notes)) {
+                        $note_id = $created_notes->id;    
+                     }
+                                                               
                      if($courses) {            
                         foreach($courses as $course) {                            
                             $param_section = array(
                                      "name" => $course->fullname
                                         );                        
                             $section = json_encode($param_section);                            
-                            $eventresponse = create_oneNote_section($SESSION->onenotetoken, $note_id, $section);
+                            $eventresponse = create_oneNote_section($access_token->token, $note_id, $section);
                         }
                      }                            
                  } else {                     
                      $note_id = array_search("MoodleNote", $notes);
-                     $getsection = get_oneNote_section($SESSION->onenotetoken, $note_id);
+                     $getsection = get_oneNote_section($access_token->token, $note_id);
                      
                      $sections = array();
                      if(isset($getsection->value)) {
@@ -115,7 +93,7 @@ class block_onenote extends block_list {
                                      "name" => $course->fullname
                                         );                        
                                 $section = json_encode($param_section);
-                                $eventresponse = create_oneNote_section($SESSION->onenotetoken, $note_id, $section);
+                                $eventresponse = create_oneNote_section($access_token->token, $note_id, $section);
                              }
                             }
                          }
@@ -128,7 +106,7 @@ class block_onenote extends block_list {
                          );
                          
                      $note_name = json_encode($param);
-                     $created_notes = create_oneNote_notes($SESSION->onenotetoken,$note_name);
+                     $created_notes = create_oneNote_notes($access_token->token,$note_name);
                      $note_id = $created_notes->id;
                   
                      if($courses) {            
@@ -137,16 +115,26 @@ class block_onenote extends block_list {
                                      "name" => $course->fullname
                                         );                        
                             $section = json_encode($param_section);
-                            $eventresponse = create_oneNote_section($SESSION->onenotetoken, $note_id, $section);
+                            $eventresponse = create_oneNote_section($access_token->token, $note_id, $section);
                             
             
                         }
                      } 
-             }
+             }  
+            $notes = $onenoteapi->get_items_list('',$access_token->token);
+            if($notes) {
+              foreach ($notes as $note) {
+                $content->items[] = $note['title'];
+               }    
+            }             
             
-           $content->items[] = "Notebook and section created";
+            
+        } else {
+            $url = new moodle_url('https://login.live.com/oauth20_authorize.srf',$params);         
+            $content->items[] =  '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;" 
+            href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';//target="_blank"
+            
         }
-
-        return $content;*/
-    }
+        return $content;
+      }
 }

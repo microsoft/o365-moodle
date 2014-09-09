@@ -1,55 +1,9 @@
 <script src="/js/jquery_1.9.js"></script>
 <script type="text/javascript">
-$(document).ready(function(){
-$('#save').on( "click", function() {	    
-	    var accesstoken = $("#token").val();
-        var note_name = $("#newnote").val();
-        var note_data = {name: note_name};
-        $.ajax({
-		    type: 'POST',
-            url: 'https://www.onenote.com/api/v1.0/notebooks',
-		    headers: { 'Authorization': 'Bearer '+ accesstoken },
-		    data: note_name,
-            cache: false,
-            contentType: 'application/json',
-            processData: false,
-            success: function (data) {
-		      alert(JSON.stringify(data));
-		    },
-		    error: function(){
-		      alert("Cannot get data");
-		      console.log(jqXHR.responseText);
-		    }
-		});
-        //e.preventDefault();
-        //data = new FormData($('#create_note')[0]);
-        //alert(data);
-        /*console.log('Submitting');
-        $.ajax({
-            type: 'POST',
-            url: 'https://www.onenote.com/api/v1.0/notebooks',
-            data: data,
-            cache: false,
-            contentType: 'application/json',
-            processData: false
-			}).done(function(data) {
-				console.log(data);
-				if(data.search("ERROR") > -1)
-				{
-					alert(tools.getLocalization(trans,["ERROR_in_uploading","value"]));
-						console.log(data);
-				}
-				else
-				{
-					$("#image_file").val(data);
-					$("#image_file_original").val(data.replace("small_",""));
-					alert(tools.getLocalization(trans,["Image_Uploaded_Successfully","value"]));
-				}
-			}).fail(function(jqXHR,status, errorThrown) {
-            console.log(errorThrown);
-            console.log(jqXHR.responseText);
-            console.log(jqXHR.status);
-			});*/
-		});
+$(document).ready(function(){	    
+		window.M.core_filepicker = { active_filepicker : { list: function(){ 
+			  window.location.reload();
+			} }   }   ;
+		
 });
 </script>                   
