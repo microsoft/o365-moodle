@@ -1,5 +1,5 @@
 <?php
-$string['pluginname'] = 'OneNote Notes block';
-$string['onenote'] = 'OneNote Notes';
-$string['onenote:addinstance'] = 'Add a new OneNote Notes block';
-$string['onenote:myaddinstance'] = 'Add a new OneNote Notes block to the My Moodle page';
+$string['pluginname'] = 'OneNote block';
+$string['onenote'] = 'Microsoft OneNote';
+$string['onenote:addinstance'] = 'Add a new Microsoft OneNote block';
+$string['onenote:myaddinstance'] = 'Add a New microsoft OneNote block to the My Moodle page';

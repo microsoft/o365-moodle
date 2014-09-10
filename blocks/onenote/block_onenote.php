@@ -42,19 +42,35 @@ class block_onenote extends block_list {
         $onenoteapi = new microsoft_onenote($params['client_id'], $params['client_secret'], $returnurl);
         $params['redirect_uri'] = $onenoteapi->callback_url();
         $access_token = $onenoteapi->get_accesstoken();
+
         if(isset($access_token->token)) {
             $notes = $onenoteapi->get_items_list('');
             if($notes) {
-              foreach ($notes as $note) {
-                $content->items[] = $note['title'];
-               }
+                $content->items[] = '<b>Your Notebooks:</b>';
+                foreach ($notes as $note) {
+                    $content->items[] = '<a href="' . $note['url'] . '" target="_blank">' . $note['title'] . '</a>';
+                }
+            }
+
+            // add the "save to onenote" button if this is a file upload type of assignment
+            $cm_instance_id = optional_param('id', null, PARAM_INT);
+            if ($cm_instance_id) {
+                $content->items[] = '<br/><br/>';
+
+                $action_params['action'] = 'save';
+                $action_params['id'] = $cm_instance_id;
+                $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+                $content->items[] =
+                    '<form action="' . $url->out(false) . '" method="post" id="mform1" class="mform">' .
+                    '<input name="submitbutton" value="Save Assignment to OneNote" type="submit" id="id_savebutton">' .
+                    '</form>';
             }
         } else {
             $url = new moodle_url('https://login.live.com/oauth20_authorize.srf',$params);
             $content->items[] =  '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
             href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';//target="_blank"
-
         }
+
         return $content;
-      }
+    }
 }

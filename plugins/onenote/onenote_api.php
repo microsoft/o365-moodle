@@ -179,6 +179,8 @@ class microsoft_onenote extends oauth2_client {
         $response = json_decode($this->get($url));
         $this->isget = TRUE;
 
+        // error_log('response: ' . print_r($response, true));
+        
         if (isset($response->error)) {
             $this->log_out();
             return false;
@@ -196,7 +198,7 @@ class microsoft_onenote extends oauth2_client {
                         'date' => strtotime($item->lastModifiedTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
                         'source' => $item->id,
-                        'url' => $item->self,
+                        'url' => $item->links->oneNoteWebUrl->href,
                         'author' => $item->createdBy,
                         'id' => $item->id,
                         'children' => array()
@@ -208,7 +210,7 @@ class microsoft_onenote extends oauth2_client {
                         'date' => strtotime($item->lastModifiedTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
                         'source' => $item->id,
-                        'url' => $item->self,
+                        'url' => $item->links->oneNoteWebUrl->href,
                         'author' => $item->createdBy
                     );
                 }
