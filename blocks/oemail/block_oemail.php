@@ -38,7 +38,7 @@ class block_oemail extends block_list {
             <tr><td style='width:70px;font-weight:bold;'>From</td>
             <td style='font-weight:bold;'>Subject</td>
             <td style='width:70px;font-weight:bold;'>Date</td></tr>";
-
+        if(isset($messages)) { 
         foreach ($messages->value as $message) {
             $date_rec = strtotime($message->DateTimeReceived);
             $date_rec = date("M j G:i:s",$date_rec);//"https://outlook.office365.com/EWS/OData/Me/Messages('" . $message->Id . "')"
@@ -54,8 +54,10 @@ class block_oemail extends block_list {
                                 <td style='vertical-align:top;width:70px;'>".$date_rec."</td></tr>";
             //$content->icons[] = html_writer::empty_tag('img', array('src' => 'images/icons/1.gif', 'class' => 'icon'));
         }
+        }
         $content->items[] = "</table>";
         $content->footer = (is_array($messages->value) && (count($messages->value) > 0)) ? (count($messages->value) . " Messages.") : "No messages.";
+        
         } else {
             $content->items[] = "";
         } 
