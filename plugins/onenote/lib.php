@@ -130,8 +130,8 @@ class repository_onenote extends repository {
      *          path: internal location of the file
      *          url: URL to the source
      */
-    public function get_file($id, $filename = '') {        
-        $path = $this->prepare_file($filename);        
+    public function get_file($id, $filename = '') {
+        $path = $this->prepare_file($filename);
         return $this->onenote->download_section($id, $path);
     }
 

@@ -34,14 +34,14 @@ require_once($CFG->libdir.'/oauthlib.php');
  *
  * @package    repository_onenote
  */
-class microsoft_onenote extends oauth2_client { 
+class microsoft_onenote extends oauth2_client {
     /** @var string OAuth 2.0 scope */
     const SCOPE = 'office.onenote_update';
     /** @var string Base url to access API */
-    const API = 'https://www.onenote.com/api/v1.0';
+    const API = 'https://www.onenote.com/api/beta'; //'https://www.onenote.com/api/v1.0';
     /** @var cache_session cache of notebooknames */
     var $notebooknamecache = null;
-    private $isget = TRUE; 
+    private $isget = TRUE;
     /**-
      * Construct a onenote request object
      *
@@ -52,10 +52,10 @@ class microsoft_onenote extends oauth2_client {
     public function __construct($clientid, $clientsecret, $returnurl) {
         parent::__construct($clientid, $clientsecret, $returnurl, self::SCOPE);
 
-        error_log('microsoft_onenote constructor');
-        error_log(print_r($clientid, true));
-        error_log(print_r($clientsecret, true));
-        error_log(print_r($returnurl, true));
+        // error_log('microsoft_onenote constructor');
+        // error_log(print_r($clientid, true));
+        // error_log(print_r($clientsecret, true));
+        // error_log(print_r($returnurl, true));
 
         // Make a session cache
         $this->notebooknamecache = cache::make('repository_onenote', 'foldername');
@@ -69,8 +69,8 @@ class microsoft_onenote extends oauth2_client {
      *
      * @return bool true if GET should be used
      */
-    protected function use_http_get() {        
-            return $this->isget;    
+    protected function use_http_get() {
+            return $this->isget;
     }
 
     /**
@@ -98,13 +98,10 @@ class microsoft_onenote extends oauth2_client {
      public function download_section($section_id, $path) {
         error_log('download_section called: ' . print_r($section_id, true));
 
-        // TODO: how to download notebook or section?
         $url = self::API."/sections/".$section_id."/pages";
-        error_log(print_r($url,true)); 
-        // Microsoft live redirects to the real download location..
-        $this->setopt(array('CURLOPT_FOLLOWLOCATION' => true, 'CURLOPT_MAXREDIRS' => 3));
+        error_log(print_r($url,true));
+
         $this->isget = FALSE;
-        $this->request($url);        
         $response = $this->get($url);
         $this->isget = TRUE;
         $response = json_decode($response);
@@ -116,7 +113,7 @@ class microsoft_onenote extends oauth2_client {
             return null;
         }
 
-        file_put_contents($path, $response->value);
+        file_put_contents($path, json_encode($response->value));
         return array('path'=>$path, 'url'=>$url);
     }
 
@@ -177,21 +174,18 @@ class microsoft_onenote extends oauth2_client {
             $url = self::API."/notebooks/{$currentnotebookid}/sections/";
         }
 
- 
-         $this->isget = FALSE;
-         $this->request($url);
-         $response = json_decode($this->get($url));
-         $this->isget = TRUE;
-         
-          
-         if (isset($response->error)) {
+        $this->isget = FALSE;
+        $this->request($url);
+        $response = json_decode($this->get($url));
+        $this->isget = TRUE;
+
+        if (isset($response->error)) {
             $this->log_out();
             return false;
         }
 
         $items = array();
-        
-            
+
         if ($response && $response->value) {
             foreach ($response->value as $item) {
                 if ($enumerating_notebooks) {
@@ -219,13 +213,13 @@ class microsoft_onenote extends oauth2_client {
                     );
                 }
             }
-        } 
-        if(isset($items->id)) {
-            $this->insert_notes($items);    
         }
-        
 
-       return $items;
+        if(isset($items->id)) {
+            $this->insert_notes($items);
+        }
+
+        return $items;
     }
 
     /**
@@ -240,73 +234,77 @@ class microsoft_onenote extends oauth2_client {
     }
 
     private function insert_notes($notes) {
-        $noteurl = self::API."/notebooks/";                
+        $noteurl = self::API."/notebooks/";
         $courses = enrol_get_my_courses();
         error_log(print_r($notes,true));
         $notes_array = array();
-            if($notes) {
-              foreach ($notes as $note) {
+
+        if($notes) {
+            foreach ($notes as $note) {
                 if($note['id']) {
-                    $not[$note['id']] = $note['title'];                
-                    array_push($notes_array,$not);    
-                }  
-                                
-               }    
+                    $not[$note['id']] = $note['title'];
+                    array_push($notes_array,$not);
+                }
             }
-            
-            if(count($notes_array) != ''){  
-                 foreach($notes_array as $notes) {
-                    if(!(in_array('MoodleNote', $notes))){                        
-                     $param = array(
-                          "name" => "MoodleNote"   
-                         );                         
-                     $note_name = json_encode($param);
-                     $this->setHeader('Content-Type: application/json');
-                     $this->isget = FALSE;
-                     $this->request($noteurl);
-                     $created_notes = json_decode($this->post($noteurl,$note_name));
-                     $this->isget = TRUE;
-                     //$created_notes = create_oneNote_notes($access_token->token,$note_name);                     
-                     $note_id = $created_notes->id;                                          
-                     if($courses) {            
-                        foreach($courses as $course) {                            
+        }
+
+        if(count($notes_array) != ''){
+            foreach($notes_array as $notes) {
+                if(!(in_array('MoodleNote', $notes))){
+                    $param = array(
+                        "name" => "MoodleNote"
+                    );
+
+                    $note_name = json_encode($param);
+                    $this->setHeader('Content-Type: application/json');
+                    $this->isget = FALSE;
+                    $this->request($noteurl);
+                    $created_notes = json_decode($this->post($noteurl,$note_name));
+                    $this->isget = TRUE;
+                    //$created_notes = create_oneNote_notes($access_token->token,$note_name);
+                    $note_id = $created_notes->id;
+
+                    if($courses) {
+                        foreach($courses as $course) {
                             $param_section = array(
-                                     "name" => $course->fullname
-                                        );                        
-                             $section = json_encode($param_section);                            
-                             $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                             $this->setHeader('Content-Type: application/json');
-                             $this->isget = FALSE;
-                             $this->request($sectionurl);
-                             $getsection = json_decode($this->post($sectionurl,$section));
-                             $this->isget = TRUE;
-                             error_log(print_r($getsection, true));
+                                "name" => $course->fullname
+                            );
+                            $section = json_encode($param_section);
+                            $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+                            $this->setHeader('Content-Type: application/json');
+                            $this->isget = FALSE;
+                            $this->request($sectionurl);
+                            $getsection = json_decode($this->post($sectionurl,$section));
+                            $this->isget = TRUE;
+                            error_log(print_r($getsection, true));
                         }
-                     }                            
-                 } else {                     
-                     $note_id = array_search("MoodleNote", $notes);
-                     error_log("hereeee");
-                     error_log(print_r($note_id,true));
-                     $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                     $this->setHeader('Content-Type: application/json');
-                     $this->isget = FALSE;
-                     $this->request($sectionurl);
-                     $getsection = json_decode($this->get($sectionurl));
-                     $this->isget = FALSE;
-                     error_log(print_r($getsection, true));
-                     
-                     $sections = array();
-                     if(isset($getsection->value)) {
-                        foreach($getsection->value as $section) {      
-                              array_push($sections,$section->name);                  
-                          }             
-                     }
-                     if($courses) {            
+                    }
+                } else {
+                    $note_id = array_search("MoodleNote", $notes);
+                    error_log("hereeee");
+                    error_log(print_r($note_id,true));
+                    $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+                    $this->setHeader('Content-Type: application/json');
+                    $this->isget = FALSE;
+                    $this->request($sectionurl);
+                    $getsection = json_decode($this->get($sectionurl));
+                    $this->isget = FALSE;
+                    error_log(print_r($getsection, true));
+
+                    $sections = array();
+                    if(isset($getsection->value)) {
+                        foreach($getsection->value as $section) {
+                            array_push($sections,$section->name);
+                        }
+                    }
+
+                    if($courses) {
                         foreach($courses as $course) {
                             if(!in_array($course->fullname, $sections)) {
                                 $param_section = array(
-                                     "name" => $course->fullname
-                                        );                        
+                                    "name" => $course->fullname
+                                );
+
                                 $section = json_encode($param_section);
                                 $this->setHeader('Content-Type: application/json');
                                 $this->isget = FALSE;
@@ -314,42 +312,41 @@ class microsoft_onenote extends oauth2_client {
                                 $eventresponse = $this->post($sectionurl,$section);
                                 $this->isget = TRUE;
                                 //create_oneNote_section($access_token->token, $note_id, $section);
-                             }
                             }
-                         }
-                     }
-            
-                 } 
-             } else {                    
-                    $param = array(
-                          "name" => "MoodleNote"   
-                         );
-                         
-                     $note_name = json_encode($param);
-                     $this->setHeader('Content-Type: application/json');
-                     $this->isget = FALSE;
-                     $this->request($noteurl);
-                     $created_notes = json_decode($this->post($noteurl,$note_name));
-                     $this->isget = TRUE;                     
-                     error_log(print_r($created_notes,true));
-                     $note_id = $created_notes->id;
-                     $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                     if($courses) {            
-                        foreach($courses as $course) {
-                            $param_section = array(
-                                     "name" => $course->fullname
-                                        );                        
-                            $section = json_encode($param_section);
-                          //  $eventresponse = create_oneNote_section($access_token->token, $note_id, $section);
-                            $this->setHeader('Content-Type: application/json');
-                            $this->isget = FALSE;
-                            $this->request($sectionurl);
-                            $eventresponse = $this->post($sectionurl,$section);
-                            $this->isget = TRUE;            
                         }
-                     } 
-             }  
-         
-    }
+                    }
+                }
+            }
+        } else {
+            $param = array(
+                "name" => "MoodleNote"
+            );
 
+            $note_name = json_encode($param);
+            $this->setHeader('Content-Type: application/json');
+            $this->isget = FALSE;
+            $this->request($noteurl);
+            $created_notes = json_decode($this->post($noteurl,$note_name));
+            $this->isget = TRUE;
+            error_log(print_r($created_notes,true));
+
+            $note_id = $created_notes->id;
+            $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+            if($courses) {
+                foreach($courses as $course) {
+                    $param_section = array(
+                        "name" => $course->fullname
+                    );
+
+                    $section = json_encode($param_section);
+                    //  $eventresponse = create_oneNote_section($access_token->token, $note_id, $section);
+                    $this->setHeader('Content-Type: application/json');
+                    $this->isget = FALSE;
+                    $this->request($sectionurl);
+                    $eventresponse = $this->post($sectionurl,$section);
+                    $this->isget = TRUE;
+                }
+            }
+        }
+    }
 }
