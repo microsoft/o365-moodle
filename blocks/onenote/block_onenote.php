@@ -59,7 +59,9 @@ class block_onenote extends block_list {
 
                 $action_params['action'] = 'save';
                 $action_params['id'] = $cm_instance_id;
+                $action_params['token'] = $access_token->token;
                 $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+                
                 $content->items[] =
                     '<form action="' . $url->out(false) . '" method="post" id="mform1" class="mform">' .
                     '<input name="submitbutton" value="Save Assignment to OneNote" type="submit" id="id_savebutton">' .
@@ -71,6 +73,7 @@ class block_onenote extends block_list {
             href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';//target="_blank"
         }
 
+        error_log('_get_content exited');
         return $content;
     }
 }
