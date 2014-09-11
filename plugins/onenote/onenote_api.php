@@ -88,6 +88,7 @@ class microsoft_onenote extends oauth2_client {
     protected function token_url() {
         return 'https://login.live.com/oauth20_token.srf';
     }
+
     /**
      * Downloads a section to a  file from onenote using authenticated request
      *
@@ -179,7 +180,7 @@ class microsoft_onenote extends oauth2_client {
         $response = json_decode($this->get($url));
         $this->isget = TRUE;
 
-        // error_log('response: ' . print_r($response, true));
+        //error_log('response: ' . print_r($response, true));
         
         if (isset($response->error)) {
             $this->log_out();
@@ -210,7 +211,7 @@ class microsoft_onenote extends oauth2_client {
                         'date' => strtotime($item->lastModifiedTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
                         'source' => $item->id,
-                        'url' => $item->links->oneNoteWebUrl->href,
+                        'url' => $item->self,
                         'author' => $item->createdBy
                     );
                 }
@@ -352,3 +353,4 @@ class microsoft_onenote extends oauth2_client {
         }
     }
 }
+
