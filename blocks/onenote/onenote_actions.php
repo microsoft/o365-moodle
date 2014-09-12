@@ -10,11 +10,15 @@ $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $assign = $DB->get_record('assign', array('id' => $cm->instance));
 //error_log('assign: ' . print_r($assign, true));
 
+// TODO: Map $cm->course to section id
+
 // save to one note using name, intro
 // TODO: Fix up images / links etc. (copy those to onenote too and update hrefs accordingly)
 $html = '<!DOCTYPE html><html><head><title>Assignment: ' . $assign->name . '</title></head><body><h1>' . $assign->name . '</h1><div>' . $assign->intro . '</div></body></html>';
 
 $url = 'https://www.onenote.com/api/beta/pages';
+
+//$url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
 
 $curl = new curl();
 $curl->setHeader('Authorization: Bearer ' . $token);

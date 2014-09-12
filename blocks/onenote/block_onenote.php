@@ -30,11 +30,12 @@ class block_onenote extends block_list {
         $content->items = array();
         $content->icons = '';
 
-        $params['client_id'] = get_config('onenote', 'clientid'); //'Mc8gpyG9wYr7f5qSr8JoQ';
-        $params['client_secret'] = get_config('onenote', 'secret'); //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
+        // TODO: For now, we are simply going to use the microsoft_onenote class that exists inside the onenote repository plugin. Eventually we will have to refactor this properly.
+        $params['client_id'] = get_config('onenote', 'clientid');
+        $params['client_secret'] = get_config('onenote', 'secret');
         $returnurl = new moodle_url('/repository/repository_callback.php');
         $returnurl->param('callback', 'yes');
-        $returnurl->param('repo_id', 9);
+        $returnurl->param('repo_id', $this->get_onenote_repo_id());
         $returnurl->param('sesskey', sesskey());
         $params['state'] = $returnurl->out_as_local_url(FALSE);
         $params['scope'] = 'office.onenote_update';
@@ -42,6 +43,7 @@ class block_onenote extends block_list {
         $onenoteapi = new microsoft_onenote($params['client_id'], $params['client_secret'], $returnurl);
         $params['redirect_uri'] = $onenoteapi->callback_url();
         $access_token = $onenoteapi->get_accesstoken();
+        //error_log("access_token: " . print_r($access_token, true));
 
         if(isset($access_token->token)) {
             $notes = $onenoteapi->get_items_list('');
@@ -61,7 +63,7 @@ class block_onenote extends block_list {
                 $action_params['id'] = $cm_instance_id;
                 $action_params['token'] = $access_token->token;
                 $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
-                
+
                 $content->items[] =
                     '<form action="' . $url->out(false) . '" method="post" id="mform1" class="mform">' .
                     '<input name="submitbutton" value="Save Assignment to OneNote" type="submit" id="id_savebutton">' .
@@ -75,5 +77,13 @@ class block_onenote extends block_list {
 
         error_log('_get_content exited');
         return $content;
+    }
+
+    // get the repo id for the onenote repo
+    private function get_onenote_repo_id() {
+        global $DB;
+        $repository = $DB->get_record('repository', array('type'=>'onenote'));
+        //error_log(print_r($repository, true));
+        return $repository->id;
     }
 }
