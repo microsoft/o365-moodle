@@ -34,9 +34,9 @@ class block_yammer extends block_list {
         }
 
         //Yammer client application settings
-        $client_id = 'eK7Bh1rNgtYKPwDjyBOLZQ'; //'Mc8gpyG9wYr7f5qSr8JoQ';
-        $client_secret = 'WsarbiIcRPGUuvj9ADYA4MbT9oi9ilY6NA2VQJeuw'; //'hvzBKUtj3cFkmIxjioqvSpAnNkfTfTT5X7lP8lgIOP0';
-        $redirect_uri = 'http://localhost:88/blocks/yammer/yammer_redirect.php'; // 'http://localhost/moodleapp/blocks/yammer/yammer_redirect.php';
+        $client_id = 's45JJIkjEpQ5etnz1sm33Q'; //'eK7Bh1rNgtYKPwDjyBOLZQ';
+        $client_secret = '7c2SZUGjXy1yb58YQYkezjY9Cp2fIHzwpaa7SGg960'; //'WsarbiIcRPGUuvj9ADYA4MbT9oi9ilY6NA2VQJeuw';
+        $redirect_uri = 'http://gopikalocal.com/blocks/yammer/yammer_redirect.php'; // 'http://localhost:88/blocks/yammer/yammer_redirect.php';
 
         $curl = new curl();
         if($code && $authprovider == 'yammer') {
@@ -44,6 +44,7 @@ class block_yammer extends block_list {
             $response = $curl->get('https://www.yammer.com/oauth2/access_token.json?client_id='.$client_id.'&client_secret='.$client_secret.'&code='.$code);
             $response = json_decode($response);
             $SESSION->yammertoken = $response->access_token->token;
+            header( "Location: /my" );
         }
 
         if(!isset($SESSION->yammertoken) ) {
