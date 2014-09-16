@@ -47,14 +47,16 @@ class events_o365 {
                 $is_teacher = is_teacher($course_id, $USER->id);
                 if($is_teacher) {
                     $course_cal = $DB->get_record('course_calendar_ext',array("course_id" => $course_id));
-                    $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->calendar_id);
+                    if ($course_cal) {
+                        $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->calendar_id);
 
-                    if(!isset($events->error) || !($events->error)) {
-                        foreach($events->value as $event) {
-                            $event->course = $course_id;
+                        if(!isset($events->error) || !($events->error)) {
+                            foreach($events->value as $event) {
+                                $event->course = $course_id;
+                            }
+
+                            array_push($courseevents,$events);
                         }
-
-                        array_push($courseevents,$events);
                     }
                 }
             }
