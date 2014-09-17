@@ -12,11 +12,12 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="course_calendar_ext" COMMENT="Extension for adding up the calendar id to course ">
+    <TABLE NAME="course_ms_ext" COMMENT="Extension for adding up the calendar id and onenote section id to course ">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="course_id" TYPE="int" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Course id created by moodle"/>
-        <FIELD NAME="calendar_id" TYPE="char" LENGTH="300" NOTNULL="false" SEQUENCE="false" COMMENT="Course id created by office calendar which is passes to the moodle"/>
+        <FIELD NAME="ms_id" TYPE="char" LENGTH="300" NOTNULL="false" SEQUENCE="false" COMMENT="Course id/Section id created by office calendar/onenote which is passes to the moodle"/>
+        <FIELD NAME="ms_type" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false" COMMENT="type of the ms_id, to show whether it is calender or onenote"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

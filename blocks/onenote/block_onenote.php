@@ -11,7 +11,6 @@ class block_onenote extends block_list {
     public function get_content() {
         if (!isloggedin()) {
             return null;
-
         }
 
         if ($this->content !== null) {
@@ -42,26 +41,27 @@ class block_onenote extends block_list {
         $params['response_type'] = 'code';
         $onenoteapi = new microsoft_onenote($params['client_id'], $params['client_secret'], $returnurl);
         $params['redirect_uri'] = $onenoteapi->callback_url();
-        $access_token = $onenoteapi->get_accesstoken();
-        //error_log("access_token: " . print_r($access_token, true));
+        $onenote_token = $onenoteapi->get_accesstoken();
 
-        if(isset($access_token->token)) {
+        if(isset($onenote_token->token)) {
             $notes = $onenoteapi->get_items_list('');
             if($notes) {
                 $content->items[] = '<b>Your Notebooks:</b>';
-                foreach ($notes as $note) {
+                foreach ($notes as $note) {                    
                     $content->items[] = '<a href="' . $note['url'] . '" target="_blank">' . $note['title'] . '</a>';
                 }
+            } else {
+                $content->items[] = "No notes";
             }
 
             // add the "save to onenote" button if this is a file upload type of assignment
-            $cm_instance_id = optional_param('id', null, PARAM_INT);
-            if ($cm_instance_id) {
+             $cm_instance_id = optional_param('id', null, PARAM_INT);
+            if($cm_instance_id) {
                 $content->items[] = '<br/><br/>';
 
                 $action_params['action'] = 'save';
                 $action_params['id'] = $cm_instance_id;
-                $action_params['token'] = $access_token->token;
+                $action_params['token'] = $onenote_token->token;
                 $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
 
                 $content->items[] =
@@ -72,7 +72,7 @@ class block_onenote extends block_list {
         } else {
             $url = new moodle_url('https://login.live.com/oauth20_authorize.srf',$params);
             $content->items[] =  '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
-            href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';//target="_blank"
+            href="'.$url->out(false).'">'.get_string('login', 'repository').'</a>';
         }
 
         error_log('_get_content exited');
@@ -83,7 +83,6 @@ class block_onenote extends block_list {
     private function get_onenote_repo_id() {
         global $DB;
         $repository = $DB->get_record('repository', array('type'=>'onenote'));
-        //error_log(print_r($repository, true));
         return $repository->id;
     }
 }

@@ -1,10 +1,13 @@
 <?php
 require_once($CFG->dirroot.'/blocks/yammer/yammer_lib.php');
 
-
 class block_yammer extends block_list {
     public function init() {
         $this->title = get_string('yammer', 'block_yammer');
+    }
+
+    function has_config() {
+        return true;
     }
 
     public function get_content() {
@@ -23,7 +26,7 @@ class block_yammer extends block_list {
     }
 
     public function _get_content() {
-        global $SESSION;
+        global $CFG,$SESSION;
 
         $content = new stdClass;
         $content->items = array();
@@ -32,11 +35,11 @@ class block_yammer extends block_list {
         if (!empty($code)) {
             $authprovider = required_param('authprovider', PARAM_ALPHANUMEXT);
         }
-
+        
         //Yammer client application settings
-        $client_id = 's45JJIkjEpQ5etnz1sm33Q'; //'eK7Bh1rNgtYKPwDjyBOLZQ';
-        $client_secret = '7c2SZUGjXy1yb58YQYkezjY9Cp2fIHzwpaa7SGg960'; //'WsarbiIcRPGUuvj9ADYA4MbT9oi9ilY6NA2VQJeuw';
-        $redirect_uri = 'http://gopikalocal.com/blocks/yammer/yammer_redirect.php'; // 'http://localhost:88/blocks/yammer/yammer_redirect.php';
+        $client_id = $CFG->block_yammer_clientid; //'eK7Bh1rNgtYKPwDjyBOLZQ';
+        $client_secret = $CFG->block_yammer_clientsecret; //'WsarbiIcRPGUuvj9ADYA4MbT9oi9ilY6NA2VQJeuw';
+        $redirect_uri = $CFG->block_yammer_redirect; // 'http://localhost:88/blocks/yammer/yammer_redirect.php';
 
         $curl = new curl();
         if($code && $authprovider == 'yammer') {
@@ -66,8 +69,7 @@ class block_yammer extends block_list {
                 $created_at = strtotime($message->created_at);            
                 $created_at = date("M j G:i:s",$created_at);
 
-                $content->items[] ="<tr><td style='vertical-align:top;width:70px;'>".$name.
-                    "</td><td style='vertical-align:top;'>".$message->body->plain."</td><td style='vertical-align:top;width:70px;'>".$created_at."</td></tr>";
+                $content->items[] ="<tr><td style='vertical-align:top;width:70px;'>".$name."</td><td style='vertical-align:top;'>".$message->body->plain."</td><td style='vertical-align:top;width:70px;'>".$created_at."</td></tr>";
             }
 
             $content->items[] = "</table>";

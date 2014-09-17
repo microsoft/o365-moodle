@@ -12,7 +12,7 @@ if (empty($code)) {
     throw new moodle_exception('onenote_failure');
 }
 
-$loginurl = '/'; // TODO: What should be this url to allow user to add the block on other pages?
+$loginurl = '/my'; // TODO: What should be this url to allow user to add the block on other pages?
 if (!empty($CFG->alternateloginurl)) {
     $loginurl = $CFG->alternateloginurl;
 }
