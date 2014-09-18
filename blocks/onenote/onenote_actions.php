@@ -9,8 +9,8 @@ $token = required_param('token', PARAM_TEXT);
 
 $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $assign = $DB->get_record('assign', array('id' => $cm->instance));
-$section = $DB->get_record('course_ms_ext',array("course_id" => $cm->course,"ms_type" => "onenote"));
-$section_id = $section->ms_id;
+$section = $DB->get_record('course_ms_ext',array("course_id" => $cm->course));
+$section_id = $section->section_id;
 
 error_log('assign: ' . print_r($assign, true));
 // /exit;
