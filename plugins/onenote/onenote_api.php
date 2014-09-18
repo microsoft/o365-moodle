@@ -289,9 +289,15 @@ class microsoft_onenote extends oauth2_client {
                                 //mapping course id and section id                            
                                 $course_onenote = new stdClass();
                                 $course_onenote->course_id = $course->id;
-                                $course_onenote->ms_id = $getsection->id;
-                                $course_onenote->ms_type = "onenote";
-                                $insert = $DB->insert_record("course_ms_ext", $course_onenote);    
+                                $course_onenote->section_id = $getsection->id;                                
+                                $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course->id));
+                                if($course_ext) {
+                                	$course_onenote->id = $course_ext->id;
+                                	$update = $DB->update_record("course_ms_ext", $course_onenote);
+                                }else {
+                                	$insert = $DB->insert_record("course_ms_ext", $course_onenote);
+                                }
+                                    
                             }
                                                         
                             error_log(print_r($getsection, true));
@@ -337,54 +343,21 @@ class microsoft_onenote extends oauth2_client {
                                 error_log(print_r($eventresponse->id,TRUE));
                                 $course_onenote = new stdClass();
                                 $course_onenote->course_id = $course->id;
-                                $course_onenote->ms_id = $eventresponse->id;
-                                $course_onenote->ms_type = "onenote";
-                                $insert = $DB->insert_record("course_ms_ext", $course_onenote);
-                                //create_oneNote_section($access_token->token, $note_id, $section);
+                                $course_onenote->section_id = $eventresponse->id;                                
+                                $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course->id));
+                                if($course_ext) {
+                                	$course_onenote->id = $course_ext->id;
+                                	$update = $DB->update_record("course_ms_ext", $course_onenote);
+                                }else {
+                                	$insert = $DB->insert_record("course_ms_ext", $course_onenote);
+                                }
+
                             }
                         }
                     }
                 }
             //}
-        } /*else {
-           
-            $param = array(
-                "name" => $notebook_name
-            );
-
-            $note_name = json_encode($param);
-            $this->setHeader('Content-Type: application/json');
-            $this->isget = FALSE;
-            $this->request($noteurl);
-            $created_notes = json_decode($this->post($noteurl,$note_name));
-            $this->isget = TRUE;
-            error_log(print_r($created_notes,true));
-            $note_id = $created_notes->id;
-            $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-            if($courses) {
-                foreach($courses as $course) {
-                    $param_section = array(
-                        "name" => $course->fullname
-                    );
-
-                    $section = json_encode($param_section);
-                    //  $eventresponse = create_oneNote_section($access_token->token, $note_id, $section);
-                    $this->setHeader('Content-Type: application/json');
-                    $this->isget = FALSE;
-                    $this->request($sectionurl);
-                    $eventresponse = $this->post($sectionurl,$section);
-                    $this->isget = TRUE;
-                    $eventresponse = json_decode($eventresponse);
-                    //mapping course id and section id
-                    $course_onenote = new stdClass();
-                    $course_onenote->course_id = $course->id;
-                    $course_onenote->ms_id = $eventresponse->id;
-                    $course_onenote->ms_type = "onenote";
-                    $insert = $DB->insert_record("course_ms_ext", $course_onenote);
-                }
-            }
-             
-        }*/
+        } 
     }
 }
 

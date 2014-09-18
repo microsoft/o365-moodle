@@ -35,4 +35,4 @@ if (empty($contextid)) {
 
 $systemcontext = get_system_context();
 
-echo "I am in index";exit;
+

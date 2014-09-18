@@ -46,9 +46,9 @@ class events_o365 {
                 $course_id = $course->id;
                 $is_teacher = is_teacher($course_id, $USER->id);
                 if($is_teacher) {
-                    $course_cal = $DB->get_record('course_ms_ext',array("course_id" => $course_id,"ms_type" => "calendar"));
+                    $course_cal = $DB->get_record('course_ms_ext',array("course_id" => $course_id));
                     if ($course_cal) {
-                        $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->ms_id);
+                        $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->calendar_id);
 
                         if(!isset($events->error) || !($events->error)) {
                             foreach($events->value as $event) {
@@ -189,9 +189,8 @@ class events_o365 {
         if ($data->courseid != 0) { //Course event
             $course = $DB->get_record('course',array("id" => $data->courseid));
             $course_name = $course->fullname;
-            $course_cal = $DB->get_record('course_ms_ext',array("course_id" => $data->courseid,"ms_type" => "calendar"));
-            
-            $calendar_id = $course_cal->ms_id;
+            $course_cal = $DB->get_record('course_ms_ext',array("course_id" => $data->courseid));
+            $calendar_id = $course_cal->calendar_id;
             $course_name = array(0 => $course_name);
 
             //In moodle the roles are based on the context, to check if logged in user is a teacher
@@ -380,11 +379,16 @@ function create_course_calendar($data) {
 
     $new_calendar = o365_create_calendar($SESSION->accesstoken, $data->fullname);
 
-    $course_calendar = new stdClass();
+    $course_calendar = new stdClass();    
     $course_calendar->course_id = $data->id;
-    $course_calendar->ms_id = $new_calendar->Id;
-    $course_calendar->ms_type = "calendar";
-    $insert = $DB->insert_record("course_ms_ext", $course_calendar);
+    $course_calendar->calendar_id = $new_calendar->Id;
+    $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $data->id));
+    if($course_ext) {
+    	$course_calendar->id = $course_ext->id;
+        $update = $DB->update_record("course_ms_ext", $course_calendar);
+    } else {
+    	$insert = $DB->insert_record("course_ms_ext", $course_calendar);
+    }    
     //error_log(print_r($insert, true));
 }
 
@@ -394,9 +398,9 @@ function delete_course_calendar($data) {
     error_log("delete_course_calendar called");
     error_log(print_r($data, true));
 
-    $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $data->id,"ms_type" => "calendar"));
+    $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $data->id));
 
-    o365_delete_calendar($SESSION->accesstoken, $course_ext->ms_id);
+    o365_delete_calendar($SESSION->accesstoken, $course_ext->calendar_id);
 }
 
 function subscribe_to_course_calendar($data) {
@@ -405,7 +409,7 @@ function subscribe_to_course_calendar($data) {
     error_log(print_r($data, true));
 
     // Get O365 calendar id for the course from course table
-    $calendar_id = $DB->get_record('course_ms_ext', array("course_id" => $data->courseid,"ms_type" => "calendar"));
+    $calendar_id = $DB->get_record('course_ms_ext', array("course_id" => $data->courseid));
     
     // TODO: Get student UPN and share the calendar with them
 
