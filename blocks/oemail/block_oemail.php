@@ -28,11 +28,11 @@ class block_oemail extends block_list {
 
         date_default_timezone_set('UTC');
         // get email from Office365
-        if(isset($SESSION->accesstoken)) {
-        $messages = o365_get_messages($SESSION->accesstoken);
         $content = new stdClass;
         $content->items = array();
         $content->icons = ''; //array();
+        if(isset($SESSION->accesstoken)) {
+        $messages = o365_get_messages($SESSION->accesstoken);        
         $content->items[] =
             "<table border='0' cellpadding='4' cellspacing='4'>
             <tr><td style='width:70px;font-weight:bold;'>From</td>
@@ -59,7 +59,7 @@ class block_oemail extends block_list {
         $content->footer = (is_array($messages->value) && (count($messages->value) > 0)) ? (count($messages->value) . " Messages.") : "No messages.";
         
         } else {
-            $content->items[] = "";
+            $content->items[] = "No data";
         } 
         return $content;
     }

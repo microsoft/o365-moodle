@@ -48,6 +48,24 @@ class events_o365 {
                 if($is_teacher) {
                     $course_cal = $DB->get_record('course_ms_ext',array("course_id" => $course_id));
                     if ($course_cal) {
+                    	if($course_cal->calendar_id == '') {
+                    		$calendar = o365_get_calendar($SESSION->accesstoken);
+                    		echo "<pre>";
+                    		//print_r($calendar);
+                    		$o365_cal = array();
+                    		foreach ($calendar->value as $cal) {                    			
+                    		 if($cal->Id) {
+				                    $o365_cal[$cal->Id] = $cal->Name;
+				                }
+                    		}
+                    		$calendar_id = array_search($course->fullname, $o365_cal);                    		
+                    		$course_calendar = new stdClass();	
+                    		$course_calendar->id = $course_cal->id;
+                    		$course_calendar->course_id = $course_id;
+                    		$course_calendar->calendar_id = $calendar_id;
+                    		$course_cal = $DB->update_record('course_ms_ext', $course_calendar);
+                    		$course_cal->calendar_id = $calendar_id;
+                    	}
                         $events = o365_get_calendar_events($SESSION->accesstoken,$course_cal->calendar_id);
 
                         if(!isset($events->error) || !($events->error)) {
@@ -57,6 +75,12 @@ class events_o365 {
 
                             array_push($courseevents,$events);
                         }
+                    } else {
+                    	$calendar = o365_get_calendar($SESSION->accesstoken);
+                    	$course_calendar = new stdClass();
+                    	$course_calendar->course_id = $course_id;
+                    	$course_calendar->calendar_id = $calendar->Id;
+                    	$course_cal = $DB->insert_record('course_ms_ext', $course_calendar);
                     }
                 }
             }

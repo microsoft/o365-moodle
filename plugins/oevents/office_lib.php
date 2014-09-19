@@ -53,6 +53,17 @@ function o365_get_calendar_events($access_token, $calendar_id) {
     $events = json_decode($response);
     return $events;
 }
+function o365_get_calendar($access_token){
+	$curl = new curl();
+	$header = array("Authorization: Bearer ". $access_token);
+	$curl->setHeader($header);
+	
+	$response = $curl->get('https://outlook.office365.com/ews/odata/Me/Calendars');
+	$calendar = json_decode($response);
+	
+	return $calendar;
+}
+
 
 function o365_create_calendar_event($access_token, $calendar_id, $event) {
     error_log("o365_create_calendar_event called");

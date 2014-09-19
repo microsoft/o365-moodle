@@ -217,14 +217,10 @@ class microsoft_onenote extends oauth2_client {
                 }
             }
         }
-
-        if(isset($items)) {
-            $this->insert_notes($items);
-             
+        if (empty($path)) {
+        	$this->insert_notes($items);
         }
-        
-
-        return $items;
+       	return $items;
     }
 
     /**
@@ -242,21 +238,17 @@ class microsoft_onenote extends oauth2_client {
         global $DB;
         $notebook_name =  get_string('notebookname','block_onenote');
         $noteurl = self::API."/notebooks/";
-        $courses = enrol_get_my_courses();
-        //error_log(print_r($notes,true));
-        $notes_array = array();
-        error_log('got called');
+        $courses = enrol_get_my_courses(); //get the current user enrolled courses       
+        $notes_array = array();        
         if($notes) {
             foreach ($notes as $note) {
                 if($note['id']) {
                     $notes_array[$note['id']] = $note['title'];
-                    //array_push($notes_array,$not);
                 }
             }
         }
-        error_log(print_r($notes_array,TRUE));
-        if(count($notes_array) != ''){
-            //foreach($notes_array as $notes) {
+        
+        if(count($notes_array) > 0){            
                 if(!(in_array($notebook_name, $notes_array))){                                 
                     $param = array(
                         "name" => $notebook_name
@@ -267,41 +259,13 @@ class microsoft_onenote extends oauth2_client {
                     $this->setHeader('Content-Type: application/json');
                     $this->request($noteurl);
                     $created_notes = json_decode($this->post($noteurl,$note_name));
-                    $this->isget = TRUE;
-                    //$created_notes = create_oneNote_notes($access_token->token,$note_name);
-                    error_log(print_r($created_notes,true));
+                    $this->isget = TRUE;                  
+                    $sections = array();
                     if($created_notes) {
                         $note_id = $created_notes->id;    
                     }      
                     if($courses) {
-                        foreach($courses as $course) {
-                            $param_section = array(
-                                "name" => $course->fullname
-                            );
-                            $section = json_encode($param_section);
-                            $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                            $this->setHeader('Content-Type: application/json');
-                            $this->isget = FALSE;
-                            $this->request($sectionurl);
-                            $getsection = json_decode($this->post($sectionurl,$section));
-                            $this->isget = TRUE;
-                            if($getsection) {
-                                //mapping course id and section id                            
-                                $course_onenote = new stdClass();
-                                $course_onenote->course_id = $course->id;
-                                $course_onenote->section_id = $getsection->id;                                
-                                $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course->id));
-                                if($course_ext) {
-                                	$course_onenote->id = $course_ext->id;
-                                	$update = $DB->update_record("course_ms_ext", $course_onenote);
-                                }else {
-                                	$insert = $DB->insert_record("course_ms_ext", $course_onenote);
-                                }
-                                    
-                            }
-                                                        
-                            error_log(print_r($getsection, true));
-                        }
+                    	$this->create_sections_onenote($courses,$note_id,$sections);                        
                     }
                 } else {
                     $note_id = array_search($notebook_name, $notes_array);                    
@@ -311,53 +275,60 @@ class microsoft_onenote extends oauth2_client {
                     $this->request($sectionurl);
                     $getsection = json_decode($this->get($sectionurl));
                     $this->isget = TRUE;
-                    
-                    //error_log(print_r($getsection, true));
-
                     $sections = array();
                     if(isset($getsection->value)) {
                         foreach($getsection->value as $section) {
-                            array_push($sections,$section->name);
+                        	$sections[$section->id] = $section->name;                     
                         }
                     }
-                    error_log("in sections");
                     
-                    error_log(print_r($sections,TRUE));
                     if($courses) {
-                        foreach($courses as $course) {
-                            error_log(print_r($course,TRUE));
-                            if(!in_array($course->fullname, $sections)) {
-                                $param_section = array(
-                                    "name" => $course->fullname
-                                );
-                                error_log(print_r($course->id,TRUE));
-                                $section = json_encode($param_section);
-                                $this->setHeader('Content-Type: application/json');
-                                $this->isget = FALSE;
-                                $this->request($sectionurl);
-                                $eventresponse = $this->post($sectionurl,$section);
-                                $this->isget = TRUE;
-                                $eventresponse = json_decode($eventresponse);
-                                //mapping course id and section id
-                                error_log(print_r($eventresponse,TRUE));
-                                error_log(print_r($eventresponse->id,TRUE));
-                                $course_onenote = new stdClass();
-                                $course_onenote->course_id = $course->id;
-                                $course_onenote->section_id = $eventresponse->id;                                
-                                $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course->id));
-                                if($course_ext) {
-                                	$course_onenote->id = $course_ext->id;
-                                	$update = $DB->update_record("course_ms_ext", $course_onenote);
-                                }else {
-                                	$insert = $DB->insert_record("course_ms_ext", $course_onenote);
-                                }
-
-                            }
-                        }
+                    	$this->create_sections_onenote($courses, $note_id, $sections);
+                        
                     }
                 }
             //}
         } 
+    }
+    private function insert_sectionid_table($course_id,$section_id) {
+    	global $DB;
+    	$course_onenote = new stdClass();
+    	$course_onenote->course_id = $course_id;
+    	$course_onenote->section_id = $section_id;
+    	$course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course_id));
+    	if($course_ext) {
+    		$course_onenote->id = $course_ext->id;
+    		$update = $DB->update_record("course_ms_ext", $course_onenote);
+    	}else {
+    		$insert = $DB->insert_record("course_ms_ext", $course_onenote);
+    	}
+    	
+    }
+    private function create_sections_onenote($courses,$note_id, array $sections){
+    	$sectionurl = self::API."/notebooks/".$note_id."/sections/";    	
+    	
+    	foreach($courses as $course) {
+    		if(!in_array($course->fullname, $sections)) {
+    			$param_section = array(
+    					"name" => $course->fullname
+    			);
+    			$section = json_encode($param_section);
+    			$this->setHeader('Content-Type: application/json');
+    			$this->isget = FALSE;
+    			$this->request($sectionurl);
+    			$eventresponse = $this->post($sectionurl,$section);
+    			$this->isget = TRUE;
+    			$eventresponse = json_decode($eventresponse);
+    			//mapping course id and section id
+    			if($eventresponse)
+    			$this->insert_sectionid_table($course->id, $eventresponse->id);
+    		} else {
+    			$section_id = array_search($course->fullname, $sections);
+    			$this->insert_sectionid_table($course->id, $section_id);
+    			 
+    		}
+    			
+    	}
     }
 }
 
