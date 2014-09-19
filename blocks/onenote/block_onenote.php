@@ -47,7 +47,7 @@ class block_onenote extends block_list {
             $notes = $onenoteapi->get_items_list('');
             if($notes) {
                 $content->items[] = '<b>Your Notebooks:</b>';
-                foreach ($notes as $note) {                    
+                foreach ($notes as $note) {
                     $content->items[] = '<a href="' . $note['url'] . '" target="_blank">' . $note['title'] . '</a>';
                 }
             } else {

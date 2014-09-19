@@ -112,7 +112,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenote->get_notebook_name($folderid),
+                    $ret['path'][] = array('name' => $this->onenote->get_item_name($folderid),
                                            'path' => $trail);
                 }
             }
@@ -132,7 +132,7 @@ class repository_onenote extends repository {
      */
     public function get_file($id, $filename = '') {
         $path = $this->prepare_file($filename);
-        return $this->onenote->download_section($id, $path);
+        return $this->onenote->download_page($id, $path);
     }
 
     /**
