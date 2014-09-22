@@ -87,19 +87,18 @@ class events_o365 {
         }
 
          // TODO: Restrict time range to be the same as moodle events. Use $filter?
-        $o365events = o365_get_calendar_events($SESSION->accesstoken,'');
-
+        $o365events = o365_get_calendar_events($SESSION->accesstoken,'');        
         if($courseevents && is_array($courseevents)) {
             foreach ($courseevents[0]->value as $event) {
-                array_push($o365events->value, $event);
+                array_push($o365events->value, $event);                
             }
         }
-
+        
         // Need to give start time and end time to get all the events from calendar.
         //TODO: Here I am giving the time recent and next 60 days. What is a good range?
         $timestart = time() - 4320000;
         $timeend = time() + 5184000;
-        $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,FALSE,true,true);
+        $moodleevents = calendar_get_events($timestart,$timeend,$USER->id,FALSE,true,true,true);        
         $context_value = 0;
 
         // loop through all Office 365 events and create or update moodle events
