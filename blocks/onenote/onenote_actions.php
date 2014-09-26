@@ -2,10 +2,10 @@
 
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
-
+require_once $CFG->dirroot.'/blocks/onenote/onenote_lib.php';
 
 $id = required_param('id', PARAM_INT);
-$token = required_param('token', PARAM_TEXT);
+echo $token = required_param('token', PARAM_TEXT);
 
 // Map $cm->course to section id
 $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
@@ -16,76 +16,62 @@ $context = context_module::instance($assign_context->id);
 
 $section = $DB->get_record('course_ms_ext',array("course_id" => $cm->course));
 $section_id = $section->section_id;
+
+$BOUNDARY = hash('sha256',rand());
 $date = date("Y-m-d H:i:s");
+$postdata = create_postdata($assign, $context->id, $BOUNDARY);
+/*$imageData = file_get_contents('ex.jpg');
+		$postdata = <<<POSTDATA
+--{$BOUNDARY}
+Content-Disposition: form-data; name="Presentation"
+Content-Type: text/html
+		
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$assign->name</title>
+    <meta name="created" value="$date"/>
+  </head>
+  <body>
+    <p>This is a page that just contains some simple <i>formatted</i> <b>text</b> and an image</p>
+    <img src="name:imageData" alt="A beautiful logo" width=\"426\" height=\"68\" />
+  </body>
+</html>
+--{$BOUNDARY}
+Content-Disposition: form-data; name="imageData"
+Content-Type: image/jpeg
 
-$doc = new DOMDocument();
-$doc->loadHTML($assign->intro);
-$xpath = new DOMXPath($doc);
-$src = $xpath->evaluate("string(//img/@src)");
-if($src) {
-	$filename = explode("/",$src);
-	$filename = $filename[1];
-}
-
-//get file contents
-$fs = get_file_storage();
-// Prepare file record object
-$fileinfo = array(
-		'component' => 'mod_assign',     // usually = table name
-		'filearea' => 'intro',     // usually = table name
-		'itemid' => 0,               // usually = ID of row in table
-		'contextid' => $context->id, // ID of context
-		'filepath' => '/',           // any path beginning and ending in /
-		'filename' => $filename);
-
-// Get file
-$file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
-		$fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
-$filesize =  $file->get_filesize();
-$filedata = $file->get_filepath();
-$filename = $file->get_filename();
-$contents = $file->get_content();
-//error_log('assign: ' . print_r($assign, true));
-
-// save to one note using name, intro
+$imageData
+--{$BOUNDARY}--
+POSTDATA;
+*/	
 // TODO: Fix up images / links etc. (copy those to onenote too and update hrefs accordingly)
 
-        
-$html = '<!DOCTYPE html><html><head>
-		<title>Assignment: ' . $assign->name . '</title>
-		<meta name="created" content="'.$date.'">
-		</head>
-		<body>
-				<h1>' . $assign->name . '</h1>
-			    			
-				<div>' . $assign->intro . '</div>
-		</body></html>';
-
-$eol = "\r\n"; 
-$BOUNDARY = md5(time()); 
-$BODY=""; 
-$BODY.= '--'.$BOUNDARY. $eol; 
-$BODY .= 'Content-Disposition: form-data; name="Presentation"'; 
-$BODY .= $html;
-$BODY.= '--'.$BOUNDARY. $eol; 
-$BODY.= 'Content-Disposition: form-data; name="Presentation"; filename="'.$filename.'"'. $eol ; 
-$BODY.= 'Content-Type: application/octet-stream' . $eol; 
-$BODY.= 'Content-Transfer-Encoding: base64' . $eol . $eol; 
-$BODY.= chunk_split(base64_encode($contents)) . $eol; 
-$BODY.= '--'.$BOUNDARY .'--' . $eol. $eol;
 
 $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
-$postfields = array("filedata" => $filedata,"filename" => $filename,"file" => $contents);
-$curl = new curl();
-$curl->setHeader('Authorization: Bearer ' . $token);
-$curl->setHeader('Content-Type:multipart/form-data,boundary='.$BOUNDARY);
-//$curl->setopt(array("CURLOPT_POSTFIELDS" => $postfields,"CURLOPT_INFILESIZE" => $filesize));
-//$file->add_to_curl_request();
-$response = $curl->post($url, $BODY);
+$encodedAccessToken = rawurlencode($token);
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);		
+curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; boundary=$BOUNDARY\r\n".
+					"Authorization: Bearer ".$encodedAccessToken));
+curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+curl_setopt($ch,CURLOPT_POST,true);
+curl_setopt($ch,CURLOPT_POSTFIELDS,$postdata);
+$response = curl_exec($ch);
 $response = json_decode($response);
+$error = curl_error($ch);
+	    
+/*$curl = new curl();
 
-//error_log("response: " . print_r($response, true));
-
+//$curl->setHeader('Authorization: Bearer ' . rawurlencode($token));
+$curl->setopt(array("CURLOPT_SSL_VERIFYPEER" => false));
+$curl->setHeader("Content-Type: multipart/form-data; boundary=$BOUNDARY\r\n".
+                                                        "Authorization: Bearer ".rawurlencode($token));
+$response = $curl->post($url, $postdata);
+$response = json_decode($response);
+$err = $curl->error;
+*/
 if (!$response || isset($response->ErrorCode)) {
     $url = '/';
 } else {
@@ -95,4 +81,7 @@ if (!$response || isset($response->ErrorCode)) {
 
 $url = new moodle_url($url);
 redirect($url);
+
+
+
 ?>
