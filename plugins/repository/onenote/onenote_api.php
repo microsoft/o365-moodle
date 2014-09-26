@@ -113,8 +113,54 @@ class microsoft_onenote extends oauth2_client {
             return null;
         }
 
-        file_put_contents($path, $response);
-        return array('path'=>$path, 'url'=>$url);
+        // see if the file contains any references to images or other files and if so, create a folder and download those, too
+        $doc = new DOMDocument();
+        $doc->loadHTML($response);
+        $xpath = new DOMXPath($doc);
+        $nodes = $xpath->query("//img/@src");
+        
+        if ($nodes) {
+            // create temp folder
+            $temp_folder = join(DIRECTORY_SEPARATOR, array(trim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
+            if (file_exists($temp_folder)) { 
+                fulldelete($temp_folder);
+            }
+            
+            if (!mkdir($temp_folder))
+                return null;
+            
+            $files_folder = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
+            if (!mkdir($files_folder))
+                return null;
+            
+            $this->isget = FALSE;
+        
+            $i = 1;
+            foreach ($nodes as $node) {
+                $response = $this->get($node->value);
+                file_put_contents($files_folder . DIRECTORY_SEPARATOR . $i, $response);
+                
+                $node->value = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . $i;
+                $i++; 
+            }
+            
+            $this->isget = TRUE;
+
+            // update img src paths in the html accordingly
+            file_put_contents(join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
+            
+            // zip up the folder so it can be attached as a single file
+            $fp = get_file_packer('application/zip');
+            $filelist = array();
+            $filelist[] = $temp_folder;
+            $fp->archive_to_pathname($filelist, $path); // TODO: How to add .zip extension?
+            
+            fulldelete($temp_folder);
+        } else {
+            file_put_contents($path, $response);
+        }
+        
+        return array('path'=>$path . '.zip', 'url'=>$url);
     }
 
     /**
@@ -260,7 +306,7 @@ class microsoft_onenote extends oauth2_client {
         }
 
         if (empty($path)) {
-        	$this->insert_notes($items);
+            $this->insert_notes($items);
         }
 
         return $items;
@@ -308,7 +354,7 @@ class microsoft_onenote extends oauth2_client {
                         $note_id = $created_notes->id;
                     }
                     if($courses) {
-                    	$this->create_sections_onenote($courses,$note_id,$sections);
+                        $this->create_sections_onenote($courses,$note_id,$sections);
                     }
                 } else {
                     $note_id = array_search($notebook_name, $notes_array);
@@ -321,57 +367,59 @@ class microsoft_onenote extends oauth2_client {
                     $sections = array();
                     if(isset($getsection->value)) {
                         foreach($getsection->value as $section) {
-                        	$sections[$section->id] = $section->name;
+                            $sections[$section->id] = $section->name;
                         }
                     }
 
                     if($courses) {
-                    	$this->create_sections_onenote($courses, $note_id, $sections);
+                        $this->create_sections_onenote($courses, $note_id, $sections);
 
                     }
                 }
             //}
         }
     }
+    
     private function insert_sectionid_table($course_id,$section_id) {
-    	global $DB;
-    	$course_onenote = new stdClass();
-    	$course_onenote->course_id = $course_id;
-    	$course_onenote->section_id = $section_id;
-    	$course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course_id));
-    	if($course_ext) {
-    		$course_onenote->id = $course_ext->id;
-    		$update = $DB->update_record("course_ms_ext", $course_onenote);
-    	}else {
-    		$insert = $DB->insert_record("course_ms_ext", $course_onenote);
-    	}
+        global $DB;
+        $course_onenote = new stdClass();
+        $course_onenote->course_id = $course_id;
+        $course_onenote->section_id = $section_id;
+        $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course_id));
+        if($course_ext) {
+            $course_onenote->id = $course_ext->id;
+            $update = $DB->update_record("course_ms_ext", $course_onenote);
+        }else {
+            $insert = $DB->insert_record("course_ms_ext", $course_onenote);
+        }
 
     }
+    
     private function create_sections_onenote($courses,$note_id, array $sections){
-    	$sectionurl = self::API."/notebooks/".$note_id."/sections/";
+        $sectionurl = self::API."/notebooks/".$note_id."/sections/";
 
-    	foreach($courses as $course) {
-    		if(!in_array($course->fullname, $sections)) {
-    			$param_section = array(
-    					"name" => $course->fullname
-    			);
-    			$section = json_encode($param_section);
-    			$this->setHeader('Content-Type: application/json');
-    			$this->isget = FALSE;
-    			$this->request($sectionurl);
-    			$eventresponse = $this->post($sectionurl,$section);
-    			$this->isget = TRUE;
-    			$eventresponse = json_decode($eventresponse);
-    			//mapping course id and section id
-    			if($eventresponse)
-    			$this->insert_sectionid_table($course->id, $eventresponse->id);
-    		} else {
-    			$section_id = array_search($course->fullname, $sections);
-    			$this->insert_sectionid_table($course->id, $section_id);
+        foreach($courses as $course) {
+            if(!in_array($course->fullname, $sections)) {
+                $param_section = array(
+                        "name" => $course->fullname
+                );
+                $section = json_encode($param_section);
+                $this->setHeader('Content-Type: application/json');
+                $this->isget = FALSE;
+                $this->request($sectionurl);
+                $eventresponse = $this->post($sectionurl,$section);
+                $this->isget = TRUE;
+                $eventresponse = json_decode($eventresponse);
+                //mapping course id and section id
+                if($eventresponse)
+                $this->insert_sectionid_table($course->id, $eventresponse->id);
+            } else {
+                $section_id = array_search($course->fullname, $sections);
+                $this->insert_sectionid_table($course->id, $section_id);
 
-    		}
+            }
 
-    	}
+        }
     }
 }
 
