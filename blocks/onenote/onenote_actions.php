@@ -45,8 +45,6 @@ $imageData
 --{$BOUNDARY}--
 POSTDATA;
 */	
-// TODO: Fix up images / links etc. (copy those to onenote too and update hrefs accordingly)
-
 
 $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
 $encodedAccessToken = rawurlencode($token);
@@ -58,10 +56,23 @@ curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; bou
 curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 curl_setopt($ch,CURLOPT_POST,true);
 curl_setopt($ch,CURLOPT_POSTFIELDS,$postdata);
-$response = curl_exec($ch);
-$response = json_decode($response);
-$error = curl_error($ch);
-	    
+
+$raw_response = curl_exec($ch);
+$info = curl_getinfo($ch);
+curl_close($ch);
+
+if ($info['http_code'] == 201)
+{
+	$response_without_header = substr($raw_response,$info['header_size']);
+	$response = json_decode($response_without_header);
+
+    // Redirect to that onenote page so student can continue working on it
+    $url = $response->links->oneNoteWebUrl->href;
+} else {
+	$url = '/';
+}
+
+
 /*$curl = new curl();
 
 //$curl->setHeader('Authorization: Bearer ' . rawurlencode($token));
@@ -72,16 +83,7 @@ $response = $curl->post($url, $postdata);
 $response = json_decode($response);
 $err = $curl->error;
 */
-if (!$response || isset($response->ErrorCode)) {
-    $url = '/';
-} else {
-    // Redirect to that onenote page so student can continue working on it
-    $url = $response->links->oneNoteWebUrl->href;
-}
 
 $url = new moodle_url($url);
 redirect($url);
-
-
-
 ?>

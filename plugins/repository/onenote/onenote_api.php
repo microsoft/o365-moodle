@@ -160,7 +160,7 @@ class microsoft_onenote extends oauth2_client {
             file_put_contents($path, $response);
         }
         
-        return array('path'=>$path . '.zip', 'url'=>$url);
+        return array('path'=>$path, 'url'=>$url);
     }
 
     /**
@@ -307,7 +307,7 @@ class microsoft_onenote extends oauth2_client {
 
         if (empty($path)) {
             $this->insert_notes($items);
-        }
+       }
 
         return $items;
     }

@@ -256,7 +256,7 @@ class events_o365 {
 
         // obtain uuid back from O365 and set it into the moodle event
         $eventresponse = json_decode($eventresponse);
-        if($eventresponse && $eventresponse->Id) {
+        if($eventresponse && isset($eventresponse->Id) && $eventresponse->Id) {
             $event = calendar_event::load($data->id);
             $event->uuid = $eventresponse->Id;
             $event->update($event);
