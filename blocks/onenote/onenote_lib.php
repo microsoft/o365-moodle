@@ -74,8 +74,10 @@ function get_file_contents($filename,$context_id) {
 			$fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
 	$filesize =  $file->get_filesize();
 	$filedata = $file->get_filepath();
-	$filename = $file->get_filename();
-	$contents = $file->get_content();
+	
+	$contents = array();
+	$contents['filename'] = $file->get_filename();
+	$contents['content'] = $file->get_content();
 	return $contents;
 }
 function create_postdata($assign,$context_id,$BOUNDARY) {	
@@ -94,11 +96,12 @@ function create_postdata($assign,$context_id,$BOUNDARY) {
 			$s->nodeValue = "name:".$src_name[0];
 			$img_data .= <<<IMGDATA
 --{$BOUNDARY}
-Content-Disposition: form-data; name="$src_name[0]"
+Content-Disposition: form-data; name="$src_name[0]"; filename="$contents[filename]"
 Content-Type: image/jpeg
 
-$contents
+$contents[content]
 IMGDATA;
+			$img_data .="\r\n";
 		}
 	}
 	$output = $dom->saveXML( $doc );
