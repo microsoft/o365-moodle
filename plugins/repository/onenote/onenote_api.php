@@ -153,6 +153,7 @@ class microsoft_onenote extends oauth2_client {
             $fp = get_file_packer('application/zip');
             $filelist = array();
             $filelist[] = $temp_folder;
+            
             $fp->archive_to_pathname($filelist, $path); // TODO: How to add .zip extension?
             
             fulldelete($temp_folder);
@@ -381,16 +382,17 @@ class microsoft_onenote extends oauth2_client {
     }
     
     private function insert_sectionid_table($course_id,$section_id) {
-        global $DB;
+        global $DB,$USER;
         $course_onenote = new stdClass();
+        $course_onenote->user_id = $USER->id;
         $course_onenote->course_id = $course_id;
         $course_onenote->section_id = $section_id;
-        $course_ext = $DB->get_record('course_ms_ext', array("course_id" => $course_id));
+        $course_ext = $DB->get_record('course_user_ext', array("course_id" => $course_id,"user_id" => $USER->id));
         if($course_ext) {
             $course_onenote->id = $course_ext->id;
-            $update = $DB->update_record("course_ms_ext", $course_onenote);
+            $update = $DB->update_record("course_user_ext", $course_onenote);
         }else {
-            $insert = $DB->insert_record("course_ms_ext", $course_onenote);
+            $insert = $DB->insert_record("course_user_ext", $course_onenote);
         }
 
     }

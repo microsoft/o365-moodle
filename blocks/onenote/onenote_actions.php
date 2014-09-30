@@ -4,8 +4,10 @@ require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 require_once $CFG->dirroot.'/blocks/onenote/onenote_lib.php';
 
+global $USER;
+
 $id = required_param('id', PARAM_INT);
-echo $token = required_param('token', PARAM_TEXT);
+$token = required_param('token', PARAM_TEXT);
 
 // Map $cm->course to section id
 $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
@@ -14,7 +16,8 @@ $assign = $DB->get_record('assign', array('id' => $cm->instance));
 $assign_context =  get_coursemodule_from_instance('assign', $assign->id, $cm->course);
 $context = context_module::instance($assign_context->id);
 
-$section = $DB->get_record('course_ms_ext',array("course_id" => $cm->course));
+$user_id = $USER->id;
+$section = $DB->get_record('course_user_ext',array("course_id" => $cm->course,"user_id" => $user_id));
 $section_id = $section->section_id;
 
 $BOUNDARY = hash('sha256',rand());
