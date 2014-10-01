@@ -57,7 +57,7 @@ function create_oneNote_section($access_token, $note_id, $section) {
     $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections',$section);
 
 }
-function get_file_contents($filename,$context_id) {
+function get_file_contents($path,$filename,$context_id) {
 	//get file contents
 	$fs = get_file_storage();
 	// Prepare file record object
@@ -66,10 +66,11 @@ function get_file_contents($filename,$context_id) {
 			'filearea' => 'intro',     // usually = table name
 			'itemid' => 0,               // usually = ID of row in table
 			'contextid' => $context_id, // ID of context
-			'filepath' => '/',           // any path beginning and ending in /
+			'filepath' => $path,           // any path beginning and ending in /
 			'filename' => $filename);
 
 	// Get file
+	//error_log(print_r($fileinfo, true));
 	$file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
 			$fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
 	$filesize =  $file->get_filesize();
@@ -89,25 +90,28 @@ function create_postdata($assign,$context_id,$BOUNDARY) {
 	if($src) {
 		$img_data = "";
 		foreach ($src as $s) {
-			$value = explode( "/", $s->nodeValue );
-			$s->nodeValue = array_pop($value);//.$s->nodeValue
-			$contents = get_file_contents($s->nodeValue,$context_id);
-			$src_name = explode(".",$s->nodeValue);
-			$s->nodeValue = "name:".$src_name[0];
+			$path_parts = pathinfo($s->nodeValue);
+			$path = substr($path_parts['dirname'], strlen('@@PLUGINFILE@@')) . '/';
+			$contents = get_file_contents($path, $path_parts['basename'], $context_id);
+			$s->nodeValue = "name:".$path_parts['filename'];
+
 			$img_data .= <<<IMGDATA
 --{$BOUNDARY}
-Content-Disposition: form-data; name="$src_name[0]"; filename="$contents[filename]"
+Content-Disposition: form-data; name="$path_parts[filename]"; filename="$contents[filename]"
 Content-Type: image/jpeg
 
 $contents[content]
 IMGDATA;
+			
 			$img_data .="\r\n";
 		}
 	}
+	
 	$output = $dom->saveXML( $doc );
 	$date = date("Y-m-d H:i:s");
-			$eol = "\r\n";
-			$BODY=<<<POSTDATA
+	$eol = "\r\n";
+	
+	$BODY=<<<POSTDATA
 --{$BOUNDARY}
 Content-Disposition: form-data; name="Presentation"
 Content-Type: text/html

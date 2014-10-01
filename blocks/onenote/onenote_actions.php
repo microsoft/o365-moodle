@@ -12,10 +12,7 @@ $token = required_param('token', PARAM_TEXT);
 // Map $cm->course to section id
 $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
 $assign = $DB->get_record('assign', array('id' => $cm->instance));
-
-$assign_context =  get_coursemodule_from_instance('assign', $assign->id, $cm->course);
-$context = context_module::instance($assign_context->id);
-
+$context = context_module::instance($cm->id);
 $user_id = $USER->id;
 $section = $DB->get_record('course_user_ext',array("course_id" => $cm->course,"user_id" => $user_id));
 $section_id = $section->section_id;
@@ -23,31 +20,6 @@ $section_id = $section->section_id;
 $BOUNDARY = hash('sha256',rand());
 $date = date("Y-m-d H:i:s");
 $postdata = create_postdata($assign, $context->id, $BOUNDARY);
-/*$imageData = file_get_contents('ex.jpg');
-		$postdata = <<<POSTDATA
---{$BOUNDARY}
-Content-Disposition: form-data; name="Presentation"
-Content-Type: text/html
-		
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>$assign->name</title>
-    <meta name="created" value="$date"/>
-  </head>
-  <body>
-    <p>This is a page that just contains some simple <i>formatted</i> <b>text</b> and an image</p>
-    <img src="name:imageData" alt="A beautiful logo" width=\"426\" height=\"68\" />
-  </body>
-</html>
---{$BOUNDARY}
-Content-Disposition: form-data; name="imageData"
-Content-Type: image/jpeg
-
-$imageData
---{$BOUNDARY}--
-POSTDATA;
-*/	
 
 $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
 $encodedAccessToken = rawurlencode($token);
@@ -75,18 +47,5 @@ if ($info['http_code'] == 201)
 	$url = '/';
 }
 
-
-/*$curl = new curl();
-
-//$curl->setHeader('Authorization: Bearer ' . rawurlencode($token));
-$curl->setopt(array("CURLOPT_SSL_VERIFYPEER" => false));
-$curl->setHeader("Content-Type: multipart/form-data; boundary=$BOUNDARY\r\n".
-                                                        "Authorization: Bearer ".rawurlencode($token));
-$response = $curl->post($url, $postdata);
-$response = json_decode($response);
-$err = $curl->error;
-*/
-
 $url = new moodle_url($url);
 redirect($url);
-?>
