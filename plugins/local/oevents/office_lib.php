@@ -38,8 +38,7 @@ function o365_delete_calendar($access_token, $calendar_id) {
 
 function o365_get_calendar_events($access_token, $calendar_id) {
     error_log("o365_get_calendar_events called");
-    error_log(print_r($calendar_id, true));
-
+    error_log(print_r($calendar_id, true));    
     $curl = new curl();
     $header = array('Authorization: Bearer '.$access_token);
     $curl->setHeader($header);
