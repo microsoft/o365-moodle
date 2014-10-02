@@ -153,15 +153,18 @@ class microsoft_onenote extends oauth2_client {
             $fp = get_file_packer('application/zip');
             $filelist = array();
             $filelist[] = $temp_folder;
-            
-            $fp->archive_to_pathname($filelist, $path); // TODO: How to add .zip extension?
+           
+            $zipfilepath = pathinfo($path);
+            $zipfilename = $zipfilepath['basename'].".zip";
+            $zippath = $zipfilepath['dirname']."/".$zipfilename;
+            $fp->archive_to_pathname($filelist, $zippath); // TODO: How to add .zip extension?
             
             fulldelete($temp_folder);
         } else {
             file_put_contents($path, $response);
         }
         
-        return array('path'=>$path, 'url'=>$url);
+        return array('path'=>$zippath, 'url'=>$url);
     }
 
     /**
