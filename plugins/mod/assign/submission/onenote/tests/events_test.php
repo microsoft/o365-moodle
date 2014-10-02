@@ -17,7 +17,7 @@
 /**
  * Contains the event tests for the plugin.
  *
- * @package   assignsubmission_file
+ * @package   assignsubmission_onenote
  * @copyright 2013 Frédéric Massart
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
 
-class assignsubmission_file_events_testcase extends advanced_testcase {
+class assignsubmission_onenote_events_testcase extends advanced_testcase {
 
     /** @var stdClass $user A user to submit an assignment. */
     protected $user;
@@ -44,7 +44,7 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
     /** @var stdClass $assign The assignment object. */
     protected $assign;
 
-    /** @var stdClass $files Files that are being submitted for the assignment. */
+    /** @var stdClass $files onenotes that are being submitted for the assignment. */
     protected $files;
 
     /** @var stdClass $submission Submission information. */
@@ -75,8 +75,8 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
         $fs = get_file_storage();
         $dummy = (object) array(
             'contextid' => $this->context->id,
-            'component' => 'assignsubmission_file',
-            'filearea' => ASSIGNSUBMISSION_FILE_FILEAREA,
+            'component' => 'assignsubmission_onenote',
+            'filearea' => ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             'itemid' => $this->submission->id,
             'filepath' => '/',
             'filename' => 'myassignmnent.pdf'
@@ -84,14 +84,14 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
         $this->fi = $fs->create_file_from_string($dummy, 'Content of ' . $dummy->filename);
         $dummy = (object) array(
             'contextid' => $this->context->id,
-            'component' => 'assignsubmission_file',
-            'filearea' => ASSIGNSUBMISSION_FILE_FILEAREA,
+            'component' => 'assignsubmission_onenote',
+            'filearea' => ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             'itemid' => $this->submission->id,
             'filepath' => '/',
             'filename' => 'myassignmnent.png'
         );
         $this->fi2 = $fs->create_file_from_string($dummy, 'Content of ' . $dummy->filename);
-        $this->files = $fs->get_area_files($this->context->id, 'assignsubmission_file', ASSIGNSUBMISSION_FILE_FILEAREA,
+        $this->files = $fs->get_area_files($this->context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             $this->submission->id, 'id', false);
 
     }
@@ -103,14 +103,14 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         $data = new stdClass();
-        $plugin = $this->assign->get_submission_plugin_by_type('file');
+        $plugin = $this->assign->get_submission_plugin_by_type('onenote');
         $sink = $this->redirectEvents();
         $plugin->save($this->submission, $data);
         $events = $sink->get_events();
 
         $this->assertCount(2, $events);
         $event = reset($events);
-        $this->assertInstanceOf('\assignsubmission_file\event\assessable_uploaded', $event);
+        $this->assertInstanceOf('\assignsubmission_onenote\event\assessable_uploaded', $event);
         $this->assertEquals($this->context->id, $event->contextid);
         $this->assertEquals($this->submission->id, $event->objectid);
         $this->assertCount(2, $event->other['pathnamehashes']);
@@ -136,7 +136,7 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         $data = new stdClass();
-        $plugin = $this->assign->get_submission_plugin_by_type('file');
+        $plugin = $this->assign->get_submission_plugin_by_type('onenote');
         $sink = $this->redirectEvents();
         $plugin->save($this->submission, $data);
         $events = $sink->get_events();
@@ -144,7 +144,7 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
         $this->assertCount(2, $events);
         // We want to test the last event fired.
         $event = $events[1];
-        $this->assertInstanceOf('\assignsubmission_file\event\submission_created', $event);
+        $this->assertInstanceOf('\assignsubmission_onenote\event\submission_created', $event);
         $this->assertEquals($this->context->id, $event->contextid);
         $this->assertEquals($this->course->id, $event->courseid);
         $this->assertEquals($this->submission->id, $event->other['submissionid']);
@@ -154,13 +154,13 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
     }
 
     /**
-     * Test that the submission_updated event is fired when a file submission is saved when an existing submission already exists.
+     * Test that the submission_updated event is fired when a onenote submission is saved when an existing submission already exists.
      */
     public function test_submission_updated() {
         $this->resetAfterTest();
 
         $data = new stdClass();
-        $plugin = $this->assign->get_submission_plugin_by_type('file');
+        $plugin = $this->assign->get_submission_plugin_by_type('onenote');
         $sink = $this->redirectEvents();
         // Create a submission.
         $plugin->save($this->submission, $data);
@@ -171,7 +171,7 @@ class assignsubmission_file_events_testcase extends advanced_testcase {
         $this->assertCount(4, $events);
         // We want to test the last event fired.
         $event = $events[3];
-        $this->assertInstanceOf('\assignsubmission_file\event\submission_updated', $event);
+        $this->assertInstanceOf('\assignsubmission_onenote\event\submission_updated', $event);
         $this->assertEquals($this->context->id, $event->contextid);
         $this->assertEquals($this->course->id, $event->courseid);
         $this->assertEquals($this->submission->id, $event->other['submissionid']);

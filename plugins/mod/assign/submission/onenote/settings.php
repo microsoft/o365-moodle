@@ -21,10 +21,9 @@
  */
 
 
-// Note: This is on by default.
 $settings->add(new admin_setting_configcheckbox('assignsubmission_onenote/default',
                    new lang_string('default', 'assignsubmission_onenote'),
-                   new lang_string('default_help', 'assignsubmission_onenote'), 1));
+                   new lang_string('default_help', 'assignsubmission_onenote'), 0));
 
 if (isset($CFG->maxbytes)) {
 

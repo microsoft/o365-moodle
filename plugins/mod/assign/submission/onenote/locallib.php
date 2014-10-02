@@ -125,7 +125,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $fileoptions = array('subdirs'=>1,
                                 'maxbytes'=>$this->get_config('maxsubmissionsizebytes'),
                                 'maxfiles'=>$this->get_config('maxfilesubmissions'),
-                                'accepted_types'=>'*',
+                                'accepted_types'=>'zip',
                                 'return_types'=>FILE_INTERNAL);
         return $fileoptions;
     }
@@ -148,13 +148,13 @@ class assign_submission_onenote extends assign_submission_plugin {
         $submissionid = $submission ? $submission->id : 0;
 
         $data = file_prepare_standard_filemanager($data,
-                                                  'files',
+                                                  'onenotes',
                                                   $fileoptions,
                                                   $this->assignment->get_context(),
                                                   'assignsubmission_onenote',
                                                   ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                                                   $submissionid);
-        $mform->addElement('filemanager', 'files_filemanager', $this->get_name(), null, $fileoptions);
+        $mform->addElement('filemanager', 'onenotes_filemanager', $this->get_name(), null, $fileoptions);
 
         return true;
     }
@@ -193,7 +193,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $fileoptions = $this->get_file_options();
 
         $data = file_postupdate_standard_filemanager($data,
-                                                     'files',
+                                                     'onenotes',
                                                      $fileoptions,
                                                      $this->assignment->get_context(),
                                                      'assignsubmission_onenote',
@@ -519,7 +519,7 @@ class assign_submission_onenote extends assign_submission_plugin {
      */
     public function get_external_parameters() {
         return array(
-            'files_filemanager' => new external_value(
+            'onenotes_filemanager' => new external_value(
                 PARAM_INT,
                 'The id of a draft area containing files for this submission.'
             )
