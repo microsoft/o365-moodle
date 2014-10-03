@@ -100,7 +100,7 @@ class microsoft_onenote extends oauth2_client {
         error_log('download_page called: ' . print_r($page_id, true));
 
         $url = self::API."/pages/".$page_id."/content";
-        error_log(print_r($url,true));
+        //error_log(print_r($url,true));
 
         $this->isget = FALSE;
         $response = $this->get($url);
@@ -192,7 +192,7 @@ class microsoft_onenote extends oauth2_client {
         $this->request($url);
         $response = json_decode($this->get($url));
         $this->isget = TRUE;
-        error_log('response: ' . print_r($response, true));
+        //error_log('response: ' . print_r($response, true));
 
         if (!$response || isset($response->error)) {
             // TODO: Hack: See if it is a section id
@@ -201,7 +201,7 @@ class microsoft_onenote extends oauth2_client {
             $this->request($url);
             $response = json_decode($this->get($url));
             $this->isget = TRUE;
-            error_log('response: ' . print_r($response, true));
+            //error_log('response: ' . print_r($response, true));
 
             if (!$response || isset($response->error)) {
                 $this->log_out();
@@ -232,8 +232,8 @@ class microsoft_onenote extends oauth2_client {
             $parts = explode('/', $path);
             $part1 = array_pop($parts);
             $part2 = array_pop($parts);
-            error_log('part1: ' . print_r($part1, true));
-            error_log('part2: ' . print_r($part2, true));
+            //error_log('part1: ' . print_r($part1, true));
+            //error_log('part2: ' . print_r($part2, true));
 
             if ($part2) {
                 $item_type = 'page';
@@ -244,13 +244,13 @@ class microsoft_onenote extends oauth2_client {
             }
         }
 
-        error_log('request: ' . print_r($url, true));
+        //error_log('request: ' . print_r($url, true));
         $this->isget = FALSE;
         $this->request($url);
         $response = json_decode($this->get($url));
         $this->isget = TRUE;
 
-        error_log('response: ' . print_r($response, true));
+        //error_log('response: ' . print_r($response, true));
 
         $items = array();
 

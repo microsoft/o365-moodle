@@ -81,11 +81,12 @@ function get_file_contents($path,$filename,$context_id) {
 	$contents['content'] = $file->get_content();
 	return $contents;
 }
-function create_postdata($assign,$context_id,$BOUNDARY) {	
+function create_postdata($assign,$context_id,$BOUNDARY) {
+	//error_log($assign->intro);	
 	$dom = new DOMDocument();
 	$dom->loadHTML($assign->intro);
 	$xpath = new DOMXPath($dom);
-	$doc = $dom->getElementsByTagName("html")->item(0);
+	$doc = $dom->getElementsByTagName("body")->item(0);
 	$src = $xpath->query(".//@src");
 	if($src) {
 		$img_data = "";
@@ -106,25 +107,30 @@ IMGDATA;
 			$img_data .="\r\n";
 		}
 	}
+
+	// extract just the content of the body
+	$dom_clone = new DOMDocument;
+	foreach ($doc->childNodes as $child){
+		$dom_clone->appendChild($dom_clone->importNode($child, true));
+	}
 	
-	$output = $dom->saveXML( $doc );
+	$output = $dom_clone->saveHTML();
 	$date = date("Y-m-d H:i:s");
-	$eol = "\r\n";
 	
 	$BODY=<<<POSTDATA
 --{$BOUNDARY}
 Content-Disposition: form-data; name="Presentation"
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 
 <!DOCTYPE html>
 <html>
 <head>
-<title>Assignment:  $assign->name </title>
+<title>Assignment: $assign->name</title>
 <meta name="created" value="$date"/>
 </head>
-<body>
-<h1> $assign->name </h1>
-<div> $output </div>
+<body style="font-family:Arial">
+<h2>$assign->name</h2>
+$output
 </body>
 </html>
 $img_data
@@ -133,5 +139,3 @@ POSTDATA;
 
 return $BODY;
 }
-
-?>

@@ -246,7 +246,11 @@ class auth_plugin_googleoauth2 extends auth_plugin_base {
                         $params['access_token'] = $accesstoken;															
                         $header = array('Authorization: Bearer '.$accesstoken);
                         $curl->setHeader($header);
-                        $postreturnvalues = $curl->get('https://graph.windows.net/' . get_config('auth/googleoauth2', 'azureaddomain') . '/users/' . $userupn . '?api-version=2013-04-05');
+
+                        $upn_parts = explode("@", $userupn);
+                        $postreturnvalues = $curl->get('https://graph.windows.net/' . $upn_parts[1] . '/users/' . $userupn . '?api-version=2013-04-05');
+                        //$postreturnvalues = $curl->get('https://graph.windows.net/' . get_config('auth/googleoauth2', 'azureaddomain') . '/users/' . $userupn . '?api-version=2013-04-05');
+
                         $azureaduser = json_decode($postreturnvalues);
                         $useremail = $azureaduser->mail; //Need to put it back when using graph api
                         // TODO: mail may be empty, in which case use UPN instead

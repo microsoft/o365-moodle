@@ -134,7 +134,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
         $fileoptions = $this->get_file_options();
         $gradeid = $grade ? $grade->id : 0;
-        $elementname = 'files_' . $userid;
+        $elementname = 'onenotes_' . $userid;
 
         $data = file_prepare_standard_filemanager($data,
                                                   $elementname,
@@ -177,7 +177,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     public function update_file_count($grade) {
         global $DB;
 
-        $filefeedback = $this->get_file_feedback($grade->id);
+        $filefeedback = $this->get_onenote_feedback($grade->id);
         if ($filefeedback) {
             $filefeedback->numfiles = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
             return $DB->update_record('assignfeedback_onenote', $filefeedback);
@@ -202,7 +202,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
         // The element name may have been for a different user.
         foreach ($data as $key => $value) {
-            if (strpos($key, 'files_') === 0 && strpos($key, '_filemanager')) {
+            if (strpos($key, 'onenotes_') === 0 && strpos($key, '_filemanager')) {
                 $elementname = substr($key, 0, strpos($key, '_filemanager'));
             }
         }
@@ -413,7 +413,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         } else if ($data = $mform->get_data()) {
             // Copy the files from the draft area to a temporary import area.
             $data = file_postupdate_standard_filemanager($data,
-                                                         'files',
+                                                         'onenotes',
                                                          $this->get_file_options(),
                                                          $this->assignment->get_context(),
                                                          'assignfeedback_onenote',
@@ -436,7 +436,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                                        ASSIGNFEEDBACK_ONENOTE_FILEAREA,
                                        $grade->id);
 
-                $filefeedback = $this->get_file_feedback($grade->id);
+                $filefeedback = $this->get_onenote_feedback($grade->id);
                 if ($filefeedback) {
                     $filefeedback->numfiles = $this->count_files($grade->id,
                                                                  ASSIGNFEEDBACK_ONENOTE_FILEAREA);
@@ -618,7 +618,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         return array(
             'onenotes_filemanager' => new external_value(
                 PARAM_INT,
-                'The id of a draft area containing files for this feedback.'
+                'The id of a draft area containing OneNote files for this feedback.'
             )
         );
     }

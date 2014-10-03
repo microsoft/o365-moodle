@@ -125,7 +125,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $fileoptions = array('subdirs'=>1,
                                 'maxbytes'=>$this->get_config('maxsubmissionsizebytes'),
                                 'maxfiles'=>$this->get_config('maxfilesubmissions'),
-                                'accepted_types'=>'zip',
+                                'accepted_types'=>'*',
                                 'return_types'=>FILE_INTERNAL);
         return $fileoptions;
     }
