@@ -85,9 +85,11 @@ function create_postdata($assign,$context_id,$BOUNDARY) {
 	//error_log($assign->intro);	
 	$dom = new DOMDocument();
 	$dom->loadHTML($assign->intro);
+	
 	$xpath = new DOMXPath($dom);
 	$doc = $dom->getElementsByTagName("body")->item(0);
 	$src = $xpath->query(".//@src");
+	
 	if($src) {
 		$img_data = "";
 		foreach ($src as $s) {
@@ -130,7 +132,7 @@ Content-Type: text/html; charset=utf-8
 </head>
 <body style="font-family:Arial">
 <h2>$assign->name</h2>
-$output
+<font face='Arial,Helvetica,sans-serif'>$output</font>
 </body>
 </html>
 $img_data

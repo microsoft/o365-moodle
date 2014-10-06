@@ -210,7 +210,7 @@ class microsoft_onenote extends oauth2_client {
         }
 
         $this->itemnamecache->set($cachekey, $response->value[0]->name);
-        return $response->value[0]->name;
+        return $response->value[0]->name.".zip";
     }
 
     /**
@@ -294,7 +294,7 @@ class microsoft_onenote extends oauth2_client {
 
                 case 'page':
                     $items[] = array(
-                        'title' => $item->title,
+                        'title' => $item->title.".zip",
                         'path' => $path.'/'.urlencode($item->id),
                         //'size' => $item->size,
                         'date' => strtotime($item->createdTime),
