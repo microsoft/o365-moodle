@@ -23,6 +23,7 @@
  */
 
 require_once($CFG->libdir.'/eventslib.php');
+require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -139,7 +140,6 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return bool
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
-
         if ($this->get_config('maxfilesubmissions') <= 0) {
             return false;
         }
@@ -147,15 +147,21 @@ class assign_submission_onenote extends assign_submission_plugin {
         $fileoptions = $this->get_file_options();
         $submissionid = $submission ? $submission->id : 0;
 
-        $data = file_prepare_standard_filemanager($data,
-                                                  'onenotes',
-                                                  $fileoptions,
-                                                  $this->assignment->get_context(),
-                                                  'assignsubmission_onenote',
-                                                  ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                                                  $submissionid);
-        $mform->addElement('filemanager', 'onenotes_filemanager', $this->get_name(), null, $fileoptions);
+        $onenote_token = get_onenote_token();
 
+        if (isset($onenote_token)) {
+            $action_params['action'] = 'save';
+            $cm_instance_id = optional_param('id', null, PARAM_INT);
+            $action_params['id'] = $cm_instance_id;
+            $action_params['token'] = $onenote_token;
+            $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+            
+            $o = '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Start working in OneNote' . '</a>';
+        } else {
+            $o = get_onenote_signin_widget();
+        }
+        
+        $mform->addElement('html', $o);
         return true;
     }
 
@@ -315,9 +321,16 @@ class assign_submission_onenote extends assign_submission_plugin {
         // Show we show a link to view all files for this plugin?
         $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
-            return $this->assignment->render_area_files('assignsubmission_onenote',
+            $o = '<p><a href="https://onedrive.live.com/edit.aspx?resid=CA0D55ED453954BE!117&cid=ca0d55ed453954be&app=OneNote" target="_blank">View in OneNote</a></p>';
+            $o .= '<p>Download as a Zip file:</p>';
+            $o .= $this->assignment->render_area_files('assignsubmission_onenote',
                                                         ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                                                         $submission->id);
+            
+            //error_log(print_r($this->assignment, true));
+            //error_log(print_r($submission, true));
+            
+            return $o;
         } else {
             return get_string('countfiles', 'assignsubmission_onenote', $count);
         }

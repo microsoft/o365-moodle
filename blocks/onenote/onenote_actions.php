@@ -2,12 +2,14 @@
 
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
-require_once $CFG->dirroot.'/blocks/onenote/onenote_lib.php';
+require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
 
 global $USER;
 
+$action = required_param('action', PARAM_TEXT);
 $id = required_param('id', PARAM_INT);
-$token = required_param('token', PARAM_TEXT);
+//$token = required_param('token', PARAM_TEXT);
+$onenote_token = get_onenote_token();
 
 // Map $cm->course to section id
 $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
@@ -22,12 +24,12 @@ $date = date("Y-m-d H:i:s");
 $postdata = create_postdata($assign, $context->id, $BOUNDARY);
 
 $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
-$encodedAccessToken = rawurlencode($token);
+$encodedAccessToken = rawurlencode($onenote_token);
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_HEADER, 1);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);		
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; boundary=$BOUNDARY\r\n".
-					"Authorization: Bearer ".$encodedAccessToken));
+                    "Authorization: Bearer ".$encodedAccessToken));
 curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 curl_setopt($ch,CURLOPT_POST,true);
 curl_setopt($ch,CURLOPT_POSTFIELDS,$postdata);
@@ -38,13 +40,13 @@ curl_close($ch);
 
 if ($info['http_code'] == 201)
 {
-	$response_without_header = substr($raw_response,$info['header_size']);
-	$response = json_decode($response_without_header);
+    $response_without_header = substr($raw_response,$info['header_size']);
+    $response = json_decode($response_without_header);
 
     // Redirect to that onenote page so student can continue working on it
     $url = $response->links->oneNoteWebUrl->href;
 } else {
-	$url = '/';
+    $url = '/';
 }
 
 $url = new moodle_url($url);
