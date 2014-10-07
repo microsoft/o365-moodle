@@ -23,5 +23,16 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
+    <TABLE NAME="assign_user_ext" COMMENT="to store user id, assign id and onenote page id relationship">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="user_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="user id"/>
+        <FIELD NAME="assign_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="assignment id"/>
+        <FIELD NAME="page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>

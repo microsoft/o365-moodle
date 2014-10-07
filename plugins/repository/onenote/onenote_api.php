@@ -483,64 +483,63 @@ function get_onenote_signin_widget() {
            href="'.$url->out(false).'" style="' . get_linkbutton_style() . '">' . 'Sign in to OneNote' . '</a>';
 }
 
-function get_oneNote_notes ($access_token) {
-    $curl = new curl();
+// function get_oneNote_notes ($access_token) {
+//     $curl = new curl();
 
-    $header = array(
-            'Authorization: Bearer ' . $access_token,
-            'Content-Type: application/json'
-    );
-    $curl->setHeader($header);
+//     $header = array(
+//             'Authorization: Bearer ' . $access_token,
+//             'Content-Type: application/json'
+//     );
+//     $curl->setHeader($header);
 
-    $notes = $curl->get('https://www.onenote.com/api/v1.0/notebooks');
-    $notes = json_decode($notes);
+//     $notes = $curl->get('https://www.onenote.com/api/v1.0/notebooks');
+//     $notes = json_decode($notes);
 
-    return $notes;
-}
+//     return $notes;
+// }
 
-function create_oneNote_notes($access_token, $note) {
-    $curl = new curl();
+// function create_oneNote_notes($access_token, $note) {
+//     $curl = new curl();
 
-    $header = array(
-            'Authorization: Bearer ' . $access_token,
-            'Content-Type: application/json'
-    );
-    $curl->setHeader($header);
+//     $header = array(
+//             'Authorization: Bearer ' . $access_token,
+//             'Content-Type: application/json'
+//     );
+//     $curl->setHeader($header);
 
-    $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks',$note);
-    $eventresponse = json_decode($eventresponse);
+//     $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks',$note);
+//     $eventresponse = json_decode($eventresponse);
 
-    return $eventresponse;
-}
+//     return $eventresponse;
+// }
 
-function get_oneNote_section($access_token, $note_id) {
-    $curl = new curl();
+// function get_oneNote_section($access_token, $note_id) {
+//     $curl = new curl();
 
-    $header = array(
-            'Authorization: Bearer ' . $access_token,
-            'Content-Type: application/json'
-    );
-    $curl->setHeader($header);
+//     $header = array(
+//             'Authorization: Bearer ' . $access_token,
+//             'Content-Type: application/json'
+//     );
+//     $curl->setHeader($header);
 
-    $getsection = $curl->get('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections');
-    $getsection = json_decode($getsection);
+//     $getsection = $curl->get('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections');
+//     $getsection = json_decode($getsection);
 
-    return $getsection;
+//     return $getsection;
+// }
 
-}
+// function create_oneNote_section($access_token, $note_id, $section) {
+//     $curl = new curl();
 
-function create_oneNote_section($access_token, $note_id, $section) {
-    $curl = new curl();
+//     $header = array(
+//             'Authorization: Bearer ' . $access_token,
+//             'Content-Type: application/json'
+//     );
+//     $curl->setHeader($header);
 
-    $header = array(
-            'Authorization: Bearer ' . $access_token,
-            'Content-Type: application/json'
-    );
-    $curl->setHeader($header);
+//     $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections',$section);
 
-    $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections',$section);
-
-}
+// }
 
 function get_file_contents($path,$filename,$context_id) {
     //get file contents
@@ -632,6 +631,26 @@ $img_data
 POSTDATA;
 
     return $BODY;
+}
+
+function get_onenote_page($onenote_token, $page_id) {
+    $curl = new curl();
+
+    $header = array(
+            'Authorization: Bearer ' . $onenote_token,
+            'Content-Type: application/json'
+    );
+    
+    $curl->setHeader($header);
+
+    $response = $curl->get(microsoft_onenote::API . '/pages/' . $page_id);
+    $response = json_decode($response);
+    
+    if (!$response || isset($response->error)) {
+    	return null;
+    }
+    
+    return $response->value[0];
 }
 
 // get the repo id for the onenote repo

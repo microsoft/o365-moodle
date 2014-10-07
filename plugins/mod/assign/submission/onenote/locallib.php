@@ -147,6 +147,8 @@ class assign_submission_onenote extends assign_submission_plugin {
         $fileoptions = $this->get_file_options();
         $submissionid = $submission ? $submission->id : 0;
 
+        $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
+        
         $onenote_token = get_onenote_token();
 
         if (isset($onenote_token)) {
@@ -156,10 +158,13 @@ class assign_submission_onenote extends assign_submission_plugin {
             $action_params['token'] = $onenote_token;
             $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
             
-            $o = '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Start working in OneNote' . '</a>';
+            $o .= '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
         } else {
-            $o = get_onenote_signin_widget();
+            $o .= get_onenote_signin_widget();
         }
+        
+        $o .= '<br/><br/><p>Click on the button above to work on the assignment in OneNote. Once you are done working on it, you can come back here and save your changes and submit the assignment.</p>';
+        $o .= '<hr/>';
         
         $mform->addElement('html', $o);
         return true;
