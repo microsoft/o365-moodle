@@ -436,6 +436,7 @@ function get_onenote_api() {
     $onenote_api = new microsoft_onenote(get_config('onenote', 'clientid'), get_config('onenote', 'secret'), $returnurl);
     
     if (isset($onenote_api)) {
+        $onenote_api->is_logged_in();
         return $onenote_api;
     }
     
@@ -451,7 +452,7 @@ function get_onenote_token() {
     $onenote_api = get_onenote_api();
     if (!$onenote_api)
         return null;
-    
+
     $tokenobj = $onenote_api->get_accesstoken();
     
     if (isset($tokenobj)) {
@@ -567,7 +568,7 @@ Content-Type: text/html; charset=utf-8
 <title>Assignment: $assign->name</title>
 <meta name="created" value="$date"/>
 </head>
-<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="11px" color="rgb(3,3,3)"><h2>$assign->name</h2>$output</font></body>
+<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="11px" color="rgb(3,3,3)">$output</font></body>
 </html>
 $img_data
 --{$BOUNDARY}--

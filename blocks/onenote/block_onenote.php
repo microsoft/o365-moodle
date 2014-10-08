@@ -48,6 +48,7 @@ class block_onenote extends block_list {
                 $action_params['id'] = $cm_instance_id;
                 $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
 
+                $content->items[] = '<br/>';
                 $content->items[] =
                     '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Save assignment to OneNote' . '</a>';
 

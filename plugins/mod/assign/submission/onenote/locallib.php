@@ -357,6 +357,8 @@ class assign_submission_onenote extends assign_submission_plugin {
                     
                     // show a link to the OneNote page
                     $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'View in OneNote' . '</a></p>';
+                } else {
+                    $o .= '<p>The OneNote page corresponding to this assignment appears to have been deleted. Luckily, you had saved it into Moodle and you can dwonload it as a Zip file below.</p>';
                 }
             }
             
