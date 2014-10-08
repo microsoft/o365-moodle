@@ -18,6 +18,7 @@ $context = context_module::instance($cm->id);
 $user_id = $USER->id;
 
 // see if page already exists for this assignment. If so, redirect to it
+// TOOD: add oneNoteWebUrl to the db
 $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $user_id));
 if ($record) {
     $page = get_onenote_page($onenote_token, $record->page_id);
@@ -68,9 +69,10 @@ if ($info['http_code'] == 201)
     
     // Redirect to that onenote page so student can continue working on it
     $url = $response->links->oneNoteWebUrl->href;
-} else {
-    $url = '/';
-}
 
-$url = new moodle_url($url);
-redirect($url);
+    $url = new moodle_url($url);
+    redirect($url);
+} else {
+    // TODO: Show error page
+    throw new moodle_exception('save_to_onenote_failed');
+}

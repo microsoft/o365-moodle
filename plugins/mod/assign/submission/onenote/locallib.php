@@ -28,7 +28,7 @@ require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
 defined('MOODLE_INTERNAL') || die();
 
 // File areas for OneNote submission assignment.
-define('ASSIGNSUBMISSION_ONENOTE_MAXFILES', 20);
+define('ASSIGNSUBMISSION_ONENOTE_MAXFILES', 1);
 define('ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES', 5);
 define('ASSIGNSUBMISSION_ONENOTE_FILEAREA', 'submission_onenote_files');
 
@@ -158,12 +158,14 @@ class assign_submission_onenote extends assign_submission_plugin {
             $action_params['token'] = $onenote_token;
             $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
             
-            $o .= '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
+            $o .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
+            //$o .= '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
+            $o .= '<br/><br/><p>Click on the button above to export the assignment to OneNote and work on it there. You can come back here later on to import your work back into Moodle.</p>';
         } else {
             $o .= get_onenote_signin_widget();
+            $o .= '<br/><br/><p>Click on the button above to sign in to OneNote so you can work on the assignment in OneNote.</p>';
         }
         
-        $o .= '<br/><br/><p>Click on the button above to work on the assignment in OneNote. Once you are done working on it, you can come back here and save your changes and submit the assignment.</p>';
         $o .= '<hr/>';
         
         $mform->addElement('html', $o);
@@ -201,21 +203,34 @@ class assign_submission_onenote extends assign_submission_plugin {
     public function save(stdClass $submission, stdClass $data) {
         global $USER, $DB;
 
-        $fileoptions = $this->get_file_options();
-
-        $data = file_postupdate_standard_filemanager($data,
-                                                     'onenotes',
-                                                     $fileoptions,
-                                                     $this->assignment->get_context(),
-                                                     'assignsubmission_onenote',
-                                                     ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                                                     $submission->id);
-
-        $filesubmission = $this->get_file_submission($submission->id);
-
-        // Plagiarism code event trigger when files are uploaded.
-
+        // get OneNote page id
+        $record = $DB->get_record('assign_user_ext', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
+        $page_id = $record->page_id;
+        $temp_folder = create_temp_folder();
+        $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        
+        // Create zip file containing onenote page and related files
+        $onenote_api = get_onenote_api();
+        $download_info = $onenote_api->download_page($page_id, $temp_file);
+        
+        // save it to approp area
         $fs = get_file_storage();
+        
+        // Prepare file record object
+        $fileinfo = array(
+            'contextid' => $this->assignment->get_context()->id,
+            'component' => 'assignsubmission_onenote',
+            'filearea' => ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            'itemid' => $submission->id,
+            'filepath' => '/',
+            'filename' => 'OneNote_' . time() . '.zip');
+        
+        $fs->create_file_from_pathname($fileinfo, $download_info['path']);
+        fulldelete($temp_folder);
+        
+        $filesubmission = $this->get_file_submission($submission->id);
+        
+        // Plagiarism code event trigger when files are uploaded.
         $files = $fs->get_area_files($this->assignment->get_context()->id,
                                      'assignsubmission_onenote',
                                      ASSIGNSUBMISSION_ONENOTE_FILEAREA,
@@ -234,9 +249,11 @@ class assign_submission_onenote extends assign_submission_plugin {
                 'pathnamehashes' => array_keys($files)
             )
         );
+        
         if (!empty($submission->userid) && ($submission->userid != $USER->id)) {
             $params['relateduserid'] = $submission->userid;
         }
+        
         $event = \assignsubmission_onenote\event\assessable_uploaded::create($params);
         $event->set_legacy_files($files);
         $event->trigger();
@@ -321,12 +338,29 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return string
      */
     public function view_summary(stdClass $submission, & $showviewlink) {
+        global $DB;
+        
+        $o = '';
+        
         $count = $this->count_files($submission->id, ASSIGNSUBMISSION_ONENOTE_FILEAREA);
 
         // Show we show a link to view all files for this plugin?
         $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
-            $o = '<p><a href="https://onedrive.live.com/edit.aspx?resid=CA0D55ED453954BE!117&cid=ca0d55ed453954be&app=OneNote" target="_blank">View in OneNote</a></p>';
+            // get page id of the OneNote page for this assignment
+            $record = $DB->get_record('assign_user_ext', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
+            if ($record) {
+                $onenote_token = get_onenote_token();
+                $page = get_onenote_page($onenote_token, $record->page_id);
+                if ($page) {
+                    $url = new moodle_url($page->links->oneNoteWebUrl->href);
+                    
+                    // show a link to the OneNote page
+                    $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'View in OneNote' . '</a></p>';
+                }
+            }
+            
+            // show standard link to download zip package
             $o .= '<p>Download as a Zip file:</p>';
             $o .= $this->assignment->render_area_files('assignsubmission_onenote',
                                                         ASSIGNSUBMISSION_ONENOTE_FILEAREA,

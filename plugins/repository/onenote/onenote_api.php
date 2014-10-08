@@ -121,13 +121,7 @@ class microsoft_onenote extends oauth2_client {
         
         if ($nodes) {
             // create temp folder
-            $temp_folder = join(DIRECTORY_SEPARATOR, array(trim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
-            if (file_exists($temp_folder)) { 
-                fulldelete($temp_folder);
-            }
-            
-            if (!mkdir($temp_folder))
-                return null;
+            $temp_folder = create_temp_folder();
             
             $files_folder = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
             if (!mkdir($files_folder))
@@ -135,18 +129,20 @@ class microsoft_onenote extends oauth2_client {
             
             $this->isget = FALSE;
         
+            // save images etc.
             $i = 1;
             foreach ($nodes as $node) {
                 $response = $this->get($node->value);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . $i, $response);
                 
+                // update img src paths in the html accordingly
                 $node->value = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . $i;
                 $i++; 
             }
             
             $this->isget = TRUE;
 
-            // update img src paths in the html accordingly
+            // save the html page itself
             file_put_contents(join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
             
             // zip up the folder so it can be attached as a single file
@@ -426,6 +422,7 @@ class microsoft_onenote extends oauth2_client {
 }
 
 
+// TODO: Move these into microsoft_onenote or a helper class
 // ----------------------------------------------------------------------------------------------------
 // OneNote api calls
 
@@ -483,67 +480,10 @@ function get_onenote_signin_widget() {
            href="'.$url->out(false).'" style="' . get_linkbutton_style() . '">' . 'Sign in to OneNote' . '</a>';
 }
 
-// function get_oneNote_notes ($access_token) {
-//     $curl = new curl();
-
-//     $header = array(
-//             'Authorization: Bearer ' . $access_token,
-//             'Content-Type: application/json'
-//     );
-//     $curl->setHeader($header);
-
-//     $notes = $curl->get('https://www.onenote.com/api/v1.0/notebooks');
-//     $notes = json_decode($notes);
-
-//     return $notes;
-// }
-
-// function create_oneNote_notes($access_token, $note) {
-//     $curl = new curl();
-
-//     $header = array(
-//             'Authorization: Bearer ' . $access_token,
-//             'Content-Type: application/json'
-//     );
-//     $curl->setHeader($header);
-
-//     $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks',$note);
-//     $eventresponse = json_decode($eventresponse);
-
-//     return $eventresponse;
-// }
-
-// function get_oneNote_section($access_token, $note_id) {
-//     $curl = new curl();
-
-//     $header = array(
-//             'Authorization: Bearer ' . $access_token,
-//             'Content-Type: application/json'
-//     );
-//     $curl->setHeader($header);
-
-//     $getsection = $curl->get('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections');
-//     $getsection = json_decode($getsection);
-
-//     return $getsection;
-// }
-
-// function create_oneNote_section($access_token, $note_id, $section) {
-//     $curl = new curl();
-
-//     $header = array(
-//             'Authorization: Bearer ' . $access_token,
-//             'Content-Type: application/json'
-//     );
-//     $curl->setHeader($header);
-
-//     $eventresponse = $curl->post('https://www.onenote.com/api/v1.0/notebooks/'.$note_id.'/sections',$section);
-
-// }
-
 function get_file_contents($path,$filename,$context_id) {
-    //get file contents
+    // get file contents
     $fs = get_file_storage();
+    
     // Prepare file record object
     $fileinfo = array(
             'component' => 'mod_assign',     // usually = table name
@@ -583,13 +523,16 @@ function create_postdata($assign,$context_id,$BOUNDARY) {
     if($src) {
         $img_data = "";
         foreach ($src as $s) {
-            $path_parts = pathinfo($s->nodeValue);
-            $path = substr($path_parts['dirname'], strlen('@@PLUGINFILE@@')) . '/';
+            $path_parts = pathinfo(urldecode($s->nodeValue));
+            $path = substr($path_parts['dirname'], strlen('@@PLUGINFILE@@')) . DIRECTORY_SEPARATOR;
             $contents = get_file_contents($path, $path_parts['basename'], $context_id);
                 
-            if (!$contents || ($contents->length == 0))
+            if (!$contents || (count($contents) == 0))
                 continue;
                 
+            $path_parts['filename'] = urlencode($path_parts['filename']);
+            $contents['filename'] = urlencode($contents['filename']);
+            
             $s->nodeValue = "name:".$path_parts['filename'];
 
             $img_data .= <<<IMGDATA
@@ -662,4 +605,16 @@ function get_onenote_repo_id() {
 
 function get_linkbutton_style() {
     return 'border: 1px #000 solid; background-color: #0038a8; color: #fff; display: inline-block; padding: 3px 8px; margin: 5px 0px;';
+}
+
+function create_temp_folder() {
+    $temp_folder = join(DIRECTORY_SEPARATOR, array(trim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
+    if (file_exists($temp_folder)) {
+        fulldelete($temp_folder);
+    }
+    
+    if (!mkdir($temp_folder))
+        return null;
+    
+    return $temp_folder;   
 }
