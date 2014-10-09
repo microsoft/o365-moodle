@@ -1,15 +1,16 @@
 <?php
 
 require_once('../../config.php');
-require_once($CFG->dirroot . '/mod/assign/locallib.php');
+require_once($CFG->libdir.'/oauthlib.php');
 require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
+require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 global $USER;
 
 $action = required_param('action', PARAM_TEXT);
 $id = required_param('id', PARAM_INT);
 //$token = required_param('token', PARAM_TEXT);
-$onenote_token = get_onenote_token();
+$onenote_token = microsoft_onenote::get_onenote_token();
 
 // Map $cm->course to section id
 $cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
@@ -21,7 +22,7 @@ $user_id = $USER->id;
 // TOOD: add oneNoteWebUrl to the db
 $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $user_id));
 if ($record) {
-    $page = get_onenote_page($onenote_token, $record->page_id);
+    $page = microsoft_onenote::get_onenote_page($onenote_token, $record->page_id);
     
     // check if user deleted page, if so we will delete the old record and continue to recreate the page
     if ($page) { 
@@ -38,7 +39,7 @@ $section_id = $section->section_id;
 
 $BOUNDARY = hash('sha256',rand());
 $date = date("Y-m-d H:i:s");
-$postdata = create_postdata($assign, $context->id, $BOUNDARY);
+$postdata = microsoft_onenote::create_postdata($assign, $context->id, $BOUNDARY);
 
 $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
 $encodedAccessToken = rawurlencode($onenote_token);

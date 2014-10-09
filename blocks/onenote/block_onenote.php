@@ -27,11 +27,33 @@ class block_onenote extends block_list {
         $content->items = array();
         $content->icons = '';
 
-        $onenote_api = get_onenote_api();
+        $onenote_api = microsoft_onenote::get_onenote_api();
         $onenote_token = $onenote_api->get_accesstoken();
         
         if (isset($onenote_token)) {
+            // add the "save to onenote" button if this is a file upload type of assignment
+            $cm_instance_id = optional_param('id', null, PARAM_INT);
+            if ($cm_instance_id) {
+                $action_params['action'] = 'save';
+                $action_params['id'] = $cm_instance_id;
+                $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+
+                $content->items[] =
+                    '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . 
+                    $url->out(false) . 
+                    '" style="' . microsoft_onenote::get_linkbutton_style() . 
+                    '">' . 'Work on the assignment in OneNote' . '</a>';
+
+                // TODO: Add username of logged in person and signout button
+//                 $action_params['action'] = 'signout';
+//                 $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+
+//                 $content->items[] = 
+//                     '<input type="button" value="Sign out" onclick="window.location.href=\'' . $url->out(false) . '\';"/>';
+            
+            $content->items[] = '<br/>';
             $notes = $onenote_api->get_items_list('');
+            
             if ($notes) {
                 $content->items[] = '<b>Your Notebooks:</b>';
                 foreach ($notes as $note) {
@@ -41,26 +63,9 @@ class block_onenote extends block_list {
                 $content->items[] = "No notebooks";
             }
 
-            // add the "save to onenote" button if this is a file upload type of assignment
-            $cm_instance_id = optional_param('id', null, PARAM_INT);
-            if ($cm_instance_id) {
-                $action_params['action'] = 'save';
-                $action_params['id'] = $cm_instance_id;
-                $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
-
-                $content->items[] = '<br/>';
-                $content->items[] =
-                    '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . get_linkbutton_style() . '">' . 'Save assignment to OneNote' . '</a>';
-
-                // TODO: Add username of logged in person and signout button
-//                 $action_params['action'] = 'signout';
-//                 $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
-
-//                 $content->items[] = 
-//                     '<input type="button" value="Sign out" onclick="window.location.href=\'' . $url->out(false) . '\';"/>';
             }
         } else {
-            $content->items[] = get_onenote_signin_widget();
+            $content->items[] = microsoft_onenote::get_onenote_signin_widget();
         }
 
         return $content;
