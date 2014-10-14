@@ -33,10 +33,6 @@
  */
 
 
-global $CFG;
-require_once($CFG->dirroot.'/lib/oauthlib.php');
-require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
-
 class repository_onenote_generator extends testing_repository_generator {
 
     /**
@@ -47,7 +43,7 @@ class repository_onenote_generator extends testing_repository_generator {
      */
     protected function prepare_type_record(array $record) {
         $record = parent::prepare_type_record($record);
-       $record = parent::prepare_type_record($record);
+       
         if (!isset($record['clientid'])) {
             $record['clientid'] = 'clientid';
         }
@@ -58,11 +54,5 @@ class repository_onenote_generator extends testing_repository_generator {
     
     }
 
-    public function test_microsoftinstance() {
-    	/*$returnurl = new moodle_url('/repository/repository_callback.php');
-    	 $this->onenote_test = new microsoft_onenote('', '', $returnurl);*/
-    	//	$onenote_api = $this->onenote_test->get_onenote_api();
-    	$onenote_api = microsoft_onenote::get_onenote_api();
-    }
 
 }
