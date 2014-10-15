@@ -23,58 +23,61 @@ function xmldb_repository_onenote_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2014100701) {
+    if ($oldversion < 2014101301) {
     
-    	// Define table repository_onenote to be created.
-    	$table = new xmldb_table('repository_onenote');
+        // Define table repository_onenote to be created.
+        $table = new xmldb_table('repository_onenote');
     
-    	// Adding fields to table repository_onenote.
-    	$table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        // Adding fields to table repository_onenote.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
     
-    	// Adding keys to table repository_onenote.
-    	$table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        // Adding keys to table repository_onenote.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
     
-    	// Conditionally launch create table for repository_onenote.
-    	if (!$dbman->table_exists($table)) {
-    		$dbman->create_table($table);
-    	}
+        // Conditionally launch create table for repository_onenote.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
     
-    	// Define table course_user_ext to be created.
-    	$table = new xmldb_table('course_user_ext');
+        // Define table course_user_ext to be created.
+        $table = new xmldb_table('course_user_ext');
     
-    	// Adding fields to table course_user_ext.
-    	$table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-    	$table->add_field('user_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
-    	$table->add_field('course_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
-    	$table->add_field('section_id', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        // Adding fields to table course_user_ext.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('user_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
+        $table->add_field('course_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
+        $table->add_field('section_id', XMLDB_TYPE_CHAR, '100', null, null, null, null);
     
-    	// Adding keys to table course_user_ext.
-    	$table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        // Adding keys to table course_user_ext.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
     
-    	// Conditionally launch create table for course_user_ext.
-    	if (!$dbman->table_exists($table)) {
-    		$dbman->create_table($table);
-    	}
+        // create table for course_user_ext.
+        if ($dbman->table_exists($table))
+            $dbman->drop_table($table);
+
+        $dbman->create_table($table);
     
         // Define table assign_user_ext to be created.
-    	$table = new xmldb_table('assign_user_ext');
+        $table = new xmldb_table('assign_user_ext');
     
-    	// Adding fields to table course_user_ext.
-    	$table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-    	$table->add_field('user_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
-    	$table->add_field('assign_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
-    	$table->add_field('page_id', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        // Adding fields to table course_user_ext.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('user_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
+        $table->add_field('assign_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
+        $table->add_field('submission_page_id', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('feedback_page_id', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        
+        // Adding keys to table course_user_ext.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
     
-    	// Adding keys to table course_user_ext.
-    	$table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        // create table for assign_user_ext.
+        if ($dbman->table_exists($table))
+            $dbman->drop_table($table);
+            
+        $dbman->create_table($table);
     
-    	// Conditionally launch create table for assign_user_ext.
-    	if (!$dbman->table_exists($table)) {
-    		$dbman->create_table($table);
-    	}
-    
-    	// Onenote savepoint reached.
-    	upgrade_plugin_savepoint(true, 2014100701, 'repository', 'onenote');
+        // Onenote savepoint reached.
+        upgrade_plugin_savepoint(true, 2014101301, 'repository', 'onenote');
     }
     
     // Moodle v2.3.0 release upgrade line

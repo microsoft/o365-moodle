@@ -23,12 +23,13 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="assign_user_ext" COMMENT="to store user id, assign id and onenote page id relationship">
+    <TABLE NAME="assign_user_ext" COMMENT="to store user id, assign id, sumission OneNote page id, and feedback OneNote page id relationship">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="user_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="user id"/>
         <FIELD NAME="assign_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="assignment id"/>
-        <FIELD NAME="page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id"/>
+        <FIELD NAME="submission_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for student's submission"/>
+        <FIELD NAME="feedback_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's feedback"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

@@ -161,10 +161,10 @@ class microsoft_onenote extends oauth2_client {
             $i = 1;
             foreach ($nodes as $node) {
                 $response = $this->get($node->value);
-                file_put_contents($files_folder . DIRECTORY_SEPARATOR . $i, $response);
+                file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
                 // update img src paths in the html accordingly
-                $node->value = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . $i;
+                $node->value = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
                 $i++; 
             }
             
@@ -486,6 +486,174 @@ class microsoft_onenote extends oauth2_client {
            href="'.$url->out(false).'" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Sign in to OneNote' . '</a>';
     }
     
+    // gets (or creates) the submission page or feedback page in OneNote for the given student assignment. 
+    // if page already exists, weburl to the page is returned
+    // if page does not exist, 
+    //      if this is a student,
+    //          if previous zip package exists for the submission
+    //              unzip the zip package and create page from it
+    //          else 
+    //              this is the first time a student is working on the submission, so create the page from the assignment prompt
+    //      else (this is a teacher)
+    //          if previous zip package exists for the feedback
+    //              unzip the package and create page from it
+    //          else
+    //              create the page from the student's submission
+    // returns weburl to the OneNote page created or obtained
+    public static function get_page($cmid, $is_teacher, $submission = null, $grade = null) {
+        global $USER, $DB;
+        
+        $token = microsoft_onenote::get_onenote_token();
+        if (!$token)
+            return null;
+        
+        $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
+        $assign = $DB->get_record('assign', array('id' => $cm->instance)); 
+        $context = context_module::instance($cm->id);
+        $user_id = $USER->id;
+        
+        // if page already exists, return it
+        $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $user_id));
+        if ($record) {
+            $page = microsoft_onenote::get_onenote_page($token, 
+                    $is_teacher ? $record->feedback_page_id : $record->submission_page_id);
+        
+            if ($page) {
+                $url = $page->links->oneNoteWebUrl->href;
+                return $url;
+            }
+
+            // probably user deleted page, so we will update the db record to reflect it and continue to recreate the page
+            if ($is_teacher)
+                $record->submission_page_id = null;
+            else 
+                $record->feedback_page_id = null;
+            
+            $DB->update_record('assign_user_ext', $record);
+        } else {
+            $record = new object();
+            $record->assign_id = $assign->id;
+            $record->user_id = $user_id;
+        }
+        
+        // get the section id for the course so we can create the page in the approp section
+        $section = $DB->get_record('course_user_ext', array("course_id" => $cm->course, "user_id" => $user_id));
+        $section_id = $section->section_id;
+        
+        $BOUNDARY = hash('sha256',rand());
+        
+        $fs = get_file_storage();
+        
+        if ($is_teacher) {
+            // TODO: check if feedback exists
+            if ($grade) {
+                $files = $fs->get_area_files($context->id,
+                        'assignfeedback_onenote',
+                        ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+                        $grade->id,
+                        'id',
+                        false);
+                
+                if (!empty($files)) {
+                    // if so, unzip the feedback and prepare postdata from it
+                    $temp_folder = microsoft_onenote::create_temp_folder();
+                    
+                    $fp = get_file_packer('application/zip');
+                    $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                    
+                    if (empty($filelist))
+                        return null;
+                    
+                    $postdata = microsoft_onenote::create_postdata_from_folder($assign->name, join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                } else {
+                    return null;
+                }
+            } else {
+                // otherwise, get the submission and prepare postdata from it
+                if ($submission) {
+                    $files = $fs->get_area_files($context->id,
+                            'assignsubmission_onenote',
+                            ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                            $submission->id,
+                            'id',
+                            false);
+                    
+                    if (!empty($files)) {
+                        // if so, unzip the submission and prepare postdata from it
+                        
+                        // create temp folder
+                        $temp_folder = microsoft_onenote::create_temp_folder();
+                        
+                        $fp = get_file_packer('application/zip');
+                        $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                        
+                        if (empty($filelist))
+                            return null;
+                        
+                        $postdata = microsoft_onenote::create_postdata_from_folder($assign->name, join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            }
+        }
+        else {
+            // check if a previous submission exists
+            if ($submission) {
+                $files = $fs->get_area_files($context->id,
+                        'assignsubmission_onenote',
+                        ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                        $submission->id,
+                        'id',
+                        false);
+                
+                if (!empty($files)) {
+                    // if so, unzip the submission and prepare postdata from it
+                    
+                    // create temp folder
+                    $temp_folder = microsoft_onenote::create_temp_folder();
+                    
+                    $fp = get_file_packer('application/zip');
+                    $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                    
+                    if (empty($filelist))
+                        return null;
+                    
+                    $postdata = microsoft_onenote::create_postdata_from_folder($assign->name, join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                } else {
+                    return null;
+                }
+            } else {
+                // if not, prepare postdata from assignment prompt
+                $postdata = microsoft_onenote::create_postdata($assign->name, $assign->intro, $context->id, $BOUNDARY);
+            }
+        }
+            
+        $response = microsoft_onenote::create_page_from_postdata($token, $section_id, $postdata, $BOUNDARY);
+        
+        if ($response)
+        {
+            // remember page id in the same db record
+            if ($is_teacher)
+                $record->feedback_page_id = $response->id;
+            else
+                $record->submission_page_id = $response->id;
+
+            if (isset($record->id))
+                $DB->update_record('assign_user_ext', $record);
+            else
+                $DB->insert_record('assign_user_ext', $record);
+
+            // Redirect to that onenote page so student can continue working on it
+            $url = $response->links->oneNoteWebUrl->href;
+            return $url;
+        }
+        
+        return null;
+    }
+    
     public static function get_file_contents($path,$filename,$context_id) {
         // get file contents
         $fs = get_file_storage();
@@ -517,10 +685,9 @@ class microsoft_onenote extends oauth2_client {
         return $contents;
     }
     
-    public static function create_postdata($assign,$context_id,$BOUNDARY) {
-        //error_log($assign->intro);
+    public static function create_postdata($title, $body_content, $context_id, $BOUNDARY) {
         $dom = new DOMDocument();
-        $dom->loadHTML($assign->intro);
+        $dom->loadHTML($body_content);
     
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
@@ -570,7 +737,7 @@ Content-Type: text/html; charset=utf-8
 <!DOCTYPE html>
 <html>
 <head>
-<title>Assignment: $assign->name</title>
+<title>$title</title>
 <meta name="created" value="$date"/>
 </head>
 <body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="14px" color="rgb(3,3,3)">$output</font></body>
@@ -581,6 +748,100 @@ POSTDATA;
     
         error_log(print_r($BODY, true));
         return $BODY;
+    }
+    
+    public static function create_postdata_from_folder($title, $folder, $BOUNDARY) {
+        $dom = new DOMDocument();
+        
+        $page_file = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), 'page.html'));
+        if (!$dom->loadHTMLFile($page_file))
+            return null;
+        
+        $xpath = new DOMXPath($dom);
+        $doc = $dom->getElementsByTagName("body")->item(0);
+        $src = $xpath->query(".//@src");
+    
+        if($src) {
+            $img_data = "";
+            foreach ($src as $s) {
+                $src_relpath = urldecode($s->nodeValue);
+                $src_filename = substr($src_relpath, strlen('./page_files/'));
+                $src_path = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
+                $contents = file_get_contents($src_path);
+    
+                if (!$contents || (count($contents) == 0))
+                    continue;
+    
+                //$contents = base64_encode($contents);
+                $src_filename = urlencode($src_filename);
+                $s->nodeValue = "name:".$src_filename;
+    
+                $img_data .= <<<IMGDATA
+--{$BOUNDARY}
+Content-Disposition: form-data; name="$src_filename"; filename="$src_filename"
+Content-Type: image/png
+
+$contents
+IMGDATA;
+
+                $img_data .="\r\n";
+            }
+        }
+    
+        // extract just the content of the body
+        $dom_clone = new DOMDocument;
+        foreach ($doc->childNodes as $child){
+            $dom_clone->appendChild($dom_clone->importNode($child, true));
+        }
+    
+        $output = $dom_clone->saveHTML();
+        $date = date("Y-m-d H:i:s");
+    
+        $BODY=<<<POSTDATA
+--{$BOUNDARY}
+Content-Disposition: form-data; name="Presentation"
+Content-Type: text/html; charset=utf-8
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>$title</title>
+<meta name="created" value="$date"/>
+</head>
+<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="14px" color="rgb(3,3,3)">$output</font></body>
+</html>
+$img_data
+--{$BOUNDARY}--
+POSTDATA;
+    
+        error_log(print_r($BODY, true));
+        return $BODY;
+    }
+    
+    public static function create_page_from_postdata($token, $section_id, $postdata, $BOUNDARY) {
+        $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
+        $encodedAccessToken = rawurlencode($token);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; boundary=$BOUNDARY\r\n".
+                "Authorization: Bearer ".$encodedAccessToken));
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($ch,CURLOPT_POST,true);
+        curl_setopt($ch,CURLOPT_POSTFIELDS,$postdata);
+        
+        $raw_response = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+        
+        if ($info['http_code'] == 201)
+        {
+            $response_without_header = substr($raw_response,$info['header_size']);
+            $response = json_decode($response_without_header);
+            return $response;
+        }
+        
+        return null;
     }
     
     public static function get_onenote_page($onenote_token, $page_id) {
@@ -625,4 +886,52 @@ POSTDATA;
     
         return $temp_folder;
     }
+
+    // check if given user is a teacher in the given course
+    public static function is_teacher($course_id, $user_id) {
+        //teacher role comes with courses.
+        $context = context_course::instance($course_id);//get_context_instance(CONTEXT_COURSE, $course_id, true);
+        
+        $roles = get_user_roles($context, $user_id, true);
+    
+        foreach ($roles as $role) {
+            if ($role->roleid == 3) {
+                return true;
+            }
+        }
+    
+        return false;
+    }
+
+    // TODO: Update for onenote
+    private function check_token_expiry() {
+            global $SESSION;
+    
+            date_default_timezone_set('UTC');
+            if(isset($SESSION->expires)) {
+            if (time() > $SESSION->expires) {
+                $refresh = array();
+                if(isset($SESSION->params_office)) {
+                    $refresh['client_id'] = $SESSION->params_office['client_id'];
+                    $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+                    $refresh['grant_type'] = "refresh_token";
+                    $refresh['refresh_token'] = $SESSION->refreshtoken;
+                    $refresh['resource'] = $SESSION->params_office['resource'];    
+                }
+                
+                $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
+    
+                $curl = new curl();
+                $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
+    
+                $access_token = json_decode($refresh_token_access)->access_token;
+                $refresh_token = json_decode($refresh_token_access)->refresh_token;
+                $expires_on = json_decode($refresh_token_access)->expires_on;
+    
+                $SESSION->accesstoken =  $access_token;
+                $SESSION->refreshtoken = $refresh_token;
+                $SESSION->expires = $expires_on;
+             }
+        }
+      }
 }

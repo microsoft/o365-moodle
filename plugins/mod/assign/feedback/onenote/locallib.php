@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 define('ASSIGNFEEDBACK_ONENOTE_FILEAREA', 'feedback_files');
 define('ASSIGNFEEDBACK_ONENOTE_BATCH_FILEAREA', 'feedback_files_batch');
 define('ASSIGNFEEDBACK_ONENOTE_IMPORT_FILEAREA', 'feedback_files_import');
-define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES', 5);
+define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES', 1);
 define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYUSERS', 5);
 define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
 
@@ -131,20 +131,34 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return bool true if elements were added to the form
      */
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {
-
-        $fileoptions = $this->get_file_options();
         $gradeid = $grade ? $grade->id : 0;
-        $elementname = 'onenotes_' . $userid;
 
-        $data = file_prepare_standard_filemanager($data,
-                                                  $elementname,
-                                                  $fileoptions,
-                                                  $this->assignment->get_context(),
-                                                  'assignfeedback_onenote',
-                                                  ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                                                  $gradeid);
-        $mform->addElement('filemanager', $elementname . '_filemanager', $this->get_name(), null, $fileoptions);
+        $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
+        
+        $onenote_token = microsoft_onenote::get_onenote_token();
 
+        if (isset($onenote_token)) {
+            // get the zip file containing the student's submission
+            
+            // upload it to the teacher's OneNote account
+            $action_params['action'] = 'save_feedback';
+            $cm_instance_id = optional_param('id', null, PARAM_INT);
+            $action_params['id'] = $cm_instance_id;
+            $action_params['token'] = $onenote_token;
+            $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+            
+            $o .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Add feedback using OneNote' . '</a>';
+            //$o .= '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
+            $o .= '<br/><br/><p>Click on the button above to export the student\'s submission to OneNote and add your feedback to it there. You can come back here later on to import your feedback back into Moodle.</p>';
+        } else {
+            $o .= microsoft_onenote::get_onenote_signin_widget();
+            $o .= '<br/><br/><p>Click on the button above to sign in to OneNote so you can add your feedback to the student\'s submission there.</p>';
+        }
+        
+        $o .= '<hr/>';
+        
+        $mform->addElement('html', $o);
+        
         return true;
     }
 
@@ -198,23 +212,36 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return bool
      */
     public function save(stdClass $grade, stdClass $data) {
-        $fileoptions = $this->get_file_options();
-
-        // The element name may have been for a different user.
-        foreach ($data as $key => $value) {
-            if (strpos($key, 'onenotes_') === 0 && strpos($key, '_filemanager')) {
-                $elementname = substr($key, 0, strpos($key, '_filemanager'));
-            }
-        }
-
-        $data = file_postupdate_standard_filemanager($data,
-                                                     $elementname,
-                                                     $fileoptions,
-                                                     $this->assignment->get_context(),
-                                                     'assignfeedback_onenote',
-                                                     ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                                                     $grade->id);
-
+        global $DB;
+        
+        // get the OneNote page id corresponding to the teacher's feedback for this submission
+        $record = $DB->get_record('assign_user_ext', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
+        $feedback_page_id = $record->feedback_page_id;
+        $temp_folder = microsoft_onenote::create_temp_folder();
+        $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        
+        // Create zip file containing onenote page and related files
+        $onenote_api = microsoft_onenote::get_onenote_api();
+        $download_info = $onenote_api->download_page($feedback_page_id, $temp_file);
+        
+        $fs = get_file_storage();
+        
+        // delete any previous feedbacks
+        $fs->delete_area_files($this->assignment->get_context()->id, 'assignsubmission_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
+        
+        // Prepare file record object
+        $fileinfo = array(
+            'contextid' => $this->assignment->get_context()->id,
+            'component' => 'assignfeedback_onenote',
+            'filearea' => ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+            'itemid' => $grade->id,
+            'filepath' => '/',
+            'filename' => 'OneNote_' . time() . '.zip');
+        
+        // save it
+        $fs->create_file_from_pathname($fileinfo, $download_info['path']);
+        fulldelete($temp_folder);
+        
         return $this->update_file_count($grade);
     }
 

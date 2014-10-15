@@ -145,28 +145,20 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
 
-        $fileoptions = $this->get_file_options();
-        $submissionid = $submission ? $submission->id : 0;
+        $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, false, $submission);
 
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
         
-        $onenote_token = microsoft_onenote::get_onenote_token();
-
-        if (isset($onenote_token)) {
-            $action_params['action'] = 'save';
-            $cm_instance_id = optional_param('id', null, PARAM_INT);
-            $action_params['id'] = $cm_instance_id;
-            $action_params['token'] = $onenote_token;
-            $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
-            
-            $o .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
-            //$o .= '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
-            $o .= '<br/><br/><p>Click on the button above to export the assignment to OneNote and work on it there. You can come back here later on to import your work back into Moodle.</p>';
+        if ($url) {                    
+            // show a link to the OneNote page
+            $url = new moodle_url($url);
+            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a></p>';
+            $o .= '<br/><p>Click on the button above to work on the assignment in OneNote. You can come back here later on to save your work back into Moodle.</p>';
         } else {
             $o .= microsoft_onenote::get_onenote_signin_widget();
             $o .= '<br/><br/><p>Click on the button above to sign in to OneNote so you can work on the assignment there.</p>';
         }
-        
+
         $o .= '<hr/>';
         
         $mform->addElement('html', $o);
@@ -206,16 +198,18 @@ class assign_submission_onenote extends assign_submission_plugin {
 
         // get OneNote page id
         $record = $DB->get_record('assign_user_ext', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
-        $page_id = $record->page_id;
+        $submission_page_id = $record->submission_page_id;
         $temp_folder = microsoft_onenote::create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files
         $onenote_api = microsoft_onenote::get_onenote_api();
-        $download_info = $onenote_api->download_page($page_id, $temp_file);
+        $download_info = $onenote_api->download_page($submission_page_id, $temp_file);
         
-        // save it to approp area
         $fs = get_file_storage();
+        
+        // delete any previous attempts
+        $fs->delete_area_files($this->assignment->get_context()->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submission->id);
         
         // Prepare file record object
         $fileinfo = array(
@@ -226,6 +220,7 @@ class assign_submission_onenote extends assign_submission_plugin {
             'filepath' => '/',
             'filename' => 'OneNote_' . time() . '.zip');
         
+        // save it
         $fs->create_file_from_pathname($fileinfo, $download_info['path']);
         fulldelete($temp_folder);
         
@@ -339,34 +334,25 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return string
      */
     public function view_summary(stdClass $submission, & $showviewlink) {
-        global $DB;
+        global $DB, $USER;
         
+        // Show we show a link to view all files for this plugin?
+        $count = $this->count_files($submission->id, ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+        $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
+
+        $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
         $o = '';
         
-        $count = $this->count_files($submission->id, ASSIGNSUBMISSION_ONENOTE_FILEAREA);
-
-        // Show we show a link to view all files for this plugin?
-        $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
-            // get page id of the OneNote page for this assignment
-            $record = $DB->get_record('assign_user_ext', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
-            if ($record) {
-                $onenote_token = microsoft_onenote::get_onenote_token();
-                
-                if (isset($onenote_token)) {
-                    $page = microsoft_onenote::get_onenote_page($onenote_token, $record->page_id);
-                    if ($page) {
-                        $url = new moodle_url($page->links->oneNoteWebUrl->href);
-                        
-                        // show a link to the OneNote page
-                        $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'View in OneNote' . '</a></p>';
-                    } else {
-                        $o .= '<p>The OneNote page corresponding to this assignment appears to have been deleted. Luckily, you had saved it into Moodle and you can dwonload it as a Zip file below.</p>';
-                    }
-                } else {
-                    $o .= microsoft_onenote::get_onenote_signin_widget();
-                    $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view your submission there.</p>';
-                }
+            $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, $is_teacher, $submission);
+
+            if ($url) {                    
+                // show a link to the OneNote page
+                $url = new moodle_url($url);
+                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'View in OneNote' . '</a></p>';
+            } else {
+                $o .= microsoft_onenote::get_onenote_signin_widget();
+                $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';
             }
             
             // show standard link to download zip package
@@ -374,9 +360,6 @@ class assign_submission_onenote extends assign_submission_plugin {
             $o .= $this->assignment->render_area_files('assignsubmission_onenote',
                                                         ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                                                         $submission->id);
-            
-            //error_log(print_r($this->assignment, true));
-            //error_log(print_r($submission, true));
             
             return $o;
         } else {
