@@ -209,13 +209,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         
         // get the OneNote page id corresponding to the teacher's feedback for this submission
         $record = $DB->get_record('assign_user_ext', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
-        $feedback_page_id = $record->feedback_page_id;
         $temp_folder = microsoft_onenote::create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files
         $onenote_api = microsoft_onenote::get_onenote_api();
-        $download_info = $onenote_api->download_page($feedback_page_id, $temp_file);
+        $download_info = $onenote_api->download_page($record->feedback_teacher_page_id, $temp_file);
         
         $fs = get_file_storage();
         

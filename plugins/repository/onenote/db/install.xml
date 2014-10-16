@@ -23,13 +23,15 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="assign_user_ext" COMMENT="to store user id, assign id, sumission OneNote page id, and feedback OneNote page id relationship">
+    <TABLE NAME="assign_user_ext" COMMENT="to store OneNote page id's for submissions and fedbacks for student's assignments">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="user_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="user id"/>
         <FIELD NAME="assign_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="assignment id"/>
-        <FIELD NAME="submission_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for student's submission"/>
-        <FIELD NAME="feedback_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's feedback"/>
+        <FIELD NAME="submission_student_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for stodent's copy of student's submission"/>
+        <FIELD NAME="feedback_student_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for student's copy of teacher's feedback"/>
+        <FIELD NAME="submission_teacher_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's copy of student's submission"/>
+        <FIELD NAME="feedback_teacher_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's copy of teacher's feedback"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

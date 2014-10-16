@@ -528,7 +528,8 @@ class microsoft_onenote extends oauth2_client {
         $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $student_user_id));
         if ($record) {
             $page = microsoft_onenote::get_onenote_page($token, 
-                    $want_feedback_page ? $record->feedback_page_id : $record->submission_page_id);
+                    $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) : 
+                                          ($is_teacher ? $record->submission_teacher_page_id : $record->submission_student_page_id));
         
             if ($page) {
                 $url = $page->links->oneNoteWebUrl->href;
@@ -536,10 +537,17 @@ class microsoft_onenote extends oauth2_client {
             }
 
             // probably user deleted page, so we will update the db record to reflect it and continue to recreate the page
-            if ($want_feedback_page)
-                $record->feedback_page_id = null;
-            else 
-                $record->submission_page_id = null;
+            if ($want_feedback_page) {
+                if ($is_teacher)
+                    $record->feedback_teacher_page_id = null;
+                else
+                    $record->feedback_student_page_id = null;
+            } else {
+                if ($is_teacher)
+                    $record->submission_teacher_page_id = null;
+                else
+                    $record->submission_student_page_id = null;
+            }
                 
             $DB->update_record('assign_user_ext', $record);
         } else {
@@ -619,11 +627,18 @@ class microsoft_onenote extends oauth2_client {
         if ($response)
         {
             // remember page id in the same db record or insert a new one if it did not exist before
-            if ($want_feedback_page)
-                $record->feedback_page_id = $response->id;
-            else
-                $record->submission_page_id = $response->id;
-
+            if ($want_feedback_page) {
+                if ($is_teacher)
+                    $record->feedback_teacher_page_id = $response->id;
+                else
+                    $record->feedback_student_page_id = $response->id;
+            } else {
+                if ($is_teacher)
+                    $record->submission_teacher_page_id = $response->id;
+                else
+                    $record->submission_student_page_id = $response->id;
+            }
+                
             if (isset($record->id))
                 $DB->update_record('assign_user_ext', $record);
             else
