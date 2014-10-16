@@ -133,23 +133,16 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {
         $gradeid = $grade ? $grade->id : 0;
 
+        $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, true, true,
+                $this->assignment->get_user_submission($userid, false), $grade);
+        
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
         
-        $onenote_token = microsoft_onenote::get_onenote_token();
-
-        if (isset($onenote_token)) {
-            // get the zip file containing the student's submission
-            
-            // upload it to the teacher's OneNote account
-            $action_params['action'] = 'save_feedback';
-            $cm_instance_id = optional_param('id', null, PARAM_INT);
-            $action_params['id'] = $cm_instance_id;
-            $action_params['token'] = $onenote_token;
-            $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
-            
-            $o .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Add feedback using OneNote' . '</a>';
-            //$o .= '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a>';
-            $o .= '<br/><br/><p>Click on the button above to export the student\'s submission to OneNote and add your feedback to it there. You can come back here later on to import your feedback back into Moodle.</p>';
+        if ($url) {
+            // show a link to the OneNote page
+            $url = new moodle_url($url);
+            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Add feedback using OneNote' . '</a></p>';
+            $o .= '<br/><p>Click on the button above to add your feedback for the student\'s submission in OneNote. You can come back here later on to save your work back into Moodle.</p>';
         } else {
             $o .= microsoft_onenote::get_onenote_signin_widget();
             $o .= '<br/><br/><p>Click on the button above to sign in to OneNote so you can add your feedback to the student\'s submission there.</p>';
@@ -227,7 +220,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $fs = get_file_storage();
         
         // delete any previous feedbacks
-        $fs->delete_area_files($this->assignment->get_context()->id, 'assignsubmission_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
+        $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
         
         // Prepare file record object
         $fileinfo = array(
@@ -253,16 +246,32 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return string
      */
     public function view_summary(stdClass $grade, & $showviewlink) {
-
-        $count = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
-
         // Show a view all link if the number of files is over this limit.
+        $count = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
 
+        $o = '';
+        
         if ($count <= ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
-            return $this->assignment->render_area_files('assignfeedback_onenote',
+            $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, true, true, 
+                    $this->assignment->get_user_submission($grade->userid, false), $grade);
+
+            if ($url) {                    
+                // show a link to the OneNote page
+                $url = new moodle_url($url);
+                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Edit in OneNote' . '</a></p>';
+            } else {
+                $o .= microsoft_onenote::get_onenote_signin_widget();
+                $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';
+            }
+            
+            // show standard link to download zip package
+            $o .= '<p>Download:</p>';
+            $o .= $this->assignment->render_area_files('assignfeedback_onenote',
                                                         ASSIGNFEEDBACK_ONENOTE_FILEAREA,
                                                         $grade->id);
+            
+            return $o;
         } else {
             return get_string('countfiles', 'assignfeedback_onenote', $count);
         }

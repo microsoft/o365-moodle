@@ -141,11 +141,15 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return bool
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
+        global $USER;
+        
         if ($this->get_config('maxfilesubmissions') <= 0) {
             return false;
         }
 
-        $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, false, $submission);
+        $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
+        $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, false, $is_teacher, 
+                $submission, null);
 
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
         
@@ -334,9 +338,9 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return string
      */
     public function view_summary(stdClass $submission, & $showviewlink) {
-        global $DB, $USER;
-        
-        // Show we show a link to view all files for this plugin?
+        global $USER;
+
+        // Should we show a link to view all files for this plugin?
         $count = $this->count_files($submission->id, ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
 
@@ -344,7 +348,8 @@ class assign_submission_onenote extends assign_submission_plugin {
         $o = '';
         
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
-            $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, $is_teacher, $submission);
+            $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, false, $is_teacher, 
+                    $submission, null);
 
             if ($url) {                    
                 // show a link to the OneNote page
@@ -356,7 +361,7 @@ class assign_submission_onenote extends assign_submission_plugin {
             }
             
             // show standard link to download zip package
-            $o .= '<p>Download as a Zip file:</p>';
+            $o .= '<p>Download:</p>';
             $o .= $this->assignment->render_area_files('assignsubmission_onenote',
                                                         ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                                                         $submission->id);

@@ -486,21 +486,25 @@ class microsoft_onenote extends oauth2_client {
            href="'.$url->out(false).'" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Sign in to OneNote' . '</a>';
     }
     
-    // gets (or creates) the submission page or feedback page in OneNote for the given student assignment. 
-    // if page already exists, weburl to the page is returned
-    // if page does not exist, 
-    //      if this is a student,
-    //          if previous zip package exists for the submission
-    //              unzip the zip package and create page from it
-    //          else 
-    //              this is the first time a student is working on the submission, so create the page from the assignment prompt
-    //      else (this is a teacher)
-    //          if previous zip package exists for the feedback
-    //              unzip the package and create page from it
-    //          else
-    //              create the page from the student's submission
-    // returns weburl to the OneNote page created or obtained
-    public static function get_page($cmid, $is_teacher, $submission = null, $grade = null) {
+    // Gets (or creates) the submission page or feedback page in OneNote for the given student assignment.
+    // Note: For each assignment, each student has a record in the db that contains the OneNote page ID's of corresponding submission and feedback pages
+    // Basic logic:
+    // if the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned
+    // if either OneNote page or corresponding record in db does not exist,
+    //     if we are being called for getting a feedback page
+    //         if a zip package for the feedback page exists, 
+    //             create OneNote page from it (for student or teacher)
+    //         else
+    //             if this is a teacher, it means they are just looking at the student's submission for the first time, so create a feedback page from the submission
+    //             else bail out
+    //     else (we are being called for getting a submission page) 
+    //         if a zip package exists for the submission
+    //             unzip the zip package and create page from it
+    //         else 
+    //             if this is a student, this must be the first time they are working on the submission, so create the page from the assignment prompt
+    //             else bail out
+    // return the weburl to the OneNote page created or obtained
+    public static function get_page($cmid, $want_feedback_page, $is_teacher, $submission = null, $grade = null) {
         global $USER, $DB;
         
         $token = microsoft_onenote::get_onenote_token();
@@ -512,11 +516,19 @@ class microsoft_onenote extends oauth2_client {
         $context = context_module::instance($cm->id);
         $user_id = $USER->id;
         
-        // if page already exists, return it
-        $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $user_id));
+        // if $submission is given, then it contains the student's user id. If $submission is null, it means a student is just looking at the assignment to start working on it, so use the logged in user id
+        if ($submission)
+            $student_user_id = $submission->userid;
+        else
+            $student_user_id = $user_id;
+        
+        $student_name = $student_user_id; // TODO: get actual name
+        
+        // if the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned
+        $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $student_user_id));
         if ($record) {
             $page = microsoft_onenote::get_onenote_page($token, 
-                    $is_teacher ? $record->feedback_page_id : $record->submission_page_id);
+                    $want_feedback_page ? $record->feedback_page_id : $record->submission_page_id);
         
             if ($page) {
                 $url = $page->links->oneNoteWebUrl->href;
@@ -524,16 +536,17 @@ class microsoft_onenote extends oauth2_client {
             }
 
             // probably user deleted page, so we will update the db record to reflect it and continue to recreate the page
-            if ($is_teacher)
-                $record->submission_page_id = null;
-            else 
+            if ($want_feedback_page)
                 $record->feedback_page_id = null;
-            
+            else 
+                $record->submission_page_id = null;
+                
             $DB->update_record('assign_user_ext', $record);
         } else {
+            // prepare record object since we will use it further down to insert into database
             $record = new object();
             $record->assign_id = $assign->id;
-            $record->user_id = $user_id;
+            $record->user_id = $student_user_id;
         }
         
         // get the section id for the course so we can create the page in the approp section
@@ -544,90 +557,60 @@ class microsoft_onenote extends oauth2_client {
         
         $fs = get_file_storage();
         
-        if ($is_teacher) {
-            // TODO: check if feedback exists
-            if ($grade) {
-                $files = $fs->get_area_files($context->id,
-                        'assignfeedback_onenote',
-                        ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                        $grade->id,
-                        'id',
-                        false);
-                
-                if (!empty($files)) {
-                    // if so, unzip the feedback and prepare postdata from it
-                    $temp_folder = microsoft_onenote::create_temp_folder();
+        // if we are being called for getting a feedback page 
+        if ($want_feedback_page) {
+            // if previously saved fedback does not exist
+            if (!$grade || 
+                !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, 
+                        $grade->id, 'id', false))) {
+                if ($is_teacher) {
+                    // this must be the first time teacher is looking at student's submission
+                    // so prepare feedback page from submission zip package
+                    $files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                        $submission->id, 'id', false);
                     
-                    $fp = get_file_packer('application/zip');
-                    $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
-                    
-                    if (empty($filelist))
+                    if (!files)
                         return null;
                     
-                    $postdata = microsoft_onenote::create_postdata_from_folder($assign->name, join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                // unzip the submission and prepare postdata from it
+                $temp_folder = microsoft_onenote::create_temp_folder();
+                $fp = get_file_packer('application/zip');
+                $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                
+                $postdata = microsoft_onenote::create_postdata_from_folder('Submission: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                        join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
                 } else {
                     return null;
                 }
             } else {
-                // otherwise, get the submission and prepare postdata from it
-                if ($submission) {
-                    $files = $fs->get_area_files($context->id,
-                            'assignsubmission_onenote',
-                            ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                            $submission->id,
-                            'id',
-                            false);
-                    
-                    if (!empty($files)) {
-                        // if so, unzip the submission and prepare postdata from it
-                        
-                        // create temp folder
-                        $temp_folder = microsoft_onenote::create_temp_folder();
-                        
-                        $fp = get_file_packer('application/zip');
-                        $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
-                        
-                        if (empty($filelist))
-                            return null;
-                        
-                        $postdata = microsoft_onenote::create_postdata_from_folder($assign->name, join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
-                    } else {
-                        return null;
-                    }
-                } else {
-                    return null;
-                }
+                // create postdata from the zip package of teacher's feedback
+                $temp_folder = microsoft_onenote::create_temp_folder();
+                $fp = get_file_packer('application/zip');
+                $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                
+                $postdata = microsoft_onenote::create_postdata_from_folder('Feedback: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                        join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
-        }
-        else {
-            // check if a previous submission exists
-            if ($submission) {
-                $files = $fs->get_area_files($context->id,
-                        'assignsubmission_onenote',
-                        ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                        $submission->id,
-                        'id',
-                        false);
-                
-                if (!empty($files)) {
-                    // if so, unzip the submission and prepare postdata from it
-                    
-                    // create temp folder
-                    $temp_folder = microsoft_onenote::create_temp_folder();
-                    
-                    $fp = get_file_packer('application/zip');
-                    $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
-                    
-                    if (empty($filelist))
-                        return null;
-                    
-                    $postdata = microsoft_onenote::create_postdata_from_folder($assign->name, join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
-                } else {
+        } else {
+            // we want submission page
+            if (!$submission || 
+                !($files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                    $submission->id, 'id', false))) {
+                if ($is_teacher) {
                     return null;
+                } else {
+                    // this is a student and they are just starting to work on this assignment, so prepare page from the assignment prompt
+                    $postdata = microsoft_onenote::create_postdata('Submission: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                        $assign->intro, $context->id, $BOUNDARY);
                 }
             } else {
-                // if not, prepare postdata from assignment prompt
-                $postdata = microsoft_onenote::create_postdata($assign->name, $assign->intro, $context->id, $BOUNDARY);
+                // unzip the submission and prepare postdata from it
+                $temp_folder = microsoft_onenote::create_temp_folder();
+                $fp = get_file_packer('application/zip');
+                $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                
+                $postdata = microsoft_onenote::create_postdata_from_folder('Submission: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                        join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         }
             
@@ -635,8 +618,8 @@ class microsoft_onenote extends oauth2_client {
         
         if ($response)
         {
-            // remember page id in the same db record
-            if ($is_teacher)
+            // remember page id in the same db record or insert a new one if it did not exist before
+            if ($want_feedback_page)
                 $record->feedback_page_id = $response->id;
             else
                 $record->submission_page_id = $response->id;
@@ -646,7 +629,7 @@ class microsoft_onenote extends oauth2_client {
             else
                 $DB->insert_record('assign_user_ext', $record);
 
-            // Redirect to that onenote page so student can continue working on it
+            // return weburl to that onenote page
             $url = $response->links->oneNoteWebUrl->href;
             return $url;
         }
@@ -845,6 +828,9 @@ POSTDATA;
     }
     
     public static function get_onenote_page($onenote_token, $page_id) {
+        if (!$onenote_token || !$page_id)
+            return null;
+        
         $curl = new curl();
     
         $header = array(
