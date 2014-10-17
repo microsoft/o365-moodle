@@ -689,7 +689,7 @@ class microsoft_onenote extends oauth2_client {
     
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
-        $src = $xpath->query(".//@src");
+        $src = $xpath->query("//@src");
     
         if($src) {
             $img_data = "";
@@ -704,7 +704,7 @@ class microsoft_onenote extends oauth2_client {
                 $path_parts['filename'] = urlencode($path_parts['filename']);
                 $contents['filename'] = urlencode($contents['filename']);
     
-                $s->nodeValue = "name:".$path_parts['filename'];
+                $s->nodeValue = "name:" . $path_parts['filename'];
     
                 $img_data .= <<<IMGDATA
 --{$BOUNDARY}
@@ -757,12 +757,13 @@ POSTDATA;
         
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
-        $src = $xpath->query(".//@src");
-    
-        if($src) {
-            $img_data = "";
-            foreach ($src as $s) {
-                $src_relpath = urldecode($s->nodeValue);
+        $img_nodes = $xpath->query("//img");
+        $img_data = "";
+        
+        if($img_nodes) {
+            foreach ($img_nodes as $img_node) {
+                $src_node = $img_node->attributes->getNamedItem("src");
+                $src_relpath = urldecode($src_node->nodeValue);
                 $src_filename = substr($src_relpath, strlen('./page_files/'));
                 $src_path = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
                 $contents = file_get_contents($src_path);
@@ -770,14 +771,17 @@ POSTDATA;
                 if (!$contents || (count($contents) == 0))
                     continue;
     
-                //$contents = base64_encode($contents);
                 $src_filename = urlencode($src_filename);
-                $s->nodeValue = "name:".$src_filename;
+                $src_node->nodeValue = "name:" . $src_filename;
+                
+                // remove data_fullres_src if present
+                if ($img_node->attributes->getNamedItem("data-fullres-src"))
+                    $img_node->removeAttribute("data-fullres-src");
     
                 $img_data .= <<<IMGDATA
 --{$BOUNDARY}
 Content-Disposition: form-data; name="$src_filename"; filename="$src_filename"
-Content-Type: image/png
+Content-Type: image/jpeg
 
 $contents
 IMGDATA;
