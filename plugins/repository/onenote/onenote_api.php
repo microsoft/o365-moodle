@@ -145,9 +145,9 @@ class microsoft_onenote extends oauth2_client {
         $doc = new DOMDocument();
         $doc->loadHTML($response);
         $xpath = new DOMXPath($doc);
-        $nodes = $xpath->query("//img/@src");
+        $img_nodes = $xpath->query("//img");
         
-        if ($nodes) {
+        if ($img_nodes && (count($img_nodes) > 0)) {
             // create temp folder
             $temp_folder = microsoft_onenote::create_temp_folder();
             
@@ -159,12 +159,18 @@ class microsoft_onenote extends oauth2_client {
         
             // save images etc.
             $i = 1;
-            foreach ($nodes as $node) {
-                $response = $this->get($node->value);
+            foreach ($img_nodes as $img_node) {
+                $src_node = $img_node->attributes->getNamedItem("src");
+                $response = $this->get($src_node->nodeValue);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
                 // update img src paths in the html accordingly
-                $node->value = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
+                $src_node->nodeValue = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
+                
+                // remove data_fullres_src if present
+                if ($img_node->attributes->getNamedItem("data-fullres-src"))
+                    $img_node->removeAttribute("data-fullres-src");
+                
                 $i++; 
             }
             
