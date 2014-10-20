@@ -695,6 +695,33 @@ class microsoft_onenote extends oauth2_client {
     
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
+        
+        // handle OneNote restrictions on supported HTML tags
+        
+        // handle <br/> problem
+        $br_nodes = $xpath->query('//br');
+        if ($br_nodes) {
+            $count = $br_nodes->length;
+            $index = 0;
+            
+            while ($index < $count) {
+                $br_node = $br_nodes->item($index);
+                
+                // replace only the last br in a sequence with a p
+                $next_sibling = $br_node->nextSibling;
+                while($next_sibling && ($next_sibling->nodeName == 'br')) {
+                    $br_node = $next_sibling;
+                    $next_sibling = $br_node->nextSibling;    
+                    $index++;
+                }
+                
+                $p_node = new DOMElement('p');
+                $br_node->parentNode->replaceChild($p_node, $br_node);
+                $index++;
+            }
+        }
+        
+        // process images
         $src = $xpath->query("//@src");
     
         if($src) {

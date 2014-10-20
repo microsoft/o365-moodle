@@ -7,7 +7,7 @@ require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
 $action = required_param('action', PARAM_TEXT);
 $cmid = required_param('id', PARAM_INT);
 
-$url = microsoft_onenote::get_page($cmid, false);
+$url = microsoft_onenote::get_page($cmid, false, false);
 if ($url) {
     $url = new moodle_url($url);
     redirect($url);
