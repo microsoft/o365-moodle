@@ -696,9 +696,38 @@ class microsoft_onenote extends oauth2_client {
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         
-        // handle OneNote restrictions on supported HTML tags
-        
-        // handle <br/> problem
+        // add p tags inside td tags so we can specify correct font
+        $td_nodes = $xpath->query('//td');
+        if ($td_nodes) {
+            $td_nodes_array = array();
+            
+            foreach ($td_nodes as $td_node) {
+                $td_nodes_array[] = $td_node;
+            }
+            
+            foreach ($td_nodes_array as $td_node) {
+                $child_nodes = $td_node->childNodes;
+                $child_nodes_array = array();
+                
+                foreach ($child_nodes as $child_node) {
+                    $child_nodes_array[] = $child_node;
+                }
+                
+                foreach ($child_nodes_array as $child_node) {
+                    $node_name = $child_node->nodeName;
+                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a')) {
+                        $p_node = $dom->createElement('span');
+                        $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
+                        $p_node->appendChild($td_node->removeChild($child_node));
+                        $td_node->insertBefore($p_node);
+                    } else {
+                        $td_node->insertBefore($td_node->removeChild($child_node));                        
+                    }
+                }
+            }
+        }
+                
+            // handle <br/> problem
         $br_nodes = $xpath->query('//br');
         if ($br_nodes) {
             $count = $br_nodes->length;
@@ -771,7 +800,7 @@ Content-Type: text/html; charset=utf-8
 <title>$title</title>
 <meta name="created" value="$date"/>
 </head>
-<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="14px" color="rgb(3,3,3)">$output</font></body>
+<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">$output</body>
 </html>
 $img_data
 --{$BOUNDARY}--
