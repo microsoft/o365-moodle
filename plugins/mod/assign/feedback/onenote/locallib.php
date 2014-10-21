@@ -141,7 +141,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($url) {
             // show a link to the OneNote page
             $url = new moodle_url($url);
-            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Add feedback using OneNote' . '</a></p>';
+            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" class="onenote_linkbutton">' . 'Add feedback using OneNote' . '</a></p>';
             $o .= '<br/><p>Click on the button above to add your feedback for the student\'s submission in OneNote. You can come back here later on to save your work back into Moodle.</p>';
         } else {
             $o .= microsoft_onenote::get_onenote_signin_widget();
@@ -258,7 +258,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             if ($url) {                    
                 // show a link to the OneNote page
                 $url = new moodle_url($url);
-                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Edit in OneNote' . '</a></p>';
+                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" class="onenote_linkbutton">' . 'Edit in OneNote' . '</a></p>';
             } else {
                 $o .= microsoft_onenote::get_onenote_signin_widget();
                 $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';

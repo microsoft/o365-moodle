@@ -156,7 +156,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         if ($url) {                    
             // show a link to the OneNote page
             $url = new moodle_url($url);
-            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Work on the assignment in OneNote' . '</a></p>';
+            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" class="onenote_linkbutton">' . 'Work on the assignment in OneNote' . '</a></p>';
             $o .= '<br/><p>Click on the button above to work on the assignment in OneNote. You can come back here later on to save your work back into Moodle.</p>';
         } else {
             $o .= microsoft_onenote::get_onenote_signin_widget();
@@ -208,6 +208,9 @@ class assign_submission_onenote extends assign_submission_plugin {
         // Create zip file containing onenote page and related files
         $onenote_api = microsoft_onenote::get_onenote_api();
         $download_info = $onenote_api->download_page($record->submission_student_page_id, $temp_file);
+        
+        if (!$download_info)
+            return false;
         
         $fs = get_file_storage();
         
@@ -353,7 +356,7 @@ class assign_submission_onenote extends assign_submission_plugin {
             if ($url) {                    
                 // show a link to the OneNote page
                 $url = new moodle_url($url);
-                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'View in OneNote' . '</a></p>';
+                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" class="onenote_linkbutton">' . 'View in OneNote' . '</a></p>';
             } else {
                 $o .= microsoft_onenote::get_onenote_signin_widget();
                 $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';

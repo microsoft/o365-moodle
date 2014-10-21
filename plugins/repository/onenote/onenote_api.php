@@ -134,10 +134,11 @@ class microsoft_onenote extends oauth2_client {
         $response = $this->get($url);
         $this->isget = TRUE;
 
+        // on success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors
+        $decoded_response = json_decode($response);
         error_log("response: " . print_r($response, true));
 
-        if (!$response || isset($response->error)) {
-            $this->log_out();
+        if (!$response || isset($decoded_response->error)) {
             return null;
         }
 
@@ -231,7 +232,6 @@ class microsoft_onenote extends oauth2_client {
             //error_log('response: ' . print_r($response, true));
 
             if (!$response || isset($response->error)) {
-                $this->log_out();
                 return false;
             }
         }
@@ -282,7 +282,6 @@ class microsoft_onenote extends oauth2_client {
         $items = array();
 
         if (isset($response->error)) {
-            $this->log_out();
             return $items;
         }
 
@@ -489,7 +488,7 @@ class microsoft_onenote extends oauth2_client {
         $url = new moodle_url('https://login.live.com/oauth20_authorize.srf', $params);
     
         return '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
-           href="'.$url->out(false).'" style="' . microsoft_onenote::get_linkbutton_style() . '">' . 'Sign in to OneNote' . '</a>';
+           href="'.$url->out(false).'" class="onenote_linkbutton">' . 'Sign in to OneNote' . '</a>';
     }
     
     // Gets (or creates) the submission page or feedback page in OneNote for the given student assignment.
@@ -528,7 +527,7 @@ class microsoft_onenote extends oauth2_client {
         else
             $student_user_id = $user_id;
         
-        $student_name = $student_user_id; // TODO: get actual name
+        $student_name = $DB->get_field('user', 'username', array('id' => $student_user_id));
         
         // if the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned
         $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $student_user_id));
@@ -591,7 +590,8 @@ class microsoft_onenote extends oauth2_client {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
-                $postdata = microsoft_onenote::create_postdata_from_folder('Submission: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                $postdata = microsoft_onenote::create_postdata_from_folder(
+                        microsoft_onenote::format_assignment_title($assign, $student_name, false), 
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
                 } else {
                     return null;
@@ -602,7 +602,8 @@ class microsoft_onenote extends oauth2_client {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
-                $postdata = microsoft_onenote::create_postdata_from_folder('Feedback: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                $postdata = microsoft_onenote::create_postdata_from_folder(
+                        microsoft_onenote::format_assignment_title($assign, $student_name, true), 
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         } else {
@@ -614,7 +615,8 @@ class microsoft_onenote extends oauth2_client {
                     return null;
                 } else {
                     // this is a student and they are just starting to work on this assignment, so prepare page from the assignment prompt
-                    $postdata = microsoft_onenote::create_postdata('Submission: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                    $postdata = microsoft_onenote::create_postdata(
+                        microsoft_onenote::format_assignment_title($assign, $student_name, false), 
                         $assign->intro, $context->id, $BOUNDARY);
                 }
             } else {
@@ -623,7 +625,8 @@ class microsoft_onenote extends oauth2_client {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
-                $postdata = microsoft_onenote::create_postdata_from_folder('Submission: ' . $assign->name . ' [Student: ' . $student_name . ']', 
+                $postdata = microsoft_onenote::create_postdata_from_folder(
+                        microsoft_onenote::format_assignment_title($assign, $student_name, false), 
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         }
@@ -656,6 +659,10 @@ class microsoft_onenote extends oauth2_client {
         }
         
         return null;
+    }
+    
+    private static function format_assignment_title($assign, $student_name, $is_feedback) {
+        return ($is_feedback ? 'Feedback: ' : 'Submission: ') . $assign->name . ' [' . $student_name . ']';
     }
     
     public static function get_file_contents($path,$filename,$context_id) {
@@ -715,7 +722,8 @@ class microsoft_onenote extends oauth2_client {
                 
                 foreach ($child_nodes_array as $child_node) {
                     $node_name = $child_node->nodeName;
-                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a')) {
+                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a') || ($node_name == 'i') || 
+                        ($node_name == 'span') || ($node_name == 'em') || ($node_name == 'strong')) {
                         $p_node = $dom->createElement('span');
                         $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
                         $p_node->appendChild($td_node->removeChild($child_node));
@@ -928,7 +936,7 @@ POSTDATA;
             return null;
         }
     
-        return $response->value[0];
+        return $response;
     }
     
     // get the repo id for the onenote repo
@@ -936,10 +944,6 @@ POSTDATA;
         global $DB;
         $repository = $DB->get_record('repository', array('type'=>'onenote'));
         return $repository->id;
-    }
-    
-    public static function get_linkbutton_style() {
-        return 'background-color: #80397B; color: #fff; display: inline-block; padding: 4px 10px; margin: 5px 0px;';
     }
     
     public static function create_temp_folder() {

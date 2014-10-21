@@ -45,8 +45,7 @@ class block_onenote extends block_list {
                     $content->items[] =
                         '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . 
                         $url->out(false) . 
-                        '" style="' . microsoft_onenote::get_linkbutton_style() . 
-                        '">' . 'Work on the assignment in OneNote' . '</a>';
+                        '" class="onenote_linkbutton">' . 'Work on the assignment in OneNote' . '</a>';
     
                     $content->items[] = '<br/>';
                 }
@@ -54,7 +53,12 @@ class block_onenote extends block_list {
                 $notes = $onenote_api->get_items_list('');
                 
                 if ($notes) {
-                    $content->items[] = '<b>Your Notebooks:</b>';
+//                     $content->items[] = '<div class="box block_tree_box">' .
+//                     '<ul class="block_tree list"><li class="type_unknown contains_branch" aria-expanded="true"><p class="tree_item branch root_node"><a href="http://vinlocaldomain.com:88/my/">Your Notebooks</a></p><ul>' .
+//                     '<li class="type_setting collapsed item_with_icon"><p class="tree_item leaf"><a href="http://vinlocaldomain.com:88/blog/index.php?courseid=0"><img alt="" class="smallicon navicon" title="" src="http://vinlocaldomain.com:88/theme/image.php/clean/core/1413927861/i/navigationitem" />Site blogs</a></p></li>' .
+//                     '<li class="type_setting collapsed item_with_icon"><p class="tree_item leaf"><a href="http://vinlocaldomain.com:88/badges/view.php?type=1"><img alt="" class="smallicon navicon" title="" src="http://vinlocaldomain.com:88/theme/image.php/clean/core/1413927861/i/navigationitem" />Site badges</a></p></li>' .
+//                     '</ul></li></ul></div>';
+                    
                     foreach ($notes as $note) {
                         $content->items[] = '<a href="' . $note['url'] . '" target="_blank">' . $note['title'] . '</a>';
                     }
