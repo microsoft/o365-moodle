@@ -355,7 +355,7 @@ class microsoft_onenote extends oauth2_client {
 
     private function insert_notes($notes) {
         global $DB;
-        $notebook_name =  get_string('notebookname','block_onenote');
+        $notebook_name = get_string('notebookname','block_onenote');
         $noteurl = self::API."/notebooks/";
         $courses = enrol_get_my_courses(); //get the current user enrolled courses
         $notes_array = array();

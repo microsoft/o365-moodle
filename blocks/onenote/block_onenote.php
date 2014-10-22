@@ -22,7 +22,7 @@ class block_onenote extends block_list {
     }
 
     public function _get_content() {
-        global $USER, $COURSE;
+        global $USER, $COURSE, $PAGE;
         
         error_log('_get_content called');
         $content = new stdClass;
@@ -33,37 +33,40 @@ class block_onenote extends block_list {
         $onenote_token = $onenote_api->get_accesstoken();
         
         if (isset($onenote_token)) {
-            // add the "save to onenote" button if this is a file upload type of assignment
-            $cm_instance_id = optional_param('id', null, PARAM_INT);
-            
-            if ($cm_instance_id) {
+            // add the "save to onenote" button if we are on an assignment page
+            if ($PAGE->cm) {
                 if (!microsoft_onenote::is_teacher($COURSE->id, $USER->id)) {
                     $action_params['action'] = 'save';
-                    $action_params['id'] = $cm_instance_id;
+                    $action_params['id'] = $PAGE->cm->id;
                     $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
     
                     $content->items[] =
                         '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . 
                         $url->out(false) . 
                         '" class="onenote_linkbutton">' . 'Work on the assignment in OneNote' . '</a>';
-    
-                    $content->items[] = '<br/>';
                 }
-            
-                $notes = $onenote_api->get_items_list('');
+            } else {
+                $notebooks = $onenote_api->get_items_list('');
                 
-                if ($notes) {
-//                     $content->items[] = '<div class="box block_tree_box">' .
-//                     '<ul class="block_tree list"><li class="type_unknown contains_branch" aria-expanded="true"><p class="tree_item branch root_node"><a href="http://vinlocaldomain.com:88/my/">Your Notebooks</a></p><ul>' .
-//                     '<li class="type_setting collapsed item_with_icon"><p class="tree_item leaf"><a href="http://vinlocaldomain.com:88/blog/index.php?courseid=0"><img alt="" class="smallicon navicon" title="" src="http://vinlocaldomain.com:88/theme/image.php/clean/core/1413927861/i/navigationitem" />Site blogs</a></p></li>' .
-//                     '<li class="type_setting collapsed item_with_icon"><p class="tree_item leaf"><a href="http://vinlocaldomain.com:88/badges/view.php?type=1"><img alt="" class="smallicon navicon" title="" src="http://vinlocaldomain.com:88/theme/image.php/clean/core/1413927861/i/navigationitem" />Site badges</a></p></li>' .
-//                     '</ul></li></ul></div>';
+                if ($notebooks) {
+                    // find moodle notebook
+                    $moodle_notebook = null;
+                    $notebook_name = get_string('notebookname', 'block_onenote');
                     
-                    foreach ($notes as $note) {
-                        $content->items[] = '<a href="' . $note['url'] . '" target="_blank">' . $note['title'] . '</a>';
+                    foreach($notebooks as $notebook) {
+                        if ($notebook['title'] == $notebook_name) {
+                            $moodle_notebook = $notebook;
+                            break;
+                        }
                     }
-                } else {
-                    $content->items[] = "No notebooks";
+                    
+                    if ($moodle_notebook) {
+                        $url = new moodle_url($moodle_notebook['url']);
+                        $content->items[] =
+                            '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' .
+                            $url->out(false) .
+                            '" class="onenote_linkbutton">' . 'Open your Moodle notebook' . '</a>';
+                    }
                 }
             }
         } else {
