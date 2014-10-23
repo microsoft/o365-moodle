@@ -28,23 +28,13 @@ class block_onenote extends block_list {
         $content = new stdClass;
         $content->items = array();
         $content->icons = '';
-
         $onenote_api = microsoft_onenote::get_onenote_api();
         $onenote_token = $onenote_api->get_accesstoken();
         
         if (isset($onenote_token)) {
             // add the "save to onenote" button if we are on an assignment page
-            if ($PAGE->cm) {
-                if (!microsoft_onenote::is_teacher($COURSE->id, $USER->id)) {
-                    $action_params['action'] = 'save';
-                    $action_params['id'] = $PAGE->cm->id;
-                    $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
-    
-                    $content->items[] =
-                        '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' . 
-                        $url->out(false) . 
-                        '" class="onenote_linkbutton">' . 'Work on the assignment in OneNote' . '</a>';
-                }
+            if ($PAGE->cm && !microsoft_onenote::is_teacher($COURSE->id, $USER->id)) {
+                $content->items[] = microsoft_onenote::render_action_button('Work on the assignment in OneNote', $PAGE->cm->id);
             } else {
                 $notebooks = $onenote_api->get_items_list('');
                 

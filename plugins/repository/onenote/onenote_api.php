@@ -25,6 +25,18 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/oauthlib.php');
 
+// File areas for OneNote submission assignment.
+define('ASSIGNSUBMISSION_ONENOTE_MAXFILES', 1);
+define('ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES', 5);
+define('ASSIGNSUBMISSION_ONENOTE_FILEAREA', 'submission_onenote_files');
+
+// File areas for onenote feedback assignment.
+define('ASSIGNFEEDBACK_ONENOTE_FILEAREA', 'feedback_files');
+define('ASSIGNFEEDBACK_ONENOTE_BATCH_FILEAREA', 'feedback_files_batch');
+define('ASSIGNFEEDBACK_ONENOTE_IMPORT_FILEAREA', 'feedback_files_import');
+define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES', 1);
+define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYUSERS', 5);
+define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
 
 /**
  * A helper class to access microsoft live resources using the api.
@@ -491,6 +503,23 @@ class microsoft_onenote extends oauth2_client {
            href="'.$url->out(false).'" class="onenote_linkbutton">' . 'Sign in to OneNote' . '</a>';
     }
     
+    public static function render_action_button($button_text, $cmid, $want_feedback_page = false, $is_teacher = false, 
+        $submission_user_id = null, $submission_id = null, $grade_id = null) {
+        
+        $action_params['action'] = 'openpage';
+        $action_params['cmid'] = $cmid;
+        $action_params['wantfeedback'] = $want_feedback_page;
+        $action_params['isteacher'] = $is_teacher;
+        $action_params['submissionuserid'] = $submission_user_id;
+        $action_params['submissionid'] = $submission_id;
+        $action_params['gradeid'] = $grade_id;
+        
+        $url = new moodle_url('/blocks/onenote/onenote_actions.php', $action_params);
+        
+        return '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
+            $url->out(false) . '" class="onenote_linkbutton">' . $button_text . '</a>';
+    }
+    
     // Gets (or creates) the submission page or feedback page in OneNote for the given student assignment.
     // Note: For each assignment, each student has a record in the db that contains the OneNote page ID's of corresponding submission and feedback pages
     // Basic logic:
@@ -509,7 +538,7 @@ class microsoft_onenote extends oauth2_client {
     //             if this is a student, this must be the first time they are working on the submission, so create the page from the assignment prompt
     //             else bail out
     // return the weburl to the OneNote page created or obtained
-    public static function get_page($cmid, $want_feedback_page, $is_teacher, $submission = null, $grade = null) {
+    public static function get_page($cmid, $want_feedback_page = false, $is_teacher = false, $submission_user_id = null, $submission_id = null, $grade_id = null) {
         global $USER, $DB;
         
         $token = microsoft_onenote::get_onenote_token();
@@ -521,9 +550,9 @@ class microsoft_onenote extends oauth2_client {
         $context = context_module::instance($cm->id);
         $user_id = $USER->id;
         
-        // if $submission is given, then it contains the student's user id. If $submission is null, it means a student is just looking at the assignment to start working on it, so use the logged in user id
-        if ($submission)
-            $student_user_id = $submission->userid;
+        // if $submission_userId is given, then it contains the student's user id. If it is null, it means a student is just looking at the assignment to start working on it, so use the logged in user id
+        if ($submission_user_id)
+            $student_user_id = $submission_user_id;
         else
             $student_user_id = $user_id;
         
@@ -573,16 +602,16 @@ class microsoft_onenote extends oauth2_client {
         // if we are being called for getting a feedback page 
         if ($want_feedback_page) {
             // if previously saved fedback does not exist
-            if (!$grade || 
+            if (!$grade_id || 
                 !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, 
-                        $grade->id, 'id', false))) {
+                        $grade_id, 'id', false))) {
                 if ($is_teacher) {
                     // this must be the first time teacher is looking at student's submission
                     // so prepare feedback page from submission zip package
                     $files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                        $submission->id, 'id', false);
+                        $submission_id, 'id', false);
                     
-                    if (!files)
+                    if (!$files)
                         return null;
                     
                 // unzip the submission and prepare postdata from it
@@ -608,9 +637,9 @@ class microsoft_onenote extends oauth2_client {
             }
         } else {
             // we want submission page
-            if (!$submission || 
+            if (!$submission_id || 
                 !($files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                    $submission->id, 'id', false))) {
+                    $submission_id, 'id', false))) {
                 if ($is_teacher) {
                     return null;
                 } else {
@@ -976,33 +1005,33 @@ POSTDATA;
 
     // TODO: Update for onenote
     private function check_token_expiry() {
-            global $SESSION;
-    
-            date_default_timezone_set('UTC');
-            if(isset($SESSION->expires)) {
-            if (time() > $SESSION->expires) {
-                $refresh = array();
-                if(isset($SESSION->params_office)) {
-                    $refresh['client_id'] = $SESSION->params_office['client_id'];
-                    $refresh['client_secret'] = $SESSION->params_office['client_secret'];
-                    $refresh['grant_type'] = "refresh_token";
-                    $refresh['refresh_token'] = $SESSION->refreshtoken;
-                    $refresh['resource'] = $SESSION->params_office['resource'];    
-                }
-                
-                $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
-    
-                $curl = new curl();
-                $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
-    
-                $access_token = json_decode($refresh_token_access)->access_token;
-                $refresh_token = json_decode($refresh_token_access)->refresh_token;
-                $expires_on = json_decode($refresh_token_access)->expires_on;
-    
-                $SESSION->accesstoken =  $access_token;
-                $SESSION->refreshtoken = $refresh_token;
-                $SESSION->expires = $expires_on;
-             }
+        global $SESSION;
+
+        date_default_timezone_set('UTC');
+        if(isset($SESSION->expires)) {
+        if (time() > $SESSION->expires) {
+            $refresh = array();
+            if(isset($SESSION->params_office)) {
+                $refresh['client_id'] = $SESSION->params_office['client_id'];
+                $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+                $refresh['grant_type'] = "refresh_token";
+                $refresh['refresh_token'] = $SESSION->refreshtoken;
+                $refresh['resource'] = $SESSION->params_office['resource'];    
+            }
+            
+            $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
+
+            $curl = new curl();
+            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
+
+            $access_token = json_decode($refresh_token_access)->access_token;
+            $refresh_token = json_decode($refresh_token_access)->refresh_token;
+            $expires_on = json_decode($refresh_token_access)->expires_on;
+
+            $SESSION->accesstoken =  $access_token;
+            $SESSION->refreshtoken = $refresh_token;
+            $SESSION->expires = $expires_on;
+         }
         }
       }
 }

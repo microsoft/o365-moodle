@@ -23,15 +23,9 @@
  */
 
 require_once($CFG->libdir.'/eventslib.php');
-require_once($CFG->libdir.'/oauthlib.php');
 require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
 
 defined('MOODLE_INTERNAL') || die();
-
-// File areas for OneNote submission assignment.
-define('ASSIGNSUBMISSION_ONENOTE_MAXFILES', 1);
-define('ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES', 5);
-define('ASSIGNSUBMISSION_ONENOTE_FILEAREA', 'submission_onenote_files');
 
 /**
  * Library class for OneNote submission plugin extending submission plugin base class
@@ -148,15 +142,14 @@ class assign_submission_onenote extends assign_submission_plugin {
         }
 
         $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-        $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, false, $is_teacher, 
-                $submission, null);
 
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
         
-        if ($url) {                    
-            // show a link to the OneNote page
-            $url = new moodle_url($url);
-            $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" class="onenote_linkbutton">' . 'Work on the assignment in OneNote' . '</a></p>';
+        if (microsoft_onenote::get_onenote_token()) {                    
+            // show a button to open the OneNote page
+            $o .= microsoft_onenote:: render_action_button('Work on the assignment in OneNote', 
+                    $this->assignment->get_course_module()->id, false, $is_teacher, 
+                    $submission ? $submission->userid : null, $submission ? $submission->id : null, null);
             $o .= '<br/><p>Click on the button above to work on the assignment in OneNote. You can come back here later on to save your work back into Moodle.</p>';
         } else {
             $o .= microsoft_onenote::get_onenote_signin_widget();
@@ -350,13 +343,11 @@ class assign_submission_onenote extends assign_submission_plugin {
         $o = '';
         
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
-            $url = microsoft_onenote::get_page($this->assignment->get_course_module()->id, false, $is_teacher, 
-                    $submission, null);
-
-            if ($url) {                    
-                // show a link to the OneNote page
-                $url = new moodle_url($url);
-                $o .= '<p><a onclick="window.open(this.href,\'_blank\'); return false;" href="' . $url->out(false) . '" class="onenote_linkbutton">' . 'View in OneNote' . '</a></p>';
+            if (microsoft_onenote::get_onenote_token()) {                    
+                // show a link to open the OneNote page
+                $o .= microsoft_onenote:: render_action_button('View in OneNote',
+                        $this->assignment->get_course_module()->id, false, $is_teacher,
+                        $submission->userid, $submission->id, null);
             } else {
                 $o .= microsoft_onenote::get_onenote_signin_widget();
                 $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';
