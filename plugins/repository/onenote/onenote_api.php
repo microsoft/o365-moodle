@@ -620,7 +620,7 @@ class microsoft_onenote extends oauth2_client {
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        microsoft_onenote::format_assignment_title($assign, $student_name, false), 
+                        microsoft_onenote::format_assignment_title($assign, $student_name, true), 
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
                 } else {
                     return null;

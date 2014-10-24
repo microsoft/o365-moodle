@@ -33,8 +33,8 @@ class block_onenote extends block_list {
         
         if (isset($onenote_token)) {
             // add the "save to onenote" button if we are on an assignment page
-            if ($PAGE->cm && !microsoft_onenote::is_teacher($COURSE->id, $USER->id)) {
-                $content->items[] = microsoft_onenote::render_action_button('Work on the assignment in OneNote', $PAGE->cm->id);
+            if ($PAGE->cm && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') && !microsoft_onenote::is_teacher($COURSE->id, $USER->id)) {
+                $content->items[] = microsoft_onenote::render_action_button('Work on this in OneNote', $PAGE->cm->id);
             } else {
                 $notebooks = $onenote_api->get_items_list('');
                 
@@ -55,7 +55,7 @@ class block_onenote extends block_list {
                         $content->items[] =
                             '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' .
                             $url->out(false) .
-                            '" class="onenote_linkbutton">' . 'Open your Moodle notebook' . '</a>';
+                            '" class="onenote_linkbutton">' . 'Open your notebook' . '</a>';
                     }
                 }
             }

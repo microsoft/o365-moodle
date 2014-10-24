@@ -29,8 +29,6 @@ defined('MOODLE_INTERNAL') || die();
  * Library class for ONENOTE feedback plugin extending feedback plugin base class.
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class assign_feedback_onenote extends assign_feedback_plugin {
 
@@ -132,7 +130,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             // show a link to open the OneNote page
             $submission = $this->assignment->get_user_submission($userid, false);
             $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-            $o .= microsoft_onenote:: render_action_button('Add feedback using OneNote',
+            $o .= microsoft_onenote:: render_action_button('Add feedback in OneNote',
                     $this->assignment->get_course_module()->id, true, $is_teacher,
                     $userid, $submission->id, $grade ? $grade->id : null);
             $o .= '<br/><p>Click on the button above to add your feedback for the student\'s submission in OneNote. You can come back here later on to save your work back into Moodle.</p>';
@@ -247,16 +245,18 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $o = '';
         
         if ($count <= ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
-            if (microsoft_onenote::get_onenote_token()) {                    
-                // show a link to open the OneNote page
-                $submission = $this->assignment->get_user_submission($grade->userid, false);
-                $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-                $o .= microsoft_onenote:: render_action_button($is_teacher ? 'Edit in OneNote' : 'View in OneNote',
-                        $this->assignment->get_course_module()->id, true, $is_teacher,
-                        $submission->userid, $submission->id, $grade->id);
-            } else {
-                $o .= microsoft_onenote::get_onenote_signin_widget();
-                $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';
+            if (($grade->grade !== null) && ($grade->grade >= 0)) {
+                if (microsoft_onenote::get_onenote_token()) {                    
+                    // show a link to open the OneNote page
+                    $submission = $this->assignment->get_user_submission($grade->userid, false);
+                    $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
+                    $o .= microsoft_onenote:: render_action_button('View feedback in OneNote',
+                            $this->assignment->get_course_module()->id, true, $is_teacher,
+                            $submission->userid, $submission->id, $grade->id);
+                } else {
+                    $o .= microsoft_onenote::get_onenote_signin_widget();
+                    $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';
+                }
             }
             
             // show standard link to download zip package
