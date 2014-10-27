@@ -207,23 +207,25 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $onenote_api = microsoft_onenote::get_onenote_api();
         $download_info = $onenote_api->download_page($record->feedback_teacher_page_id, $temp_file);
         
-        $fs = get_file_storage();
-        
-        // delete any previous feedbacks
-        $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
-        
-        // Prepare file record object
-        $fileinfo = array(
-            'contextid' => $this->assignment->get_context()->id,
-            'component' => 'assignfeedback_onenote',
-            'filearea' => ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-            'itemid' => $grade->id,
-            'filepath' => '/',
-            'filename' => 'OneNote_' . time() . '.zip');
-        
-        // save it
-        $fs->create_file_from_pathname($fileinfo, $download_info['path']);
-        fulldelete($temp_folder);
+        if ($download_info) {
+            $fs = get_file_storage();
+            
+            // delete any previous feedbacks
+            $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
+            
+            // Prepare file record object
+            $fileinfo = array(
+                'contextid' => $this->assignment->get_context()->id,
+                'component' => 'assignfeedback_onenote',
+                'filearea' => ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+                'itemid' => $grade->id,
+                'filepath' => '/',
+                'filename' => 'OneNote_' . time() . '.zip');
+            
+            // save it
+            $fs->create_file_from_pathname($fileinfo, $download_info['path']);
+            fulldelete($temp_folder);
+        }
         
         return $this->update_file_count($grade);
     }
