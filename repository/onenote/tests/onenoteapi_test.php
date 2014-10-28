@@ -90,30 +90,23 @@ class microsoft_onenote_testcase extends advanced_testcase {
    /* public function setAccessToken($token) {
     	$this->accesstoken = $token;  
     }*/
-    
+   
     public function test_getmicrosoft_repo() {
        $onenote_id = $this->onenote_api->get_onenote_repo_id();
-       $this->assertNotEmpty($onenote_id,"No value");
-       //TODO:check with the value not equal to null	
+       $this->assertNotEmpty($onenote_id,"No value");       	
     }
     
-     
-    public function test_getitemlist() {    	 	
-    	$item_list = $this->onenote_api->get_items_list();
-    	/*foreach($item_list as $item)
-    		if($item['title'] == "Moodle Notebook") {         
-         	$item_list = $this->onenote_api->get_items_list($item['path']);               	
-            foreach ($item_list as $item) {
-            	if($item['path'])
-            	$item_list = $this->onenote_api->get_items_list($item['path']);
-              }       
-    	   }
-    	print_r($item_list);*/
-    	  $this->assertNotEmpty($item_list,"No value");
+   
+    public function test_getitemlist() { 
+    	   	 	
+    	$item_list = $this->onenote_api->get_items_list();    
+    	$this->assertNotEmpty($item_list,"No value");
     }
     
     
      public function test_getpage() {
+     	
+     	$item_list = $this->onenote_api->get_items_list();
      	$generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
      	$params['course'] = $this->course1->id;
      	$instance = $generator->create_instance($params);
@@ -123,7 +116,7 @@ class microsoft_onenote_testcase extends advanced_testcase {
      	$assign_details = $this->assign->get_instance();
      	$assign_id = $assign_details->id; 
      	$save_assigment = $this->onenote_api->get_page($assign_id,false);
-     	print_r($save_assigment);
+      	print_r($save_assigment);
      	
      }
 
