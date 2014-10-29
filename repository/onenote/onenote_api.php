@@ -500,7 +500,7 @@ class microsoft_onenote extends oauth2_client {
         $url = new moodle_url('https://login.live.com/oauth20_authorize.srf', $params);
     
         return '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
-           href="'.$url->out(false).'" class="onenote_linkbutton">' . 'Sign in to OneNote' . '</a>';
+           href="'.$url->out(false).'" class="onenote_linkbutton">' . get_string('signin', 'repository_onenote') . '</a>';
     }
     
     public static function render_action_button($button_text, $cmid, $want_feedback_page = false, $is_teacher = false, 
@@ -619,8 +619,11 @@ class microsoft_onenote extends oauth2_client {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
+                $a = new stdClass();
+                $a->assign_name = $assign->name;
+                $a->student_name = $student_name;
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        microsoft_onenote::format_assignment_title($assign, $student_name, true), 
+                        get_string('feedbacktitle', 'repository_onenote', $a),
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
                 } else {
                     return null;
@@ -631,8 +634,11 @@ class microsoft_onenote extends oauth2_client {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
+                $a = new stdClass();
+                $a->assign_name = $assign->name;
+                $a->student_name = $student_name;
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        microsoft_onenote::format_assignment_title($assign, $student_name, true), 
+                        get_string('feedbacktitle', 'repository_onenote', $a),
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         } else {
@@ -644,8 +650,11 @@ class microsoft_onenote extends oauth2_client {
                     return null;
                 } else {
                     // this is a student and they are just starting to work on this assignment, so prepare page from the assignment prompt
+                    $a = new stdClass();
+                    $a->assign_name = $assign->name;
+                    $a->student_name = $student_name;
                     $postdata = microsoft_onenote::create_postdata(
-                        microsoft_onenote::format_assignment_title($assign, $student_name, false), 
+                        get_string('submissiontitle', 'repository_onenote', $a),
                         $assign->intro, $context->id, $BOUNDARY);
                 }
             } else {
@@ -654,8 +663,11 @@ class microsoft_onenote extends oauth2_client {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
+                $a = new stdClass();
+                $a->assign_name = $assign->name;
+                $a->student_name = $student_name;
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        microsoft_onenote::format_assignment_title($assign, $student_name, false), 
+                        get_string('submissiontitle', 'repository_onenote', $a),
                         join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         }
@@ -688,10 +700,6 @@ class microsoft_onenote extends oauth2_client {
         }
         
         return null;
-    }
-    
-    private static function format_assignment_title($assign, $student_name, $is_feedback) {
-        return ($is_feedback ? 'Feedback: ' : 'Submission: ') . $assign->name . ' [' . $student_name . ']';
     }
     
     public static function get_file_contents($path,$filename,$context_id) {
@@ -940,6 +948,8 @@ POSTDATA;
             $response_without_header = substr($raw_response,$info['header_size']);
             $response = json_decode($response_without_header);
             return $response;
+        } else {
+            error_log('microsoft_onenote::create_page_from_postdata failed: ' . print_r($info, true));
         }
         
         return null;

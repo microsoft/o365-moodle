@@ -128,13 +128,13 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             // show a link to open the OneNote page
             $submission = $this->assignment->get_user_submission($userid, false);
             $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-            $o .= microsoft_onenote:: render_action_button('Add feedback in OneNote',
+            $o .= microsoft_onenote:: render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
                     $this->assignment->get_course_module()->id, true, $is_teacher,
                     $userid, $submission->id, $grade ? $grade->id : null);
-            $o .= '<br/><p>Click on the button above to add your feedback for the student\'s submission in OneNote. You can come back here later on to save your work back into Moodle.</p>';
+            $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
         } else {
             $o .= microsoft_onenote::get_onenote_signin_widget();
-            $o .= '<br/><br/><p>Click on the button above to sign in to OneNote so you can add your feedback to the student\'s submission there.</p>';
+            $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignfeedback_onenote') . '</p>';
         }
         
         $o .= '<hr/>';
@@ -223,6 +223,13 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             // save it
             $fs->create_file_from_pathname($fileinfo, $download_info['path']);
             fulldelete($temp_folder);
+        } else {
+            if (microsoft_onenote::get_onenote_token())
+                $this->set_error(get_string('feedbackdownloadfailed', 'assignfeedback_onenote'));
+            else
+                $this->set_error(get_string('notsignedin', 'assignfeedback_onenote'));
+            
+            return false;
         }
         
         return $this->update_file_count($grade);
@@ -250,12 +257,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     // show a link to open the OneNote page
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
                     $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-                    $o .= microsoft_onenote:: render_action_button('View feedback in OneNote',
+                    $o .= microsoft_onenote:: render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
                             $this->assignment->get_course_module()->id, true, $is_teacher,
                             $submission->userid, $submission->id, $grade->id);
                 } else {
                     $o .= microsoft_onenote::get_onenote_signin_widget();
-                    $o .= '<br/><br/><p>Click on the button above to sign in to OneNote if you want to view the submission there.</p>';
+                    $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
                 }
             }
             

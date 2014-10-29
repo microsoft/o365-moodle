@@ -27,3 +27,6 @@ $string['oauthinfo'] = '<p>To use this plugin, you must register your site <a hr
 $string['pluginname'] = 'Microsoft OneNote';
 $string['secret'] = 'Secret';
 $string['onenote:view'] = 'View OneNote Notebooks';
+$string['signin'] = 'Sign in to OneNote';
+$string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_name}]';
+$string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_name}]';
