@@ -556,7 +556,7 @@ class microsoft_onenote extends oauth2_client {
         else
             $student_user_id = $user_id;
         
-        $student_name = $DB->get_field('user', 'username', array('id' => $student_user_id));
+        $student = $DB->get_record('user', array('id' => $student_user_id));
         
         // if the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned
         $record = $DB->get_record('assign_user_ext', array("assign_id" => $assign->id, "user_id" => $student_user_id));
@@ -621,10 +621,11 @@ class microsoft_onenote extends oauth2_client {
                 
                 $a = new stdClass();
                 $a->assign_name = $assign->name;
-                $a->student_name = $student_name;
+                $a->student_firstname = $student->firstname;
+                $a->student_lastname = $student->lastname;
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        get_string('feedbacktitle', 'repository_onenote', $a),
-                        join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    get_string('feedbacktitle', 'repository_onenote', $a),
+                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
                 } else {
                     return null;
                 }
@@ -636,10 +637,11 @@ class microsoft_onenote extends oauth2_client {
                 
                 $a = new stdClass();
                 $a->assign_name = $assign->name;
-                $a->student_name = $student_name;
+                $a->student_firstname = $student->firstname;
+                $a->student_lastname = $student->lastname;
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        get_string('feedbacktitle', 'repository_onenote', $a),
-                        join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    get_string('feedbacktitle', 'repository_onenote', $a),
+                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         } else {
             // we want submission page
@@ -652,7 +654,8 @@ class microsoft_onenote extends oauth2_client {
                     // this is a student and they are just starting to work on this assignment, so prepare page from the assignment prompt
                     $a = new stdClass();
                     $a->assign_name = $assign->name;
-                    $a->student_name = $student_name;
+                    $a->student_firstname = $student->firstname;
+                    $a->student_lastname = $student->lastname;
                     $postdata = microsoft_onenote::create_postdata(
                         get_string('submissiontitle', 'repository_onenote', $a),
                         $assign->intro, $context->id, $BOUNDARY);
@@ -665,10 +668,11 @@ class microsoft_onenote extends oauth2_client {
                 
                 $a = new stdClass();
                 $a->assign_name = $assign->name;
-                $a->student_name = $student_name;
+                $a->student_firstname = $student->firstname;
+                $a->student_lastname = $student->lastname;
                 $postdata = microsoft_onenote::create_postdata_from_folder(
-                        get_string('submissiontitle', 'repository_onenote', $a),
-                        join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    get_string('submissiontitle', 'repository_onenote', $a),
+                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         }
             

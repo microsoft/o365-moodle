@@ -28,5 +28,5 @@ $string['pluginname'] = 'Microsoft OneNote';
 $string['secret'] = 'Secret';
 $string['onenote:view'] = 'View OneNote Notebooks';
 $string['signin'] = 'Sign in to OneNote';
-$string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_name}]';
-$string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_name}]';
+$string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
+$string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
