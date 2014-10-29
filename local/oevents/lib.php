@@ -400,6 +400,9 @@ function create_course_calendar($data) {
     error_log("create_course_calendar called");
     error_log(print_r($data, true));
 
+    if (!isset($SESSION->accesstoken))
+        return;
+    
     $new_calendar = o365_create_calendar($SESSION->accesstoken, $data->fullname);
 
     $course_calendar = new stdClass();    

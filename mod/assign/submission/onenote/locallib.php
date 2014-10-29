@@ -385,108 +385,6 @@ class assign_submission_onenote extends assign_submission_plugin {
                                                     $submission->id);
     }
 
-
-
-    /**
-     * Return true if this plugin can upgrade an old Moodle 2.2 assignment of this type
-     * and version.
-     *
-     * @param string $type
-     * @param int $version
-     * @return bool True if upgrade is possible
-     */
-    public function can_upgrade($type, $version) {
-
-        $uploadsingletype ='uploadsingle';
-        $uploadtype ='upload';
-
-        if (($type == $uploadsingletype || $type == $uploadtype) && $version >= 2011112900) {
-            return true;
-        }
-        return false;
-    }
-
-
-    /**
-     * Upgrade the settings from the old assignment
-     * to the new plugin based one
-     *
-     * @param context $oldcontext - the old assignment context
-     * @param stdClass $oldassignment - the old assignment data record
-     * @param string $log record log events here
-     * @return bool Was it a success? (false will trigger rollback)
-     */
-    public function upgrade_settings(context $oldcontext, stdClass $oldassignment, & $log) {
-        global $DB;
-
-        if ($oldassignment->assignmenttype == 'uploadsingle') {
-            $this->set_config('maxfilesubmissions', 1);
-            $this->set_config('maxsubmissionsizebytes', $oldassignment->maxbytes);
-            return true;
-        } else if ($oldassignment->assignmenttype == 'upload') {
-            $this->set_config('maxfilesubmissions', $oldassignment->var1);
-            $this->set_config('maxsubmissionsizebytes', $oldassignment->maxbytes);
-
-            // Advanced file upload uses a different setting to do the same thing.
-            $DB->set_field('assign',
-                           'submissiondrafts',
-                           $oldassignment->var4,
-                           array('id'=>$this->assignment->get_instance()->id));
-
-            // Convert advanced file upload "hide description before due date" setting.
-            $alwaysshow = 0;
-            if (!$oldassignment->var3) {
-                $alwaysshow = 1;
-            }
-            $DB->set_field('assign',
-                           'alwaysshowdescription',
-                           $alwaysshow,
-                           array('id'=>$this->assignment->get_instance()->id));
-            return true;
-        }
-    }
-
-    /**
-     * Upgrade the submission from the old assignment to the new one
-     *
-     * @param context $oldcontext The context of the old assignment
-     * @param stdClass $oldassignment The data record for the old oldassignment
-     * @param stdClass $oldsubmission The data record for the old submission
-     * @param stdClass $submission The data record for the new submission
-     * @param string $log Record upgrade messages in the log
-     * @return bool true or false - false will trigger a rollback
-     */
-    public function upgrade(context $oldcontext,
-                            stdClass $oldassignment,
-                            stdClass $oldsubmission,
-                            stdClass $submission,
-                            & $log) {
-        global $DB;
-
-        $filesubmission = new stdClass();
-
-        $filesubmission->numfiles = $oldsubmission->numfiles;
-        $filesubmission->submission = $submission->id;
-        $filesubmission->assignment = $this->assignment->get_instance()->id;
-
-        if (!$DB->insert_record('assignsubmission_onenote', $filesubmission) > 0) {
-            $log .= get_string('couldnotconvertsubmission', 'mod_assign', $submission->userid);
-            return false;
-        }
-
-        // Now copy the area files.
-        $this->assignment->copy_area_files_for_upgrade($oldcontext->id,
-                                                        'mod_assignment',
-                                                        'submission',
-                                                        $oldsubmission->id,
-                                                        $this->assignment->get_context()->id,
-                                                        'assignsubmission_onenote',
-                                                        ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                                                        $submission->id);
-
-        return true;
-    }
-
     /**
      * The assignment has been deleted - cleanup
      *
@@ -497,7 +395,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         // Will throw exception on failure.
         $DB->delete_records('assignsubmission_onenote',
                             array('assignment'=>$this->assignment->get_instance()->id));
-
+        
         return true;
     }
 
@@ -560,19 +458,5 @@ class assign_submission_onenote extends assign_submission_plugin {
             $DB->insert_record('assignsubmission_onenote', $filesubmission);
         }
         return true;
-    }
-
-    /**
-     * Return a description of external params suitable for uploading a file submission from a webservice.
-     *
-     * @return external_description|null
-     */
-    public function get_external_parameters() {
-        return array(
-            'onenotes_filemanager' => new external_value(
-                PARAM_INT,
-                'The id of a draft area containing files for this submission.'
-            )
-        );
     }
 }

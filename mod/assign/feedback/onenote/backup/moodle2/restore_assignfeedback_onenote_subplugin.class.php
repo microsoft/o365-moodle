@@ -18,8 +18,6 @@
  * This file contains the restore code for the feedback_file plugin.
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
@@ -30,8 +28,6 @@ defined('MOODLE_INTERNAL') || die();
  * to restore one assign_feedback subplugin.
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_assignfeedback_onenote_subplugin extends restore_subplugin {
 

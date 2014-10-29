@@ -18,8 +18,6 @@
  * This file contains the backup code for the feedback_file plugin.
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
@@ -29,8 +27,6 @@ defined('MOODLE_INTERNAL') || die();
  * This just adds its filearea to the annotations and records the number of files.
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_assignfeedback_onenote_subplugin extends backup_subplugin {
 

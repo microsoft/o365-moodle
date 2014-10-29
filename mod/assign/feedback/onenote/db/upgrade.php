@@ -18,8 +18,6 @@
  * Upgrade code for the feedback_onenote module.
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**

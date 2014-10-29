@@ -18,8 +18,6 @@
  * This file defines the admin settings for this plugin
  *
  * @package   assignfeedback_onenote
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $settings->add(new admin_setting_configcheckbox('assignfeedback_onenote/default',
