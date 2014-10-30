@@ -23,7 +23,7 @@
  */
 
 require_once($CFG->libdir.'/eventslib.php');
-require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
+require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -194,7 +194,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         global $USER, $DB;
 
         // get OneNote page id
-        $record = $DB->get_record('assign_user_ext', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
+        $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
         $temp_folder = microsoft_onenote::create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         

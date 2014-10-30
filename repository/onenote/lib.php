@@ -22,7 +22,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once('onenote_api.php');
+require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
 
 /**
  * Microsoft OneNote repository plugin.
@@ -43,14 +43,12 @@ class repository_onenote extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $clientid = get_config('onenote', 'clientid');
-        $secret = get_config('onenote', 'secret');
         $returnurl = new moodle_url('/repository/repository_callback.php');
         $returnurl->param('callback', 'yes');
         $returnurl->param('repo_id', $this->id);
         $returnurl->param('sesskey', sesskey());
 
-        $this->onenote = new microsoft_onenote($clientid, $secret, $returnurl);
+        $this->onenote = microsoft_onenote::get_onenote_api($returnurl);
         $this->check_login();
     }
 
@@ -145,27 +143,6 @@ class repository_onenote extends repository {
     }
 
     /**
-     * Setup repistory form.
-     *
-     * @param moodleform $mform Moodle form (passed by reference)
-     * @param string $classname repository class name
-     */
-    public static function type_config_form($mform, $classname = 'repository') {
-        $a = new stdClass;
-        $a->callbackurl = microsoft_onenote::callback_url()->out(false);
-        $mform->addElement('static', null, '', get_string('oauthinfo', 'repository_onenote', $a));
-
-        parent::type_config_form($mform);
-        $strrequired = get_string('required');
-        $mform->addElement('text', 'clientid', get_string('clientid', 'repository_onenote'));
-        $mform->addElement('text', 'secret', get_string('secret', 'repository_onenote'));
-        $mform->addRule('clientid', $strrequired, 'required', null, 'client');
-        $mform->addRule('secret', $strrequired, 'required', null, 'client');
-        $mform->setType('clientid', PARAM_RAW_TRIMMED);
-        $mform->setType('secret', PARAM_RAW_TRIMMED);
-    }
-
-    /**
      * Logout from repository instance and return
      * login form.
      *
@@ -202,4 +179,35 @@ class repository_onenote extends repository {
     public function supported_returntypes() {
         return FILE_INTERNAL;
     }
+    
+    
+    /* TODO:
+    caching code:
+    @var cache_session cache of notebooknames
+    var $itemnamecache = null;
+    
+        // Make a session cache
+        $this->itemnamecache = cache::make('local_onenote', 'foldername');
+
+     * get_item_name
+     *         // Cache based on oauthtoken and item_id.
+        $cachekey = $this->item_cache_key($item_id);
+
+        if ($item_name = $this->itemnamecache->get($cachekey)) {
+            return $item_name;
+        }
+
+        and:
+        $this->itemnamecache->set($cachekey, $response->value[0]->name);
+     
+     *    /**
+     * Returns a key for itemname cache
+     *
+     * @param string $item_id the id which is to be cached
+     * @return string the cache key to use
+     private function item_cache_key($item_id) {
+        // Cache based on oauthtoken and item_id.
+        return $this->get_tokenname().'_'.$item_id;
+    }
+ */
 }

@@ -1,6 +1,28 @@
 <?php
-require_once($CFG->dirroot.'/lib/oauthlib.php');
-require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Microsoft OneNote block Plugin
+ *
+ * @package    block_onenote
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
 
 class block_onenote extends block_list {
     public function init() {
@@ -53,7 +75,7 @@ class block_onenote extends block_list {
                     if ($moodle_notebook) {
                         $url = new moodle_url($moodle_notebook['url']);
                         $content->items[] =
-                            '<a onclick="window.open(this.href,\'_blank\'); setTimeout(function(){ location.reload(); }, 2000); return false;" href="' .
+                            '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
                             $url->out(false) .
                             '" class="onenote_linkbutton">' . get_string('opennotebook', 'block_onenote') . '</a>';
                     }

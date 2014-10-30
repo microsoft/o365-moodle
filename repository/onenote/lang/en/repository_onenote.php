@@ -25,8 +25,4 @@ $string['clientid'] = 'Client ID';
 $string['configplugin'] = 'Configure Microsoft OneNote';
 $string['oauthinfo'] = '<p>To use this plugin, you must register your site <a href="https://account.live.com/developers/applications">with Microsoft</a>.<p>As part of the registration process, you will need to enter the following URL as \'Redirect domain\':</p><p>{$a->callbackurl}</p>Once registered, you will be provided with a client ID and secret which can be entered here.</p>';
 $string['pluginname'] = 'Microsoft OneNote';
-$string['secret'] = 'Secret';
 $string['onenote:view'] = 'View OneNote Notebooks';
-$string['signin'] = 'Sign in to OneNote';
-$string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
-$string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';

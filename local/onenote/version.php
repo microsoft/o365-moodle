@@ -15,13 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for OneNote repository
+ * Version details for OneNote local plugin
  *
- * @package    repository_noenote
+ * @package    local_onenote
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014103001;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2014103002;        // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2014050800;        // Requires this Moodle version.
-$plugin->component = 'repository_onenote'; // Full name of the plugin (used for diagnostics).
+$plugin->component = 'local_onenote'; // Full name of the plugin (used for diagnostics).

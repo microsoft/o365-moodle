@@ -1,8 +1,7 @@
 <?php
 
 require_once('../../config.php');
-require_once($CFG->libdir.'/oauthlib.php');
-require_once($CFG->dirroot.'/repository/onenote/onenote_api.php');
+require_once('onenote_api.php');
 
 $action = required_param('action', PARAM_TEXT);
 $cmid = required_param('cmid', PARAM_INT);
