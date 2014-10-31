@@ -218,7 +218,6 @@ class microsoft_onenote extends oauth2_client {
 
         $url = self::API."/notebooks/{$item_id}";
         $this->isget = FALSE;
-        $this->request($url);
         $response = json_decode($this->get($url));
         $this->isget = TRUE;
         //error_log('response: ' . print_r($response, true));
@@ -227,7 +226,6 @@ class microsoft_onenote extends oauth2_client {
             // TODO: Hack: See if it is a section id
             $url = self::API."/sections/{$item_id}";
             $this->isget = FALSE;
-            $this->request($url);
             $response = json_decode($this->get($url));
             $this->isget = TRUE;
             //error_log('response: ' . print_r($response, true));
@@ -273,7 +271,6 @@ class microsoft_onenote extends oauth2_client {
 
         //error_log('request: ' . print_r($url, true));
         $this->isget = FALSE;
-        $this->request($url);
         $response = json_decode($this->get($url));
         $this->isget = TRUE;
 
@@ -335,7 +332,7 @@ class microsoft_onenote extends oauth2_client {
             }
         }
 
-        if (empty($path)) {
+        if ($item_type == 'notebook') {
             $this->insert_notes($items);
        }
 
@@ -357,45 +354,45 @@ class microsoft_onenote extends oauth2_client {
         }
 
         if(count($notes_array) > 0){
-                if(!(in_array($notebook_name, $notes_array))){
-                    $param = array(
-                        "name" => $notebook_name
-                    );
+            if(!(in_array($notebook_name, $notes_array))){
+                $param = array(
+                    "name" => $notebook_name
+                );
 
-                    $note_name = json_encode($param);
-                    $this->isget = FALSE;
-                    $this->setHeader('Content-Type: application/json');
-                    $this->request($noteurl);
-                    $created_notes = json_decode($this->post($noteurl,$note_name));
-                    $this->isget = TRUE;
-                    $sections = array();
-                    if($created_notes) {
-                        $note_id = $created_notes->id;
-                    }
-                    if($courses) {
-                        $this->create_sections_onenote($courses,$note_id,$sections);
-                    }
-                } else {
-                    $note_id = array_search($notebook_name, $notes_array);
-                    $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                    $this->setHeader('Content-Type: application/json');
-                    $this->isget = FALSE;
-                    $this->request($sectionurl);
-                    $getsection = json_decode($this->get($sectionurl));
-                    $this->isget = TRUE;
-                    $sections = array();
-                    if(isset($getsection->value)) {
-                        foreach($getsection->value as $section) {
-                            $sections[$section->id] = $section->name;
-                        }
-                    }
+                $note_name = json_encode($param);
+                $this->isget = FALSE;
+                $this->setHeader('Content-Type: application/json');
+                $created_notes = json_decode($this->post($noteurl,$note_name));
+                $this->isget = TRUE;
+                $sections = array();
+                
+                if($created_notes) {
+                    $note_id = $created_notes->id;
+                }
 
-                    if($courses) {
-                        $this->create_sections_onenote($courses, $note_id, $sections);
-
+                if($courses) {
+                    $this->create_sections_onenote($courses,$note_id,$sections);
+                }
+            } else {
+                $note_id = array_search($notebook_name, $notes_array);
+                $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+                $this->setHeader('Content-Type: application/json');
+                $this->isget = FALSE;
+                $getsection = json_decode($this->get($sectionurl));
+                $this->isget = TRUE;
+                $sections = array();
+                
+                if(isset($getsection->value)) {
+                    foreach($getsection->value as $section) {
+                        $sections[$section->id] = $section->name;
                     }
                 }
-            //}
+
+                if($courses) {
+                    $this->create_sections_onenote($courses, $note_id, $sections);
+
+                }
+            }
         }
     }
     
@@ -421,18 +418,18 @@ class microsoft_onenote extends oauth2_client {
         foreach($courses as $course) {
             if(!in_array($course->fullname, $sections)) {
                 $param_section = array(
-                        "name" => $course->fullname
+                    "name" => $course->fullname
                 );
+
                 $section = json_encode($param_section);
                 $this->setHeader('Content-Type: application/json');
                 $this->isget = FALSE;
-                $this->request($sectionurl);
                 $eventresponse = $this->post($sectionurl,$section);
                 $this->isget = TRUE;
                 $eventresponse = json_decode($eventresponse);
                 //mapping course id and section id
                 if($eventresponse)
-                $this->insert_sectionid_table($course->id, $eventresponse->id);
+                    $this->insert_sectionid_table($course->id, $eventresponse->id);
             } else {
                 $section_id = array_search($course->fullname, $sections);
                 $this->insert_sectionid_table($course->id, $section_id);
