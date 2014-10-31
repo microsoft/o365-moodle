@@ -30,9 +30,8 @@ require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
  * @package    repository_onenote
  */
 class repository_onenote extends repository {
-    /** @var microsoft_onenote onenote oauth2 api helper object */
-    private $onenote = null;
-
+    private $onenote_api = null;
+    
     /**
      * Constructor
      *
@@ -43,13 +42,7 @@ class repository_onenote extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $returnurl = new moodle_url('/repository/repository_callback.php');
-        $returnurl->param('callback', 'yes');
-        $returnurl->param('repo_id', $this->id);
-        $returnurl->param('sesskey', sesskey());
-
-        $this->onenote = microsoft_onenote::get_onenote_api($returnurl);
-        $this->check_login();
+        $this->onenote_api = onenote_api::getInstance();
     }
 
     /**
@@ -58,7 +51,7 @@ class repository_onenote extends repository {
      * @return bool true when logged in
      */
     public function check_login() {
-        return $this->onenote->is_logged_in();
+        return $this->onenote_api->is_logged_in();
     }
 
     /**
@@ -67,7 +60,7 @@ class repository_onenote extends repository {
      * @return array of login options
      */
     public function print_login() {
-        $url = $this->onenote->get_login_url();
+        $url = $this->onenote_api->get_login_url();
 
         if ($this->options['ajax']) {
             $popup = new stdClass();
@@ -94,7 +87,7 @@ class repository_onenote extends repository {
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $fileslist = $this->onenote->get_items_list($path);
+        $fileslist = $this->onenote_api->get_items_list($path);
         // Filter list for accepted types. Hopefully this will be done by core some day.
         $fileslist = array_filter($fileslist, array($this, 'filter'));
         $ret['list'] = $fileslist;
@@ -110,7 +103,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenote->get_item_name($folderid),
+                    $ret['path'][] = array('name' => $this->onenote_api->get_item_name($folderid),
                                            'path' => $trail);
                 }
             }
@@ -130,7 +123,7 @@ class repository_onenote extends repository {
      */
     public function get_file($id, $filename = '') {
         $path = $this->prepare_file($filename);
-        return $this->onenote->download_page($id, $path);
+        return $this->onenote_api->download_page($id, $path);
     }
 
     /**
@@ -149,7 +142,7 @@ class repository_onenote extends repository {
      * @return page to display
      */
     public function logout() {
-        $this->onenote->log_out();
+        $this->onenote_api->log_out();
         return $this->print_login();
     }
 

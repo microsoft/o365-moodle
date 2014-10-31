@@ -3,8 +3,7 @@
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/onenote_api.php');
 
-$onenote_api = microsoft_onenote::get_onenote_api(); // takes care of getting auth token and setting it into the api object
-if (!$onenote_api->is_logged_in())
+if (!onenote_api::getInstance()->is_logged_in()) // upgrades token and then checks for success
     throw new moodle_exception('Unable to log in to OneNote.');
 
 $strhttpsbug = get_string('cannotaccessparentwin', 'repository');

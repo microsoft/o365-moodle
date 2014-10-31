@@ -50,13 +50,13 @@ class block_onenote extends block_list {
         $content = new stdClass;
         $content->items = array();
         $content->icons = '';
-        $onenote_api = microsoft_onenote::get_onenote_api();
-        $onenote_token = $onenote_api->get_accesstoken();
+        $onenote_api = onenote_api::getInstance();
         
-        if (isset($onenote_token)) {
+        if ($onenote_api->is_logged_in()) {
             // add the "save to onenote" button if we are on an assignment page
-            if ($PAGE->cm && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') && !microsoft_onenote::is_teacher($COURSE->id, $USER->id)) {
-                $content->items[] = microsoft_onenote::render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
+            if ($PAGE->cm && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') && 
+                    !$onenote_api->is_teacher($COURSE->id, $USER->id)) {
+                $content->items[] = $onenote_api->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
             } else {
                 $notebooks = $onenote_api->get_items_list('');
                 
@@ -83,7 +83,7 @@ class block_onenote extends block_list {
             }
         } else {
             $content->items[] = $content->items[] = file_get_contents($CFG->dirroot.'/local/onenote/onenote.html');
-            $content->items[] = microsoft_onenote::get_onenote_signin_widget();
+            $content->items[] = $onenote_api->render_signin_widget();
         }
 
         return $content;

@@ -125,17 +125,18 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         
         $gradeid = $grade ? $grade->id : 0;
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
+        $onenote_api = onenote_api::getInstance();
         
-        if (microsoft_onenote::get_onenote_token()) {
+        if ($onenote_api->is_logged_in()) {
             // show a link to open the OneNote page
             $submission = $this->assignment->get_user_submission($userid, false);
-            $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-            $o .= microsoft_onenote:: render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
+            $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
+            $o .= $onenote_api-> render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
                     $this->assignment->get_course_module()->id, true, $is_teacher,
                     $userid, $submission->id, $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
         } else {
-            $o .= microsoft_onenote::get_onenote_signin_widget();
+            $o .= $onenote_api->render_signin_widget();
             $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignfeedback_onenote') . '</p>';
         }
         
@@ -200,11 +201,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         
         // get the OneNote page id corresponding to the teacher's feedback for this submission
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
-        $temp_folder = microsoft_onenote::create_temp_folder();
+        $onenote_api = onenote_api::getInstance();
+        $temp_folder = $onenote_api->create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files
-        $onenote_api = microsoft_onenote::get_onenote_api();
         $download_info = $onenote_api->download_page($record->feedback_teacher_page_id, $temp_file);
         
         if ($download_info) {
@@ -226,7 +227,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             $fs->create_file_from_pathname($fileinfo, $download_info['path']);
             fulldelete($temp_folder);
         } else {
-            if (microsoft_onenote::get_onenote_token())
+            if ($onenote_api->is_logged_in())
                 $this->set_error(get_string('feedbackdownloadfailed', 'assignfeedback_onenote'));
             else
                 $this->set_error(get_string('notsignedin', 'assignfeedback_onenote'));
@@ -250,20 +251,21 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         // Show a view all link if the number of files is over this limit.
         $count = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
-     
+        $onenote_api = onenote_api::getInstance();
+        
         $o = '';
         
         if ($count <= ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
             if (($grade->grade !== null) && ($grade->grade >= 0)) {
-                if (microsoft_onenote::get_onenote_token()) {                    
+                if ($onenote_api->is_logged_in()) {                    
                     // show a link to open the OneNote page
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
-                    $is_teacher = microsoft_onenote::is_teacher($this->assignment->get_course()->id, $USER->id);
-                    $o .= microsoft_onenote:: render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
+                    $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
+                    $o .= $onenote_api-> render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
                             $this->assignment->get_course_module()->id, true, $is_teacher,
                             $submission->userid, $submission->id, $grade->id);
                 } else {
-                    $o .= microsoft_onenote::get_onenote_signin_widget();
+                    $o .= $onenote_api->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
                 }
             }

@@ -38,75 +38,24 @@ define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES', 1);
 define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYUSERS', 5);
 define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
 
-/**
- * A helper class to access microsoft live resources using the api.
- *
- * This uses the microsoft API defined in
- * http://msdn.microsoft.com/en-us/library/hh243648.aspx
- *
- * @package    local_onenote
+/*
+ * Subclass the oauth2_client class because we want to override some of its methods
  */
-class microsoft_onenote extends oauth2_client {
+class onenote_client extends oauth2_client {
     /** @var string OAuth 2.0 scope */
     const SCOPE = 'office.onenote_update';
     /** @var string Base url to access API */
     const API = 'https://www.onenote.com/api/beta'; //'https://www.onenote.com/api/v1.0';
-    private $isget = TRUE;
-
-    // Singleton instance
-    protected static $_instance = null;
-        
+    private $token_as_param = TRUE;
+    
     /**-
      * Construct a onenote request object
-     * TODO: Need to make this protected to ensure singleton usage
-     *
      * @param string $clientid client id for OAuth 2.0 provided by microsoft
      * @param string $clientsecret secret for OAuth 2.0 provided by microsoft
      * @param moodle_url $returnurl url to return to after succseful auth
      */
     public function __construct($clientid, $clientsecret, $returnurl) {
         parent::__construct($clientid, $clientsecret, $returnurl, self::SCOPE);
-
-        // error_log('microsoft_onenote constructor');
-        // error_log(print_r($clientid, true));
-        // error_log(print_r($clientsecret, true));
-        // error_log(print_r($returnurl, true));
-    }
-
-    // Singleton pattern implementation makes "clone" unavailable
-    protected function __clone()
-    {}
-    
-    // Singleton pattern implementation
-    public static function getInstance($returnurl)
-    {
-        global $CFG;
-        
-        if (null === self::$_instance) {
-            if ($returnurl == null) {
-                $returnurl = new moodle_url('/local/onenote/onenote_redirect.php');
-            }
-        
-            self::$_instance = new self(get_config('onenote', 'clientid'), get_config('onenote', 'secret'), $returnurl);
-        
-            if (isset(self::$_instance)) {
-                self::$_instance->is_logged_in();
-            }
-        }
-    
-        return self::$_instance;
-    }
-    
-    /**
-     * Should HTTP GET be used instead of POST?
-     *
-     * The Microsoft API does not support POST, so we should use
-     * GET instead (with the auth_token passed as a GET param).
-     *
-     * @return bool true if GET should be used
-     */
-    protected function use_http_get() {
-        return $this->isget;
     }
 
     /**
@@ -116,7 +65,7 @@ class microsoft_onenote extends oauth2_client {
     protected function auth_url() {
         return 'https://login.live.com/oauth20_authorize.srf';
     }
-
+    
     /**
      * Returns the token url for OAuth 12.0 request
      * @return string the auth url
@@ -124,7 +73,78 @@ class microsoft_onenote extends oauth2_client {
     protected function token_url() {
         return 'https://login.live.com/oauth20_token.srf';
     }
+    
+    /**
+     * Should HTTP GET be used instead of POST?
+     *
+     * OneNote REST API needs auth token in the header for get as well as post requests. 
+     * Oauth2_client sets the token in the header only if it thinks that it is making making a post request. 
+     * So we control that behavior by overriding this method.
+     *
+     * @return bool true if GET should be used
+     */
+    protected function use_http_get() {
+        return $this->token_as_param;
+    }
+    
+    public function myget($url, $params=array(), $token='', $secret='') {
+        $this->token_as_param = false;
+        $response = $this->get($url, $params, $token, $secret);
+        $this->token_as_param = true;
+        return $response;
+    }
 
+    public function mypost($url, $params=array(), $token='', $secret='') {
+        $this->token_as_param = false;
+        $response = $this->post($url, $params, $token, $secret);
+        $this->token_as_param = true;
+        return $response;
+    }
+}
+
+/**
+ * A helper class to access Microsoft OneNote using the REST api. 
+ * This is a singleton class.
+ *
+ * @package    local_onenote
+ */
+class onenote_api {
+    private static $instance = null;
+    private $onenote_client = null;
+        
+    protected function __construct() {
+        $returnurl = new moodle_url('/local/onenote/onenote_redirect.php');
+        $returnurl->param('callback', 'yes');
+        $returnurl->param('repo_id', $this->get_onenote_repo_id());
+        $returnurl->param('sesskey', sesskey());
+        
+        $this->onenote_client = new onenote_client(get_config('onenote', 'clientid'), get_config('onenote', 'secret'), $returnurl);
+    }
+
+    public static function getInstance()
+    {
+        if (null === self::$instance) {
+            self::$instance = new static();
+        }
+        
+        // TODO: refresh token
+        self::$instance->get_onenote_client()->is_logged_in();
+
+        return self::$instance;
+    }
+    
+    private function __clone()
+    {
+    }
+
+    private function __wakeup()
+    {
+    }
+
+    public function get_onenote_client() {
+        return $this->onenote_client;
+    }
+    
     /**
      * Downloads a OneNote page to a  file from onenote using authenticated request
      *
@@ -135,12 +155,10 @@ class microsoft_onenote extends oauth2_client {
      public function download_page($page_id, $path) {
         error_log('download_page called: ' . print_r($page_id, true));
 
-        $url = self::API."/pages/".$page_id."/content";
+        $url = onenote_client::API."/pages/".$page_id."/content";
         //error_log(print_r($url,true));
 
-        $this->isget = FALSE;
-        $response = $this->get($url);
-        $this->isget = TRUE;
+        $response = $this->get_onenote_client()->myget($url);
 
         // on success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors
         $decoded_response = json_decode($response);
@@ -158,19 +176,17 @@ class microsoft_onenote extends oauth2_client {
         
         if ($img_nodes && (count($img_nodes) > 0)) {
             // create temp folder
-            $temp_folder = microsoft_onenote::create_temp_folder();
+            $temp_folder = $this->create_temp_folder();
             
             $files_folder = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
             if (!mkdir($files_folder, 0777, true))
                 return null;
             
-            $this->isget = FALSE;
-        
             // save images etc.
             $i = 1;
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
-                $response = $this->get($src_node->nodeValue);
+                $response = $this->get_onenote_client()->myget($src_node->nodeValue);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
                 // update img src paths in the html accordingly
@@ -183,8 +199,6 @@ class microsoft_onenote extends oauth2_client {
                 $i++; 
             }
             
-            $this->isget = TRUE;
-
             // save the html page itself
             file_put_contents(join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
             
@@ -216,18 +230,14 @@ class microsoft_onenote extends oauth2_client {
             throw new coding_exception('Empty item_id passed to get_item_name');
         }
 
-        $url = self::API."/notebooks/{$item_id}";
-        $this->isget = FALSE;
-        $response = json_decode($this->get($url));
-        $this->isget = TRUE;
+        $url = onenote_client::API."/notebooks/{$item_id}";
+        $response = json_decode($this->get_onenote_client()->myget($url));
         //error_log('response: ' . print_r($response, true));
 
         if (!$response || isset($response->error)) {
             // TODO: Hack: See if it is a section id
-            $url = self::API."/sections/{$item_id}";
-            $this->isget = FALSE;
-            $response = json_decode($this->get($url));
-            $this->isget = TRUE;
+            $url = onenote_client::API."/sections/{$item_id}";
+            $response = json_decode($this->get_onenote_client()->myget($url));
             //error_log('response: ' . print_r($response, true));
 
             if (!$response || isset($response->error)) {
@@ -252,7 +262,7 @@ class microsoft_onenote extends oauth2_client {
 
         if (empty($path)) {
             $item_type = 'notebook';
-            $url = self::API."/notebooks";
+            $url = onenote_client::API."/notebooks";
         } else {
             $parts = explode('/', $path);
             $part1 = array_pop($parts);
@@ -262,18 +272,15 @@ class microsoft_onenote extends oauth2_client {
 
             if ($part2) {
                 $item_type = 'page';
-                $url = self::API."/sections/{$part1}/pages";
+                $url = onenote_client::API."/sections/{$part1}/pages";
             } else {
                 $item_type = 'section';
-                $url = self::API."/notebooks/{$part1}/sections";
+                $url = onenote_client::API."/notebooks/{$part1}/sections";
             }
         }
 
         //error_log('request: ' . print_r($url, true));
-        $this->isget = FALSE;
-        $response = json_decode($this->get($url));
-        $this->isget = TRUE;
-
+        $response = json_decode($this->get_onenote_client()->myget($url));
         //error_log('response: ' . print_r($response, true));
 
         $items = array();
@@ -342,7 +349,7 @@ class microsoft_onenote extends oauth2_client {
     private function insert_notes($notes) {
         global $DB;
         $notebook_name = get_string('notebookname','block_onenote');
-        $noteurl = self::API."/notebooks/";
+        $noteurl = onenote_client::API."/notebooks/";
         $courses = enrol_get_my_courses(); //get the current user enrolled courses
         $notes_array = array();
         if($notes) {
@@ -360,10 +367,8 @@ class microsoft_onenote extends oauth2_client {
                 );
 
                 $note_name = json_encode($param);
-                $this->isget = FALSE;
-                $this->setHeader('Content-Type: application/json');
-                $created_notes = json_decode($this->post($noteurl,$note_name));
-                $this->isget = TRUE;
+                // TODO: $this->get_onenote_client()->setHeader('Content-Type: application/json');
+                $created_notes = json_decode($this->get_onenote_client()->mypost($noteurl,$note_name));
                 $sections = array();
                 
                 if($created_notes) {
@@ -371,15 +376,13 @@ class microsoft_onenote extends oauth2_client {
                 }
 
                 if($courses) {
-                    $this->create_sections_onenote($courses,$note_id,$sections);
+                    $this->create_onenote_sections($courses,$note_id,$sections);
                 }
             } else {
                 $note_id = array_search($notebook_name, $notes_array);
-                $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                $this->setHeader('Content-Type: application/json');
-                $this->isget = FALSE;
-                $getsection = json_decode($this->get($sectionurl));
-                $this->isget = TRUE;
+                $sectionurl = onenote_client::API."/notebooks/".$note_id."/sections/";
+                // TODO: $this->setHeader('Content-Type: application/json');
+                $getsection = json_decode($this->get_onenote_client()->myget($sectionurl));
                 $sections = array();
                 
                 if(isset($getsection->value)) {
@@ -389,7 +392,7 @@ class microsoft_onenote extends oauth2_client {
                 }
 
                 if($courses) {
-                    $this->create_sections_onenote($courses, $note_id, $sections);
+                    $this->create_onenote_sections($courses, $note_id, $sections);
 
                 }
             }
@@ -412,72 +415,52 @@ class microsoft_onenote extends oauth2_client {
 
     }
     
-    private function create_sections_onenote($courses,$note_id, array $sections){
-        $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+    private function create_onenote_sections($courses,$note_id, array $sections){
+        $sectionurl = onenote_client::API."/notebooks/".$note_id."/sections/";
 
-        foreach($courses as $course) {
+        foreach ($courses as $course) {
             if(!in_array($course->fullname, $sections)) {
                 $param_section = array(
                     "name" => $course->fullname
                 );
 
                 $section = json_encode($param_section);
-                $this->setHeader('Content-Type: application/json');
-                $this->isget = FALSE;
-                $eventresponse = $this->post($sectionurl,$section);
-                $this->isget = TRUE;
+                // TODO: $this->setHeader('Content-Type: application/json');
+                $eventresponse = $this->get_onenote_client()->mypost($sectionurl,$section);
                 $eventresponse = json_decode($eventresponse);
+
                 //mapping course id and section id
-                if($eventresponse)
+                if ($eventresponse)
                     $this->insert_sectionid_table($course->id, $eventresponse->id);
             } else {
                 $section_id = array_search($course->fullname, $sections);
                 $this->insert_sectionid_table($course->id, $section_id);
-
             }
-
         }
     }
 
     // -------------------------------------------------------------------------------------------------------------------------
     // Helper methods
-    public static function get_onenote_api($returnurl = null) {
-        return microsoft_onenote::getInstance($returnurl);
+    public function is_logged_in() {
+        return $this->get_onenote_client()->is_logged_in();
     }
     
-    public static function get_onenote_token($returnurl = null) {
-        $onenote_api = microsoft_onenote::getInstance($returnurl);
-        if (!$onenote_api)
-            return null;
-    
-        $tokenobj = $onenote_api->get_accesstoken();
-    
-        if (isset($tokenobj)) {
-            return $tokenobj->token;
-        }
-    
-        return null;
+    public function get_login_url() {
+        return $this->get_onenote_client()->get_login_url();
     }
     
-    public static function get_onenote_signin_widget() {
-        $params['client_id'] = get_config('onenote', 'clientid');
-        $params['client_secret'] = get_config('onenote', 'secret');
-        $returnurl = new moodle_url('/local/onenote/onenote_redirect.php');
-        $returnurl->param('callback', 'yes');
-        $returnurl->param('repo_id', microsoft_onenote::get_onenote_repo_id());
-        $returnurl->param('sesskey', sesskey());
-        $params['state'] = $returnurl->out_as_local_url(FALSE);
-        $params['scope'] = 'office.onenote_update';
-        $params['response_type'] = 'code';
-        $params['redirect_uri'] = microsoft_onenote::callback_url();
+    public function log_out() {
+        return $this->get_onenote_client()->log_out();
+    }
     
-        $url = new moodle_url('https://login.live.com/oauth20_authorize.srf', $params);
+    public function render_signin_widget() {
+        $url = $this->get_onenote_client()->get_login_url();
     
         return '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
            href="'.$url->out(false).'" class="onenote_linkbutton">' . get_string('signin', 'local_onenote') . '</a>';
     }
     
-    public static function render_action_button($button_text, $cmid, $want_feedback_page = false, $is_teacher = false, 
+    public function render_action_button($button_text, $cmid, $want_feedback_page = false, $is_teacher = false, 
         $submission_user_id = null, $submission_id = null, $grade_id = null) {
         
         $action_params['action'] = 'openpage';
@@ -512,12 +495,8 @@ class microsoft_onenote extends oauth2_client {
     //             if this is a student, this must be the first time they are working on the submission, so create the page from the assignment prompt
     //             else bail out
     // return the weburl to the OneNote page created or obtained
-    public static function get_page($cmid, $want_feedback_page = false, $is_teacher = false, $submission_user_id = null, $submission_id = null, $grade_id = null) {
+    public function get_page($cmid, $want_feedback_page = false, $is_teacher = false, $submission_user_id = null, $submission_id = null, $grade_id = null) {
         global $USER, $DB;
-        
-        $token = microsoft_onenote::get_onenote_token();
-        if (!$token)
-            return null;
         
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
         $assign = $DB->get_record('assign', array('id' => $cm->instance)); 
@@ -535,13 +514,14 @@ class microsoft_onenote extends oauth2_client {
         // if the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $assign->id, "user_id" => $student_user_id));
         if ($record) {
-            $page = microsoft_onenote::get_onenote_page($token, 
-                    $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) : 
-                                          ($is_teacher ? $record->submission_teacher_page_id : $record->submission_student_page_id));
-        
-            if ($page) {
-                $url = $page->links->oneNoteWebUrl->href;
-                return $url;
+            $page_id = $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) : 
+                                          ($is_teacher ? $record->submission_teacher_page_id : $record->submission_student_page_id);
+            if ($page_id) {
+                $page = json_decode($this->get_onenote_client()->myget(onenote_client::API . '/pages/' . $page_id));
+                if ($page && !isset($page->error)) {
+                    $url = $page->links->oneNoteWebUrl->href;
+                    return $url;
+                }
             }
 
             // probably user deleted page, so we will update the db record to reflect it and continue to recreate the page
@@ -589,7 +569,7 @@ class microsoft_onenote extends oauth2_client {
                         return null;
                     
                 // unzip the submission and prepare postdata from it
-                $temp_folder = microsoft_onenote::create_temp_folder();
+                $temp_folder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
@@ -597,7 +577,7 @@ class microsoft_onenote extends oauth2_client {
                 $a->assign_name = $assign->name;
                 $a->student_firstname = $student->firstname;
                 $a->student_lastname = $student->lastname;
-                $postdata = microsoft_onenote::create_postdata_from_folder(
+                $postdata = $this->create_postdata_from_folder(
                     get_string('feedbacktitle', 'local_onenote', $a),
                     join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
                 } else {
@@ -605,7 +585,7 @@ class microsoft_onenote extends oauth2_client {
                 }
             } else {
                 // create postdata from the zip package of teacher's feedback
-                $temp_folder = microsoft_onenote::create_temp_folder();
+                $temp_folder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
@@ -613,7 +593,7 @@ class microsoft_onenote extends oauth2_client {
                 $a->assign_name = $assign->name;
                 $a->student_firstname = $student->firstname;
                 $a->student_lastname = $student->lastname;
-                $postdata = microsoft_onenote::create_postdata_from_folder(
+                $postdata = $this->create_postdata_from_folder(
                     get_string('feedbacktitle', 'local_onenote', $a),
                     join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
@@ -630,13 +610,13 @@ class microsoft_onenote extends oauth2_client {
                     $a->assign_name = $assign->name;
                     $a->student_firstname = $student->firstname;
                     $a->student_lastname = $student->lastname;
-                    $postdata = microsoft_onenote::create_postdata(
+                    $postdata = $this->create_postdata(
                         get_string('submissiontitle', 'local_onenote', $a),
                         $assign->intro, $context->id, $BOUNDARY);
                 }
             } else {
                 // unzip the submission and prepare postdata from it
-                $temp_folder = microsoft_onenote::create_temp_folder();
+                $temp_folder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
                 
@@ -644,13 +624,13 @@ class microsoft_onenote extends oauth2_client {
                 $a->assign_name = $assign->name;
                 $a->student_firstname = $student->firstname;
                 $a->student_lastname = $student->lastname;
-                $postdata = microsoft_onenote::create_postdata_from_folder(
+                $postdata = $this->create_postdata_from_folder(
                     get_string('submissiontitle', 'local_onenote', $a),
                     join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
             }
         }
             
-        $response = microsoft_onenote::create_page_from_postdata($token, $section_id, $postdata, $BOUNDARY);
+        $response = $this->create_page_from_postdata($section_id, $postdata, $BOUNDARY);
         
         if ($response)
         {
@@ -680,7 +660,7 @@ class microsoft_onenote extends oauth2_client {
         return null;
     }
     
-    public static function get_file_contents($path,$filename,$context_id) {
+    public function get_file_contents($path,$filename,$context_id) {
         // get file contents
         $fs = get_file_storage();
     
@@ -711,7 +691,7 @@ class microsoft_onenote extends oauth2_client {
         return $contents;
     }
     
-    public static function create_postdata($title, $body_content, $context_id, $BOUNDARY) {
+    public function create_postdata($title, $body_content, $context_id, $BOUNDARY) {
         $dom = new DOMDocument();
         $dom->loadHTML($body_content);
     
@@ -781,7 +761,7 @@ class microsoft_onenote extends oauth2_client {
             foreach ($src as $s) {
                 $path_parts = pathinfo(urldecode($s->nodeValue));
                 $path = substr($path_parts['dirname'], strlen('@@PLUGINFILE@@')) . DIRECTORY_SEPARATOR;
-                $contents = microsoft_onenote::get_file_contents($path, $path_parts['basename'], $context_id);
+                $contents = $this->get_file_contents($path, $path_parts['basename'], $context_id);
     
                 if (!$contents || (count($contents) == 0))
                     continue;
@@ -833,7 +813,7 @@ POSTDATA;
         return $BODY;
     }
     
-    public static function create_postdata_from_folder($title, $folder, $BOUNDARY) {
+    public function create_postdata_from_folder($title, $folder, $BOUNDARY) {
         $dom = new DOMDocument();
         
         $page_file = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), 'page.html'));
@@ -905,7 +885,8 @@ POSTDATA;
         return $BODY;
     }
     
-    public static function create_page_from_postdata($token, $section_id, $postdata, $BOUNDARY) {
+    public function create_page_from_postdata($section_id, $postdata, $BOUNDARY) {
+        $token = $this->get_onenote_client()->get_accesstoken()->token;
         $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
         $encodedAccessToken = rawurlencode($token);
         $ch = curl_init($url);
@@ -927,43 +908,20 @@ POSTDATA;
             $response = json_decode($response_without_header);
             return $response;
         } else {
-            error_log('microsoft_onenote::create_page_from_postdata failed: ' . print_r($info, true));
+            error_log('onenote_api::create_page_from_postdata failed: ' . print_r($info, true));
         }
         
         return null;
     }
     
-    public static function get_onenote_page($onenote_token, $page_id) {
-        if (!$onenote_token || !$page_id)
-            return null;
-        
-        $curl = new curl();
-    
-        $header = array(
-            'Authorization: Bearer ' . $onenote_token,
-            'Content-Type: application/json'
-        );
-    
-        $curl->setHeader($header);
-    
-        $response = $curl->get(microsoft_onenote::API . '/pages/' . $page_id);
-        $response = json_decode($response);
-    
-        if (!$response || isset($response->error)) {
-            return null;
-        }
-    
-        return $response;
-    }
-    
     // get the repo id for the onenote repo
-    public static function get_onenote_repo_id() {
+    public function get_onenote_repo_id() {
         global $DB;
         $repository = $DB->get_record('repository', array('type'=>'onenote'));
         return $repository->id;
     }
     
-    public static function create_temp_folder() {
+    public function create_temp_folder() {
         $temp_folder = join(DIRECTORY_SEPARATOR, array(trim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
         if (file_exists($temp_folder)) {
             fulldelete($temp_folder);
@@ -976,7 +934,7 @@ POSTDATA;
     }
 
     // check if given user is a teacher in the given course
-    public static function is_teacher($course_id, $user_id) {
+    public function is_teacher($course_id, $user_id) {
         //teacher role comes with courses.
         $context = context_course::instance($course_id);//get_context_instance(CONTEXT_COURSE, $course_id, true);
         
@@ -997,29 +955,29 @@ POSTDATA;
 
         date_default_timezone_set('UTC');
         if(isset($SESSION->expires)) {
-        if (time() > $SESSION->expires) {
-            $refresh = array();
-            if(isset($SESSION->params_office)) {
-                $refresh['client_id'] = $SESSION->params_office['client_id'];
-                $refresh['client_secret'] = $SESSION->params_office['client_secret'];
-                $refresh['grant_type'] = "refresh_token";
-                $refresh['refresh_token'] = $SESSION->refreshtoken;
-                $refresh['resource'] = $SESSION->params_office['resource'];    
+            if (time() > $SESSION->expires) {
+                $refresh = array();
+                if(isset($SESSION->params_office)) {
+                    $refresh['client_id'] = $SESSION->params_office['client_id'];
+                    $refresh['client_secret'] = $SESSION->params_office['client_secret'];
+                    $refresh['grant_type'] = "refresh_token";
+                    $refresh['refresh_token'] = $SESSION->refreshtoken;
+                    $refresh['resource'] = $SESSION->params_office['resource'];    
+                }
+                
+                $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
+        
+                $curl = new curl();
+                $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
+        
+                $access_token = json_decode($refresh_token_access)->access_token;
+                $refresh_token = json_decode($refresh_token_access)->refresh_token;
+                $expires_on = json_decode($refresh_token_access)->expires_on;
+        
+                $SESSION->accesstoken =  $access_token;
+                $SESSION->refreshtoken = $refresh_token;
+                $SESSION->expires = $expires_on;
             }
-            
-            $requestaccesstokenurl = "https://login.windows.net/common/oauth2/token";
-
-            $curl = new curl();
-            $refresh_token_access = $curl->post($requestaccesstokenurl, $refresh);
-
-            $access_token = json_decode($refresh_token_access)->access_token;
-            $refresh_token = json_decode($refresh_token_access)->refresh_token;
-            $expires_on = json_decode($refresh_token_access)->expires_on;
-
-            $SESSION->accesstoken =  $access_token;
-            $SESSION->refreshtoken = $refresh_token;
-            $SESSION->expires = $expires_on;
-         }
         }
-      }
+    }
 }
