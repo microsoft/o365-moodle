@@ -84,10 +84,7 @@ class microsoft_onenote extends oauth2_client {
         
         if (null === self::$_instance) {
             if ($returnurl == null) {
-                $returnurl = new moodle_url($CFG->dirroot . '/repository/repository_callback.php');
-                $returnurl->param('callback', 'yes');
-                $returnurl->param('repo_id', microsoft_onenote::get_onenote_repo_id());
-                $returnurl->param('sesskey', sesskey());
+                $returnurl = new moodle_url('/local/onenote/onenote_redirect.php');
             }
         
             self::$_instance = new self(get_config('onenote', 'clientid'), get_config('onenote', 'secret'), $returnurl);
@@ -468,7 +465,7 @@ class microsoft_onenote extends oauth2_client {
     public static function get_onenote_signin_widget() {
         $params['client_id'] = get_config('onenote', 'clientid');
         $params['client_secret'] = get_config('onenote', 'secret');
-        $returnurl = new moodle_url('/repository/repository_callback.php');
+        $returnurl = new moodle_url('/local/onenote/onenote_redirect.php');
         $returnurl->param('callback', 'yes');
         $returnurl->param('repo_id', microsoft_onenote::get_onenote_repo_id());
         $returnurl->param('sesskey', sesskey());

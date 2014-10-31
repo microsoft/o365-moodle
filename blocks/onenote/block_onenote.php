@@ -44,7 +44,7 @@ class block_onenote extends block_list {
     }
 
     public function _get_content() {
-        global $USER, $COURSE, $PAGE;
+        global $USER, $COURSE, $PAGE, $CFG;
         
         error_log('_get_content called');
         $content = new stdClass;
@@ -82,11 +82,10 @@ class block_onenote extends block_list {
                 }
             }
         } else {
+            $content->items[] = $content->items[] = file_get_contents($CFG->dirroot.'/local/onenote/onenote.html');
             $content->items[] = microsoft_onenote::get_onenote_signin_widget();
         }
 
         return $content;
     }
 }
-
-require_once($CFG->dirroot.'/blocks/onenote/onenote.html');
