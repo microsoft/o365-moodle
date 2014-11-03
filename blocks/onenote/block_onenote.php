@@ -23,6 +23,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
+require_once($CFG->dirroot.'/local/onenote/onenote.html');
 
 class block_onenote extends block_list {
     public function init() {
@@ -82,7 +83,6 @@ class block_onenote extends block_list {
                 }
             }
         } else {
-            $content->items[] = $content->items[] = file_get_contents($CFG->dirroot.'/local/onenote/onenote.html');
             $content->items[] = $onenote_api->render_signin_widget();
         }
 
