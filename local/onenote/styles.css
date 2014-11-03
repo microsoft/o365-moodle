@@ -1,8 +1,13 @@
 .onenote_linkbutton
 {
+	background-image: url([[pix:local_onenote|onenote]]);
+	background-position: 2px 0px;
+	background-size: 32px 32px;
+    background-repeat: no-repeat;
     background-color: #80397B; 
     color: #fff; 
     display: inline-block; 
-    padding: 4px 10px; 
+    padding: 6px 6px 6px 40px;
     margin: 5px 0px;
+    font-size: 14px;
 }
