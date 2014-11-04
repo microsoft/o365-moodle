@@ -23,7 +23,7 @@ function xmldb_local_onenote_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2014103002) {
+    if ($oldversion < 2014110402) {
         // Define table to be created.
         $table = new xmldb_table('onenote_user_sections');
     
@@ -63,8 +63,25 @@ function xmldb_local_onenote_upgrade($oldversion) {
             
         $dbman->create_table($table);
     
+        // Define table to be created.
+        $table = new xmldb_table('msa_refresh_tokens');
+    
+        // Adding fields to table
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('user_id', XMLDB_TYPE_INTEGER, '5', null, null, null, null);
+        $table->add_field('refresh_token', XMLDB_TYPE_CHAR, '500', null, null, null, null);
+    
+        // Adding keys to table
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+    
+        // create table
+        if ($dbman->table_exists($table))
+            $dbman->drop_table($table);
+
+        $dbman->create_table($table);
+    
         // Onenote savepoint reached.
-        upgrade_plugin_savepoint(true, 2014103002, 'local', 'onenote');
+        upgrade_plugin_savepoint(true, 2014110402, 'local', 'onenote');
     }
     
     // Moodle v2.3.0 release upgrade line

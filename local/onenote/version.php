@@ -22,6 +22,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014103002;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2014110402;        // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2014050800;        // Requires this Moodle version.
 $plugin->component = 'local_onenote'; // Full name of the plugin (used for diagnostics).

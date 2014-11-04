@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/onenote/db" VERSION="20141030" COMMENT="XMLDB file for Moodle local/onenote plugin"
+<XMLDB PATH="local/onenote/db" VERSION="20141104" COMMENT="XMLDB file for Moodle local/onenote plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -24,6 +24,16 @@
         <FIELD NAME="feedback_student_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for student's copy of teacher's feedback"/>
         <FIELD NAME="submission_teacher_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's copy of student's submission"/>
         <FIELD NAME="feedback_teacher_page_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's copy of teacher's feedback"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="msa_refresh_tokens" COMMENT="to store Microsoft Account refresh tokens for users">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="user_id" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false" COMMENT="user id"/>
+        <FIELD NAME="refresh_token" TYPE="char" LENGTH="500" NOTNULL="false" SEQUENCE="false" COMMENT="user's refresh token"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
