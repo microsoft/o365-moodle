@@ -79,7 +79,11 @@ class onenote_client extends oauth2_client {
         
         // Has the token expired?
         if (isset($accesstoken->expires) && time() >= $accesstoken->expires) {
-            $this->refresh_token();
+            if (!$this->refresh_token())
+            {
+                $this->log_out();
+                return false;
+            }
         }
 
         // We have a token so we are logged in.
@@ -135,11 +139,20 @@ class onenote_client extends oauth2_client {
     }
 
     public function refresh_token() {
+        global $DB, $USER;
+        
+        $this->log_out(); // remove previous token
+        
+        $record = $DB->get_record('msa_refresh_tokens', array("user_id" => $USER->id));
+        
+        if (!$record || !$record->refresh_token)
+            return false;
+        
         $callbackurl = self::callback_url();
         $params = array('client_id' => $this->get_clientid(),
             'client_secret' => $this->get_clientsecret(),
             'grant_type' => 'refresh_token',
-            'refresh_token' => $this->get_accesstoken()->refresh_token,
+            'refresh_token' => $record->refresh_token,
             'redirect_uri' => $callbackurl->out(false),
         );
         
