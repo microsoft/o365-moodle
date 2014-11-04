@@ -23,9 +23,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
-require_once($CFG->dirroot.'/local/onenote/onenote.html');
 
-class block_onenote extends block_list {
+class block_onenote extends block_base {
     public function init() {
         $this->title = get_string('onenote', 'block_onenote');
     }
@@ -49,15 +48,15 @@ class block_onenote extends block_list {
         
         error_log('_get_content called');
         $content = new stdClass;
-        $content->items = array();
-        $content->icons = '';
+        $content->text = '';
+        $content->footer = '';
         $onenote_api = onenote_api::getInstance();
         
         if ($onenote_api->is_logged_in()) {
             // add the "save to onenote" button if we are on an assignment page
             if ($PAGE->cm && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') && 
                     !$onenote_api->is_teacher($COURSE->id, $USER->id)) {
-                $content->items[] = $onenote_api->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
+                $content->text .= $onenote_api->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
             } else {
                 $notebooks = $onenote_api->get_items_list('');
                 
@@ -75,7 +74,7 @@ class block_onenote extends block_list {
                     
                     if ($moodle_notebook) {
                         $url = new moodle_url($moodle_notebook['url']);
-                        $content->items[] =
+                        $content->text .=
                             '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
                             $url->out(false) .
                             '" class="onenote_linkbutton">' . get_string('opennotebook', 'block_onenote') . '</a>';
@@ -83,7 +82,8 @@ class block_onenote extends block_list {
                 }
             }
         } else {
-            $content->items[] = $onenote_api->render_signin_widget();
+            $content->text .= $onenote_api->render_signin_widget();
+            $content->text .= file_get_contents($CFG->dirroot.'/local/onenote/onenote.html');
         }
 
         return $content;
