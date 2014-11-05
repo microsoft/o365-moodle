@@ -20,16 +20,6 @@
  * @package    local_onenote
  */
 
-$string['configplugin'] = 'Configure Microsoft OneNote';
-$string['oauthinfo'] = '<p>To use this plugin, you must register your site <a href=\'https://account.live.com/developers/applications\'>with Microsoft</a>.<p>As part of the registration process, you will need to enter the following URL as \'Redirect domain\':</p><p>{$a->callbackurl}</p>Once registered, you will be provided with a client ID and secret which can be entered here.</p>';
 $string['pluginname'] = 'Microsoft OneNote';
-$string['secret'] = 'Secret';
-$string['signin'] = 'Sign in';
 $string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
 $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
-$string['clientid'] = 'OneNote client ID';
-$string['clientiddetails'] = 'Enter the OneNote client ID from the <a target="_blank" href="https://account.live.com/developers/applications\">Live App management site</a>';
-$string['clientsecret'] = 'OneNote client secret';
-$string['clientsecretdetails'] = 'Enter the OneNote client secret from the <a target="_blank" href="https://account.live.com/developers/applications\">Live App management site</a>';
-$string['redirect'] = 'OneNote redirect URI';
-$string['redirectdetails'] = 'Redirect uri from the <a target="_blank" href="https://account.live.com/developers/applications\">Live App management site</a>';

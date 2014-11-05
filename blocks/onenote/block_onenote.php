@@ -83,7 +83,7 @@ class block_onenote extends block_base {
             }
         } else {
             $content->text .= $onenote_api->render_signin_widget();
-            $content->text .= file_get_contents($CFG->dirroot.'/local/onenote/onenote.html');
+            $content->text .= file_get_contents($CFG->dirroot.'/local/msaccount/login.html');
         }
 
         return $content;
