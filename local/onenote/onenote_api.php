@@ -253,14 +253,6 @@ class onenote_api {
 
         return self::$instance;
     }
-    
-    private function __clone()
-    {
-    }
-
-    private function __wakeup()
-    {
-    }
 
     public function get_onenote_client() {
         return $this->onenote_client;
