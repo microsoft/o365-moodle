@@ -38,18 +38,6 @@ define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES', 1);
 define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYUSERS', 5);
 define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
 
-class onenote_client extends msaccount_client {
-    /** @var string Base url to access API */
-    const API = 'https://www.onenote.com/api/beta'; //'https://www.onenote.com/api/v1.0';
-    
-    /**-
-     * Construct a onenote_client  object
-     */
-    public function __construct() {
-        parent::__construct();
-    }
-}
-
 /**
  * A helper class to access Microsoft OneNote using the REST api. 
  * This is a singleton class.
@@ -57,8 +45,11 @@ class onenote_client extends msaccount_client {
  * @package    local_onenote
  */
 class onenote_api {
+    /** @var string Base url to access API */
+    const API = 'https://www.onenote.com/api/beta'; //'https://www.onenote.com/api/v1.0';
+    
     private static $instance = null;
-    private $onenote_client = null;
+    private $msaccount_client = null;
         
     protected function __construct() {
 //         $returnurl = ;
@@ -68,7 +59,7 @@ class onenote_api {
 //         $returnurl->param('repo_id', $this->get_onenote_repo_id());
 //         $returnurl->param('sesskey', sesskey());
         
-        $this->onenote_client = new onenote_client();
+        $this->msaccount_client = new msaccount_client();
     }
 
     public static function getInstance()
@@ -78,21 +69,13 @@ class onenote_api {
         }
         
         // TODO: refresh token
-        self::$instance->get_onenote_client()->is_logged_in();
+        self::$instance->get_msaccount_client()->is_logged_in();
 
         return self::$instance;
     }
     
-    private function __clone()
-    {
-    }
-
-    private function __wakeup()
-    {
-    }
-
-    public function get_onenote_client() {
-        return $this->onenote_client;
+    public function get_msaccount_client() {
+        return $this->msaccount_client;
     }
     
     /**
@@ -105,10 +88,10 @@ class onenote_api {
      public function download_page($page_id, $path) {
         error_log('download_page called: ' . print_r($page_id, true));
 
-        $url = onenote_client::API."/pages/".$page_id."/content";
+        $url = self::API."/pages/".$page_id."/content";
         //error_log(print_r($url,true));
 
-        $response = $this->get_onenote_client()->myget($url);
+        $response = $this->get_msaccount_client()->myget($url);
 
         // on success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors
         $decoded_response = json_decode($response);
@@ -136,7 +119,7 @@ class onenote_api {
             $i = 1;
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
-                $response = $this->get_onenote_client()->myget($src_node->nodeValue);
+                $response = $this->get_msaccount_client()->myget($src_node->nodeValue);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
                 // update img src paths in the html accordingly
@@ -180,14 +163,14 @@ class onenote_api {
             throw new coding_exception('Empty item_id passed to get_item_name');
         }
 
-        $url = onenote_client::API."/notebooks/{$item_id}";
-        $response = json_decode($this->get_onenote_client()->myget($url));
+        $url = self::API."/notebooks/{$item_id}";
+        $response = json_decode($this->get_msaccount_client()->myget($url));
         //error_log('response: ' . print_r($response, true));
 
         if (!$response || isset($response->error)) {
             // TODO: Hack: See if it is a section id
-            $url = onenote_client::API."/sections/{$item_id}";
-            $response = json_decode($this->get_onenote_client()->myget($url));
+            $url = self::API."/sections/{$item_id}";
+            $response = json_decode($this->get_msaccount_client()->myget($url));
             //error_log('response: ' . print_r($response, true));
 
             if (!$response || isset($response->error)) {
@@ -212,7 +195,7 @@ class onenote_api {
 
         if (empty($path)) {
             $item_type = 'notebook';
-            $url = onenote_client::API."/notebooks";
+            $url = self::API."/notebooks";
         } else {
             $parts = explode('/', $path);
             $part1 = array_pop($parts);
@@ -222,15 +205,15 @@ class onenote_api {
 
             if ($part2) {
                 $item_type = 'page';
-                $url = onenote_client::API."/sections/{$part1}/pages";
+                $url = self::API."/sections/{$part1}/pages";
             } else {
                 $item_type = 'section';
-                $url = onenote_client::API."/notebooks/{$part1}/sections";
+                $url = self::API."/notebooks/{$part1}/sections";
             }
         }
 
         //error_log('request: ' . print_r($url, true));
-        $response = json_decode($this->get_onenote_client()->myget($url));
+        $response = json_decode($this->get_msaccount_client()->myget($url));
         //error_log('response: ' . print_r($response, true));
 
         $items = array();
@@ -299,7 +282,7 @@ class onenote_api {
     private function insert_notes($notes) {
         global $DB;
         $notebook_name = get_string('notebookname','block_onenote');
-        $noteurl = onenote_client::API."/notebooks/";
+        $noteurl = self::API."/notebooks/";
         $courses = enrol_get_my_courses(); //get the current user enrolled courses
         $notes_array = array();
         if($notes) {
@@ -317,8 +300,8 @@ class onenote_api {
                 );
 
                 $note_name = json_encode($param);
-                // TODO: $this->get_onenote_client()->setHeader('Content-Type: application/json');
-                $created_notes = json_decode($this->get_onenote_client()->mypost($noteurl,$note_name));
+                // TODO: $this->get_msaccount_client()->setHeader('Content-Type: application/json');
+                $created_notes = json_decode($this->get_msaccount_client()->mypost($noteurl,$note_name));
                 $sections = array();
                 
                 if($created_notes) {
@@ -330,9 +313,9 @@ class onenote_api {
                 }
             } else {
                 $note_id = array_search($notebook_name, $notes_array);
-                $sectionurl = onenote_client::API."/notebooks/".$note_id."/sections/";
+                $sectionurl = self::API."/notebooks/".$note_id."/sections/";
                 // TODO: $this->setHeader('Content-Type: application/json');
-                $getsection = json_decode($this->get_onenote_client()->myget($sectionurl));
+                $getsection = json_decode($this->get_msaccount_client()->myget($sectionurl));
                 $sections = array();
                 
                 if(isset($getsection->value)) {
@@ -366,7 +349,7 @@ class onenote_api {
     }
     
     private function create_onenote_sections($courses,$note_id, array $sections){
-        $sectionurl = onenote_client::API."/notebooks/".$note_id."/sections/";
+        $sectionurl = self::API."/notebooks/".$note_id."/sections/";
 
         foreach ($courses as $course) {
             if(!in_array($course->fullname, $sections)) {
@@ -376,7 +359,7 @@ class onenote_api {
 
                 $section = json_encode($param_section);
                 // TODO: $this->setHeader('Content-Type: application/json');
-                $eventresponse = $this->get_onenote_client()->mypost($sectionurl,$section);
+                $eventresponse = $this->get_msaccount_client()->mypost($sectionurl,$section);
                 $eventresponse = json_decode($eventresponse);
 
                 //mapping course id and section id
@@ -392,19 +375,19 @@ class onenote_api {
     // -------------------------------------------------------------------------------------------------------------------------
     // Helper methods
     public function is_logged_in() {
-        return $this->get_onenote_client()->is_logged_in();
+        return $this->get_msaccount_client()->is_logged_in();
     }
     
     public function get_login_url() {
-        return $this->get_onenote_client()->get_login_url();
+        return $this->get_msaccount_client()->get_login_url();
     }
     
     public function log_out() {
-        return $this->get_onenote_client()->log_out();
+        return $this->get_msaccount_client()->log_out();
     }
     
     public function render_signin_widget() {
-        return $this->get_onenote_client()->render_signin_widget();
+        return $this->get_msaccount_client()->render_signin_widget();
     }
     
     public function render_action_button($button_text, $cmid, $want_feedback_page = false, $is_teacher = false, 
@@ -464,7 +447,7 @@ class onenote_api {
             $page_id = $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) : 
                                           ($is_teacher ? $record->submission_teacher_page_id : $record->submission_student_page_id);
             if ($page_id) {
-                $page = json_decode($this->get_onenote_client()->myget(onenote_client::API . '/pages/' . $page_id));
+                $page = json_decode($this->get_msaccount_client()->myget(self::API . '/pages/' . $page_id));
                 if ($page && !isset($page->error)) {
                     $url = $page->links->oneNoteWebUrl->href;
                     return $url;
@@ -833,7 +816,7 @@ POSTDATA;
     }
     
     public function create_page_from_postdata($section_id, $postdata, $BOUNDARY) {
-        $token = $this->get_onenote_client()->get_accesstoken()->token;
+        $token = $this->get_msaccount_client()->get_accesstoken()->token;
         $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
         $encodedAccessToken = rawurlencode($token);
         $ch = curl_init($url);
