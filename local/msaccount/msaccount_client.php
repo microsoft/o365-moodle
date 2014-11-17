@@ -210,7 +210,61 @@ class msaccount_client extends oauth2_client {
         $this->token_as_param = true;
         return $response;
     }
+}
 
+/**
+ * A helper class to access Microsoft Account using the REST api. 
+ * This is a singleton class. 
+ * All access to Microsoft Account should be through this class instead of directly accessing the msaccount_client class.
+ *
+ * @package    local_msaccount
+ */
+class msaccount_api {
+
+    private static $instance = null;
+    private $msaccount_client = null;
+
+    protected function __construct() {
+        $this->msaccount_client = new msaccount_client();
+    }
+    
+    public static function getInstance() {
+        if (null === self::$instance) {
+            self::$instance = new static();
+        }
+    
+        self::$instance->msaccount_client->is_logged_in();
+    
+        return self::$instance;
+    }
+    
+    public function get_msaccount_client() {
+        return $this->msaccount_client;
+    }
+    public function is_logged_in() {
+        return $this->get_msaccount_client()->is_logged_in();
+    }
+    
+    public function get_login_url() {
+        return $this->get_msaccount_client()->get_login_url();
+    }
+    
+    public function log_out() {
+        return $this->get_msaccount_client()->log_out();
+    }
+
+    public function myget($url, $params=array(), $token='', $secret='') {
+        return $this->get_msaccount_client()->myget($url, $params, $token, $secret);
+    }
+    
+    public function mypost($url, $params=array(), $token='', $secret='') {
+        return $this->get_msaccount_client()->mypost($url, $params, $token, $secret);
+    }
+    
+    public function get_accesstoken() {
+        return $this->get_msaccount_client()->get_accesstoken();
+    }
+    
     public function render_signin_widget() {
         $url = $this->get_login_url();
     
