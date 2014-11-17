@@ -1,13 +1,13 @@
 .msaccount_linkbutton
 {
 	background-image: url([[pix:local_msaccount|msaccount]]);
-	background-position: 2px 0px;
-	background-size: 32px 32px;
+	background-position: 4px 4px;
+	background-size: 102px 23px;
     background-repeat: no-repeat;
-    background-color: #1E82CC; /* #14499F; */ 
-    color: #fff; 
+    background-color: #FEFEFE; /* #1E82CC; */ 
+    color: #003D5C; 
     display: inline-block; 
-    padding: 6px 6px 6px 40px;
+    padding: 6px 6px 6px 110px;
     margin: 5px 0px;
     font-size: 14px;
 }
