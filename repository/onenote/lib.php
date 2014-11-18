@@ -172,35 +172,4 @@ class repository_onenote extends repository {
     public function supported_returntypes() {
         return FILE_INTERNAL;
     }
-    
-    
-    /* TODO:
-    caching code:
-    @var cache_session cache of notebooknames
-    var $itemnamecache = null;
-    
-        // Make a session cache
-        $this->itemnamecache = cache::make('local_onenote', 'foldername');
-
-     * get_item_name
-     *         // Cache based on oauthtoken and item_id.
-        $cachekey = $this->item_cache_key($item_id);
-
-        if ($item_name = $this->itemnamecache->get($cachekey)) {
-            return $item_name;
-        }
-
-        and:
-        $this->itemnamecache->set($cachekey, $response->value[0]->name);
-     
-     *    /**
-     * Returns a key for itemname cache
-     *
-     * @param string $item_id the id which is to be cached
-     * @return string the cache key to use
-     private function item_cache_key($item_id) {
-        // Cache based on oauthtoken and item_id.
-        return $this->get_tokenname().'_'.$item_id;
-    }
- */
 }

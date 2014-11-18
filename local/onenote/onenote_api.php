@@ -52,13 +52,6 @@ class onenote_api {
     private $msacount_api = null;
         
     protected function __construct() {
-//         $returnurl = ;
-        
-//         // TODO: remove these?
-//         $returnurl->param('callback', 'yes');
-//         $returnurl->param('repo_id', $this->get_onenote_repo_id());
-//         $returnurl->param('sesskey', sesskey());
-        
         $this->msaccount_api = msaccount_api::getInstance();
     }
 
@@ -299,8 +292,7 @@ class onenote_api {
                 );
 
                 $note_name = json_encode($param);
-                // TODO: $this->get_msaccount_api()->setHeader('Content-Type: application/json');
-                $created_notes = json_decode($this->get_msaccount_api()->mypost($noteurl,$note_name));
+                $created_notes = json_decode($this->get_msaccount_api()->mypost($noteurl, $note_name));
                 $sections = array();
                 
                 if($created_notes) {
@@ -313,7 +305,6 @@ class onenote_api {
             } else {
                 $note_id = array_search($notebook_name, $notes_array);
                 $sectionurl = self::API."/notebooks/".$note_id."/sections/";
-                // TODO: $this->setHeader('Content-Type: application/json');
                 $getsection = json_decode($this->get_msaccount_api()->myget($sectionurl));
                 $sections = array();
                 
@@ -357,8 +348,7 @@ class onenote_api {
                 );
 
                 $section = json_encode($param_section);
-                // TODO: $this->setHeader('Content-Type: application/json');
-                $eventresponse = $this->get_msaccount_api()->mypost($sectionurl,$section);
+                $eventresponse = $this->get_msaccount_api()->mypost($sectionurl, $section);
                 $eventresponse = json_decode($eventresponse);
 
                 //mapping course id and section id

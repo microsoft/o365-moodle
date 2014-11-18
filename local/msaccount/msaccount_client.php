@@ -206,6 +206,7 @@ class msaccount_client extends oauth2_client {
 
     public function mypost($url, $params=array(), $token='', $secret='') {
         $this->token_as_param = false;
+        $this->setHeader('Content-Type: application/json');
         $response = $this->post($url, $params, $token, $secret);
         $this->token_as_param = true;
         return $response;
@@ -263,6 +264,10 @@ class msaccount_api {
     
     public function get_accesstoken() {
         return $this->get_msaccount_client()->get_accesstoken();
+    }
+    
+    public function setHeader($header) {
+        return $this->get_msaccount_client()->setHeader($header);
     }
     
     public function render_signin_widget() {
