@@ -31,3 +31,5 @@ $string['clientsecret'] = 'Microsoft Acount client secret';
 $string['clientsecretdetails'] = 'Enter the Microsoft Account client secret from the <a target="_blank" href="https://account.live.com/developers/applications\">Live App management site</a>';
 $string['redirect'] = 'Microsoft Account redirect URI';
 $string['redirectdetails'] = 'Redirect uri from the <a target="_blank" href="https://account.live.com/developers/applications\">Live App management site</a>';
+$string['cannotaccessparentwin'] = 'Sign in successful. Please refresh the browser page after this popup window closes.';
+$string['refreshnonjsfilepicker'] = 'Sign in successful. Please close this popup window and refresh the browser page.';
