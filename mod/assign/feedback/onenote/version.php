@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the version information for the comments feedback plugin
+ * This file contains the version information for the OneNote feedback plugin
  *
  * @package assignfeedback_onenote
  */
@@ -23,6 +23,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2014092900;
-$plugin->requires  = 2014050800;
+$plugin->requires  = 2014051200;
 $plugin->component = 'assignfeedback_onenote';
-
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = '1.0.0.0';
+$plugin->dependencies = array('local_onenote' => 2014110503);
