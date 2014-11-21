@@ -46,6 +46,7 @@ define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
  */
 class onenote_api {
     /** @var string Base url to access API */
+    // TODO: Switch to non-beta version
     const API = 'https://www.onenote.com/api/beta'; //'https://www.onenote.com/api/v1.0';
     
     private static $instance = null;
@@ -714,10 +715,10 @@ IMGDATA;
         $BODY=<<<POSTDATA
 --{$BOUNDARY}
 Content-Disposition: form-data; name="Presentation"
-Content-Type: text/html; charset=utf-8
+Content-Type: application/xhtml+xml
 
-<!DOCTYPE html>
-<html>
+<?xml version="1.0" encoding="utf-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">
 <head>
 <title>$title</title>
 <meta name="created" value="$date"/>
@@ -786,10 +787,10 @@ IMGDATA;
         $BODY=<<<POSTDATA
 --{$BOUNDARY}
 Content-Disposition: form-data; name="Presentation"
-Content-Type: text/html; charset=utf-8
+Content-Type: application/xhtml+xml
 
-<!DOCTYPE html>
-<html>
+<?xml version="1.0" encoding="utf-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">
 <head>
 <title>$title</title>
 <meta name="created" value="$date"/>
@@ -806,7 +807,7 @@ POSTDATA;
     
     public function create_page_from_postdata($section_id, $postdata, $BOUNDARY) {
         $token = $this->get_msaccount_api()->get_accesstoken()->token;
-        $url = 'https://www.onenote.com/api/beta/sections/' . $section_id . '/pages';
+        $url = self::API . '/sections/' . $section_id . '/pages';
         $encodedAccessToken = rawurlencode($token);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
