@@ -137,33 +137,46 @@ class msaccount_client extends oauth2_client {
         if (!$record || !$record->refresh_token)
             return false;
         
-        $callbackurl = self::callback_url();
-        $params = array('client_id' => $this->get_clientid(),
-            'client_secret' => $this->get_clientsecret(),
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $record->refresh_token,
-            'redirect_uri' => $callbackurl->out(false),
-        );
+        $ch = curl_init();
         
-        $this->setHeader('Content-Type: application/x-www-form-urlencoded');
-        $response = $this->post($this->token_url(), $params);
-
-        if (!$this->info['http_code'] === 200) {
-            throw new moodle_exception('Could not refresh oauth token');
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_URL, $this->token_url());
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $callbackurl = self::callback_url();
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, 
+            'client_id=' . $this->get_clientid() . 
+            '&client_secret=' . $this->get_clientsecret() . 
+            '&grant_type=refresh_token' . 
+            '&refresh_token=' . $record->refresh_token .
+            '&redirect_url=' . $callbackurl->out(false));
+        
+        $raw_response = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+        
+        if (!$info['http_code'] === 200) {
+            return false;
         }
 
-        $r = json_decode($response);
+        $response_without_header = substr($raw_response, $info['header_size']);
+        $r = json_decode($response_without_header);
 
         if (!isset($r->access_token)) {
             return false;
         }
 
-        // Store the token an expiry time.
+        // Store the new token with new expiry time.
         $accesstoken = new stdClass;
         $accesstoken->token = $r->access_token;
         $accesstoken->expires = (time() + ($r->expires_in - 10)); // Expires 10 seconds before actual expiry.
         $this->store_token($accesstoken);
         
+        // also update refresh token
         $this->store_refresh_token($r->refresh_token);
                 
         return true;
