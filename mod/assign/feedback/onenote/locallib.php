@@ -130,6 +130,10 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($onenote_api->is_logged_in()) {
             // show a link to open the OneNote page
             $submission = $this->assignment->get_user_submission($userid, false);
+            
+            if (!$submission)
+                return false;
+
             $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
             $o .= $onenote_api-> render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
                     $this->assignment->get_course_module()->id, true, $is_teacher,
