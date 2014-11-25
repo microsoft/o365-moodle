@@ -130,14 +130,10 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($onenote_api->is_logged_in()) {
             // show a link to open the OneNote page
             $submission = $this->assignment->get_user_submission($userid, false);
-            
-            if (!$submission)
-                return false;
-
             $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
-            $o .= $onenote_api-> render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
+            $o .= $onenote_api->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
                     $this->assignment->get_course_module()->id, true, $is_teacher,
-                    $userid, $submission->id, $grade ? $grade->id : null);
+                    $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
         } else {
             $o .= $onenote_api->render_signin_widget();
@@ -265,9 +261,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     // show a link to open the OneNote page
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
                     $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
-                    $o .= $onenote_api-> render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
+                    $o .= $onenote_api->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
                             $this->assignment->get_course_module()->id, true, $is_teacher,
-                            $submission->userid, $submission->id, $grade->id);
+                            $grade->userid, $submission ? $submission->id : 0, $grade->id);
                 } else {
                     $o .= $onenote_api->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';

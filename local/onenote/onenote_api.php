@@ -469,7 +469,7 @@ class onenote_api {
         $section = $DB->get_record('onenote_user_sections', array("course_id" => $cm->course, "user_id" => $user_id));
         $section_id = $section->section_id;
         
-        $BOUNDARY = hash('sha256',rand());
+        $boundary = hash('sha256',rand());
         
         $fs = get_file_storage();
         
@@ -485,21 +485,29 @@ class onenote_api {
                     $files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                         $submission_id, 'id', false);
                     
-                    if (!$files)
-                        return null;
-                    
-                // unzip the submission and prepare postdata from it
-                $temp_folder = $this->create_temp_folder();
-                $fp = get_file_packer('application/zip');
-                $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
-                
-                $a = new stdClass();
-                $a->assign_name = $assign->name;
-                $a->student_firstname = $student->firstname;
-                $a->student_lastname = $student->lastname;
-                $postdata = $this->create_postdata_from_folder(
-                    get_string('feedbacktitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    if ($files) {
+                        // unzip the submission and prepare postdata from it
+                        $temp_folder = $this->create_temp_folder();
+                        $fp = get_file_packer('application/zip');
+                        $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                        
+                        $a = new stdClass();
+                        $a->assign_name = $assign->name;
+                        $a->student_firstname = $student->firstname;
+                        $a->student_lastname = $student->lastname;
+                        $postdata = $this->create_postdata_from_folder(
+                            get_string('feedbacktitle', 'local_onenote', $a),
+                            join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                    } else {
+                        // student did not turn in a submission, so create an empty one
+                        $a = new stdClass();
+                        $a->assign_name = $assign->name;
+                        $a->student_firstname = $student->firstname;
+                        $a->student_lastname = $student->lastname;
+                        $postdata = $this->create_postdata(
+                            get_string('feedbacktitle', 'local_onenote', $a),
+                            $assign->intro, $context->id, $boundary);
+                    }
                 } else {
                     return null;
                 }
@@ -515,7 +523,7 @@ class onenote_api {
                 $a->student_lastname = $student->lastname;
                 $postdata = $this->create_postdata_from_folder(
                     get_string('feedbacktitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         } else {
             // we want submission page
@@ -532,7 +540,7 @@ class onenote_api {
                     $a->student_lastname = $student->lastname;
                     $postdata = $this->create_postdata(
                         get_string('submissiontitle', 'local_onenote', $a),
-                        $assign->intro, $context->id, $BOUNDARY);
+                        $assign->intro, $context->id, $boundary);
                 }
             } else {
                 // unzip the submission and prepare postdata from it
@@ -546,11 +554,11 @@ class onenote_api {
                 $a->student_lastname = $student->lastname;
                 $postdata = $this->create_postdata_from_folder(
                     get_string('submissiontitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $BOUNDARY);
+                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         }
             
-        $response = $this->create_page_from_postdata($section_id, $postdata, $BOUNDARY);
+        $response = $this->create_page_from_postdata($section_id, $postdata, $boundary);
         
         if ($response)
         {
@@ -611,7 +619,7 @@ class onenote_api {
         return $contents;
     }
     
-    public function create_postdata($title, $body_content, $context_id, $BOUNDARY) {
+    public function create_postdata($title, $body_content, $context_id, $boundary) {
         $dom = new DOMDocument();
         $dom->loadHTML($body_content);
     
@@ -692,7 +700,7 @@ class onenote_api {
                 $s->nodeValue = "name:" . $path_parts['filename'];
     
                 $img_data .= <<<IMGDATA
---{$BOUNDARY}
+--{$boundary}
 Content-Disposition: form-data; name="$path_parts[filename]"; filename="$contents[filename]"
 Content-Type: image/jpeg
 
@@ -713,7 +721,7 @@ IMGDATA;
         $date = date("Y-m-d H:i:s");
     
         $BODY=<<<POSTDATA
---{$BOUNDARY}
+--{$boundary}
 Content-Disposition: form-data; name="Presentation"
 Content-Type: application/xhtml+xml
 
@@ -726,14 +734,14 @@ Content-Type: application/xhtml+xml
 <body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">$output</body>
 </html>
 $img_data
---{$BOUNDARY}--
+--{$boundary}--
 POSTDATA;
     
         error_log(print_r($BODY, true));
         return $BODY;
     }
     
-    public function create_postdata_from_folder($title, $folder, $BOUNDARY) {
+    public function create_postdata_from_folder($title, $folder, $boundary) {
         $dom = new DOMDocument();
         
         $page_file = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), 'page.html'));
@@ -764,7 +772,7 @@ POSTDATA;
                     $img_node->removeAttribute("data-fullres-src");
     
                 $img_data .= <<<IMGDATA
---{$BOUNDARY}
+--{$boundary}
 Content-Disposition: form-data; name="$src_filename"; filename="$src_filename"
 Content-Type: image/jpeg
 
@@ -785,7 +793,7 @@ IMGDATA;
         $date = date("Y-m-d H:i:s");
     
         $BODY=<<<POSTDATA
---{$BOUNDARY}
+--{$boundary}
 Content-Disposition: form-data; name="Presentation"
 Content-Type: application/xhtml+xml
 
@@ -798,21 +806,21 @@ Content-Type: application/xhtml+xml
 <body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="14px" color="rgb(3,3,3)">$output</font></body>
 </html>
 $img_data
---{$BOUNDARY}--
+--{$boundary}--
 POSTDATA;
     
         error_log(print_r($BODY, true));
         return $BODY;
     }
     
-    public function create_page_from_postdata($section_id, $postdata, $BOUNDARY) {
+    public function create_page_from_postdata($section_id, $postdata, $boundary) {
         $token = $this->get_msaccount_api()->get_accesstoken()->token;
         $url = self::API . '/sections/' . $section_id . '/pages';
         $encodedAccessToken = rawurlencode($token);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; boundary=$BOUNDARY\r\n".
+        curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; boundary=$boundary\r\n".
                 "Authorization: Bearer ".$encodedAccessToken));
         curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
         curl_setopt($ch,CURLOPT_POST,true);
