@@ -132,7 +132,7 @@ class msaccount_client extends oauth2_client {
         
         $this->log_out(); // remove previous token
         
-        $record = $DB->get_record('msa_refresh_tokens', array("user_id" => $USER->id));
+        $record = $DB->get_record('msaccount_refresh_tokens', array("user_id" => $USER->id));
         
         if (!$record || !$record->refresh_token)
             return false;
@@ -185,15 +185,15 @@ class msaccount_client extends oauth2_client {
     public function store_refresh_token($refresh_token) {
         global $DB, $USER;
         
-        $record = $DB->get_record('msa_refresh_tokens', array("user_id" => $USER->id));
+        $record = $DB->get_record('msaccount_refresh_tokens', array("user_id" => $USER->id));
         if ($record) {
             $record->refresh_token = $refresh_token;
-            $DB->update_record('msa_refresh_tokens', $record);
+            $DB->update_record('msaccount_refresh_tokens', $record);
         } else {
             $record = new stdClass();
             $record->user_id = $USER->id;
             $record->refresh_token = $refresh_token;
-            $DB->insert_record('msa_refresh_tokens', $record);
+            $DB->insert_record('msaccount_refresh_tokens', $record);
         }
     }
     
