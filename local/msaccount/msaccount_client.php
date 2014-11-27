@@ -289,4 +289,14 @@ class msaccount_api {
         return '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
            href="'.$url->out(false).'" class="msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
     }
+
+    // these are useful primarily for testing purposes
+    public function store_refresh_token($refresh_token) {
+        $this->get_msaccount_client()->store_refresh_token($refresh_token);
+    }
+    
+    public function refresh_token() {
+        return $this->get_msaccount_client()->refresh_token();
+    }
+   
 }
