@@ -29,16 +29,16 @@ require_once($CFG->dirroot.'/lib/filelib.php');
  * Handles events.
  */
 class observers {
-	/**
-	 * Handle user_deleted event - clean up calendar subscriptions.
-	 *
-	 * @param \core\event\user_deleted $event The triggered event.
-	 * @return bool Success/Failure.
-	 */
-	public static function handle_user_deleted(\core\event\user_deleted $event) {
-		global $DB;
-		$eventdata = $event->get_data();
-		$DB->delete_records('auth_oidc_token', ['username' => $eventdata['other']['username']]);
-		return true;
-	}
+    /**
+     * Handle user_deleted event - clean up calendar subscriptions.
+     *
+     * @param \core\event\user_deleted $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_user_deleted(\core\event\user_deleted $event) {
+        global $DB;
+        $eventdata = $event->get_data();
+        $DB->delete_records('auth_oidc_token', ['username' => $eventdata['other']['username']]);
+        return true;
+    }
 }

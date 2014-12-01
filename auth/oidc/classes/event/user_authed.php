@@ -27,7 +27,7 @@ namespace auth_oidc\event;
  * Event fired when a user authenticated with OIDC, but does not log in.
  */
 class user_authed extends \core\event\base {
-	/**
+    /**
      * Return localised event name.
      *
      * @return string

@@ -27,7 +27,7 @@ namespace auth_oidc\event;
  * Fired when a user uses OIDC to log in.
  */
 class user_loggedin extends \core\event\base {
-	/**
+    /**
      * Return localised event name.
      *
      * @return string

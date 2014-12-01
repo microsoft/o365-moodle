@@ -23,9 +23,9 @@
 
 $observers = [
     [
-        'eventname'   => '\core\event\user_deleted',
-        'callback'    => '\auth_oidc\observers::handle_user_deleted',
-        'priority'    => 200,
-        'internal'    => false,
+        'eventname' => '\core\event\user_deleted',
+        'callback' => '\auth_oidc\observers::handle_user_deleted',
+        'priority' => 200,
+        'internal' => false,
     ],
 ];

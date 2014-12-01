@@ -25,41 +25,41 @@ namespace auth_oidc\form;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once ($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot.'/lib/formslib.php');
 
 /**
  * OIDC Disconnect Form.
  */
 class disconnect extends \moodleform {
-	/**
-	 * Form definition.
-	 */
-	protected function definition() {
-		global $USER;
+    /**
+     * Form definition.
+     */
+    protected function definition() {
+        global $USER;
 
-		$authconfig = get_config('auth_oidc');
-		$opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_oidc');
+        $authconfig = get_config('auth_oidc');
+        $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_oidc');
 
-		$mform =& $this->_form;
-		$mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_oidc', $opname)));
-		$mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_oidc', $opname)));
-		$mform->addElement('html', '<br />');
+        $mform =& $this->_form;
+        $mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_oidc', $opname)));
+        $mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_oidc', $opname)));
+        $mform->addElement('html', '<br />');
 
-		$mform->addElement('header', 'userdetails', 'User Details');
-		$mform->addElement('text', 'username', 'Username');
-		$mform->addElement('passwordunmask', 'password', 'Password');
+        $mform->addElement('header', 'userdetails', 'User Details');
+        $mform->addElement('text', 'username', 'Username');
+        $mform->addElement('passwordunmask', 'password', 'Password');
 
-		$mform->setType('username', PARAM_TEXT);
-		$mform->addRule('username', null, 'required', null, 'client');
-		$mform->addRule('password', null, 'required', null, 'client');
+        $mform->setType('username', PARAM_TEXT);
+        $mform->addRule('username', null, 'required', null, 'client');
+        $mform->addRule('password', null, 'required', null, 'client');
 
-		// If the user cannot choose a username, set it to their current username and freeze.
-		if (isset($this->_customdata['canchooseusername']) && $this->_customdata['canchooseusername'] == false) {
-			$mform->setDefault('username', $USER->username);
-			$element = $mform->getElement('username');
-			$element->freeze();
-		}
+        // If the user cannot choose a username, set it to their current username and freeze.
+        if (isset($this->_customdata['canchooseusername']) && $this->_customdata['canchooseusername'] == false) {
+            $mform->setDefault('username', $USER->username);
+            $element = $mform->getElement('username');
+            $element->freeze();
+        }
 
-		$this->add_action_buttons();
-	}
+        $this->add_action_buttons();
+    }
 }
