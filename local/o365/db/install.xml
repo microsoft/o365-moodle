@@ -52,7 +52,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
-        <FIELD NAME="scope" TYPE="char" LENGTH="63" NOTNULL="true" SEQUENCE="false" COMMENT="token scope"/>
+        <FIELD NAME="scope" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="token scope"/>
         <FIELD NAME="resource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
         <FIELD NAME="token" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token"/>
         <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="token expiry"/>
@@ -63,7 +63,7 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="user" UNIQUE="false" FIELDS="user_id"/>
-        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id,resource,scope"/>
+        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id,resource"/>
       </INDEXES>
     </TABLE>
   </TABLES>
