@@ -1,0 +1,132 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_o365
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
+ */
+
+namespace local_o365\rest;
+
+/**
+ * API client for o365 calendar.
+ */
+class calendar extends \local_o365\rest\o365api {
+    /**
+     * Get the API client's oauth2 resource.
+     *
+     * @return string The resource for oauth2 tokens.
+     */
+    public static function get_resource() {
+        return 'https://outlook.office365.com';
+    }
+
+    /**
+     * Get the base URI that API calls should be sent to.
+     *
+     * @return string|bool The URI to send API calls to, or false if a precondition failed.
+     */
+    public function get_apiuri() {
+        return static::get_resource().'/api/v1.0/me';
+    }
+
+    /**
+     * Create a new event in the user's o365 calendar.
+     *
+     * @param string $subject The event's title/subject.
+     * @param string $body The event's body/description.
+     * @param int $starttime The timestamp when the event starts.
+     * @param int $endtime The timestamp when the event ends.
+     * @param array $attendees Array of moodle user objects that are attending the event.
+     * @param array $other Other parameters to include.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array()) {
+        $eventdata = [
+            'Subject' => $subject,
+            'Body' => [
+                'ContentType' => 'HTML',
+                'Content' => $body,
+            ],
+            'Start' => date('c', $starttime),
+            'End' => date('c', $endtime),
+            'Attendees' => [],
+        ];
+        foreach ($attendees as $attendee) {
+            $eventdata['Attendees'][] = [
+                'EmailAddress' => [
+                    'Address' => $attendee->email,
+                    'Name' => $attendee->firstname.' '.$attendee->lastname,
+                ],
+            ];
+        }
+        $eventdata = array_merge($eventdata, $other);
+        $eventdata = json_encode($eventdata);
+        $response = $this->apicall('post', '/events', $eventdata);
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
+     * Update an event.
+     *
+     * @param string $outlookeventid The event ID in o365 outlook.
+     * @param array $updated Array of updated information. Keys are 'subject', 'body', 'starttime', 'endtime', and 'attendees'.
+     * @return array|null Returned response, or null if error.
+     */
+    public function update_event($outlookeventid, $updated) {
+        $updateddata = [];
+        if (!empty($updated['subject'])) {
+            $updateddata['Subject'] = $updated['subject'];
+        }
+        if (!empty($updated['body'])) {
+            $updateddata['Body'] = ['ContentType' => 'HTML', 'Content' => $updated['body']];
+        }
+        if (!empty($updated['starttime'])) {
+            $updateddata['Start'] = date('c', $updated['starttime']);
+        }
+        if (!empty($updated['endtime'])) {
+            $updateddata['End'] = date('c', $updated['endtime']);
+        }
+        if (!empty($updated['attendees'])) {
+            foreach ($updated['attendees'] as $attendee) {
+                $updateddata['Attendees'][] = [
+                    'EmailAddress' => [
+                        'Address' => $attendee->email,
+                        'Name' => $attendee->firstname.' '.$attendee->lastname,
+                    ],
+                ];
+            }
+        }
+        $updateddata = json_encode($updateddata);
+        $response = $this->apicall('patch', '/events/'.$outlookeventid, $updateddata);
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
+     * Delete an event.
+     *
+     * @param string $outlookeventid The event ID in o365 outlook.
+     * @return bool Success/Failure.
+     */
+    public function delete_event($outlookeventid) {
+        $this->apicall('delete', '/events/'.$outlookeventid);
+        return true;
+    }
+}
