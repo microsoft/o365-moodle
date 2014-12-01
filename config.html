@@ -1,0 +1,74 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package auth_oidc
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
+ */
+
+global $CFG;
+
+if (!isset($config->opname)) {
+    $config->opname = 'OpenID Connect';
+}
+if (!isset($config->clientid)) {
+    $config->clientid = '';
+}
+if (!isset($config->clientsecret)) {
+    $config->clientsecret = '';
+}
+if (!isset($config->authendpoint)) {
+    $config->authendpoint = 'localhost';
+}
+if (!isset($config->tokenendpoint)) {
+    $config->tokenendpoint = 'localhost';
+}
+?>
+<table cellspacing="0" cellpadding="5" border="0">
+
+<?php
+$opts = ['opname', 'clientid', 'clientsecret', 'authendpoint', 'tokenendpoint'];
+foreach ($opts as $opt) {
+    $keystr = get_string('cfg_'.$opt.'_key', 'auth_oidc');
+    $descstr = get_string('cfg_'.$opt.'_desc', 'auth_oidc');
+    ?>
+<tr valign="top" class="required">
+    <td align="right"><label for="<?php echo $opt; ?>"><?php echo $keystr; ?></label></td>
+    <td>
+        <input id="<?php echo $opt; ?>" name="<?php echo $opt; ?>" type="text" size="30" value="<?php echo $config->$opt;?>" />
+        <?php
+        if (isset($err[$opt])) {
+            echo $OUTPUT->error_text($err[$opt]);
+        }
+        ?>
+    </td>
+    <td><?php echo $descstr; ?></td>
+</tr>
+    <?php
+}
+?>
+
+<tr valign="top" class="required">
+    <td align="right"><?php echo get_string('cfg_redirecturi_key', 'auth_oidc'); ?></td>
+    <td>
+       <?php echo $CFG->wwwroot.'/auth/oidc/'; ?>
+    </td>
+    <td><?php echo get_string('cfg_redirecturi_desc', 'auth_oidc'); ?></td>
+</tr>
+
+</table>
