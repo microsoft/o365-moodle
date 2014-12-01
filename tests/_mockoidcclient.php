@@ -25,23 +25,23 @@
  * A mock oidcclient class providing access to all inaccessible properties/methods.
  */
 class mockoidcclient extends \auth_oidc\oidcclient {
-	/** @var \auth_oidc\httpclientinterface An HTTP client to use. */
-	public $httpclient;
+    /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
+    public $httpclient;
 
-	/** @var array Array of endpoints. */
-	public $endpoints = [];
+    /** @var array Array of endpoints. */
+    public $endpoints = [];
 
-	/**
-	 * Stub method to access protected parent method.
-	 */
-	public function getnewstate($nonce) {
-		return parent::getnewstate($nonce);
-	}
+    /**
+     * Stub method to access protected parent method.
+     */
+    public function getnewstate($nonce) {
+        return parent::getnewstate($nonce);
+    }
 
-	/**
-	 * Stub method to access protected parent method.
-	 */
-	public function getauthrequestparams() {
-		return parent::getauthrequestparams();
-	}
+    /**
+     * Stub method to access protected parent method.
+     */
+    public function getauthrequestparams() {
+        return parent::getauthrequestparams();
+    }
 }

@@ -27,12 +27,12 @@ namespace auth_oidc;
  * Interface defining an HTTP client.
  */
 interface httpclientinterface {
-	/**
-	 * Post data to a URL.
-	 *
-	 * @param string $url The URL to post to.
-	 * @param string|array $data The data to post.
-	 * @return string The returned data.
-	 */
-	public function post($url, $data);
+    /**
+     * Post data to a URL.
+     *
+     * @param string $url The URL to post to.
+     * @param string|array $data The data to post.
+     * @return string The returned data.
+     */
+    public function post($url, $data);
 }

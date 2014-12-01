@@ -27,9 +27,9 @@ require_once(__DIR__.'/auth.php');
 $auth = new \auth_plugin_oidc;
 $auth->set_httpclient(new \auth_oidc\httpclient);
 if (!empty($_REQUEST['state'])) {
-	// Response from OP.
-	$auth->handleauthresponse($_REQUEST);
+    // Response from OP.
+    $auth->handleauthresponse($_REQUEST);
 } else {
-	// Initial login request.
-	$auth->initiateauthrequest();
+    // Initial login request.
+    $auth->initiateauthrequest();
 }

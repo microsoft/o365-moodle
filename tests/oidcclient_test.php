@@ -33,78 +33,78 @@ global $CFG;
  */
 class auth_oidc_oidcclient_testcase extends \advanced_testcase {
 
-	/**
-	 * Test getting and setting credentials.
-	 */
-	public function test_creds_getters_and_setters() {
-		$httpclient = new \auth_oidc\httpclient;
-		$client = new mockoidcclient($httpclient);
+    /**
+     * Test getting and setting credentials.
+     */
+    public function test_creds_getters_and_setters() {
+        $httpclient = new \auth_oidc\httpclient;
+        $client = new mockoidcclient($httpclient);
 
-		$this->assertNull($client->get_clientid());
-		$this->assertNull($client->get_clientsecret());
-		$this->assertNull($client->get_redirecturi());
+        $this->assertNull($client->get_clientid());
+        $this->assertNull($client->get_clientsecret());
+        $this->assertNull($client->get_redirecturi());
 
-		$id = 'id';
-		$secret = 'secret';
-		$redirecturi = 'redirecturi';
-		$client->setcreds($id, $secret, $redirecturi);
+        $id = 'id';
+        $secret = 'secret';
+        $redirecturi = 'redirecturi';
+        $client->setcreds($id, $secret, $redirecturi);
 
-		$this->assertEquals($id, $client->get_clientid());
-		$this->assertEquals($secret, $client->get_clientsecret());
-		$this->assertEquals($redirecturi, $client->get_redirecturi());
-	}
+        $this->assertEquals($id, $client->get_clientid());
+        $this->assertEquals($secret, $client->get_clientsecret());
+        $this->assertEquals($redirecturi, $client->get_redirecturi());
+    }
 
-	/**
-	 * Dataprovider returning endpoints.
-	 *
-	 * @return array Array of arrays of test parameters.
-	 */
-	public function dataprovider_endpoints() {
-		$tests = [];
+    /**
+     * Dataprovider returning endpoints.
+     *
+     * @return array Array of arrays of test parameters.
+     */
+    public function dataprovider_endpoints() {
+        $tests = [];
 
-		$tests['oneinvalid'] = [
-			['auth' => 100],
-			['Exception', 'Invalid Endpoint URI received.']
-		];
+        $tests['oneinvalid'] = [
+            ['auth' => 100],
+            ['Exception', 'Invalid Endpoint URI received.']
+        ];
 
-		$tests['oneinvalidonevalid1'] = [
-			['auth' => 100, 'token' => 'http://example.com/token'],
-			['Exception', 'Invalid Endpoint URI received.']
-		];
+        $tests['oneinvalidonevalid1'] = [
+            ['auth' => 100, 'token' => 'http://example.com/token'],
+            ['Exception', 'Invalid Endpoint URI received.']
+        ];
 
-		$tests['oneinvalidonevalid2'] = [
-			['token' => 'http://example.com/token', 'auth' => 100],
-			['Exception', 'Invalid Endpoint URI received.']
-		];
+        $tests['oneinvalidonevalid2'] = [
+            ['token' => 'http://example.com/token', 'auth' => 100],
+            ['Exception', 'Invalid Endpoint URI received.']
+        ];
 
-		$tests['onevalid'] = [
-			['token' => 'http://example.com/token'],
-			[]
-		];
+        $tests['onevalid'] = [
+            ['token' => 'http://example.com/token'],
+            []
+        ];
 
-		$tests['twovalid'] = [
-			['auth' => 'http://example.com/auth', 'token' => 'http://example.com/token'],
-			[]
-		];
+        $tests['twovalid'] = [
+            ['auth' => 'http://example.com/auth', 'token' => 'http://example.com/token'],
+            []
+        ];
 
-		return $tests;
-	}
+        return $tests;
+    }
 
-	/**
-	 * Test setting and getting endpoints.
-	 *
-	 * @dataProvider dataprovider_endpoints
-	 */
-	public function test_endpoints_getters_and_setters($endpoints, $expectedexception) {
-		if (!empty($expectedexception)) {
-			$this->setExpectedException($expectedexception[0], $expectedexception[1]);
-		}
-		$httpclient = new \auth_oidc\httpclient;
-		$client = new mockoidcclient($httpclient);
-		$client->setendpoints($endpoints);
+    /**
+     * Test setting and getting endpoints.
+     *
+     * @dataProvider dataprovider_endpoints
+     */
+    public function test_endpoints_getters_and_setters($endpoints, $expectedexception) {
+        if (!empty($expectedexception)) {
+            $this->setExpectedException($expectedexception[0], $expectedexception[1]);
+        }
+        $httpclient = new \auth_oidc\httpclient;
+        $client = new mockoidcclient($httpclient);
+        $client->setendpoints($endpoints);
 
-		foreach ($endpoints as $type => $uri) {
-			$this->assertEquals($uri, $client->get_endpoint($type));
-		}
-	}
+        foreach ($endpoints as $type => $uri) {
+            $this->assertEquals($uri, $client->get_endpoint($type));
+        }
+    }
 }

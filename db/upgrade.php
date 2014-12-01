@@ -33,41 +33,5 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     $dbman = $DB->get_manager();
     $result = true;
 
-    if ($result && $oldversion < 2014110800) {
-        if (!$dbman->table_exists('auth_oidc_state')) {
-            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_oidc_state');
-        }
-        upgrade_plugin_savepoint($result, '2014110800', 'auth', 'oidc');
-    }
-
-    if ($result && $oldversion < 2014111000) {
-        if (!$dbman->table_exists('auth_oidc_token')) {
-            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_oidc_token');
-        }
-        upgrade_plugin_savepoint($result, '2014111000', 'auth', 'oidc');
-    }
-
-    if ($result && $oldversion < 2014111002) {
-        $table = new \xmldb_table('auth_oidc_token');
-        $field = new \xmldb_field('username', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, false, '0', 'sub');
-        $dbman->add_field($table, $field);
-        upgrade_plugin_savepoint($result, '2014111002', 'auth', 'oidc');
-    }
-
-    if ($result && $oldversion < 2014111003) {
-        $table = new \xmldb_table('auth_oidc_token');
-        $field = new \xmldb_field('authcode', XMLDB_TYPE_TEXT, null, null, null, false, null, 'sub');
-        $dbman->add_field($table, $field);
-        upgrade_plugin_savepoint($result, '2014111003', 'auth', 'oidc');
-    }
-
-    if ($result && $oldversion < 2014111004) {
-        $table = new \xmldb_table('auth_oidc_state');
-        $field = new \xmldb_field('nonce', XMLDB_TYPE_CHAR, '15', null, XMLDB_NOTNULL, false, '0', 'state');
-        $dbman->add_field($table, $field);
-        upgrade_plugin_savepoint($result, '2014111004', 'auth', 'oidc');
-    }
-
-
     return $result;
 }

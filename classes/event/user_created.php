@@ -27,7 +27,7 @@ namespace auth_oidc\event;
  * Event fired when OIDC creates a new user.
  */
 class user_created extends \core\event\base {
-	/**
+    /**
      * Return localised event name.
      *
      * @return string

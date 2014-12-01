@@ -525,10 +525,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
      *
      * @param stdClass $config
      * @param array $err errors
-     * @param array $user_fields
+     * @param array $userfields
      * @return void
      */
-    public function config_form($config, $err, $user_fields) {
+    public function config_form($config, $err, $userfields) {
         include(__DIR__.'/config.html');
     }
 

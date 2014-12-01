@@ -27,166 +27,166 @@ namespace auth_oidc;
  * OpenID Connect Client
  */
 class oidcclient {
-	/** @var \auth_oidc\httpclientinterface An HTTP client to use. */
-	protected $httpclient;
+    /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
+    protected $httpclient;
 
-	/** @var string The client ID. */
-	protected $clientid;
+    /** @var string The client ID. */
+    protected $clientid;
 
-	/** @var string The client secret. */
-	protected $clientsecret;
+    /** @var string The client secret. */
+    protected $clientsecret;
 
-	/** @var string The client redirect URI. */
-	protected $redirecturi;
+    /** @var string The client redirect URI. */
+    protected $redirecturi;
 
-	/** @var array Array of endpoints. */
-	protected $endpoints = [];
+    /** @var array Array of endpoints. */
+    protected $endpoints = [];
 
-	/**
-	 * Constructor.
-	 *
-	 * @param \auth_oidc\httpclientinterface $httpclient An HTTP client to use for background communication.
-	 */
-	public function __construct(\auth_oidc\httpclientinterface $httpclient) {
-		$this->httpclient = $httpclient;
-	}
+    /**
+     * Constructor.
+     *
+     * @param \auth_oidc\httpclientinterface $httpclient An HTTP client to use for background communication.
+     */
+    public function __construct(\auth_oidc\httpclientinterface $httpclient) {
+        $this->httpclient = $httpclient;
+    }
 
-	/**
-	 * Set client details/credentials.
-	 *
-	 * @param string $id The registered client ID.
-	 * @param string $secret The registered client secret.
-	 * @param string $redirecturi The registered client redirect URI.
-	 */
-	public function setcreds($id, $secret, $redirecturi) {
-		$this->clientid = $id;
-		$this->clientsecret = $secret;
-		$this->redirecturi = $redirecturi;
-	}
+    /**
+     * Set client details/credentials.
+     *
+     * @param string $id The registered client ID.
+     * @param string $secret The registered client secret.
+     * @param string $redirecturi The registered client redirect URI.
+     */
+    public function setcreds($id, $secret, $redirecturi) {
+        $this->clientid = $id;
+        $this->clientsecret = $secret;
+        $this->redirecturi = $redirecturi;
+    }
 
-	/**
-	 * Get the set client ID.
-	 *
-	 * @return string The set client ID.
-	 */
-	public function get_clientid() {
-		return (isset($this->clientid)) ? $this->clientid : null;
-	}
+    /**
+     * Get the set client ID.
+     *
+     * @return string The set client ID.
+     */
+    public function get_clientid() {
+        return (isset($this->clientid)) ? $this->clientid : null;
+    }
 
-	/**
-	 * Get the set client secret.
-	 *
-	 * @return string The set client secret.
-	 */
-	public function get_clientsecret() {
-		return (isset($this->clientsecret)) ? $this->clientsecret : null;
-	}
+    /**
+     * Get the set client secret.
+     *
+     * @return string The set client secret.
+     */
+    public function get_clientsecret() {
+        return (isset($this->clientsecret)) ? $this->clientsecret : null;
+    }
 
-	/**
-	 * Get the set redirect URI.
-	 *
-	 * @return string The set redirect URI.
-	 */
-	public function get_redirecturi() {
-		return (isset($this->redirecturi)) ? $this->redirecturi : null;
-	}
+    /**
+     * Get the set redirect URI.
+     *
+     * @return string The set redirect URI.
+     */
+    public function get_redirecturi() {
+        return (isset($this->redirecturi)) ? $this->redirecturi : null;
+    }
 
-	/**
-	 * Set OIDC endpoints.
-	 *
-	 * @param array $endpoints Array of endpoints. Can have keys 'auth', and 'token'.
-	 */
-	public function setendpoints($endpoints) {
-		foreach ($endpoints as $type => $uri) {
-			if (clean_param($uri, PARAM_URL) !== $uri) {
-				throw new \Exception('Invalid Endpoint URI received.');
-			}
-			$this->endpoints[$type] = $uri;
-		}
-	}
+    /**
+     * Set OIDC endpoints.
+     *
+     * @param array $endpoints Array of endpoints. Can have keys 'auth', and 'token'.
+     */
+    public function setendpoints($endpoints) {
+        foreach ($endpoints as $type => $uri) {
+            if (clean_param($uri, PARAM_URL) !== $uri) {
+                throw new \Exception('Invalid Endpoint URI received.');
+            }
+            $this->endpoints[$type] = $uri;
+        }
+    }
 
-	public function get_endpoint($endpoint) {
-		return (isset($this->endpoints[$endpoint])) ? $this->endpoints[$endpoint] : null;
-	}
+    public function get_endpoint($endpoint) {
+        return (isset($this->endpoints[$endpoint])) ? $this->endpoints[$endpoint] : null;
+    }
 
-	/**
-	 * Get an array of authorization request parameters.
-	 *
-	 * @return array Array of request parameters.
-	 */
-	protected function getauthrequestparams() {
-		$nonce = 'N'.uniqid();
-		return [
-			'response_type' => 'code',
-			'client_id' => $this->clientid,
-			'scope' => 'openid profile email',
-			'nonce' => $nonce,
-			'response_mode' => 'form_post',
-			'resource' => 'https://graph.windows.net',
-			'state' => $this->getnewstate($nonce),
-			'prompt' => 'login',
-		];
-	}
+    /**
+     * Get an array of authorization request parameters.
+     *
+     * @return array Array of request parameters.
+     */
+    protected function getauthrequestparams() {
+        $nonce = 'N'.uniqid();
+        return [
+            'response_type' => 'code',
+            'client_id' => $this->clientid,
+            'scope' => 'openid profile email',
+            'nonce' => $nonce,
+            'response_mode' => 'form_post',
+            'resource' => 'https://graph.windows.net',
+            'state' => $this->getnewstate($nonce),
+            'prompt' => 'login',
+        ];
+    }
 
-	/**
-	 * Generate a new state parameter.
-	 *
-	 * @return string The new state value.
-	 */
-	protected function getnewstate($nonce) {
-		global $DB;
-		$staterec = new \stdClass;
-		$staterec->sesskey = sesskey();
-		$staterec->state = random_string(15);
-		$staterec->nonce = $nonce;
-		$staterec->timecreated = time();
-		$DB->insert_record('auth_oidc_state', $staterec);
-		return $staterec->state;
-	}
+    /**
+     * Generate a new state parameter.
+     *
+     * @return string The new state value.
+     */
+    protected function getnewstate($nonce) {
+        global $DB;
+        $staterec = new \stdClass;
+        $staterec->sesskey = sesskey();
+        $staterec->state = random_string(15);
+        $staterec->nonce = $nonce;
+        $staterec->timecreated = time();
+        $DB->insert_record('auth_oidc_state', $staterec);
+        return $staterec->state;
+    }
 
-	/**
-	 * Perform an authorization request by redirecting resource owner's user agent to auth endpoint.
-	 */
-	public function authrequest() {
-		global $DB;
-		if (empty($this->clientid)) {
-			throw new \Exception('Please set client credentials with setcreds');
-		}
+    /**
+     * Perform an authorization request by redirecting resource owner's user agent to auth endpoint.
+     */
+    public function authrequest() {
+        global $DB;
+        if (empty($this->clientid)) {
+            throw new \Exception('Please set client credentials with setcreds');
+        }
 
-		if (empty($this->endpoints['auth'])) {
-			throw new \Exception('No auth endpoint set. Please set with $this->setendpoints');
-		}
+        if (empty($this->endpoints['auth'])) {
+            throw new \Exception('No auth endpoint set. Please set with $this->setendpoints');
+        }
 
-		$params = $this->getauthrequestparams();
-		$redirecturl = new \moodle_url($this->endpoints['auth'], $params);
-		redirect($redirecturl);
-	}
+        $params = $this->getauthrequestparams();
+        $redirecturl = new \moodle_url($this->endpoints['auth'], $params);
+        redirect($redirecturl);
+    }
 
-	/**
-	 * Exchange an authorization code for an access token.
-	 *
-	 * @param string $tokenendpoint The token endpoint URI.
-	 * @param string $code An authorization code.
-	 * @return array Received parameters.
-	 */
-	public function tokenrequest($code) {
-		if (empty($this->endpoints['token'])) {
-			throw new \Exception('No token endpoint set. Please set with $this->setendpoints');
-		}
+    /**
+     * Exchange an authorization code for an access token.
+     *
+     * @param string $tokenendpoint The token endpoint URI.
+     * @param string $code An authorization code.
+     * @return array Received parameters.
+     */
+    public function tokenrequest($code) {
+        if (empty($this->endpoints['token'])) {
+            throw new \Exception('No token endpoint set. Please set with $this->setendpoints');
+        }
 
-		$params = [
-			'client_id' => $this->clientid,
-			'client_secret' => $this->clientsecret,
-			'grant_type' => 'authorization_code',
-			'code' => $code,
-			'redirect_uri' => $this->redirecturi,
-		];
+        $params = [
+            'client_id' => $this->clientid,
+            'client_secret' => $this->clientsecret,
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'redirect_uri' => $this->redirecturi,
+        ];
 
-		try {
-			$returned = $this->httpclient->post($this->endpoints['token'], $params);
-			return @json_decode($returned, true);
-		} catch (\Exception $e) {
-			return $e->getMessage();
-		}
-	}
+        try {
+            $returned = $this->httpclient->post($this->endpoints['token'], $params);
+            return @json_decode($returned, true);
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
 }
