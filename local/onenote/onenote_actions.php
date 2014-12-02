@@ -1,7 +1,11 @@
 <?php
 
-require_once('../../config.php');
+require_once(__DIR__.'/../../config.php');
 require_once('onenote_api.php');
+
+require_login();
+$PAGE->set_url('/local/onenote/onenote_actions.php');
+$PAGE->set_context(\context_system::instance());
 
 $action = required_param('action', PARAM_TEXT);
 $cmid = required_param('cmid', PARAM_INT);

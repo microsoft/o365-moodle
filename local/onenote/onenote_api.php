@@ -185,8 +185,7 @@ class onenote_api {
     public function get_items_list($path = '') {
         global $OUTPUT;
 
-        error_log('get_items_list called: ' . $path);
-        $precedingpath = '';
+        //error_log('get_items_list called: ' . $path);
 
         if (empty($path)) {
             $item_type = 'notebook';
@@ -195,8 +194,6 @@ class onenote_api {
             $parts = explode('/', $path);
             $part1 = array_pop($parts);
             $part2 = array_pop($parts);
-            //error_log('part1: ' . print_r($part1, true));
-            //error_log('part2: ' . print_r($part2, true));
 
             if ($part2) {
                 $item_type = 'page';
@@ -267,103 +264,103 @@ class onenote_api {
             }
         }
 
-        if ($item_type == 'notebook') {
-            $this->insert_notes($items);
-       }
-
         return $items;
     }
 
-    private function insert_notes($notes) {
+    // ensure that data about the notebooks and sections in OneNote are sync'ed up with our database
+    private function sync_notebook_data() {
         global $DB;
-        $notebook_name = get_string('notebookname','block_onenote');
-        $noteurl = self::API."/notebooks/";
+        
+        $notebooks = $this->get_items_list('');
+        
+        $notebook_name = get_string('notebookname', 'block_onenote');
+        $notebooksurl = self::API . "/notebooks/";
         $courses = enrol_get_my_courses(); //get the current user enrolled courses
-        $notes_array = array();
-        if($notes) {
-            foreach ($notes as $note) {
-                if($note['id']) {
-                    $notes_array[$note['id']] = $note['title'];
+        $notebooks_array = array();
+        
+        if ($notebooks) {
+            foreach ($notebooks as $notebook) {
+                if ($notebook['id']) {
+                    $notebooks_array[$notebook['id']] = $notebook['title'];
                 }
             }
         }
 
-        if(count($notes_array) > 0){
-            if(!(in_array($notebook_name, $notes_array))){
+        if (count($notebooks_array) > 0){
+            if (!(in_array($notebook_name, $notebooks_array))){
                 $param = array(
                     "name" => $notebook_name
                 );
 
-                $note_name = json_encode($param);
-                $created_notes = json_decode($this->get_msaccount_api()->mypost($noteurl, $note_name));
+                $notebook_name = json_encode($param);
+                $created_notebook = json_decode($this->get_msaccount_api()->mypost($notebooksurl, $notebook_name));
                 $sections = array();
                 
-                if($created_notes) {
-                    $note_id = $created_notes->id;
+                if ($created_notebook) {
+                    $notebook_id = $created_notebook->id;
                 }
 
-                if($courses) {
-                    $this->create_onenote_sections($courses,$note_id,$sections);
+                if ($courses) {
+                    $this->sync_sections($courses, $notebook_id, $sections);
                 }
             } else {
-                $note_id = array_search($notebook_name, $notes_array);
-                $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+                $notebook_id = array_search($notebook_name, $notebooks_array);
+                $sectionurl = self::API . "/notebooks/" . $notebook_id . "/sections/";
                 $getsection = json_decode($this->get_msaccount_api()->myget($sectionurl));
                 $sections = array();
                 
-                if(isset($getsection->value)) {
-                    foreach($getsection->value as $section) {
+                if (isset($getsection->value)) {
+                    foreach ($getsection->value as $section) {
                         $sections[$section->id] = $section->name;
                     }
                 }
 
-                if($courses) {
-                    $this->create_onenote_sections($courses, $note_id, $sections);
-
+                if ($courses) {
+                    $this->sync_sections($courses, $notebook_id, $sections);
                 }
             }
         }
     }
     
-    private function insert_sectionid_table($course_id,$section_id) {
-        global $DB,$USER;
-        $course_onenote = new stdClass();
-        $course_onenote->user_id = $USER->id;
-        $course_onenote->course_id = $course_id;
-        $course_onenote->section_id = $section_id;
-        $course_ext = $DB->get_record('onenote_user_sections', array("course_id" => $course_id,"user_id" => $USER->id));
-        if($course_ext) {
-            $course_onenote->id = $course_ext->id;
-            $update = $DB->update_record("onenote_user_sections", $course_onenote);
-        }else {
-            $insert = $DB->insert_record("onenote_user_sections", $course_onenote);
-        }
-
-    }
-    
-    private function create_onenote_sections($courses,$note_id, array $sections){
-        $sectionurl = self::API."/notebooks/".$note_id."/sections/";
+    private function sync_sections($courses, $notebook_id, array $sections){
+        $sectionurl = self::API . "/notebooks/" . $notebook_id . "/sections/";
 
         foreach ($courses as $course) {
-            if(!in_array($course->fullname, $sections)) {
+            if (!in_array($course->fullname, $sections)) {
                 $param_section = array(
                     "name" => $course->fullname
                 );
 
                 $section = json_encode($param_section);
-                $eventresponse = $this->get_msaccount_api()->mypost($sectionurl, $section);
-                $eventresponse = json_decode($eventresponse);
+                $response = $this->get_msaccount_api()->mypost($sectionurl, $section);
+                $response = json_decode($response);
 
-                //mapping course id and section id
-                if ($eventresponse)
-                    $this->insert_sectionid_table($course->id, $eventresponse->id);
+                if ($response)
+                    $this->upsert_user_section($course->id, $response->id);
             } else {
                 $section_id = array_search($course->fullname, $sections);
-                $this->insert_sectionid_table($course->id, $section_id);
+                $this->upsert_user_section($course->id, $section_id);
             }
         }
     }
 
+    private function upsert_user_section($course_id, $section_id) {
+        global $DB,$USER;
+        $new_section = new stdClass();
+        $new_section->user_id = $USER->id;
+        $new_section->course_id = $course_id;
+        $new_section->section_id = $section_id;
+        
+        $section = $DB->get_record('onenote_user_sections', array("course_id" => $course_id, "user_id" => $USER->id));
+
+        if ($section) {
+            $new_section->id = $section->id;
+            $update = $DB->update_record("onenote_user_sections", $new_section);
+        } else {
+            $insert = $DB->insert_record("onenote_user_sections", $new_section);
+        }
+    }
+    
     // -------------------------------------------------------------------------------------------------------------------------
     // Helper methods
     public function is_logged_in() {
@@ -468,11 +465,12 @@ class onenote_api {
         }
         
         // get the section id for the course so we can create the page in the approp section
-        $section = $DB->get_record('onenote_user_sections', array("course_id" => $cm->course, "user_id" => $user_id));
+        $section = $this->get_section($cm->course, $user_id);
+        if (!$section)
+            return false;
+        
         $section_id = $section->section_id;
-        
         $boundary = hash('sha256',rand());
-        
         $fs = get_file_storage();
         
         // if we are being called for getting a feedback page 
@@ -589,7 +587,31 @@ class onenote_api {
         
         return null;
     }
-    
+
+    // check if we are in sync with OneNote notebooks and section and try to sync up if we are not
+    private function get_section($course_id, $user_id)
+    {
+        global $DB;
+        
+        $section = $DB->get_record('onenote_user_sections', array("course_id" => $course_id, "user_id" => $user_id));
+
+        // need to make sure section actually exists in case user may have deleted it
+        if ($section && $section->section_id) {
+            $onenote_section = json_decode($this->get_msaccount_api()->myget(self::API . '/sections/' . $section->section_id));
+            if ($onenote_section && !isset($onenote_section->error)) {
+                return $section;
+            }
+        }
+        
+        $this->sync_notebook_data();
+            
+        $section = $DB->get_record('onenote_user_sections', array("course_id" => $course_id, "user_id" => $user_id));
+        if ($section && $section->section_id)
+            return $section;
+        
+        return null;
+    }
+
     public function get_file_contents($path,$filename,$context_id) {
         // get file contents
         $fs = get_file_storage();
@@ -756,7 +778,7 @@ POSTDATA;
         $img_nodes = $xpath->query("//img");
         $img_data = "";
         
-        if($img_nodes) {
+        if ($img_nodes) {
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
                 $src_relpath = urldecode($src_node->nodeValue);

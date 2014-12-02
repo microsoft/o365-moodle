@@ -184,8 +184,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Save the files and trigger plagiarism plugin, if enabled,
-     * to scan the uploaded files via events trigger
+     * Save the files
      *
      * @param stdClass $submission
      * @param stdClass $data
@@ -196,6 +195,11 @@ class assign_submission_onenote extends assign_submission_plugin {
 
         // get OneNote page id
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
+        if (!$record || !$record->submission_student_page_id) {
+            $this->set_error(get_string('submissionnotstarted', 'assignsubmission_onenote'));
+            return false;
+        }
+        
         $onenote_api = onenote_api::getInstance();
         $temp_folder = $onenote_api->create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
