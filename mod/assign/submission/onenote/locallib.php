@@ -198,7 +198,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
         $onenote_api = onenote_api::getInstance();
         $temp_folder = $onenote_api->create_temp_folder();
-        $temp_file = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files
         $download_info = $onenote_api->download_page($record->submission_student_page_id, $temp_file);

@@ -104,9 +104,11 @@ class onenote_api {
             // create temp folder
             $temp_folder = $this->create_temp_folder();
             
-            $files_folder = join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
-            if (!mkdir($files_folder, 0777, true))
+            $files_folder = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
+            if (!mkdir($files_folder, 0777, true)) {
+                echo('Failed to create folder: ' . $files_folder);
                 return null;
+            }
             
             // save images etc.
             $i = 1;
@@ -126,7 +128,7 @@ class onenote_api {
             }
             
             // save the html page itself
-            file_put_contents(join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
+            file_put_contents(join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
             
             // zip up the folder so it can be attached as a single file
             $fp = get_file_packer('application/zip');
@@ -497,7 +499,7 @@ class onenote_api {
                         $a->student_lastname = $student->lastname;
                         $postdata = $this->create_postdata_from_folder(
                             get_string('feedbacktitle', 'local_onenote', $a),
-                            join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                            join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
                     } else {
                         // student did not turn in a submission, so create an empty one
                         $a = new stdClass();
@@ -523,7 +525,7 @@ class onenote_api {
                 $a->student_lastname = $student->lastname;
                 $postdata = $this->create_postdata_from_folder(
                     get_string('feedbacktitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                    join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         } else {
             // we want submission page
@@ -554,7 +556,7 @@ class onenote_api {
                 $a->student_lastname = $student->lastname;
                 $postdata = $this->create_postdata_from_folder(
                     get_string('submissiontitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(trim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                    join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         }
             
@@ -683,9 +685,9 @@ class onenote_api {
         
         // process images
         $src = $xpath->query("//@src");
-    
-        if($src) {
-            $img_data = "";
+        $img_data = "";
+        
+        if ($src) {
             foreach ($src as $s) {
                 $path_parts = pathinfo(urldecode($s->nodeValue));
                 $path = substr($path_parts['dirname'], strlen('@@PLUGINFILE@@')) . DIRECTORY_SEPARATOR;
@@ -707,7 +709,7 @@ Content-Type: image/jpeg
 $contents[content]
 IMGDATA;
 
-                $img_data .="\r\n";
+                $img_data .= PHP_EOL;
             }
         }
     
@@ -720,7 +722,7 @@ IMGDATA;
         $output = $dom_clone->saveHTML();
         $date = date("Y-m-d H:i:s");
     
-        $BODY=<<<POSTDATA
+        $postdata = <<<POSTDATA
 --{$boundary}
 Content-Disposition: form-data; name="Presentation"
 Content-Type: application/xhtml+xml
@@ -735,16 +737,17 @@ Content-Type: application/xhtml+xml
 </html>
 $img_data
 --{$boundary}--
+
 POSTDATA;
-    
-        error_log(print_r($BODY, true));
-        return $BODY;
+
+        error_log(print_r($postdata, true));
+        return $postdata;
     }
     
     public function create_postdata_from_folder($title, $folder, $boundary) {
         $dom = new DOMDocument();
         
-        $page_file = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), 'page.html'));
+        $page_file = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
         if (!$dom->loadHTMLFile($page_file))
             return null;
         
@@ -758,7 +761,7 @@ POSTDATA;
                 $src_node = $img_node->attributes->getNamedItem("src");
                 $src_relpath = urldecode($src_node->nodeValue);
                 $src_filename = substr($src_relpath, strlen('./page_files/'));
-                $src_path = join(DIRECTORY_SEPARATOR, array(trim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
+                $src_path = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
                 $contents = file_get_contents($src_path);
     
                 if (!$contents || (count($contents) == 0))
@@ -779,7 +782,7 @@ Content-Type: image/jpeg
 $contents
 IMGDATA;
 
-                $img_data .="\r\n";
+                $img_data .= PHP_EOL;
             }
         }
     
@@ -792,7 +795,7 @@ IMGDATA;
         $output = $dom_clone->saveHTML();
         $date = date("Y-m-d H:i:s");
     
-        $BODY=<<<POSTDATA
+        $postdata = <<<POSTDATA
 --{$boundary}
 Content-Disposition: form-data; name="Presentation"
 Content-Type: application/xhtml+xml
@@ -807,10 +810,11 @@ Content-Type: application/xhtml+xml
 </html>
 $img_data
 --{$boundary}--
+
 POSTDATA;
     
-        error_log(print_r($BODY, true));
-        return $BODY;
+        error_log(print_r($postdata, true));
+        return $postdata;
     }
     
     public function create_page_from_postdata($section_id, $postdata, $boundary) {
@@ -820,11 +824,11 @@ POSTDATA;
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type: multipart/form-data; boundary=$boundary\r\n".
-                "Authorization: Bearer ".$encodedAccessToken));
-        curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-        curl_setopt($ch,CURLOPT_POST,true);
-        curl_setopt($ch,CURLOPT_POSTFIELDS,$postdata);
+        curl_setopt($ch,CURLOPT_HTTPHEADER, array("Content-Type: multipart/form-data; boundary=$boundary" . PHP_EOL .
+                "Authorization: Bearer " . $encodedAccessToken));
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch,CURLOPT_POST, true);
+        curl_setopt($ch,CURLOPT_POSTFIELDS, $postdata);
         
         $raw_response = curl_exec($ch);
         $info = curl_getinfo($ch);
@@ -832,11 +836,11 @@ POSTDATA;
         
         if ($info['http_code'] == 201)
         {
-            $response_without_header = substr($raw_response,$info['header_size']);
+            $response_without_header = substr($raw_response, $info['header_size']);
             $response = json_decode($response_without_header);
             return $response;
         } else {
-            error_log('onenote_api::create_page_from_postdata failed: ' . print_r($info, true));
+            error_log('onenote_api::create_page_from_postdata failed: ' . print_r($info, true) . ' Raw response: ' . $raw_response);
         }
         
         return null;
@@ -850,13 +854,15 @@ POSTDATA;
     }
     
     public function create_temp_folder() {
-        $temp_folder = join(DIRECTORY_SEPARATOR, array(trim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
+        $temp_folder = join(DIRECTORY_SEPARATOR, array(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
         if (file_exists($temp_folder)) {
             fulldelete($temp_folder);
         }
     
-        if (!mkdir($temp_folder, 0777, true))
+        if (!mkdir($temp_folder, 0777, true)) {
+            echo('Failed to create temp folder: ' . $temp_folder);
             return null;
+        }
     
         return $temp_folder;
     }
