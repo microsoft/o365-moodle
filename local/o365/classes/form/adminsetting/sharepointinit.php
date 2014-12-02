@@ -36,7 +36,7 @@ class sharepointinit extends \admin_setting {
     /**
      * Config text constructor
      *
-     * @param string $name unique ascii name, either 'mysetting' for settings that in config, or 'myplugin/mysetting' for ones in config_plugins.
+     * @param string $name unique ascii name.
      * @param string $visiblename localised
      * @param string $description long localised info
      * @param string $defaultsetting
@@ -87,7 +87,7 @@ class sharepointinit extends \admin_setting {
                     $idtoken = \auth_oidc\jwt::instance_from_encoded($tokens['idtoken']);
                     $setuser = $idtoken->claim('upn');
                 } catch (\Exception $e) {
-
+                    // There is a check below for an empty $setuser.
                 }
             }
         }

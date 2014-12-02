@@ -27,7 +27,7 @@ namespace local_o365\event;
  * Event fired whenever a user subscribes to a calendar.
  */
 class calendar_subscribed extends \core\event\base {
-	/**
+    /**
      * Return localised event name.
      *
      * @return string

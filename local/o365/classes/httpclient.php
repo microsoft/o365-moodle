@@ -52,7 +52,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
             $options['CURLOPT_POSTFIELDS'] = $this->_tmp_file_post_params;
             unset($this->_tmp_file_post_params);
         } else {
-            // $params is the raw post data
+            // Var $params is the raw post data.
             $options['CURLOPT_POSTFIELDS'] = $params;
         }
         return $this->request($url, $options);
@@ -81,7 +81,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
             $options['CURLOPT_POSTFIELDS'] = $this->_tmp_file_post_params;
             unset($this->_tmp_file_post_params);
         } else {
-            // $params is the raw post data
+            // Var $params is the raw post data.
             $options['CURLOPT_POSTFIELDS'] = $params;
         }
         return $this->request($url, $options);

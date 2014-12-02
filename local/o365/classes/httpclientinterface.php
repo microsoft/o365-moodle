@@ -27,35 +27,35 @@ namespace local_o365;
  * HTTP Client Interface.
  */
 interface httpclientinterface {
-	/**
-     * HTTP POST method
-     *
-     * @param string $url
-     * @param array|string $params
-     * @param array $options
-     * @return bool
-     */
-	public function post($url, $params = '', $options = array());
+     /**
+      * HTTP POST method
+      *
+      * @param string $url
+      * @param array|string $params
+      * @param array $options
+      * @return bool
+      */
+     public function post($url, $params = '', $options = array());
 
-	/**
-     * HTTP GET method
-     *
-     * @param string $url
-     * @param array $params
-     * @param array $options
-     * @return bool
-     */
-	public function get($url, $params = array(), $options = array());
+     /**
+      * HTTP GET method
+      *
+      * @param string $url
+      * @param array $params
+      * @param array $options
+      * @return bool
+      */
+     public function get($url, $params = array(), $options = array());
 
-	/**
-     * HTTP PATCH method
-     *
-     * @param string $url
-     * @param array|string $params
-     * @param array $options
-     * @return bool
-     */
-	public function patch($url, $params = '', $options = array());
+     /**
+      * HTTP PATCH method
+      *
+      * @param string $url
+      * @param array|string $params
+      * @param array $options
+      * @return bool
+      */
+     public function patch($url, $params = '', $options = array());
 
     /**
      * HTTP DELETE method
@@ -65,17 +65,17 @@ interface httpclientinterface {
      * @param array $options
      * @return bool
      */
-	public function delete($url, $param = array(), $options = array());
+     public function delete($url, $param = array(), $options = array());
 
     /**
      * Set HTTP Request Header
      *
      * @param array $header
      */
-	public function setHeader($header);
+     public function setHeader($header);
 
-	/**
-     * Resets the HTTP Request headers (to prepare for the new request)
-     */
+     /**
+      * Resets the HTTP Request headers (to prepare for the new request)
+      */
     public function resetHeader();
 }

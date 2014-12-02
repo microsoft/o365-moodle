@@ -49,9 +49,9 @@ class cron {
 
             if ($opdata['caltype'] === 'site') {
                 $syncsite = true;
-            } elseif ($opdata['caltype'] === 'user') {
+            } else if ($opdata['caltype'] === 'user') {
                 $syncusers[$opdata['userid']] = $opdata['userid'];
-            } elseif ($opdata['caltype'] === 'course') {
+            } else if ($opdata['caltype'] === 'course') {
                 $synccourses[$opdata['caltypeid']] = $opdata['caltypeid'];
             }
 
@@ -59,7 +59,8 @@ class cron {
         }
 
         $oidcconfig = get_config('auth_oidc');
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
+                $oidcconfig->tokenendpoint);
         $httpclient = new \local_o365\httpclient();
         $outlookresource = \local_o365\rest\calendar::get_resource();
 
@@ -85,7 +86,8 @@ class cron {
                                WHERE ev.courseid = ? AND tok.resource = ?';
             $siteevents = $DB->get_recordset_sql($siteeventssql, [SITEID, $outlookresource]);
             foreach ($siteevents as $siteevent) {
-                $token = new \local_o365\oauth2\token($siteevent->token, $siteevent->tokenexpiry, $siteevent->refreshtoken, $siteevent->tokenscope, $siteevent->tokenresource, $clientdata, $httpclient);
+                $token = new \local_o365\oauth2\token($siteevent->token, $siteevent->tokenexpiry, $siteevent->refreshtoken,
+                        $siteevent->tokenscope, $siteevent->tokenresource, $clientdata, $httpclient);
                 $cal = new \local_o365\rest\calendar($token, $httpclient);
                 $cal->update_event($siteevent->outlookeventid, ['attendees' => $siteeventssubscribers]);
             }
@@ -121,14 +123,15 @@ class cron {
                     // Subscribed. Perform sync on unsynced events.
                     if (empty($userevent->outlookeventid)) {
                         // Event not synced. Create o365 event.
-                        $token = new \local_o365\oauth2\token($userevent->token, $userevent->tokenexpiry, $userevent->refreshtoken, $userevent->tokenscope, $userevent->tokenresource, $clientdata, $httpclient);
+                        $token = new \local_o365\oauth2\token($userevent->token, $userevent->tokenexpiry, $userevent->refreshtoken,
+                                $userevent->tokenscope, $userevent->tokenresource, $clientdata, $httpclient);
                         $cal = new \local_o365\rest\calendar($token, $httpclient);
                         $subject = $userevent->name;
                         $body = $userevent->description;
                         $starttime = $userevent->timestart;
                         $endtime = $userevent->timestart + $userevent->timeduration;
                         $response = $cal->create_event($subject, $body, $starttime, $endtime, []);
-                        // Store ID
+                        // Store ID.
                         if (!empty($response) && is_array($response)) {
                             if (isset($response['Id'])) {
                                 $idmaprec = [
@@ -145,7 +148,8 @@ class cron {
                     // Not subscribed. Delete synced events.
                     if (!empty($userevent->outlookeventid)) {
                         // Event synced. Deleted o365 event.
-                        $token = new \local_o365\oauth2\token($userevent->token, $userevent->tokenexpiry, $userevent->refreshtoken, $userevent->tokenscope, $userevent->tokenresource, $clientdata, $httpclient);
+                        $token = new \local_o365\oauth2\token($userevent->token, $userevent->tokenexpiry, $userevent->refreshtoken,
+                                $userevent->tokenscope, $userevent->tokenresource, $clientdata, $httpclient);
                         $cal = new \local_o365\rest\calendar($token, $httpclient);
                         $response = $cal->delete_event($userevent->outlookeventid);
                         $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $userevent->outlookeventid]);
@@ -179,7 +183,8 @@ class cron {
                                  WHERE ev.courseid = ? AND tok.resource = ?';
             $courseevents = $DB->get_recordset_sql($courseeventssql, [$courseid, $outlookresource]);
             foreach ($courseevents as $courseevent) {
-                $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry, $courseevent->refreshtoken, $courseevent->tokenscope, $courseevent->tokenresource, $clientdata, $httpclient);
+                $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry, $courseevent->refreshtoken,
+                        $courseevent->tokenscope, $courseevent->tokenresource, $clientdata, $httpclient);
                 $cal = new \local_o365\rest\calendar($token, $httpclient);
                 $cal->update_event($courseevent->outlookeventid, ['attendees' => $courseeventssubscribers]);
             }

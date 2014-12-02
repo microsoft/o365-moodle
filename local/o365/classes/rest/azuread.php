@@ -32,7 +32,7 @@ class azuread extends \local_o365\rest\o365api {
      *
      * @return bool Whether the API client is configured.
      */
-	public static function is_configured() {
+    public static function is_configured() {
         $config = get_config('local_o365');
         return (!empty($config->tenant)) ? true : false;
     }
@@ -43,7 +43,7 @@ class azuread extends \local_o365\rest\o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-    	return 'https://graph.windows.net';
+        return 'https://graph.windows.net';
     }
 
     /**
@@ -53,8 +53,8 @@ class azuread extends \local_o365\rest\o365api {
      * @return string The transformed full request URI.
      */
     protected function transform_full_request_uri($requesturi) {
-    	$requesturi .= (strpos($requesturi, '?') === false) ? '?' : '&';
-    	$requesturi .= 'api-version=2013-04-05';
+        $requesturi .= (strpos($requesturi, '?') === false) ? '?' : '&';
+        $requesturi .= 'api-version=2013-04-05';
         return $requesturi;
     }
 
@@ -64,9 +64,9 @@ class azuread extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-    	$config = get_config('local_o365');
+        $config = get_config('local_o365');
         if (!empty($config->tenant)) {
-    		return static::get_resource().'/'.$config->tenant.'.onmicrosoft.com';
+            return static::get_resource().'/'.$config->tenant.'.onmicrosoft.com';
         } else {
             return false;
         }

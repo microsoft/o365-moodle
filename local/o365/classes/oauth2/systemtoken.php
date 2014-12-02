@@ -27,73 +27,73 @@ namespace local_o365\oauth2;
  * Represents an oauth2 token.
  */
 class systemtoken extends \local_o365\oauth2\token {
-	public static function instance($resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
-		$tokens = get_config('local_o365', 'systemtokens');
-		$tokens = unserialize($tokens);
-		if (isset($tokens[$resource])) {
-			$token = new systemtoken($tokens[$resource]['token'], $tokens[$resource]['expiry'], $tokens[$resource]['refreshtoken'],
-					$tokens[$resource]['scope'], $tokens[$resource]['resource'], $clientdata, $httpclient);
-			return $token;
-		}
-		return null;
-	}
+    public static function instance($resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+        $tokens = get_config('local_o365', 'systemtokens');
+        $tokens = unserialize($tokens);
+        if (isset($tokens[$resource])) {
+            $token = new systemtoken($tokens[$resource]['token'], $tokens[$resource]['expiry'], $tokens[$resource]['refreshtoken'],
+                    $tokens[$resource]['scope'], $tokens[$resource]['resource'], $clientdata, $httpclient);
+            return $token;
+        }
+        return null;
+    }
 
-	/**
-	 * Get stored token for a user and resourse.
-	 *
-	 * @param int $userid The ID of the user to get the token for.
-	 * @param string $resource The resource to get the token for.
-	 * @return array Array of token data.
-	 */
-	protected function get_stored_token($userid, $resource) {
-		$tokens = get_config('local_o365', 'systemtokens');
-		$tokens = unserialize($tokens);
-		return (isset($tokens[$resource])) ? $tokens[$resource] : false;
-	}
+    /**
+     * Get stored token for a user and resourse.
+     *
+     * @param int $userid The ID of the user to get the token for.
+     * @param string $resource The resource to get the token for.
+     * @return array Array of token data.
+     */
+    protected function get_stored_token($userid, $resource) {
+        $tokens = get_config('local_o365', 'systemtokens');
+        $tokens = unserialize($tokens);
+        return (isset($tokens[$resource])) ? $tokens[$resource] : false;
+    }
 
-	/**
-	 * Update the stored token.
-	 *
-	 * @param array $existingtoken Array of existing token data.
-	 * @param array $newtoken Array of new token data.
-	 * @return bool Success/Failure.
-	 */
-	protected function update_stored_token($existingtoken, $newtoken) {
-		global $DB;
-		$tokens = get_config('local_o365', 'systemtokens');
-		$tokens = unserialize($tokens);
-		if (isset($tokens[$existingtoken['resource']])) {
-			unset($tokens[$existingtoken['resource']]);
-		}
-		$tokens[$newtoken['resource']] = $newtoken;
-		$tokens = serialize($tokens);
-		set_config('systemtokens', $tokens, 'local_o365');
-		return true;
-	}
+    /**
+     * Update the stored token.
+     *
+     * @param array $existingtoken Array of existing token data.
+     * @param array $newtoken Array of new token data.
+     * @return bool Success/Failure.
+     */
+    protected function update_stored_token($existingtoken, $newtoken) {
+        global $DB;
+        $tokens = get_config('local_o365', 'systemtokens');
+        $tokens = unserialize($tokens);
+        if (isset($tokens[$existingtoken['resource']])) {
+            unset($tokens[$existingtoken['resource']]);
+        }
+        $tokens[$newtoken['resource']] = $newtoken;
+        $tokens = serialize($tokens);
+        set_config('systemtokens', $tokens, 'local_o365');
+        return true;
+    }
 
-	/**
-	 * Store a new system token.
-	 *
-	 * @param string $token Token access token.
-	 * @param int $expiry Token expiry timestamp.
-	 * @param string $refreshtoken Token refresh token.
-	 * @param string $scope Token scope.
-	 * @param string $resource Token resource.
-	 * @return array Array of new token information.
-	 */
-	public static function store_new_token($token, $expiry, $refreshtoken, $scope, $resource) {
-		$tokens = get_config('local_o365', 'systemtokens');
-		$tokens = unserialize($tokens);
-		$newtoken = [
-			'token' => $token,
-			'expiry' => $expiry,
-			'refreshtoken' => $refreshtoken,
-			'scope' => $scope,
-			'resource' => $resource,
-		];
-		$tokens[$resource] = $newtoken;
-		$tokens = serialize($tokens);
-		set_config('systemtokens', $tokens, 'local_o365');
-		return $newtoken;
-	}
+    /**
+     * Store a new system token.
+     *
+     * @param string $token Token access token.
+     * @param int $expiry Token expiry timestamp.
+     * @param string $refreshtoken Token refresh token.
+     * @param string $scope Token scope.
+     * @param string $resource Token resource.
+     * @return array Array of new token information.
+     */
+    public static function store_new_token($token, $expiry, $refreshtoken, $scope, $resource) {
+        $tokens = get_config('local_o365', 'systemtokens');
+        $tokens = unserialize($tokens);
+        $newtoken = [
+            'token' => $token,
+            'expiry' => $expiry,
+            'refreshtoken' => $refreshtoken,
+            'scope' => $scope,
+            'resource' => $resource,
+        ];
+        $tokens[$resource] = $newtoken;
+        $tokens = serialize($tokens);
+        set_config('systemtokens', $tokens, 'local_o365');
+        return $newtoken;
+    }
 }
