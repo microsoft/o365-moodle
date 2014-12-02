@@ -159,7 +159,7 @@ class repository_office365 extends \repository {
                 // Path is in my files.
                 list($list, $breadcrumb) = $this->get_listing_my(substr($path, 3));
             }
-        } elseif (strpos($path, '/courses/') === 0) {
+        } else if (strpos($path, '/courses/') === 0) {
             if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
                 // Path is in course files.
                 list($list, $breadcrumb) = $this->get_listing_course(substr($path, 8));
@@ -295,7 +295,7 @@ class repository_office365 extends \repository {
                         'datecreated' => strtotime($content['dateTimeCreated']),
                         'children' => [],
                     ];
-                } elseif ($content['type'] === 'File') {
+                } else if ($content['type'] === 'File') {
                     $list[] = [
                         'title' => $content['name'],
                         'date' => strtotime($content['dateTimeCreated']),
@@ -338,7 +338,7 @@ class repository_office365 extends \repository {
 
         if ($fileid['source'] === 'onedrive') {
             $sourceclient = $this->get_onedrive_apiclient();
-        } elseif ($fileid['source'] === 'sharepoint') {
+        } else if ($fileid['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
             $sourceclient->set_site('moodle');
         }
