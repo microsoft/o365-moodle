@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/o365/db" VERSION="20141030" COMMENT="XMLDB file for Moodle local/o365 plugin"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_o365_cronqueue" COMMENT="Queued events for the next cron run">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="operation" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the operation to be performed"/>
+        <FIELD NAME="data" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="the operation data"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the time the operation was created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="operation" UNIQUE="false" FIELDS="operation"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_o365_calidmap" COMMENT="Maps local event ids to o365 event ids">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="eventid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle event id"/>
+        <FIELD NAME="outlookeventid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="outlook event id"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="event" UNIQUE="false" FIELDS="eventid"/>
+        <INDEX NAME="oevent" UNIQUE="false" FIELDS="outlookeventid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_o365_calsub" COMMENT="Tracks calendar subscriptions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
+        <FIELD NAME="caltype" TYPE="char" LENGTH="31" NOTNULL="true" SEQUENCE="false" COMMENT="the type of calendar - site,user,course,group"/>
+        <FIELD NAME="caltypeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the id of the entity the calendar is for, i.e. courseid"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time subscription created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user" UNIQUE="false" FIELDS="user_id"/>
+        <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id,caltype,caltypeid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_o365_token" COMMENT="Stores tokens.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
+        <FIELD NAME="scope" TYPE="char" LENGTH="63" NOTNULL="true" SEQUENCE="false" COMMENT="token scope"/>
+        <FIELD NAME="resource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
+        <FIELD NAME="token" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token"/>
+        <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="token expiry"/>
+        <FIELD NAME="refreshtoken" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="refresh token"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user" UNIQUE="false" FIELDS="user_id"/>
+        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id,resource,scope"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
