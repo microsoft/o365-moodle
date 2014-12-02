@@ -27,7 +27,7 @@ namespace local_o365\event;
  * Event fired whenever a user unsubscribes from a calendar.
  */
 class calendar_unsubscribed extends \core\event\base {
-	/**
+    /**
      * Return localised event name.
      *
      * @return string

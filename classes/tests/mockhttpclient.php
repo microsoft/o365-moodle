@@ -27,26 +27,26 @@ namespace local_o365\tests;
  * A mock HTTP client allowing set responses.
  */
 class mockhttpclient extends \local_o365\httpclient {
-	/** @var string The stored set response. */
-	protected $mockresponse = '';
+    /** @var string The stored set response. */
+    protected $mockresponse = '';
 
-	/**
-	 * Set a response to return.
-	 *
-	 * @param string $response The response to return.
-	 */
-	public function set_response($response) {
-		$this->mockresponse = $response;
-	}
+    /**
+     * Set a response to return.
+     *
+     * @param string $response The response to return.
+     */
+    public function set_response($response) {
+        $this->mockresponse = $response;
+    }
 
-	/**
-	 * Return the set response instead of making the actual HTTP request.
-	 *
-	 * @param string $url The request URL
-	 * @param array $options Additional curl options.
-	 * @return string The set response.
-	 */
-	protected function request($url, $options = array()) {
-		return $this->mockresponse;
-	}
+    /**
+     * Return the set response instead of making the actual HTTP request.
+     *
+     * @param string $url The request URL
+     * @param array $options Additional curl options.
+     * @return string The set response.
+     */
+    protected function request($url, $options = array()) {
+        return $this->mockresponse;
+    }
 }

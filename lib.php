@@ -22,8 +22,8 @@
  */
 
 function local_o365_cron() {
-	mtrace('O365 Cron is starting...');
-	$cron = new \local_o365\cron();
-	$cron->run();
-	mtrace('O365 Cron finished.');
+    mtrace('O365 Cron is starting...');
+    $cron = new \local_o365\cron();
+    $cron->run();
+    mtrace('O365 Cron finished.');
 }

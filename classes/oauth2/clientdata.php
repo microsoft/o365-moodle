@@ -27,65 +27,65 @@ namespace local_o365\oauth2;
  * Class representing oauth2 client data.
  */
 class clientdata {
-	/** @var string The registerd client ID. */
-	protected $clientid;
+    /** @var string The registerd client ID. */
+    protected $clientid;
 
-	/** @var string The registered client secreet. */
-	protected $clientsecret;
+    /** @var string The registered client secreet. */
+    protected $clientsecret;
 
-	/** @var string The authorization endpoint URI. */
-	protected $authendpoint;
+    /** @var string The authorization endpoint URI. */
+    protected $authendpoint;
 
-	/** @var string The token endpoint URI. */
-	protected $tokenendpoint;
+    /** @var string The token endpoint URI. */
+    protected $tokenendpoint;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param string $clientid The registerd client ID.
-	 * @param string $clientsecret The registered client secreet.
-	 * @param string $authendpoint The authorization endpoint URI.
-	 * @param string $tokenendpoint The token endpoint URI.
-	 */
-	public function __construct($clientid, $clientsecret, $authendpoint, $tokenendpoint) {
-		$this->clientid = $clientid;
-		$this->clientsecret = $clientsecret;
-		$this->authendpoint = $authendpoint;
-		$this->tokenendpoint = $tokenendpoint;
-	}
+    /**
+     * Constructor.
+     *
+     * @param string $clientid The registerd client ID.
+     * @param string $clientsecret The registered client secreet.
+     * @param string $authendpoint The authorization endpoint URI.
+     * @param string $tokenendpoint The token endpoint URI.
+     */
+    public function __construct($clientid, $clientsecret, $authendpoint, $tokenendpoint) {
+        $this->clientid = $clientid;
+        $this->clientsecret = $clientsecret;
+        $this->authendpoint = $authendpoint;
+        $this->tokenendpoint = $tokenendpoint;
+    }
 
-	/**
-	 * Get the registerd client ID.
-	 *
-	 * @return string The registerd client ID.
-	 */
-	public function get_clientid() {
-		return $this->clientid;
-	}
+    /**
+     * Get the registerd client ID.
+     *
+     * @return string The registerd client ID.
+     */
+    public function get_clientid() {
+        return $this->clientid;
+    }
 
-	/**
-	 * Get the registered client secreet.
-	 *
-	 * @return string The registered client secreet.
-	 */
-	public function get_clientsecret() {
-		return $this->clientsecret;
-	}
-	/**
-	 * Get the authorization endpoint URI.
-	 *
-	 * @return string The authorization endpoint URI.
-	 */
-	public function get_authendpoint() {
-		return $this->authendpoint;
-	}
+    /**
+     * Get the registered client secreet.
+     *
+     * @return string The registered client secreet.
+     */
+    public function get_clientsecret() {
+        return $this->clientsecret;
+    }
+    /**
+     * Get the authorization endpoint URI.
+     *
+     * @return string The authorization endpoint URI.
+     */
+    public function get_authendpoint() {
+        return $this->authendpoint;
+    }
 
-	/**
-	 * Get the token endpoint URI.
-	 *
-	 * @return string The token endpoint URI.
-	 */
-	public function get_tokenendpoint() {
-		return $this->tokenendpoint;
-	}
+    /**
+     * Get the token endpoint URI.
+     *
+     * @return string The token endpoint URI.
+     */
+    public function get_tokenendpoint() {
+        return $this->tokenendpoint;
+    }
 }

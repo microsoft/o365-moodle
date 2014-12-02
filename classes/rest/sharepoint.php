@@ -48,7 +48,7 @@ class sharepoint extends \local_o365\rest\o365api {
     public static function get_resource() {
         $config = get_config('local_o365');
         if (!empty($config->tenant)) {
-        	return 'https://'.$config->tenant.'.sharepoint.com';
+            return 'https://'.$config->tenant.'.sharepoint.com';
         } else {
             return false;
         }

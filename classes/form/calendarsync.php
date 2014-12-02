@@ -25,31 +25,31 @@ namespace local_o365\form;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once ($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot.'/lib/formslib.php');
 
 /**
  * o365 Calendar Sync Form.
  */
 class calendarsync extends \moodleform {
-	/**
-	 * Form definition.
-	 */
-	protected function definition() {
-		global $USER;
+    /**
+     * Form definition.
+     */
+    protected function definition() {
+        global $USER;
 
-		$mform =& $this->_form;
+        $mform =& $this->_form;
 
-		$usercourses = enrol_get_my_courses(['id','fullname']);
+        $usercourses = enrol_get_my_courses(['id', 'fullname']);
 
-		$mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
-		$mform->addElement('html', \html_writer::span(get_string('ucp_calsync_desc', 'local_o365')));
+        $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
+        $mform->addElement('html', \html_writer::span(get_string('ucp_calsync_desc', 'local_o365')));
 
-		$mform->addElement('advcheckbox', 'sitecal', '', 'Sitewide Calendar');
-		$mform->addElement('advcheckbox', 'usercal', '', 'Personal (User) Calendar');
-		foreach ($usercourses as $courseid => $course) {
-			$mform->addElement('advcheckbox', 'coursecal['.$course->id.']', '', $course->fullname);
-		}
+        $mform->addElement('advcheckbox', 'sitecal', '', 'Sitewide Calendar');
+        $mform->addElement('advcheckbox', 'usercal', '', 'Personal (User) Calendar');
+        foreach ($usercourses as $courseid => $course) {
+            $mform->addElement('advcheckbox', 'coursecal['.$course->id.']', '', $course->fullname);
+        }
 
-		$this->add_action_buttons();
-	}
+        $this->add_action_buttons();
+    }
 }
