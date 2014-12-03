@@ -682,7 +682,7 @@ class onenote_api {
             }
         }
                 
-            // handle <br/> problem
+        // handle <br/> problem
         $br_nodes = $xpath->query('//br');
         if ($br_nodes) {
             $count = $br_nodes->length;
@@ -707,7 +707,8 @@ class onenote_api {
         
         // process images
         $src = $xpath->query("//@src");
-        $img_data = "";
+        $img_data = '';
+        $eol = "\r\n";
         
         if ($src) {
             foreach ($src as $s) {
@@ -723,15 +724,10 @@ class onenote_api {
     
                 $s->nodeValue = "name:" . $path_parts['filename'];
     
-                $img_data .= <<<IMGDATA
---{$boundary}
-Content-Disposition: form-data; name="$path_parts[filename]"; filename="$contents[filename]"
-Content-Type: image/jpeg
-
-$contents[content]
-IMGDATA;
-
-                $img_data .= PHP_EOL;
+                $img_data .= '--' . $boundary . $eol;
+                $img_data .= 'Content-Disposition: form-data; name="' . $path_parts['filename'] . '"; filename="' . $contents['filename'] . '"' . $eol;
+                $img_data .= 'Content-Type: image/jpeg' . $eol .$eol;
+                $img_data .= $contents['content'] . $eol;
             }
         }
     
@@ -742,25 +738,19 @@ IMGDATA;
         }
     
         $output = $dom_clone->saveHTML();
+
         $date = date("Y-m-d H:i:s");
-    
-        $postdata = <<<POSTDATA
---{$boundary}
-Content-Disposition: form-data; name="Presentation"
-Content-Type: application/xhtml+xml
 
-<?xml version="1.0" encoding="utf-8" ?>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">
-<head>
-<title>$title</title>
-<meta name="created" value="$date"/>
-</head>
-<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">$output</body>
-</html>
-$img_data
---{$boundary}--
-
-POSTDATA;
+        $postdata = '';
+        $postdata .= '--' . $boundary . $eol;
+        $postdata .= 'Content-Disposition: form-data; name="Presentation"' . $eol;
+        $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
+        $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
+        $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '</html>' . $eol;
+        $postdata .= $img_data . $eol;
+        $postdata .= '--' . $boundary . '--' . $eol . $eol;
 
         error_log(print_r($postdata, true));
         return $postdata;
@@ -776,7 +766,8 @@ POSTDATA;
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         $img_nodes = $xpath->query("//img");
-        $img_data = "";
+        $img_data = '';
+        $eol = "\r\n";
         
         if ($img_nodes) {
             foreach ($img_nodes as $img_node) {
@@ -796,15 +787,10 @@ POSTDATA;
                 if ($img_node->attributes->getNamedItem("data-fullres-src"))
                     $img_node->removeAttribute("data-fullres-src");
     
-                $img_data .= <<<IMGDATA
---{$boundary}
-Content-Disposition: form-data; name="$src_filename"; filename="$src_filename"
-Content-Type: image/jpeg
-
-$contents
-IMGDATA;
-
-                $img_data .= PHP_EOL;
+                $img_data .= '--' . $boundary . $eol;
+                $img_data .= 'Content-Disposition: form-data; name="' . $src_filename . '"; filename="' . $src_filename . '"' . $eol;
+                $img_data .= 'Content-Type: image/jpeg' . $eol .$eol;
+                $img_data .= $contents . $eol;
             }
         }
     
@@ -817,24 +803,17 @@ IMGDATA;
         $output = $dom_clone->saveHTML();
         $date = date("Y-m-d H:i:s");
     
-        $postdata = <<<POSTDATA
---{$boundary}
-Content-Disposition: form-data; name="Presentation"
-Content-Type: application/xhtml+xml
-
-<?xml version="1.0" encoding="utf-8" ?>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">
-<head>
-<title>$title</title>
-<meta name="created" value="$date"/>
-</head>
-<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="14px" color="rgb(3,3,3)">$output</font></body>
-</html>
-$img_data
---{$boundary}--
-
-POSTDATA;
-    
+        $postdata = '';
+        $postdata .= '--' . $boundary . $eol;
+        $postdata .= 'Content-Disposition: form-data; name="Presentation"' . $eol;
+        $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
+        $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
+        $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '</html>' . $eol;
+        $postdata .= $img_data . $eol;
+        $postdata .= '--' . $boundary . '--' . $eol . $eol;
+        
         error_log(print_r($postdata, true));
         return $postdata;
     }
