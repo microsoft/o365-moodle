@@ -772,6 +772,10 @@ class onenote_api {
         if ($img_nodes) {
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
+                if (!$src_node)
+                    continue;
+                
+                // echo htmlentities($dom->saveHTML($src_node)); echo "\r\n<br/>";
                 $src_relpath = urldecode($src_node->nodeValue);
                 $src_filename = substr($src_relpath, strlen('./page_files/'));
                 $src_path = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
