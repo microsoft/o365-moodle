@@ -12,7 +12,7 @@
     font-size: 14px;
 }
 
-.onenote_linkbutton:active, .onenote_linkbutton:hover
+.onenote_linkbutton:active, .onenote_linkbutton:hover, .onenote_linkbutton:visited
 {
     text-decoration: none !important;
     color: #fff;

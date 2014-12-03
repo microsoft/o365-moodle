@@ -13,7 +13,8 @@
     text-decoration: none;
 }
 
-.msaccount_linkbutton:active, .msaccount_linkbutton:hover
+.msaccount_linkbutton:active, .msaccount_linkbutton:hover, .msaccount_linkbutton:visited
 {
 	text-decoration: none !important;
+    color: #003D5C; 
 }
