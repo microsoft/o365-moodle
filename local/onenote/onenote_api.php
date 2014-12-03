@@ -645,6 +645,7 @@ class onenote_api {
     
     public function create_postdata($title, $body_content, $context_id, $boundary) {
         $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
         $dom->loadHTML($body_content);
     
         $xpath = new DOMXPath($dom);
