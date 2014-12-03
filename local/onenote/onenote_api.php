@@ -114,6 +114,9 @@ class onenote_api {
             $i = 1;
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
+                if (!$src_node)
+                    continue;
+                
                 $response = $this->get_msaccount_api()->myget($src_node->nodeValue);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
