@@ -41,3 +41,4 @@ $string['signinhelp2'] = 'Click on the button above to sign in to OneNote if you
 $string['viewfeedback'] = 'View feedback';
 $string['feedbackdownloadfailed'] = 'Could not download the feedback from OneNote. Please try again.';
 $string['notsignedin'] = 'Please sign in to OneNote before attempting to save your changes.';
+$string['feedbacknotstarted'] = 'Please add your feedback using OneNote and then save your changes.';

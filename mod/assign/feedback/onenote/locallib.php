@@ -201,6 +201,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         
         // get the OneNote page id corresponding to the teacher's feedback for this submission
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
+        if (!$record || !$record->feedback_teacher_page_id) {
+            $this->set_error(get_string('feedbacknotstarted', 'assignfeedback_onenote'));
+            return false;
+        }
+        
         $onenote_api = onenote_api::getInstance();
         $temp_folder = $onenote_api->create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
