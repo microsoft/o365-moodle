@@ -98,6 +98,9 @@ class onenote_api {
         $doc = new DOMDocument();
         $doc->loadHTML($response);
         $xpath = new DOMXPath($doc);
+        
+        $this->handle_garbage_chars($xpath);
+        
         $img_nodes = $xpath->query("//img");
         
         if ($img_nodes && (count($img_nodes) > 0)) {
@@ -722,6 +725,8 @@ class onenote_api {
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         
+        $this->handle_garbage_chars($xpath);
+        
         $img_nodes = $xpath->query("//img");
         $img_data = '';
         $eol = "\r\n";
@@ -866,6 +871,35 @@ class onenote_api {
                 
                 $p_node = new DOMElement('p', '&nbsp;');
                 $br_node->parentNode->replaceChild($p_node, $br_node);
+                $index++;
+            }
+        }    
+    }
+    
+    // HACKHACK: Remove this once OneNote fixes their bug.
+    // OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
+    // They get converted into garbage chars like ￼. Replace them with <p/> tags
+    private function handle_garbage_chars($xpath) {
+        $garbage_nodes = $xpath->query("//p[contains(., 'ï¿¼')]");
+        
+        if ($garbage_nodes) {
+            $count = $garbage_nodes->length;
+            $index = 0;
+            
+            while ($index < $count) {
+                $garbage_node = $garbage_nodes->item($index);
+                
+                // count the number of garbage char sequences in the node value
+                $nodeValue = $garbage_node->nodeValue;
+                $replaced = 0;
+                $nodeValue = str_replace("ï¿¼", "", $nodeValue, $replaced);
+                $garbage_node->nodeValue = $nodeValue;
+
+                while ($replaced-- > 0) {
+                    $p_node = new DOMElement('p', '&nbsp;');
+                    $garbage_node->parentNode->insertBefore($p_node, $garbage_node->nextSibling);
+                }
+
                 $index++;
             }
         }    
