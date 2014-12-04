@@ -114,6 +114,9 @@ class onenote_api {
             $i = 1;
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
+                if (!$src_node)
+                    continue;
+                
                 $response = $this->get_msaccount_api()->myget($src_node->nodeValue);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
@@ -612,7 +615,7 @@ class onenote_api {
         return null;
     }
 
-    public function get_file_contents($path,$filename,$context_id) {
+    private function get_file_contents($path,$filename,$context_id) {
         // get file contents
         $fs = get_file_storage();
     
@@ -643,71 +646,25 @@ class onenote_api {
         return $contents;
     }
     
-    public function create_postdata($title, $body_content, $context_id, $boundary) {
+    private function create_postdata($title, $body_content, $context_id, $boundary) {
         $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
         $dom->loadHTML($body_content);
-    
+        libxml_clear_errors();
+        
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         
-        // add p tags inside td tags so we can specify correct font
-        $td_nodes = $xpath->query('//td');
-        if ($td_nodes) {
-            $td_nodes_array = array();
-            
-            foreach ($td_nodes as $td_node) {
-                $td_nodes_array[] = $td_node;
-            }
-            
-            foreach ($td_nodes_array as $td_node) {
-                $child_nodes = $td_node->childNodes;
-                $child_nodes_array = array();
+        // add span tags inside td tags so we can specify correct font
+        $this->process_td_tags($xpath);
                 
-                foreach ($child_nodes as $child_node) {
-                    $child_nodes_array[] = $child_node;
-                }
-                
-                foreach ($child_nodes_array as $child_node) {
-                    $node_name = $child_node->nodeName;
-                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a') || ($node_name == 'i') || 
-                        ($node_name == 'span') || ($node_name == 'em') || ($node_name == 'strong')) {
-                        $p_node = $dom->createElement('span');
-                        $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
-                        $p_node->appendChild($td_node->removeChild($child_node));
-                        $td_node->insertBefore($p_node);
-                    } else {
-                        $td_node->insertBefore($td_node->removeChild($child_node));                        
-                    }
-                }
-            }
-        }
-                
-            // handle <br/> problem
-        $br_nodes = $xpath->query('//br');
-        if ($br_nodes) {
-            $count = $br_nodes->length;
-            $index = 0;
-            
-            while ($index < $count) {
-                $br_node = $br_nodes->item($index);
-                
-                // replace only the last br in a sequence with a p
-                $next_sibling = $br_node->nextSibling;
-                while($next_sibling && ($next_sibling->nodeName == 'br')) {
-                    $br_node = $next_sibling;
-                    $next_sibling = $br_node->nextSibling;    
-                    $index++;
-                }
-                
-                $p_node = new DOMElement('p');
-                $br_node->parentNode->replaceChild($p_node, $br_node);
-                $index++;
-            }
-        }
+        // handle <br/> problem
+        $this->process_br_tags($xpath);
         
         // process images
         $src = $xpath->query("//@src");
-        $img_data = "";
+        $img_data = '';
+        $eol = "\r\n";
         
         if ($src) {
             foreach ($src as $s) {
@@ -723,15 +680,10 @@ class onenote_api {
     
                 $s->nodeValue = "name:" . $path_parts['filename'];
     
-                $img_data .= <<<IMGDATA
---{$boundary}
-Content-Disposition: form-data; name="$path_parts[filename]"; filename="$contents[filename]"
-Content-Type: image/jpeg
-
-$contents[content]
-IMGDATA;
-
-                $img_data .= PHP_EOL;
+                $img_data .= '--' . $boundary . $eol;
+                $img_data .= 'Content-Disposition: form-data; name="' . $path_parts['filename'] . '"; filename="' . $contents['filename'] . '"' . $eol;
+                $img_data .= 'Content-Type: image/jpeg' . $eol .$eol;
+                $img_data .= $contents['content'] . $eol;
             }
         }
     
@@ -742,31 +694,25 @@ IMGDATA;
         }
     
         $output = $dom_clone->saveHTML();
+
         $date = date("Y-m-d H:i:s");
-    
-        $postdata = <<<POSTDATA
---{$boundary}
-Content-Disposition: form-data; name="Presentation"
-Content-Type: application/xhtml+xml
 
-<?xml version="1.0" encoding="utf-8" ?>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">
-<head>
-<title>$title</title>
-<meta name="created" value="$date"/>
-</head>
-<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">$output</body>
-</html>
-$img_data
---{$boundary}--
-
-POSTDATA;
+        $postdata = '';
+        $postdata .= '--' . $boundary . $eol;
+        $postdata .= 'Content-Disposition: form-data; name="Presentation"' . $eol;
+        $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
+        $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
+        $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '</html>' . $eol;
+        $postdata .= $img_data . $eol;
+        $postdata .= '--' . $boundary . '--' . $eol . $eol;
 
         error_log(print_r($postdata, true));
         return $postdata;
     }
     
-    public function create_postdata_from_folder($title, $folder, $boundary) {
+    private function create_postdata_from_folder($title, $folder, $boundary) {
         $dom = new DOMDocument();
         
         $page_file = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
@@ -775,12 +721,18 @@ POSTDATA;
         
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
+        
         $img_nodes = $xpath->query("//img");
-        $img_data = "";
+        $img_data = '';
+        $eol = "\r\n";
         
         if ($img_nodes) {
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
+                if (!$src_node)
+                    continue;
+                
+                // echo htmlentities($dom->saveHTML($src_node)); echo "\r\n<br/>";
                 $src_relpath = urldecode($src_node->nodeValue);
                 $src_filename = substr($src_relpath, strlen('./page_files/'));
                 $src_path = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
@@ -796,15 +748,10 @@ POSTDATA;
                 if ($img_node->attributes->getNamedItem("data-fullres-src"))
                     $img_node->removeAttribute("data-fullres-src");
     
-                $img_data .= <<<IMGDATA
---{$boundary}
-Content-Disposition: form-data; name="$src_filename"; filename="$src_filename"
-Content-Type: image/jpeg
-
-$contents
-IMGDATA;
-
-                $img_data .= PHP_EOL;
+                $img_data .= '--' . $boundary . $eol;
+                $img_data .= 'Content-Disposition: form-data; name="' . $src_filename . '"; filename="' . $src_filename . '"' . $eol;
+                $img_data .= 'Content-Type: image/jpeg' . $eol .$eol;
+                $img_data .= $contents . $eol;
             }
         }
     
@@ -817,29 +764,22 @@ IMGDATA;
         $output = $dom_clone->saveHTML();
         $date = date("Y-m-d H:i:s");
     
-        $postdata = <<<POSTDATA
---{$boundary}
-Content-Disposition: form-data; name="Presentation"
-Content-Type: application/xhtml+xml
-
-<?xml version="1.0" encoding="utf-8" ?>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">
-<head>
-<title>$title</title>
-<meta name="created" value="$date"/>
-</head>
-<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(3,3,3);"><font face="'Helvetica Neue',Helvetica,Arial,sans-serif;" size="14px" color="rgb(3,3,3)">$output</font></body>
-</html>
-$img_data
---{$boundary}--
-
-POSTDATA;
-    
+        $postdata = '';
+        $postdata .= '--' . $boundary . $eol;
+        $postdata .= 'Content-Disposition: form-data; name="Presentation"' . $eol;
+        $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
+        $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
+        $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '</html>' . $eol;
+        $postdata .= $img_data . $eol;
+        $postdata .= '--' . $boundary . '--' . $eol . $eol;
+        
         error_log(print_r($postdata, true));
         return $postdata;
     }
     
-    public function create_page_from_postdata($section_id, $postdata, $boundary) {
+    private function create_page_from_postdata($section_id, $postdata, $boundary) {
         $token = $this->get_msaccount_api()->get_accesstoken()->token;
         $url = self::API . '/sections/' . $section_id . '/pages';
         $encodedAccessToken = rawurlencode($token);
@@ -866,6 +806,69 @@ POSTDATA;
         }
         
         return null;
+    }
+    
+    // In order for us to be able to specify a font for the text inside a table, OneNote needs the text inside <td> tags to be 
+    // enclosed inside <span> tags with approp font
+    private function process_td_tags($xpath) {
+        $td_nodes = $xpath->query('//td');
+        if ($td_nodes) {
+            $td_nodes_array = array();
+        
+            foreach ($td_nodes as $td_node) {
+                $td_nodes_array[] = $td_node;
+            }
+        
+            foreach ($td_nodes_array as $td_node) {
+                $child_nodes = $td_node->childNodes;
+                $child_nodes_array = array();
+        
+                foreach ($child_nodes as $child_node) {
+                    $child_nodes_array[] = $child_node;
+                }
+        
+                foreach ($child_nodes_array as $child_node) {
+                    $node_name = $child_node->nodeName;
+                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a') || ($node_name == 'i') ||
+                        ($node_name == 'span') || ($node_name == 'em') || ($node_name == 'strong')) {
+                            $p_node = $dom->createElement('span');
+                            $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
+                            $p_node->appendChild($td_node->removeChild($child_node));
+                            $td_node->insertBefore($p_node);
+                        } else {
+                            $td_node->insertBefore($td_node->removeChild($child_node));
+                        }
+                }
+            }
+        }
+    }
+
+    // HACKHACK: Remove this once OneNote fixes their bug.
+    // OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
+    // The workaround is to replace the last <br/> in a sequence with a <p/>
+    private function process_br_tags($xpath) {
+        $br_nodes = $xpath->query('//br');
+        
+        if ($br_nodes) {
+            $count = $br_nodes->length;
+            $index = 0;
+            
+            while ($index < $count) {
+                $br_node = $br_nodes->item($index);
+                
+                // replace only the last br in a sequence with a p
+                $next_sibling = $br_node->nextSibling;
+                while($next_sibling && ($next_sibling->nodeName == 'br')) {
+                    $br_node = $next_sibling;
+                    $next_sibling = $br_node->nextSibling;    
+                    $index++;
+                }
+                
+                $p_node = new DOMElement('p', '&nbsp;');
+                $br_node->parentNode->replaceChild($p_node, $br_node);
+                $index++;
+            }
+        }    
     }
     
     // get the repo id for the onenote repo
