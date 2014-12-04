@@ -90,9 +90,9 @@ class repository_office365 extends \repository {
         if ($this->onedrive['configured'] === true && !empty($this->onedrive['token'])) {
             $clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
                     $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-            $token = new \local_o365\oauth2\token($this->onedrive['token']['token'], $this->onedrive['token']['expiry'],
-                    $this->onedrive['token']['refreshtoken'], $this->onedrive['token']['scope'],
-                    $this->onedrive['token']['resource'], $clientdata, $this->httpclient);
+            $token = new \local_o365\oauth2\token($this->onedrive['token']->token, $this->onedrive['token']->expiry,
+                    $this->onedrive['token']->refreshtoken, $this->onedrive['token']->scope,
+                    $this->onedrive['token']->resource, $clientdata, $this->httpclient);
             return new \local_o365\rest\onedrive($token, $this->httpclient);
         }
         return false;
@@ -148,7 +148,9 @@ class repository_office365 extends \repository {
             $context = \context_system::instance();
         }
         if ($context instanceof \context_course) {
-            $path = '/courses/'.$context->instanceid;
+            if (empty($path)) {
+                $path = '/courses/'.$context->instanceid;
+            }
         }
 
         $list = [];
@@ -255,7 +257,7 @@ class repository_office365 extends \repository {
         $contents = $onedrive->get_contents($path);
 
         // Generate listing.
-        $list = $ths->contents_api_response_to_list($contents, 'onedrive');
+        $list = $this->contents_api_response_to_list($contents, 'onedrive');
 
         // Generate path.
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => 'My Files', 'path' => '/my/']];
