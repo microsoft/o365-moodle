@@ -615,7 +615,7 @@ class onenote_api {
         return null;
     }
 
-    public function get_file_contents($path,$filename,$context_id) {
+    private function get_file_contents($path,$filename,$context_id) {
         // get file contents
         $fs = get_file_storage();
     
@@ -646,68 +646,20 @@ class onenote_api {
         return $contents;
     }
     
-    public function create_postdata($title, $body_content, $context_id, $boundary) {
+    private function create_postdata($title, $body_content, $context_id, $boundary) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
         $dom->loadHTML($body_content);
-    
+        libxml_clear_errors();
+        
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         
-        // add p tags inside td tags so we can specify correct font
-        $td_nodes = $xpath->query('//td');
-        if ($td_nodes) {
-            $td_nodes_array = array();
-            
-            foreach ($td_nodes as $td_node) {
-                $td_nodes_array[] = $td_node;
-            }
-            
-            foreach ($td_nodes_array as $td_node) {
-                $child_nodes = $td_node->childNodes;
-                $child_nodes_array = array();
-                
-                foreach ($child_nodes as $child_node) {
-                    $child_nodes_array[] = $child_node;
-                }
-                
-                foreach ($child_nodes_array as $child_node) {
-                    $node_name = $child_node->nodeName;
-                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a') || ($node_name == 'i') || 
-                        ($node_name == 'span') || ($node_name == 'em') || ($node_name == 'strong')) {
-                        $p_node = $dom->createElement('span');
-                        $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
-                        $p_node->appendChild($td_node->removeChild($child_node));
-                        $td_node->insertBefore($p_node);
-                    } else {
-                        $td_node->insertBefore($td_node->removeChild($child_node));                        
-                    }
-                }
-            }
-        }
+        // add span tags inside td tags so we can specify correct font
+        $this->process_td_tags($xpath);
                 
         // handle <br/> problem
-        $br_nodes = $xpath->query('//br');
-        if ($br_nodes) {
-            $count = $br_nodes->length;
-            $index = 0;
-            
-            while ($index < $count) {
-                $br_node = $br_nodes->item($index);
-                
-                // replace only the last br in a sequence with a p
-                $next_sibling = $br_node->nextSibling;
-                while($next_sibling && ($next_sibling->nodeName == 'br')) {
-                    $br_node = $next_sibling;
-                    $next_sibling = $br_node->nextSibling;    
-                    $index++;
-                }
-                
-                $p_node = new DOMElement('p');
-                $br_node->parentNode->replaceChild($p_node, $br_node);
-                $index++;
-            }
-        }
+        $this->process_br_tags($xpath);
         
         // process images
         $src = $xpath->query("//@src");
@@ -760,7 +712,7 @@ class onenote_api {
         return $postdata;
     }
     
-    public function create_postdata_from_folder($title, $folder, $boundary) {
+    private function create_postdata_from_folder($title, $folder, $boundary) {
         $dom = new DOMDocument();
         
         $page_file = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
@@ -769,6 +721,7 @@ class onenote_api {
         
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
+        
         $img_nodes = $xpath->query("//img");
         $img_data = '';
         $eol = "\r\n";
@@ -826,7 +779,7 @@ class onenote_api {
         return $postdata;
     }
     
-    public function create_page_from_postdata($section_id, $postdata, $boundary) {
+    private function create_page_from_postdata($section_id, $postdata, $boundary) {
         $token = $this->get_msaccount_api()->get_accesstoken()->token;
         $url = self::API . '/sections/' . $section_id . '/pages';
         $encodedAccessToken = rawurlencode($token);
@@ -853,6 +806,69 @@ class onenote_api {
         }
         
         return null;
+    }
+    
+    // In order for us to be able to specify a font for the text inside a table, OneNote needs the text inside <td> tags to be 
+    // enclosed inside <span> tags with approp font
+    private function process_td_tags($xpath) {
+        $td_nodes = $xpath->query('//td');
+        if ($td_nodes) {
+            $td_nodes_array = array();
+        
+            foreach ($td_nodes as $td_node) {
+                $td_nodes_array[] = $td_node;
+            }
+        
+            foreach ($td_nodes_array as $td_node) {
+                $child_nodes = $td_node->childNodes;
+                $child_nodes_array = array();
+        
+                foreach ($child_nodes as $child_node) {
+                    $child_nodes_array[] = $child_node;
+                }
+        
+                foreach ($child_nodes_array as $child_node) {
+                    $node_name = $child_node->nodeName;
+                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a') || ($node_name == 'i') ||
+                        ($node_name == 'span') || ($node_name == 'em') || ($node_name == 'strong')) {
+                            $p_node = $dom->createElement('span');
+                            $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
+                            $p_node->appendChild($td_node->removeChild($child_node));
+                            $td_node->insertBefore($p_node);
+                        } else {
+                            $td_node->insertBefore($td_node->removeChild($child_node));
+                        }
+                }
+            }
+        }
+    }
+
+    // HACKHACK: Remove this once OneNote fixes their bug.
+    // OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
+    // The workaround is to replace the last <br/> in a sequence with a <p/>
+    private function process_br_tags($xpath) {
+        $br_nodes = $xpath->query('//br');
+        
+        if ($br_nodes) {
+            $count = $br_nodes->length;
+            $index = 0;
+            
+            while ($index < $count) {
+                $br_node = $br_nodes->item($index);
+                
+                // replace only the last br in a sequence with a p
+                $next_sibling = $br_node->nextSibling;
+                while($next_sibling && ($next_sibling->nodeName == 'br')) {
+                    $br_node = $next_sibling;
+                    $next_sibling = $br_node->nextSibling;    
+                    $index++;
+                }
+                
+                $p_node = new DOMElement('p', '&nbsp;');
+                $br_node->parentNode->replaceChild($p_node, $br_node);
+                $index++;
+            }
+        }    
     }
     
     // get the repo id for the onenote repo
