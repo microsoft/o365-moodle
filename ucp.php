@@ -92,9 +92,11 @@ if (!empty($action)) {
 
             // The following calculates what courses need to be added or removed from the subscription table.
             $newcoursesubs = [];
-            foreach ($fromform->coursecal as $courseid => $onoff) {
-                if ($onoff === '1') {
-                    $newcoursesubs[$courseid] = $courseid;
+            if (!empty($fromform->coursecal) && is_array($fromform->coursecal)) {
+                foreach ($fromform->coursecal as $courseid => $onoff) {
+                    if ($onoff === '1') {
+                        $newcoursesubs[$courseid] = $courseid;
+                    }
                 }
             }
             $todelete = array_diff_key($existingcoursesubs, $newcoursesubs);
