@@ -67,12 +67,14 @@ class profile_field_oidc extends \profile_field_base {
      */
     public function load_data() {
         parent::load_data();
-        $label = get_string('pluginname', 'profilefield_oidc');
-        $authconfig = get_config('auth_oidc');
-        if (!empty($authconfig->opname)) {
-            $label = $authconfig->opname;
+        if (!empty($this->field)) {
+            $label = get_string('pluginname', 'profilefield_oidc');
+            $authconfig = get_config('auth_oidc');
+            if (!empty($authconfig->opname)) {
+                $label = $authconfig->opname;
+            }
+            $this->field->name = $label;
         }
-        $this->field->name = $label;
     }
 
     /**

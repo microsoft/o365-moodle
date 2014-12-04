@@ -58,7 +58,9 @@ class profile_field_o365 extends \profile_field_base {
      */
     public function load_data() {
         parent::load_data();
-        $this->field->name = get_string('pluginname', 'profilefield_o365');
+        if (!empty($this->field)) {
+            $this->field->name = get_string('pluginname', 'profilefield_o365');
+        }
     }
 
     /**
