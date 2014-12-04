@@ -656,7 +656,7 @@ class onenote_api {
         $doc = $dom->getElementsByTagName("body")->item(0);
         
         // add span tags inside td tags so we can specify correct font
-        $this->process_td_tags($xpath);
+        $this->process_td_tags($dom, $xpath);
                 
         // handle <br/> problem
         $this->process_br_tags($xpath);
@@ -810,7 +810,7 @@ class onenote_api {
     
     // In order for us to be able to specify a font for the text inside a table, OneNote needs the text inside <td> tags to be 
     // enclosed inside <span> tags with approp font
-    private function process_td_tags($xpath) {
+    private function process_td_tags($dom, $xpath) {
         $td_nodes = $xpath->query('//td');
         if ($td_nodes) {
             $td_nodes_array = array();
