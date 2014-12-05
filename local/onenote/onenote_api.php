@@ -341,7 +341,7 @@ class onenote_api {
                 $response = $this->get_msaccount_api()->mypost($sectionurl, $section);
                 $response = json_decode($response);
 
-                if ($response)
+                if ($response && $response->id)
                     $this->upsert_user_section($course->id, $response->id);
             } else {
                 $section_id = array_search($course->fullname, $sections);

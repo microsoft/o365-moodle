@@ -148,7 +148,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         
         if ($onenote_api->is_logged_in()) {                    
             // show a button to open the OneNote page
-            $o .= $onenote_api-> render_action_button(get_string('workonthis', 'assignsubmission_onenote'), 
+            $o .= $onenote_api->render_action_button(get_string('workonthis', 'assignsubmission_onenote'), 
                     $this->assignment->get_course_module()->id, false, $is_teacher, 
                     $submission ? $submission->userid : null, $submission ? $submission->id : null, null);
             $o .= '<br/><p>' . get_string('workonthishelp', 'assignsubmission_onenote') . '</p>';
@@ -358,20 +358,20 @@ class assign_submission_onenote extends assign_submission_plugin {
             if ($is_teacher || (isset($submission->status) && ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED))) {
                 if ($onenote_api->is_logged_in()) {                    
                     // show a link to open the OneNote page
-                    $o .= $onenote_api-> render_action_button(get_string('viewsubmission', 'assignsubmission_onenote'),
+                    $o .= $onenote_api->render_action_button(get_string('viewsubmission', 'assignsubmission_onenote'),
                             $this->assignment->get_course_module()->id, false, $is_teacher,
                             $submission->userid, $submission->id, null);
                 } else {
                     $o .= $onenote_api->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignsubmission_onenote') . '</p>';
                 }
-            }
             
-            // show standard link to download zip package
-            $o .= '<p>Download:</p>';
-            $o .= $this->assignment->render_area_files('assignsubmission_onenote',
-                                                        ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                                                        $submission->id);
+                // show standard link to download zip package
+                $o .= '<p>Download:</p>';
+                $o .= $this->assignment->render_area_files('assignsubmission_onenote',
+                                                            ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                                                            $submission->id);
+            }
             
             return $o;
         } else {

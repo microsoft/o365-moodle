@@ -273,13 +273,13 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     $o .= $onenote_api->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
                 }
-            }
             
-            // show standard link to download zip package
-            $o .= '<p>Download:</p>';
-            $o .= $this->assignment->render_area_files('assignfeedback_onenote',
-                                                        ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                                                        $grade->id);
+                // show standard link to download zip package
+                $o .= '<p>Download:</p>';
+                $o .= $this->assignment->render_area_files('assignfeedback_onenote',
+                                                            ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+                                                            $grade->id);
+            }
             
             return $o;
         } else {
