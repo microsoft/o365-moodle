@@ -355,7 +355,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $o = '';
         
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
-            if ($is_teacher || (isset($submission->status) && ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED))) {
+            if (($count > 0) && ($is_teacher || (isset($submission->status) && ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED)))) {
                 if ($onenote_api->is_logged_in()) {                    
                     // show a link to open the OneNote page
                     $o .= $onenote_api->render_action_button(get_string('viewsubmission', 'assignsubmission_onenote'),
