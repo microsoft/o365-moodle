@@ -103,7 +103,7 @@ abstract class o365api {
         $apiurl = $this->get_apiuri();
 
         $httpmethod = strtolower($httpmethod);
-        if (!in_array($httpmethod, ['get', 'post', 'patch', 'merge', 'delete'], true)) {
+        if (!in_array($httpmethod, ['get', 'post', 'put', 'patch', 'merge', 'delete'], true)) {
             throw new \Exception('Invalid httpmethod passed to apicall');
         }
 
