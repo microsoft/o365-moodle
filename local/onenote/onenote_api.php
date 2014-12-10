@@ -659,8 +659,11 @@ class onenote_api {
         $doc = $dom->getElementsByTagName("body")->item(0);
         
         // add span tags inside td tags so we can specify correct font
-        $this->process_td_tags($dom, $xpath);
-                
+        //$this->process_td_tags($dom, $xpath);
+
+        // process heading and td tags
+        $this->process_tags($dom, $xpath);
+
         // handle <br/> problem
         $this->process_br_tags($xpath);
         
@@ -940,5 +943,45 @@ class onenote_api {
         }
     
         return false;
+    }
+
+    /**
+     * Function to add span for heading and td tags and respective font sizes
+     * @param $dom
+     * @param $xpath
+     */
+    private function process_tags($dom, $xpath) {
+
+        //list of tags we are processing
+        $tags = array('h1','h2','h3','h4','h5','h6','td');
+
+        // font sizes for each tag
+        $tag_font_sizes = array('h1' => '24px', 'h2' => '22px', 'h3' => '18px', 'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '12px');
+
+        //process each tag
+        foreach($tags as $tag){
+
+            $nodes = $xpath->query('//'.$tag);
+            if ($nodes) {
+
+                foreach ($nodes as $node) {
+                    $child_nodes = $node->childNodes;
+
+                    foreach ($child_nodes as $child_node) {
+
+                        if(in_array($child_node->nodeName, array('#text' , 'b', 'a', 'i', 'span', 'em', 'strong'))){
+
+                            $p_node = $dom->createElement('span');
+                            $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight: bold;font-size:". $tag_font_sizes[$tag] ."; color:rgb(51,51,51);");
+                            $p_node->appendChild($node->removeChild($child_node));
+                            $node->insertBefore($p_node);
+
+                        } else {
+                            $node->insertBefore($node->removeChild($child_node));
+                        }
+                    }
+                }
+            }
+        }
     }
 }
