@@ -175,7 +175,30 @@ if (!empty($_POST)) {
 			$response = $apiclient->sync_users();
 			apiresult_examine($response);
 		}
+	} elseif ($_POST['api'] === 'onedrive') {
+		$tokenparams = ['user_id' => $USER->id, 'resource' => \local_o365\rest\onedrive::get_resource()];
+		if (empty($tokenparams['resource'])) {
+			throw new \Exception('Not configured');
+		}
+		$tokenrec = $DB->get_record('local_o365_token', $tokenparams);
+		if (empty($tokenrec)) {
+			throw new \Exception('No token');
+		}
+		$oidcconfig = get_config('auth_oidc');
+		$httpclient = new \local_o365\httpclient();
+		$clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+		$token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken, $tokenrec->scope, $tokenrec->resource, $clientdata, $httpclient);
+		$apiclient = new \local_o365\rest\onedrive($token, $httpclient);
+		if (isset($_POST['readdir']['submit'])) {
+			$response = $apiclient->get_contents($_POST['readdir']['directory']);
+			apiresult_examine($response);
+		} else if (isset($_POST['createfile']['submit'])) {
+			$response = $apiclient->create_file($_POST['createfile']['folderpath'], $_POST['createfile']['filename'], $_POST['createfile']['contents']);
+			apiresult_examine($response);
+		}
+
 	}
+
 	echo '</pre>';
 }
 ?>
@@ -184,14 +207,14 @@ if (!empty($_POST)) {
 
 <header>AzureAD/O365 Rest Sandbox</header>
 <div class="switchers">
-<span onclick="switchform('aad', this)" class="switcher selected">AzureAD</span>
+<span onclick="switchform('aad', this)" class="switcher">AzureAD</span>
 <span onclick="switchform('sharepoint', this)" class="switcher">Sharepoint</span>
-<span onclick="switchform('onedrive', this)" class="switcher">OneDrive</span>
+<span onclick="switchform('onedrive', this)" class="switcher selected">OneDrive</span>
 <span onclick="switchform('calendar', this)" class="switcher">Calendar</span>
 </div>
 
 <div id="forms">
-<form id="api_aad" class="apiform" method="post">
+<form id="api_aad" class="apiform" method="post" style="display:none">
 	<input type="hidden" name="api" value="aad">
 	<div class="scratchwrapper">
 		<h4>Scratch</h4>
@@ -259,6 +282,21 @@ if (!empty($_POST)) {
 	?>
 	<input type="submit" name="createsite[submit]"/>
 </form>
+
+<form id="api_onedrive" class="apiform" method="post">
+	<input type="hidden" name="api" value="onedrive">
+	<h4>Read directory</h4>
+	<input type="text" name="readdir[directory]" size="60" value="<?php if (!empty($_POST['readdir']['directory'])) { echo $_POST['readdir']['directory']; } ?>"/>
+	<input type="submit" name="readdir[submit]"/>
+	<br />
+
+	<h4>Create File</h4>
+	Path: <input type="text" name="createfile[folderpath]" value="<?php if (!empty($_POST['createfile']['folderpath'])) { echo $_POST['createfile']['folderpath']; } ?>"/><br />
+	Filename: <input type="text" name="createfile[filename]" value="<?php if (!empty($_POST['createfile']['filename'])) { echo $_POST['createfile']['filename']; } ?>"/><br />
+	Content: <br /><textarea name="createfile[contents]"><?php echo (isset($_POST['createfile']['contents'])) ? $_POST['createfile']['contents'] : '';?></textarea><br />
+	<input type="submit" name="createfile[submit]"/>
+</form>
+
 </div>
 </div>
 </body>
