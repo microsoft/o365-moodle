@@ -658,9 +658,6 @@ class onenote_api {
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         
-        // add span tags inside td tags so we can specify correct font
-        //$this->process_td_tags($dom, $xpath);
-
         // process heading and td tags
         $this->process_tags($dom, $xpath);
 
@@ -815,41 +812,6 @@ class onenote_api {
         
         return null;
     }
-    
-    // In order for us to be able to specify a font for the text inside a table, OneNote needs the text inside <td> tags to be 
-    // enclosed inside <span> tags with approp font
-    private function process_td_tags($dom, $xpath) {
-        $td_nodes = $xpath->query('//td');
-        if ($td_nodes) {
-            $td_nodes_array = array();
-        
-            foreach ($td_nodes as $td_node) {
-                $td_nodes_array[] = $td_node;
-            }
-        
-            foreach ($td_nodes_array as $td_node) {
-                $child_nodes = $td_node->childNodes;
-                $child_nodes_array = array();
-        
-                foreach ($child_nodes as $child_node) {
-                    $child_nodes_array[] = $child_node;
-                }
-        
-                foreach ($child_nodes_array as $child_node) {
-                    $node_name = $child_node->nodeName;
-                    if (($node_name == '#text') || ($node_name == 'b') || ($node_name == 'a') || ($node_name == 'i') ||
-                        ($node_name == 'span') || ($node_name == 'em') || ($node_name == 'strong')) {
-                            $p_node = $dom->createElement('span');
-                            $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);");
-                            $p_node->appendChild($td_node->removeChild($child_node));
-                            $td_node->insertBefore($p_node);
-                        } else {
-                            $td_node->insertBefore($td_node->removeChild($child_node));
-                        }
-                }
-            }
-        }
-    }
 
     // HACKHACK: Remove this once OneNote fixes their bug.
     // OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
@@ -952,32 +914,38 @@ class onenote_api {
      */
     private function process_tags($dom, $xpath) {
 
-        //list of tags we are processing
-        $tags = array('h1','h2','h3','h4','h5','h6','td');
+        // List of tags we are processing.
+        $tags = array('h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'td');
 
-        // font sizes for each tag
-        $tag_font_sizes = array('h1' => '24px', 'h2' => '22px', 'h3' => '18px', 'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '12px');
+        // Font sizes for each tag.
+        $tagfontsizes = array('h1' => '24px', 'h2' => '22px', 'h3' => '18px',
+            'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '12px');
 
-        //process each tag
-        foreach($tags as $tag){
+        // Process each tag.
+        foreach ($tags as $tag) {
 
             $nodes = $xpath->query('//'.$tag);
             if ($nodes) {
 
                 foreach ($nodes as $node) {
-                    $child_nodes = $node->childNodes;
+                    $childnodes = $node->childnodes;
 
-                    foreach ($child_nodes as $child_node) {
+                    foreach ($childnodes as $childnode) {
 
-                        if(in_array($child_node->nodeName, array('#text' , 'b', 'a', 'i', 'span', 'em', 'strong'))){
+                        if (in_array($childnode->nodeName, array('#text', 'b', 'a', 'i', 'span', 'em', 'strong'))) {
 
-                            $p_node = $dom->createElement('span');
-                            $p_node->setAttribute("style", "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight: bold;font-size:". $tag_font_sizes[$tag] ."; color:rgb(51,51,51);");
-                            $p_node->appendChild($node->removeChild($child_node));
-                            $node->insertBefore($p_node);
+                            $spannode = $dom->createElement('span');
+
+                            $style = "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;";
+                            $style .= "font-weight: bold;font-size:". $tagfontsizes[$tag] ."; color:rgb(51,51,51);";
+
+                            $spannode->setAttribute("style", $style);
+
+                            $spannode->appendChild($node->removeChild($childnode));
+                            $node->insertBefore($spannode);
 
                         } else {
-                            $node->insertBefore($node->removeChild($child_node));
+                            $node->insertBefore($node->removeChild($childnode));
                         }
                     }
                 }
