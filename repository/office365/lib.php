@@ -71,12 +71,10 @@ class repository_office365 extends \repository {
 
         $this->sharepoint['configured'] = \local_o365\rest\sharepoint::is_configured();
         if ($this->sharepoint['configured'] === true) {
-            if (!empty($this->o365config->systemtokens)) {
-                $systemtokens = unserialize($this->o365config->systemtokens);
-                $spresource = \local_o365\rest\sharepoint::get_resource();
-                if (isset($systemtokens[$spresource])) {
-                    $this->sharepoint['token'] = $systemtokens[$spresource];
-                }
+            $sharepointresource = \local_o365\rest\sharepoint::get_resource();
+            $tokenrec = $DB->get_record('local_o365_token', ['user_id' => $USER->id, 'resource' => $sharepointresource]);
+            if (!empty($tokenrec)) {
+                $this->sharepoint['token'] = $tokenrec;
             }
         }
     }
@@ -107,9 +105,10 @@ class repository_office365 extends \repository {
         if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
             $clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
                     $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-            $token = new \local_o365\oauth2\token($this->sharepoint['token']['token'], $this->sharepoint['token']['expiry'],
-                    $this->sharepoint['token']['refreshtoken'], $this->sharepoint['token']['scope'],
-                    $this->sharepoint['token']['resource'], $clientdata, $this->httpclient);
+            $token = new \local_o365\oauth2\token($this->sharepoint['token']->token, $this->sharepoint['token']->expiry,
+                    $this->sharepoint['token']->refreshtoken, $this->sharepoint['token']->scope,
+                    $this->sharepoint['token']->resource, $clientdata, $this->httpclient);
+
             return new \local_o365\rest\sharepoint($token, $this->httpclient);
         }
         return false;
@@ -327,12 +326,9 @@ class repository_office365 extends \repository {
                 if ($this->path_is_upload($path) === false) {
                     $sharepointclient = $this->get_sharepoint_apiclient();
                     if (!empty($sharepointclient)) {
-                        $sharepointclient->set_site('moodle');
+                        $sharepointclient->set_site('moodle/'.$courses[$courseid]->shortname);
                         try {
-                            $fullpath = '/'.$courses[$courseid]->shortname;
-                            if (!empty($relpath)) {
-                                $fullpath .= '/'.$relpath;
-                            }
+                            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
                             $contents = $sharepointclient->get_files($fullpath);
                             $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint');
                         } catch (\Exception $e) {

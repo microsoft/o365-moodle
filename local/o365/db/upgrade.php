@@ -64,5 +64,34 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2014111707', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2014111710) {
+        if (!$dbman->table_exists('local_o365_coursespsite')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_coursespsite');
+        }
+        if (!$dbman->table_exists('local_o365_spgroupdata')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_spgroupdata');
+        }
+        if (!$dbman->table_exists('local_o365_aaduserdata')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_aaduserdata');
+        }
+        upgrade_plugin_savepoint($result, '2014111710', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2014111711) {
+        $table = new xmldb_table('local_o365_spgroupdata');
+        $field = new xmldb_field('permtype', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'grouptitle');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2014111711', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2014111715) {
+        if (!$dbman->table_exists('local_o365_spgroupassign')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_spgroupassign');
+        }
+        upgrade_plugin_savepoint($result, '2014111715', 'local', 'o365');
+    }
+
     return $result;
 }

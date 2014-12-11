@@ -30,13 +30,30 @@ class mockhttpclient extends \local_o365\httpclient {
     /** @var string The stored set response. */
     protected $mockresponse = '';
 
+    /** @var int The index of the current response. */
+    protected $curresponse = 0;
+
     /**
      * Set a response to return.
      *
      * @param string $response The response to return.
      */
     public function set_response($response) {
-        $this->mockresponse = $response;
+        $this->set_responses([$response]);
+    }
+
+    /**
+     * Set multiple responses.
+     *
+     * Responses will be returned in sequence every time $this->request is called. I.e. The first
+     * time request() is called, the first item in the response array will be returned, the second time it's
+     * called the second item will be returned, etc.
+     *
+     * @param array $responses Array of responses.
+     */
+    public function set_responses(array $responses) {
+        $this->curresponse = 0;
+        $this->mockresponse = $responses;
     }
 
     /**
@@ -47,6 +64,16 @@ class mockhttpclient extends \local_o365\httpclient {
      * @return string The set response.
      */
     protected function request($url, $options = array()) {
-        return $this->mockresponse;
+        if (isset($this->mockresponse[$this->curresponse])) {
+            $response = $this->mockresponse[$this->curresponse];
+            $this->curresponse++;
+            return $response;
+        } else {
+            $this->curresponse = 0;
+            if (!isset($this->mockresponse[$this->curresponse])) {
+                throw new \Exception('No responses available.');
+            }
+            return $this->mockresponse[$this->curresponse];
+        }
     }
 }

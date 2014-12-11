@@ -245,6 +245,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
             // Delete token data.
             $DB->delete_records('auth_oidc_token', ['username' => $USER->username]);
 
+            $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+            $event = \auth_oidc\event\user_disconnected::create($eventdata);
+            $event->trigger();
+
             redirect(new \moodle_url('/auth/oidc/ucp.php'));
         }
 
@@ -332,7 +336,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
             'userid' => $USER->id,
             'other' => ['username' => $USER->username]
         ];
-        $event = \auth_oidc\event\user_loggedin::create($eventdata);
+        $event = \auth_oidc\event\user_connected::create($eventdata);
         $event->trigger();
 
         // Update auth plugin.
