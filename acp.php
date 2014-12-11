@@ -32,7 +32,6 @@ if (is_siteadmin() !== true) {
 if ($mode === 'setsystemuser') {
     $SESSION->auth_oidc_justevent = true;
     redirect(new \moodle_url('/auth/oidc/index.php'));
-    die();
 } else if ($mode === 'sharepointinit') {
     $oidcconfig = get_config('auth_oidc');
     if (empty($oidcconfig)) {
@@ -79,6 +78,21 @@ if ($mode === 'setsystemuser') {
 
     if ($sharepoint->site_exists('moodle') === false) {
         $sharepoint->create_site('Moodle', 'moodle', 'Site for shared Moodle course data.');
+    }
+
+    $courses = $DB->get_recordset('course');
+    $successes = [];
+    $failures = [];
+    foreach ($courses as $course) {
+        if ($course->id == SITEID) {
+            continue;
+        }
+        try {
+            $sharepoint->create_course_site($course);
+            $successes[] = $course->id;
+        } catch (\Exception $e) {
+            $failures[] = $course->id;
+        }
     }
     set_config('sharepoint_initialized', '1', 'local_o365');
     redirect(new \moodle_url('/admin/settings.php?section=local_o365'));

@@ -22,18 +22,39 @@
  */
 
 $observers = [
-    [
-        'eventname'   => '\auth_oidc\event\user_loggedin',
-        'callback'    => '\local_o365\observers::handle_oidc_login',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
+    // Events from auth_oidc.
     [
         'eventname'   => '\auth_oidc\event\user_authed',
-        'callback'    => '\local_o365\observers::handle_oidc_authed',
+        'callback'    => '\local_o365\observers::handle_oidc_user_authed',
         'priority'    => 200,
         'internal'    => false,
     ],
+    [
+        'eventname'   => '\auth_oidc\event\user_connected',
+        'callback'    => '\local_o365\observers::handle_oidc_user_connected',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\auth_oidc\event\user_created',
+        'callback'    => '\local_o365\observers::handle_oidc_user_created',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\auth_oidc\event\user_disconnected',
+        'callback'    => '\local_o365\observers::handle_oidc_user_disconnected',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\auth_oidc\event\user_loggedin',
+        'callback'    => '\local_o365\observers::handle_oidc_user_loggedin',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+
+    // Events from core.
     [
         'eventname'   => '\core\event\calendar_event_created',
         'callback'    => '\local_o365\observers::handle_calendar_event_created',
@@ -71,14 +92,44 @@ $observers = [
         'internal'    => false,
     ],
     [
-        'eventname'   => '\core\event\course_deleted',
-        'callback'    => '\local_o365\observers::handle_course_deleted',
+        'eventname'   => '\core\event\role_assigned',
+        'callback'    => '\local_o365\observers::handle_role_assigned',
         'priority'    => 200,
         'internal'    => false,
     ],
     [
-        'eventname'   => '\auth_oidc\event\user_created',
-        'callback'    => '\local_o365\observers::handle_oidc_user_created',
+        'eventname'   => '\core\event\role_unassigned',
+        'callback'    => '\local_o365\observers::handle_role_unassigned',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\role_capabilities_updated',
+        'callback'    => '\local_o365\observers::handle_role_capabilities_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\role_deleted',
+        'callback'    => '\local_o365\observers::handle_role_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\course_created',
+        'callback'    => '\local_o365\observers::handle_course_created',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\course_updated',
+        'callback'    => '\local_o365\observers::handle_course_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\course_deleted',
+        'callback'    => '\local_o365\observers::handle_course_deleted',
         'priority'    => 200,
         'internal'    => false,
     ],

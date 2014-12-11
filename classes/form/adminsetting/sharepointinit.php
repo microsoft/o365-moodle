@@ -95,10 +95,11 @@ class sharepointinit extends \admin_setting {
         $settinghtml = '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
         if (!empty($setuser)) {
             $sitesinitialized = get_config('local_o365', 'sharepoint_initialized');
+            $initurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointinit']);
             if (!empty($sitesinitialized)) {
                 $settinghtml .= get_string('settings_sharepointinit_initialized', 'local_o365');
+                $settinghtml .= ' '.\html_writer::link($initurl, get_string('settings_sharepointinit_reinitialize', 'local_o365'));
             } else {
-                $initurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointinit']);
                 $settinghtml .= \html_writer::link($initurl, get_string('settings_sharepointinit_initialize', 'local_o365'));
             }
         } else {
