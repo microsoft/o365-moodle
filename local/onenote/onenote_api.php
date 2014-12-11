@@ -726,7 +726,10 @@ class onenote_api {
         $doc = $dom->getElementsByTagName("body")->item(0);
         
         $this->handle_garbage_chars($xpath);
-        
+
+        // Process html before download.
+        $this->process_tags($dom, $xpath);
+
         $img_nodes = $xpath->query("//img");
         $img_data = '';
         $eol = "\r\n";
