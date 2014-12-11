@@ -951,5 +951,15 @@ class onenote_api {
                 }
             }
         }
+
+        // Get all tables.
+        $tables = $xpath->query('//table');
+
+        if ($tables) {
+            foreach ($tables as $table) {
+                // Set border attribute of each table.
+                $table->setAttribute("border", "2");
+            }
+        }
     }
 }
