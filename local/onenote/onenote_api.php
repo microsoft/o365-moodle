@@ -931,7 +931,7 @@ class onenote_api {
             if ($nodes) {
 
                 foreach ($nodes as $node) {
-                    $childnodes = $node->childnodes;
+                    $childnodes = $node->childNodes;
 
                     foreach ($childnodes as $childnode) {
 
@@ -955,14 +955,15 @@ class onenote_api {
             }
         }
 
+        // TODO: We should do this only for tables that have a border already
         // Get all tables.
-        $tables = $xpath->query('//table');
+        // $tables = $xpath->query('//table');
 
-        if ($tables) {
-            foreach ($tables as $table) {
-                // Set border attribute of each table.
-                $table->setAttribute("border", "2");
-            }
-        }
+        // if ($tables) {
+            // foreach ($tables as $table) {
+                // // Set border attribute of each table.
+                // $table->setAttribute("border", "2");
+            // }
+        // }
     }
 }
