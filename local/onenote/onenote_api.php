@@ -940,7 +940,7 @@ class onenote_api {
                             $spannode = $dom->createElement('span');
 
                             $style = "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;";
-                            $style .= "font-weight: bold;font-size:". $tagfontsizes[$tag] ."; color:rgb(51,51,51);";
+                            $style .= "font-size:". $tagfontsizes[$tag] ."; color:rgb(51,51,51);";
 
                             $spannode->setAttribute("style", $style);
 
