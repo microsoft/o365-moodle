@@ -706,7 +706,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $img_data . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -778,7 +778,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica Neue\',\'HelveticaNeue-Light\', \'Helvetica Neue Light\',  Helvetica, Arial, \'Lucida Grande\', sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $img_data . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
