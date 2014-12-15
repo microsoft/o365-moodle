@@ -37,6 +37,8 @@ $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect 
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
 $string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint to use.';
 
+$string['oidc:manageconnection'] = 'Manage OpenID Connect Connection';
+
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';
 $string['eventusercreated'] = 'User created with OpenID Connect';
 $string['eventuserconnected'] = 'User connected to OpenID Connect';
