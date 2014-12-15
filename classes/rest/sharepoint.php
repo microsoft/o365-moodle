@@ -327,7 +327,8 @@ class sharepoint extends \local_o365\rest\o365api {
      * @param int $muserid Optional. If present, will removed record of assignment in database.
      * @return array|null Returned response, or null if error.
      */
-    public function remove_user_from_group($userupn, $groupid) {
+    public function remove_user_from_group($userupn, $groupid, $muserid) {
+        global $DB;
         $loginname = 'i:0#.f|membership|'.$userupn;
         $loginname = urlencode($loginname);
         $endpoint = '/web/sitegroups/getbyid('.$groupid.')/users/removebyloginname(@v)?@v=\''.$loginname.'\'';

@@ -550,8 +550,9 @@ class observers {
         // Check if the role affected the required capability
         $rolecapsql = "SELECT *
                          FROM {role_capabilities}
-                        WHERE contextid = ? AND roleid = ? AND capability = ?";
-        $capassignrec = $DB->get_record_sql($rolecapsql, [$contextid, $roleid, $requiredcap]);
+                        WHERE roleid = ? AND capability = ?";
+        $capassignrec = $DB->get_record_sql($rolecapsql, [$roleid, $requiredcap]);
+
         if (empty($capassignrec) || $capassignrec->permission == CAP_INHERIT) {
             // Role doesn't affect required capability. Doesn't concern us.
             return false;
@@ -574,20 +575,22 @@ class observers {
             $userupn = \local_o365\rest\azuread::get_muser_upn($user);
             if (empty($userupn)) {
                 // No user UPN, can't continue.
+                return false;
             }
 
             $spgroupsql = 'SELECT *
                              FROM {local_o365_coursespsite} site
-                             JOIN {local_o365_spgroupdata} group ON group.coursespsiteid = site.id
-                            WHERE site.courseid = ? AND group.permtype = ?';
+                             JOIN {local_o365_spgroupdata} grp ON grp.coursespsiteid = site.id
+                            WHERE site.courseid = ? AND grp.permtype = ?';
             $spgrouprec = $DB->get_record_sql($spgroupsql, [$courseid, 'contribute']);
             if (empty($spgrouprec)) {
                 // No sharepoint group, can't fix that here.
+                return false;
             }
 
             // If the context is a course context we can change SP access now.
             $sharepoint = static::construct_sharepoint_api_with_system_user();
-            $hascap = has_capability($requiredcap, $context, $assignee);
+            $hascap = has_capability($requiredcap, $context, $user);
             if ($hascap === true) {
                 // Add to group.
                 $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $user->id);
@@ -600,7 +603,7 @@ class observers {
             // If the context is higher than a course, we have to run a sync in cron.
             $cronqueuerec = new \stdClass;
             $cronqueuerec->operation = 'spaccesssync';
-            $cronqueuerec->data = serialize(['roleid' => $roleid, 'userid' => $assignee, 'contextid' => $contextid]);
+            $cronqueuerec->data = serialize(['roleid' => $roleid, 'userid' => $user->id, 'contextid' => $contextid]);
             $cronqueuerec->timecreated = time();
             $DB->insert_record('local_o365_cronqueue', $cronqueuerec);
             return true;

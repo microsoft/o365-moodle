@@ -206,7 +206,7 @@ class azuread extends \local_o365\rest\o365api {
      */
     public static function get_muser_upn($user) {
         global $DB;
-
+        $now = time();
         // Get user UPN.
         $aaduserdata = $DB->get_record('local_o365_aaduserdata', ['muserid' => $user->id]);
         if (!empty($aaduserdata)) {
@@ -219,10 +219,11 @@ class azuread extends \local_o365\rest\o365api {
                 return false;
             }
             $oidcconfig = get_config('auth_oidc');
+            $httpclient = new \local_o365\httpclient();
             $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
             $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $this->httpclient);
-            $aadapiclient = new \local_o365\rest\azuread($token, $this->httpclient);
+            $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
             $rawaaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
             if (!empty($rawaaduserdata)) {
                 // Save user data.

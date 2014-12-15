@@ -217,8 +217,8 @@ class cron {
             $context = \context_course::instance($course->id);
             $spgroupsql = 'SELECT *
                              FROM {local_o365_coursespsite} site
-                             JOIN {local_o365_spgroupdata} group ON group.coursespsiteid = site.id
-                            WHERE site.courseid = ? AND group.permtype = ?';
+                             JOIN {local_o365_spgroupdata} grp ON grp.coursespsiteid = site.id
+                            WHERE site.courseid = ? AND grp.permtype = ?';
             $spgrouprec = $DB->get_record_sql($spgroupsql, [$courseid, 'contribute']);
             foreach ($users as $user) {
                 $userupn = \local_o365\rest\azuread::get_muser_upn($user);
