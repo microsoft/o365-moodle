@@ -82,13 +82,17 @@ class cron {
                                      tok.resource AS tokenresource
                                 FROM {event} ev
                                 JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                                JOIN {local_o365_token} tok ON tok.user_id = ev.userid
+                           LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid
                                WHERE ev.courseid = ? AND tok.resource = ?';
             $siteevents = $DB->get_recordset_sql($siteeventssql, [SITEID, $outlookresource]);
             foreach ($siteevents as $siteevent) {
-                mtrace('Syncing event #'.$siteevent->id);
-                $token = new \local_o365\oauth2\token($siteevent->token, $siteevent->tokenexpiry, $siteevent->refreshtoken,
-                        $siteevent->tokenscope, $siteevent->tokenresource, $clientdata, $httpclient);
+                mtrace('Syncing site event #'.$siteevent->id);
+                if (!empty($siteevent->token)) {
+                    $token = new \local_o365\oauth2\token($siteevent->token, $siteevent->tokenexpiry, $siteevent->refreshtoken,
+                            $siteevent->tokenscope, $siteevent->tokenresource, $clientdata, $httpclient);
+                } else {
+                    $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
+                }
                 $cal = new \local_o365\rest\calendar($token, $httpclient);
                 $cal->update_event($siteevent->outlookeventid, ['attendees' => $siteeventssubscribers]);
             }
@@ -120,7 +124,7 @@ class cron {
             $params = array_merge([$outlookresource], $syncuserinorequalparams);
             $userevents = $DB->get_recordset_sql($usereventssql, $params);
             foreach ($userevents as $userevent) {
-                mtrace('Syncing event #'.$userevent->id);
+                mtrace('Syncing user event #'.$userevent->id);
                 if (!empty($userevent->calsubid)) {
                     // Subscribed. Perform sync on unsynced events.
                     if (empty($userevent->outlookeventid)) {
@@ -181,13 +185,17 @@ class cron {
                                        tok.resource AS tokenresource
                                   FROM {event} ev
                                   JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                                  JOIN {local_o365_token} tok ON tok.user_id = ev.userid
+                             LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid
                                  WHERE ev.courseid = ? AND tok.resource = ?';
             $courseevents = $DB->get_recordset_sql($courseeventssql, [$courseid, $outlookresource]);
             foreach ($courseevents as $courseevent) {
-                mtrace('Syncing event #'.$courseevent->id);
-                $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry, $courseevent->refreshtoken,
-                        $courseevent->tokenscope, $courseevent->tokenresource, $clientdata, $httpclient);
+                mtrace('Syncing course event #'.$courseevent->id);
+                if (!empty($courseevent->token)) {
+                    $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry, $courseevent->refreshtoken,
+                            $courseevent->tokenscope, $courseevent->tokenresource, $clientdata, $httpclient);
+                } else {
+                    $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
+                }
                 $cal = new \local_o365\rest\calendar($token, $httpclient);
                 $cal->update_event($courseevent->outlookeventid, ['attendees' => $courseeventssubscribers]);
             }
