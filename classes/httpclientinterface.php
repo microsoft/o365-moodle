@@ -28,11 +28,12 @@ namespace auth_oidc;
  */
 interface httpclientinterface {
     /**
-     * Post data to a URL.
-     *
-     * @param string $url The URL to post to.
-     * @param string|array $data The data to post.
-     * @return string The returned data.
-     */
-    public function post($url, $data);
+      * HTTP POST method
+      *
+      * @param string $url
+      * @param array|string $params
+      * @param array $options
+      * @return bool
+      */
+     public function post($url, $params = '', $options = array());
 }

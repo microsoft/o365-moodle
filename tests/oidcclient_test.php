@@ -23,9 +23,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__.'/_mockoidcclient.php');
-require_once(__DIR__.'/_mockhttpclient.php');
-
 global $CFG;
 
 /**
@@ -37,8 +34,8 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
      * Test getting and setting credentials.
      */
     public function test_creds_getters_and_setters() {
-        $httpclient = new \auth_oidc\httpclient;
-        $client = new mockoidcclient($httpclient);
+        $httpclient = new \auth_oidc\tests\mockhttpclient();
+        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
 
         $this->assertNull($client->get_clientid());
         $this->assertNull($client->get_clientsecret());
@@ -99,8 +96,8 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
         if (!empty($expectedexception)) {
             $this->setExpectedException($expectedexception[0], $expectedexception[1]);
         }
-        $httpclient = new \auth_oidc\httpclient;
-        $client = new mockoidcclient($httpclient);
+        $httpclient = new \auth_oidc\tests\mockhttpclient();
+        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
         $client->setendpoints($endpoints);
 
         foreach ($endpoints as $type => $uri) {

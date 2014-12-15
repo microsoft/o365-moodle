@@ -35,12 +35,12 @@ $oidcconnected = (!empty($oidctoken)) ? true : false;
 if (!empty($action)) {
     if ($action === 'connect' && $oidcconnected === false) {
         $auth = new \auth_plugin_oidc;
-        $auth->set_httpclient(new \auth_oidc\httpclient);
+        $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnect' && $oidcconnected === true) {
         if (is_enabled_auth('manual') === true) {
             $auth = new \auth_plugin_oidc;
-            $auth->set_httpclient(new \auth_oidc\httpclient);
+            $auth->set_httpclient(new \auth_oidc\httpclient());
             $auth->disconnect();
         }
     } else {
