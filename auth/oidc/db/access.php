@@ -23,8 +23,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2014111702;
-$plugin->requires = 2014051200;
-$plugin->component = 'auth_oidc';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.0.0.0';
+global $CFG;
+
+$capabilities = [
+    'auth/oidc:manageconnection' => [
+        'riskbitmask' => RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_USER,
+        'archetypes' => [
+            'user' => CAP_ALLOW
+        ]
+    ],
+];

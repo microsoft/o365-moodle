@@ -26,6 +26,8 @@ require_once(__DIR__.'/auth.php');
 
 require_login();
 
+require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+
 $action = optional_param('action', null, PARAM_TEXT);
 $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
 $oidcconnected = (!empty($oidctoken)) ? true : false;
