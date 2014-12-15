@@ -164,6 +164,9 @@ if (!empty($_POST)) {
 		} elseif(isset($_POST['deletegroup']['submit'])) {
 			$response = $apiclient->delete_group_by_id($_POST['deletegroup']['groupid']);
 			apiresult_examine($response);
+		} elseif (isset($_POST['createfile']['submit'])) {
+			$response = $apiclient->create_file($_POST['createfile']['folderpath'], $_POST['createfile']['filename'], $_POST['createfile']['contents']);
+			apiresult_examine($response);
 		}
 	} elseif ($_POST['api'] === 'aad') {
 		$oidcconfig = get_config('auth_oidc');
@@ -304,6 +307,12 @@ foreach ($apis as $key => $name) {
 	<input type="text" name="siteexists[url]" size="60" value="<?php if (!empty($_POST['siteexists']['url'])) { echo $_POST['siteexists']['url']; } ?>"/>
 	<input type="submit" name="siteexists[submit]"/>
 	<br /><br />
+
+	<h4>Create File</h4>
+	Path: <input type="text" name="createfile[folderpath]" value="<?php if (!empty($_POST['createfile']['folderpath'])) { echo $_POST['createfile']['folderpath']; } ?>"/><br />
+	Filename: <input type="text" name="createfile[filename]" value="<?php if (!empty($_POST['createfile']['filename'])) { echo $_POST['createfile']['filename']; } ?>"/><br />
+	Content: <br /><textarea name="createfile[contents]"><?php echo (isset($_POST['createfile']['contents'])) ? $_POST['createfile']['contents'] : '';?></textarea><br />
+	<input type="submit" name="createfile[submit]"/>
 
 	<h4>Read directory</h4>
 	<input type="text" name="readdir[directory]" size="60" value="<?php if (!empty($_POST['readdir']['directory'])) { echo $_POST['readdir']['directory']; } ?>"/>

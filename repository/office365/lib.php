@@ -261,30 +261,50 @@ class repository_office365 extends \repository {
         if ($clienttype === 'onedrive') {
             $onedrive = $this->get_onedrive_apiclient();
             $result = $onedrive->create_file($filepath, $filename, $content);
-            $source = base64_encode(serialize(['id' => $result['id'], 'source' => $clienttype]));
-            $downloadedfile = $this->get_file($source, $filename);
-            $record = new \stdClass;
-            $record->filename = $filename;
-            $record->filepath = $savepath;
-            $record->itemid = $itemid;
-            $record->component = 'user';
-            $record->filearea = 'draft';
-            $record->itemid = $itemid;
-            $record->license = $license;
-            $record->author = $author;
-            $usercontext = \context_user::instance($USER->id);
-            $now = time();
-            $record->contextid = $usercontext->id;
-            $record->timecreated = $now;
-            $record->timemodified = $now;
-            $record->userid = $USER->id;
-            $record->sortorder = 0;
-            $record->source = $this->build_source_field($source);
-            $info = \repository::move_to_filepool($downloadedfile['path'], $record);
-            return $info;
+        } else if ($clienttype === 'sharepoint') {
+            $pathtrimmed = trim($filepath, '/');
+            $pathparts = explode('/', $pathtrimmed);
+            if (!is_numeric($pathparts[0])) {
+                throw new \Exception('Bad path');
+            }
+            $courseid = (int)$pathparts[0];
+            unset($pathparts[0]);
+            $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
+            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
+            $courses = enrol_get_users_courses($USER->id);
+            if (!isset($courses[$courseid])) {
+                throw new \Exception('Access denied');
+            }
+            $curcourse = $courses[$courseid];
+            unset($courses);
+            $sharepoint = $this->get_sharepoint_apiclient();
+            $sharepoint->set_site('moodle/'.$curcourse->shortname);
+            $result = $sharepoint->create_file($fullpath, $filename, $content);
         } else {
             throw new \Exception('Client type not supported');
         }
+
+        $source = base64_encode(serialize(['id' => $result['id'], 'source' => $clienttype]));
+        $downloadedfile = $this->get_file($source, $filename);
+        $record = new \stdClass;
+        $record->filename = $filename;
+        $record->filepath = $savepath;
+        $record->itemid = $itemid;
+        $record->component = 'user';
+        $record->filearea = 'draft';
+        $record->itemid = $itemid;
+        $record->license = $license;
+        $record->author = $author;
+        $usercontext = \context_user::instance($USER->id);
+        $now = time();
+        $record->contextid = $usercontext->id;
+        $record->timecreated = $now;
+        $record->timemodified = $now;
+        $record->userid = $USER->id;
+        $record->sortorder = 0;
+        $record->source = $this->build_source_field($source);
+        $info = \repository::move_to_filepool($downloadedfile['path'], $record);
+        return $info;
     }
 
     /**
