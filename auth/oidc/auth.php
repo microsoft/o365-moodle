@@ -108,7 +108,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
         $redirecturi = new moodle_url('/auth/oidc/');
 
-        $httpclient = new \auth_oidc\httpclient;
+        $httpclient = new \auth_oidc\httpclient();
         $client = new \auth_oidc\oidcclient($this->httpclient);
         $client->setcreds($this->config->clientid, $this->config->clientsecret, $redirecturi->out());
         $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);

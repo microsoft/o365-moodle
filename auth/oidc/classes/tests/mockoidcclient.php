@@ -21,6 +21,8 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
+namespace auth_oidc\tests;
+
 /**
  * A mock oidcclient class providing access to all inaccessible properties/methods.
  */
