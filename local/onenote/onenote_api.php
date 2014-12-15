@@ -947,23 +947,29 @@ class onenote_api {
                             $spannode->appendChild($node->removeChild($childnode));
                             $node->insertBefore($spannode);
 
-                        } else {
-                            $node->insertBefore($node->removeChild($childnode));
                         }
+                        // This code can be removed.
+//                        else {
+//                            $node->insertBefore($node->removeChild($childnode));
+//                        }
                     }
                 }
             }
         }
 
-        // TODO: We should do this only for tables that have a border already
-        // Get all tables.
-        // $tables = $xpath->query('//table');
+         //Get all tables.
+         $tables = $xpath->query('//table');
 
-        // if ($tables) {
-            // foreach ($tables as $table) {
-                // // Set border attribute of each table.
-                // $table->setAttribute("border", "2");
-            // }
-        // }
+         if ($tables) {
+             foreach ($tables as $table) {
+                 // Check if table have border attribute set.
+                 $border = $table->getAttribute('border');
+
+                 // If not, set default border of table
+                 if($border ==''){
+                     $table->setAttribute("border", "2");
+                 }
+             }
+         }
     }
 }
