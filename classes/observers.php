@@ -230,6 +230,34 @@ class observers {
     }
 
     /**
+     * Construct a calendar API client using the system API user.
+     *
+     * @param int $userid The userid to get the outlook token for.
+     * @return \local_o365\rest\calendar|bool A constructed calendar API client, or false if error.
+     */
+    public static function construct_calendar_api($userid, $systemfallback = true) {
+        $outlookresource = \local_o365\rest\calendar::get_resource();
+        $oidcconfig = get_config('auth_oidc');
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
+                $oidcconfig->tokenendpoint);
+        $tokenparams = ['user_id' => $userid, 'resource' => $outlookresource];
+        $tokenrec = $DB->get_record('local_o365_token', $tokenparams);
+        $token = null;
+        if (!empty($tokenrec)) {
+            $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken, $tokenrec->scope,
+                $tokenrec->resource, $clientdata, $httpclient);
+        }
+        if (empty($token) && $systemfallback === true) {
+            $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
+        }
+        if (empty($token)) {
+            return false;
+        }
+        $cal = new \local_o365\rest\calendar($token, $httpclient);
+    }
+
+    /**
      * Handle a calendar_event_created event.
      *
      * @param \core\event\calendar_event_created $event The triggered event.
@@ -239,18 +267,7 @@ class observers {
         global $DB;
 
         // Construct calendar client.
-        $tokenparams = ['user_id' => $event->userid, 'resource' => \local_o365\rest\calendar::get_resource()];
-        $tokenrec = $DB->get_record('local_o365_token', $tokenparams);
-        if (empty($tokenrec)) {
-            return true;
-        }
-        $oidcconfig = get_config('auth_oidc');
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
-        $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken, $tokenrec->scope,
-                $tokenrec->resource, $clientdata, $httpclient);
-        $cal = new \local_o365\rest\calendar($token, $httpclient);
+        $cal = static::construct_calendar_api($event->userid);
 
         // Assemble basic event data.
         $event = $DB->get_record('event', ['id' => $event->objectid]);
@@ -318,18 +335,7 @@ class observers {
         }
 
         // Construct calendar client.
-        $tokenparams = ['user_id' => $event->userid, 'resource' => \local_o365\rest\calendar::get_resource()];
-        $tokenrec = $DB->get_record('local_o365_token', $tokenparams);
-        if (empty($tokenrec)) {
-            return true;
-        }
-        $oidcconfig = get_config('auth_oidc');
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
-        $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken, $tokenrec->scope,
-                $tokenrec->resource, $clientdata, $httpclient);
-        $cal = new \local_o365\rest\calendar($token, $httpclient);
+        $cal = static::construct_calendar_api($event->userid);
 
         // Send updated information to o365.
         $event = $DB->get_record('event', ['id' => $event->objectid]);
@@ -362,18 +368,7 @@ class observers {
         }
 
         // Construct calendar client.
-        $tokenparams = ['user_id' => $event->userid, 'resource' => \local_o365\rest\calendar::get_resource()];
-        $tokenrec = $DB->get_record('local_o365_token', $tokenparams);
-        if (empty($tokenrec)) {
-            return true;
-        }
-        $oidcconfig = get_config('auth_oidc');
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
-        $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken, $tokenrec->scope,
-                $tokenrec->resource, $clientdata, $httpclient);
-        $cal = new \local_o365\rest\calendar($token, $httpclient);
+        $cal = static::construct_calendar_api($event->userid);
 
         foreach ($idmaprecs as $idmaprec) {
             $response = $cal->delete_event($idmaprec->outlookeventid);
