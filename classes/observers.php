@@ -151,8 +151,8 @@ class observers {
     public static function handle_oidc_user_loggedin(\auth_oidc\event\user_loggedin $event) {
         // Get additional tokens for the user.
         $eventdata = $event->get_data();
-        if (!empty($eventdata['other']['username']) && !empty($eventdata['other']['userid'])) {
-            $tokenresult = static::get_additional_tokens_for_user($eventdata['other']['username'], $eventdata['other']['userid']);
+        if (!empty($eventdata['other']['username']) && !empty($eventdata['userid'])) {
+            $tokenresult = static::get_additional_tokens_for_user($eventdata['other']['username'], $eventdata['userid']);
         }
 
         return true;
