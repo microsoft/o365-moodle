@@ -25,7 +25,7 @@ require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
 
 $auth = new \auth_plugin_oidc;
-$auth->set_httpclient(new \auth_oidc\httpclient);
+$auth->set_httpclient(new \auth_oidc\httpclient());
 if (!empty($_REQUEST['state'])) {
     // Response from OP.
     $auth->handleauthresponse($_REQUEST);

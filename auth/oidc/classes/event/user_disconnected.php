@@ -21,19 +21,39 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-namespace auth_oidc;
+namespace auth_oidc\event;
 
 /**
- * Interface defining an HTTP client.
+ * Fired when a user disconnects from OpenID Connect.
  */
-interface httpclientinterface {
+class user_disconnected extends \core\event\base {
     /**
-      * HTTP POST method
-      *
-      * @param string $url
-      * @param array|string $params
-      * @param array $options
-      * @return bool
-      */
-     public function post($url, $params = '', $options = array());
+     * Return localised event name.
+     *
+     * @return string
+     */
+    public static function get_name() {
+        return get_string('eventuserdisconnected', 'auth_oidc');
+    }
+
+    /**
+     * Returns non-localised event description with id's for admin use only.
+     *
+     * @return string
+     */
+    public function get_description() {
+        return "The user with id '$this->userid' has disconnected from OpenID Connect (auth plugin 'auth_oidc').";
+    }
+
+    /**
+     * Init method.
+     *
+     * @return void
+     */
+    protected function init() {
+        $this->context = \context_system::instance();
+        $this->data['crud'] = 'r';
+        $this->data['edulevel'] = self::LEVEL_OTHER;
+        $this->data['objecttable'] = 'user';
+    }
 }

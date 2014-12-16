@@ -108,7 +108,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
         $redirecturi = new moodle_url('/auth/oidc/');
 
-        $httpclient = new \auth_oidc\httpclient;
+        $httpclient = new \auth_oidc\httpclient();
         $client = new \auth_oidc\oidcclient($this->httpclient);
         $client->setcreds($this->config->clientid, $this->config->clientsecret, $redirecturi->out());
         $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
@@ -185,6 +185,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
      */
     public function disconnect() {
         global $OUTPUT, $PAGE, $USER, $DB, $CFG;
+        require_once($CFG->dirroot.'/user/lib.php');
         $PAGE->set_url('/auth/oidc/ucp.php');
         $PAGE->set_context(\context_system::instance());
         $PAGE->set_pagelayout('standard');
@@ -216,35 +217,39 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if (empty($fromform->password)) {
                 throw new \Exception('Password cannot be empty');
             }
+            $origusername = $USER->username;
+            $updateduser = new \stdClass;
 
             if ($customdata['canchooseusername'] === true) {
                 if (empty($fromform)) {
                     throw new \Exception('Username cannot be empty');
                 }
 
-                if ($fromform->username !== $USER->username) {
-                    $usercheck = ['username' => $fromform->username, 'mnethostid' => $CFG->mnet_localhost_id];
-                    $existinguser = $DB->get_record('user', $usercheck);
-                    if (!empty($existinguser)) {
-                        throw new \Exception('That username is already taken. Please choose a different one.');
+                if (strtolower($fromform->username) !== $USER->username) {
+                    $newusername = strtolower($fromform->username);
+                    $usercheck = ['username' => $newusername, 'mnethostid' => $CFG->mnet_localhost_id];
+                    if ($DB->record_exists('user', $usercheck) === false) {
+                        $updateduser->username = $newusername;
                     } else {
-                        // Update username.
-                        $updateduser = ['id' => $USER->id, 'username' => $fromform->username];
-                        $DB->update_record('user', (object)$updateduser);
+                        throw new \Exception('That username is already taken. Please choose a different one.');
                     }
                 }
             }
 
-            // Set auth.
-            $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'manual']);
-
-            // Update password.
-            $user = $DB->get_record('user', ['id' => $USER->id]);
-            update_internal_user_password($user, $fromform->password);
+            // Update user.
+            $updateduser->auth = 'manual';
+            $updateduser->id = $USER->id;
+            $updateduser->password = $fromform->password;
+            user_update_user($updateduser);
 
             // Delete token data.
-            $DB->delete_records('auth_oidc_token', ['username' => $USER->username]);
+            $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
 
+            $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+            $event = \auth_oidc\event\user_disconnected::create($eventdata);
+            $event->trigger();
+
+            $USER = $DB->get_record('user', ['id' => $USER->id]);
             redirect(new \moodle_url('/auth/oidc/ucp.php'));
         }
 
@@ -332,7 +337,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
             'userid' => $USER->id,
             'other' => ['username' => $USER->username]
         ];
-        $event = \auth_oidc\event\user_loggedin::create($eventdata);
+        $event = \auth_oidc\event\user_connected::create($eventdata);
         $event->trigger();
 
         // Update auth plugin.

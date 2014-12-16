@@ -32,7 +32,6 @@ if (is_siteadmin() !== true) {
 if ($mode === 'setsystemuser') {
     $SESSION->auth_oidc_justevent = true;
     redirect(new \moodle_url('/auth/oidc/index.php'));
-    die();
 } else if ($mode === 'sharepointinit') {
     $oidcconfig = get_config('auth_oidc');
     if (empty($oidcconfig)) {
@@ -49,26 +48,6 @@ if ($mode === 'setsystemuser') {
             $oidcconfig->tokenendpoint);
 
     $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
-    if (empty($sptoken)) {
-        $aadgraphtoken = \local_o365\oauth2\systemtoken::instance('https://graph.windows.net', $clientdata, $httpclient);
-        if (!empty($aadgraphtoken)) {
-            $params = [
-                'client_id' => $oidcconfig->clientid,
-                'client_secret' => $oidcconfig->clientsecret,
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $aadgraphtoken->get_refreshtoken(),
-                'resource' => $spresource,
-            ];
-            $tokenresult = $httpclient->post($oidcconfig->tokenendpoint, $params);
-            $tokenresult = @json_decode($tokenresult, true);
-
-            if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
-                \local_o365\oauth2\systemtoken::store_new_token($tokenresult['access_token'], $tokenresult['expires_on'],
-                        $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
-                $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
-            }
-        }
-    }
 
     if (empty($sptoken)) {
         throw new \Exception('Did not have an available sharepoint token, and could not get one.');
@@ -79,6 +58,22 @@ if ($mode === 'setsystemuser') {
 
     if ($sharepoint->site_exists('moodle') === false) {
         $sharepoint->create_site('Moodle', 'moodle', 'Site for shared Moodle course data.');
+    }
+
+    $courses = $DB->get_recordset('course');
+    $successes = [];
+    $failures = [];
+    foreach ($courses as $course) {
+        if ($course->id == SITEID) {
+            continue;
+        }
+
+        try {
+            $sharepoint->create_course_site($course);
+            $successes[] = $course->id;
+        } catch (\Exception $e) {
+            $failures[] = $course->id;
+        }
     }
     set_config('sharepoint_initialized', '1', 'local_o365');
     redirect(new \moodle_url('/admin/settings.php?section=local_o365'));

@@ -197,4 +197,46 @@ class azuread extends \local_o365\rest\o365api {
         }
         return true;
     }
+
+    /**
+     * Get the AzureAD UPN of a connected Moodle user.
+     *
+     * @param \stdClass $user The Moodle user.
+     * @return string|bool The user's AzureAD UPN, or false if failure.
+     */
+    public static function get_muser_upn($user) {
+        global $DB;
+        $now = time();
+        // Get user UPN.
+        $aaduserdata = $DB->get_record('local_o365_aaduserdata', ['muserid' => $user->id]);
+        if (!empty($aaduserdata)) {
+            return $aaduserdata->userupn;
+        } else {
+            // Get user data.
+            $authoidcuserdata = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
+            if (empty($authoidcuserdata)) {
+                // No data for the user in the OIDC token table. Can't proceed.
+                return false;
+            }
+            $oidcconfig = get_config('auth_oidc');
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+            $resource = \local_o365\rest\azuread::get_resource();
+            $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+            $rawaaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
+            if (!empty($rawaaduserdata) && isset($rawaaduserdata['objectId']) && isset($rawaaduserdata['userPrincipalName'])) {
+                // Save user data.
+                $aaduserdata = new \stdClass;
+                $aaduserdata->muserid = $user->id;
+                $aaduserdata->objectid = $rawaaduserdata['objectId'];
+                $aaduserdata->userupn = $rawaaduserdata['userPrincipalName'];
+                $aaduserdata->timecreated = $now;
+                $aaduserdata->timemodified = $now;
+                $aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
+                return $aaduserdata->userupn;
+            }
+        }
+        return false;
+    }
 }

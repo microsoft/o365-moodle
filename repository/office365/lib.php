@@ -71,12 +71,10 @@ class repository_office365 extends \repository {
 
         $this->sharepoint['configured'] = \local_o365\rest\sharepoint::is_configured();
         if ($this->sharepoint['configured'] === true) {
-            if (!empty($this->o365config->systemtokens)) {
-                $systemtokens = unserialize($this->o365config->systemtokens);
-                $spresource = \local_o365\rest\sharepoint::get_resource();
-                if (isset($systemtokens[$spresource])) {
-                    $this->sharepoint['token'] = $systemtokens[$spresource];
-                }
+            $sharepointresource = \local_o365\rest\sharepoint::get_resource();
+            $tokenrec = $DB->get_record('local_o365_token', ['user_id' => $USER->id, 'resource' => $sharepointresource]);
+            if (!empty($tokenrec)) {
+                $this->sharepoint['token'] = $tokenrec;
             }
         }
     }
@@ -107,9 +105,10 @@ class repository_office365 extends \repository {
         if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
             $clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
                     $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-            $token = new \local_o365\oauth2\token($this->sharepoint['token']['token'], $this->sharepoint['token']['expiry'],
-                    $this->sharepoint['token']['refreshtoken'], $this->sharepoint['token']['scope'],
-                    $this->sharepoint['token']['resource'], $clientdata, $this->httpclient);
+            $token = new \local_o365\oauth2\token($this->sharepoint['token']->token, $this->sharepoint['token']->expiry,
+                    $this->sharepoint['token']->refreshtoken, $this->sharepoint['token']->scope,
+                    $this->sharepoint['token']->resource, $clientdata, $this->httpclient);
+
             return new \local_o365\rest\sharepoint($token, $this->httpclient);
         }
         return false;
@@ -262,30 +261,50 @@ class repository_office365 extends \repository {
         if ($clienttype === 'onedrive') {
             $onedrive = $this->get_onedrive_apiclient();
             $result = $onedrive->create_file($filepath, $filename, $content);
-            $source = base64_encode(serialize(['id' => $result['id'], 'source' => $clienttype]));
-            $downloadedfile = $this->get_file($source, $filename);
-            $record = new \stdClass;
-            $record->filename = $filename;
-            $record->filepath = $savepath;
-            $record->itemid = $itemid;
-            $record->component = 'user';
-            $record->filearea = 'draft';
-            $record->itemid = $itemid;
-            $record->license = $license;
-            $record->author = $author;
-            $usercontext = \context_user::instance($USER->id);
-            $now = time();
-            $record->contextid = $usercontext->id;
-            $record->timecreated = $now;
-            $record->timemodified = $now;
-            $record->userid = $USER->id;
-            $record->sortorder = 0;
-            $record->source = $this->build_source_field($source);
-            $info = \repository::move_to_filepool($downloadedfile['path'], $record);
-            return $info;
+        } else if ($clienttype === 'sharepoint') {
+            $pathtrimmed = trim($filepath, '/');
+            $pathparts = explode('/', $pathtrimmed);
+            if (!is_numeric($pathparts[0])) {
+                throw new \Exception('Bad path');
+            }
+            $courseid = (int)$pathparts[0];
+            unset($pathparts[0]);
+            $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
+            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
+            $courses = enrol_get_users_courses($USER->id);
+            if (!isset($courses[$courseid])) {
+                throw new \Exception('Access denied');
+            }
+            $curcourse = $courses[$courseid];
+            unset($courses);
+            $sharepoint = $this->get_sharepoint_apiclient();
+            $sharepoint->set_site('moodle/'.$curcourse->shortname);
+            $result = $sharepoint->create_file($fullpath, $filename, $content);
         } else {
             throw new \Exception('Client type not supported');
         }
+
+        $source = base64_encode(serialize(['id' => $result['id'], 'source' => $clienttype]));
+        $downloadedfile = $this->get_file($source, $filename);
+        $record = new \stdClass;
+        $record->filename = $filename;
+        $record->filepath = $savepath;
+        $record->itemid = $itemid;
+        $record->component = 'user';
+        $record->filearea = 'draft';
+        $record->itemid = $itemid;
+        $record->license = $license;
+        $record->author = $author;
+        $usercontext = \context_user::instance($USER->id);
+        $now = time();
+        $record->contextid = $usercontext->id;
+        $record->timecreated = $now;
+        $record->timemodified = $now;
+        $record->userid = $USER->id;
+        $record->sortorder = 0;
+        $record->source = $this->build_source_field($source);
+        $info = \repository::move_to_filepool($downloadedfile['path'], $record);
+        return $info;
     }
 
     /**
@@ -327,12 +346,9 @@ class repository_office365 extends \repository {
                 if ($this->path_is_upload($path) === false) {
                     $sharepointclient = $this->get_sharepoint_apiclient();
                     if (!empty($sharepointclient)) {
-                        $sharepointclient->set_site('moodle');
+                        $sharepointclient->set_site('moodle/'.$courses[$courseid]->shortname);
                         try {
-                            $fullpath = '/'.$courses[$courseid]->shortname;
-                            if (!empty($relpath)) {
-                                $fullpath .= '/'.$relpath;
-                            }
+                            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
                             $contents = $sharepointclient->get_files($fullpath);
                             $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint');
                         } catch (\Exception $e) {

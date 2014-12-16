@@ -23,30 +23,18 @@
 
 namespace auth_oidc;
 
+require_once($CFG->dirroot.'/lib/filelib.php');
+
 /**
- * Implementation of the httpclientinterface using CURL.
+ * Implementation of \auth_oidc\httpclientinterface using Moodle CURL.
  */
-class httpclient implements \auth_oidc\httpclientinterface {
-
-    /**
-     * Encodes an array to the application/x-www-form-urlencoded format.
-     *
-     * @param array $ar An associative array to encode.
-     * @return string The array encoded as application/x-www-form-urlencoded.
-     */
-    protected function urlencode_array(array $ar) {
-        foreach ($ar as $k => $v) {
-            $ar[$k] = urlencode($k).'='.urlencode($v);
-        }
-        return implode('&', $ar);
-    }
-
+class httpclient extends \curl implements \auth_oidc\httpclientinterface {
     /**
      * Generate a client tag.
      *
      * @return string A client tag.
      */
-    protected function get_clienttag() {
+    protected function get_clienttag_headers() {
         global $CFG;
 
         $iid = sha1($CFG->wwwroot);
@@ -58,47 +46,24 @@ class httpclient implements \auth_oidc\httpclientinterface {
 
         $params = "lang=PHP; os={$ostype}; os_version={$osver}; arch={$arch}; version={$ver}; MoodleInstallId={$iid}";
         $clienttag = "Moodle/{$mdlver} ({$params})";
-        return $clienttag;
+
+        return [
+            'User-Agent: '.$clienttag,
+            'X-ClientService-ClientTag: '.$clienttag,
+        ];
     }
 
     /**
-     * Post data to a URL.
+     * Single HTTP Request
      *
-     * @param string $url The URL to post to.
-     * @param string|array $data The data to post.
-     * @return string The returned data.
+     * @param string $url The URL to request
+     * @param array $options
+     * @return bool
      */
-    public function post($url, $data) {
-        $ch = curl_init();
-        $curlopts = [
-            CURLOPT_URL => $url,
-            CURLOPT_HEADER => false,
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-        ];
-
-        $clienttag = $this->get_clienttag();
-        $curlopts[CURLOPT_HTTPHEADER][] = 'User-Agent: '.$clienttag;
-        $curlopts[CURLOPT_HTTPHEADER][] = 'X-ClientService-ClientTag: '.$clienttag;
-
-        if (is_array($data)) {
-            $curlopts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/x-www-form-urlencoded';
-            $data = $this->urlencode_array($data);
-        } else if (is_string($data)) {
-            $curlopts[CURLOPT_HTTPHEADER][] = 'Content-Type: text/plain';
-        }
-        $curlopts[CURLOPT_POSTFIELDS] = $data;
-
-        curl_setopt_array($ch, $curlopts);
-        $returned = curl_exec($ch);
-        if ($returned === false) {
-            $errorstring = curl_error($ch);
-            curl_close($ch);
-            throw new \Exception('CURL Error: '.$errorstring);
-        } else {
-            curl_close($ch);
-            return $returned;
-        }
+    protected function request($url, $options = array()) {
+        $this->setHeader($this->get_clienttag_headers());
+        $result = parent::request($url, $options);
+        $this->resetHeader();
+        return $result;
     }
 }

@@ -27,6 +27,14 @@ namespace local_o365\oauth2;
  * Represents an oauth2 token.
  */
 class systemtoken extends \local_o365\oauth2\token {
+    /**
+     * Get a system token for a given resource.
+     *
+     * @param string $resource The new resource.
+     * @param \local_o365\oauth2\clientdata $clientdata Client information.
+     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @return \local_o365\oauth2\systemtoken|bool A constructed token for the new resource, or false if failure.
+     */
     public static function instance($resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
         $tokens = get_config('local_o365', 'systemtokens');
         $tokens = unserialize($tokens);
@@ -34,8 +42,44 @@ class systemtoken extends \local_o365\oauth2\token {
             $token = new systemtoken($tokens[$resource]['token'], $tokens[$resource]['expiry'], $tokens[$resource]['refreshtoken'],
                     $tokens[$resource]['scope'], $tokens[$resource]['resource'], $clientdata, $httpclient);
             return $token;
+        } else {
+            $token = static::get_for_new_resource($resource, $clientdata, $httpclient);
+            if (!empty($token)) {
+                return $token;
+            }
         }
         return null;
+    }
+
+    /**
+     * Get a token instance for a new resource.
+     *
+     * @param string $resource The new resource.
+     * @param \local_o365\oauth2\clientdata $clientdata Client information.
+     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @return \local_o365\oauth2\systemtoken|bool A constructed token for the new resource, or false if failure.
+     */
+    public static function get_for_new_resource($resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+        $aadgraphtoken = static::instance('https://graph.windows.net', $clientdata, $httpclient);
+        if (!empty($aadgraphtoken)) {
+            $params = [
+                'client_id' => $clientdata->get_clientid(),
+                'client_secret' => $clientdata->get_clientsecret(),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $aadgraphtoken->get_refreshtoken(),
+                'resource' => $resource,
+            ];
+            $tokenresult = $httpclient->post($clientdata->get_tokenendpoint(), $params);
+            $tokenresult = @json_decode($tokenresult, true);
+
+            if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
+                static::store_new_token($tokenresult['access_token'], $tokenresult['expires_on'],
+                        $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
+                $token = static::instance($resource, $clientdata, $httpclient);
+                return $token;
+            }
+        }
+        return false;
     }
 
     /**

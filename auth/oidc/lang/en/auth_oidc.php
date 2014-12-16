@@ -37,9 +37,13 @@ $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect 
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
 $string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint to use.';
 
+$string['oidc:manageconnection'] = 'Manage OpenID Connect Connection';
+
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';
 $string['eventusercreated'] = 'User created with OpenID Connect';
+$string['eventuserconnected'] = 'User connected to OpenID Connect';
 $string['eventuserloggedin'] = 'User Logged In with OpenID Connect';
+$string['eventuserdisconnected'] = 'User disconnected from OpenID Connect';
 
 $string['ucp_general_intro'] = 'Here you can manage your connection to {$a}. If enabled, you will be able to use your {$a} account to log in to Moodle instead of a separate username and password. Once connected, you\'ll no longer have to remember a username and password for Moodle, all log-ins will be handled by {$a}.';
 $string['ucp_status'] = '{$a} is:';
