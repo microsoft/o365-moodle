@@ -416,7 +416,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $now = time();
 
         $siteurl = rawurlencode($course->shortname);
-        $fullsiteurl = $this->parentsite.'/'.$siteurl;
+        $fullsiteurl = '/'.$this->parentsite.'/'.$siteurl;
 
         // Check if site exists.
         if ($this->site_exists($fullsiteurl) !== true) {
@@ -436,7 +436,12 @@ class sharepoint extends \local_o365\rest\o365api {
                 throw new \Exception('Problem creating site.');
             }
         } else {
-            throw new \Exception('Site already exists.');
+            $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
+            if (!empty($siterec) && $siterec->siteurl == $fullsiteurl) {
+                return $siterec;
+            } else {
+                throw new \Exception('Site already exists, but could not find local record.');
+            }
         }
     }
 
@@ -453,6 +458,7 @@ class sharepoint extends \local_o365\rest\o365api {
 
         $users = get_users_by_capability($context, $capability);
         $results = [];
+
         // Assign users to group.
         foreach ($users as $user) {
             // Only AAD users can be added to sharepoint.
@@ -460,7 +466,12 @@ class sharepoint extends \local_o365\rest\o365api {
                 continue;
             }
 
-            $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+            try {
+                $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+            } catch (\Exception $e) {
+                continue;
+            }
+
             if (!empty($userupn)) {
                 $results[$user->id] = $this->add_user_to_group($userupn, $spgroupid, $user->id);
             }
@@ -494,17 +505,20 @@ class sharepoint extends \local_o365\rest\o365api {
         $this->set_site($siterec->siteurl);
 
         // Create teacher group and save in db.
-        $groupname = get_string('spsite_group_contributors_name', 'local_o365', $course->shortname);
-        $description = get_string('spsite_group_contributors_desc', 'local_o365', $course->shortname);
-        $groupdata = $this->create_group($groupname, $description);
-        $grouprec = new \stdClass;
-        $grouprec->coursespsiteid = $siterec->id;
-        $grouprec->groupid = $groupdata['Id'];
-        $grouprec->grouptitle = $groupdata['Title'];
-        $grouprec->permtype = 'contribute';
-        $grouprec->timecreated = $now;
-        $grouprec->timemodified = $now;
-        $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+        $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
+        if (empty($grouprec)) {
+            $groupname = get_string('spsite_group_contributors_name', 'local_o365', $course->shortname);
+            $description = get_string('spsite_group_contributors_desc', 'local_o365', $course->shortname);
+            $groupdata = $this->create_group($groupname, $description);
+            $grouprec = new \stdClass;
+            $grouprec->coursespsiteid = $siterec->id;
+            $grouprec->groupid = $groupdata['Id'];
+            $grouprec->grouptitle = $groupdata['Title'];
+            $grouprec->permtype = 'contribute';
+            $grouprec->timecreated = $now;
+            $grouprec->timemodified = $now;
+            $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+        }
 
         // Assign group permissions.
         $this->assign_group_permissions($grouprec->groupid, $grouprec->permtype);
