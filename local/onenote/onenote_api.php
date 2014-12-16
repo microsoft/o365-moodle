@@ -100,7 +100,10 @@ class onenote_api {
         $xpath = new DOMXPath($doc);
         
         $this->handle_garbage_chars($xpath);
-        
+
+        // Process span tags to increase font size.
+        $this->process_span_tags($xpath);
+
         $img_nodes = $xpath->query("//img");
         
         if ($img_nodes && (count($img_nodes) > 0)) {
@@ -706,7 +709,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $img_data . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -726,9 +729,6 @@ class onenote_api {
         $doc = $dom->getElementsByTagName("body")->item(0);
         
         $this->handle_garbage_chars($xpath);
-
-        // Process html before download.
-        $this->process_tags($dom, $xpath);
 
         $img_nodes = $xpath->query("//img");
         $img_data = '';
@@ -778,7 +778,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', \'Helvetica Neue Light\',  Arial, \'Lucida Grande\', sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $img_data . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -928,26 +928,39 @@ class onenote_api {
         foreach ($tags as $tag) {
 
             $nodes = $xpath->query('//'.$tag);
-            if ($nodes) {
+            if ($nodes->length) {
 
-                foreach ($nodes as $node) {
-                    $childnodes = $node->childnodes;
+                $nodesarray = array();
 
-                    foreach ($childnodes as $childnode) {
+                foreach($nodes as $tagnode){
+                    $nodesarray[] = $tagnode;
+                }
+
+                foreach ($nodesarray as $node) {
+                    $childnodes = $node->childNodes;
+
+                    $childnodesarray = array();
+
+                    foreach($childnodes as $child){
+                        $childnodesarray[] = $child;
+                    }
+
+                    foreach ($childnodesarray as $childnode) {
 
                         if (in_array($childnode->nodeName, array('#text', 'b', 'a', 'i', 'span', 'em', 'strong'))) {
 
                             $spannode = $dom->createElement('span');
 
-                            $style = "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;";
-                            $style .= "font-weight: bold;font-size:". $tagfontsizes[$tag] ."; color:rgb(51,51,51);";
+                            $style = "font-family:'Helvetica',Arial,sans-serif;";
+                            $style .= "font-size:". $tagfontsizes[$tag] ."; color:rgb(51,51,51);";
 
                             $spannode->setAttribute("style", $style);
 
                             $spannode->appendChild($node->removeChild($childnode));
                             $node->insertBefore($spannode);
 
-                        } else {
+                        }
+                        else {
                             $node->insertBefore($node->removeChild($childnode));
                         }
                     }
@@ -955,13 +968,37 @@ class onenote_api {
             }
         }
 
-        // Get all tables.
-        $tables = $xpath->query('//table');
+         //Get all tables.
+         $tables = $xpath->query('//table');
 
-        if ($tables) {
-            foreach ($tables as $table) {
-                // Set border attribute of each table.
-                $table->setAttribute("border", "2");
+         if ($tables) {
+             foreach ($tables as $table) {
+                 // Check if table have border attribute set.
+                 $border = $table->getAttribute('border');
+
+                 // If not, set default border of table
+                 if($border ==''){
+                     $table->setAttribute("border", "2");
+                 }
+             }
+         }
+    }
+
+    /**
+     * Function to increase the span font size to 14px to make downloaded html look better
+     * @param $xpath
+     */
+    private function process_span_tags($xpath){
+
+        // Get all the span tags
+        $spannodes = $xpath->query('//span');
+
+        if($spannodes->length){
+
+            foreach($spannodes as $span){
+                $style = $span->getAttribute('style');
+                // Replace 12px font size with 14px.
+                $span->setAttribute('style', str_replace('font-size:12px','font-size:14px', $style));
             }
         }
     }
