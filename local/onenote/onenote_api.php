@@ -100,7 +100,10 @@ class onenote_api {
         $xpath = new DOMXPath($doc);
         
         $this->handle_garbage_chars($xpath);
-        
+
+        // Process span tags to increase font size.
+        $this->process_span_tags($xpath);
+
         $img_nodes = $xpath->query("//img");
         
         if ($img_nodes && (count($img_nodes) > 0)) {
@@ -979,5 +982,24 @@ class onenote_api {
                  }
              }
          }
+    }
+
+    /**
+     * Function to increase the span font size to 14px to make downloaded html look better
+     * @param $xpath
+     */
+    private function process_span_tags($xpath){
+
+        // Get all the span tags
+        $spannodes = $xpath->query('//span');
+
+        if($spannodes->length){
+
+            foreach($spannodes as $span){
+                $style = $span->getAttribute('style');
+                // Replace 12px font size with 14px.
+                $span->setAttribute('style', str_replace('font-size:12px','font-size:14px', $style));
+            }
+        }
     }
 }
