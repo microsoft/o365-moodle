@@ -67,6 +67,7 @@ if ($mode === 'setsystemuser') {
         if ($course->id == SITEID) {
             continue;
         }
+
         try {
             $sharepoint->create_course_site($course);
             $successes[] = $course->id;

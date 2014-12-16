@@ -225,7 +225,7 @@ class azuread extends \local_o365\rest\o365api {
             $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
             $rawaaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
-            if (!empty($rawaaduserdata)) {
+            if (!empty($rawaaduserdata) && isset($rawaaduserdata['objectId']) && isset($rawaaduserdata['userPrincipalName'])) {
                 // Save user data.
                 $aaduserdata = new \stdClass;
                 $aaduserdata->muserid = $user->id;
