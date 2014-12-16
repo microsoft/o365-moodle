@@ -706,7 +706,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $img_data . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -726,9 +726,6 @@ class onenote_api {
         $doc = $dom->getElementsByTagName("body")->item(0);
         
         $this->handle_garbage_chars($xpath);
-
-        // Process html before download.
-        $this->process_tags($dom, $xpath);
 
         $img_nodes = $xpath->query("//img");
         $img_data = '';
@@ -778,7 +775,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica Neue\',\'HelveticaNeue-Light\', \'Helvetica Neue Light\',  Helvetica, Arial, \'Lucida Grande\', sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', \'Helvetica Neue Light\',  Arial, \'Lucida Grande\', sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $img_data . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -928,18 +925,30 @@ class onenote_api {
         foreach ($tags as $tag) {
 
             $nodes = $xpath->query('//'.$tag);
-            if ($nodes) {
+            if ($nodes->length) {
 
-                foreach ($nodes as $node) {
+                $nodesarray = array();
+
+                foreach($nodes as $tagnode){
+                    $nodesarray[] = $tagnode;
+                }
+
+                foreach ($nodesarray as $node) {
                     $childnodes = $node->childNodes;
 
-                    foreach ($childnodes as $childnode) {
+                    $childnodesarray = array();
+
+                    foreach($childnodes as $child){
+                        $childnodesarray[] = $child;
+                    }
+
+                    foreach ($childnodesarray as $childnode) {
 
                         if (in_array($childnode->nodeName, array('#text', 'b', 'a', 'i', 'span', 'em', 'strong'))) {
 
                             $spannode = $dom->createElement('span');
 
-                            $style = "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;";
+                            $style = "font-family:'Helvetica',Arial,sans-serif;";
                             $style .= "font-size:". $tagfontsizes[$tag] ."; color:rgb(51,51,51);";
 
                             $spannode->setAttribute("style", $style);
@@ -948,10 +957,9 @@ class onenote_api {
                             $node->insertBefore($spannode);
 
                         }
-                        // This code can be removed.
-//                        else {
-//                            $node->insertBefore($node->removeChild($childnode));
-//                        }
+                        else {
+                            $node->insertBefore($node->removeChild($childnode));
+                        }
                     }
                 }
             }
