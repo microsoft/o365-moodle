@@ -142,19 +142,19 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
 
-        $onenote_api = onenote_api::getInstance();
-        $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
+        $onenoteapi = onenote_api::getInstance();
+        $is_teacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
 
         $o = '<hr/><b>' . get_string('onenoteactions', 'assignsubmission_onenote') . '</b>';
         
-        if ($onenote_api->is_logged_in()) {                    
+        if ($onenoteapi->is_logged_in()) {
             // Show a button to open the OneNote page.
-            $o .= $onenote_api->render_action_button(get_string('workonthis', 'assignsubmission_onenote'), 
+            $o .= $onenoteapi->render_action_button(get_string('workonthis', 'assignsubmission_onenote'),
                     $this->assignment->get_course_module()->id, false, $is_teacher, 
                     $submission ? $submission->userid : null, $submission ? $submission->id : null, null);
             $o .= '<br/><p>' . get_string('workonthishelp', 'assignsubmission_onenote') . '</p>';
         } else {
-            $o .= $onenote_api->render_signin_widget();
+            $o .= $onenoteapi->render_signin_widget();
             $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignsubmission_onenote') . '</p>';
         }
 
@@ -203,15 +203,15 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
         
-        $onenote_api = onenote_api::getInstance();
-        $temp_folder = $onenote_api->create_temp_folder();
+        $onenoteapi = onenote_api::getInstance();
+        $temp_folder = $onenoteapi->create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files.
-        $download_info = $onenote_api->download_page($record->submission_student_page_id, $temp_file);
+        $download_info = $onenoteapi->download_page($record->submission_student_page_id, $temp_file);
         
         if (!$download_info) {
-            if ($onenote_api->is_logged_in()) {
+            if ($onenoteapi->is_logged_in()) {
                 $this->set_error(get_string('submissiondownloadfailed', 'assignsubmission_onenote'));
             } else {
                 $this->set_error(get_string('notsignedin', 'assignsubmission_onenote'));
@@ -237,7 +237,7 @@ class assign_submission_onenote extends assign_submission_plugin {
             }
 
             // Check if submission size is greater assignment submission limit.
-        }else if ($submissionsize > $submissionlimit) {
+        } else if ($submissionsize > $submissionlimit) {
 
             // Display error if true.
             $this->set_error(get_string('submissionlimitexceed', 'assignsubmission_onenote'));
@@ -379,20 +379,20 @@ class assign_submission_onenote extends assign_submission_plugin {
         $count = $this->count_files($submission->id, ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
 
-        $onenote_api = onenote_api::getInstance();
-        $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
+        $onenoteapi = onenote_api::getInstance();
+        $is_teacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
         $o = '';
         
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {
             if (($count > 0) && ($is_teacher || (isset($submission->status)
                         && ($submission->status == ASSIGN_SUBMISSION_STATUS_SUBMITTED)))) {
-                if ($onenote_api->is_logged_in()) {                    
-                    // show a link to open the OneNote page
-                    $o .= $onenote_api->render_action_button(get_string('viewsubmission', 'assignsubmission_onenote'),
+                if ($onenoteapi->is_logged_in()) {
+                    // Show a link to open the OneNote page.
+                    $o .= $onenoteapi->render_action_button(get_string('viewsubmission', 'assignsubmission_onenote'),
                             $this->assignment->get_course_module()->id, false, $is_teacher,
                             $submission->userid, $submission->id, null);
                 } else {
-                    $o .= $onenote_api->render_signin_widget();
+                    $o .= $onenoteapi->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignsubmission_onenote') . '</p>';
                 }
             
