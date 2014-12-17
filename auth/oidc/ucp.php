@@ -26,6 +26,8 @@ require_once(__DIR__.'/auth.php');
 
 require_login();
 
+require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+
 $action = optional_param('action', null, PARAM_TEXT);
 $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
 $oidcconnected = (!empty($oidctoken)) ? true : false;
@@ -33,12 +35,12 @@ $oidcconnected = (!empty($oidctoken)) ? true : false;
 if (!empty($action)) {
     if ($action === 'connect' && $oidcconnected === false) {
         $auth = new \auth_plugin_oidc;
-        $auth->set_httpclient(new \auth_oidc\httpclient);
+        $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnect' && $oidcconnected === true) {
         if (is_enabled_auth('manual') === true) {
             $auth = new \auth_plugin_oidc;
-            $auth->set_httpclient(new \auth_oidc\httpclient);
+            $auth->set_httpclient(new \auth_oidc\httpclient());
             $auth->disconnect();
         }
     } else {

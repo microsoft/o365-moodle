@@ -22,5 +22,8 @@
  */
 
 $string['configplugin'] = 'Configure Microsoft Office 365 Repository';
+$string['file'] = 'File';
+$string['office365:view'] = 'View office365 repository';
 $string['pluginname'] = 'Office 365 OneDrive';
 $string['pluginname_help'] = 'A Microsoft Office 365 OneDrive Repository';
+$string['upload'] = 'Upload New File';

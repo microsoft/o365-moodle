@@ -71,12 +71,10 @@ class repository_office365 extends \repository {
 
         $this->sharepoint['configured'] = \local_o365\rest\sharepoint::is_configured();
         if ($this->sharepoint['configured'] === true) {
-            if (!empty($this->o365config->systemtokens)) {
-                $systemtokens = unserialize($this->o365config->systemtokens);
-                $spresource = \local_o365\rest\sharepoint::get_resource();
-                if (isset($systemtokens[$spresource])) {
-                    $this->sharepoint['token'] = $systemtokens[$spresource];
-                }
+            $sharepointresource = \local_o365\rest\sharepoint::get_resource();
+            $tokenrec = $DB->get_record('local_o365_token', ['user_id' => $USER->id, 'resource' => $sharepointresource]);
+            if (!empty($tokenrec)) {
+                $this->sharepoint['token'] = $tokenrec;
             }
         }
     }
@@ -107,9 +105,10 @@ class repository_office365 extends \repository {
         if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
             $clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
                     $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-            $token = new \local_o365\oauth2\token($this->sharepoint['token']['token'], $this->sharepoint['token']['expiry'],
-                    $this->sharepoint['token']['refreshtoken'], $this->sharepoint['token']['scope'],
-                    $this->sharepoint['token']['resource'], $clientdata, $this->httpclient);
+            $token = new \local_o365\oauth2\token($this->sharepoint['token']->token, $this->sharepoint['token']->expiry,
+                    $this->sharepoint['token']->refreshtoken, $this->sharepoint['token']->scope,
+                    $this->sharepoint['token']->resource, $clientdata, $this->httpclient);
+
             return new \local_o365\rest\sharepoint($token, $this->httpclient);
         }
         return false;
@@ -138,7 +137,12 @@ class repository_office365 extends \repository {
      *           path, current path and parent path
      */
     public function get_listing($path = '', $page = '') {
-        global $OUTPUT;
+        global $OUTPUT, $SESSION;
+
+        $itemid = optional_param('itemid', 0, PARAM_INT);
+        if (!empty($itemid)) {
+            $SESSION->repository_office365['curpath'][$itemid] = $path;
+        }
 
         // If we were launched from a course context (or child of course context), initialize the file picker in the correct course.
         if (!empty($this->context)) {
@@ -185,6 +189,18 @@ class repository_office365 extends \repository {
             }
         }
 
+        if ($this->path_is_upload($path) === true) {
+            return [
+                'dynload' => true,
+                'nologin' => true,
+                'nosearch' => true,
+                'path' => $breadcrumb,
+                'upload' => [
+                    'label' => get_string('file', 'repository_office365'),
+                ],
+            ];
+        }
+
         return [
             'dynload' => true,
             'nologin' => true,
@@ -192,6 +208,103 @@ class repository_office365 extends \repository {
             'list' => $list,
             'path' => $breadcrumb,
         ];
+    }
+
+    /**
+     * Determine whether a given path is an upload path.
+     *
+     * @param string $path A path to check.
+     * @return bool Whether the path is an upload path.
+     */
+    protected function path_is_upload($path) {
+        return (substr($path, -strlen('/upload/')) === '/upload/') ? true : false;
+    }
+
+    /**
+     * Process uploaded file.
+     *
+     * @return array Array of uploaded file information.
+     */
+    public function upload($saveas_filename, $maxbytes) {
+        global $CFG, $USER, $SESSION;
+
+        $types = optional_param_array('accepted_types', '*', PARAM_RAW);
+        $savepath = optional_param('savepath', '/', PARAM_PATH);
+        $itemid = optional_param('itemid', 0, PARAM_INT);
+        $license = optional_param('license', $CFG->sitedefaultlicense, PARAM_TEXT);
+        $author = optional_param('author', '', PARAM_TEXT);
+        $areamaxbytes = optional_param('areamaxbytes', FILE_AREA_MAX_BYTES_UNLIMITED, PARAM_INT);
+        $overwriteexisting = optional_param('overwrite', false, PARAM_BOOL);
+
+        $filepath = '/';
+        if (!empty($SESSION->repository_office365)) {
+            if (isset($SESSION->repository_office365['curpath']) && isset($SESSION->repository_office365['curpath'][$itemid])) {
+                $filepath = $SESSION->repository_office365['curpath'][$itemid];
+                if (strpos($filepath, '/my/') === 0) {
+                    $clienttype = 'onedrive';
+                    $filepath = substr($filepath, 3);
+                } else if (strpos($filepath, '/courses/') === 0) {
+                    $clienttype = 'sharepoint';
+                    $filepath = substr($filepath, 8);
+                } else {
+                    throw new \Exception('Invalid client type.');
+                }
+            }
+        }
+        if ($this->path_is_upload($filepath) === true) {
+            $filepath = substr($filepath, 0, -strlen('/upload/'));
+        }
+        $filename = (!empty($saveas_filename)) ? $saveas_filename : $_FILES['repo_upload_file']['name'];
+        $filename = clean_param($filename, PARAM_FILE);
+        $content = file_get_contents($_FILES['repo_upload_file']['tmp_name']);
+
+        if ($clienttype === 'onedrive') {
+            $onedrive = $this->get_onedrive_apiclient();
+            $result = $onedrive->create_file($filepath, $filename, $content);
+        } else if ($clienttype === 'sharepoint') {
+            $pathtrimmed = trim($filepath, '/');
+            $pathparts = explode('/', $pathtrimmed);
+            if (!is_numeric($pathparts[0])) {
+                throw new \Exception('Bad path');
+            }
+            $courseid = (int)$pathparts[0];
+            unset($pathparts[0]);
+            $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
+            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
+            $courses = enrol_get_users_courses($USER->id);
+            if (!isset($courses[$courseid])) {
+                throw new \Exception('Access denied');
+            }
+            $curcourse = $courses[$courseid];
+            unset($courses);
+            $sharepoint = $this->get_sharepoint_apiclient();
+            $sharepoint->set_site('moodle/'.$curcourse->shortname);
+            $result = $sharepoint->create_file($fullpath, $filename, $content);
+        } else {
+            throw new \Exception('Client type not supported');
+        }
+
+        $source = base64_encode(serialize(['id' => $result['id'], 'source' => $clienttype]));
+        $downloadedfile = $this->get_file($source, $filename);
+        $record = new \stdClass;
+        $record->filename = $filename;
+        $record->filepath = $savepath;
+        $record->itemid = $itemid;
+        $record->component = 'user';
+        $record->filearea = 'draft';
+        $record->itemid = $itemid;
+        $record->license = $license;
+        $record->author = $author;
+        $usercontext = \context_user::instance($USER->id);
+        $now = time();
+        $record->contextid = $usercontext->id;
+        $record->timecreated = $now;
+        $record->timemodified = $now;
+        $record->userid = $USER->id;
+        $record->sortorder = 0;
+        $record->source = $this->build_source_field($source);
+        $info = \repository::move_to_filepool($downloadedfile['path'], $record);
+        return $info;
     }
 
     /**
@@ -221,23 +334,37 @@ class repository_office365 extends \repository {
                 ];
             }
         } else {
-            $pathparts = explode('/', $path);
-            if (!is_numeric($pathparts[1])) {
+            $pathtrimmed = trim($path, '/');
+            $pathparts = explode('/', $pathtrimmed);
+            if (!is_numeric($pathparts[0])) {
                 throw new \Exception('Bad path');
             }
-            $courseid = (int)$pathparts[1];
+            $courseid = (int)$pathparts[0];
+            unset($pathparts[0]);
+            $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
             if (isset($courses[$courseid])) {
-                $sharepointclient = $this->get_sharepoint_apiclient();
-                if (!empty($sharepointclient)) {
-                    $sharepointclient->set_site('moodle');
-                    try {
-                        $contents = $sharepointclient->get_files('/'.$courses[$courseid]->shortname);
-                        $list = $this->contents_api_response_to_list($contents, 'sharepoint');
-                    } catch (\Exception $e) {
-                        $list = [];
+                if ($this->path_is_upload($path) === false) {
+                    $sharepointclient = $this->get_sharepoint_apiclient();
+                    if (!empty($sharepointclient)) {
+                        $sharepointclient->set_site('moodle/'.$courses[$courseid]->shortname);
+                        try {
+                            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
+                            $contents = $sharepointclient->get_files($fullpath);
+                            $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint');
+                        } catch (\Exception $e) {
+                            $list = [];
+                        }
                     }
                 }
-                $breadcrumb[] = ['name' => $courses[$courseid]->shortname, 'path' => '/courses/'.$courseid];
+
+                $curpath = '/courses/'.$courseid;
+                $breadcrumb[] = ['name' => $courses[$courseid]->shortname, 'path' => $curpath];
+                foreach ($pathparts as $pathpart) {
+                    if (!empty($pathpart)) {
+                        $curpath .= '/'.$pathpart;
+                        $breadcrumb[] = ['name' => $pathpart, 'path' => $curpath];
+                    }
+                }
             }
         }
 
@@ -253,11 +380,15 @@ class repository_office365 extends \repository {
     protected function get_listing_my($path = '') {
         global $OUTPUT;
         $path = (empty($path)) ? '/' : $path;
-        $onedrive = $this->get_onedrive_apiclient();
-        $contents = $onedrive->get_contents($path);
 
-        // Generate listing.
-        $list = $this->contents_api_response_to_list($contents, 'onedrive');
+        $list = [];
+        if ($this->path_is_upload($path) !== true) {
+            $onedrive = $this->get_onedrive_apiclient();
+            $contents = $onedrive->get_contents($path);
+            $list = $this->contents_api_response_to_list($contents, $path, 'onedrive');
+        } else {
+            $list = [];
+        }
 
         // Generate path.
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => 'My Files', 'path' => '/my/']];
@@ -279,14 +410,23 @@ class repository_office365 extends \repository {
      * @param string $clienttype The type of client that the response is from. onedrive/sharepoint.
      * @return array A $list array to be used by the respository class in get_listing.
      */
-    protected function contents_api_response_to_list($response, $clienttype) {
+    protected function contents_api_response_to_list($response, $path, $clienttype) {
         global $OUTPUT;
         $list = [];
+        if ($clienttype === 'onedrive') {
+            $pathprefix = '/my'.$path;
+        } else if ($clienttype === 'sharepoint') {
+            $pathprefix = '/courses'.$path;
+        }
+        $list[] = [
+            'title' => get_string('upload', 'repository_office365'),
+            'path' => $pathprefix.'/upload/',
+            'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
+            'children' => [],
+        ];
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
-                $itempath = ($path === '/')
-                    ? '/my/'.$content['name']
-                    : '/my'.$content['parentReference']['path'].'/'.$content['name'];
+                $itempath = $pathprefix.'/'.$content['name'];
                 if ($content['type'] === 'Folder') {
                     $list[] = [
                         'title' => $content['name'],
@@ -310,6 +450,7 @@ class repository_office365 extends \repository {
                     ];
                 }
             }
+
         }
         return $list;
     }
@@ -348,7 +489,9 @@ class repository_office365 extends \repository {
 
         if (!empty($file)) {
             $path = $this->prepare_file($filename);
-            $result = file_put_contents($path, $file);
+            if (!empty($path)) {
+                $result = file_put_contents($path, $file);
+            }
         }
         if (empty($result)) {
             throw new moodle_exception('errorwhiledownload', 'repository_office365');

@@ -15,18 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package local_o365
+ * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-namespace local_o365\tests;
+namespace auth_oidc\tests;
 
 /**
  * A mock HTTP client allowing set responses.
  */
-class mockhttpclient extends \local_o365\httpclient {
+class mockhttpclient extends \auth_oidc\httpclient {
     /** @var string The stored set response. */
     protected $mockresponse = '';
 

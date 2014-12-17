@@ -124,6 +124,47 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get information about a folder.
+     *
+     * @param string $path The folder path.
+     * @return array Array of folder information.
+     */
+    public function get_folder_metadata($path) {
+        $path = rawurlencode($path);
+        $response = $this->apicall('get', "/v1.0/files/getByPath('{$path}')");
+        $response = json_decode($response, true);
+        if (empty($response)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $response;
+    }
+
+    /**
+     * Create a new file.
+     *
+     * @param string $folderpath The path to the file.
+     * @param string $filename The name of the file.
+     * @param string $content The file's contents.
+     * @return array Result.
+     */
+    public function create_file($folderpath, $filename, $content) {
+        $parentinfo = $this->get_folder_metadata($folderpath);
+        if (is_array($parentinfo) && isset($parentinfo['id'])) {
+            $filename = rawurlencode($filename);
+            $url = '/v1.0/files/'.$parentinfo['id'].'/children/'.$filename.'/content?nameConflict=overwrite';
+            $params = ['file' => $content];
+            $response = $this->apicall('put', $url, $params);
+            $response = json_decode($response, true);
+            if (empty($response)) {
+                throw new \Exception('Error in API call.');
+            }
+            return $response;
+        } else {
+            throw new \Exception('Could not find parent folder information');
+        }
+    }
+
+    /**
      * Create a new subsite.
      *
      * @param string $title The site's title.
@@ -243,6 +284,36 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get group information.
+     *
+     * @param string $id The group's id.
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_group_by_id($id) {
+        $result = $this->apicall('get', '/web/sitegroups/getbyid(\''.$id.'\')');
+        $result = json_decode($result, true);
+        if (empty($result)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $result;
+    }
+
+    /**
+     * Delete group.
+     *
+     * @param string $id The group's id.
+     * @return array|null Returned response, or null if error.
+     */
+    public function delete_group_by_id($id) {
+        $result = $this->apicall('post', '/web/sitegroups/removebyid(\''.$id.'\')');
+        $result = json_decode($result, true);
+        if (empty($result)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $result;
+    }
+
+    /**
      * Get users in a group.
      *
      * @param string $name The group's name.
@@ -260,17 +331,55 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Add a user to a group.
      *
-     * @param string $user An AAD user's LoginName.
-     * @param string $groupname The group's name.
+     * @param string $userupn An AAD user's UPN.
+     * @param string $groupid The group's id.
+     * @param int $muserid Optional. If present, will record assignment in database.
      * @return array|null Returned response, or null if error.
      */
-    public function add_user_to_group($user, $groupname) {
-        $userdata = ['LoginName' => $user];
+    public function add_user_to_group($userupn, $groupid, $muserid = null) {
+        global $DB;
+        $loginname = 'i:0#.f|membership|'.$userupn;
+        $userdata = ['LoginName' => $loginname];
         $userdata = json_encode($userdata);
-        $result = $this->apicall('post', '/web/sitegroups/getbyname(\''.$groupname.'\')/users', $userdata);
+        $result = $this->apicall('post', '/web/sitegroups/getbyid(\''.$groupid.'\')/users', $userdata);
         $result = json_decode($result, true);
         if (empty($result)) {
             throw new \Exception('Error in API call.');
+        }
+
+        if (!empty($muserid)) {
+            $recorded = $DB->record_exists('local_o365_spgroupassign', ['userid' => $muserid, 'groupid' => $groupid]);
+            if (empty($recorded)) {
+                $record = new \stdClass;
+                $record->userid = $muserid;
+                $record->groupid = $groupid;
+                $record->timecreated = time();
+                $DB->insert_record('local_o365_spgroupassign', $record);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Remove a user from a group.
+     *
+     * @param string $userupn An AAD user's UPN.
+     * @param string $groupid The group's id.
+     * @param int $muserid Optional. If present, will removed record of assignment in database.
+     * @return array|null Returned response, or null if error.
+     */
+    public function remove_user_from_group($userupn, $groupid, $muserid) {
+        global $DB;
+        $loginname = 'i:0#.f|membership|'.$userupn;
+        $loginname = urlencode($loginname);
+        $endpoint = '/web/sitegroups/getbyid('.$groupid.')/users/removebyloginname(@v)?@v=\''.$loginname.'\'';
+        $result = $this->apicall('post', $endpoint, '');
+        $result = json_decode($result, true);
+        if (empty($result)) {
+            throw new \Exception('Error in API call.');
+        }
+        if (!empty($muserid)) {
+            $recorded = $DB->delete_records('local_o365_spgroupassign', ['userid' => $muserid, 'groupid' => $groupid]);
         }
         return $result;
     }
@@ -292,6 +401,200 @@ class sharepoint extends \local_o365\rest\o365api {
             throw new \Exception('Permission not found');
         }
         $roledefid = $permdefids[$permissiontype];
-        return $this->apicall('post', "/web/roleassignments/addroleassignment(principalid={$principalid},roledefid={$roledefid})");
+        $response = $this->apicall('post', "/web/roleassignments/addroleassignment(principalid={$groupid},roledefid={$roledefid})");
+        return $response;
+    }
+
+    /**
+     * Create a course subsite.
+     *
+     * @param \stdClass $course A course record to create the subsite from.
+     * @return \stdClass An association record.
+     */
+    public function create_course_subsite($course) {
+        global $DB;
+        $now = time();
+
+        $siteurl = rawurlencode($course->shortname);
+        $fullsiteurl = '/'.$this->parentsite.'/'.$siteurl;
+
+        // Check if site exists.
+        if ($this->site_exists($fullsiteurl) !== true) {
+            // Create site.
+            $sitedata = $this->create_site($course->fullname, $siteurl, $course->summary);
+            if (!empty($sitedata)) {
+                // Save site data.
+                $siterec = new \stdClass;
+                $siterec->courseid = $course->id;
+                $siterec->siteid = $sitedata['Id'];
+                $siterec->siteurl = $sitedata['ServerRelativeUrl'];
+                $siterec->timecreated = $now;
+                $siterec->timemodified = $now;
+                $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
+                return $siterec;
+            } else {
+                throw new \Exception('Problem creating site.');
+            }
+        } else {
+            $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
+            if (!empty($siterec) && $siterec->siteurl == $fullsiteurl) {
+                return $siterec;
+            } else {
+                throw new \Exception('Site already exists, but could not find local record.');
+            }
+        }
+    }
+
+    /**
+     * Add users with a given capability in a given context to a Sharepoint group.
+     *
+     * @param \context $context The context to check for the capability.
+     * @param string $capability The capability to check for.
+     * @param int $spgroupid The sharepoint group ID to add users to.
+     */
+    public function add_users_with_capability_to_group($context, $capability, $spgroupid) {
+        global $DB;
+        $now = time();
+
+        $users = get_users_by_capability($context, $capability);
+        $results = [];
+
+        // Assign users to group.
+        foreach ($users as $user) {
+            // Only AAD users can be added to sharepoint.
+            if ($user->auth !== 'oidc') {
+                continue;
+            }
+
+            try {
+                $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+            } catch (\Exception $e) {
+                continue;
+            }
+
+            if (!empty($userupn)) {
+                $results[$user->id] = $this->add_user_to_group($userupn, $spgroupid, $user->id);
+            }
+        }
+        return $results;
+    }
+
+    /**
+     * Create a subsite for a course and assign appropriate permissions.
+     *
+     * @param int|\stdClass $course A course record or course ID.
+     * @return bool Success/Failure.
+     */
+    public function create_course_site($course) {
+        global $DB;
+        $now = time();
+
+        $this->set_site('moodle');
+
+        // Get course data.
+        if (is_numeric($course)) {
+            $course = $DB->get_record('course', ['id' => $course]);
+            if (empty($course)) {
+                throw new \Exception('Course not found.');
+            }
+        }
+
+        $requiredcapability = static::get_course_site_required_capability();
+
+        $siterec = $this->create_course_subsite($course);
+        $this->set_site($siterec->siteurl);
+
+        // Create teacher group and save in db.
+        $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
+        if (empty($grouprec)) {
+            $groupname = get_string('spsite_group_contributors_name', 'local_o365', $course->shortname);
+            $description = get_string('spsite_group_contributors_desc', 'local_o365', $course->shortname);
+            $groupdata = $this->create_group($groupname, $description);
+            $grouprec = new \stdClass;
+            $grouprec->coursespsiteid = $siterec->id;
+            $grouprec->groupid = $groupdata['Id'];
+            $grouprec->grouptitle = $groupdata['Title'];
+            $grouprec->permtype = 'contribute';
+            $grouprec->timecreated = $now;
+            $grouprec->timemodified = $now;
+            $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+        }
+
+        // Assign group permissions.
+        $this->assign_group_permissions($grouprec->groupid, $grouprec->permtype);
+
+        // Get users who need access.
+        $coursecontext = \context_course::instance($course->id);
+        $results = $this->add_users_with_capability_to_group($coursecontext, $requiredcapability, $grouprec->groupid);
+        return true;
+    }
+
+    /**
+     * Update a subsite for a course.
+     *
+     * @param int|\stdClass $course A course record or course ID.
+     * @return bool Success/Failure.
+     */
+    public function update_course_site($courseid, $shortname, $fullname) {
+        global $DB;
+
+        $spsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $courseid]);
+        if (empty($spsite)) {
+            return false;
+        }
+
+        $this->set_site($spsite->siteurl);
+
+        // Cannot update URL at the moment, just update Title.
+        try {
+            $updated = ['Title' => $fullname];
+            $this->update_site($updated);
+        } catch (\Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get the Moodle capability a user must have in the course context to access the course's sharepoint site.
+     *
+     * @return string A moodle capability.
+     */
+    public static function get_course_site_required_capability() {
+        return 'moodle/course:managefiles';
+    }
+
+    /**
+     * Delete a course site and it's associated groups.
+     * @param int $courseid The ID of the course to delete the site for.
+     * @return bool Success/Failure.
+     */
+    public function delete_course_site($courseid) {
+        global $DB;
+        $spsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $courseid]);
+        if (empty($spsite)) {
+            // No site created (that we know about).
+            return false;
+        }
+        $this->set_site($spsite->siteurl);
+
+        $spgroupsql = 'SELECT spgroup.*
+                         FROM {local_o365_spgroupdata} spgroup
+                         JOIN {local_o365_coursespsite} spsite
+                              ON spgroup.coursespsiteid = spsite.id
+                        WHERE spsite.courseid = ?';
+        $spgroups = $DB->get_records_sql($sqlgroupsql, [$courseid]);
+        foreach ($spgroups as $spgroup) {
+            try {
+                $this->delete_group_by_id($spgroup->groupid);
+                $DB->delete_records('local_o365_spgroupdata', ['id' => $spgroup->id]);
+            } catch (\Exception $e) {
+                // If the API call failed we can still continue.
+            }
+        }
+        $this->delete_site();
+        $DB->delete_records('local_o365_coursespsite', ['courseid' => $courseid]);
+
+        return true;
     }
 }

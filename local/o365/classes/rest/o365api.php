@@ -76,7 +76,9 @@ abstract class o365api {
      */
     protected function checktoken() {
         if ($this->token->is_expired() === true) {
-            $result = $this->token->refresh();
+            return $this->token->refresh();
+        } else {
+            return true;
         }
     }
 
@@ -99,11 +101,15 @@ abstract class o365api {
      * @return string The result of the API call.
      */
     public function apicall($httpmethod, $apimethod, $params = '') {
-        $this->checktoken();
+        $tokenvalid = $this->checktoken();
+        if ($tokenvalid !== true) {
+            throw new \Exception('Invalid or expired token.');
+        }
+
         $apiurl = $this->get_apiuri();
 
         $httpmethod = strtolower($httpmethod);
-        if (!in_array($httpmethod, ['get', 'post', 'patch', 'merge', 'delete'], true)) {
+        if (!in_array($httpmethod, ['get', 'post', 'put', 'patch', 'merge', 'delete'], true)) {
             throw new \Exception('Invalid httpmethod passed to apicall');
         }
 
@@ -114,6 +120,7 @@ abstract class o365api {
             'Content-Type: application/json;odata.metadata=full',
             'Authorization: Bearer '.$this->token->get_token(),
         ];
+        $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
         $options = ['CURLOPT_SSLVERSION' => 3];

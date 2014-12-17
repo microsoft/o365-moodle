@@ -170,7 +170,7 @@ class token {
         ];
         $result = $this->httpclient->post($this->clientdata->get_tokenendpoint(), $params);
         $result = json_decode($result, true);
-        if (!empty($result) && is_array($result)) {
+        if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $origresource = $this->resource;
 
             $this->token = $result['access_token'];
@@ -192,6 +192,7 @@ class token {
             }
             return true;
         } else {
+            var_dump($result);
             return false;
         }
     }

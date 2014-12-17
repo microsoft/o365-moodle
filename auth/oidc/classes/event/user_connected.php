@@ -21,9 +21,39 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-/**
- * A mock httpclient class providing access to all inaccessible properties/methods.
- */
-class mockhttpclient extends \auth_oidc\httpclient {
+namespace auth_oidc\event;
 
+/**
+ * Fired when a user connects to OpenID Connect.
+ */
+class user_connected extends \core\event\base {
+    /**
+     * Return localised event name.
+     *
+     * @return string
+     */
+    public static function get_name() {
+        return get_string('eventuserconnected', 'auth_oidc');
+    }
+
+    /**
+     * Returns non-localised event description with id's for admin use only.
+     *
+     * @return string
+     */
+    public function get_description() {
+        return "The user with id '$this->userid' has switched to using OpenID Connect (auth plugin 'auth_oidc').";
+    }
+
+    /**
+     * Init method.
+     *
+     * @return void
+     */
+    protected function init() {
+        $this->context = \context_system::instance();
+        $this->data['crud'] = 'r';
+        $this->data['edulevel'] = self::LEVEL_OTHER;
+        $this->data['objecttable'] = 'user';
+    }
 }

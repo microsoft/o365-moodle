@@ -96,4 +96,45 @@ class onedrive extends \local_o365\rest\o365api {
     public function get_file_by_id($fileid) {
         return $this->apicall('get', "/{$fileid}/content");
     }
+
+    /**
+     * Get information about a folder.
+     *
+     * @param string $path The folder path.
+     * @return array Array of folder information.
+     */
+    public function get_folder_metadata($path) {
+        $path = rawurlencode($path);
+        $response = $this->apicall('get', "/getByPath('{$path}')");
+        $response = json_decode($response, true);
+        if (empty($response)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $response;
+    }
+
+    /**
+     * Create a new file.
+     *
+     * @param string $folderpath The path to the file.
+     * @param string $filename The name of the file.
+     * @param string $content The file's contents.
+     * @return array Result.
+     */
+    public function create_file($folderpath, $filename, $content) {
+        $parentinfo = $this->get_folder_metadata($folderpath);
+        if (is_array($parentinfo) && isset($parentinfo['id'])) {
+            $filename = rawurlencode($filename);
+            $url = '/'.$parentinfo['id'].'/children/'.$filename.'/content?nameConflict=overwrite';
+            $params = ['file' => $content];
+            $response = $this->apicall('put', $url, $params);
+            $response = json_decode($response, true);
+            if (empty($response)) {
+                throw new \Exception('Error in API call.');
+            }
+            return $response;
+        } else {
+            throw new \Exception('Could not find parent folder information');
+        }
+    }
 }

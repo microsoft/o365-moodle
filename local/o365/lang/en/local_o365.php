@@ -31,6 +31,7 @@ $string['settings_aadsync_details'] = 'If enabled, users in the associated Azure
 $string['settings_sharepointinit'] = 'Initialize Sharepoint Sites';
 $string['settings_sharepointinit_details'] = 'This will create a sharepoint site for Moodle and subsites for all courses. Once initialized, courses will be able to use these sharepoint sites to share information between users.';
 $string['settings_sharepointinit_initialize'] = 'Initialize';
+$string['settings_sharepointinit_reinitialize'] = 'Reinitialize';
 $string['settings_sharepointinit_initialized'] = 'Sharepoint has been initialized';
 $string['settings_sharepointinit_setsystemapiuser'] = 'Set the system API user first.';
 $string['settings_systemapiuser'] = 'System API User';
@@ -41,6 +42,9 @@ $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
 $string['settings_tenant'] = 'AAD Tenant';
 $string['settings_tenant_details'] = 'The AAD tenant';
+
+$string['spsite_group_contributors_name'] = '{$a} contributors';
+$string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
 
 $string['ucp_general_intro'] = 'Here you can manage your connection to Office 365.';
 $string['ucp_title'] = 'Office365 Connection Management';

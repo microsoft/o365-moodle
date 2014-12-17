@@ -21,19 +21,29 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-namespace auth_oidc;
+namespace auth_oidc\tests;
 
 /**
- * Interface defining an HTTP client.
+ * A mock oidcclient class providing access to all inaccessible properties/methods.
  */
-interface httpclientinterface {
+class mockoidcclient extends \auth_oidc\oidcclient {
+    /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
+    public $httpclient;
+
+    /** @var array Array of endpoints. */
+    public $endpoints = [];
+
     /**
-      * HTTP POST method
-      *
-      * @param string $url
-      * @param array|string $params
-      * @param array $options
-      * @return bool
-      */
-     public function post($url, $params = '', $options = array());
+     * Stub method to access protected parent method.
+     */
+    public function getnewstate($nonce) {
+        return parent::getnewstate($nonce);
+    }
+
+    /**
+     * Stub method to access protected parent method.
+     */
+    public function getauthrequestparams() {
+        return parent::getauthrequestparams();
+    }
 }
