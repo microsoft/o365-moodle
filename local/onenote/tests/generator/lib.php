@@ -43,7 +43,7 @@ class repository_onenote_generator extends testing_repository_generator {
      */
     protected function prepare_type_record(array $record) {
         $record = parent::prepare_type_record($record);
-       
+
         if (!isset($record['clientid'])) {
             $record['clientid'] = 'clientid';
         }
@@ -51,7 +51,7 @@ class repository_onenote_generator extends testing_repository_generator {
             $record['secret'] = 'secret';
         }
         return $record;
-    
+
     }
 
 

@@ -27,25 +27,26 @@ function xmldb_local_onenote_upgrade($oldversion) {
         // Define table to be created.
         $table = new xmldb_table('onenote_user_sections');
     
-        // Adding fields to table
+        // Adding fields to table.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('user_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('course_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('section_id', XMLDB_TYPE_CHAR, '255', null, null, null, null);
     
-        // Adding keys to table
+        // Adding keys to table.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
     
-        // create table
-        if ($dbman->table_exists($table))
+        // Create table.
+        if ($dbman->table_exists($table)) {
             $dbman->drop_table($table);
+        }
 
         $dbman->create_table($table);
     
         // Define table onenote_assign_pages to be created.
         $table = new xmldb_table('onenote_assign_pages');
     
-        // Adding fields to table
+        // Adding fields to table.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('user_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('assign_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
@@ -54,29 +55,27 @@ function xmldb_local_onenote_upgrade($oldversion) {
         $table->add_field('submission_teacher_page_id', XMLDB_TYPE_CHAR, '255', null, null, null, null);
         $table->add_field('feedback_teacher_page_id', XMLDB_TYPE_CHAR, '255', null, null, null, null);
         
-        // Adding keys to table
+        // Adding keys to table.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
     
-        // create table
-        if ($dbman->table_exists($table))
+        // Create table.
+        if ($dbman->table_exists($table)) {
             $dbman->drop_table($table);
-            
+        }
         $dbman->create_table($table);
     
         // Onenote savepoint reached.
         upgrade_plugin_savepoint(true, 2014110503, 'local', 'onenote');
     }
     
-    // Moodle v2.3.0 release upgrade line
-    // Put any upgrade step following this
+    // Moodle v2.3.0 release upgrade line.
+    // Put any upgrade step following this.
 
-    // Moodle v2.4.0 release upgrade line
-    // Put any upgrade step following this
-
+    // Moodle v2.4.0 release upgrade line.
+    // Put any upgrade step following this.
 
     // Moodle v2.5.0 release upgrade line.
     // Put any upgrade step following this.
-
 
     // Moodle v2.6.0 release upgrade line.
     // Put any upgrade step following this.
