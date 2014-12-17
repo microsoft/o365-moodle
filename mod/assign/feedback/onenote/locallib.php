@@ -131,9 +131,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
-            $is_teacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+            $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
             $o .= $onenoteapi->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
-                    $this->assignment->get_course_module()->id, true, $is_teacher,
+                    $this->assignment->get_course_module()->id, true, $isteacher,
                     $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
         } else {
@@ -208,17 +208,18 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         }
         
         $onenoteapi = onenote_api::getInstance();
-        $temp_folder = $onenoteapi->create_temp_folder();
-        $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        $tempfolder = $onenoteapi->create_temp_folder();
+        $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files.
-        $download_info = $onenoteapi->download_page($record->feedback_teacher_page_id, $temp_file);
+        $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile);
         
-        if ($download_info) {
+        if ($downloadinfo) {
             $fs = get_file_storage();
             
             // Delete any previous feedbacks.
-            $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
+            $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote',
+                ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
             
             // Prepare file record object.
             $fileinfo = array(
@@ -230,8 +231,8 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 'filename' => 'OneNote_' . time() . '.zip');
             
             // Save it.
-            $fs->create_file_from_pathname($fileinfo, $download_info['path']);
-            fulldelete($temp_folder);
+            $fs->create_file_from_pathname($fileinfo, $downloadinfo['path']);
+            fulldelete($tempfolder);
         } else {
             if ($onenoteapi->is_logged_in()) {
                 $this->set_error(get_string('feedbackdownloadfailed', 'assignfeedback_onenote'));
@@ -267,9 +268,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 if ($onenoteapi->is_logged_in()) {
                     // Show a link to open the OneNote page.
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
-                    $is_teacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+                    $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
                     $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
-                            $this->assignment->get_course_module()->id, true, $is_teacher,
+                            $this->assignment->get_course_module()->id, true, $isteacher,
                             $grade->userid, $submission ? $submission->id : 0, $grade->id);
                 } else {
                     $o .= $onenoteapi->render_signin_widget();
