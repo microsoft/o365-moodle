@@ -111,24 +111,24 @@ class onenote_api {
             // Create temp folder.
             $temp_folder = $this->create_temp_folder();
             
-            $files_folder = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
-            if (!mkdir($files_folder, 0777, true)) {
-                echo('Failed to create folder: ' . $files_folder);
+            $filesfolder = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
+            if (!mkdir($filesfolder, 0777, true)) {
+                echo('Failed to create folder: ' . $filesfolder);
                 return null;
             }
             
             // Save images etc.
             $i = 1;
             foreach ($img_nodes as $img_node) {
-                $src_node = $img_node->attributes->getNamedItem("src");
-                if (!$src_node)
+                $srcnode = $img_node->attributes->getNamedItem("src");
+                if (!$srcnode){
                     continue;
-                
-                $response = $this->get_msaccount_api()->myget($src_node->nodeValue);
-                file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
+                }
+                $response = $this->get_msaccount_api()->myget($srcnode->nodeValue);
+                file_put_contents($filesfolder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
                 // Update img src paths in the html accordingly.
-                $src_node->nodeValue = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
+                $srcnode->nodeValue = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
                 
                 // Remove data_fullres_src if present.
                 if ($img_node->attributes->getNamedItem("data-fullres-src"))
@@ -670,7 +670,7 @@ class onenote_api {
         
         // Process images.
         $src = $xpath->query("//@src");
-        $img_data = '';
+        $imgdata = '';
         $eol = "\r\n";
         
         if ($src) {
@@ -687,10 +687,10 @@ class onenote_api {
     
                 $s->nodeValue = "name:" . $path_parts['filename'];
     
-                $img_data .= '--' . $boundary . $eol;
-                $img_data .= 'Content-Disposition: form-data; name="' . $path_parts['filename'] . '"; filename="' . $contents['filename'] . '"' . $eol;
-                $img_data .= 'Content-Type: image/jpeg' . $eol .$eol;
-                $img_data .= $contents['content'] . $eol;
+                $imgdata .= '--' . $boundary . $eol;
+                $imgdata .= 'Content-Disposition: form-data; name="' . $path_parts['filename'] . '"; filename="' . $contents['filename'] . '"' . $eol;
+                $imgdata .= 'Content-Type: image/jpeg' . $eol .$eol;
+                $imgdata .= $contents['content'] . $eol;
             }
         }
     
@@ -712,7 +712,7 @@ class onenote_api {
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
         $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
-        $postdata .= $img_data . $eol;
+        $postdata .= $imgdata . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
 
         error_log(print_r($postdata, true));
@@ -732,35 +732,35 @@ class onenote_api {
         $this->handle_garbage_chars($xpath);
 
         $img_nodes = $xpath->query("//img");
-        $img_data = '';
+        $imgdata = '';
         $eol = "\r\n";
         
         if ($img_nodes) {
             foreach ($img_nodes as $img_node) {
-                $src_node = $img_node->attributes->getNamedItem("src");
-                if (!$src_node)
+                $srcnode = $img_node->attributes->getNamedItem("src");
+                if (!$srcnode)
                     continue;
                 
                 // echo htmlentities($dom->saveHTML($src_node)); echo "\r\n<br/>";
-                $src_relpath = urldecode($src_node->nodeValue);
-                $src_filename = substr($src_relpath, strlen('./page_files/'));
-                $src_path = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), substr($src_relpath, 2)));
-                $contents = file_get_contents($src_path);
+                $srcrelpath = urldecode($srcnode->nodeValue);
+                $srcfilename = substr($srcrelpath, strlen('./page_files/'));
+                $srcpath = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), substr($srcrelpath, 2)));
+                $contents = file_get_contents($srcpath);
     
                 if (!$contents || (count($contents) == 0))
                     continue;
     
-                $src_filename = urlencode($src_filename);
-                $src_node->nodeValue = "name:" . $src_filename;
+                $srcfilename = urlencode($srcfilename);
+                $srcnode->nodeValue = "name:" . $srcfilename;
                 
                 // Remove data_fullres_src if present.
                 if ($img_node->attributes->getNamedItem("data-fullres-src"))
                     $img_node->removeAttribute("data-fullres-src");
     
-                $img_data .= '--' . $boundary . $eol;
-                $img_data .= 'Content-Disposition: form-data; name="' . $src_filename . '"; filename="' . $src_filename . '"' . $eol;
-                $img_data .= 'Content-Type: image/jpeg' . $eol .$eol;
-                $img_data .= $contents . $eol;
+                $imgdata .= '--' . $boundary . $eol;
+                $imgdata .= 'Content-Disposition: form-data; name="' . $srcfilename . '"; filename="' . $srcfilename . '"' . $eol;
+                $imgdata .= 'Content-Type: image/jpeg' . $eol .$eol;
+                $imgdata .= $contents . $eol;
             }
         }
     
@@ -781,7 +781,7 @@ class onenote_api {
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
         $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', \'Helvetica Neue Light\',  Arial, \'Lucida Grande\', sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
-        $postdata .= $img_data . $eol;
+        $postdata .= $imgdata . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
         
         error_log(print_r($postdata, true));
