@@ -191,7 +191,7 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return bool
      */
     public function save(stdClass $submission, stdClass $data) {
-        global $USER, $DB;
+        global $USER, $DB, $COURSE;
 
         // get OneNote page id
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
@@ -215,7 +215,32 @@ class assign_submission_onenote extends assign_submission_plugin {
             
             return false;
         }
-        
+
+        // Get assignment submission size limit.
+        $submissionlimit = $this->get_config('maxsubmissionsizebytes');
+
+        // Get submission zip size.
+        $submissionsize = filesize($download_info['path']);
+
+        // Check if assignment submission limit is zero, i.e. when user selected course upload limit.
+        if($submissionlimit == 0){
+
+            // Check if submission size is greater than course upload limit.
+            if($submissionsize > $COURSE->maxbytes){
+
+                // Display error if true.
+                $this->set_error(get_string('submissionlimitexceed', 'assignsubmission_onenote'));
+                return false;
+            }
+
+            // Check if submission size is greater assignment submission limit.
+        }elseif($submissionsize > $submissionlimit){
+
+            // Display error if true.
+            $this->set_error(get_string('submissionlimitexceed', 'assignsubmission_onenote'));
+            return false;
+        }
+
         $fs = get_file_storage();
         
         // delete any previous attempts
