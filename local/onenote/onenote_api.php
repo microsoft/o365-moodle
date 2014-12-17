@@ -109,9 +109,9 @@ class onenote_api {
         
         if ($img_nodes && (count($img_nodes) > 0)) {
             // Create temp folder.
-            $temp_folder = $this->create_temp_folder();
+            $tempfolder = $this->create_temp_folder();
             
-            $filesfolder = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
+            $filesfolder = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page_files'));
             if (!mkdir($filesfolder, 0777, true)) {
                 echo('Failed to create folder: ' . $filesfolder);
                 return null;
@@ -138,16 +138,16 @@ class onenote_api {
             }
             
             // Save the html page itself.
-            file_put_contents(join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
+            file_put_contents(join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
             
             // Zip up the folder so it can be attached as a single file.
             $fp = get_file_packer('application/zip');
             $filelist = array();
-            $filelist[] = $temp_folder;
+            $filelist[] = $tempfolder;
            
             $fp->archive_to_pathname($filelist, $path);
             
-            fulldelete($temp_folder);
+            fulldelete($tempfolder);
         } else {
             file_put_contents($path, $response);
         }
@@ -389,12 +389,12 @@ class onenote_api {
         return $this->get_msaccount_api()->render_signin_widget();
     }
     
-    public function render_action_button($button_text, $cmid, $want_feedback_page = false, $is_teacher = false, 
+    public function render_action_button($button_text, $cmid, $wantfeedbackpage = false, $is_teacher = false,
         $submission_user_id = null, $submission_id = null, $grade_id = null) {
         
         $action_params['action'] = 'openpage';
         $action_params['cmid'] = $cmid;
-        $action_params['wantfeedback'] = $want_feedback_page;
+        $action_params['wantfeedback'] = $wantfeedbackpage;
         $action_params['isteacher'] = $is_teacher;
         $action_params['submissionuserid'] = $submission_user_id;
         $action_params['submissionid'] = $submission_id;
@@ -424,7 +424,7 @@ class onenote_api {
     //             if this is a student, this must be the first time they are working on the submission, so create the page from the assignment prompt
     //             else bail out
     // return the weburl to the OneNote page created or obtained
-    public function get_page($cmid, $want_feedback_page = false, $is_teacher = false, $submission_user_id = null, $submission_id = null, $grade_id = null) {
+    public function get_page($cmid, $wantfeedbackpage = false, $is_teacher = false, $submission_user_id = null, $submission_id = null, $grade_id = null) {
         global $USER, $DB;
         
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
@@ -443,7 +443,7 @@ class onenote_api {
         // If the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $assign->id, "user_id" => $student_user_id));
         if ($record) {
-            $pageid = $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) :
+            $pageid = $wantfeedbackpage ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) :
                                           ($is_teacher ? $record->submission_teacher_page_id : $record->submission_student_page_id);
             if ($pageid) {
                 $page = json_decode($this->get_msaccount_api()->myget(self::API . '/pages/' . $pageid));
@@ -454,7 +454,7 @@ class onenote_api {
             }
 
             // Probably user deleted page, so we will update the db record to reflect it and continue to recreate the page.
-            if ($want_feedback_page) {
+            if ($wantfeedbackpage) {
                 if ($is_teacher)
                     $record->feedback_teacher_page_id = null;
                 else
@@ -484,7 +484,7 @@ class onenote_api {
         $fs = get_file_storage();
         
         // If we are being called for getting a feedback page.
-        if ($want_feedback_page) {
+        if ($wantfeedbackpage) {
             // If previously saved feedback does not exist.
             if (!$grade_id || 
                 !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, 
@@ -497,9 +497,9 @@ class onenote_api {
                     
                     if ($files) {
                         // Unzip the submission and prepare postdata from it.
-                        $temp_folder = $this->create_temp_folder();
+                        $tempfolder = $this->create_temp_folder();
                         $fp = get_file_packer('application/zip');
-                        $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                        $filelist = $fp->extract_to_pathname(reset($files), $tempfolder);
                         
                         $a = new stdClass();
                         $a->assign_name = $assign->name;
@@ -507,7 +507,7 @@ class onenote_api {
                         $a->student_lastname = $student->lastname;
                         $postdata = $this->create_postdata_from_folder(
                             get_string('feedbacktitle', 'local_onenote', $a),
-                            join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                            join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0')), $boundary);
                     } else {
                         // Student did not turn in a submission, so create an empty one.
                         $a = new stdClass();
@@ -523,9 +523,9 @@ class onenote_api {
                 }
             } else {
                 // Create postdata from the zip package of teacher's feedback.
-                $temp_folder = $this->create_temp_folder();
+                $tempfolder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
-                $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                $filelist = $fp->extract_to_pathname(reset($files), $tempfolder);
                 
                 $a = new stdClass();
                 $a->assign_name = $assign->name;
@@ -533,7 +533,7 @@ class onenote_api {
                 $a->student_lastname = $student->lastname;
                 $postdata = $this->create_postdata_from_folder(
                     get_string('feedbacktitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                    join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         } else {
             // We want submission page.
@@ -554,9 +554,9 @@ class onenote_api {
                 }
             } else {
                 // Unzip the submission and prepare postdata from it.
-                $temp_folder = $this->create_temp_folder();
+                $tempfolder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
-                $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
+                $filelist = $fp->extract_to_pathname(reset($files), $tempfolder);
                 
                 $a = new stdClass();
                 $a->assign_name = $assign->name;
@@ -564,7 +564,7 @@ class onenote_api {
                 $a->student_lastname = $student->lastname;
                 $postdata = $this->create_postdata_from_folder(
                     get_string('submissiontitle', 'local_onenote', $a),
-                    join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
+                    join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         }
             
@@ -573,7 +573,7 @@ class onenote_api {
         if ($response)
         {
             // Remember page id in the same db record or insert a new one if it did not exist before.
-            if ($want_feedback_page) {
+            if ($wantfeedbackpage) {
                 if ($is_teacher)
                     $record->feedback_teacher_page_id = $response->id;
                 else
@@ -882,17 +882,17 @@ class onenote_api {
     }
     
     public function create_temp_folder() {
-        $temp_folder = join(DIRECTORY_SEPARATOR, array(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
-        if (file_exists($temp_folder)) {
-            fulldelete($temp_folder);
+        $tempfolder = join(DIRECTORY_SEPARATOR, array(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
+        if (file_exists($tempfolder)) {
+            fulldelete($tempfolder);
         }
     
-        if (!mkdir($temp_folder, 0777, true)) {
-            echo('Failed to create temp folder: ' . $temp_folder);
+        if (!mkdir($tempfolder, 0777, true)) {
+            echo('Failed to create temp folder: ' . $tempfolder);
             return null;
         }
     
-        return $temp_folder;
+        return $tempfolder;
     }
 
     // Check if given user is a teacher in the given course.
