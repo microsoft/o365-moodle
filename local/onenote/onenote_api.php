@@ -49,13 +49,13 @@ define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
 class onenote_api {
     /** @var string Base url to access API */
     // TODO: Switch to non-beta version
-    const API = 'https://www.onenote.com/api/beta'; //'https://www.onenote.com/api/v1.0';
+    const API = 'https://www.onenote.com/api/beta'; // 'https://www.onenote.com/api/v1.0';.
     
     private static $instance = null;
-    private $msacount_api = null;
+    private $msacountapi = null;
         
     protected function __construct() {
-        $this->msaccount_api = msaccount_api::getInstance();
+        $this->msaccountapi = msaccount_api::getInstance();
     }
 
     public static function getInstance() {
@@ -69,7 +69,7 @@ class onenote_api {
     }
     
     public function get_msaccount_api() {
-        return $this->msaccount_api;
+        return $this->msaccountapi;
     }
     
     /**
@@ -79,19 +79,19 @@ class onenote_api {
      * @param string $path path to save page to
      * @return array stucture for repository download_file
      */
-    public function download_page($page_id, $path) {
-        error_log('download_page called: ' . print_r($page_id, true));
+    public function download_page($pageid, $path) {
+        error_log('download_page called: ' . print_r($pageid, true));
 
-        $url = self::API."/pages/".$page_id."/content";
+        $url = self::API."/pages/".$pageid."/content";
         //error_log(print_r($url,true));
 
         $response = $this->get_msaccount_api()->myget($url);
 
         // On success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors.
-        $decoded_response = json_decode($response);
+        $decodedresponse = json_decode($response);
         error_log("response: " . print_r($response, true));
 
-        if (!$response || isset($decoded_response->error)) {
+        if (!$response || isset($decodedresponse->error)) {
             return null;
         }
 
@@ -443,10 +443,10 @@ class onenote_api {
         // If the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $assign->id, "user_id" => $student_user_id));
         if ($record) {
-            $page_id = $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) : 
+            $pageid = $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) :
                                           ($is_teacher ? $record->submission_teacher_page_id : $record->submission_student_page_id);
-            if ($page_id) {
-                $page = json_decode($this->get_msaccount_api()->myget(self::API . '/pages/' . $page_id));
+            if ($pageid) {
+                $page = json_decode($this->get_msaccount_api()->myget(self::API . '/pages/' . $pageid));
                 if ($page && !isset($page->error)) {
                     $url = $page->links->oneNoteWebUrl->href;
                     return $url;
