@@ -126,18 +126,18 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         
         $gradeid = $grade ? $grade->id : 0;
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
-        $onenote_api = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getInstance();
         
-        if ($onenote_api->is_logged_in()) {
+        if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
-            $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
-            $o .= $onenote_api->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
+            $is_teacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+            $o .= $onenoteapi->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
                     $this->assignment->get_course_module()->id, true, $is_teacher,
                     $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
         } else {
-            $o .= $onenote_api->render_signin_widget();
+            $o .= $onenoteapi->render_signin_widget();
             $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignfeedback_onenote') . '</p>';
         }
         
@@ -207,12 +207,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             return false;
         }
         
-        $onenote_api = onenote_api::getInstance();
-        $temp_folder = $onenote_api->create_temp_folder();
+        $onenoteapi = onenote_api::getInstance();
+        $temp_folder = $onenoteapi->create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
         // Create zip file containing onenote page and related files.
-        $download_info = $onenote_api->download_page($record->feedback_teacher_page_id, $temp_file);
+        $download_info = $onenoteapi->download_page($record->feedback_teacher_page_id, $temp_file);
         
         if ($download_info) {
             $fs = get_file_storage();
@@ -233,7 +233,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             $fs->create_file_from_pathname($fileinfo, $download_info['path']);
             fulldelete($temp_folder);
         } else {
-            if ($onenote_api->is_logged_in()) {
+            if ($onenoteapi->is_logged_in()) {
                 $this->set_error(get_string('feedbackdownloadfailed', 'assignfeedback_onenote'));
             } else {
                 $this->set_error(get_string('notsignedin', 'assignfeedback_onenote'));
@@ -258,21 +258,21 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         // Show a view all link if the number of files is over this limit.
         $count = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
-        $onenote_api = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getInstance();
         
         $o = '';
         
         if ($count <= ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
             if (($grade->grade !== null) && ($grade->grade >= 0)) {
-                if ($onenote_api->is_logged_in()) {                    
+                if ($onenoteapi->is_logged_in()) {
                     // Show a link to open the OneNote page.
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
-                    $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
-                    $o .= $onenote_api->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
+                    $is_teacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+                    $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
                             $this->assignment->get_course_module()->id, true, $is_teacher,
                             $grade->userid, $submission ? $submission->id : 0, $grade->id);
                 } else {
-                    $o .= $onenote_api->render_signin_widget();
+                    $o .= $onenoteapi->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
                 }
             
@@ -310,7 +310,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         global $DB;
         // Will throw exception on failure.
         $DB->delete_records('assignfeedback_onenote',
-                            array('assignment'=>$this->assignment->get_instance()->id));
+                            array('assignment' => $this->assignment->get_instance()->id));
 
         return true;
     }
