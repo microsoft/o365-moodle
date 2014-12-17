@@ -16,9 +16,10 @@
 
 /**
  * This file contains the definition for the library class for onenote feedback plugin
- *
- *
  * @package   assignfeedback_onenote
+ * @author Vin Bhalerao <vin@bhalerao.org>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
@@ -49,7 +50,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      */
     public function get_onenote_feedback($gradeid) {
         global $DB;
-        return $DB->get_record('assignfeedback_onenote', array('grade'=>$gradeid));
+        return $DB->get_record('assignfeedback_onenote', array('grade' => $gradeid));
     }
 
     /**
@@ -60,10 +61,10 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     private function get_file_options() {
         global $COURSE;
 
-        $fileoptions = array('subdirs'=>1,
-                             'maxbytes'=>$COURSE->maxbytes,
-                             'accepted_types'=>'*',
-                             'return_types'=>FILE_INTERNAL);
+        $fileoptions = array('subdirs' => 1,
+                             'maxbytes' => $COURSE->maxbytes,
+                             'accepted_types' => '*',
+                             'return_types' => FILE_INTERNAL);
         return $fileoptions;
     }
 
@@ -128,7 +129,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $onenote_api = onenote_api::getInstance();
         
         if ($onenote_api->is_logged_in()) {
-            // show a link to open the OneNote page
+            // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
             $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
             $o .= $onenote_api->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
@@ -199,7 +200,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     public function save(stdClass $grade, stdClass $data) {
         global $DB;
         
-        // get the OneNote page id corresponding to the teacher's feedback for this submission
+        // Get the OneNote page id corresponding to the teacher's feedback for this submission.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
         if (!$record || !$record->feedback_teacher_page_id) {
             $this->set_error(get_string('feedbacknotstarted', 'assignfeedback_onenote'));
@@ -210,16 +211,16 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $temp_folder = $onenote_api->create_temp_folder();
         $temp_file = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
-        // Create zip file containing onenote page and related files
+        // Create zip file containing onenote page and related files.
         $download_info = $onenote_api->download_page($record->feedback_teacher_page_id, $temp_file);
         
         if ($download_info) {
             $fs = get_file_storage();
             
-            // delete any previous feedbacks
+            // Delete any previous feedbacks.
             $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
             
-            // Prepare file record object
+            // Prepare file record object.
             $fileinfo = array(
                 'contextid' => $this->assignment->get_context()->id,
                 'component' => 'assignfeedback_onenote',
@@ -228,14 +229,15 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 'filepath' => '/',
                 'filename' => 'OneNote_' . time() . '.zip');
             
-            // save it
+            // Save it.
             $fs->create_file_from_pathname($fileinfo, $download_info['path']);
             fulldelete($temp_folder);
         } else {
-            if ($onenote_api->is_logged_in())
+            if ($onenote_api->is_logged_in()) {
                 $this->set_error(get_string('feedbackdownloadfailed', 'assignfeedback_onenote'));
-            else
+            } else {
                 $this->set_error(get_string('notsignedin', 'assignfeedback_onenote'));
+            }
             
             return false;
         }
@@ -263,7 +265,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($count <= ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
             if (($grade->grade !== null) && ($grade->grade >= 0)) {
                 if ($onenote_api->is_logged_in()) {                    
-                    // show a link to open the OneNote page
+                    // Show a link to open the OneNote page.
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
                     $is_teacher = $onenote_api->is_teacher($this->assignment->get_course()->id, $USER->id);
                     $o .= $onenote_api->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
@@ -274,7 +276,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
                 }
             
-                // show standard link to download zip package
+                // Show standard link to download zip package.
                 $o .= '<p>Download:</p>';
                 $o .= $this->assignment->render_area_files('assignfeedback_onenote',
                                                             ASSIGNFEEDBACK_ONENOTE_FILEAREA,
@@ -328,6 +330,6 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return array - An array of fileareas (keys) and descriptions (values)
      */
     public function get_file_areas() {
-        return array(ASSIGNFEEDBACK_ONENOTE_FILEAREA=>$this->get_name());
+        return array(ASSIGNFEEDBACK_ONENOTE_FILEAREA => $this->get_name());
     }
 }
