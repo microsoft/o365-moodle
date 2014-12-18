@@ -154,7 +154,7 @@ class assignsubmission_onenote_events_testcase extends advanced_testcase {
     }
 
     /**
-     * Test that the submission_updated event is fired when a onenote submission is saved when an existing submission already exists.
+     * Test that the submission_updated event is fired when onenote submission is saved when an existing submission already exists.
      */
     public function test_submission_updated() {
         $this->resetAfterTest();

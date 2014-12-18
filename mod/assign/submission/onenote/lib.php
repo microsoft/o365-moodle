@@ -47,7 +47,7 @@ function assignsubmission_onenote_pluginfile($course,
     require_login($course, false, $cm);
     $itemid = (int)array_shift($args);
     $record = $DB->get_record('assign_submission',
-                              array('id'=>$itemid),
+                              array('id' => $itemid),
                               'userid, assignment, groupid',
                               MUST_EXIST);
     $userid = $record->userid;

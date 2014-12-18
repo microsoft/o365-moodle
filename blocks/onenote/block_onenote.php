@@ -16,8 +16,10 @@
 
 /**
  * Microsoft OneNote block Plugin
- *
- * @package    block_onenote
+ * @package block_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -50,30 +52,30 @@ class block_onenote extends block_base {
         $content = new stdClass;
         $content->text = '';
         $content->footer = '';
-        $onenote_api = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getInstance();
         
-        if ($onenote_api->is_logged_in()) {
-            // add the "save to onenote" button if we are on an assignment page
+        if ($onenoteapi->is_logged_in()) {
+            // Add the "save to onenote" button if we are on an assignment page.
             if ($PAGE->cm && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') && 
-                    !$onenote_api->is_teacher($COURSE->id, $USER->id)) {
-                $content->text .= $onenote_api->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
+                    !$onenoteapi->is_teacher($COURSE->id, $USER->id)) {
+                $content->text .= $onenoteapi->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
             } else {
-                $notebooks = $onenote_api->get_items_list('');
+                $notebooks = $onenoteapi->get_items_list('');
                 
                 if ($notebooks) {
-                    // find moodle notebook
-                    $moodle_notebook = null;
-                    $notebook_name = get_string('notebookname', 'block_onenote');
+                    // Find moodle notebook.
+                    $moodlenotebook = null;
+                    $notebookname = get_string('notebookname', 'block_onenote');
                     
-                    foreach($notebooks as $notebook) {
-                        if ($notebook['title'] == $notebook_name) {
-                            $moodle_notebook = $notebook;
+                    foreach ($notebooks as $notebook) {
+                        if ($notebook['title'] == $notebookname) {
+                            $moodlenotebook = $notebook;
                             break;
                         }
                     }
                     
-                    if ($moodle_notebook) {
-                        $url = new moodle_url($moodle_notebook['url']);
+                    if ($moodlenotebook) {
+                        $url = new moodle_url($moodlenotebook['url']);
                         $content->text .=
                             '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
                             $url->out(false) .
@@ -82,7 +84,7 @@ class block_onenote extends block_base {
                 }
             }
         } else {
-            $content->text .= $onenote_api->render_signin_widget();
+            $content->text .= $onenoteapi->render_signin_widget();
             $content->text .= file_get_contents($CFG->dirroot.'/local/msaccount/login.html');
         }
 

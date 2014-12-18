@@ -46,10 +46,10 @@ function assignfeedback_onenote_pluginfile($course,
 
     require_login($course, false, $cm);
     $itemid = (int)array_shift($args);
-    $record = $DB->get_record('assign_grades', array('id'=>$itemid), 'userid,assignment', MUST_EXIST);
+    $record = $DB->get_record('assign_grades', array('id' => $itemid), 'userid,assignment', MUST_EXIST);
     $userid = $record->userid;
 
-    if (!$assign = $DB->get_record('assign', array('id'=>$cm->instance))) {
+    if (!$assign = $DB->get_record('assign', array('id' => $cm->instance))) {
         return false;
     }
 
