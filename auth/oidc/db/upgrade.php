@@ -33,5 +33,14 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     $dbman = $DB->get_manager();
     $result = true;
 
+    if ($result && $oldversion < 2014111703) {
+        // Lengthen field.
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('scope', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'username');
+        $dbman->change_field_type($table, $field);
+
+        upgrade_plugin_savepoint($result, '2014111703', 'auth', 'oidc');
+    }
+
     return $result;
 }
