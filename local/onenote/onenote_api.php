@@ -16,8 +16,10 @@
 
 /**
  * Convenient wrappers and helper for using the OneNote API
- *
  * @package    local_onenote
+ * @author Vin Bhalerao <vin@bhalerao.org> Sushant Gawali <sushant@introp.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 
@@ -56,8 +58,7 @@ class onenote_api {
         $this->msaccount_api = msaccount_api::getInstance();
     }
 
-    public static function getInstance()
-    {
+    public static function getInstance() {
         if (null === self::$instance) {
             self::$instance = new static();
         }
@@ -78,7 +79,7 @@ class onenote_api {
      * @param string $path path to save page to
      * @return array stucture for repository download_file
      */
-     public function download_page($page_id, $path) {
+    public function download_page($page_id, $path) {
         error_log('download_page called: ' . print_r($page_id, true));
 
         $url = self::API."/pages/".$page_id."/content";
@@ -86,7 +87,7 @@ class onenote_api {
 
         $response = $this->get_msaccount_api()->myget($url);
 
-        // on success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors
+        // On success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors.
         $decoded_response = json_decode($response);
         error_log("response: " . print_r($response, true));
 
@@ -94,7 +95,7 @@ class onenote_api {
             return null;
         }
 
-        // see if the file contains any references to images or other files and if so, create a folder and download those, too
+        // See if the file contains any references to images or other files and if so, create a folder and download those, too.
         $doc = new DOMDocument();
         $doc->loadHTML($response);
         $xpath = new DOMXPath($doc);
@@ -107,7 +108,7 @@ class onenote_api {
         $img_nodes = $xpath->query("//img");
         
         if ($img_nodes && (count($img_nodes) > 0)) {
-            // create temp folder
+            // Create temp folder.
             $temp_folder = $this->create_temp_folder();
             
             $files_folder = join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page_files'));
@@ -116,7 +117,7 @@ class onenote_api {
                 return null;
             }
             
-            // save images etc.
+            // Save images etc.
             $i = 1;
             foreach ($img_nodes as $img_node) {
                 $src_node = $img_node->attributes->getNamedItem("src");
@@ -126,20 +127,20 @@ class onenote_api {
                 $response = $this->get_msaccount_api()->myget($src_node->nodeValue);
                 file_put_contents($files_folder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
                 
-                // update img src paths in the html accordingly
+                // Update img src paths in the html accordingly.
                 $src_node->nodeValue = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
                 
-                // remove data_fullres_src if present
+                // Remove data_fullres_src if present.
                 if ($img_node->attributes->getNamedItem("data-fullres-src"))
                     $img_node->removeAttribute("data-fullres-src");
                 
                 $i++; 
             }
             
-            // save the html page itself
+            // Save the html page itself.
             file_put_contents(join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
             
-            // zip up the folder so it can be attached as a single file
+            // Zip up the folder so it can be attached as a single file.
             $fp = get_file_packer('application/zip');
             $filelist = array();
             $filelist[] = $temp_folder;
@@ -276,7 +277,7 @@ class onenote_api {
         return $items;
     }
 
-    // ensure that data about the notebooks and sections in OneNote are sync'ed up with our database
+    // Ensure that data about the notebooks and sections in OneNote are sync'ed up with our database.
     private function sync_notebook_data() {
         global $DB;
         
@@ -371,7 +372,7 @@ class onenote_api {
     }
     
     // -------------------------------------------------------------------------------------------------------------------------
-    // Helper methods
+    // Helper methods.
     public function is_logged_in() {
         return $this->get_msaccount_api()->is_logged_in();
     }
@@ -431,7 +432,7 @@ class onenote_api {
         $context = context_module::instance($cm->id);
         $user_id = $USER->id;
         
-        // if $submission_userId is given, then it contains the student's user id. If it is null, it means a student is just looking at the assignment to start working on it, so use the logged in user id
+        // If $submission_userId is given, then it contains the student's user id. If it is null, it means a student is just looking at the assignment to start working on it, so use the logged in user id.
         if ($submission_user_id)
             $student_user_id = $submission_user_id;
         else
@@ -439,7 +440,7 @@ class onenote_api {
         
         $student = $DB->get_record('user', array('id' => $student_user_id));
         
-        // if the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned
+        // If the required submission or feedback OneNote page and corresponding record already exists in db and in OneNote, weburl to the page is returned.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $assign->id, "user_id" => $student_user_id));
         if ($record) {
             $page_id = $want_feedback_page ? ($is_teacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) : 
@@ -452,7 +453,7 @@ class onenote_api {
                 }
             }
 
-            // probably user deleted page, so we will update the db record to reflect it and continue to recreate the page
+            // Probably user deleted page, so we will update the db record to reflect it and continue to recreate the page.
             if ($want_feedback_page) {
                 if ($is_teacher)
                     $record->feedback_teacher_page_id = null;
@@ -467,13 +468,13 @@ class onenote_api {
                 
             $DB->update_record('onenote_assign_pages', $record);
         } else {
-            // prepare record object since we will use it further down to insert into database
+            // Prepare record object since we will use it further down to insert into database.
             $record = new object();
             $record->assign_id = $assign->id;
             $record->user_id = $student_user_id;
         }
         
-        // get the section id for the course so we can create the page in the approp section
+        // Get the section id for the course so we can create the page in the approp section.
         $section = $this->get_section($cm->course, $user_id);
         if (!$section)
             return false;
@@ -482,20 +483,20 @@ class onenote_api {
         $boundary = hash('sha256',rand());
         $fs = get_file_storage();
         
-        // if we are being called for getting a feedback page 
+        // If we are being called for getting a feedback page.
         if ($want_feedback_page) {
-            // if previously saved fedback does not exist
+            // If previously saved feedback does not exist.
             if (!$grade_id || 
                 !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, 
                         $grade_id, 'id', false))) {
                 if ($is_teacher) {
-                    // this must be the first time teacher is looking at student's submission
-                    // so prepare feedback page from submission zip package
+                    // This must be the first time teacher is looking at student's submission
+                    // So prepare feedback page from submission zip package.
                     $files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                         $submission_id, 'id', false);
                     
                     if ($files) {
-                        // unzip the submission and prepare postdata from it
+                        // Unzip the submission and prepare postdata from it.
                         $temp_folder = $this->create_temp_folder();
                         $fp = get_file_packer('application/zip');
                         $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
@@ -508,7 +509,7 @@ class onenote_api {
                             get_string('feedbacktitle', 'local_onenote', $a),
                             join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
                     } else {
-                        // student did not turn in a submission, so create an empty one
+                        // Student did not turn in a submission, so create an empty one.
                         $a = new stdClass();
                         $a->assign_name = $assign->name;
                         $a->student_firstname = $student->firstname;
@@ -521,7 +522,7 @@ class onenote_api {
                     return null;
                 }
             } else {
-                // create postdata from the zip package of teacher's feedback
+                // Create postdata from the zip package of teacher's feedback.
                 $temp_folder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
@@ -535,14 +536,14 @@ class onenote_api {
                     join(DIRECTORY_SEPARATOR, array(rtrim($temp_folder, DIRECTORY_SEPARATOR), '0')), $boundary);
             }
         } else {
-            // we want submission page
+            // We want submission page.
             if (!$submission_id || 
                 !($files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                     $submission_id, 'id', false))) {
                 if ($is_teacher) {
                     return null;
                 } else {
-                    // this is a student and they are just starting to work on this assignment, so prepare page from the assignment prompt
+                    // This is a student and they are just starting to work on this assignment, so prepare page from the assignment prompt.
                     $a = new stdClass();
                     $a->assign_name = $assign->name;
                     $a->student_firstname = $student->firstname;
@@ -552,7 +553,7 @@ class onenote_api {
                         $assign->intro, $context->id, $boundary);
                 }
             } else {
-                // unzip the submission and prepare postdata from it
+                // Unzip the submission and prepare postdata from it.
                 $temp_folder = $this->create_temp_folder();
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $temp_folder);
@@ -571,7 +572,7 @@ class onenote_api {
         
         if ($response)
         {
-            // remember page id in the same db record or insert a new one if it did not exist before
+            // Remember page id in the same db record or insert a new one if it did not exist before.
             if ($want_feedback_page) {
                 if ($is_teacher)
                     $record->feedback_teacher_page_id = $response->id;
@@ -589,7 +590,7 @@ class onenote_api {
             else
                 $DB->insert_record('onenote_assign_pages', $record);
 
-            // return weburl to that onenote page
+            // Return weburl to that onenote page.
             $url = $response->links->oneNoteWebUrl->href;
             return $url;
         }
@@ -597,14 +598,14 @@ class onenote_api {
         return null;
     }
 
-    // check if we are in sync with OneNote notebooks and section and try to sync up if we are not
+    // Check if we are in sync with OneNote notebooks and section and try to sync up if we are not.
     private function get_section($course_id, $user_id)
     {
         global $DB;
         
         $section = $DB->get_record('onenote_user_sections', array("course_id" => $course_id, "user_id" => $user_id));
 
-        // need to make sure section actually exists in case user may have deleted it
+        // Need to make sure section actually exists in case user may have deleted it.
         if ($section && $section->section_id) {
             $onenote_section = json_decode($this->get_msaccount_api()->myget(self::API . '/sections/' . $section->section_id));
             if ($onenote_section && !isset($onenote_section->error)) {
@@ -622,10 +623,10 @@ class onenote_api {
     }
 
     private function get_file_contents($path,$filename,$context_id) {
-        // get file contents
+        // Get file contents.
         $fs = get_file_storage();
     
-        // Prepare file record object
+        // Prepare file record object.
         $fileinfo = array(
             'component' => 'mod_assign',     // usually = table name
             'filearea' => 'intro',     // usually = table name
@@ -634,7 +635,7 @@ class onenote_api {
             'filepath' => $path,           // any path beginning and ending in /
             'filename' => $filename);
     
-        // Get file
+        // Get file.
         //error_log(print_r($fileinfo, true));
         $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
                 $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
@@ -661,13 +662,13 @@ class onenote_api {
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
         
-        // process heading and td tags
+        // Process heading and td tags.
         $this->process_tags($dom, $xpath);
 
-        // handle <br/> problem
+        // Handle <br/> problem.
         $this->process_br_tags($xpath);
         
-        // process images
+        // Process images.
         $src = $xpath->query("//@src");
         $img_data = '';
         $eol = "\r\n";
@@ -693,7 +694,7 @@ class onenote_api {
             }
         }
     
-        // extract just the content of the body
+        // Extract just the content of the body.
         $dom_clone = new DOMDocument;
         foreach ($doc->childNodes as $child){
             $dom_clone->appendChild($dom_clone->importNode($child, true));
@@ -752,7 +753,7 @@ class onenote_api {
                 $src_filename = urlencode($src_filename);
                 $src_node->nodeValue = "name:" . $src_filename;
                 
-                // remove data_fullres_src if present
+                // Remove data_fullres_src if present.
                 if ($img_node->attributes->getNamedItem("data-fullres-src"))
                     $img_node->removeAttribute("data-fullres-src");
     
@@ -763,7 +764,7 @@ class onenote_api {
             }
         }
     
-        // extract just the content of the body
+        // Extract just the content of the body.
         $dom_clone = new DOMDocument;
         foreach ($doc->childNodes as $child){
             $dom_clone->appendChild($dom_clone->importNode($child, true));
@@ -818,7 +819,7 @@ class onenote_api {
 
     // HACKHACK: Remove this once OneNote fixes their bug.
     // OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
-    // The workaround is to replace the last <br/> in a sequence with a <p/>
+    // The workaround is to replace the last <br/> in a sequence with a <p/>.
     private function process_br_tags($xpath) {
         $br_nodes = $xpath->query('//br');
         
@@ -829,7 +830,7 @@ class onenote_api {
             while ($index < $count) {
                 $br_node = $br_nodes->item($index);
                 
-                // replace only the last br in a sequence with a p
+                // Replace only the last br in a sequence with a p.
                 $next_sibling = $br_node->nextSibling;
                 while($next_sibling && ($next_sibling->nodeName == 'br')) {
                     $br_node = $next_sibling;
@@ -846,7 +847,7 @@ class onenote_api {
     
     // HACKHACK: Remove this once OneNote fixes their bug.
     // OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
-    // They get converted into garbage chars like ￼. Replace them with <p/> tags
+    // They get converted into garbage chars like ￼. Replace them with <p/> tags.
     private function handle_garbage_chars($xpath) {
         $garbage_nodes = $xpath->query("//p[contains(., 'ï¿¼')]");
         
@@ -857,7 +858,7 @@ class onenote_api {
             while ($index < $count) {
                 $garbage_node = $garbage_nodes->item($index);
                 
-                // count the number of garbage char sequences in the node value
+                // Count the number of garbage char sequences in the node value.
                 $nodeValue = $garbage_node->nodeValue;
                 $replaced = 0;
                 $nodeValue = str_replace("ï¿¼", "", $nodeValue, $replaced);
@@ -873,7 +874,7 @@ class onenote_api {
         }    
     }
     
-    // get the repo id for the onenote repo
+    // Get the repo id for the onenote repo.
     public function get_onenote_repo_id() {
         global $DB;
         $repository = $DB->get_record('repository', array('type'=>'onenote'));
@@ -894,9 +895,9 @@ class onenote_api {
         return $temp_folder;
     }
 
-    // check if given user is a teacher in the given course
+    // Check if given user is a teacher in the given course.
     public function is_teacher($course_id, $user_id) {
-        //teacher role comes with courses.
+        // Teacher role comes with courses.
         $context = context_course::instance($course_id);//get_context_instance(CONTEXT_COURSE, $course_id, true);
         
         $roles = get_user_roles($context, $user_id, true);
