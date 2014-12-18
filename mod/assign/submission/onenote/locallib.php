@@ -229,7 +229,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         if ($submissionlimit == 0) {
 
             // Check if submission size is greater than course upload limit.
-            if ($submissionsize > $COURSE->maxbytes) {
+            if (($COURSE->maxbytes > 0) && ($submissionsize > $COURSE->maxbytes)) {
 
                 // Display error if true.
                 $this->set_error(get_string('submissionlimitexceed', 'assignsubmission_onenote'));
