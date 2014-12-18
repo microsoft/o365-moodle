@@ -32,7 +32,7 @@ function xmldb_repository_onenote_install() {
     $result = true;
     require_once($CFG->dirroot.'/repository/lib.php');
     $onenoteplugin = new repository_type('onenote', array(), true);
-    if(!$id = $onenoteplugin->create(true)) {
+    if (!$id = $onenoteplugin->create(true)) {
         $result = false;
     }
     return $result;

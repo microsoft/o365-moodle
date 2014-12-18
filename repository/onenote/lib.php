@@ -16,8 +16,10 @@
 
 /**
  * Microsoft OneNote Repository Plugin
- *
  * @package    repository_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -30,7 +32,7 @@ require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
  * @package    repository_onenote
  */
 class repository_onenote extends repository {
-    private $onenote_api = null;
+    private $onenoteapi = null;
     
     /**
      * Constructor
@@ -42,7 +44,7 @@ class repository_onenote extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $this->onenote_api = onenote_api::getInstance();
+        $this->onenoteapi = onenote_api::getInstance();
     }
 
     /**
@@ -51,7 +53,7 @@ class repository_onenote extends repository {
      * @return bool true when logged in
      */
     public function check_login() {
-        return $this->onenote_api->is_logged_in();
+        return $this->onenoteapi->is_logged_in();
     }
 
     /**
@@ -60,7 +62,7 @@ class repository_onenote extends repository {
      * @return array of login options
      */
     public function print_login() {
-        $url = $this->onenote_api->get_login_url();
+        $url = $this->onenoteapi->get_login_url();
 
         if ($this->options['ajax']) {
             $popup = new stdClass();
@@ -87,14 +89,14 @@ class repository_onenote extends repository {
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $fileslist = $this->onenote_api->get_items_list($path);
+        $fileslist = $this->onenoteapi->get_items_list($path);
         // Filter list for accepted types. Hopefully this will be done by core some day.
         $fileslist = array_filter($fileslist, array($this, 'filter'));
         $ret['list'] = $fileslist;
 
         // Generate path bar, always start with the plugin name.
         $ret['path']   = array();
-        $ret['path'][] = array('name'=> $this->name, 'path'=>'');
+        $ret['path'][] = array('name' => $this->name, 'path' => '');
 
         // Now add each level folder.
         $trail = '';
@@ -103,7 +105,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenote_api->get_item_name($folderid),
+                    $ret['path'][] = array('name' => $this->onenoteapi->get_item_name($folderid),
                                            'path' => $trail);
                 }
             }
@@ -123,7 +125,7 @@ class repository_onenote extends repository {
      */
     public function get_file($id, $filename = '') {
         $path = $this->prepare_file($filename);
-        return $this->onenote_api->download_page($id, $path);
+        return $this->onenoteapi->download_page($id, $path);
     }
 
     /**
