@@ -104,7 +104,7 @@ class microsoft_onenote_testcase extends advanced_testcase
     public function set_test_config() {
         set_config('clientid', $this->config->client_id, 'local_msaccount');
         set_config('clientsecret', $this->config->client_secret, 'local_msaccount');
-        $this->onenoteapi = onenote_api::getInstance();
+        $this->onenoteapi = onenote_api::getinstance();
     }
 
     public function set_user($index) {

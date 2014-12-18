@@ -142,7 +142,7 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
 
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
 
         $o = '<hr/><b>' . get_string('onenoteactions', 'assignsubmission_onenote') . '</b>';
@@ -203,7 +203,7 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
         
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         $tempfolder = $onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
@@ -379,7 +379,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $count = $this->count_files($submission->id, ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
 
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
         $o = '';
         

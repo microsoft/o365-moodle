@@ -243,7 +243,7 @@ class msaccount_api {
         $this->msaccountclient = new msaccount_client();
     }
     
-    public static function getInstance() {
+    public static function getinstance() {
         if (null === self::$instance) {
             self::$instance = new static();
         }

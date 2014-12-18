@@ -126,7 +126,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         
         $gradeid = $grade ? $grade->id : 0;
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
@@ -207,7 +207,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             return false;
         }
         
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         $tempfolder = $onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
         
@@ -259,7 +259,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         // Show a view all link if the number of files is over this limit.
         $count = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         
         $o = '';
         
