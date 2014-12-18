@@ -16,8 +16,10 @@
 
 /**
  * Convenient wrappers and helper for using the msaccount API
- *
  * @package    local_msaccount
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 
@@ -31,7 +33,7 @@ require_once($CFG->libdir.'/oauthlib.php');
 class msaccount_client extends oauth2_client {
     /** @var string OAuth 2.0 scope */
     const SCOPE = 'office.onenote_update wl.skydrive wl.offline_access';
-    private $token_as_param = TRUE;
+    private $tokenasparam = true;
     
     /**-
      * Construct a msaccount_client object
@@ -43,7 +45,7 @@ class msaccount_client extends oauth2_client {
         $returnurl = new moodle_url('/local/msaccount/msaccount_redirect.php');
         $returnurl->param('sesskey', sesskey());
 
-        parent::__construct(get_config('local_msaccount', 'clientid'), get_config('local_msaccount', 'clientsecret'), 
+        parent::__construct(get_config('local_msaccount', 'clientid'), get_config('local_msaccount', 'clientsecret'),
                 $returnurl, self::SCOPE);
     }
 
@@ -68,8 +70,7 @@ class msaccount_client extends oauth2_client {
         
         // Has the token expired?
         if (isset($accesstoken->expires) && time() >= $accesstoken->expires) {
-            if (!$this->refresh_token())
-            {
+            if (!$this->refresh_token()) {
                 $this->log_out();
                 return false;
             }
@@ -130,13 +131,13 @@ class msaccount_client extends oauth2_client {
     public function refresh_token() {
         global $DB, $USER;
         
-        $this->log_out(); // remove previous token
+        $this->log_out(); // Remove previous token.
         
         $record = $DB->get_record('msaccount_refresh_tokens', array("user_id" => $USER->id));
         
-        if (!$record || !$record->refresh_token)
+        if (!$record || !$record->refresh_token) {
             return false;
-        
+        }
         $ch = curl_init();
         
         curl_setopt($ch, CURLOPT_HEADER, 1);
@@ -148,14 +149,14 @@ class msaccount_client extends oauth2_client {
         
         $callbackurl = self::callback_url();
         
-        curl_setopt($ch, CURLOPT_POSTFIELDS, 
-            'client_id=' . $this->get_clientid() . 
-            '&client_secret=' . $this->get_clientsecret() . 
-            '&grant_type=refresh_token' . 
+        curl_setopt($ch, CURLOPT_POSTFIELDS,
+            'client_id=' . $this->get_clientid() .
+            '&client_secret=' . $this->get_clientsecret() .
+            '&grant_type=refresh_token' .
             '&refresh_token=' . $record->refresh_token .
             '&redirect_url=' . $callbackurl->out(false));
         
-        $raw_response = curl_exec($ch);
+        $rawresponse = curl_exec($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
         
@@ -163,8 +164,8 @@ class msaccount_client extends oauth2_client {
             return false;
         }
 
-        $response_without_header = substr($raw_response, $info['header_size']);
-        $r = json_decode($response_without_header);
+        $responsewithoutheader = substr($rawresponse, $info['header_size']);
+        $r = json_decode($responsewithoutheader);
 
         if (!isset($r->access_token)) {
             return false;
@@ -176,23 +177,23 @@ class msaccount_client extends oauth2_client {
         $accesstoken->expires = (time() + ($r->expires_in - 10)); // Expires 10 seconds before actual expiry.
         $this->store_token($accesstoken);
         
-        // also update refresh token
+        // Also update refresh token.
         $this->store_refresh_token($r->refresh_token);
                 
         return true;
     }
 
-    public function store_refresh_token($refresh_token) {
+    public function store_refresh_token($refreshtoken) {
         global $DB, $USER;
         
         $record = $DB->get_record('msaccount_refresh_tokens', array("user_id" => $USER->id));
         if ($record) {
-            $record->refresh_token = $refresh_token;
+            $record->refresh_token = $refreshtoken;
             $DB->update_record('msaccount_refresh_tokens', $record);
         } else {
             $record = new stdClass();
             $record->user_id = $USER->id;
-            $record->refresh_token = $refresh_token;
+            $record->refresh_token = $refreshtoken;
             $DB->insert_record('msaccount_refresh_tokens', $record);
         }
     }
@@ -207,21 +208,21 @@ class msaccount_client extends oauth2_client {
      * @return bool true if GET should be used
      */
     protected function use_http_get() {
-        return $this->token_as_param;
+        return $this->tokenasparam;
     }
     
     public function myget($url, $params=array(), $token='', $secret='') {
-        $this->token_as_param = false;
+        $this->tokenasparam = false;
         $response = $this->get($url, $params, $token, $secret);
-        $this->token_as_param = true;
+        $this->tokenasparam = true;
         return $response;
     }
 
     public function mypost($url, $params=array(), $token='', $secret='') {
-        $this->token_as_param = false;
+        $this->tokenasparam = false;
         $this->setHeader('Content-Type: application/json');
         $response = $this->post($url, $params, $token, $secret);
-        $this->token_as_param = true;
+        $this->tokenasparam = true;
         return $response;
     }
 }
@@ -236,10 +237,10 @@ class msaccount_client extends oauth2_client {
 class msaccount_api {
 
     private static $instance = null;
-    private $msaccount_client = null;
+    private $msaccountclient = null;
 
     protected function __construct() {
-        $this->msaccount_client = new msaccount_client();
+        $this->msaccountclient = new msaccount_client();
     }
     
     public static function getInstance() {
@@ -247,13 +248,13 @@ class msaccount_api {
             self::$instance = new static();
         }
     
-        self::$instance->msaccount_client->is_logged_in();
+        self::$instance->msaccountclient->is_logged_in();
     
         return self::$instance;
     }
     
     public function get_msaccount_client() {
-        return $this->msaccount_client;
+        return $this->msaccountclient;
     }
     public function is_logged_in() {
         return $this->get_msaccount_client()->is_logged_in();
@@ -286,13 +287,14 @@ class msaccount_api {
     public function render_signin_widget() {
         $url = $this->get_login_url();
     
-        return '<a onclick="window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
+        return '<a onclick="window.open(this.href,\'mywin\',
+           \'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
            href="'.$url->out(false).'" class="msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
     }
 
-    // these are useful primarily for testing purposes
-    public function store_refresh_token($refresh_token) {
-        $this->get_msaccount_client()->store_refresh_token($refresh_token);
+    // These are useful primarily for testing purposes.
+    public function store_refresh_token($refreshtoken) {
+        $this->get_msaccount_client()->store_refresh_token($refreshtoken);
     }
     
     public function refresh_token() {

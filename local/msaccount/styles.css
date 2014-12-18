@@ -3,9 +3,9 @@
 	background-image: url([[pix:local_msaccount|msaccount]]);
 	background-position: 4px 4px;
     background-repeat: no-repeat;
-    background-color: #FEFEFE; /* #1E82CC; */ 
-    color: #003D5C; 
-    display: inline-block; 
+    background-color: #FEFEFE; /* #1E82CC; */
+    color: #003D5C;
+    display: inline-block;
     padding: 6px 4px 5px 110px;
     margin: 5px 0px;
     font-size: 14px;
@@ -16,5 +16,5 @@
 .msaccount_linkbutton:active, .msaccount_linkbutton:hover, .msaccount_linkbutton:visited
 {
 	text-decoration: none !important;
-    color: #003D5C; 
+    color: #003D5C;
 }
