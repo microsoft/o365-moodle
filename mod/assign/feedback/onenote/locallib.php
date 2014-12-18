@@ -17,7 +17,7 @@
 /**
  * This file contains the definition for the library class for onenote feedback plugin
  * @package   assignfeedback_onenote
- * @author Vin Bhalerao <vin@bhalerao.org>
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */

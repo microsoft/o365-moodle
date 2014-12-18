@@ -18,7 +18,7 @@
  * This file contains the definition for the library class for OneNote submission plugin
  * This class provides all the functionality for the new assign module.
  * @package assignsubmission_onenote
- * @author Vin Bhalerao <vin@bhalerao.org> Sushant Gawali <sushant@introp.net>
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com) Sushant Gawali (sushant@introp.net)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
