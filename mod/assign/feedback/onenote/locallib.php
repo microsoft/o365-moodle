@@ -198,7 +198,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return bool
      */
     public function save(stdClass $grade, stdClass $data) {
-        global $DB;
+        global $DB, $COURSE;
         
         // Get the OneNote page id corresponding to the teacher's feedback for this submission.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
@@ -215,6 +215,18 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile);
         
         if ($downloadinfo) {
+
+            // Get feedback zip size.
+            $feedbacksize = filesize($downloadinfo['path']);
+
+            // Check if feedback size is greater than course upload limit.
+            if (($COURSE->maxbytes > 0) && ($feedbacksize > $COURSE->maxbytes)) {
+
+                // Display error if true.
+                $this->set_error(get_string('feedbacklimitexceed', 'assignfeedback_onenote'));
+                return false;
+            }
+
             $fs = get_file_storage();
             
             // Delete any previous feedbacks.
