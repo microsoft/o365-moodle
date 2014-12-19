@@ -77,6 +77,10 @@ class filter_oembed extends moodle_text_filter {
             $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(slideshare\.net)\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_slidesharecallback', $newtext);
         } 
+        if (get_config('filter_oembed', 'officemix')){
+            $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(mix\.office\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
+            $newtext = preg_replace_callback($search, 'filter_oembed_officemixcallback', $newtext);
+        }
         if (get_config('filter_oembed', 'issuu')){
             $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(issuu\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_issuucallback', $newtext);
@@ -117,7 +121,7 @@ function filter_oembed_youtubecallback($link) {
 
 function filter_oembed_vimeocallback($link) {
     global $CFG;
-    $url = "http://vimeo.com/api/oembed.json?url=".trim($link[7]);
+    $url = "http://vimeo.com/api/oembed.json?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
     $jsonret = filter_oembed_curlcall($url);
     return filter_oembed_vidembed($jsonret);
 }
@@ -132,6 +136,13 @@ function filter_oembed_tedcallback($link) {
 function filter_oembed_slidesharecallback($link) {
     global $CFG;
     $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[6])."&format=json";
+    $json = filter_oembed_curlcall($url);
+    return $json['html'];
+}
+
+function filter_oembed_officemixcallback($link) {
+    global $CFG;
+    $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
@@ -170,6 +181,7 @@ function filter_oembed_curlcall($www){
     curl_setopt ($crl, CURLOPT_URL,$www);
     curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
+    curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
     $ret = curl_exec($crl);
     curl_close($crl);
     $result = json_decode($ret, true);
