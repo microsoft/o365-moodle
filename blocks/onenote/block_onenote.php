@@ -48,7 +48,6 @@ class block_onenote extends block_base {
     public function _get_content() {
         global $USER, $COURSE, $PAGE, $CFG;
         
-        error_log('_get_content called');
         $content = new stdClass;
         $content->text = '';
         $content->footer = '';

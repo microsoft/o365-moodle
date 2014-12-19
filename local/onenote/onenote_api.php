@@ -80,16 +80,13 @@ class onenote_api {
      * @return array stucture for repository download_file
      */
     public function download_page($pageid, $path) {
-        error_log('download_page called: ' . print_r($pageid, true));
 
         $url = self::API."/pages/".$pageid."/content";
-        //error_log(print_r($url,true));
 
         $response = $this->get_msaccount_api()->myget($url);
 
         // On success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors.
         $decodedresponse = json_decode($response);
-        error_log("response: " . print_r($response, true));
 
         if (!$response || isset($decodedresponse->error)) {
             return null;
@@ -163,7 +160,6 @@ class onenote_api {
      * @return mixed item name or false in case of error
      */
     public function get_item_name($itemid) {
-        error_log('get_item_name called: ' . print_r($itemid, true));
 
         if (empty($itemid)) {
             throw new coding_exception('Empty item_id passed to get_item_name');
@@ -171,13 +167,11 @@ class onenote_api {
 
         $url = self::API."/notebooks/{$itemid}";
         $response = json_decode($this->get_msaccount_api()->myget($url));
-        //error_log('response: ' . print_r($response, true));
 
         if (!$response || isset($response->error)) {
             // TODO: Hack: See if it is a section id.
             $url = self::API."/sections/{$itemid}";
             $response = json_decode($this->get_msaccount_api()->myget($url));
-            //error_log('response: ' . print_r($response, true));
 
             if (!$response || isset($response->error)) {
                 return false;
@@ -196,8 +190,6 @@ class onenote_api {
     public function get_items_list($path = '') {
         global $OUTPUT;
 
-        //error_log('get_items_list called: ' . $path);
-
         if (empty($path)) {
             $itemtype = 'notebook';
             $url = self::API."/notebooks";
@@ -215,9 +207,7 @@ class onenote_api {
             }
         }
 
-        //error_log('request: ' . print_r($url, true));
         $response = json_decode($this->get_msaccount_api()->myget($url));
-        //error_log('response: ' . print_r($response, true));
 
         $items = array();
 
@@ -232,7 +222,6 @@ class onenote_api {
                     $items[] = array(
                         'title' => $item->name,
                         'path' => $path.'/'.urlencode($item->id),
-                        //'size' => $item->size,
                         'date' => strtotime($item->lastModifiedTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
                         'source' => $item->id,
@@ -247,7 +236,6 @@ class onenote_api {
                     $items[] = array(
                         'title' => $item->name,
                         'path' => $path.'/'.urlencode($item->id),
-                        //'size' => $item->size,
                         'date' => strtotime($item->lastModifiedTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
                         'source' => $item->id,
@@ -262,7 +250,6 @@ class onenote_api {
                     $items[] = array(
                         'title' => $item->title.".zip",
                         'path' => $path.'/'.urlencode($item->id),
-                        //'size' => $item->size,
                         'date' => strtotime($item->createdTime),
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->title, 90))->out(false),
                         'source' => $item->id,
@@ -649,7 +636,6 @@ class onenote_api {
             'filename' => $filename);
     
         // Get file.
-        //error_log(print_r($fileinfo, true));
         $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
                 $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
     
@@ -730,7 +716,6 @@ class onenote_api {
         $postdata .= $imgdata . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
 
-        error_log(print_r($postdata, true));
         return $postdata;
     }
     
@@ -756,7 +741,6 @@ class onenote_api {
                 if (!$srcnode) {
                     continue;
                 }
-                // echo htmlentities($dom->saveHTML($src_node)); echo "\r\n<br/>";
                 $srcrelpath = urldecode($srcnode->nodeValue);
                 $srcfilename = substr($srcrelpath, strlen('./page_files/'));
                 $srcpath = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), substr($srcrelpath, 2)));
@@ -794,13 +778,12 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', Arial, \'Lucida Grande\', sans-serif;font-size:14px; color:rgb(51,51,51);">' .
-            $output . '</body>' . $eol;
+        $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', Arial, \'Lucida Grande\',';
+        $postdata .= 'sans-serif;font-size:14px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $imgdata . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
         
-        error_log(print_r($postdata, true));
         return $postdata;
     }
     
@@ -825,8 +808,6 @@ class onenote_api {
             $responsewithoutheader = substr($rawresponse, $info['header_size']);
             $response = json_decode($responsewithoutheader);
             return $response;
-        } else {
-            error_log('onenote_api::create_page_from_postdata failed: ' . print_r($info, true) . ' Raw response: ' . $rawresponse);
         }
         
         return null;
@@ -913,7 +894,7 @@ class onenote_api {
     // Check if given user is a teacher in the given course.
     public function is_teacher($courseid, $userid) {
         // Teacher role comes with courses.
-        $context = context_course::instance($courseid); //get_context_instance(CONTEXT_COURSE, $courseid, true);
+        $context = context_course::instance($courseid); // Get_context_instance(CONTEXT_COURSE, $courseid, true);.
         
         $roles = get_user_roles($context, $userid, true);
     
