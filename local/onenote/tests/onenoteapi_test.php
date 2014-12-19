@@ -98,7 +98,6 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->getDataGenerator()->enrol_user($this->user1->id, $this->course2->id, 5);
         
         $this->assertCount(2, get_enrolled_users($c1ctx));
-        // $this->assertCount(2, get_enrolled_users($c2ctx));
     }
 
     public function set_test_config() {
