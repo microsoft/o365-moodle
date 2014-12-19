@@ -44,7 +44,7 @@ class repository_onenote extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $this->onenoteapi = onenote_api::getInstance();
+        $this->onenoteapi = onenote_api::getinstance();
     }
 
     /**

@@ -51,7 +51,7 @@ class block_onenote extends block_base {
         $content = new stdClass;
         $content->text = '';
         $content->footer = '';
-        $onenoteapi = onenote_api::getInstance();
+        $onenoteapi = onenote_api::getinstance();
         
         if ($onenoteapi->is_logged_in()) {
             // Add the "save to onenote" button if we are on an assignment page.

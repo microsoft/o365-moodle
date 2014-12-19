@@ -29,7 +29,7 @@ $submissionuserid = optional_param('submissionuserid', null, PARAM_INT);
 $submissionid = optional_param('submissionid', null, PARAM_INT);
 $gradeid = optional_param('gradeid', null, PARAM_INT);
 
-$url = onenote_api::getInstance()->get_page($cmid, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid, $gradeid);
+$url = onenote_api::getinstance()->get_page($cmid, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid, $gradeid);
 if ($url) {
     $url = new moodle_url($url);
     redirect($url);

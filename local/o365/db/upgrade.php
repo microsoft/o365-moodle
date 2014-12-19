@@ -93,5 +93,28 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2014111715', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2014111716) {
+        // Drop old index.
+        $table = new xmldb_table('local_o365_token');
+        $index = new xmldb_index('usrresscp', XMLDB_INDEX_NOTUNIQUE, ['user_id','resource','scope']);
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Lengthen field.
+        $table = new xmldb_table('local_o365_token');
+        $field = new xmldb_field('scope', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'user_id');
+        $dbman->change_field_type($table, $field);
+
+        // Create new index.
+        $table = new xmldb_table('local_o365_token');
+        $index = new xmldb_index('usrres', XMLDB_INDEX_NOTUNIQUE, ['user_id','resource']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint($result, '2014111716', 'local', 'o365');
+    }
+
     return $result;
 }

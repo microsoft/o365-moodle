@@ -55,10 +55,10 @@ class onenote_api {
     private $msacountapi = null;
         
     protected function __construct() {
-        $this->msaccountapi = msaccount_api::getInstance();
+        $this->msaccountapi = msaccount_api::getinstance();
     }
 
-    public static function getInstance() {
+    public static function getinstance() {
         if (null === self::$instance) {
             self::$instance = new static();
         }
