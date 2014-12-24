@@ -87,8 +87,8 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->setUser($this->user->id);
         $c1ctx = context_course::instance($this->course1->id);
         $c2ctx = context_course::instance($this->course2->id);
-        $this->getDataGenerator()->enrol_user($this->user->id, $this->course1->id, 4);
-        $this->getDataGenerator()->enrol_user($this->user->id, $this->course2->id, 4);
+        $this->getDataGenerator()->enrol_user($this->user->id, $this->course1->id, 3);
+        $this->getDataGenerator()->enrol_user($this->user->id, $this->course2->id, 3);
         $this->assertCount(2, enrol_get_my_courses());
         $courses = enrol_get_my_courses();
         
@@ -117,6 +117,12 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->assertEquals(true, $this->onenoteapi->get_msaccount_api()->is_logged_in());
     }
 
+    public function test_isteacher() {
+        $this->set_test_config();
+        $this->set_user(0);
+        $this->assertTrue($this->onenoteapi->is_teacher($this->course1->id, $this->user->id), "user is not teacher");
+    }
+
     public function test_getitemlist() {
         $this->set_test_config();
         $this->set_user(0);
@@ -132,10 +138,10 @@ class microsoft_onenote_testcase extends advanced_testcase
         );
         
         foreach ($itemlist as $item) {
-        if ($item['title'] == "Moodle Notebook") {
+            if ($item['title'] == "Moodle Notebook") {
                 array_push($notesectionnames, "Moodle Notebook");
                 $itemlist = $this->onenoteapi->get_items_list($item['path']);
-            foreach ($itemlist as $item) {
+                foreach ($itemlist as $item) {
                     array_push($notesectionnames, $item['title']);
                 }
             }
@@ -152,11 +158,10 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->set_test_config();
         $this->set_user(0);
         
-        $itemlist = $this->onenoteapi->get_items_list();
-        
         // Creating a testable assignment.
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
         $params['course'] = $this->course1->id;
+        $params['intro'] = '<h3>Heading 1</h3><br><h4>Heading 2</h4><br><h5>Heading 3</h5>ï¿¼';
         $instance = $generator->create_instance($params);
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
         $this->context = context_module::instance($this->cm->id);
@@ -206,7 +211,6 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->set_test_config();
         $this->set_user(0);
         
-        $itemlist = $this->onenoteapi->get_items_list();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
         $params['course'] = $this->course2->id;
         $instance = $generator->create_instance($params);
@@ -218,8 +222,7 @@ class microsoft_onenote_testcase extends advanced_testcase
         
         // To get the notebooks of student.
         $this->set_user(1);
-        $itemlist = $this->onenoteapi->get_items_list();
-        
+
         $createsubmission = $this->create_submission_feedback($this->cm, false, false, null, null, null);
         $this->submission = $this->assign->get_user_submission($this->user1->id, true);
         // Saving the assignment.
