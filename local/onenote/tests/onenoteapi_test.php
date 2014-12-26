@@ -154,6 +154,51 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->assertNotEmpty($itemlist, "No value");
     }
 
+    public function test_sizelimits() {
+        $this->set_test_config();
+        $this->set_user(0);
+
+        // Creating a testable assignment.
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $params['course'] = $this->course1->id;
+        $params['intro'] = '<h3>Heading 1</h3><br><h4>Heading 2</h4><br><h5>Heading 3</h5>ï¿¼';
+        $instance = $generator->create_instance($params);
+        $this->cm = get_coursemodule_from_instance('assign', $instance->id);
+        $this->context = context_module::instance($this->cm->id);
+        $this->assign = new testable_assign($this->context, $this->cm, $this->course1);
+
+        // To get the notebooks of student.
+        $this->set_user(1);
+
+        // Student submission to onenote.
+        $createsubmission = $this->create_submission_feedback($this->cm, false, false, null, null, null);
+        $this->submission = $this->assign->get_user_submission($this->user1->id, true);
+
+        // Saving the assignment.
+        $data = new stdClass();
+        $assignsubmission = new assign_submission_onenote($this->assign, '');
+
+        // Set submission size limit.
+        $assignsubmission->set_config('maxsubmissionsizebytes', '10');
+        $saveassign = $assignsubmission->save($this->submission, $data);
+
+        $this->assertFalse($saveassign, 'Submission limit check fails');
+
+        // Set course size limit.
+        $this->course1->maxbytes = 10;
+
+        // Creating feedback for submission.
+        $this->set_user(0);
+
+        // Saving the grade.
+        $this->grade = $this->assign->get_user_grade($this->user1->id, true);
+        $gradeassign = new assign_feedback_onenote($this->assign, '');
+        $gradeassign = $gradeassign->save($this->grade, $data);
+
+        $this->assertFalse($gradeassign, 'Feedback limit check fails');
+
+    }
+
     public function test_getpage() {
         $this->set_test_config();
         $this->set_user(0);
