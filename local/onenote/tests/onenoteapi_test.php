@@ -268,7 +268,8 @@ class microsoft_onenote_testcase extends advanced_testcase
         // To get the notebooks of student.
         $this->set_user(1);
 
-        $createsubmission = $this->create_submission_feedback($this->cm, false, false, null, null, null);
+        $this->create_submission_feedback($this->cm, false, false, null, null, null);
+        $this->create_submission_feedback($this->cm, false, false, null, null, null);
         $this->submission = $this->assign->get_user_submission($this->user1->id, true);
         // Saving the assignment.
         $data = new stdClass();
