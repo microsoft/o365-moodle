@@ -213,6 +213,7 @@ class msaccount_client extends oauth2_client {
     
     public function myget($url, $params=array(), $token='', $secret='') {
         $this->tokenasparam = false;
+        $this->header = array();
         $response = $this->get($url, $params, $token, $secret);
         $this->tokenasparam = true;
         return $response;
