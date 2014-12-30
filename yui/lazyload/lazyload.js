@@ -1,6 +1,5 @@
 YUI.add('moodle-filter_oembed-lazyload', function(Y) {
 
-
     var AUTOLINKER = function() {
         AUTOLINKER.superclass.constructor.apply(this, arguments);
     };
@@ -21,7 +20,7 @@ YUI.add('moodle-filter_oembed-lazyload', function(Y) {
                 } else {
                     var modifier = '?';
                 }
-                content.set('src', content.get('src')+modifier+'autoplay=1');
+                content.set('src', content.get('src') + modifier + 'autoplay=1');
                 this.replace(content);
             }, Y.one(document.body), 'a.lvvideo');
         }

@@ -28,25 +28,25 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    $torf = array('1'=>'Yes','0'=>'No');
+    $torf = array('1' => 'Yes', '0' => 'No');
     $item = new admin_setting_configselect('filter_oembed/youtube', get_string('youtube', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/vimeo', get_string('vimeo', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/ted', get_string('ted', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);    
+    $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/slideshare', get_string('slideshare', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);  
+    $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/officemix', get_string('officemix', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/screenr', get_string('screenr', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);  
+    $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/issuu', get_string('issuu', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);    
+    $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/soundcloud', get_string('soundcloud', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);   
+    $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/pollev', get_string('pollev', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);        
-    $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);    
+    $settings->add($item);
+    $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);
     $settings->add($item);
 }
