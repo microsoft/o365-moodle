@@ -178,7 +178,7 @@ class onenote_api {
             }
         }
 
-        return $response->value[0]->name.".zip";
+        return $response->name.".zip";
     }
 
     /**

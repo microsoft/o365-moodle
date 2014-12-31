@@ -117,6 +117,47 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->assertEquals(true, $this->onenoteapi->get_msaccount_api()->is_logged_in());
     }
 
+    public function test_createtempfolder() {
+        $this->set_test_config();
+        $this->set_user(0);
+
+        $this->assertNotNull($this->onenoteapi->create_temp_folder(), 'Unable to create temp folder');
+    }
+
+    public function test_getitemaname(){
+        $this->set_test_config();
+        $this->set_user(0);
+
+        $itemlist = $this->onenoteapi->get_items_list();
+
+        foreach ($itemlist as $item) {
+            if($item['title'] == 'Moodle Notebook'){
+                $this->assertEquals($item['title'].'.zip', $this->onenoteapi->get_item_name($item['id']), 'Unable to get notebook name');
+
+                $subitems = $this->onenoteapi->get_items_list($item['path']);
+                foreach ($subitems as $subitem) {
+                    $this->assertEquals($subitem['title'].'.zip', $this->onenoteapi->get_item_name($subitem['id']), 'Unable to get section name');
+                }
+            }
+        }
+    }
+
+    public function test_renderactionbutton() {
+        $this->set_test_config();
+        $this->set_user(0);
+        global $CFG;
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $params['course'] = $this->course1->id;
+        $instance = $generator->create_instance($params);
+        $this->cm = get_coursemodule_from_instance('assign', $instance->id);
+
+        $expected = '<a onclick="window.open(this.href,\'_blank\'); return false;" href="'.$CFG->wwwroot.'/local/onenote/onenote_actions.php?';
+        $expected .= 'action=openpage&cmid=1&wantfeedback&isteacher&submissionuserid&submissionid&gradeid" class="onenote_linkbutton">Onenote</a>';
+        $button = $this->onenoteapi->render_action_button('Onenote', $this->cm->id);
+        $this->assertEquals($expected, $button, 'Invalid action button');
+    }
+
     public function test_isteacher() {
         $this->set_test_config();
         $this->set_user(0);
@@ -197,6 +238,57 @@ class microsoft_onenote_testcase extends advanced_testcase
 
         $this->assertFalse($gradeassign, 'Feedback limit check fails');
 
+    }
+
+    public function test_downloadpagehtml(){
+        global $DB;
+        $this->set_test_config();
+        $this->set_user(0);
+
+        // Creating a testable assignment.
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $params['course'] = $this->course1->id;
+        $params['intro'] = '<h3>Heading 1</h3><p>This is test assignment.</p><br>';
+        $instance = $generator->create_instance($params);
+        $this->cm = get_coursemodule_from_instance('assign', $instance->id);
+        $this->context = context_module::instance($this->cm->id);
+        $this->assign = new testable_assign($this->context, $this->cm, $this->course1);
+
+        // To get the notebooks of student.
+        $this->set_user(1);
+
+        // Student submission to onenote.
+        $createsubmission = $this->create_submission_feedback($this->cm, false, false, null, null, null);
+        $this->submission = $this->assign->get_user_submission($this->user1->id, true);
+
+        $record = $DB->get_record('onenote_assign_pages',
+            array("assign_id" => $this->submission->assignment, "user_id" => $this->submission->userid));
+
+
+        $tempfolder = $this->onenoteapi->create_temp_folder();
+        $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        $info = $this->onenoteapi->download_page($record->submission_student_page_id, $tempfile);
+
+        $zip = new ZipArchive;
+        $res = $zip->open($info['path']);
+        if ($res === TRUE) {
+            $zip->extractTo($tempfolder);
+            $zip->close();
+        }
+        $folder = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0'));
+        $pagefile = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
+
+        $htmlDom = new DomDocument;
+        $htmlDom->loadHTMLFile($pagefile);
+        $htmlDom->preservewhitespace = false;
+
+        $expectedHtml = '<h3 style="font-size:12px;color:#5b9bd5">';
+        $expectedHtml .= '<span style="font-family:Helvetica;font-size:18px;color:#333333">Heading 1</span></h3> ';
+        $expectedHtml .= '<p><span style="font-family:Helvetica;font-size:14px;color:#333333">This is test assignment.</span></p>';
+
+        $h = $htmlDom->saveHTML();
+        $h = trim(preg_replace('/\s+/', ' ', $h));
+        $this->assertContains($expectedHtml, $h, 'Html does not match');
     }
 
     public function test_getpage() {
