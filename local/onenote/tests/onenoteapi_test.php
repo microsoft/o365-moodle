@@ -137,6 +137,7 @@ class microsoft_onenote_testcase extends advanced_testcase
                 $subitems = $this->onenoteapi->get_items_list($item['path']);
                 foreach ($subitems as $subitem) {
                     $this->assertEquals($subitem['title'].'.zip', $this->onenoteapi->get_item_name($subitem['id']), 'Unable to get section name');
+                    break;
                 }
             }
         }
