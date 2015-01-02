@@ -45,7 +45,7 @@ class filter_oembed extends moodle_text_filter {
         }
     }
 
-    function filter($text, array $options = array()) {
+    public function filter($text, array $options = array()) {
         global $CFG;
 
         if (!is_string($text) or empty($text)) {
@@ -177,7 +177,7 @@ function filter_oembed_soundcloudcallback($link) {
 
 function filter_oembed_curlcall($www) {
     $crl = curl_init();
-    $timeout = 5;
+    $timeout = 15;
     curl_setopt ($crl, CURLOPT_URL, $www);
     curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
