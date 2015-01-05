@@ -140,6 +140,21 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a file's metadata by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return array The file's metadata.
+     */
+    public function get_file_metadata($fileid) {
+        $response = $this->apicall('get', "/v1.0/files/{$fileid}");
+        $response = json_decode($response, true);
+        if (empty($response)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $response;
+    }
+
+    /**
      * Create a new file.
      *
      * @param string $folderpath The path to the file.
