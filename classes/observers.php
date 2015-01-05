@@ -236,6 +236,7 @@ class observers {
      * @return \local_o365\rest\calendar|bool A constructed calendar API client, or false if error.
      */
     public static function construct_calendar_api($userid, $systemfallback = true) {
+        global $DB;
         $outlookresource = \local_o365\rest\calendar::get_resource();
         $oidcconfig = get_config('auth_oidc');
         $httpclient = new \local_o365\httpclient();
@@ -255,6 +256,7 @@ class observers {
             return false;
         }
         $cal = new \local_o365\rest\calendar($token, $httpclient);
+        return $cal;
     }
 
     /**
@@ -285,15 +287,28 @@ class observers {
             $attendees = $DB->get_records_sql($subscribedsql);
         } else if (isset($event->courseid) && $event->courseid != SITEID && $event->courseid > 0) {
             // Course event - Get subscribed students.
-            $subscribedsql = 'SELECT u.id, u.email, u.firstname, u.lastname
-                                FROM {user} u
-                                JOIN {user_enrolments} ue ON ue.userid = u.id
-                                JOIN {enrol} e ON e.id = ue.enrolid
-                                JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                                     AND sub.caltype = "course"
-                                     AND sub.caltypeid = e.courseid
-                               WHERE e.courseid = ?';
-            $attendees = $DB->get_records_sql($subscribedsql, [$event->courseid]);
+            if (!empty($event->groupid)) {
+                $subscribedsql = 'SELECT u.id, u.email, u.firstname, u.lastname
+                                    FROM {user} u
+                                    JOIN {user_enrolments} ue ON ue.userid = u.id
+                                    JOIN {enrol} e ON e.id = ue.enrolid
+                                    JOIN {local_o365_calsub} sub ON sub.user_id = u.id
+                                         AND sub.caltype = "course"
+                                         AND sub.caltypeid = e.courseid
+                                    JOIN {groups_members} grpmbr ON grpmbr.userid = u.id
+                                   WHERE e.courseid = ? AND grpmbr.groupid = ?';
+                $attendees = $DB->get_records_sql($subscribedsql, [$event->courseid, $event->groupid]);
+            } else {
+                $subscribedsql = 'SELECT u.id, u.email, u.firstname, u.lastname
+                                    FROM {user} u
+                                    JOIN {user_enrolments} ue ON ue.userid = u.id
+                                    JOIN {enrol} e ON e.id = ue.enrolid
+                                    JOIN {local_o365_calsub} sub ON sub.user_id = u.id
+                                         AND sub.caltype = "course"
+                                         AND sub.caltypeid = e.courseid
+                                   WHERE e.courseid = ?';
+                $attendees = $DB->get_records_sql($subscribedsql, [$event->courseid]);
+            }
         } else {
             // Personal user event. Only sync if user is subscribed to their events.
             if (!$DB->record_exists('local_o365_calsub', ['caltype' => 'user', 'user_id' => $event->userid])) {
