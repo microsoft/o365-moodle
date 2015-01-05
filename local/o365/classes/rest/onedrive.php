@@ -98,6 +98,21 @@ class onedrive extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a file's metadata by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_file_metadata($fileid) {
+        $response = $this->apicall('get', "/{$fileid}");
+        $response = json_decode($response, true);
+        if (empty($response)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $response;
+    }
+
+    /**
      * Get information about a folder.
      *
      * @param string $path The folder path.
