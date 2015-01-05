@@ -28,6 +28,8 @@ $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
 
 $string['settings_aadsync'] = 'Sync users from AzureAD';
 $string['settings_aadsync_details'] = 'If enabled, users in the associated AzureAD directory will be synced to Moodle. This will create users in Moodle that exist in AzureAD, and delete Moodle users created from AzureAD when they are deleted from AzureAD.';
+$string['settings_parentsiteuri'] = 'Course sharepoint sites parent site URI';
+$string['settings_parentsiteuri_details'] = 'The URI to use for the parent site of all course sharepoint sites. "moodle" is a good default, but you can change it if it conflicts with a site you already have.<br /><b>Important - </b>If you change this after sites have been initialized, the sites must be reinitialized.';
 $string['settings_sharepointinit'] = 'Initialize Sharepoint Sites';
 $string['settings_sharepointinit_details'] = 'This will create a sharepoint site for Moodle and subsites for all courses. Once initialized, courses will be able to use these sharepoint sites to share information between users.';
 $string['settings_sharepointinit_initialize'] = 'Initialize';

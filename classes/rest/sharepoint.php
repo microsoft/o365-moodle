@@ -68,6 +68,16 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get the URI of the site that serves as the parent site for all sharepoint course sites.
+     *
+     * @return string The URI of the parent site.
+     */
+    public function get_moodle_parent_site_uri() {
+        $config = get_config('local_o365');
+        return (!empty($config->parentsiteuri)) ? $config->parentsiteuri : 'moodle';
+    }
+
+    /**
      * Set the site to use when making API calls.
      *
      * @param string $site The site's relative URL. i.e. /site/subsite
@@ -504,7 +514,7 @@ class sharepoint extends \local_o365\rest\o365api {
         global $DB;
         $now = time();
 
-        $this->set_site('moodle');
+        $this->set_site($this->get_moodle_parent_site_uri());
 
         // Get course data.
         if (is_numeric($course)) {

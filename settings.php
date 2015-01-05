@@ -33,6 +33,9 @@ if ($hassiteconfig) {
     $settings->add(new \local_o365\form\adminsetting\systemapiuser('local_o365/systemapiuser', get_string('settings_systemapiuser', 'local_o365'),
                    get_string('settings_systemapiuser_details', 'local_o365'), '', PARAM_RAW));
 
+    $settings->add(new \admin_setting_configtext('local_o365/parentsiteuri', get_string('settings_parentsiteuri', 'local_o365'),
+                   get_string('settings_parentsiteuri_details', 'local_o365'), 'moodle', PARAM_ALPHANUMEXT));
+
     $settings->add(new \local_o365\form\adminsetting\sharepointinit('local_o365/initialize', get_string('settings_sharepointinit', 'local_o365'),
                    get_string('settings_sharepointinit_details', 'local_o365'), '', PARAM_RAW));
 
