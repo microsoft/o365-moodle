@@ -489,7 +489,7 @@ class repository_office365 extends \repository {
             $sourceclient = $this->get_onedrive_apiclient();
         } else if ($reference['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
-            $sourceclient->set_site('moodle');
+            $sourceclient->set_site($sourceclient->get_moodle_parent_site_uri());
         }
         $file = $sourceclient->get_file_by_id($reference['id']);
 
@@ -548,7 +548,7 @@ class repository_office365 extends \repository {
                     $sourceclient = $this->get_onedrive_apiclient();
                 } else if ($filesource === 'sharepoint') {
                     $sourceclient = $this->get_sharepoint_apiclient();
-                    $sourceclient->set_site('moodle');
+                    $sourceclient->set_site($sourceclient->get_moodle_parent_site_uri());
                 }
 
                 $filemetadata = $sourceclient->get_file_metadata($fileid);
