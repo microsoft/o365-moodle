@@ -121,35 +121,35 @@ function filter_oembed_youtubecallback($link) {
 
 function filter_oembed_vimeocallback($link) {
     global $CFG;
-    $url = "http://vimeo.com/api/oembed.json?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
+    $url = "http://vimeo.com/api/oembed.json?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=270';
     $jsonret = filter_oembed_curlcall($url);
     return filter_oembed_vidembed($jsonret);
 }
 
 function filter_oembed_tedcallback($link) {
     global $CFG;
-    $url = "http://www.ted.com/services/v1/oembed.json?url=".trim($link[1]).trim($link[3]).'/talks/'.trim($link[4]);
+    $url = "http://www.ted.com/services/v1/oembed.json?url=".trim($link[1]).trim($link[3]).'/talks/'.trim($link[4]).'&maxwidth=480&maxheight=270';
     $jsonret = filter_oembed_curlcall($url);
     return filter_oembed_vidembed($jsonret);
 }
 
 function filter_oembed_slidesharecallback($link) {
     global $CFG;
-    $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json";
+    $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=320";
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
 
 function filter_oembed_officemixcallback($link) {
     global $CFG;
-    $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
+    $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=320';
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
 
 function filter_oembed_pollevcallback($link) {
     global $CFG;
-    $url = "http://www.polleverywhere.com/services/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'/'.trim($link[5])."&format=json";
+    $url = "http://www.polleverywhere.com/services/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'/'.trim($link[5])."&format=json&maxwidth=480&maxheight=270";
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
@@ -163,14 +163,14 @@ function filter_oembed_issuucallback($link) {
 
 function filter_oembed_screenrcallback($link) {
     global $CFG;
-    $url = "http://www.screenr.com/api/oembed.json?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]);
+    $url = "http://www.screenr.com/api/oembed.json?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=270';
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
 
 function filter_oembed_soundcloudcallback($link) {
     global $CFG;
-    $url = "http://soundcloud.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json";
+    $url = "http://soundcloud.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270'";
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
