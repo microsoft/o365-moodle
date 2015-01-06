@@ -40,6 +40,9 @@ This is a singleton class that provides simple wrappers for various authenticati
 ### onenote_actions.php file
 This file processes form submissions from all the OneNote-related submit buttons in the Moodle API that help students work on their assignments and help teachers provide feedback on those assignments in OneNote.
 
+### Plugin dependencies
+local_onenote => local_msaccount
+
 
 Additional notes about the OneNote integration
 ----------------------------------------------

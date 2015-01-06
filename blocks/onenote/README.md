@@ -18,3 +18,6 @@ It is recommended that this block should be configured to appear on all pages th
 
 ### get_content method
 This is the standard block get_content method that returns either the Microsoft Account signin widget if the user hasn't signed in yet or the appropriate OneNote action button if so.
+
+### Plugin dependencies
+block_onenote => local_onenote => local_msaccount
