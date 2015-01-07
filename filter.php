@@ -135,15 +135,19 @@ function filter_oembed_tedcallback($link) {
 
 function filter_oembed_slidesharecallback($link) {
     global $CFG;
-    $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=320";
+    $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270";
     $json = filter_oembed_curlcall($url);
     return $json['html'];
 }
 
 function filter_oembed_officemixcallback($link) {
     global $CFG;
-    $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=320';
+    $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
     $json = filter_oembed_curlcall($url);
+
+    // Increase the height and width of iframe.
+    $json['html'] = str_replace('width="348"', 'width="480"', $json['html']);
+    $json['html'] = str_replace('height="245"', 'height="270"', $json['html']);
     return $json['html'];
 }
 

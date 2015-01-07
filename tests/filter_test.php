@@ -57,21 +57,21 @@ class filter_oembed_testcase extends basic_testcase {
         $youtubeoutput .= ' frameborder="0" allowfullscreen></iframe>';
         $this->assertContains($youtubeoutput, $filteroutput, 'Youtube filter fails');
 
-        $soundcloudoutput = '<iframe width="100%" height="400" scrolling="no" frameborder="no"';
+        $soundcloudoutput = '<iframe width="480" height="270" scrolling="no" frameborder="no"';
         $soundcloudoutput .= ' src="https://w.soundcloud.com/player/?visual=true&url=http%3A%2F%2Fapi.soundcloud.com%';
-        $soundcloudoutput .= '2Ftracks%2F132183772&show_artwork=true"></iframe>';
+        $soundcloudoutput .= '2Ftracks%2F132183772&show_artwork=true&maxwidth=480&maxheight=270%27"></iframe>';
         $this->assertContains($soundcloudoutput, $filteroutput, 'Soundcloud filter fails');
 
-        $officemixoutput = '<iframe width="348" height="245" src="https://mix.office.com/embed/50ujrxsjvp9c" frameborder="0"';
+        $officemixoutput = '<iframe width="480" height="270" src="https://mix.office.com/embed/50ujrxsjvp9c" frameborder="0"';
         $officemixoutput .= ' allowfullscreen></iframe>';
         $this->assertContains($officemixoutput, $filteroutput, 'Office mix filter fails');
 
-        $vimeooutput = '<iframe src="//player.vimeo.com/video/115538038" width="1280" height="720" frameborder="0"';
+        $vimeooutput = '<iframe src="//player.vimeo.com/video/115538038" width="480" height="270" frameborder="0"';
         $vimeooutput .= ' title="Snow Fun" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
         $this->assertContains($vimeooutput, $filteroutput, 'Vimeo filter fails');
 
-        $tedoutput = '<iframe src="https://embed-ssl.ted.com/talks/aj_jacobs_how_healthy_living_nearly_killed_me.html" width="560"';
-        $tedoutput .= ' height="315" frameborder="0" scrolling="no" webkitAllowFullScreen mozallowfullscreen allowFullScreen>';
+        $tedoutput = '<iframe src="https://embed-ssl.ted.com/talks/aj_jacobs_how_healthy_living_nearly_killed_me.html" width="480"';
+        $tedoutput .= ' height="270" frameborder="0" scrolling="no" webkitAllowFullScreen mozallowfullscreen allowFullScreen>';
         $tedoutput .= '</iframe>';
         $this->assertContains($tedoutput, $filteroutput, 'Ted filter fails');
 
