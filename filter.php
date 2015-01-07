@@ -147,7 +147,7 @@ function filter_oembed_officemixcallback($link) {
 
     // Increase the height and width of iframe.
     $json['html'] = str_replace('width="348"', 'width="480"', $json['html']);
-    $json['html'] = str_replace('height="245"', 'height="270"', $json['html']);
+    $json['html'] = str_replace('height="245"', 'height="320"', $json['html']);
     return $json['html'];
 }
 

@@ -62,7 +62,7 @@ class filter_oembed_testcase extends basic_testcase {
         $soundcloudoutput .= '2Ftracks%2F132183772&show_artwork=true&maxwidth=480&maxheight=270%27"></iframe>';
         $this->assertContains($soundcloudoutput, $filteroutput, 'Soundcloud filter fails');
 
-        $officemixoutput = '<iframe width="480" height="270" src="https://mix.office.com/embed/50ujrxsjvp9c" frameborder="0"';
+        $officemixoutput = '<iframe width="480" height="320" src="https://mix.office.com/embed/50ujrxsjvp9c" frameborder="0"';
         $officemixoutput .= ' allowfullscreen></iframe>';
         $this->assertContains($officemixoutput, $filteroutput, 'Office mix filter fails');
 
