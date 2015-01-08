@@ -29,6 +29,51 @@ require_once($CFG->dirroot.'/lib/filelib.php');
  * An httpclientinterface implementation, using curl class as backend and adding patch and merge methods.
  */
 class httpclient extends \curl implements \local_o365\httpclientinterface {
+       /**
+     * Generate a client tag.
+     *
+     * @return string A client tag.
+     */
+    protected function get_clienttag_headers() {
+        global $CFG;
+
+        $iid = sha1($CFG->wwwroot);
+        $mdlver = $this->get_moodle_version();
+        $ostype = php_uname('s');
+        $osver = php_uname('r');
+        $arch = php_uname('m');
+        $ver = $this->get_plugin_version();
+
+        $params = "lang=PHP; os={$ostype}; os_version={$osver}; arch={$arch}; version={$ver}; MoodleInstallId={$iid}";
+        $clienttag = "Moodle/{$mdlver} ({$params})";
+        return [
+            'User-Agent: '.$clienttag,
+            'X-ClientService-ClientTag: '.$clienttag,
+        ];
+    }
+
+    /**
+     * Get the current plugin version.
+     *
+     * @return string The current plugin version.
+     */
+    protected function get_plugin_version() {
+        global $CFG;
+        $plugin = new \stdClass;
+        require_once($CFG->dirroot.'/local/o365/version.php');
+        return $plugin->release;
+    }
+
+    /**
+     * Get the current Moodle version.
+     *
+     * @return string The current Moodle version.
+     */
+    protected function get_moodle_version() {
+        global $CFG;
+        return $CFG->release;
+    }
+
     /**
      * HTTP PATCH method
      *
