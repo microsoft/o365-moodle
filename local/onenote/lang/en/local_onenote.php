@@ -23,3 +23,5 @@
 $string['pluginname'] = 'Microsoft OneNote';
 $string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
 $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
+$string['connction_error'] = 'Cannot open OneNote page due to connection error. Please try after some time.';
+$string['onenote_page_error'] = 'Error in opening OneNote page';

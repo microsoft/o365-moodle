@@ -569,7 +569,25 @@ class onenote_api {
         }
             
         $response = $this->create_page_from_postdata($sectionid, $postdata, $boundary);
-        
+
+        // If there is connection error, repeat curl call for 3 times by pausing 0.5 sec in between.
+        if($response == 'connection_error'){
+            for($i = 0; $i <3; $i++){
+                $response = $this->create_page_from_postdata($sectionid, $postdata, $boundary);
+
+                // If we get proper response then break the loop.
+                if($response != 'connection_error'){
+                    break;
+                }
+                usleep(500000);
+            }
+        }
+
+        // If still there is connection error, return it.
+        if($response == 'connection_error'){
+            return $response;
+        }
+
         if ($response) {
             // Remember page id in the same db record or insert a new one if it did not exist before.
             if ($wantfeedbackpage) {
@@ -801,6 +819,20 @@ class onenote_api {
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         
         $rawresponse = curl_exec($ch);
+
+        // Check if curl call fails.
+        if($rawresponse === false){
+            $errorno = curl_errno($ch);
+            curl_close($ch);
+
+            // If curl call fails and reason is net connectivity return it or return null.
+            if (in_array($errorno, array('6', '7', '28'))) {
+                return 'connection_error';
+            } else {
+                return null;
+            }
+        }
+
         $info = curl_getinfo($ch);
         curl_close($ch);
         

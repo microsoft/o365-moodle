@@ -30,9 +30,15 @@ $submissionid = optional_param('submissionid', null, PARAM_INT);
 $gradeid = optional_param('gradeid', null, PARAM_INT);
 
 $url = onenote_api::getinstance()->get_page($cmid, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid, $gradeid);
+
+// If connection error then show message.
+if ($url == 'connection_error') {
+    throw new moodle_exception(get_string('connction_error', 'local_onenote'), 'onenote');
+}
+
 if ($url) {
     $url = new moodle_url($url);
     redirect($url);
 } else {
-    throw new moodle_exception('get_onenote_page_failed');
+    throw new moodle_exception(get_string('onenote_page_error', 'local_onenote'), 'onenote');
 }
