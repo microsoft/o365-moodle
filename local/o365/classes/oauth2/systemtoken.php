@@ -43,9 +43,14 @@ class systemtoken extends \local_o365\oauth2\token {
                     $tokens[$resource]['scope'], $tokens[$resource]['resource'], $clientdata, $httpclient);
             return $token;
         } else {
-            $token = static::get_for_new_resource($resource, $clientdata, $httpclient);
-            if (!empty($token)) {
-                return $token;
+            if ($resource === 'https://graph.windows.net') {
+                // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
+                return null;
+            } else {
+                $token = static::get_for_new_resource($resource, $clientdata, $httpclient);
+                if (!empty($token)) {
+                    return $token;
+                }
             }
         }
         return null;
