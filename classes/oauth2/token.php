@@ -192,7 +192,7 @@ class token {
             }
             return true;
         } else {
-            var_dump($result);
+            throw new \Exception('Could not refresh token');
             return false;
         }
     }
