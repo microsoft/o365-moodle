@@ -38,19 +38,40 @@ class httpclient extends \curl implements \auth_oidc\httpclientinterface {
         global $CFG;
 
         $iid = sha1($CFG->wwwroot);
-        $mdlver = '1.0';
-        $ostype = 'Linux|Windows';
-        $osver = '3.4.30|6.2.9000';
-        $arch = 'x64';
-        $ver = '1.0';
+        $mdlver = $this->get_moodle_version();
+        $ostype = php_uname('s');
+        $osver = php_uname('r');
+        $arch = php_uname('m');
+        $ver = $this->get_plugin_version();
 
         $params = "lang=PHP; os={$ostype}; os_version={$osver}; arch={$arch}; version={$ver}; MoodleInstallId={$iid}";
         $clienttag = "Moodle/{$mdlver} ({$params})";
-
         return [
             'User-Agent: '.$clienttag,
             'X-ClientService-ClientTag: '.$clienttag,
         ];
+    }
+
+    /**
+     * Get the current plugin version.
+     *
+     * @return string The current plugin version.
+     */
+    protected function get_plugin_version() {
+        global $CFG;
+        $plugin = new \stdClass;
+        require_once($CFG->dirroot.'/auth/oidc/version.php');
+        return $plugin->release;
+    }
+
+    /**
+     * Get the current Moodle version.
+     *
+     * @return string The current Moodle version.
+     */
+    protected function get_moodle_version() {
+        global $CFG;
+        return $CFG->release;
     }
 
     /**
