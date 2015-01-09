@@ -150,7 +150,7 @@ function filter_oembed_officemixcallback($link) {
     $json['html'] = str_replace('height="245"', 'height="320"', $json['html']);
     $json['html'] = str_replace('height="310"', 'height="410"', $json['html']);
     $json['html'] = str_replace('height="267"', 'height="350"', $json['html']);
-    return $json['html'];
+    return filter_oembed_vidembed($json);
 }
 
 function filter_oembed_pollevcallback($link) {
@@ -171,14 +171,14 @@ function filter_oembed_screenrcallback($link) {
     global $CFG;
     $url = "http://www.screenr.com/api/oembed.json?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=270';
     $json = filter_oembed_curlcall($url);
-    return $json['html'];
+    return filter_oembed_vidembed($json);
 }
 
 function filter_oembed_soundcloudcallback($link) {
     global $CFG;
     $url = "http://soundcloud.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270'";
     $json = filter_oembed_curlcall($url);
-    return $json['html'];
+    return filter_oembed_vidembed($json);
 }
 
 function filter_oembed_curlcall($www) {
@@ -196,8 +196,16 @@ function filter_oembed_curlcall($www) {
 
 function filter_oembed_vidembed($json) {
     if (get_config('filter_oembed', 'lazyload')) {
+
+        $dom = new DOMDocument();
+        $dom->loadHTML($json['html']);
+
+        // Get height and width of iframe.
+        $height = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('height');
+        $width = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('width');
+
         $embedcode = '<a class="lvoembed lvvideo" data-embed="'.htmlspecialchars($json['html']).'"';
-        $embedcode .= 'href="#"><div class="lazyvideo_container">';
+        $embedcode .= 'href="#" data-height="'. $height .'" data-width="'. $width .'"><div class="lazyvideo_container">';
         $embedcode .= '<img class="lazyvideo_placeholder" src="'.$json['thumbnail_url'].'" />';
         $embedcode .= '<div class="lazyvideo_title"><div class="lazyvideo_text">'.$json['title'].'</div></div>';
         $embedcode .= '<span class="lazyvideo_playbutton"></span>';

@@ -10,8 +10,8 @@ YUI.add('moodle-filter_oembed-lazyload', function(Y) {
                 e.preventDefault();
                 var title = '';
                 var videonode = this.getData('embed');
-                var videowidth = this.one('img').get('offsetWidth');
-                var videoheight = this.one('img').get('offsetHeight');
+                var videowidth = this.getData('width');
+                var videoheight = this.getData('height');
                 var content = Y.Node.create(videonode);
                 content.set('width', videowidth);
                 content.set('height', videoheight);
