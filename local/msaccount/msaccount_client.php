@@ -215,6 +215,22 @@ class msaccount_client extends oauth2_client {
         $this->tokenasparam = false;
         $this->header = array();
         $response = $this->get($url, $params, $token, $secret);
+
+        // If there is curl error due to connection. Try curl call for 3 times pausing for 0.5 sec.
+        if (strpos($response, 'Could not resolve host') !== false || strpos($response, 'Failed to connect') !== false
+            || strpos($response, 'Timed out') !== false) {
+            for($i = 0; $i < 3; $i++){
+                $response = $this->get($url, $params, $token, $secret);
+
+                // If we get proper response, break the loop.
+                if(strpos($response, 'Could not resolve host') === false || strpos($response, 'Failed to connect') === false
+                    || strpos($response, 'Timed out') === false){
+                    break;
+                }
+                usleep(500000);
+            }
+        }
+
         $this->tokenasparam = true;
         return $response;
     }
@@ -223,6 +239,22 @@ class msaccount_client extends oauth2_client {
         $this->tokenasparam = false;
         $this->setHeader('Content-Type: application/json');
         $response = $this->post($url, $params, $token, $secret);
+
+        // If there is curl error due to connection. Try curl call for 3 times pausing for 0.5 sec.
+        if (strpos($response, 'Could not resolve host') !== false || strpos($response, 'Failed to connect') !== false
+            || strpos($response, 'Timed out') !== false) {
+            for($i = 0; $i < 3; $i++){
+                $response = $this->post($url, $params, $token, $secret);
+
+                // If we get proper response, break the loop.
+                if(strpos($response, 'Could not resolve host') === false || strpos($response, 'Failed to connect') === false
+                    || strpos($response, 'Timed out') === false){
+                    break;
+                }
+                usleep(500000);
+            }
+        }
+
         $this->tokenasparam = true;
         return $response;
     }
