@@ -194,18 +194,23 @@ function filter_oembed_curlcall($www) {
     curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
     $ret = curl_exec($crl);
 
+    // Check if curl call fails.
     if ($ret === false) {
-        $errorno = curl_errno($crl);
-        if (in_array($errorno, array('6', '7', '28'))) {
+        // Check if error is due to network connection.
+        if (in_array(curl_errno($crl), array('6', '7', '28'))) {
 
+            // Try curl call for 3 times pausing 0.5 sec.
             for ($i = 0; $i < 3; $i++) {
                 $ret = curl_exec($crl);
 
-                if ($ret !== false || !in_array(curl_errno($crl), array('6', '7', '28'))) {
+                // If we get proper response, break the loop.
+                if ($ret !== false) {
                     break;
                 }
+                usleep(500000);
             }
 
+            // If still curl call failing, return null.
             if ($ret === false) {
                 return null;
             }
