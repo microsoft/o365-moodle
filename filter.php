@@ -137,13 +137,17 @@ function filter_oembed_slidesharecallback($link) {
     global $CFG;
     $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270";
     $json = filter_oembed_curlcall($url);
-    return $json['html'];
+    return $json === null ? '<h3>Error in loading iframe. Please try refreshing the page.</h3>' : $json['html'];
 }
 
 function filter_oembed_officemixcallback($link) {
     global $CFG;
     $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
     $json = filter_oembed_curlcall($url);
+
+    if($json === null){
+        return '<h3>Error in loading video. Please try refreshing the page.</h3>';
+    }
 
     // Increase the height and width of iframe.
     $json['html'] = str_replace('width="348"', 'width="480"', $json['html']);
@@ -157,14 +161,14 @@ function filter_oembed_pollevcallback($link) {
     global $CFG;
     $url = "http://www.polleverywhere.com/services/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'/'.trim($link[5])."&format=json&maxwidth=480&maxheight=270";
     $json = filter_oembed_curlcall($url);
-    return $json['html'];
+    return $json === null ? '<h3>Error in loading iframe. Please try refreshing the page.</h3>' : $json['html'];
 }
 
 function filter_oembed_issuucallback($link) {
     global $CFG;
     $url = "http://issuu.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json";
     $json = filter_oembed_curlcall($url);
-    return $json['html'];
+    return $json === null ? '<h3>Error in loading iframe. Please try refreshing the page.</h3>' : $json['html'];
 }
 
 function filter_oembed_screenrcallback($link) {
@@ -189,16 +193,47 @@ function filter_oembed_curlcall($www) {
     curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
     curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
     $ret = curl_exec($crl);
+
+    if ($ret === false) {
+        $errorno = curl_errno($crl);
+        if (in_array($errorno, array('6', '7', '28'))) {
+
+            for ($i = 0; $i < 3; $i++) {
+                $ret = curl_exec($crl);
+
+                if ($ret !== false || !in_array(curl_errno($crl), array('6', '7', '28'))) {
+                    break;
+                }
+            }
+
+            if ($ret === false) {
+                return null;
+            }
+
+        } else {
+            return null;
+        }
+    }
+
     curl_close($crl);
     $result = json_decode($ret, true);
     return $result;
 }
 
 function filter_oembed_vidembed($json) {
+
+    if ($json === null) {
+        return '<h3>Error in loading video. Please try refreshing the page.</h3>';
+    }
+
     if (get_config('filter_oembed', 'lazyload')) {
 
         $dom = new DOMDocument();
+
+        // To surpress the loadHTML Warnings.
+        libxml_use_internal_errors(true);
         $dom->loadHTML($json['html']);
+        libxml_use_internal_errors(false);
 
         // Get height and width of iframe.
         $height = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('height');
