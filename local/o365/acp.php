@@ -26,7 +26,7 @@ require_once(__DIR__.'/../../config.php');
 $mode = required_param('mode', PARAM_TEXT);
 
 if (is_siteadmin() !== true) {
-    throw new \Exception('Unauthorized');
+    throw new \moodle_exception('Unauthorized');
 }
 
 if ($mode === 'setsystemuser') {
@@ -67,12 +67,12 @@ if ($mode === 'setsystemuser') {
 } else if ($mode === 'sharepointinit') {
     $oidcconfig = get_config('auth_oidc');
     if (empty($oidcconfig)) {
-        throw new \Exception('Please set application credentials in auth_oidc first.');
+        throw new \moodle_exception('Please set application credentials in auth_oidc first.');
     }
 
     $spresource = \local_o365\rest\sharepoint::get_resource();
     if (empty($spresource)) {
-        throw new \Exception('Please configure local_o365 first.');
+        throw new \moodle_exception('Please configure local_o365 first.');
     }
 
     $httpclient = new \local_o365\httpclient();
@@ -82,7 +82,7 @@ if ($mode === 'setsystemuser') {
     $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
 
     if (empty($sptoken)) {
-        throw new \Exception('Did not have an available sharepoint token, and could not get one.');
+        throw new \moodle_exception('Did not have an available sharepoint token, and could not get one.');
     }
 
     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);

@@ -57,7 +57,7 @@ class repository_office365 extends \repository {
         $this->httpclient = new \local_o365\httpclient();
 
         if (empty($this->oidcconfig)) {
-            throw new \Exception('AzureAD SSO not configured');
+            throw new \moodle_exception('AzureAD SSO not configured');
         }
 
         $this->onedrive['configured'] = \local_o365\rest\onedrive::is_configured();
@@ -248,7 +248,7 @@ class repository_office365 extends \repository {
                     $clienttype = 'sharepoint';
                     $filepath = substr($filepath, 8);
                 } else {
-                    throw new \Exception('Invalid client type.');
+                    throw new \moodle_exception('Invalid client type.');
                 }
             }
         }
@@ -266,7 +266,7 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($filepath, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
-                throw new \Exception('Bad path');
+                throw new \moodle_exception('Bad path');
             }
             $courseid = (int)$pathparts[0];
             unset($pathparts[0]);
@@ -274,7 +274,7 @@ class repository_office365 extends \repository {
             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
             $courses = enrol_get_users_courses($USER->id);
             if (!isset($courses[$courseid])) {
-                throw new \Exception('Access denied');
+                throw new \moodle_exception('Access denied');
             }
             $curcourse = $courses[$courseid];
             unset($courses);
@@ -282,7 +282,7 @@ class repository_office365 extends \repository {
             $sharepoint->set_site('moodle/'.$curcourse->shortname);
             $result = $sharepoint->create_file($fullpath, $filename, $content);
         } else {
-            throw new \Exception('Client type not supported');
+            throw new \moodle_exception('Client type not supported');
         }
 
         $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype]);
@@ -337,7 +337,7 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($path, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
-                throw new \Exception('Bad path');
+                throw new \moodle_exception('Bad path');
             }
             $courseid = (int)$pathparts[0];
             unset($pathparts[0]);
@@ -426,7 +426,7 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($path, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
-                throw new \Exception('Bad path');
+                throw new \moodle_exception('Bad path');
             }
             $courseid = (int)$pathparts[0];
             $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();

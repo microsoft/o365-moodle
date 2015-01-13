@@ -71,7 +71,7 @@ class onedrive extends \local_o365\rest\o365api {
         $response = $this->apicall('get', "/getByPath('{$path}')/children");
         $response = json_decode($response, true);
         if (empty($response)) {
-            throw new \Exception('Error in API call.');
+            throw new \moodle_exception('Error in API call.');
         }
         return $response;
     }
@@ -107,7 +107,7 @@ class onedrive extends \local_o365\rest\o365api {
         $response = $this->apicall('get', "/{$fileid}");
         $response = json_decode($response, true);
         if (empty($response)) {
-            throw new \Exception('Error in API call.');
+            throw new \moodle_exception('Error in API call.');
         }
         return $response;
     }
@@ -123,7 +123,7 @@ class onedrive extends \local_o365\rest\o365api {
         $response = $this->apicall('get', "/getByPath('{$path}')");
         $response = json_decode($response, true);
         if (empty($response)) {
-            throw new \Exception('Error in API call.');
+            throw new \moodle_exception('Error in API call.');
         }
         return $response;
     }
@@ -145,11 +145,11 @@ class onedrive extends \local_o365\rest\o365api {
             $response = $this->apicall('put', $url, $params);
             $response = json_decode($response, true);
             if (empty($response)) {
-                throw new \Exception('Error in API call.');
+                throw new \moodle_exception('Error in API call.');
             }
             return $response;
         } else {
-            throw new \Exception('Could not find parent folder information');
+            throw new \moodle_exception('Could not find parent folder information');
         }
     }
 }

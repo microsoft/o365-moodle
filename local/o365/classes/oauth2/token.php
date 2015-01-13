@@ -192,7 +192,7 @@ class token {
             }
             return true;
         } else {
-            throw new \Exception('Could not refresh token');
+            throw new \moodle_exception('Could not refresh token');
             return false;
         }
     }
