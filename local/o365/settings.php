@@ -41,4 +41,7 @@ if ($hassiteconfig) {
 
     $settings->add(new \admin_setting_configcheckbox('local_o365/aadsync', get_string('settings_aadsync', 'local_o365'),
                    get_string('settings_aadsync_details', 'local_o365'), '0'));
+
+    $settings->add(new \local_o365\form\adminsetting\healthcheck('local_o365/healthcheck', get_string('settings_healthcheck', 'local_o365'),
+                   get_string('settings_healthcheck_details', 'local_o365'), '0'));
 }

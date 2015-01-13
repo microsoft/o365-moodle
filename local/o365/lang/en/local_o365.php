@@ -23,11 +23,24 @@
 
 $string['pluginname'] = 'Microsoft Office 365 Integration';
 
+$string['acp_title'] = 'Office365 Administration Control Panel';
+$string['acp_healthcheck'] = 'Health Check';
+
 $string['eventcalendarsubscribed'] = 'User subscribed to a calendar';
 $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
 
+$string['healthcheck_fixlink'] = 'Click here to fix it.';
+$string['healthcheck_systemapiuser_title'] = 'System API User';
+$string['healthcheck_systemtoken_result_notoken'] = 'Moodle does not have a token to communicate with Office365 as the system API user. This can usually be resolved by resetting the system API user.';
+$string['healthcheck_systemtoken_result_noclientcreds'] = 'There are not application credentials present in the OpenID Connect plugin. Without these credentials, Moodle cannot perform any communication with Office 365. Click here to visit the settings page and enter your credentials.';
+$string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Office365 as the system API user. This can usually be resolved by resetting the system API user.';
+$string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office 365 as the system API user.';
+
 $string['settings_aadsync'] = 'Sync users from AzureAD';
 $string['settings_aadsync_details'] = 'If enabled, users in the associated AzureAD directory will be synced to Moodle. This will create users in Moodle that exist in AzureAD, and delete Moodle users created from AzureAD when they are deleted from AzureAD.';
+$string['settings_healthcheck'] = 'Health Check';
+$string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
+$string['settings_healthcheck_linktext'] = 'Perform health check';
 $string['settings_parentsiteuri'] = 'Course sharepoint sites parent site URI';
 $string['settings_parentsiteuri_details'] = 'The URI to use for the parent site of all course sharepoint sites. "moodle" is a good default, but you can change it if it conflicts with a site you already have.<br /><b>Important - </b>If you change this after sites have been initialized, the sites must be reinitialized.';
 $string['settings_sharepointinit'] = 'Initialize Sharepoint Sites';
