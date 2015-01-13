@@ -319,7 +319,10 @@ class observers {
         }
 
         // Send event to o365.
-        $response = $cal->create_event($subject, $body, $timestart, $timeend, $attendees);
+        // $response = $cal->create_event($subject, $body, $timestart, $timeend, $attendees);
+
+        // Temporary workaround to make sure that saving of assignment works.
+        $response = array();
 
         // Store ID.
         if (!empty($response) && is_array($response)) {
