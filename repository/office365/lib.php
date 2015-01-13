@@ -418,12 +418,31 @@ class repository_office365 extends \repository {
         } else if ($clienttype === 'sharepoint') {
             $pathprefix = '/courses'.$path;
         }
-        $list[] = [
-            'title' => get_string('upload', 'repository_office365'),
-            'path' => $pathprefix.'/upload/',
-            'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
-            'children' => [],
-        ];
+
+        $canupload = false;
+        if ($clienttype === 'onedrive') {
+            $canupload = true;
+        } else if ($clienttype === 'sharepoint') {
+            $pathtrimmed = trim($path, '/');
+            $pathparts = explode('/', $pathtrimmed);
+            if (!is_numeric($pathparts[0])) {
+                throw new \Exception('Bad path');
+            }
+            $courseid = (int)$pathparts[0];
+            $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
+            $coursectx = \context_course::instance($courseid);
+            $canupload = has_capability($reqcap, $coursectx);
+        }
+
+        if ($canupload === true) {
+            $list[] = [
+                'title' => get_string('upload', 'repository_office365'),
+                'path' => $pathprefix.'/upload/',
+                'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
+                'children' => [],
+            ];
+        }
+
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
                 $itempath = $pathprefix.'/'.$content['name'];
