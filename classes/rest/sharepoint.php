@@ -431,23 +431,33 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get the URI of the subsite created for a course.
+     * @param int $courseid The ID of the course.
+     * @return string The relative URI of the sharepoint subsite.
+     */
+    public static function get_course_subsite_uri($courseid) {
+        global $DB;
+        return $DB->get_field('local_o365_coursespsite', 'siteurl', ['courseid' => $courseid]);
+    }
+
+    /**
      * Create a course subsite.
      *
      * @param \stdClass $course A course record to create the subsite from.
      * @return \stdClass An association record.
      */
-    public function create_course_subsite($course) {
+    protected function create_course_subsite($course) {
         global $DB;
         $now = time();
 
-        $siteurl = rawurlencode($course->shortname);
+        $siteurl = $course->shortname;
         $fullsiteurl = '/'.$this->parentsite.'/'.$siteurl;
 
         // Check if site exists.
         if ($this->site_exists($fullsiteurl) !== true) {
             // Create site.
             $sitedata = $this->create_site($course->fullname, $siteurl, $course->summary);
-            if (!empty($sitedata)) {
+            if (!empty($sitedata) && isset($sitedata['Id']) && isset($sitedata['ServerRelativeUrl'])) {
                 // Save site data.
                 $siterec = new \stdClass;
                 $siterec->courseid = $course->id;
@@ -458,7 +468,7 @@ class sharepoint extends \local_o365\rest\o365api {
                 $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
                 return $siterec;
             } else {
-                throw new \moodle_exception('Problem creating site.');
+                throw new \moodle_exception('Problem creating site. Received: '.json_encode($sitedata));
             }
         } else {
             $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
