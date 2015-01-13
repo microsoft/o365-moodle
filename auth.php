@@ -98,13 +98,13 @@ class auth_plugin_oidc extends \auth_plugin_base {
      */
     protected function get_oidcclient() {
         if (empty($this->httpclient) || !($this->httpclient instanceof \auth_oidc\httpclientinterface)) {
-            throw new \Exception('Please set an HTTP client.');
+            throw new \moodle_exception('Please set an HTTP client.');
         }
         if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
-            throw new \Exception('Please configure OpenID Connect client credentials.');
+            throw new \moodle_exception('Please configure OpenID Connect client credentials.');
         }
         if (empty($this->config->authendpoint) || empty($this->config->tokenendpoint)) {
-            throw new \Exception('Please configure OpenID Connect server endpoints.');
+            throw new \moodle_exception('Please configure OpenID Connect server endpoints.');
         }
         $redirecturi = new moodle_url('/auth/oidc/');
 
@@ -133,7 +133,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
-            throw new \Exception('Unknown state.');
+            throw new \moodle_exception('Unknown state.');
         }
         $orignonce = $staterec->nonce;
         $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
@@ -141,25 +141,25 @@ class auth_plugin_oidc extends \auth_plugin_base {
         $client = $this->get_oidcclient();
 
         if (!isset($authparams['code'])) {
-            throw new \Exception('Auth code not received.');
+            throw new \moodle_exception('Auth code not received.');
         }
 
         $tokenparams = $client->tokenrequest($authparams['code']);
 
         if (!isset($tokenparams['id_token'])) {
-            throw new \Exception('OIDC id_token not received.');
+            throw new \moodle_exception('OIDC id_token not received.');
         }
 
         $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenparams['id_token']);
 
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
-            throw new \Exception('Invalid id_token received.');
+            throw new \moodle_exception('Invalid id_token received.');
         }
 
         $receivednonce = $idtoken->claim('nonce');
         if (empty($receivednonce) || $receivednonce !== $orignonce) {
-            throw new \Exception('Invalid id_token received');
+            throw new \moodle_exception('Invalid id_token received');
         }
 
         if (isset($SESSION->auth_oidc_justevent)) {
@@ -197,7 +197,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
         // We need the manual login plugin to be enabled for disconnection.
         if (is_enabled_auth('manual') !== true) {
-            throw new \Exception('Cannot disconnect because manual login plugin is not enabled.');
+            throw new \moodle_exception('Cannot disconnect because manual login plugin is not enabled.');
         }
 
         // Check to see if the user has a username created by OIDC, or a self-created username.
@@ -215,14 +215,14 @@ class auth_plugin_oidc extends \auth_plugin_base {
         } else if ($fromform = $mform->get_data()) {
 
             if (empty($fromform->password)) {
-                throw new \Exception('Password cannot be empty');
+                throw new \moodle_exception('Password cannot be empty');
             }
             $origusername = $USER->username;
             $updateduser = new \stdClass;
 
             if ($customdata['canchooseusername'] === true) {
                 if (empty($fromform)) {
-                    throw new \Exception('Username cannot be empty');
+                    throw new \moodle_exception('Username cannot be empty');
                 }
 
                 if (strtolower($fromform->username) !== $USER->username) {
@@ -231,7 +231,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                     if ($DB->record_exists('user', $usercheck) === false) {
                         $updateduser->username = $newusername;
                     } else {
-                        throw new \Exception('That username is already taken. Please choose a different one.');
+                        throw new \moodle_exception('That username is already taken. Please choose a different one.');
                     }
                 }
             }
@@ -293,7 +293,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 } else {
                     // OIDC user connected to user that is not us. Can't continue.
                     $err = 'The OpenID Connect user that authenticated is already connected to a Moodle user.';
-                    throw new \Exception($err);
+                    throw new \moodle_exception($err);
                 }
             }
         }
@@ -315,7 +315,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 $DB->update_record('auth_oidc_token', $tokenrec);
                 redirect(core_login_get_return_url());
             } else {
-                throw new \Exception('You\'re already connected to a different OpenID Connect user.');
+                throw new \moodle_exception('You\'re already connected to a different OpenID Connect user.');
             }
         }
 
@@ -398,13 +398,13 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
                 $event = \core\event\user_login_failed::create($eventdata);
                 $event->trigger();
-                throw new \Exception('Invalid login.');
+                throw new \moodle_exception('Invalid login.');
             }
         }
 
         $user = authenticate_user_login($username, null, true);
         if (empty($user)) {
-            throw new \Exception('Login failed.');
+            throw new \moodle_exception('Login failed.');
         }
 
         $eventdata = [

@@ -71,7 +71,7 @@ class mockhttpclient extends \auth_oidc\httpclient {
         } else {
             $this->curresponse = 0;
             if (!isset($this->mockresponse[$this->curresponse])) {
-                throw new \Exception('No responses available.');
+                throw new \moodle_exception('No responses available.');
             }
             return $this->mockresponse[$this->curresponse];
         }
