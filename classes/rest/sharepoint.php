@@ -72,7 +72,7 @@ class sharepoint extends \local_o365\rest\o365api {
      *
      * @return string The URI of the parent site.
      */
-    public function get_moodle_parent_site_uri() {
+    public static function get_moodle_parent_site_uri() {
         $config = get_config('local_o365');
         return (!empty($config->parentsiteuri)) ? $config->parentsiteuri : 'moodle';
     }
