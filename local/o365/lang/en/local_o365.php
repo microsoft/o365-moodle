@@ -25,6 +25,8 @@ $string['pluginname'] = 'Microsoft Office 365 Integration';
 
 $string['acp_title'] = 'Office365 Administration Control Panel';
 $string['acp_healthcheck'] = 'Health Check';
+$string['acp_parentsite_name'] = 'Moodle';
+$string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
 $string['eventcalendarsubscribed'] = 'User subscribed to a calendar';
 $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
