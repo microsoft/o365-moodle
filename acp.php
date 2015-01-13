@@ -89,7 +89,9 @@ if ($mode === 'setsystemuser') {
 
     $moodlesiteuri = $sharepoint->get_moodle_parent_site_uri();
     if ($sharepoint->site_exists($moodlesiteuri) === false) {
-        $sharepoint->create_site('Moodle', $moodlesiteuri, 'Site for shared Moodle course data.');
+        $moodlesitename = get_string('acp_parentsite_name', 'local_o365');
+        $moodlesitedesc = get_string('acp_parentsite_desc', 'local_o365');
+        $sharepoint->create_site($moodlesitename, $moodlesiteuri, $moodlesitedesc);
     }
 
     $courses = $DB->get_recordset('course');
