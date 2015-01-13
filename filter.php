@@ -137,7 +137,7 @@ function filter_oembed_slidesharecallback($link) {
     global $CFG;
     $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270";
     $json = filter_oembed_curlcall($url);
-    return $json === null ? '<h3>Error in loading iframe. Please try refreshing the page.</h3>' : $json['html'];
+    return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
 }
 
 function filter_oembed_officemixcallback($link) {
@@ -146,7 +146,7 @@ function filter_oembed_officemixcallback($link) {
     $json = filter_oembed_curlcall($url);
 
     if($json === null){
-        return '<h3>Error in loading video. Please try refreshing the page.</h3>';
+        return '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>';
     }
 
     // Increase the height and width of iframe.
@@ -161,14 +161,14 @@ function filter_oembed_pollevcallback($link) {
     global $CFG;
     $url = "http://www.polleverywhere.com/services/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'/'.trim($link[5])."&format=json&maxwidth=480&maxheight=270";
     $json = filter_oembed_curlcall($url);
-    return $json === null ? '<h3>Error in loading iframe. Please try refreshing the page.</h3>' : $json['html'];
+    return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
 }
 
 function filter_oembed_issuucallback($link) {
     global $CFG;
     $url = "http://issuu.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json";
     $json = filter_oembed_curlcall($url);
-    return $json === null ? '<h3>Error in loading iframe. Please try refreshing the page.</h3>' : $json['html'];
+    return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
 }
 
 function filter_oembed_screenrcallback($link) {
@@ -228,7 +228,7 @@ function filter_oembed_curlcall($www) {
 function filter_oembed_vidembed($json) {
 
     if ($json === null) {
-        return '<h3>Error in loading video. Please try refreshing the page.</h3>';
+        return '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>';
     }
 
     if (get_config('filter_oembed', 'lazyload')) {
