@@ -139,9 +139,9 @@ class repository_office365 extends \repository {
     public function get_listing($path = '', $page = '') {
         global $OUTPUT, $SESSION;
 
-        $itemid = optional_param('itemid', 0, PARAM_INT);
-        if (!empty($itemid)) {
-            $SESSION->repository_office365['curpath'][$itemid] = $path;
+        $clientid = optional_param('client_id', '', PARAM_TEXT);
+        if (!empty($clientid)) {
+            $SESSION->repository_office365['curpath'][$clientid] = $path;
         }
 
         // If we were launched from a course context (or child of course context), initialize the file picker in the correct course.
@@ -235,11 +235,12 @@ class repository_office365 extends \repository {
         $author = optional_param('author', '', PARAM_TEXT);
         $areamaxbytes = optional_param('areamaxbytes', FILE_AREA_MAX_BYTES_UNLIMITED, PARAM_INT);
         $overwriteexisting = optional_param('overwrite', false, PARAM_BOOL);
+        $clientid = optional_param('client_id', '', PARAM_TEXT);
 
         $filepath = '/';
         if (!empty($SESSION->repository_office365)) {
-            if (isset($SESSION->repository_office365['curpath']) && isset($SESSION->repository_office365['curpath'][$itemid])) {
-                $filepath = $SESSION->repository_office365['curpath'][$itemid];
+            if (isset($SESSION->repository_office365['curpath']) && isset($SESSION->repository_office365['curpath'][$clientid])) {
+                $filepath = $SESSION->repository_office365['curpath'][$clientid];
                 if (strpos($filepath, '/my/') === 0) {
                     $clienttype = 'onedrive';
                     $filepath = substr($filepath, 3);
@@ -289,7 +290,6 @@ class repository_office365 extends \repository {
         $record = new \stdClass;
         $record->filename = $filename;
         $record->filepath = $savepath;
-        $record->itemid = $itemid;
         $record->component = 'user';
         $record->filearea = 'draft';
         $record->itemid = $itemid;
