@@ -280,7 +280,7 @@ class repository_office365 extends \repository {
             $curcourse = $courses[$courseid];
             unset($courses);
             $sharepoint = $this->get_sharepoint_apiclient();
-            $parentsiteuri = $sharepoint->get_moodle_parent_site_uri().'/'.$curcourse->shortname;
+            $parentsiteuri = $sharepoint->get_course_subsite_uri($curcourse->id);
             $sharepoint->set_site($parentsiteuri);
             $result = $sharepoint->create_file($fullpath, $filename, $content);
             $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'parentsiteuri' => $parentsiteuri]);
@@ -348,7 +348,7 @@ class repository_office365 extends \repository {
                 if ($this->path_is_upload($path) === false) {
                     $sharepointclient = $this->get_sharepoint_apiclient();
                     if (!empty($sharepointclient)) {
-                        $parentsiteuri = $sharepointclient->get_moodle_parent_site_uri().'/'.$courses[$courseid]->shortname;
+                        $parentsiteuri = $sharepointclient->get_course_subsite_uri($courses[$courseid]->id);
                         $sharepointclient->set_site($parentsiteuri);
                         try {
                             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
@@ -438,7 +438,7 @@ class repository_office365 extends \repository {
             }
             $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
             $coursectx = \context_course::instance($courseid);
-            $parentsiteuri = \local_o365\rest\sharepoint::get_moodle_parent_site_uri().'/'.$course->shortname;
+            $parentsiteuri = \local_o365\rest\sharepoint::get_course_subsite_uri($course->id);
             $canupload = has_capability($reqcap, $coursectx);
         }
 

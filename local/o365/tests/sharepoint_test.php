@@ -193,7 +193,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
     	$successresponse = $this->get_response_create_site($course->fullname, $course->shortname, $course->summary);
     	$httpclient = new \local_o365\tests\mockhttpclient();
     	$httpclient->set_responses(['', $successresponse]);
-        $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
+        $apiclient = new \local_o365\tests\mocksharepoint($this->get_mock_token(), $httpclient);
         $apiclient->create_course_subsite($course);
 
         $rec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
