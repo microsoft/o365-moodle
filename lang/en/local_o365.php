@@ -61,6 +61,8 @@ $string['settings_tenant_details'] = 'The AAD tenant';
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
 
+$string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
+
 $string['ucp_general_intro'] = 'Here you can manage your connection to Office 365.';
 $string['ucp_title'] = 'Office365 Connection Management';
 $string['ucp_calsync_title'] = 'Outlook Calendar Sync';

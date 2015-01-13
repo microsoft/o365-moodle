@@ -404,16 +404,14 @@ class observers {
     public static function handle_calendar_subscribed(\local_o365\event\calendar_subscribed $event) {
         global $DB;
         $eventdata = $event->get_data();
-        $cronop = [
-            'operation' => 'calendarsubscribe',
-            'data' => serialize([
-                'caltype' => $eventdata['other']['caltype'],
-                'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
-                'userid' => $eventdata['userid'],
-            ]),
+        $calsubscribe = new \local_o365\task\calendarsync();
+        $calsubscribe->set_custom_data([
+            'caltype' => $eventdata['other']['caltype'],
+            'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
+            'userid' => $eventdata['userid'],
             'timecreated' => time(),
-        ];
-        $DB->insert_record('local_o365_cronqueue', (object)$cronop);
+        ]);
+        \core\task\manager::queue_adhoc_task($calsubscribe);
         return true;
     }
 
@@ -426,16 +424,14 @@ class observers {
     public static function handle_calendar_unsubscribed(\local_o365\event\calendar_unsubscribed $event) {
         global $DB;
         $eventdata = $event->get_data();
-        $cronop = [
-            'operation' => 'calendarunsubscribe',
-            'data' => serialize([
-                'caltype' => $eventdata['other']['caltype'],
-                'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
-                'userid' => $eventdata['userid'],
-            ]),
+        $calunsubscribe = new \local_o365\task\calendarsync();
+        $calunsubscribe->set_custom_data([
+            'caltype' => $eventdata['other']['caltype'],
+            'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
+            'userid' => $eventdata['userid'],
             'timecreated' => time(),
-        ];
-        $DB->insert_record('local_o365_cronqueue', (object)$cronop);
+        ]);
+        \core\task\manager::queue_adhoc_task($calunsubscribe);
         return true;
     }
 
@@ -616,11 +612,13 @@ class observers {
             return true;
         } else if ($context->get_course_context(false) == false) {
             // If the context is higher than a course, we have to run a sync in cron.
-            $cronqueuerec = new \stdClass;
-            $cronqueuerec->operation = 'spaccesssync';
-            $cronqueuerec->data = serialize(['roleid' => $roleid, 'userid' => $user->id, 'contextid' => $contextid]);
-            $cronqueuerec->timecreated = time();
-            $DB->insert_record('local_o365_cronqueue', $cronqueuerec);
+            $spaccesssync = new \local_o365\task\sharepointaccesssync();
+            $spaccesssync->set_custom_data([
+                'roleid' => $roleid,
+                'userid' => $userid,
+                'contextid' => $contextid,
+            ]);
+            \core\task\manager::queue_adhoc_task($spaccesssync);
             return true;
         }
     }
@@ -669,12 +667,10 @@ class observers {
         $roleid = $event->objectid;
         $contextid = $event->contextid;
 
-        // If the context is higher than a course, we have to run a sync in cron.
-        $cronqueuerec = new \stdClass;
-        $cronqueuerec->operation = 'spaccesssync';
-        $cronqueuerec->data = serialize(['roleid' => $roleid, 'userid' => '*', 'contextid' => null]);
-        $cronqueuerec->timecreated = time();
-        $DB->insert_record('local_o365_cronqueue', $cronqueuerec);
+        // Role changes can be pretty heavy - run in cron.
+        $spaccesssync = new \local_o365\task\sharepointaccesssync();
+        $spaccesssync->set_custom_data(['roleid' => $roleid, 'userid' => '*', 'contextid' => null]);
+        \core\task\manager::queue_adhoc_task($spaccesssync);
         return true;
     }
 
@@ -682,9 +678,8 @@ class observers {
      * Handle role_deleted event
      *
      * Does the following:
-     *     - check if the deleted role contained the required capability to access course sharepoint sites. If it did, check if
-     *       users that were assigned this role no longer have the required capability to access course sharepoint sites. If they
-     *       don't, remove them from the sharepoint sites' contributor groups.
+     *     - Unfortunately the role has already been deleted when we hear about it here, and have no way to determine the affected
+     *     users. Therefore, we have to do a global sync.
      *
      * @param \core\event\role_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -693,12 +688,10 @@ class observers {
         global $DB;
         $roleid = $event->objectid;
 
-        // If the context is higher than a course, we have to run a sync in cron.
-        $cronqueuerec = new \stdClass;
-        $cronqueuerec->operation = 'spaccesssync';
-        $cronqueuerec->data = serialize(['roleid' => '*', 'userid' => '*', 'contextid' => null]);
-        $cronqueuerec->timecreated = time();
-        $DB->insert_record('local_o365_cronqueue', $cronqueuerec);
+        // Role deletions can be heavy - run in cron.
+        $spaccesssync = new \local_o365\task\sharepointaccesssync();
+        $spaccesssync->set_custom_data(['roleid' => '*', 'userid' => '*', 'contextid' => null]);
+        \core\task\manager::queue_adhoc_task($spaccesssync);
         return true;
     }
 
