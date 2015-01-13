@@ -428,6 +428,24 @@ class cron {
         }
 
         $DB->delete_records_select('local_o365_cronqueue', 'timecreated < ?', [$timestart]);
+
+        // Attempt token refresh if required.
+        $oidcconfig = get_config('auth_oidc');
+        if (!empty($oidcconfig)) {
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
+                    $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+            $systemtokenlastrefresh = get_config('local_o365', 'systemtokenlastrefresh');
+            if (empty($systemtokenlastrefresh) || (int)$systemtokenlastrefresh < ($timestart - WEEKSECS)) {
+                try {
+                    $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource('https://graph.windows.net', $clientdata, $httpclient);
+                } catch (\Exception $e) {
+                    // If we can't refresh the token, it will have to be fixed manually.
+                }
+            }
+        }
+
+
         return true;
     }
 }
