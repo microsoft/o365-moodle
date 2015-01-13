@@ -21,9 +21,14 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-function local_o365_cron() {
-    mtrace('O365 Cron is starting...');
-    $cron = new \local_o365\cron();
-    $cron->run();
-    mtrace('O365 Cron finished.');
-}
+$tasks = [
+    [
+        'classname' => 'local_o365\task\refreshsystemrefreshtoken',
+        'blocking' => 0,
+        'minute' => '1',
+        'hour' => '1',
+        'day' => '*',
+        'dayofweek' => '3',
+        'month' => '*'
+    ]
+];

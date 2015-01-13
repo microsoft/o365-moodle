@@ -25,9 +25,8 @@ require_once(__DIR__.'/../../config.php');
 
 $mode = required_param('mode', PARAM_TEXT);
 
-if (is_siteadmin() !== true) {
-    throw new \moodle_exception('Unauthorized');
-}
+require_login();
+require_capability('moodle/site:config', \context_system::instance());
 
 if ($mode === 'setsystemuser') {
     $SESSION->auth_oidc_justevent = true;

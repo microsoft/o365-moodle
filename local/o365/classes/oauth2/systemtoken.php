@@ -143,10 +143,6 @@ class systemtoken extends \local_o365\oauth2\token {
         $tokens[$resource] = $newtoken;
         $tokens = serialize($tokens);
         set_config('systemtokens', $tokens, 'local_o365');
-
-        if ($resource === 'https://graph.windows.net') {
-            set_config('systemtokenlastrefresh', time(), 'local_o365');
-        }
         return $newtoken;
     }
 }

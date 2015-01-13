@@ -49,7 +49,7 @@ class disconnect extends \moodleform {
         $mform->addElement('text', 'username', 'Username');
         $mform->addElement('passwordunmask', 'password', 'Password');
 
-        $mform->setType('username', PARAM_TEXT);
+        $mform->setType('username', PARAM_USERNAME);
         $mform->addRule('username', null, 'required', null, 'client');
         $mform->addRule('password', null, 'required', null, 'client');
 
