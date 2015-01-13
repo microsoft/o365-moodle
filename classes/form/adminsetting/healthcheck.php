@@ -79,7 +79,8 @@ class healthcheck extends \admin_setting {
      */
     public function output_html($data, $query='') {
         $healthcheckurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
-        $settinghtml = \html_writer::link($healthcheckurl, get_string('settings_healthcheck_linktext', 'local_o365'));
+        $settinghtml = '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
+        $settinghtml .= \html_writer::link($healthcheckurl, get_string('settings_healthcheck_linktext', 'local_o365'));
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
     }
 }
