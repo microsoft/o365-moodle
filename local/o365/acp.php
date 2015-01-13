@@ -56,8 +56,9 @@ if ($mode === 'setsystemuser') {
     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
     $sharepoint->set_site('');
 
-    if ($sharepoint->site_exists('moodle') === false) {
-        $sharepoint->create_site('Moodle', 'moodle', 'Site for shared Moodle course data.');
+    $moodlesiteuri = $sharepoint->get_moodle_parent_site_uri();
+    if ($sharepoint->site_exists($moodlesiteuri) === false) {
+        $sharepoint->create_site('Moodle', $moodlesiteuri, 'Site for shared Moodle course data.');
     }
 
     $courses = $DB->get_recordset('course');

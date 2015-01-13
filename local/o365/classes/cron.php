@@ -178,6 +178,7 @@ class cron {
             $courseeventssql = 'SELECT ev.id,
                                        idmap.outlookeventid,
                                        ev.userid,
+                                       ev.groupid,
                                        tok.token,
                                        tok.expiry AS tokenexpiry,
                                        tok.refreshtoken,
@@ -197,7 +198,17 @@ class cron {
                     $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
                 }
                 $cal = new \local_o365\rest\calendar($token, $httpclient);
-                $cal->update_event($courseevent->outlookeventid, ['attendees' => $courseeventssubscribers]);
+                if (!empty($courseevent->groupid)) {
+                    $groupeventsubscriberssql = 'SELECT u.id, u.email, u.firstname, u.lastname
+                                                   FROM {user} u
+                                                   JOIN {local_o365_calsub} sub ON sub.user_id = u.id
+                                                   JOIN {groups_members} grpmbr ON grpmbr.userid = u.id
+                                                  WHERE sub.caltype = "course" AND sub.caltypeid = ? AND grpmbr.groupid = ?';
+                    $groupeventsubscribers = $DB->get_records_sql($groupeventsubscriberssql, [$courseid, $courseevent->groupid]);
+                    $cal->update_event($courseevent->outlookeventid, ['attendees' => $groupeventsubscribers]);
+                } else {
+                    $cal->update_event($courseevent->outlookeventid, ['attendees' => $courseeventssubscribers]);
+                }
             }
             $courseevents->close();
         }

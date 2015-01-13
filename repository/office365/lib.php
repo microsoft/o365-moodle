@@ -284,7 +284,7 @@ class repository_office365 extends \repository {
             throw new \Exception('Client type not supported');
         }
 
-        $source = base64_encode(serialize(['id' => $result['id'], 'source' => $clienttype]));
+        $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype]);
         $downloadedfile = $this->get_file($source, $filename);
         $record = new \stdClass;
         $record->filename = $filename;
@@ -438,15 +438,21 @@ class repository_office365 extends \repository {
                         'children' => [],
                     ];
                 } else if ($content['type'] === 'File') {
+                    $url = $content['webUrl'].'?web=1';
+                    $source = [
+                        'id' => $content['id'],
+                        'source' => $clienttype,
+                    ];
                     $list[] = [
                         'title' => $content['name'],
                         'date' => strtotime($content['dateTimeCreated']),
                         'datemodified' => strtotime($content['dateTimeLastModified']),
                         'datecreated' => strtotime($content['dateTimeCreated']),
                         'size' => $content['size'],
+                        'url' => $url,
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
                         'author' => $content['createdBy']['user']['displayName'],
-                        'source' => base64_encode(serialize(['id' => $content['id'], 'source' => $clienttype])),
+                        'source' => $this->pack_reference($source),
                     ];
                 }
             }
@@ -463,29 +469,29 @@ class repository_office365 extends \repository {
      * @return int
      */
     public function supported_returntypes() {
-        return FILE_INTERNAL;
+        return FILE_INTERNAL|FILE_EXTERNAL|FILE_REFERENCE;
     }
 
     /**
      * Downloads a file from external repository and saves it in temp dir
      *
-     * @param string $fileid A base64_encoded, serialized array of the file's fileid and the file's source.
+     * @param string $reference The file reference.
      * @param string $filename filename (without path) to save the downloaded file in the temporary directory, if omitted
      *                         or file already exists the new filename will be generated
      * @return array with elements:
      *   path: internal location of the file
      *   url: URL to the source (from parameters)
      */
-    public function get_file($fileid, $filename = '') {
-        $fileid = unserialize(base64_decode($fileid));
+    public function get_file($reference, $filename = '') {
+        $reference = $this->unpack_reference($reference);
 
-        if ($fileid['source'] === 'onedrive') {
+        if ($reference['source'] === 'onedrive') {
             $sourceclient = $this->get_onedrive_apiclient();
-        } else if ($fileid['source'] === 'sharepoint') {
+        } else if ($reference['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
-            $sourceclient->set_site('moodle');
+            $sourceclient->set_site($sourceclient->get_moodle_parent_site_uri());
         }
-        $file = $sourceclient->get_file_by_id($fileid['id']);
+        $file = $sourceclient->get_file_by_id($reference['id']);
 
         if (!empty($file)) {
             $path = $this->prepare_file($filename);
@@ -496,6 +502,111 @@ class repository_office365 extends \repository {
         if (empty($result)) {
             throw new moodle_exception('errorwhiledownload', 'repository_office365');
         }
-        return ['path' => $path, 'url' => $fileid];
+        return ['path' => $path, 'url' => $reference];
+    }
+
+    /**
+     * Pack file reference information into a string.
+     *
+     * @param array $reference The information to pack.
+     * @return string The packed information.
+     */
+    protected function pack_reference($reference) {
+        return base64_encode(serialize($reference));
+    }
+
+    /**
+     * Unpack file reference information from a string.
+     *
+     * @param string $reference The information to unpack.
+     * @return array The unpacked information.
+     */
+    protected function unpack_reference($reference) {
+        return unserialize(base64_decode($reference));
+    }
+
+    /**
+     * Prepare file reference information
+     *
+     * @param string $source source of the file, returned by repository as 'source' and received back from user (not cleaned)
+     * @return string file reference, ready to be stored
+     */
+    public function get_file_reference($source) {
+        $sourceunpacked = $this->unpack_reference($source);
+        if (isset($sourceunpacked['source']) && isset($sourceunpacked['id'])) {
+            $fileid = $sourceunpacked['id'];
+            $filesource = $sourceunpacked['source'];
+
+            $reference = [
+                'source' => $filesource,
+                'id' => $fileid,
+                'url' => '',
+            ];
+
+            try {
+                if ($filesource === 'onedrive') {
+                    $sourceclient = $this->get_onedrive_apiclient();
+                } else if ($filesource === 'sharepoint') {
+                    $sourceclient = $this->get_sharepoint_apiclient();
+                    $sourceclient->set_site($sourceclient->get_moodle_parent_site_uri());
+                }
+
+                $filemetadata = $sourceclient->get_file_metadata($fileid);
+                if (isset($filemetadata['webUrl'])) {
+                    $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                }
+            } catch (\Exception $e) {
+                // There was a problem making the API call.
+            }
+
+            return $this->pack_reference($reference);
+        }
+        return $source;
+    }
+
+    /**
+     * Return file URL, for most plugins, the parameter is the original
+     * url, but some plugins use a file id, so we need this function to
+     * convert file id to original url.
+     *
+     * @param string $url the url of file
+     * @return string
+     */
+    public function get_link($url) {
+        $reference = $this->unpack_reference($url);
+        return $reference['url'];
+    }
+
+    /**
+     * Repository method to serve the referenced file
+     *
+     * @see send_stored_file
+     *
+     * @param stored_file $storedfile the file that contains the reference
+     * @param int $lifetime Number of seconds before the file should expire from caches (null means $CFG->filelifetime)
+     * @param int $filter 0 (default)=no filtering, 1=all files, 2=html files only
+     * @param bool $forcedownload If true (default false), forces download of file rather than view in browser/plugin
+     * @param array $options additional options affecting the file serving
+     */
+    public function send_file($storedfile, $lifetime=null , $filter=0, $forcedownload=false, array $options = null) {
+        $reference = $this->unpack_reference($storedfile->get_reference());
+        try {
+            $fileinfo = $this->get_file($storedfile->get_reference());
+            if (isset($fileinfo['path'])) {
+                $fs = get_file_storage();
+                list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($fileinfo['path']);
+                // set this file and other similar aliases synchronised
+                $storedfile->set_synchronized($contenthash, $filesize);
+            } else {
+                throw new moodle_exception('errorwhiledownload', 'repository', '', '');
+            }
+            if (!is_array($options)) {
+                $options = [];
+            }
+            $options['sendcachedexternalfile'] = true;
+            send_stored_file($storedfile, $lifetime, $filter, $forcedownload, $options);
+        } catch (\Exception $e) {
+            send_file_not_found();
+        }
     }
 }

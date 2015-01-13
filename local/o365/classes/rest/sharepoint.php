@@ -68,6 +68,16 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get the URI of the site that serves as the parent site for all sharepoint course sites.
+     *
+     * @return string The URI of the parent site.
+     */
+    public function get_moodle_parent_site_uri() {
+        $config = get_config('local_o365');
+        return (!empty($config->parentsiteuri)) ? $config->parentsiteuri : 'moodle';
+    }
+
+    /**
      * Set the site to use when making API calls.
      *
      * @param string $site The site's relative URL. i.e. /site/subsite
@@ -132,6 +142,21 @@ class sharepoint extends \local_o365\rest\o365api {
     public function get_folder_metadata($path) {
         $path = rawurlencode($path);
         $response = $this->apicall('get', "/v1.0/files/getByPath('{$path}')");
+        $response = json_decode($response, true);
+        if (empty($response)) {
+            throw new \Exception('Error in API call.');
+        }
+        return $response;
+    }
+
+    /**
+     * Get a file's metadata by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return array The file's metadata.
+     */
+    public function get_file_metadata($fileid) {
+        $response = $this->apicall('get', "/v1.0/files/{$fileid}");
         $response = json_decode($response, true);
         if (empty($response)) {
             throw new \Exception('Error in API call.');
@@ -489,7 +514,7 @@ class sharepoint extends \local_o365\rest\o365api {
         global $DB;
         $now = time();
 
-        $this->set_site('moodle');
+        $this->set_site($this->get_moodle_parent_site_uri());
 
         // Get course data.
         if (is_numeric($course)) {
