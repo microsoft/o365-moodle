@@ -262,6 +262,7 @@ class repository_office365 extends \repository {
         if ($clienttype === 'onedrive') {
             $onedrive = $this->get_onedrive_apiclient();
             $result = $onedrive->create_file($filepath, $filename, $content);
+            $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype]);
         } else if ($clienttype === 'sharepoint') {
             $pathtrimmed = trim($filepath, '/');
             $pathparts = explode('/', $pathtrimmed);
@@ -279,13 +280,14 @@ class repository_office365 extends \repository {
             $curcourse = $courses[$courseid];
             unset($courses);
             $sharepoint = $this->get_sharepoint_apiclient();
-            $sharepoint->set_site('moodle/'.$curcourse->shortname);
+            $parentsiteuri = $sharepoint->get_moodle_parent_site_uri().'/'.$curcourse->shortname;
+            $sharepoint->set_site($parentsiteuri);
             $result = $sharepoint->create_file($fullpath, $filename, $content);
+            $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'parentsiteuri' => $parentsiteuri]);
         } else {
             throw new \moodle_exception('Client type not supported');
         }
 
-        $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype]);
         $downloadedfile = $this->get_file($source, $filename);
         $record = new \stdClass;
         $record->filename = $filename;
@@ -346,7 +348,8 @@ class repository_office365 extends \repository {
                 if ($this->path_is_upload($path) === false) {
                     $sharepointclient = $this->get_sharepoint_apiclient();
                     if (!empty($sharepointclient)) {
-                        $sharepointclient->set_site('moodle/'.$courses[$courseid]->shortname);
+                        $parentsiteuri = $sharepointclient->get_moodle_parent_site_uri().'/'.$courses[$courseid]->shortname;
+                        $sharepointclient->set_site($parentsiteuri);
                         try {
                             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
                             $contents = $sharepointclient->get_files($fullpath);
@@ -411,7 +414,7 @@ class repository_office365 extends \repository {
      * @return array A $list array to be used by the respository class in get_listing.
      */
     protected function contents_api_response_to_list($response, $path, $clienttype) {
-        global $OUTPUT;
+        global $OUTPUT, $DB;
         $list = [];
         if ($clienttype === 'onedrive') {
             $pathprefix = '/my'.$path;
@@ -429,8 +432,13 @@ class repository_office365 extends \repository {
                 throw new \moodle_exception('Bad path');
             }
             $courseid = (int)$pathparts[0];
+            $course = $DB->get_record('course', ['id' => $courseid]);
+            if (empty($course)) {
+                throw new \moodle_exception('Course not found');
+            }
             $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
             $coursectx = \context_course::instance($courseid);
+            $parentsiteuri = \local_o365\rest\sharepoint::get_moodle_parent_site_uri().'/'.$course->shortname;
             $canupload = has_capability($reqcap, $coursectx);
         }
 
@@ -462,6 +470,9 @@ class repository_office365 extends \repository {
                         'id' => $content['id'],
                         'source' => $clienttype,
                     ];
+                    if ($clienttype === 'sharepoint') {
+                        $source['parentsiteuri'] = $parentsiteuri;
+                    }
                     $list[] = [
                         'title' => $content['name'],
                         'date' => strtotime($content['dateTimeCreated']),
@@ -508,7 +519,9 @@ class repository_office365 extends \repository {
             $sourceclient = $this->get_onedrive_apiclient();
         } else if ($reference['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
-            $sourceclient->set_site($sourceclient->get_moodle_parent_site_uri());
+            $parentsiteuri = (isset($reference['parentsiteuri']))
+                ? $reference['parentsiteuri'] : $sourceclient->get_moodle_parent_site_uri();
+            $sourceclient->set_site($parentsiteuri);
         }
         $file = $sourceclient->get_file_by_id($reference['id']);
 
@@ -567,7 +580,10 @@ class repository_office365 extends \repository {
                     $sourceclient = $this->get_onedrive_apiclient();
                 } else if ($filesource === 'sharepoint') {
                     $sourceclient = $this->get_sharepoint_apiclient();
-                    $sourceclient->set_site($sourceclient->get_moodle_parent_site_uri());
+                    $parentsiteuri = (isset($sourceunpacked['parentsiteuri']))
+                        ? $sourceunpacked['parentsiteuri'] : $sourceclient->get_moodle_parent_site_uri();
+                    $sourceclient->set_site($parentsiteuri);
+                    $reference['parentsiteuri'] = $parentsiteuri;
                 }
 
                 $filemetadata = $sourceclient->get_file_metadata($fileid);
