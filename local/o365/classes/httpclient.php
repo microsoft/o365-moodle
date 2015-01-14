@@ -29,7 +29,7 @@ require_once($CFG->dirroot.'/lib/filelib.php');
  * An httpclientinterface implementation, using curl class as backend and adding patch and merge methods.
  */
 class httpclient extends \curl implements \local_o365\httpclientinterface {
-       /**
+    /**
      * Generate a client tag.
      *
      * @return string A client tag.

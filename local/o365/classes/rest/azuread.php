@@ -220,8 +220,9 @@ class azuread extends \local_o365\rest\o365api {
             }
             $oidcconfig = get_config('auth_oidc');
             $httpclient = new \local_o365\httpclient();
-            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-            $resource = \local_o365\rest\azuread::get_resource();
+            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
+                    $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+            $resource = static::get_resource();
             $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
             $rawaaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);

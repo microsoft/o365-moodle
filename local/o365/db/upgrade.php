@@ -96,7 +96,7 @@ function xmldb_local_o365_upgrade($oldversion) {
     if ($result && $oldversion < 2014111716) {
         // Drop old index.
         $table = new xmldb_table('local_o365_token');
-        $index = new xmldb_index('usrresscp', XMLDB_INDEX_NOTUNIQUE, ['user_id','resource','scope']);
+        $index = new xmldb_index('usrresscp', XMLDB_INDEX_NOTUNIQUE, ['user_id', 'resource', 'scope']);
         if ($dbman->index_exists($table, $index)) {
             $dbman->drop_index($table, $index);
         }
@@ -108,7 +108,7 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // Create new index.
         $table = new xmldb_table('local_o365_token');
-        $index = new xmldb_index('usrres', XMLDB_INDEX_NOTUNIQUE, ['user_id','resource']);
+        $index = new xmldb_index('usrres', XMLDB_INDEX_NOTUNIQUE, ['user_id', 'resource']);
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
