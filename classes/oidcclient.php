@@ -99,7 +99,7 @@ class oidcclient {
     public function setendpoints($endpoints) {
         foreach ($endpoints as $type => $uri) {
             if (clean_param($uri, PARAM_URL) !== $uri) {
-                throw new \moodle_exception('Invalid Endpoint URI received.');
+                throw new \moodle_exception('erroroidcclientinvalidendpoint', 'auth_oidc');
             }
             $this->endpoints[$type] = $uri;
         }
@@ -150,11 +150,11 @@ class oidcclient {
     public function authrequest() {
         global $DB;
         if (empty($this->clientid)) {
-            throw new \moodle_exception('Please set client credentials with setcreds');
+            throw new \moodle_exception('erroroidcclientnocreds', 'auth_oidc');
         }
 
         if (empty($this->endpoints['auth'])) {
-            throw new \moodle_exception('No auth endpoint set. Please set with $this->setendpoints');
+            throw new \moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
         }
 
         $params = $this->getauthrequestparams();
@@ -171,7 +171,7 @@ class oidcclient {
      */
     public function tokenrequest($code) {
         if (empty($this->endpoints['token'])) {
-            throw new \moodle_exception('No token endpoint set. Please set with $this->setendpoints');
+            throw new \moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
         }
 
         $params = [

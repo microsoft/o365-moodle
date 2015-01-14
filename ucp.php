@@ -44,7 +44,7 @@ if (!empty($action)) {
             $auth->disconnect();
         }
     } else {
-        throw new \moodle_exception('Invalid action received.');
+        throw new \moodle_exception('errorucpinvalidaction', 'auth_oidc');
     }
 } else {
     $PAGE->set_url('/auth/oidc/ucp.php');

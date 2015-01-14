@@ -45,9 +45,9 @@ class disconnect extends \moodleform {
         $mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_oidc', $opname)));
         $mform->addElement('html', '<br />');
 
-        $mform->addElement('header', 'userdetails', 'User Details');
-        $mform->addElement('text', 'username', 'Username');
-        $mform->addElement('passwordunmask', 'password', 'Password');
+        $mform->addElement('header', 'userdetails', get_string('userdetails'));
+        $mform->addElement('text', 'username', get_string('username'));
+        $mform->addElement('passwordunmask', 'password', get_string('password'));
 
         $mform->setType('username', PARAM_USERNAME);
         $mform->addRule('username', null, 'required', null, 'client');
