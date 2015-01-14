@@ -59,7 +59,7 @@ abstract class o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-        throw new \moodle_exception('This should be overridden');
+        throw new \moodle_exception('erroro365apinotimplemented', 'local_o365');
     }
 
     /**
@@ -68,7 +68,7 @@ abstract class o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        throw new \moodle_exception('This should be overridden');
+        throw new \moodle_exception('erroro365apinotimplemented', 'local_o365');
     }
 
     /**
@@ -103,14 +103,14 @@ abstract class o365api {
     public function apicall($httpmethod, $apimethod, $params = '') {
         $tokenvalid = $this->checktoken();
         if ($tokenvalid !== true) {
-            throw new \moodle_exception('Invalid or expired token.');
+            throw new \moodle_exception('erroro365apiinvalidtoken', 'local_o365');
         }
 
         $apiurl = $this->get_apiuri();
 
         $httpmethod = strtolower($httpmethod);
         if (!in_array($httpmethod, ['get', 'post', 'put', 'patch', 'merge', 'delete'], true)) {
-            throw new \moodle_exception('Invalid httpmethod passed to apicall');
+            throw new \moodle_exception('erroro365apiinvalidmethod', 'local_o365');
         }
 
         $requesturi = $this->transform_full_request_uri($apiurl.$apimethod);

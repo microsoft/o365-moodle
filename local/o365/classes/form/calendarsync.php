@@ -44,8 +44,8 @@ class calendarsync extends \moodleform {
         $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
         $mform->addElement('html', \html_writer::span(get_string('ucp_calsync_desc', 'local_o365')));
 
-        $mform->addElement('advcheckbox', 'sitecal', '', 'Sitewide Calendar');
-        $mform->addElement('advcheckbox', 'usercal', '', 'Personal (User) Calendar');
+        $mform->addElement('advcheckbox', 'sitecal', '', get_string('calendar_site', 'local_o365'));
+        $mform->addElement('advcheckbox', 'usercal', '', get_string('calendar_user', 'local_o365'));
         foreach ($usercourses as $courseid => $course) {
             $mform->addElement('advcheckbox', 'coursecal['.$course->id.']', '', $course->fullname);
         }

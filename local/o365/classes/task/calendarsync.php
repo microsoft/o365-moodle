@@ -155,7 +155,7 @@ class calendarsync extends \core\task\adhoc_task {
                     $cal->update_event($courseevent->outlookeventid, ['attendees' => $courseeventssubscribers]);
                 }
             } catch (\Exception $e) {
-                // Could not sync this course. Continue on.
+                // Could not sync this course event. Continue on.
                 mtrace('Error syncing course event #'.$courseevent->id.': '.$e->getMessage());
             }
         }
