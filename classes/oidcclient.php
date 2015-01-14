@@ -124,7 +124,7 @@ class oidcclient {
             'response_mode' => 'form_post',
             'resource' => 'https://graph.windows.net',
             'state' => $this->getnewstate($nonce),
-            'prompt' => 'login',
+            // 'prompt' => 'login',
         ];
     }
 
