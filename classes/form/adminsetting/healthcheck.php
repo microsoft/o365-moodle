@@ -46,9 +46,9 @@ class healthcheck extends \admin_setting {
     public function __construct($name, $visiblename, $description, $defaultsetting, $paramtype=PARAM_RAW, $size=null) {
         $this->paramtype = $paramtype;
         if (!is_null($size)) {
-            $this->size  = $size;
+            $this->size = $size;
         } else {
-            $this->size  = ($paramtype === PARAM_INT) ? 5 : 30;
+            $this->size = ($paramtype === PARAM_INT) ? 5 : 30;
         }
         parent::__construct($name, $visiblename, $description, $defaultsetting);
     }
