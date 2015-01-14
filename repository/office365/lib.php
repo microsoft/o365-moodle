@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package repository_o365
+ * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
@@ -57,7 +57,7 @@ class repository_office365 extends \repository {
         $this->httpclient = new \local_o365\httpclient();
 
         if (empty($this->oidcconfig)) {
-            throw new \moodle_exception('AzureAD SSO not configured');
+            throw new \moodle_exception('errorauthoidcnotconfig', 'repository_office365');
         }
 
         $this->onedrive['configured'] = \local_o365\rest\onedrive::is_configured();
@@ -173,7 +173,7 @@ class repository_office365 extends \repository {
         } else {
             if ($this->onedrive['configured'] === true && !empty($this->onedrive['token'])) {
                 $list[] = [
-                    'title' => 'My Files',
+                    'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
                     'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
                     'children' => [],
@@ -181,7 +181,7 @@ class repository_office365 extends \repository {
             }
             if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
                 $list[] = [
-                    'title' => 'Courses',
+                    'title' => get_string('courses', 'repository_office365'),
                     'path' => '/courses/',
                     'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
                     'children' => [],
@@ -248,7 +248,7 @@ class repository_office365 extends \repository {
                     $clienttype = 'sharepoint';
                     $filepath = substr($filepath, 8);
                 } else {
-                    throw new \moodle_exception('Invalid client type.');
+                    throw new \moodle_exception('errorbadclienttype', 'repository_office365');
                 }
             }
         }
@@ -267,7 +267,7 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($filepath, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
-                throw new \moodle_exception('Bad path');
+                throw new \moodle_exception('errorbadpath', 'repository_office365');
             }
             $courseid = (int)$pathparts[0];
             unset($pathparts[0]);
@@ -275,7 +275,7 @@ class repository_office365 extends \repository {
             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
             $courses = enrol_get_users_courses($USER->id);
             if (!isset($courses[$courseid])) {
-                throw new \moodle_exception('Access denied');
+                throw new \moodle_exception('erroraccessdenied', 'repository_office365');
             }
             $curcourse = $courses[$courseid];
             unset($courses);
@@ -285,7 +285,7 @@ class repository_office365 extends \repository {
             $result = $sharepoint->create_file($fullpath, $filename, $content);
             $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'parentsiteuri' => $parentsiteuri]);
         } else {
-            throw new \moodle_exception('Client type not supported');
+            throw new \moodle_exception('errorbadclienttype', 'repository_office365');
         }
 
         $downloadedfile = $this->get_file($source, $filename);
@@ -339,7 +339,7 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($path, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
-                throw new \moodle_exception('Bad path');
+                throw new \moodle_exception('errorbadpath', 'repository_office365');
             }
             $courseid = (int)$pathparts[0];
             unset($pathparts[0]);
@@ -394,7 +394,8 @@ class repository_office365 extends \repository {
         }
 
         // Generate path.
-        $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => 'My Files', 'path' => '/my/']];
+        $strmyfiles = get_string('myfiles', 'repository_office365');
+        $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strmyfiles, 'path' => '/my/']];
         $pathparts = explode('/', $path);
         $curpath = '/my';
         foreach ($pathparts as $pathpart) {
@@ -429,12 +430,12 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($path, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
-                throw new \moodle_exception('Bad path');
+                throw new \moodle_exception('errorbadpath', 'repository_office365');
             }
             $courseid = (int)$pathparts[0];
             $course = $DB->get_record('course', ['id' => $courseid]);
             if (empty($course)) {
-                throw new \moodle_exception('Course not found');
+                throw new \moodle_exception('errorcoursenotfound', 'repository_office365');
             }
             $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
             $coursectx = \context_course::instance($courseid);
@@ -532,7 +533,7 @@ class repository_office365 extends \repository {
             }
         }
         if (empty($result)) {
-            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+            throw new \moodle_exception('errorwhiledownload', 'repository_office365');
         }
         return ['path' => $path, 'url' => $reference];
     }
@@ -630,10 +631,10 @@ class repository_office365 extends \repository {
             if (isset($fileinfo['path'])) {
                 $fs = get_file_storage();
                 list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($fileinfo['path']);
-                // set this file and other similar aliases synchronised
+                // Set this file and other similar aliases synchronised.
                 $storedfile->set_synchronized($contenthash, $filesize);
             } else {
-                throw new moodle_exception('errorwhiledownload', 'repository', '', '');
+                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             if (!is_array($options)) {
                 $options = [];
