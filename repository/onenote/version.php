@@ -16,8 +16,10 @@
 
 /**
  * Version details for OneNote repository
- *
- * @package    repository_noenote
+ * @package    repository_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();

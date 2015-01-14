@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Installation file for the wikimedia repository
- *
- * @package    repository_wikimedia
- * @category   repository
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Installation file for the OneNote repository
+ * @package    repository_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 /**
