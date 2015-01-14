@@ -125,15 +125,19 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         global $USER;
         
         $gradeid = $grade ? $grade->id : 0;
-        $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
         $onenoteapi = onenote_api::getinstance();
-        
+        $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
+
+        if (!$isteacher)
+            return false;
+
+        $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
+
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
-            $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
             $o .= $onenoteapi->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
-                    $this->assignment->get_course_module()->id, true, $isteacher,
+                    $this->assignment->get_course_module()->id, true, true,
                     $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
         } else {

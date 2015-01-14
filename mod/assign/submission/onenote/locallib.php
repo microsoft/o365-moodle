@@ -143,14 +143,18 @@ class assign_submission_onenote extends assign_submission_plugin {
         }
 
         $onenoteapi = onenote_api::getinstance();
-        $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
+        $cmid = $this->assignment->get_course_module()->id;
+        $isstudent = $onenoteapi->is_student($cmid, $USER->id);
+
+        if (!$isstudent)
+            return false;
 
         $o = '<hr/><b>' . get_string('onenoteactions', 'assignsubmission_onenote') . '</b>';
         
         if ($onenoteapi->is_logged_in()) {
             // Show a button to open the OneNote page.
             $o .= $onenoteapi->render_action_button(get_string('workonthis', 'assignsubmission_onenote'),
-                    $this->assignment->get_course_module()->id, false, $isteacher,
+                    $this->assignment->get_course_module()->id, false, false,
                     $submission ? $submission->userid : null, $submission ? $submission->id : null, null);
             $o .= '<br/><p>' . get_string('workonthishelp', 'assignsubmission_onenote') . '</p>';
         } else {

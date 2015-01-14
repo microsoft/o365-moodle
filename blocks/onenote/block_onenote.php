@@ -56,7 +56,7 @@ class block_onenote extends block_base {
         if ($onenoteapi->is_logged_in()) {
             // Add the "save to onenote" button if we are on an assignment page.
             if ($PAGE->cm && ($PAGE->cm->modname == 'assign') && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') &&
-                    !$onenoteapi->is_teacher($PAGE->cm->id, $USER->id)) {
+                    $onenoteapi->is_student($PAGE->cm->id, $USER->id)) {
                 $content->text .= $onenoteapi->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
             } else {
                 $notebooks = $onenoteapi->get_items_list('');

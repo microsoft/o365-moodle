@@ -931,6 +931,14 @@ class onenote_api {
 
     }
 
+    // Check if given user is a student in the given course.
+    public function is_student($cmid, $userid) {
+
+        $context = context_module::instance($cmid);
+        return has_capability('mod/assign:submit', $context, $userid);
+
+    }
+
     /**
      * Function to add span for heading and td tags and respective font sizes
      * @param $dom
