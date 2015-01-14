@@ -225,7 +225,7 @@ class repository_office365 extends \repository {
      *
      * @return array Array of uploaded file information.
      */
-    public function upload($saveas_filename, $maxbytes) {
+    public function upload($saveasfilename, $maxbytes) {
         global $CFG, $USER, $SESSION;
 
         $types = optional_param_array('accepted_types', '*', PARAM_RAW);
@@ -255,7 +255,7 @@ class repository_office365 extends \repository {
         if ($this->path_is_upload($filepath) === true) {
             $filepath = substr($filepath, 0, -strlen('/upload/'));
         }
-        $filename = (!empty($saveas_filename)) ? $saveas_filename : $_FILES['repo_upload_file']['name'];
+        $filename = (!empty($saveasfilename)) ? $saveasfilename : $_FILES['repo_upload_file']['name'];
         $filename = clean_param($filename, PARAM_FILE);
         $content = file_get_contents($_FILES['repo_upload_file']['tmp_name']);
 
@@ -500,7 +500,7 @@ class repository_office365 extends \repository {
      * @return int
      */
     public function supported_returntypes() {
-        return FILE_INTERNAL|FILE_EXTERNAL|FILE_REFERENCE;
+        return FILE_INTERNAL | FILE_EXTERNAL | FILE_REFERENCE;
     }
 
     /**
@@ -520,8 +520,11 @@ class repository_office365 extends \repository {
             $sourceclient = $this->get_onedrive_apiclient();
         } else if ($reference['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
-            $parentsiteuri = (isset($reference['parentsiteuri']))
-                ? $reference['parentsiteuri'] : $sourceclient->get_moodle_parent_site_uri();
+            if (isset($reference['parentsiteuri'])) {
+                $parentsiteuri = $reference['parentsiteuri'];
+            } else {
+                $parentsiteuri = $sourceclient->get_moodle_parent_site_uri();
+            }
             $sourceclient->set_site($parentsiteuri);
         }
         $file = $sourceclient->get_file_by_id($reference['id']);
@@ -581,8 +584,11 @@ class repository_office365 extends \repository {
                     $sourceclient = $this->get_onedrive_apiclient();
                 } else if ($filesource === 'sharepoint') {
                     $sourceclient = $this->get_sharepoint_apiclient();
-                    $parentsiteuri = (isset($sourceunpacked['parentsiteuri']))
-                        ? $sourceunpacked['parentsiteuri'] : $sourceclient->get_moodle_parent_site_uri();
+                    if (isset($sourceunpacked['parentsiteuri'])) {
+                        $parentsiteuri = $sourceunpacked['parentsiteuri'];
+                    } else {
+                        $parentsiteuri = $sourceclient->get_moodle_parent_site_uri();
+                    }
                     $sourceclient->set_site($parentsiteuri);
                     $reference['parentsiteuri'] = $parentsiteuri;
                 }
