@@ -1,4 +1,4 @@
-.msaccount_linkbutton
+.local_msaccount_linkbutton
 {
 	background-image: url([[pix:local_msaccount|msaccount]]);
 	background-position: 4px 4px;
@@ -13,7 +13,7 @@
     text-decoration: none;
 }
 
-.msaccount_linkbutton:active, .msaccount_linkbutton:hover, .msaccount_linkbutton:visited
+.local_msaccount_linkbutton:active, .local_msaccount_linkbutton:hover, .local_msaccount_linkbutton:visited
 {
 	text-decoration: none !important;
     color: #003D5C;

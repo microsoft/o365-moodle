@@ -1,4 +1,4 @@
-.onenote_linkbutton
+.local_onenote_linkbutton
 {
 	background-image: url([[pix:local_onenote|onenote]]);
 	background-position: 2px 0px;
@@ -12,7 +12,7 @@
     font-size: 14px;
 }
 
-.onenote_linkbutton:active, .onenote_linkbutton:hover, .onenote_linkbutton:visited
+.local_onenote_linkbutton:active, .local_onenote_linkbutton:hover, .local_onenote_linkbutton:visited
 {
     text-decoration: none !important;
     color: #fff;

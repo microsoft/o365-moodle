@@ -322,7 +322,7 @@ class msaccount_api {
     
         return '<a onclick="window.open(this.href,\'mywin\',
            \'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
-           href="'.$url->out(false).'" class="msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
+           href="'.$url->out(false).'" class="local_msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
     }
 
     // These are useful primarily for testing purposes.

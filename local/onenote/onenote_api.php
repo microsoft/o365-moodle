@@ -391,7 +391,7 @@ class onenote_api {
         $url = new moodle_url('/local/onenote/onenote_actions.php', $actionparams);
         
         return '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
-            $url->out(false) . '" class="onenote_linkbutton">' . $buttontext . '</a>';
+            $url->out(false) . '" class="local_onenote_linkbutton">' . $buttontext . '</a>';
     }
     
     /* Gets (or creates) the submission page or feedback page in OneNote for the given student assignment.

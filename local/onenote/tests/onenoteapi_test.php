@@ -154,7 +154,7 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
 
         $expected = '<a onclick="window.open(this.href,\'_blank\'); return false;" href="'.$CFG->wwwroot.'/local/onenote/onenote_actions.php?';
-        $expected .= 'action=openpage&cmid=1&wantfeedback&isteacher&submissionuserid&submissionid&gradeid" class="onenote_linkbutton">Onenote</a>';
+        $expected .= 'action=openpage&cmid=1&wantfeedback&isteacher&submissionuserid&submissionid&gradeid" class="local_onenote_linkbutton">Onenote</a>';
         $button = $this->onenoteapi->render_action_button('Onenote', $this->cm->id);
         $this->assertEquals($expected, $button, 'Invalid action button');
     }
