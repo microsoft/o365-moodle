@@ -30,5 +30,14 @@ $tasks = [
         'day' => '*',
         'dayofweek' => '3',
         'month' => '*'
+    ],
+    [
+        'classname' => 'local_o365\task\usersync',
+        'blocking' => 0,
+        'minute' => '*',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
     ]
 ];
