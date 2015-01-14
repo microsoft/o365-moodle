@@ -69,7 +69,8 @@ class systemapiuser extends \admin_setting {
      * @return string empty string if ok, string error message otherwise
      */
     public function write_setting($data) {
-        return ($this->config_write($this->name, '0'));
+        $this->config_write($this->name, '0');
+        return '';
     }
 
 
