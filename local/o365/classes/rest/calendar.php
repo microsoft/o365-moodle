@@ -103,7 +103,8 @@ class calendar extends \local_o365\rest\o365api {
         if (!empty($updated['endtime'])) {
             $updateddata['End'] = date('c', $updated['endtime']);
         }
-        if (!empty($updated['attendees'])) {
+        if (isset($updated['attendees'])) {
+            $updateddata['Attendees'] = [];
             foreach ($updated['attendees'] as $attendee) {
                 $updateddata['Attendees'][] = [
                     'EmailAddress' => [

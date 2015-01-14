@@ -64,9 +64,9 @@ class calendarsync extends \core\task\adhoc_task {
                                  tok.resource AS tokenresource
                             FROM {event} ev
                             JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                       LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid
-                           WHERE ev.courseid = ? AND tok.resource = ?';
-        $siteevents = $DB->get_recordset_sql($siteeventssql, [SITEID, $outlookresource]);
+                       LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid AND tok.resource = ?
+                           WHERE ev.courseid = ?';
+        $siteevents = $DB->get_recordset_sql($siteeventssql, [$outlookresource, SITEID]);
         foreach ($siteevents as $siteevent) {
             if (!empty($siteevent->token)) {
                 mtrace('Syncing site event #'.$siteevent->id.' with user token.');
@@ -129,9 +129,9 @@ class calendarsync extends \core\task\adhoc_task {
                                    tok.resource AS tokenresource
                               FROM {event} ev
                               JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                         LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid
-                             WHERE ev.courseid = ? AND tok.resource = ?';
-        $courseevents = $DB->get_recordset_sql($courseeventssql, [$courseid, $outlookresource]);
+                         LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid AND tok.resource = ?
+                             WHERE ev.courseid = ? ';
+        $courseevents = $DB->get_recordset_sql($courseeventssql, [$outlookresource, $courseid]);
         foreach ($courseevents as $courseevent) {
             try {
                 if (!empty($courseevent->token)) {
