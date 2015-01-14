@@ -32,12 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param bool $forcedownload
  * @return bool false if file not found, does not return if found - just send the file
  */
-function assignsubmission_onenote_pluginfile($course,
-                                          $cm,
-                                          context $context,
-                                          $filearea,
-                                          $args,
-                                          $forcedownload) {
+function assignsubmission_onenote_pluginfile($course, $cm, context $context, $filearea, $args, $forcedownload) {
     global $DB, $CFG;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -46,10 +41,7 @@ function assignsubmission_onenote_pluginfile($course,
 
     require_login($course, false, $cm);
     $itemid = (int)array_shift($args);
-    $record = $DB->get_record('assign_submission',
-                              array('id' => $itemid),
-                              'userid, assignment, groupid',
-                              MUST_EXIST);
+    $record = $DB->get_record('assign_submission', array('id' => $itemid), 'userid, assignment, groupid', MUST_EXIST);
     $userid = $record->userid;
     $groupid = $record->groupid;
 

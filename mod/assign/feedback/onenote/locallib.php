@@ -61,10 +61,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     private function get_file_options() {
         global $COURSE;
 
-        $fileoptions = array('subdirs' => 1,
-                             'maxbytes' => $COURSE->maxbytes,
-                             'accepted_types' => '*',
-                             'return_types' => FILE_INTERNAL);
+        $fileoptions = array(
+            'subdirs' => 1,
+            'maxbytes' => $COURSE->maxbytes,
+            'accepted_types' => '*',
+            'return_types' => FILE_INTERNAL
+        );
         return $fileoptions;
     }
 
@@ -82,15 +84,8 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @param int $toitemid - The destination item id
      * @return boolean
      */
-    private function copy_area_files(file_storage $fs,
-                                     $fromcontextid,
-                                     $fromcomponent,
-                                     $fromfilearea,
-                                     $fromitemid,
-                                     $tocontextid,
-                                     $tocomponent,
-                                     $tofilearea,
-                                     $toitemid) {
+    private function copy_area_files(file_storage $fs, $fromcontextid, $fromcomponent, $fromfilearea, $fromitemid, $tocontextid,
+                                     $tocomponent, $tofilearea, $toitemid) {
 
         $newfilerecord = new stdClass();
         $newfilerecord->contextid = $tocontextid;
@@ -123,7 +118,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      */
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {
         global $USER;
-        
+
         $gradeid = $grade ? $grade->id : 0;
         $onenoteapi = onenote_api::getinstance();
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
@@ -144,11 +139,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             $o .= $onenoteapi->render_signin_widget();
             $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignfeedback_onenote') . '</p>';
         }
-        
+
         $o .= '<hr/>';
-        
+
         $mform->addElement('html', $o);
-        
+
         return true;
     }
 
@@ -162,12 +157,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     private function count_files($gradeid, $area) {
 
         $fs = get_file_storage();
-        $files = $fs->get_area_files($this->assignment->get_context()->id,
-                                     'assignfeedback_onenote',
-                                     $area,
-                                     $gradeid,
-                                     'id',
-                                     false);
+        $files = $fs->get_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote', $area, $gradeid, 'id', false);
 
         return count($files);
     }
@@ -203,21 +193,21 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      */
     public function save(stdClass $grade, stdClass $data) {
         global $DB, $COURSE;
-        
+
         // Get the OneNote page id corresponding to the teacher's feedback for this submission.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
         if (!$record || !$record->feedback_teacher_page_id) {
             $this->set_error(get_string('feedbacknotstarted', 'assignfeedback_onenote'));
             return false;
         }
-        
+
         $onenoteapi = onenote_api::getinstance();
         $tempfolder = $onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
-        
+
         // Create zip file containing onenote page and related files.
         $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile);
-        
+
         if ($downloadinfo) {
 
             // Get feedback zip size.
@@ -232,11 +222,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             }
 
             $fs = get_file_storage();
-            
+
             // Delete any previous feedbacks.
             $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote',
                 ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
-            
+
             // Prepare file record object.
             $fileinfo = array(
                 'contextid' => $this->assignment->get_context()->id,
@@ -244,8 +234,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 'filearea' => ASSIGNFEEDBACK_ONENOTE_FILEAREA,
                 'itemid' => $grade->id,
                 'filepath' => '/',
-                'filename' => 'OneNote_' . time() . '.zip');
-            
+                'filename' => 'OneNote_' . time() . '.zip'
+            );
+
             // Save it.
             $fs->create_file_from_pathname($fileinfo, $downloadinfo['path']);
             fulldelete($tempfolder);
@@ -255,10 +246,10 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             } else {
                 $this->set_error(get_string('notsignedin', 'assignfeedback_onenote'));
             }
-            
+
             return false;
         }
-        
+
         return $this->update_file_count($grade);
     }
 
@@ -271,14 +262,14 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      */
     public function view_summary(stdClass $grade, & $showviewlink) {
         global $USER;
-        
+
         // Show a view all link if the number of files is over this limit.
         $count = $this->count_files($grade->id, ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $showviewlink = $count > ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
         $onenoteapi = onenote_api::getinstance();
-        
+
         $o = '';
-        
+
         if ($count <= ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
             if (($grade->grade !== null) && ($grade->grade >= 0)) {
                 if ($onenoteapi->is_logged_in()) {
@@ -292,14 +283,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     $o .= $onenoteapi->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
                 }
-            
+
                 // Show standard link to download zip package.
                 $o .= '<p>Download:</p>';
-                $o .= $this->assignment->render_area_files('assignfeedback_onenote',
-                                                            ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                                                            $grade->id);
+                $o .= $this->assignment->render_area_files('assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
             }
-            
+
             return $o;
         } else {
             return get_string('countfiles', 'assignfeedback_onenote', $count);
@@ -313,9 +302,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return string
      */
     public function view(stdClass $grade) {
-        return $this->assignment->render_area_files('assignfeedback_onenote',
-                                                    ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                                                    $grade->id);
+        return $this->assignment->render_area_files('assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
     }
 
     /**
@@ -326,8 +313,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     public function delete_instance() {
         global $DB;
         // Will throw exception on failure.
-        $DB->delete_records('assignfeedback_onenote',
-                            array('assignment' => $this->assignment->get_instance()->id));
+        $DB->delete_records('assignfeedback_onenote', array('assignment' => $this->assignment->get_instance()->id));
 
         return true;
     }

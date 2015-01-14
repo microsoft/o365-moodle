@@ -26,11 +26,22 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
 
+/**
+ * Onenote Block.
+ */
 class block_onenote extends block_base {
+    /**
+     * Initialize plugin.
+     */
     public function init() {
         $this->title = get_string('onenote', 'block_onenote');
     }
 
+    /**
+     * Get the content of the block.
+     *
+     * @return stdObject
+     */
     public function get_content() {
         if (!isloggedin()) {
             return null;
@@ -45,14 +56,19 @@ class block_onenote extends block_base {
         return $this->content;
     }
 
+    /**
+     * Get the content of the block.
+     *
+     * @return stdObject
+     */
     public function _get_content() {
         global $USER, $COURSE, $PAGE, $CFG;
-        
+
         $content = new stdClass;
         $content->text = '';
         $content->footer = '';
         $onenoteapi = onenote_api::getinstance();
-        
+
         if ($onenoteapi->is_logged_in()) {
             // Add the "save to onenote" button if we are on an assignment page.
             if ($PAGE->cm && ($PAGE->cm->modname == 'assign') && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') &&
@@ -60,19 +76,19 @@ class block_onenote extends block_base {
                 $content->text .= $onenoteapi->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
             } else {
                 $notebooks = $onenoteapi->get_items_list('');
-                
+
                 if ($notebooks) {
                     // Find moodle notebook.
                     $moodlenotebook = null;
                     $notebookname = get_string('notebookname', 'block_onenote');
-                    
+
                     foreach ($notebooks as $notebook) {
                         if ($notebook['title'] == $notebookname) {
                             $moodlenotebook = $notebook;
                             break;
                         }
                     }
-                    
+
                     if ($moodlenotebook) {
                         $url = new moodle_url($moodlenotebook['url']);
                         $content->text .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .

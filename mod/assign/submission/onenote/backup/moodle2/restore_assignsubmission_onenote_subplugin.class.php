@@ -63,11 +63,7 @@ class restore_assignsubmission_onenote_subplugin extends restore_subplugin {
 
         $DB->insert_record('assignsubmission_onenote', $data);
 
-        $this->add_related_files('assignsubmission_onenote',
-                                 'submission_onenotes',
-                                 'submission',
-                                 null,
-                                 $oldsubmissionid);
+        $this->add_related_files('assignsubmission_onenote', 'submission_onenotes', 'submission', null, $oldsubmissionid);
     }
 
 }

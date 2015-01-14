@@ -32,12 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param bool $forcedownload
  * @return bool false if file not found, does not return if found - just send the file
  */
-function assignfeedback_onenote_pluginfile($course,
-                                        $cm,
-                                        context $context,
-                                        $filearea,
-                                        $args,
-                                        $forcedownload) {
+function assignfeedback_onenote_pluginfile($course, $cm, context $context, $filearea, $args, $forcedownload) {
     global $USER, $DB;
 
     if ($context->contextlevel != CONTEXT_MODULE) {

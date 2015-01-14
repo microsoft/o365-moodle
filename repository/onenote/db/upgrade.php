@@ -31,16 +31,16 @@ function xmldb_repository_onenote_upgrade($oldversion) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014103001) {
-    
+
         // Define table repository_onenote to be created.
         $table = new xmldb_table('repository_onenote');
-    
+
         // Adding fields to table repository_onenote.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-    
+
         // Adding keys to table repository_onenote.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-    
+
         // Conditionally launch create table for repository_onenote.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
@@ -49,7 +49,7 @@ function xmldb_repository_onenote_upgrade($oldversion) {
         // Onenote savepoint reached.
         upgrade_plugin_savepoint(true, 2014103001, 'repository', 'onenote');
     }
-    
+
     // Moodle v2.3.0 release upgrade line.
     // Put any upgrade step following this.
 

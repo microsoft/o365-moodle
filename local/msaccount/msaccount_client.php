@@ -33,10 +33,13 @@ require_once($CFG->libdir.'/oauthlib.php');
 class msaccount_client extends oauth2_client {
     /** @var string OAuth 2.0 scope */
     const SCOPE = 'office.onenote_update wl.skydrive wl.offline_access';
+
+    /** @var bool Whether to use the token as an HTTP GET parameter. */
     private $tokenasparam = true;
-    
-    /**-
-     * Construct a msaccount_client object
+
+    /**
+     * Construct a msaccount_client object.
+     *
      * @param string $clientid client id for OAuth 2.0 provided by microsoft
      * @param string $clientsecret secret for OAuth 2.0 provided by microsoft
      * @param moodle_url $returnurl url to return to after succseful auth
@@ -50,24 +53,26 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Returns the auth url for OAuth 2.0 request
+     * Returns the auth url for OAuth 2.0 request.
+     *
      * @return string the auth url
      */
     protected function auth_url() {
         return 'https://login.live.com/oauth20_authorize.srf';
     }
-    
+
     /**
-     * Returns the token url for OAuth 12.0 request
+     * Returns the token url for OAuth 12.0 request.
+     *
      * @return string the auth url
      */
     protected function token_url() {
         return 'https://login.live.com/oauth20_token.srf';
     }
-    
+
     public function is_logged_in() {
         $accesstoken = $this->get_accesstoken();
-        
+
         // Has the token expired?
         if (isset($accesstoken->expires) && time() >= $accesstoken->expires) {
             if (!$this->refresh_token()) {
@@ -122,44 +127,44 @@ class msaccount_client extends oauth2_client {
         $accesstoken->token = $r->access_token;
         $accesstoken->expires = (time() + ($r->expires_in - 10)); // Expires 10 seconds before actual expiry.
         $this->store_token($accesstoken);
-        
+
         $this->store_refresh_token($r->refresh_token);
-        
+
         return true;
     }
 
     public function refresh_token() {
         global $DB, $USER;
-        
+
         $this->log_out(); // Remove previous token.
-        
+
         $record = $DB->get_record('msaccount_refresh_tokens', array("user_id" => $USER->id));
-        
+
         if (!$record || !$record->refresh_token) {
             return false;
         }
         $ch = curl_init();
-        
+
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_URL, $this->token_url());
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        
+
         $callbackurl = self::callback_url();
-        
+
         curl_setopt($ch, CURLOPT_POSTFIELDS,
             'client_id=' . $this->get_clientid() .
             '&client_secret=' . $this->get_clientsecret() .
             '&grant_type=refresh_token' .
             '&refresh_token=' . $record->refresh_token .
             '&redirect_url=' . $callbackurl->out(false));
-        
+
         $rawresponse = curl_exec($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
-        
+
         if (!$info['http_code'] === 200) {
             return false;
         }
@@ -176,16 +181,16 @@ class msaccount_client extends oauth2_client {
         $accesstoken->token = $r->access_token;
         $accesstoken->expires = (time() + ($r->expires_in - 10)); // Expires 10 seconds before actual expiry.
         $this->store_token($accesstoken);
-        
+
         // Also update refresh token.
         $this->store_refresh_token($r->refresh_token);
-                
+
         return true;
     }
 
     public function store_refresh_token($refreshtoken) {
         global $DB, $USER;
-        
+
         $record = $DB->get_record('msaccount_refresh_tokens', array("user_id" => $USER->id));
         if ($record) {
             $record->refresh_token = $refreshtoken;
@@ -197,12 +202,12 @@ class msaccount_client extends oauth2_client {
             $DB->insert_record('msaccount_refresh_tokens', $record);
         }
     }
-    
+
     /**
      * Should HTTP GET be used instead of POST?
      *
-     * msaccount REST API needs auth token in the header for get as well as post requests. 
-     * Oauth2_client sets the token in the header only if it thinks that it is making making a post request. 
+     * msaccount REST API needs auth token in the header for get as well as post requests.
+     * Oauth2_client sets the token in the header only if it thinks that it is making making a post request.
      * So we control that behavior by overriding this method.
      *
      * @return bool true if GET should be used
@@ -210,7 +215,7 @@ class msaccount_client extends oauth2_client {
     protected function use_http_get() {
         return $this->tokenasparam;
     }
-    
+
     public function myget($url, $params=array(), $token='', $secret='') {
         $this->tokenasparam = false;
         $this->header = array();
@@ -261,8 +266,8 @@ class msaccount_client extends oauth2_client {
 }
 
 /**
- * A helper class to access Microsoft Account using the REST api. 
- * This is a singleton class. 
+ * A helper class to access Microsoft Account using the REST api.
+ * This is a singleton class.
  * All access to Microsoft Account should be through this class instead of directly accessing the msaccount_client class.
  *
  * @package    local_msaccount
@@ -275,28 +280,28 @@ class msaccount_api {
     protected function __construct() {
         $this->msaccountclient = new msaccount_client();
     }
-    
+
     public static function getinstance() {
         if (null === self::$instance) {
             self::$instance = new static();
         }
-    
+
         self::$instance->msaccountclient->is_logged_in();
-    
+
         return self::$instance;
     }
-    
+
     public function get_msaccount_client() {
         return $this->msaccountclient;
     }
     public function is_logged_in() {
         return $this->get_msaccount_client()->is_logged_in();
     }
-    
+
     public function get_login_url() {
         return $this->get_msaccount_client()->get_login_url();
     }
-    
+
     public function log_out() {
         return $this->get_msaccount_client()->log_out();
     }
@@ -304,22 +309,22 @@ class msaccount_api {
     public function myget($url, $params=array(), $token='', $secret='') {
         return $this->get_msaccount_client()->myget($url, $params, $token, $secret);
     }
-    
+
     public function mypost($url, $params=array(), $token='', $secret='') {
         return $this->get_msaccount_client()->mypost($url, $params, $token, $secret);
     }
-    
+
     public function get_accesstoken() {
         return $this->get_msaccount_client()->get_accesstoken();
     }
-    
+
     public function setHeader($header) {
         return $this->get_msaccount_client()->setHeader($header);
     }
-    
+
     public function render_signin_widget() {
         $url = $this->get_login_url();
-    
+
         return '<a onclick="window.open(this.href,\'mywin\',' .
             '\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"' .
             'href="'.$url->out(false).'" class="local_msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
@@ -329,9 +334,9 @@ class msaccount_api {
     public function store_refresh_token($refreshtoken) {
         $this->get_msaccount_client()->store_refresh_token($refreshtoken);
     }
-    
+
     public function refresh_token() {
         return $this->get_msaccount_client()->refresh_token();
     }
-   
+
 }

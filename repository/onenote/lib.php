@@ -33,7 +33,7 @@ require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
  */
 class repository_onenote extends repository {
     private $onenoteapi = null;
-    
+
     /**
      * Constructor
      *
@@ -105,8 +105,7 @@ class repository_onenote extends repository {
             foreach ($parts as $folderid) {
                 if (!empty($folderid)) {
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onenoteapi->get_item_name($folderid),
-                                           'path' => $trail);
+                    $ret['path'][] = array('name' => $this->onenoteapi->get_item_name($folderid), 'path' => $trail);
                 }
             }
         }
