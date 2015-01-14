@@ -131,7 +131,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
-            $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+            $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
             $o .= $onenoteapi->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
                     $this->assignment->get_course_module()->id, true, $isteacher,
                     $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
@@ -280,7 +280,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 if ($onenoteapi->is_logged_in()) {
                     // Show a link to open the OneNote page.
                     $submission = $this->assignment->get_user_submission($grade->userid, false);
-                    $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+                    $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
                     $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
                             $this->assignment->get_course_module()->id, true, $isteacher,
                             $grade->userid, $submission ? $submission->id : 0, $grade->id);

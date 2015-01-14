@@ -143,7 +143,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         }
 
         $onenoteapi = onenote_api::getinstance();
-        $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+        $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
 
         $o = '<hr/><b>' . get_string('onenoteactions', 'assignsubmission_onenote') . '</b>';
         
@@ -380,7 +380,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $showviewlink = $count > ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
 
         $onenoteapi = onenote_api::getinstance();
-        $isteacher = $onenoteapi->is_teacher($this->assignment->get_course()->id, $USER->id);
+        $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
         $o = '';
         
         if ($count <= ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES) {

@@ -924,19 +924,11 @@ class onenote_api {
     }
 
     // Check if given user is a teacher in the given course.
-    public function is_teacher($courseid, $userid) {
-        // Teacher role comes with courses.
-        $context = context_course::instance($courseid); // Get_context_instance(CONTEXT_COURSE, $courseid, true);.
-        
-        $roles = get_user_roles($context, $userid, true);
-    
-        foreach ($roles as $role) {
-            if ($role->roleid == 3) {
-                return true;
-            }
-        }
-    
-        return false;
+    public function is_teacher($cmid, $userid) {
+
+        $context = context_module::instance($cmid);
+        return has_capability('mod/assign:grade', $context, $userid);
+
     }
 
     /**
