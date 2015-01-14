@@ -488,7 +488,6 @@ class sharepoint extends \local_o365\rest\o365api {
      * @param int $spgroupid The sharepoint group ID to add users to.
      */
     public function add_users_with_capability_to_group($context, $capability, $spgroupid) {
-        global $DB;
         $now = time();
 
         $users = get_users_by_capability($context, $capability);

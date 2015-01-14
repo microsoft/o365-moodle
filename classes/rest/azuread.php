@@ -207,6 +207,14 @@ class azuread extends \local_o365\rest\o365api {
     public static function get_muser_upn($user) {
         global $DB;
         $now = time();
+
+        if (is_numeric($user)) {
+            $user = $DB->get_record('user', ['id' => $user]);
+            if (empty($user)) {
+                return false;
+            }
+        }
+
         // Get user UPN.
         $aaduserdata = $DB->get_record('local_o365_aaduserdata', ['muserid' => $user->id]);
         if (!empty($aaduserdata)) {

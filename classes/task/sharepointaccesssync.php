@@ -38,22 +38,25 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      */
     protected function sync_spsiteaccess_for_courses_and_users(array $courses, array $users, $requiredcap,
                                                                \local_o365\rest\sharepoint $sharepoint) {
+        global $DB;
         foreach ($courses as $course) {
-            $context = \context_course::instance($course->id);
+            $courseid = (is_numeric($course)) ? $course : $course->id;
+            $context = \context_course::instance($courseid);
             $spgroupsql = 'SELECT *
                              FROM {local_o365_coursespsite} site
                              JOIN {local_o365_spgroupdata} grp ON grp.coursespsiteid = site.id
                             WHERE site.courseid = ? AND grp.permtype = ?';
             $spgrouprec = $DB->get_record_sql($spgroupsql, [$courseid, 'contribute']);
             foreach ($users as $user) {
+                $userid = (is_numeric($user)) ? $user : $user->id;
                 $userupn = \local_o365\rest\azuread::get_muser_upn($user);
                 $hascap = has_capability($requiredcap, $context, $user);
                 if ($hascap === true) {
                     // Add to group.
-                    $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $user->id);
+                    $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $userid);
                 } else {
                     // Remove from group.
-                    $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $user->id);
+                    $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $userid);
                 }
             }
         }
@@ -74,6 +77,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      * @return bool Success/Failure.
      */
     protected function do_role_assignmentchange($roleid, $userid, $contextid, $requiredcap, $sharepoint) {
+        global $DB;
         $context = \context::instance_by_id($contextid);
 
         $user = $DB->get_record('user', ['id' => $userid], 'id,username');
@@ -163,7 +167,6 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      * Do the job.
      */
     public function execute() {
-        global $DB;
         $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
 
         $oidcconfig = get_config('auth_oidc');

@@ -110,7 +110,6 @@ class systemtoken extends \local_o365\oauth2\token {
      * @return bool Success/Failure.
      */
     protected function update_stored_token($existingtoken, $newtoken) {
-        global $DB;
         $tokens = get_config('local_o365', 'systemtokens');
         $tokens = unserialize($tokens);
         if (isset($tokens[$existingtoken['resource']])) {
