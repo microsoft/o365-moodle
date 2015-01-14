@@ -318,13 +318,8 @@ class observers {
             }
         }
 
-        // Before workaround.
         // Send event to o365.
-        // $response = $cal->create_event($subject, $body, $timestart, $timeend, $attendees);
-
-        // After workaround.
-        // Temporary workaround to make sure that saving of assignment works.
-        $response = array();
+         $response = $cal->create_event($subject, $body, $timestart, $timeend, $attendees);
 
         // Store ID.
         if (!empty($response) && is_array($response)) {
