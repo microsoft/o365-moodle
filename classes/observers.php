@@ -270,6 +270,10 @@ class observers {
 
         // Construct calendar client.
         $cal = static::construct_calendar_api($event->userid);
+        if (empty($cal)) {
+            // O365 not configured.
+            return false;
+        }
 
         // Assemble basic event data.
         $event = $DB->get_record('event', ['id' => $event->objectid]);
@@ -351,6 +355,10 @@ class observers {
 
         // Construct calendar client.
         $cal = static::construct_calendar_api($event->userid);
+        if (empty($cal)) {
+            // O365 not configured.
+            return false;
+        }
 
         // Send updated information to o365.
         $event = $DB->get_record('event', ['id' => $event->objectid]);
@@ -384,6 +392,10 @@ class observers {
 
         // Construct calendar client.
         $cal = static::construct_calendar_api($event->userid);
+        if (empty($cal)) {
+            // O365 not configured.
+            return false;
+        }
 
         foreach ($idmaprecs as $idmaprec) {
             $response = $cal->delete_event($idmaprec->outlookeventid);
@@ -599,6 +611,10 @@ class observers {
 
             // If the context is a course context we can change SP access now.
             $sharepoint = static::construct_sharepoint_api_with_system_user();
+            if (empty($sharepoint)) {
+                // O365 not configured.
+                return false;
+            }
             $hascap = has_capability($requiredcap, $context, $user);
             if ($hascap === true) {
                 // Add to group.
