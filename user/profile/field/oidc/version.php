@@ -29,5 +29,5 @@ $plugin->component = 'profilefield_oidc';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '1.0.0.0';
 $plugin->dependencies = [
-	'auth_oidc' => 2014111703
+    'auth_oidc' => 2014111703
 ];
