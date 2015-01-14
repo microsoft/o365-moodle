@@ -42,11 +42,11 @@ class jwt {
      */
     public static function decode($encoded) {
         if (empty($encoded) || !is_string($encoded)) {
-            throw new \moodle_exception('Empty or non-string JWT received.');
+            throw new \moodle_exception('errorjwtempty', 'auth_oidc');
         }
         $jwtparts = explode('.', $encoded);
         if (count($jwtparts) !== 3) {
-            throw new \moodle_exception('Malformed JWT received.');
+            throw new \moodle_exception('errorjwtmalformed', 'auth_oidc');
         }
 
         $header = base64_decode($jwtparts[0]);
@@ -54,21 +54,21 @@ class jwt {
             $header = @json_decode($header, true);
         }
         if (empty($header) || !is_array($header)) {
-            throw new \moodle_exception('Could not read JWT header');
+            throw new \moodle_exception('errorjwtcouldnotreadheader', 'auth_oidc');
         }
         if (!isset($header['alg'])) {
-            throw new \moodle_exception('Invalid JWT header');
+            throw new \moodle_exception('errorjwtinvalidheader', 'auth_oidc');
         }
 
         $jwsalgs = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'];
         if (in_array($header['alg'], $jwsalgs, true) === true) {
             $body = static::decode_jws($jwtparts);
         } else {
-            throw new \moodle_exception('JWS Alg or JWE not supported');
+            throw new \moodle_exception('errorjwtunsupportedalg', 'auth_oidc');
         }
 
         if (empty($body) || !is_array($body)) {
-            throw new \moodle_exception('Could not read JWT payload.');
+            throw new \moodle_exception('errorjwtbadpayload', 'auth_oidc');
         }
 
         return [$header, $body];

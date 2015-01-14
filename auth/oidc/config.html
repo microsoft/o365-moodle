@@ -21,10 +21,10 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-global $CFG;
+global $CFG, $OUTPUT;
 
 if (!isset($config->opname)) {
-    $config->opname = 'OpenID Connect';
+    $config->opname = get_string('pluginname', 'auth_oidc');
 }
 if (!isset($config->clientid)) {
     $config->clientid = '';
@@ -53,7 +53,7 @@ foreach ($opts as $opt) {
         <input id="<?php echo $opt; ?>" name="<?php echo $opt; ?>" type="text" size="30" value="<?php echo $config->$opt;?>" />
         <?php
         if (isset($err[$opt])) {
-            echo $OUTPUT->error_text($err[$opt]);
+            echo '<br />'.$OUTPUT->error_text($err[$opt]);
         }
         ?>
     </td>
