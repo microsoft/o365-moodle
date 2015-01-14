@@ -180,7 +180,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
         }
 
         if (empty($sharepoint)) {
-            throw new \moodle_exception('Could not get sharepoint api client');
+            throw new \moodle_exception('errorcreatingsharepointclient', 'local_o365');
         }
 
         $opdata = $this->get_custom_data();

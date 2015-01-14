@@ -110,7 +110,7 @@ class sharepoint extends \local_o365\rest\o365api {
             $contents = $this->apicall('get', "/v1.0/files/getByPath('{$path}')/children");
             $contents = json_decode($contents, true);
             if (empty($contents)) {
-                throw new \moodle_exception('Error in API call.');
+                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
             }
         } else {
             $path = rawurlencode('/'.$this->parentsite.'/Shared Documents'.$path);
@@ -144,7 +144,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $response = $this->apicall('get', "/v1.0/files/getByPath('{$path}')");
         $response = json_decode($response, true);
         if (empty($response)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $response;
     }
@@ -159,7 +159,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $response = $this->apicall('get', "/v1.0/files/{$fileid}");
         $response = json_decode($response, true);
         if (empty($response)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $response;
     }
@@ -181,11 +181,11 @@ class sharepoint extends \local_o365\rest\o365api {
             $response = $this->apicall('put', $url, $params);
             $response = json_decode($response, true);
             if (empty($response)) {
-                throw new \moodle_exception('Error in API call.');
+                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
             }
             return $response;
         } else {
-            throw new \moodle_exception('Could not find parent folder information');
+            throw new \moodle_exception('erroro365apinoparentinfo', 'local_o365');
         }
     }
 
@@ -212,7 +212,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('post', '/web/webs/add', $webcreationinformation);
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -258,7 +258,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('merge', '/web', $updated);
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -288,7 +288,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('post', '/web/sitegroups', $groupdata);
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -303,7 +303,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')');
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -318,7 +318,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('get', '/web/sitegroups/getbyid(\''.$id.'\')');
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -333,7 +333,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('post', '/web/sitegroups/removebyid(\''.$id.'\')');
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -348,7 +348,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')/users');
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         return $result;
     }
@@ -369,7 +369,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('post', '/web/sitegroups/getbyid(\''.$groupid.'\')/users', $userdata);
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
 
         if (!empty($muserid)) {
@@ -401,7 +401,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $result = $this->apicall('post', $endpoint, '');
         $result = json_decode($result, true);
         if (empty($result)) {
-            throw new \moodle_exception('Error in API call.');
+            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
         }
         if (!empty($muserid)) {
             $recorded = $DB->delete_records('local_o365_spgroupassign', ['userid' => $muserid, 'groupid' => $groupid]);
@@ -423,7 +423,7 @@ class sharepoint extends \local_o365\rest\o365api {
             'read' => 1073741826,
         ];
         if (!isset($permdefids[$permissiontype])) {
-            throw new \moodle_exception('Permission not found');
+            throw new \moodle_exception('erroro365apibadpermission', 'local_o365');
         }
         $roledefid = $permdefids[$permissiontype];
         $response = $this->apicall('post', "/web/roleassignments/addroleassignment(principalid={$groupid},roledefid={$roledefid})");
@@ -468,14 +468,14 @@ class sharepoint extends \local_o365\rest\o365api {
                 $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
                 return $siterec;
             } else {
-                throw new \moodle_exception('Problem creating site. Received: '.json_encode($sitedata));
+                throw new \moodle_exception('erroro365apicouldnotcreatesite', 'local_o365');
             }
         } else {
             $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
             if (!empty($siterec) && $siterec->siteurl == $fullsiteurl) {
                 return $siterec;
             } else {
-                throw new \moodle_exception('Site already exists, but could not find local record.');
+                throw new \moodle_exception('erroro365apisiteexistsnolocal', 'local_o365');
             }
         }
     }
@@ -530,7 +530,7 @@ class sharepoint extends \local_o365\rest\o365api {
         if (is_numeric($course)) {
             $course = $DB->get_record('course', ['id' => $course]);
             if (empty($course)) {
-                throw new \moodle_exception('Course not found.');
+                throw new \moodle_exception('erroro365apicoursenotfound', 'local_o365');
             }
         }
 

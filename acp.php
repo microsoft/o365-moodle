@@ -66,12 +66,12 @@ if ($mode === 'setsystemuser') {
 } else if ($mode === 'sharepointinit') {
     $oidcconfig = get_config('auth_oidc');
     if (empty($oidcconfig)) {
-        throw new \moodle_exception('Please set application credentials in auth_oidc first.');
+        throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
     }
 
     $spresource = \local_o365\rest\sharepoint::get_resource();
     if (empty($spresource)) {
-        throw new \moodle_exception('Please configure local_o365 first.');
+        throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
     }
 
     $httpclient = new \local_o365\httpclient();
@@ -81,7 +81,7 @@ if ($mode === 'setsystemuser') {
     $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
 
     if (empty($sptoken)) {
-        throw new \moodle_exception('Did not have an available sharepoint token, and could not get one.');
+        throw new \moodle_exception('erroracpnosptoken', 'local_o365');
     }
 
     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);

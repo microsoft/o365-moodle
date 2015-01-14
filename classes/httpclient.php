@@ -142,7 +142,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      */
     public function put($url, $params = array(), $options = array()) {
         if (!isset($params['file'])) {
-            throw new \moodle_exception('No file parameter in httpclient::put');
+            throw new \moodle_exception('errorhttpclientnofileinput', 'local_o365');
         }
         if (is_file($params['file'])) {
             $fp = fopen($params['file'], 'r');
@@ -151,7 +151,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
             $fp = fopen('php://temp', 'w+');
             $size = strlen($params['file']);
             if (!$fp) {
-                throw new \moodle_exception('Could not open temporary location to store file.');
+                throw new \moodle_exception('errorhttpclientbadtempfileloc', 'local_o365');
             }
             fwrite($fp, $params['file']);
             fseek($fp, 0);
@@ -160,7 +160,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
         $options['CURLOPT_INFILESIZE'] = $size;
         $options['CURLOPT_INFILE'] = $fp;
         if (!isset($this->options['CURLOPT_USERPWD'])) {
-            $this->setopt(array('CURLOPT_USERPWD'=>'anonymous: noreply@moodle.org'));
+            $this->setopt(array('CURLOPT_USERPWD' => 'anonymous: noreply@moodle.org'));
         }
 
         $ret = $this->request($url, $options);

@@ -28,6 +28,27 @@ $string['acp_healthcheck'] = 'Health Check';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
+$string['calendar_user'] = 'Personal (User) Calendar';
+$string['calendar_site'] = 'Sitewide Calendar';
+
+$string['erroracpauthoidcnotconfig'] = 'Please set application credentials in auth_oidc first.';
+$string['erroracplocalo365notconfig'] = 'Please configure local_o365 first.';
+$string['erroracpnosptoken'] = 'Did not have an available sharepoint token, and could not get one.';
+$string['errorhttpclientbadtempfileloc'] = 'Could not open temporary location to store file.';
+$string['errorhttpclientnofileinput'] = 'No file parameter in httpclient::put';
+$string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
+$string['errorcreatingsharepointclient'] = 'Could not get sharepoint api client';
+$string['errorcreatingsharepointclient'] = 'Could not get sharepoint api client';
+$string['erroro365apibadcall'] = 'Error in API call.';
+$string['erroro365apibadpermission'] = 'Permission not found';
+$string['erroro365apicouldnotcreatesite'] = 'Problem creating site.';
+$string['erroro365apicoursenotfound'] = 'Course not found.';
+$string['erroro365apiinvalidtoken'] = 'Invalid or expired token.';
+$string['erroro365apiinvalidmethod'] = 'Invalid httpmethod passed to apicall';
+$string['erroro365apinoparentinfo'] = 'Could not find parent folder information';
+$string['erroro365apinotimplemented'] = 'This should be overridden.';
+$string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
+
 $string['eventcalendarsubscribed'] = 'User subscribed to a calendar';
 $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
 
