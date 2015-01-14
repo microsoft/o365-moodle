@@ -517,7 +517,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
     public function cron() {
         global $DB;
 
-        $params = [time() - 5*60];
+        $params = [time() - (5 * 60)];
         $DB->delete_records_select('auth_oidc_state', 'timecreated < ?', $params);
     }
 
