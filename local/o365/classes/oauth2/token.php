@@ -161,7 +161,7 @@ class token {
      * @return bool Success/Failure.
      */
     public function refresh() {
-        global $DB, $USER;
+        global $USER;
         $params = [
             'client_id' => $this->clientdata->get_clientid(),
             'client_secret' => $this->clientdata->get_clientsecret(),

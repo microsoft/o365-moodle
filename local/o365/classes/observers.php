@@ -402,7 +402,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_subscribed(\local_o365\event\calendar_subscribed $event) {
-        global $DB;
         $eventdata = $event->get_data();
         $calsubscribe = new \local_o365\task\calendarsync();
         $calsubscribe->set_custom_data([
@@ -422,7 +421,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_unsubscribed(\local_o365\event\calendar_unsubscribed $event) {
-        global $DB;
         $eventdata = $event->get_data();
         $calunsubscribe = new \local_o365\task\calendarsync();
         $calunsubscribe->set_custom_data([
@@ -663,7 +661,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_capabilities_updated(\core\event\role_capabilities_updated $event) {
-        global $DB;
         $roleid = $event->objectid;
         $contextid = $event->contextid;
 
@@ -685,7 +682,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_deleted(\core\event\role_deleted $event) {
-        global $DB;
         $roleid = $event->objectid;
 
         // Role deletions can be heavy - run in cron.
