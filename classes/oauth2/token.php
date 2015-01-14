@@ -59,7 +59,8 @@ class token {
      * @param \local_o365\oauth2\clientdata $clientdata Client data used for refreshing the token if needed.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
      */
-    public function __construct($token, $expiry, $refreshtoken, $scope, $resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+    public function __construct($token, $expiry, $refreshtoken, $scope, $resource, \local_o365\oauth2\clientdata $clientdata,
+                                \local_o365\httpclientinterface $httpclient) {
         $this->token = $token;
         $this->expiry = $expiry;
         $this->refreshtoken = $refreshtoken;

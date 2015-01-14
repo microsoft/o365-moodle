@@ -136,8 +136,9 @@ class calendarsync extends \core\task\adhoc_task {
             try {
                 if (!empty($courseevent->token)) {
                     mtrace('Syncing course event #'.$courseevent->id.' with user token.');
-                    $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry, $courseevent->refreshtoken,
-                            $courseevent->tokenscope, $courseevent->tokenresource, $clientdata, $httpclient);
+                    $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry,
+                            $courseevent->refreshtoken, $courseevent->tokenscope, $courseevent->tokenresource, $clientdata,
+                            $httpclient);
                 } else {
                     mtrace('Syncing course event #'.$courseevent->id.' with system token.');
                     $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
@@ -240,8 +241,6 @@ class calendarsync extends \core\task\adhoc_task {
                             $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
                         }
                     }
-                } else {
-                    // Event synced. Nothing to do.
                 }
             } else {
                 // Not subscribed. Delete synced events.
@@ -252,8 +251,6 @@ class calendarsync extends \core\task\adhoc_task {
                     $cal = new \local_o365\rest\calendar($token, $httpclient);
                     $response = $cal->delete_event($userevent->outlookeventid);
                     $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $userevent->outlookeventid]);
-                } else {
-                    // Event not synced. Nothing to do.
                 }
             }
         }

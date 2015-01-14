@@ -26,6 +26,12 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 class azuread_mock extends \local_o365\rest\azuread {
+    /**
+     * Transform the full request URL.
+     *
+     * @param string $requesturi The full request URI, includes the API uri and called endpoint.
+     * @return string The transformed full request URI.
+     */
     public function transform_full_request_uri($requesturi) {
         return parent::transform_full_request_uri($requesturi);
     }

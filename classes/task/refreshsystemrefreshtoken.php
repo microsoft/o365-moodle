@@ -27,7 +27,7 @@ namespace local_o365\task;
  * Scheduled task to refresh the system API user's refresh token.
  */
 class refreshsystemrefreshtoken extends \core\task\scheduled_task {
-	/**
+    /**
      * Get a descriptive name for this task (shown to admins).
      *
      * @return string
@@ -46,7 +46,8 @@ class refreshsystemrefreshtoken extends \core\task\scheduled_task {
             $httpclient = new \local_o365\httpclient();
             $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                     $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-            $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource('https://graph.windows.net', $clientdata, $httpclient);
+            $graphresource = 'https://graph.windows.net';
+            $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource($graphresource, $clientdata, $httpclient);
         }
         return true;
     }

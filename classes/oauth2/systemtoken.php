@@ -35,7 +35,8 @@ class systemtoken extends \local_o365\oauth2\token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\systemtoken|bool A constructed token for the new resource, or false if failure.
      */
-    public static function instance($resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+    public static function instance($resource, \local_o365\oauth2\clientdata $clientdata,
+                                    \local_o365\httpclientinterface $httpclient) {
         $tokens = get_config('local_o365', 'systemtokens');
         $tokens = unserialize($tokens);
         if (isset($tokens[$resource])) {
@@ -64,7 +65,8 @@ class systemtoken extends \local_o365\oauth2\token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\systemtoken|bool A constructed token for the new resource, or false if failure.
      */
-    public static function get_for_new_resource($resource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+    public static function get_for_new_resource($resource, \local_o365\oauth2\clientdata $clientdata,
+                                                \local_o365\httpclientinterface $httpclient) {
         $aadgraphtoken = static::instance('https://graph.windows.net', $clientdata, $httpclient);
         if (!empty($aadgraphtoken)) {
             $params = [

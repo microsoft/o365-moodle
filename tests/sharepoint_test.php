@@ -73,8 +73,8 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
      * Test site_exists method.
      */
     public function test_site_exists() {
-    	$httpclient = new \local_o365\tests\mockhttpclient();
-    	$httpclient->set_response('');
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_response('');
         $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
         $this->assertFalse($apiclient->site_exists('test'));
 
@@ -83,92 +83,92 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $this->assertTrue($apiclient->site_exists('test'));
     }
 
-	/**
+    /**
      * Get a successful response for creating a site.
      *
      * @return string The json response.
      */
     protected function get_response_create_site($title, $url, $description) {
-		$successresponse = '{
-    		"odata.metadata":"https://example.sharepoint.com/moodle/_api/$metadata#SP.ApiData.Webs/@Element",
-    		"odata.type":"SP.Web",
-    		"odata.id":"https://example.sharepoint.com/moodle/'.$url.'/_api/Web",
-    		"odata.editLink":"https://example.sharepoint.com/moodle/'.$url.'/_api/Web",
-    		"AllowRssFeeds":true,
-    		"AlternateCssUrl":"",
-    		"AppInstanceId":"00000000-0000-0000-0000-000000000000",
-    		"Configuration":0,
-    		"Created":"2014-12-11T14:16:28",
-    		"CustomMasterUrl":"/moodle/'.$url.'/_catalogs/masterpage/seattle.master",
-    		"Description":"'.addslashes($description).'",
-    		"DocumentLibraryCalloutOfficeWebAppPreviewersDisabled":false,
-    		"EnableMinimalDownload":true,
-    		"Id":"000000000-1111-2222-3333-444455556666",
-    		"Language":1033,
-    		"LastItemModifiedDate":"2014-12-11T14:16:36Z",
-    		"MasterUrl":"/moodle/'.$url.'/_catalogs/masterpage/seattle.master",
-    		"QuickLaunchEnabled":true,
-    		"RecycleBinEnabled":true,
-    		"ServerRelativeUrl":"/moodle/'.$url.'",
-    		"SiteLogoUrl":null,
-    		"SyndicationEnabled":true,
-    		"Title":"'.$title.'",
-    		"TreeViewEnabled":false,
-    		"UIVersion":15,
-    		"UIVersionConfigurationEnabled":false,
-    		"Url":"https://example.sharepoint.com/moodle/'.$url.'",
-    		"WebTemplate":"STS"}';
-    	return $successresponse;
+        $successresponse = '{
+            "odata.metadata":"https://example.sharepoint.com/moodle/_api/$metadata#SP.ApiData.Webs/@Element",
+            "odata.type":"SP.Web",
+            "odata.id":"https://example.sharepoint.com/moodle/'.$url.'/_api/Web",
+            "odata.editLink":"https://example.sharepoint.com/moodle/'.$url.'/_api/Web",
+            "AllowRssFeeds":true,
+            "AlternateCssUrl":"",
+            "AppInstanceId":"00000000-0000-0000-0000-000000000000",
+            "Configuration":0,
+            "Created":"2014-12-11T14:16:28",
+            "CustomMasterUrl":"/moodle/'.$url.'/_catalogs/masterpage/seattle.master",
+            "Description":"'.addslashes($description).'",
+            "DocumentLibraryCalloutOfficeWebAppPreviewersDisabled":false,
+            "EnableMinimalDownload":true,
+            "Id":"000000000-1111-2222-3333-444455556666",
+            "Language":1033,
+            "LastItemModifiedDate":"2014-12-11T14:16:36Z",
+            "MasterUrl":"/moodle/'.$url.'/_catalogs/masterpage/seattle.master",
+            "QuickLaunchEnabled":true,
+            "RecycleBinEnabled":true,
+            "ServerRelativeUrl":"/moodle/'.$url.'",
+            "SiteLogoUrl":null,
+            "SyndicationEnabled":true,
+            "Title":"'.$title.'",
+            "TreeViewEnabled":false,
+            "UIVersion":15,
+            "UIVersionConfigurationEnabled":false,
+            "Url":"https://example.sharepoint.com/moodle/'.$url.'",
+            "WebTemplate":"STS"}';
+        return $successresponse;
     }
 
-	/**
+    /**
      * Get a successful response for adding a user to a group.
      *
      * @return string The json response.
      */
     protected function get_response_add_user_to_group($userupn) {
-    	$response = '{
-    		"odata.metadata":"https://example.sharepoint.com/moodle/_api/$metadata#SP.ApiData.Users1/@Element",
-    		"odata.type":"SP.User",
-    		"odata.id":"https://example.sharepoint.com/moodle/_api/Web/GetUserById(11)",
-    		"odata.editLink":"Web/GetUserById(11)",
-    		"Id":11,
-    		"IsHiddenInUI":false,
-    		"LoginName":"i:0#.f|membership|'.$userupn.'",
-    		"Title":"Test User",
-    		"PrincipalType":1,
-    		"Email":"'.$userupn.'",
-    		"IsShareByEmailGuestUser":false,
-    		"IsSiteAdmin":false,
-    		"UserId":{"NameId":"0000111122223333","NameIdIssuer":"urn:federation:microsoftonline"}
-    	}';
-    	return $response;
+        $response = '{
+            "odata.metadata":"https://example.sharepoint.com/moodle/_api/$metadata#SP.ApiData.Users1/@Element",
+            "odata.type":"SP.User",
+            "odata.id":"https://example.sharepoint.com/moodle/_api/Web/GetUserById(11)",
+            "odata.editLink":"Web/GetUserById(11)",
+            "Id":11,
+            "IsHiddenInUI":false,
+            "LoginName":"i:0#.f|membership|'.$userupn.'",
+            "Title":"Test User",
+            "PrincipalType":1,
+            "Email":"'.$userupn.'",
+            "IsShareByEmailGuestUser":false,
+            "IsSiteAdmin":false,
+            "UserId":{"NameId":"0000111122223333","NameIdIssuer":"urn:federation:microsoftonline"}
+        }';
+        return $response;
     }
 
-	/**
+    /**
      * Get a successful response for creating a group.
      *
      * @return string The json response.
      */
     protected function get_response_create_group($name, $desc) {
-    	$response = '{
-    		"odata.metadata":"https://example.sharepoint.com/moodle/_api/$metadata#SP.ApiData.Groups1/@Element",
-    		"odata.type":"SP.Group",
-    		"odata.id":"https://example.sharepoint.com/moodle/_api/Web/SiteGroups/GetById(37)",
-    		"odata.editLink":"Web/SiteGroups/GetById(37)",
-    		"Id":37,
-    		"IsHiddenInUI":false,
-    		"LoginName":"'.$name.'",
-    		"Title":"'.$name.'",
-    		"PrincipalType":8,
-    		"AllowMembersEditMembership":false,
-    		"AllowRequestToJoinLeave":false,
-    		"AutoAcceptRequestToJoinLeave":false,
-    		"Description":"'.$desc.'",
-    		"OnlyAllowMembersViewMembership":true,
-    		"OwnerTitle":"Test User",
-    		"RequestToJoinLeaveEmailSetting":null}';
-    	return $response;
+        $response = '{
+            "odata.metadata":"https://example.sharepoint.com/moodle/_api/$metadata#SP.ApiData.Groups1/@Element",
+            "odata.type":"SP.Group",
+            "odata.id":"https://example.sharepoint.com/moodle/_api/Web/SiteGroups/GetById(37)",
+            "odata.editLink":"Web/SiteGroups/GetById(37)",
+            "Id":37,
+            "IsHiddenInUI":false,
+            "LoginName":"'.$name.'",
+            "Title":"'.$name.'",
+            "PrincipalType":8,
+            "AllowMembersEditMembership":false,
+            "AllowRequestToJoinLeave":false,
+            "AutoAcceptRequestToJoinLeave":false,
+            "Description":"'.$desc.'",
+            "OnlyAllowMembersViewMembership":true,
+            "OwnerTitle":"Test User",
+            "RequestToJoinLeaveEmailSetting":null}';
+        return $response;
     }
 
     /**
@@ -177,22 +177,22 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
      * @return string The json response.
      */
     protected function get_response_assign_group_permission() {
-    	$response = '{
-    		"odata.metadata":"https://pdyn.sharepoint.com/moodle/_api/$metadata#Edm.Null",
-    		"odata.null":1}';
-    	return $response;
+        $response = '{
+            "odata.metadata":"https://pdyn.sharepoint.com/moodle/_api/$metadata#Edm.Null",
+            "odata.null":1}';
+        return $response;
     }
 
     /**
      * Test create_course_subsite method.
      */
     public function test_create_course_subsite() {
-    	global $DB;
-    	$course = $this->getDataGenerator()->create_course();
+        global $DB;
+        $course = $this->getDataGenerator()->create_course();
 
-    	$successresponse = $this->get_response_create_site($course->fullname, $course->shortname, $course->summary);
-    	$httpclient = new \local_o365\tests\mockhttpclient();
-    	$httpclient->set_responses(['', $successresponse]);
+        $successresponse = $this->get_response_create_site($course->fullname, $course->shortname, $course->summary);
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_responses(['', $successresponse]);
         $apiclient = new \local_o365\tests\mocksharepoint($this->get_mock_token(), $httpclient);
         $apiclient->create_course_subsite($course);
 
@@ -205,24 +205,24 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
      * Test add_users_with_capability_to_group method.
      */
     public function test_add_users_with_capability_to_group() {
-    	global $DB;
-    	$requiredcapability = \local_o365\rest\sharepoint::get_course_site_required_capability();
-		$course = $this->getDataGenerator()->create_course();
-		$role = $this->getDataGenerator()->create_role(['archetype' => 'editingteacher']);
-		$coursecontext = \context_course::instance($course->id);
+        global $DB;
+        $requiredcapability = \local_o365\rest\sharepoint::get_course_site_required_capability();
+        $course = $this->getDataGenerator()->create_course();
+        $role = $this->getDataGenerator()->create_role(['archetype' => 'editingteacher']);
+        $coursecontext = \context_course::instance($course->id);
 
-		$user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
-		$user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
+        $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
+        $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
 
-		$aaduserdata = new \stdClass;
-		$aaduserdata->muserid = $user1->id;
-		$aaduserdata->userupn = 'test@example.onmicrosoft.com';
-		$aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
+        $aaduserdata = new \stdClass;
+        $aaduserdata->muserid = $user1->id;
+        $aaduserdata->userupn = 'test@example.onmicrosoft.com';
+        $aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
 
-		$result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
+        $result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
 
-		$httpclient = new \local_o365\tests\mockhttpclient();
-    	$httpclient->set_responses([$this->get_response_add_user_to_group($aaduserdata->userupn)]);
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_responses([$this->get_response_add_user_to_group($aaduserdata->userupn)]);
         $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
         $results = $apiclient->add_users_with_capability_to_group($coursecontext, $requiredcapability, 10);
 
@@ -237,36 +237,36 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
      * Test create_course_site method.
      */
     public function test_create_course_site() {
-    	global $DB;
-		$requiredcapability = \local_o365\rest\sharepoint::get_course_site_required_capability();
-		$course = $this->getDataGenerator()->create_course();
-		$role = $this->getDataGenerator()->create_role(['archetype' => 'editingteacher']);
-		$coursecontext = \context_course::instance($course->id);
+        global $DB;
+        $requiredcapability = \local_o365\rest\sharepoint::get_course_site_required_capability();
+        $course = $this->getDataGenerator()->create_course();
+        $role = $this->getDataGenerator()->create_role(['archetype' => 'editingteacher']);
+        $coursecontext = \context_course::instance($course->id);
 
-		$user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
-		$user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
+        $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
+        $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
 
-		$aaduserdata = new \stdClass;
-		$aaduserdata->muserid = $user1->id;
-		$aaduserdata->userupn = 'test@example.onmicrosoft.com';
-		$aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
+        $aaduserdata = new \stdClass;
+        $aaduserdata->muserid = $user1->id;
+        $aaduserdata->userupn = 'test@example.onmicrosoft.com';
+        $aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
 
-		$result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
+        $result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
 
-		$httpclient = new \local_o365\tests\mockhttpclient();
-		$httpresponses = [
-			// Indicate site not found.
-			'',
-			// Indicate site created.
-			$this->get_response_create_site($course->fullname, $course->shortname, $course->summary),
-			// Indicate group created.
-			$this->get_response_create_group('testgroup', 'testgroup'),
-			// Indicate permissions assigned.
-			$this->get_response_assign_group_permission(),
-			// Indicate user added to group.
-			$this->get_response_add_user_to_group($aaduserdata->userupn),
-		];
-    	$httpclient->set_responses($httpresponses);
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpresponses = [
+            // Indicate site not found.
+            '',
+            // Indicate site created.
+            $this->get_response_create_site($course->fullname, $course->shortname, $course->summary),
+            // Indicate group created.
+            $this->get_response_create_group('testgroup', 'testgroup'),
+            // Indicate permissions assigned.
+            $this->get_response_assign_group_permission(),
+            // Indicate user added to group.
+            $this->get_response_add_user_to_group($aaduserdata->userupn),
+        ];
+        $httpclient->set_responses($httpresponses);
         $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
         $apiclient->create_course_site($course->id);
 

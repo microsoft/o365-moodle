@@ -476,8 +476,8 @@ class observers {
             $spresource = \local_o365\rest\sharepoint::get_resource();
             if (!empty($spresource)) {
                 $httpclient = new \local_o365\httpclient();
-                $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                        $oidcconfig->tokenendpoint);
+                $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
+                        $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
                 $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
                 if (!empty($sptoken)) {
                     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
@@ -558,7 +558,7 @@ class observers {
         global $DB;
         $requiredcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
 
-        // Check if the role affected the required capability
+        // Check if the role affected the required capability.
         $rolecapsql = "SELECT *
                          FROM {role_capabilities}
                         WHERE roleid = ? AND capability = ?";

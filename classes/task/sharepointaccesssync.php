@@ -27,7 +27,7 @@ namespace local_o365\task;
  * AdHoc task to sync Moodle permissions with sharepoint.
  */
 class sharepointaccesssync extends \core\task\adhoc_task {
-	/**
+    /**
      * Sync sharepoint access for a list of courses and users.
      *
      * @param array $courses The courses to sync.
@@ -36,7 +36,8 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      * @param \local\o365\rest\sharepoint $sharepoint Constructed sharepoint API client.
      * @return bool Success/Failure.
      */
-    protected function sync_spsiteaccess_for_courses_and_users(array $courses, array $users, $requiredcap, \local_o365\rest\sharepoint $sharepoint) {
+    protected function sync_spsiteaccess_for_courses_and_users(array $courses, array $users, $requiredcap,
+                                                               \local_o365\rest\sharepoint $sharepoint) {
         foreach ($courses as $course) {
             $context = \context_course::instance($course->id);
             $spgroupsql = 'SELECT *
@@ -162,7 +163,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      * Do the job.
      */
     public function execute() {
-		global $DB;
+        global $DB;
         $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
 
         $oidcconfig = get_config('auth_oidc');
@@ -170,8 +171,8 @@ class sharepointaccesssync extends \core\task\adhoc_task {
             $spresource = \local_o365\rest\sharepoint::get_resource();
             if (!empty($spresource)) {
                 $httpclient = new \local_o365\httpclient();
-                $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                        $oidcconfig->tokenendpoint);
+                $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
+                        $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
                 $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
                 if (!empty($sptoken)) {
                     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
