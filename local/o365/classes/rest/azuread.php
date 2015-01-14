@@ -181,17 +181,29 @@ class azuread extends \local_o365\rest\o365api {
         global $DB, $CFG;
         $users = $this->get_users();
         if (!empty($users) && is_array($users) && !empty($users['value'])) {
-            $userparams = ['auth' => 'oidc', 'deleted' => '0', 'mnethostid' => $CFG->mnet_localhost_id];
-            $existingusers = $DB->get_records('user', $userparams, '', 'username, id');
+            $aadresource = static::get_resource();
+            $sql = 'SELECT token.oidcuniqid, user.id, user.username
+                      FROM {user} user
+                      JOIN {auth_oidc_token} token ON user.username = token.username
+                     WHERE user.auth = ? AND user.deleted = ? AND user.mnethostid = ? AND token.resource = ?';
+            $params = ['oidc', '0', $CFG->mnet_localhost_id, $aadresource];
+            $existingusers = $DB->get_records_sql($sql, $params);
+
             foreach ($users['value'] as $user) {
                 if (!isset($existingusers[$user['objectId']])) {
-                    $this->create_user_from_aaddata($user);
+                    try {
+                        $this->create_user_from_aaddata($user);
+                    } catch (\Exception $e) {
+                        mtrace('Could not create user with objectid '.$user['objectId']);
+                    }
                 } else {
                     // Update user?
                 }
                 unset($existingusers[$user['objectId']]);
             }
-            foreach ($existingusers as $oid => $data) {
+
+            foreach ($existingusers as $objectid => $data) {
+                mtrace('Deleting user #'.$data->id);
                 delete_user((object)['id' => $data->id, 'username' => $data->username]);
             }
         }
