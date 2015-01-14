@@ -219,12 +219,12 @@ class msaccount_client extends oauth2_client {
         // If there is curl error due to connection. Try curl call for 3 times pausing for 0.5 sec.
         if (strpos($response, 'Could not resolve host') !== false || strpos($response, 'Failed to connect') !== false
             || strpos($response, 'Timed out') !== false) {
-            for($i = 0; $i < 3; $i++){
+            for ($i = 0; $i < 3; $i++) {
                 $response = $this->get($url, $params, $token, $secret);
 
                 // If we get proper response, break the loop.
-                if(strpos($response, 'Could not resolve host') === false || strpos($response, 'Failed to connect') === false
-                    || strpos($response, 'Timed out') === false){
+                if (strpos($response, 'Could not resolve host') === false || strpos($response, 'Failed to connect') === false
+                    || strpos($response, 'Timed out') === false) {
                     break;
                 }
                 usleep(500000);
@@ -243,12 +243,12 @@ class msaccount_client extends oauth2_client {
         // If there is curl error due to connection. Try curl call for 3 times pausing for 0.5 sec.
         if (strpos($response, 'Could not resolve host') !== false || strpos($response, 'Failed to connect') !== false
             || strpos($response, 'Timed out') !== false) {
-            for($i = 0; $i < 3; $i++){
+            for ($i = 0; $i < 3; $i++) {
                 $response = $this->post($url, $params, $token, $secret);
 
                 // If we get proper response, break the loop.
-                if(strpos($response, 'Could not resolve host') === false || strpos($response, 'Failed to connect') === false
-                    || strpos($response, 'Timed out') === false){
+                if (strpos($response, 'Could not resolve host') === false || strpos($response, 'Failed to connect') === false
+                    || strpos($response, 'Timed out') === false) {
                     break;
                 }
                 usleep(500000);
@@ -320,9 +320,9 @@ class msaccount_api {
     public function render_signin_widget() {
         $url = $this->get_login_url();
     
-        return '<a onclick="window.open(this.href,\'mywin\',
-           \'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"
-           href="'.$url->out(false).'" class="local_msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
+        return '<a onclick="window.open(this.href,\'mywin\',' .
+            '\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"' .
+            'href="'.$url->out(false).'" class="local_msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
     }
 
     // These are useful primarily for testing purposes.

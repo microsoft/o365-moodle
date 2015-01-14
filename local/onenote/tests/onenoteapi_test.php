@@ -124,19 +124,21 @@ class microsoft_onenote_testcase extends advanced_testcase
         $this->assertNotNull($this->onenoteapi->create_temp_folder(), 'Unable to create temp folder');
     }
 
-    public function test_getitemaname(){
+    public function test_getitemaname() {
         $this->set_test_config();
         $this->set_user(0);
 
         $itemlist = $this->onenoteapi->get_items_list();
 
         foreach ($itemlist as $item) {
-            if($item['title'] == 'Moodle Notebook'){
-                $this->assertEquals($item['title'].'.zip', $this->onenoteapi->get_item_name($item['id']), 'Unable to get notebook name');
+            if ($item['title'] == 'Moodle Notebook') {
+                $this->assertEquals($item['title'].'.zip', $this->onenoteapi->get_item_name($item['id']),
+                    'Unable to get notebook name');
 
                 $subitems = $this->onenoteapi->get_items_list($item['path']);
                 foreach ($subitems as $subitem) {
-                    $this->assertEquals($subitem['title'].'.zip', $this->onenoteapi->get_item_name($subitem['id']), 'Unable to get section name');
+                    $this->assertEquals($subitem['title'].'.zip', $this->onenoteapi->get_item_name($subitem['id']),
+                        'Unable to get section name');
                     break;
                 }
             }
@@ -153,8 +155,10 @@ class microsoft_onenote_testcase extends advanced_testcase
         $instance = $generator->create_instance($params);
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
 
-        $expected = '<a onclick="window.open(this.href,\'_blank\'); return false;" href="'.$CFG->wwwroot.'/local/onenote/onenote_actions.php?';
-        $expected .= 'action=openpage&cmid=1&wantfeedback&isteacher&submissionuserid&submissionid&gradeid" class="local_onenote_linkbutton">Onenote</a>';
+        $expected = '<a onclick="window.open(this.href,\'_blank\'); return false;"';
+        $expected .= ' href="'.$CFG->wwwroot.'/local/onenote/onenote_actions.php?';
+        $expected .= 'action=openpage&cmid=1&wantfeedback&isteacher&submissionuserid&submissionid&gradeid"';
+        $expected .= ' class="local_onenote_linkbutton">Onenote</a>';
         $button = $this->onenoteapi->render_action_button('Onenote', $this->cm->id);
         $this->assertEquals($expected, $button, 'Invalid action button');
     }
@@ -241,7 +245,7 @@ class microsoft_onenote_testcase extends advanced_testcase
 
     }
 
-    public function test_downloadpagehtml(){
+    public function test_downloadpagehtml() {
         global $DB;
         $this->set_test_config();
         $this->set_user(0);
@@ -272,24 +276,24 @@ class microsoft_onenote_testcase extends advanced_testcase
 
         $zip = new ZipArchive;
         $res = $zip->open($info['path']);
-        if ($res === TRUE) {
+        if ($res === true) {
             $zip->extractTo($tempfolder);
             $zip->close();
         }
         $folder = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0'));
         $pagefile = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
 
-        $htmlDom = new DomDocument;
-        $htmlDom->loadHTMLFile($pagefile);
-        $htmlDom->preservewhitespace = false;
+        $htmldom = new DomDocument;
+        $htmldom->loadHTMLFile($pagefile);
+        $htmldom->preservewhitespace = false;
 
-        $expectedHtml = '<h3 style="font-size:12px;color:#5b9bd5">';
-        $expectedHtml .= '<span style="font-family:Helvetica;font-size:18px;color:#333333">Heading 1</span></h3> ';
-        $expectedHtml .= '<p><span style="font-family:Helvetica;font-size:14px;color:#333333">This is test assignment.</span></p>';
+        $expectedhtml = '<h3 style="font-size:12px;color:#5b9bd5">';
+        $expectedhtml .= '<span style="font-family:Helvetica;font-size:18px;color:#333333">Heading 1</span></h3> ';
+        $expectedhtml .= '<p><span style="font-family:Helvetica;font-size:14px;color:#333333">This is test assignment.</span></p>';
 
-        $h = $htmlDom->saveHTML();
+        $h = $htmldom->saveHTML();
         $h = trim(preg_replace('/\s+/', ' ', $h));
-        $this->assertContains($expectedHtml, $h, 'Html does not match');
+        $this->assertContains($expectedhtml, $h, 'Html does not match');
     }
 
     public function test_getpage() {

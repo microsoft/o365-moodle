@@ -75,8 +75,7 @@ class block_onenote extends block_base {
                     
                     if ($moodlenotebook) {
                         $url = new moodle_url($moodlenotebook['url']);
-                        $content->text .=
-                            '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
+                        $content->text .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
                             $url->out(false) .
                             '" class="local_onenote_linkbutton">' . get_string('opennotebook', 'block_onenote') . '</a>';
                     }

@@ -218,46 +218,46 @@ class onenote_api {
         if ($response && $response->value) {
             foreach ($response->value as $item) {
                 switch ($itemtype) {
-                case 'notebook':
-                    $items[] = array(
-                        'title' => $item->name,
-                        'path' => $path.'/'.urlencode($item->id),
-                        'date' => strtotime($item->lastModifiedTime),
-                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
-                        'source' => $item->id,
-                        'url' => $item->links->oneNoteWebUrl->href,
-                        'author' => $item->createdBy,
-                        'id' => $item->id,
-                        'children' => array()
-                    );
-                    break;
+                    case 'notebook':
+                        $items[] = array(
+                            'title' => $item->name,
+                            'path' => $path.'/'.urlencode($item->id),
+                            'date' => strtotime($item->lastModifiedTime),
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
+                            'source' => $item->id,
+                            'url' => $item->links->oneNoteWebUrl->href,
+                            'author' => $item->createdBy,
+                            'id' => $item->id,
+                            'children' => array()
+                        );
+                        break;
 
-                case 'section':
-                    $items[] = array(
-                        'title' => $item->name,
-                        'path' => $path.'/'.urlencode($item->id),
-                        'date' => strtotime($item->lastModifiedTime),
-                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
-                        'source' => $item->id,
-                        'url' => $item->self,
-                        'author' => $item->createdBy,
-                        'id' => $item->id,
-                        'children' => array()
-                    );
-                    break;
+                    case 'section':
+                        $items[] = array(
+                            'title' => $item->name,
+                            'path' => $path.'/'.urlencode($item->id),
+                            'date' => strtotime($item->lastModifiedTime),
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
+                            'source' => $item->id,
+                            'url' => $item->self,
+                            'author' => $item->createdBy,
+                            'id' => $item->id,
+                            'children' => array()
+                        );
+                        break;
 
-                case 'page':
-                    $items[] = array(
-                        'title' => $item->title.".zip",
-                        'path' => $path.'/'.urlencode($item->id),
-                        'date' => strtotime($item->createdTime),
-                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->title, 90))->out(false),
-                        'source' => $item->id,
-                        'url' => $item->links->oneNoteWebUrl->href,
-                        'author' => $item->createdByAppId,
-                        'id' => $item->id
-                    );
-                    break;
+                    case 'page':
+                        $items[] = array(
+                            'title' => $item->title.".zip",
+                            'path' => $path.'/'.urlencode($item->id),
+                            'date' => strtotime($item->createdTime),
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->title, 90))->out(false),
+                            'source' => $item->id,
+                            'url' => $item->links->oneNoteWebUrl->href,
+                            'author' => $item->createdByAppId,
+                            'id' => $item->id
+                        );
+                        break;
                 }
             }
         }
@@ -422,7 +422,7 @@ class onenote_api {
         global $USER, $DB;
         
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
-        $assign = $DB->get_record('assign', array('id' => $cm->instance)); 
+        $assign = $DB->get_record('assign', array('id' => $cm->instance));
         $context = context_module::instance($cm->id);
         $userid = $USER->id;
         
@@ -486,7 +486,7 @@ class onenote_api {
         if ($wantfeedbackpage) {
             // If previously saved feedback does not exist.
             if (!$gradeid ||
-                !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA, 
+                !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA,
                         $gradeid, 'id', false))) {
                 if ($isteacher) {
                     // This must be the first time teacher is looking at student's submission
@@ -571,12 +571,12 @@ class onenote_api {
         $response = $this->create_page_from_postdata($sectionid, $postdata, $boundary);
 
         // If there is connection error, repeat curl call for 3 times by pausing 0.5 sec in between.
-        if($response == 'connection_error'){
-            for($i = 0; $i <3; $i++){
+        if ($response == 'connection_error') {
+            for ($i = 0; $i < 3; $i++) {
                 $response = $this->create_page_from_postdata($sectionid, $postdata, $boundary);
 
                 // If we get proper response then break the loop.
-                if($response != 'connection_error'){
+                if ($response != 'connection_error') {
                     break;
                 }
                 usleep(500000);
@@ -584,7 +584,7 @@ class onenote_api {
         }
 
         // If still there is connection error, return it.
-        if($response == 'connection_error'){
+        if ($response == 'connection_error') {
             return $response;
         }
 
@@ -821,7 +821,7 @@ class onenote_api {
         $rawresponse = curl_exec($ch);
 
         // Check if curl call fails.
-        if($rawresponse === false){
+        if ($rawresponse === false) {
             $errorno = curl_errno($ch);
             curl_close($ch);
 
@@ -899,7 +899,7 @@ class onenote_api {
 
                 $index++;
             }
-        }    
+        }
     }
     
     // Get the repo id for the onenote repo.
