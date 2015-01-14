@@ -128,9 +128,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $onenoteapi = onenote_api::getinstance();
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
 
-        if (!$isteacher)
+        if (!$isteacher) {
             return false;
-
+        }
         $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
 
         if ($onenoteapi->is_logged_in()) {

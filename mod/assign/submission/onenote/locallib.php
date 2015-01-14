@@ -146,9 +146,9 @@ class assign_submission_onenote extends assign_submission_plugin {
         $cmid = $this->assignment->get_course_module()->id;
         $isstudent = $onenoteapi->is_student($cmid, $USER->id);
 
-        if (!$isstudent)
+        if (!$isstudent) {
             return false;
-
+        }
         $o = '<hr/><b>' . get_string('onenoteactions', 'assignsubmission_onenote') . '</b>';
         
         if ($onenoteapi->is_logged_in()) {
