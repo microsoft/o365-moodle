@@ -166,7 +166,11 @@ class microsoft_onenote_testcase extends advanced_testcase
     public function test_isteacher() {
         $this->set_test_config();
         $this->set_user(0);
-        $this->assertTrue($this->onenoteapi->is_teacher($this->course1->id, $this->user->id), "user is not teacher");
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $params['course'] = $this->course1->id;
+        $instance = $generator->create_instance($params);
+        $this->cm = get_coursemodule_from_instance('assign', $instance->id);
+        $this->assertTrue($this->onenoteapi->is_teacher($this->cm->id, $this->user->id), "user is not teacher");
     }
 
     public function test_getitemlist() {
