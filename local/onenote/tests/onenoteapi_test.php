@@ -70,6 +70,10 @@ class microsoft_onenote_testcase extends advanced_testcase {
 
     protected $config;
 
+    /**
+     * Create basic setup for test cases
+     * @return bool
+     */
     public function setup() {
         global $CFG;
 
@@ -106,6 +110,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertCount(2, get_enrolled_users($c1ctx));
     }
 
+    /**
+     * Set client id and client secret for tests
+     */
     public function set_test_config() {
         set_config('clientid', $this->config->client_id, 'local_msaccount');
         set_config('clientsecret', $this->config->client_secret, 'local_msaccount');
