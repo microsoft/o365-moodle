@@ -194,17 +194,12 @@ class azuread extends \local_o365\rest\o365api {
                     try {
                         $this->create_user_from_aaddata($user);
                     } catch (\Exception $e) {
-                        mtrace('Could not create user with objectid '.$user['objectId']);
+                        if (!PHPUNIT_TEST) {
+                            mtrace('Could not create user with objectid '.$user['objectId']);
+                        }
                     }
-                } else {
-                    // Update user?
                 }
                 unset($existingusers[$user['objectId']]);
-            }
-
-            foreach ($existingusers as $objectid => $data) {
-                mtrace('Deleting user #'.$data->id);
-                delete_user((object)['id' => $data->id, 'username' => $data->username]);
             }
         }
         return true;
