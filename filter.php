@@ -29,8 +29,20 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/filelib.php');
 
+/**
+ * Filter for processing HTML content containing links to media from services that support the OEmbed protocol.
+ * The filter replaces the links with the embeddable content returned from the service via the Oembed protocol.
+ *
+ * @package    filter_oembed
+ */
 class filter_oembed extends moodle_text_filter {
 
+    /**
+     * Set up the filter using settings provided in the admin settings page.
+     *
+     * @param $page
+     * @param $context
+     */
     public function setup($page, $context) {
         // This only requires execution once per request.
         static $jsinitialised = false;
@@ -45,6 +57,14 @@ class filter_oembed extends moodle_text_filter {
         }
     }
 
+    /**
+     * Filters the given HTML text, looking for links pointing to media from services that support the Oembed
+     * protocol and replacing them with the embeddable content returned from the protocol.
+     *
+     * @param $text HTML to be processed.
+     * @param $options
+     * @return string String containing processed HTML.
+     */
     public function filter($text, array $options = array()) {
         global $CFG;
 
@@ -111,6 +131,12 @@ class filter_oembed extends moodle_text_filter {
     }
 }
 
+/**
+ * Looks for links pointing to Youtube content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_youtubecallback($link) {
     global $CFG;
 //    $url = "https://gdata.youtube.com/feeds/api/videos/".trim($link[4])."?v=2";
@@ -119,6 +145,12 @@ function filter_oembed_youtubecallback($link) {
     return filter_oembed_vidembed($jsonret);
 }
 
+/**
+ * Looks for links pointing to Vimeo content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_vimeocallback($link) {
     global $CFG;
     $url = "http://vimeo.com/api/oembed.json?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=270';
@@ -126,6 +158,12 @@ function filter_oembed_vimeocallback($link) {
     return filter_oembed_vidembed($jsonret);
 }
 
+/**
+ * Looks for links pointing to TED content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_tedcallback($link) {
     global $CFG;
     $url = "http://www.ted.com/services/v1/oembed.json?url=".trim($link[1]).trim($link[3]).'/talks/'.trim($link[4]).'&maxwidth=480&maxheight=270';
@@ -133,6 +171,12 @@ function filter_oembed_tedcallback($link) {
     return filter_oembed_vidembed($jsonret);
 }
 
+/**
+ * Looks for links pointing to SlideShare content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_slidesharecallback($link) {
     global $CFG;
     $url = "http://www.slideshare.net/api/oembed/2?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270";
@@ -140,6 +184,12 @@ function filter_oembed_slidesharecallback($link) {
     return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
 }
 
+/**
+ * Looks for links pointing to Microsoft Office Mix content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_officemixcallback($link) {
     global $CFG;
     $url = "https://mix.office.com/oembed/?url=".trim($link[1]).trim($link[2]).trim($link[3]).'/'.trim($link[4]);
@@ -157,6 +207,12 @@ function filter_oembed_officemixcallback($link) {
     return filter_oembed_vidembed($json);
 }
 
+/**
+ * Looks for links pointing to PollEverywhere content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_pollevcallback($link) {
     global $CFG;
     $url = "http://www.polleverywhere.com/services/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'/'.trim($link[5])."&format=json&maxwidth=480&maxheight=270";
@@ -164,6 +220,12 @@ function filter_oembed_pollevcallback($link) {
     return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
 }
 
+/**
+ * Looks for links pointing to Issuu content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_issuucallback($link) {
     global $CFG;
     $url = "http://issuu.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json";
@@ -171,6 +233,12 @@ function filter_oembed_issuucallback($link) {
     return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
 }
 
+/**
+ * Looks for links pointing to Screenr content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_screenrcallback($link) {
     global $CFG;
     $url = "http://www.screenr.com/api/oembed.json?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=270';
@@ -178,6 +246,12 @@ function filter_oembed_screenrcallback($link) {
     return filter_oembed_vidembed($json);
 }
 
+/**
+ * Looks for links pointing to SoundCloud content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
 function filter_oembed_soundcloudcallback($link) {
     global $CFG;
     $url = "http://soundcloud.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270'";
@@ -185,6 +259,12 @@ function filter_oembed_soundcloudcallback($link) {
     return filter_oembed_vidembed($json);
 }
 
+/**
+ * Makes the OEmbed request to the service that supports the protocol.
+ *
+ * @param $www URL for the Oembed request
+ * @return mixed|null|string The HTTP response object from the OEmbed request.
+ */
 function filter_oembed_curlcall($www) {
     $crl = curl_init();
     $timeout = 15;
@@ -207,6 +287,7 @@ function filter_oembed_curlcall($www) {
                 if ($ret !== false) {
                     break;
                 }
+
                 usleep(500000);
             }
 
@@ -225,6 +306,15 @@ function filter_oembed_curlcall($www) {
     return $result;
 }
 
+/**
+ * Return the HTML content to be embedded given the response from the OEmbed request.
+ * This method returns the thumbnail image if we lazy loading is enabled. Ogtherwise it returns the
+ * embeddable HTML returned from the OEmbed request. An error message is returned if there was an error during
+ * the request.
+ *
+ * @param $json Response object returned from the OEmbed request.
+ * @return string The HTML content to be embedded in the page.
+ */
 function filter_oembed_vidembed($json) {
 
     if ($json === null) {
@@ -253,5 +343,6 @@ function filter_oembed_vidembed($json) {
     } else {
         $embedcode = $json['html'];
     }
+
     return $embedcode;
 }

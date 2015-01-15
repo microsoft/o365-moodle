@@ -15,9 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit test for the filter_algebra
+ * Unit tests for the filter_oembed.
  *
  * @package    filter_oembed
+ * @author Sushant Gawali (sushant@introp.net)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -30,11 +33,17 @@ class filter_oembed_testcase extends basic_testcase {
 
     protected $filter;
 
+    /**
+     * Sets up the test cases.
+     */
     protected function setUp() {
         parent::setUp();
         $this->filter = new filter_oembed(context_system::instance(), array());
     }
 
+    /**
+     * Performs unit tests for all services supported by the filter.
+     */
     public function test_filter() {
 
         $souncloudlink = '<p><a href="https://soundcloud.com/el-silenzio-fatal/enrique-iglesias-el-perdedor">soundcloud</a></p>';

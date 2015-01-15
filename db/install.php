@@ -25,6 +25,9 @@
  * Soundcloud (Troy Williams) 
  */
 
+/**
+ * Installs the OEmbed filter.
+ */
 function xmldb_filter_oembed_install() {
     global $CFG;
 
