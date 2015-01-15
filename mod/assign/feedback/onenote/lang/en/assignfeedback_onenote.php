@@ -25,7 +25,7 @@
 $string['configmaxbytes'] = 'Maximum OneNote size';
 $string['countfiles'] = '{$a} OneNotes';
 $string['default'] = 'Enabled by default';
-$string['default_help'] = 'If set, this feedback method will be enabled by default for all new assignments.';
+$string['default_help'] = 'When set, this feedback method is enabled by default for all new assignments.';
 $string['enabled'] = 'OneNote feedback';
 $string['enabled_help'] = 'If enabled, the teacher will be able to upload OneNote pages with feedback when marking the assignments. Teachers may choose to annotate the student\'s OneNote submission or upload a completely new OneNote page.';
 $string['onenote'] = 'Feedback OneNotes';
