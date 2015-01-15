@@ -23,7 +23,7 @@
  */
 
 /**
- * Create a default instance of the wikimedia repository
+ * Create a default instance of the onenote repository
  *
  * @return bool A status indicating success or failure
  */
