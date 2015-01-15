@@ -16,8 +16,10 @@
 
 /**
  * This file contains the moodle hooks for the submission onenote plugin
- *
  * @package   assignsubmission_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 defined('MOODLE_INTERNAL') || die();
 

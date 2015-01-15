@@ -23,10 +23,11 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Provides the information to backup feedback files.
- *
  * This just adds its filearea to the annotations and records the number of files.
- *
  * @package   assignfeedback_onenote
+ * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 class backup_assignfeedback_onenote_subplugin extends backup_subplugin {
 
