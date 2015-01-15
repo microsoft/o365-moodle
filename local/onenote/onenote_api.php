@@ -62,6 +62,10 @@ class onenote_api {
         $this->msaccountapi = msaccount_api::getinstance();
     }
 
+    /**
+     * Gets the instance of onenote_api
+     * @return null|static
+     */
     public static function getinstance() {
         if (null === self::$instance) {
             self::$instance = new static();
@@ -72,6 +76,10 @@ class onenote_api {
         return self::$instance;
     }
 
+    /**
+     * Return instance of msaccount_api
+     * @return null|static
+     */
     public function get_msaccount_api() {
         return $this->msaccountapi;
     }
@@ -326,6 +334,12 @@ class onenote_api {
         }
     }
 
+    /**
+     * Sync onenote notebook sections with database
+     * @param $courses
+     * @param $notebookid
+     * @param array $sections
+     */
     private function sync_sections($courses, $notebookid, array $sections) {
         $sectionurl = self::API . "/notebooks/" . $notebookid . "/sections/";
 
@@ -349,6 +363,11 @@ class onenote_api {
         }
     }
 
+    /**
+     *  Insert or update notebook sections
+     * @param $courseid
+     * @param $sectionid
+     */
     private function upsert_user_section($courseid, $sectionid) {
         global $DB, $USER;
         $newsection = new stdClass();
@@ -371,18 +390,38 @@ class onenote_api {
         return $this->get_msaccount_api()->is_logged_in();
     }
 
+    /**
+     * Get msaccount_api login url
+     */
     public function get_login_url() {
         return $this->get_msaccount_api()->get_login_url();
     }
 
+    /**
+     * Logout from onenote
+     */
     public function log_out() {
         return $this->get_msaccount_api()->log_out();
     }
 
+    /**
+     * Render signin widget for microsoft account
+     */
     public function render_signin_widget() {
         return $this->get_msaccount_api()->render_signin_widget();
     }
 
+    /**
+     * Render onenote action button
+     * @param $buttontext
+     * @param $cmid
+     * @param bool $wantfeedbackpage
+     * @param bool $isteacher
+     * @param null $submissionuserid
+     * @param null $submissionid
+     * @param null $gradeid
+     * @return string
+     */
     public function render_action_button($buttontext, $cmid, $wantfeedbackpage = false, $isteacher = false,
         $submissionuserid = null, $submissionid = null, $gradeid = null) {
 
@@ -654,6 +693,13 @@ class onenote_api {
         return null;
     }
 
+    /**
+     * Return the contents of file
+     * @param $path
+     * @param $filename
+     * @param $contextid
+     * @return array
+     */
     private function get_file_contents($path, $filename, $contextid) {
         // Get file contents.
         $fs = get_file_storage();
@@ -684,6 +730,14 @@ class onenote_api {
         return $contents;
     }
 
+    /**
+     * Create postdata for onenote page from html.
+     * @param $title
+     * @param $bodycontent
+     * @param $contextid
+     * @param $boundary
+     * @return string
+     */
     private function create_postdata($title, $bodycontent, $contextid, $boundary) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
@@ -751,6 +805,13 @@ class onenote_api {
         return $postdata;
     }
 
+    /**
+     * Create postdata for onenote page from folder.
+     * @param $title
+     * @param $folder
+     * @param $boundary
+     * @return string
+     */
     private function create_postdata_from_folder($title, $folder, $boundary) {
         $dom = new DOMDocument();
 
@@ -819,6 +880,13 @@ class onenote_api {
         return $postdata;
     }
 
+    /**
+     * Create onenote page from html postdata.
+     * @param $sectionid
+     * @param $postdata
+     * @param $boundary
+     * @return mixed|null|string
+     */
     private function create_page_from_postdata($sectionid, $postdata, $boundary) {
         $token = $this->get_msaccount_api()->get_accesstoken()->token;
         $url = self::API . '/sections/' . $sectionid . '/pages';
@@ -929,6 +997,10 @@ class onenote_api {
         return $repository->id;
     }
 
+    /**
+     * Create temporary folder and return its path.
+     * @return null|string
+     */
     public function create_temp_folder() {
         $tempfolder = join(DIRECTORY_SEPARATOR, array(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
         if (file_exists($tempfolder)) {
@@ -943,8 +1015,12 @@ class onenote_api {
         return $tempfolder;
     }
 
+
     /**
      * Check if given user is a teacher in the given course.
+     * @param $cmid
+     * @param $userid
+     * @return bool
      */
     public function is_teacher($cmid, $userid) {
 
@@ -955,6 +1031,9 @@ class onenote_api {
 
     /**
      * Check if given user is a student in the given course.
+     * @param $cmid
+     * @param $userid
+     * @return bool
      */
     public function is_student($cmid, $userid) {
 

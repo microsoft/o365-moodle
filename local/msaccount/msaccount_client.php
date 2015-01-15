@@ -70,6 +70,11 @@ class msaccount_client extends oauth2_client {
         return 'https://login.live.com/oauth20_token.srf';
     }
 
+    /**
+     * Check if user is logged in onenote.
+     * @return bool
+     * @throws moodle_exception
+     */
     public function is_logged_in() {
         $accesstoken = $this->get_accesstoken();
 
@@ -96,6 +101,12 @@ class msaccount_client extends oauth2_client {
         return false;
     }
 
+    /**
+     * Upgrade the oauth token.
+     * @param $code
+     * @return bool
+     * @throws moodle_exception
+     */
     public function upgrade_token($code) {
         $callbackurl = self::callback_url();
         $params = array('client_id' => $this->get_clientid(),
@@ -133,6 +144,10 @@ class msaccount_client extends oauth2_client {
         return true;
     }
 
+    /**
+     * Refresh the access token.
+     * @return bool
+     */
     public function refresh_token() {
         global $DB, $USER;
 
@@ -188,6 +203,10 @@ class msaccount_client extends oauth2_client {
         return true;
     }
 
+    /**
+     * Save refresh token.
+     * @param $refreshtoken
+     */
     public function store_refresh_token($refreshtoken) {
         global $DB, $USER;
 
@@ -216,6 +235,14 @@ class msaccount_client extends oauth2_client {
         return $this->tokenasparam;
     }
 
+    /**
+     * Make http get call.
+     * @param $url
+     * @param array $params
+     * @param string $token
+     * @param string $secret
+     * @return mixed
+     */
     public function myget($url, $params=array(), $token='', $secret='') {
         $this->tokenasparam = false;
         $this->header = array();
@@ -240,6 +267,14 @@ class msaccount_client extends oauth2_client {
         return $response;
     }
 
+    /**
+     * Make http post call.
+     * @param $url
+     * @param array $params
+     * @param string $token
+     * @param string $secret
+     * @return mixed
+     */
     public function mypost($url, $params=array(), $token='', $secret='') {
         $this->tokenasparam = false;
         $this->setHeader('Content-Type: application/json');
@@ -277,10 +312,17 @@ class msaccount_api {
     private static $instance = null;
     private $msaccountclient = null;
 
+    /**
+     * Constructor for msaccount class.
+     */
     protected function __construct() {
         $this->msaccountclient = new msaccount_client();
     }
 
+    /**
+     * Get msaccount_api instance.
+     * @return null|static
+     */
     public static function getinstance() {
         if (null === self::$instance) {
             self::$instance = new static();
@@ -291,37 +333,83 @@ class msaccount_api {
         return self::$instance;
     }
 
+    /**
+     * Get msaccount client.
+     * @return msaccount_client|null
+     */
     public function get_msaccount_client() {
         return $this->msaccountclient;
     }
+
+    /**
+     * Check is user is logged in onenote.
+     * @return bool
+     */
     public function is_logged_in() {
         return $this->get_msaccount_client()->is_logged_in();
     }
 
+    /**
+     * Get msaccount login url.
+     * @return mixed
+     */
     public function get_login_url() {
         return $this->get_msaccount_client()->get_login_url();
     }
 
+    /**
+     * Logout from msaccount
+     * @return mixed
+     */
     public function log_out() {
         return $this->get_msaccount_client()->log_out();
     }
 
+    /**
+     * Make http get call.
+     * @param $url
+     * @param array $params
+     * @param string $token
+     * @param string $secret
+     * @return mixed
+     */
     public function myget($url, $params=array(), $token='', $secret='') {
         return $this->get_msaccount_client()->myget($url, $params, $token, $secret);
     }
 
+    /**
+     * Make http post call.
+     * @param $url
+     * @param array $params
+     * @param string $token
+     * @param string $secret
+     * @return mixed
+     */
     public function mypost($url, $params=array(), $token='', $secret='') {
         return $this->get_msaccount_client()->mypost($url, $params, $token, $secret);
     }
 
+    /**
+     * Get access token.
+     * @return mixed
+     */
     public function get_accesstoken() {
         return $this->get_msaccount_client()->get_accesstoken();
     }
 
+    /**
+     * Sets the header.
+     * @param $header
+     * @return mixed
+     */
     public function setHeader($header) {
         return $this->get_msaccount_client()->setHeader($header);
     }
 
+    /**
+     * Return sign in widget html.
+     * @return string
+     */
     public function render_signin_widget() {
         $url = $this->get_login_url();
 
@@ -331,10 +419,18 @@ class msaccount_api {
     }
 
     // These are useful primarily for testing purposes.
+    /**
+     * Store refresh token.
+     * @param $refreshtoken
+     */
     public function store_refresh_token($refreshtoken) {
         $this->get_msaccount_client()->store_refresh_token($refreshtoken);
     }
 
+    /**
+     * Get refresh token
+     * @return refresh_token
+     */
     public function refresh_token() {
         return $this->get_msaccount_client()->refresh_token();
     }
