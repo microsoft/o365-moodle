@@ -547,10 +547,24 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if (clean_param($form->authendpoint, PARAM_URL) !== $form->authendpoint) {
                 $err['authendpoint'] = get_string('cfg_err_invalidauthendpoint', 'auth_oidc');
             }
+            // Strip api-version=1.0 from AAD URLs until issues with OIDC are sorted out.
+            if (strpos($form->authendpoint, 'https://login.windows.net/') === 0) {
+                $needle = 'api-version=1.0';
+                if (substr($form->authendpoint, strlen($needle) * -1) === $needle) {
+                    $form->authendpoint = substr($form->authendpoint, 0, strlen($form->authendpoint) - strlen($needle));
+                }
+            }
         }
         if (!empty($form->tokenendpoint)) {
             if (clean_param($form->tokenendpoint, PARAM_URL) !== $form->tokenendpoint) {
                 $err['tokenendpoint'] = get_string('cfg_err_invalidtokenendpoint', 'auth_oidc');
+            }
+            // Strip api-version=1.0 from AAD URLs until issues with OIDC are sorted out.
+            if (strpos($form->tokenendpoint, 'https://login.windows.net/') === 0) {
+                $needle = 'api-version=1.0';
+                if (substr($form->tokenendpoint, strlen($needle) * -1) === $needle) {
+                    $form->tokenendpoint = substr($form->tokenendpoint, 0, strlen($form->tokenendpoint) - strlen($needle));
+                }
             }
         }
     }
