@@ -112,6 +112,10 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->onenoteapi = onenote_api::getinstance();
     }
 
+    /**
+     * Set current user
+     * @param $index
+     */
     public function set_user($index) {
         if ($index == 0) {
             $this->setUser($this->user->id);
@@ -123,6 +127,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertEquals(true, $this->onenoteapi->get_msaccount_api()->is_logged_in());
     }
 
+    /**
+     * Test for checking create_temp_folder
+     */
     public function test_createtempfolder() {
         $this->set_test_config();
         $this->set_user(0);
@@ -130,6 +137,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertNotNull($this->onenoteapi->create_temp_folder(), 'Unable to create temp folder');
     }
 
+    /**
+     * Test for getitemname api
+     */
     public function test_getitemaname() {
         $this->set_test_config();
         $this->set_user(0);
@@ -151,6 +161,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         }
     }
 
+    /**
+     * Test for onenote action button
+     */
     public function test_renderactionbutton() {
         $this->set_test_config();
         $this->set_user(0);
@@ -169,6 +182,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertEquals($expected, $button, 'Invalid action button');
     }
 
+    /**
+     * Test for checking if the user is teacher
+     */
     public function test_isteacher() {
         $this->set_test_config();
         $this->set_user(0);
@@ -179,6 +195,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertTrue($this->onenoteapi->is_teacher($this->cm->id, $this->user->id), "user is not teacher");
     }
 
+    /**
+     * Test for getitemlist api
+     */
     public function test_getitemlist() {
         $this->set_test_config();
         $this->set_user(0);
@@ -210,6 +229,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertNotEmpty($itemlist, "No value");
     }
 
+    /**
+     * Test for checking if assignment submission size is greater than than assignment limit.
+     */
     public function test_sizelimits() {
         $this->set_test_config();
         $this->set_user(0);
@@ -255,6 +277,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
 
     }
 
+    /**
+     * Test for checking html processing.
+     */
     public function test_downloadpagehtml() {
         global $DB;
         $this->set_test_config();
@@ -305,6 +330,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertContains($expectedhtml, $h, 'Html does not match');
     }
 
+    /**
+     * Test for getpage method.
+     */
     public function test_getpage() {
         $this->set_test_config();
         $this->set_user(0);
@@ -358,6 +386,9 @@ class microsoft_onenote_testcase extends advanced_testcase {
         }
     }
 
+    /**
+     * Test for download page method.
+     */
     public function test_downloadpage() {
         $this->set_test_config();
         $this->set_user(0);
@@ -385,6 +416,16 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $this->assertNotEmpty($saveassign, "File has not created");
     }
 
+    /**
+     * Method for creating submission page.
+     * @param $cm
+     * @param bool $wantfeedbackpage
+     * @param bool $isteacher
+     * @param null $submissionuserid
+     * @param null $submissionid
+     * @param null $gradeid
+     * @return mixed
+     */
     public function create_submission_feedback($cm, $wantfeedbackpage = false, $isteacher = false, $submissionuserid = null,
                                                $submissionid = null, $gradeid = null) {
         $submissionfeedback = $this->onenoteapi->get_page($cm->id, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid,
