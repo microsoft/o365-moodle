@@ -32,11 +32,11 @@ if (!isset($config->clientid)) {
 if (!isset($config->clientsecret)) {
     $config->clientsecret = '';
 }
-if (!isset($config->authendpoint)) {
-    $config->authendpoint = 'localhost';
+if (empty($config->authendpoint)) {
+    $config->authendpoint = 'https://login.windows.net/common/oauth2/authorize';
 }
-if (!isset($config->tokenendpoint)) {
-    $config->tokenendpoint = 'localhost';
+if (empty($config->tokenendpoint)) {
+    $config->tokenendpoint = 'https://login.windows.net/common/oauth2/token';
 }
 ?>
 <table cellspacing="0" cellpadding="5" border="0">
