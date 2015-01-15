@@ -27,8 +27,17 @@ global $CFG;
 
 /**
  * Tests oidcclient.
+ *
+ * @group auth_oidc
  */
 class auth_oidc_oidcclient_testcase extends \advanced_testcase {
+    /**
+     * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
+     */
+    protected function setUp() {
+        parent::setUp();
+        $this->resetAfterTest(true);
+    }
 
     /**
      * Test getting and setting credentials.

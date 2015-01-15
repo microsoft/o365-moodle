@@ -270,8 +270,11 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
         $apiclient->create_course_site($course->id);
 
-        print_r($course);
-        print_r($DB->get_records('local_o365_coursespsite'));
-        print_r($DB->get_records('local_o365_spgroupdata'));
+        $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
+        $this->assertNotEmpty($coursespsite);
+        $this->assertEquals('/moodle/'.$course->shortname, $coursespsite->siteurl);
+
+        $spgroupdata = $DB->get_records('local_o365_spgroupdata', ['coursespsiteid' => $coursespsite->id]);
+        $this->assertNotEmpty($spgroupdata);
     }
 }

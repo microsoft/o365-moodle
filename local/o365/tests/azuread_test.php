@@ -258,6 +258,19 @@ class local_o365_azuread_testcase extends \advanced_testcase {
                 'email' => 'testuser'.$i.'@example.onmicrosoft.com',
             ];
             $DB->insert_record('user', (object)$muser);
+
+            $token = [
+                'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,
+                'authcode' => '000',
+                'username' => '00000000-0000-0000-0000-00000000000'.$i,
+                'scope' => 'test',
+                'resource' => \local_o365\rest\azuread::get_resource(),
+                'token' => '000',
+                'expiry' => '9999999999',
+                'refreshtoken' => 'fsdfsdf'.$i,
+                'idtoken' => 'sdfsdfsdf'.$i,
+            ];
+            $DB->insert_record('auth_oidc_token', (object)$token);
         }
 
         $response = [
@@ -272,9 +285,6 @@ class local_o365_azuread_testcase extends \advanced_testcase {
 
         $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
         $apiclient->sync_users();
-
-        $deleteduser = ['auth' => 'oidc', 'username' => '00000000-0000-0000-0000-000000000002'];
-        $this->assertFalse($DB->record_exists('user', $deleteduser));
 
         $existinguser = ['auth' => 'oidc', 'username' => '00000000-0000-0000-0000-000000000001'];
         $this->assertTrue($DB->record_exists('user', $existinguser));

@@ -27,8 +27,17 @@ global $CFG;
 
 /**
  * Tests jwt
+ *
+ * @group auth_oidc
  */
-class auth_oidc_jwt_testcase extends \basic_testcase {
+class auth_oidc_jwt_testcase extends \advanced_testcase {
+    /**
+     * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
+     */
+    protected function setUp() {
+        parent::setUp();
+        $this->resetAfterTest(true);
+    }
 
     /**
      * Dataprovider for test_decode.
