@@ -21,7 +21,7 @@
  * @copyright (C) 2014 onwards Remote-Learner.net Inc (http://www.remote-learner.net)
  */
 
-$string['configplugin'] = 'Configure Microsoft Office 365 Repository';
+$string['configplugin'] = 'Configure OneDrive for Business Repository';
 $string['courses'] = 'Courses';
 
 $string['erroraccessdenied'] = 'Access denied';
@@ -33,7 +33,7 @@ $string['errorwhiledownload'] = 'An error occurred while downloading the file';
 
 $string['file'] = 'File';
 $string['myfiles'] = 'My Files';
-$string['office365:view'] = 'View office365 repository';
-$string['pluginname'] = 'Office 365 OneDrive';
-$string['pluginname_help'] = 'A Microsoft Office 365 OneDrive Repository';
+$string['office365:view'] = 'View OneDrive for Business repository';
+$string['pluginname'] = 'OneDrive for Business';
+$string['pluginname_help'] = 'A OneDrive for Business Repository';
 $string['upload'] = 'Upload New File';
