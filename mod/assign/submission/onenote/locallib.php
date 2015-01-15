@@ -96,7 +96,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Save the settings for onenote submission plugin
+     * Save the settings for OneNote submission plugin
      *
      * @param stdClass $data
      * @return bool
@@ -165,7 +165,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Count the number of files
+     * Count the number of submission OneNote files
      *
      * @param int $submissionid
      * @param string $area
@@ -181,7 +181,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Save the files
+     * Save the submission OneNote files
      *
      * @param stdClass $submission
      * @param stdClass $data
@@ -353,7 +353,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Display the list of files  in the submission status table
+     * Display the list of submission OneNote files in the submission status table
      *
      * @param stdClass $submission
      * @param bool $showviewlink Set this to true if the list of files is long
@@ -432,7 +432,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Return true if there are no submission files
+     * Return true if there are no submission OneNote files
      * @param stdClass $submission
      */
     public function is_empty(stdClass $submission) {
@@ -440,7 +440,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Get file areas returns a list of areas this plugin stores files
+     * Get file areas returns a list of areas this plugin stores files in.
      * @return array - An array of fileareas (keys) and descriptions (values)
      */
     public function get_file_areas() {

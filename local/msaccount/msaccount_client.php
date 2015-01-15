@@ -62,7 +62,7 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Returns the token url for OAuth 12.0 request.
+     * Returns the token url for OAuth 2.0 request.
      *
      * @return string the auth url
      */
@@ -71,8 +71,9 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Check if user is logged in onenote.
-     * @return bool
+     * Check if user is logged in to Microsoft Account. Also called during OAuth authentication handshake to upgrade
+     * the Oauth code to a token. Also handles expired tokens by getting a new token using the refresh token.
+     * @return bool True iff the user is logged in.
      * @throws moodle_exception
      */
     public function is_logged_in() {
@@ -102,9 +103,9 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Upgrade the oauth token.
-     * @param $code
-     * @return bool
+     * Upgrade the oauth token during Oauth handshake during authentication.
+     * @param $code OAuth code.
+     * @return bool True iff successful in upgrading.
      * @throws moodle_exception
      */
     public function upgrade_token($code) {
@@ -145,8 +146,9 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Refresh the access token.
-     * @return bool
+     * Refresh the access token. Uses the refrehs token that was saved earlier. Also obtains and saves a new refresh
+     * token for future use.
+     * @return bool True iff successful.
      */
     public function refresh_token() {
         global $DB, $USER;
@@ -204,8 +206,8 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Save refresh token.
-     * @param $refreshtoken
+     * Save refresh token into the database for future use.
+     * @param $refreshtoken Refrehs token to be saved.
      */
     public function store_refresh_token($refreshtoken) {
         global $DB, $USER;
@@ -225,23 +227,25 @@ class msaccount_client extends oauth2_client {
     /**
      * Should HTTP GET be used instead of POST?
      *
-     * msaccount REST API needs auth token in the header for get as well as post requests.
-     * Oauth2_client sets the token in the header only if it thinks that it is making making a post request.
-     * So we control that behavior by overriding this method.
+     * The Microsoft Account REST API requires an oauth token in the header for GET as well as POST requests.
+     * The oauth2_client object we use to make these requests sets the token in the header only if it thinks that
+     * it is making making a POST request. So we control that behavior by overriding this method and using the
+     * "tokenasparam" field.
      *
-     * @return bool true if GET should be used
+     * @return bool true if GET should be used, otherwise use POST.
      */
     protected function use_http_get() {
         return $this->tokenasparam;
     }
 
     /**
-     * Make http get call.
-     * @param $url
-     * @param array $params
-     * @param string $token
-     * @param string $secret
-     * @return mixed
+     * Make HTTP GET call. Use this method instesad of the get() method because it handles the "token as param" issue
+     * as well as retries in case of transient network errors.
+     * @param $url Url to GET.
+     * @param array $params Any parameters to be passed to the GET request.
+     * @param string $token The Oauth token to be used to authenticate the request.
+     * @param string $secret The secret to be used to authenticate the request.
+     * @return mixed The HTTP response.
      */
     public function myget($url, $params=array(), $token='', $secret='') {
         $this->tokenasparam = false;
@@ -259,6 +263,7 @@ class msaccount_client extends oauth2_client {
                     || strpos($response, 'Timed out') === false) {
                     break;
                 }
+
                 usleep(500000);
             }
         }
@@ -268,12 +273,13 @@ class msaccount_client extends oauth2_client {
     }
 
     /**
-     * Make http post call.
-     * @param $url
-     * @param array $params
-     * @param string $token
-     * @param string $secret
-     * @return mixed
+     * Make HTTP POST call. Use this method instesad of the post() method because it handles the "token as param" issue
+     * as well as retries in case of transient network errors.
+     * @param $url Url to POST.
+     * @param array $params Any parameters to be passed to the POST request.
+     * @param string $token The Oauth token to be used to authenticate the request.
+     * @param string $secret The secret to be used to authenticate the request.
+     * @return mixed The HTTP response.
      */
     public function mypost($url, $params=array(), $token='', $secret='') {
         $this->tokenasparam = false;
@@ -291,6 +297,7 @@ class msaccount_client extends oauth2_client {
                     || strpos($response, 'Timed out') === false) {
                     break;
                 }
+
                 usleep(500000);
             }
         }
@@ -313,15 +320,16 @@ class msaccount_api {
     private $msaccountclient = null;
 
     /**
-     * Constructor for msaccount class.
+     * Constructor for msaccount class. This is a singleton class so do not use the constructor directly.
      */
     protected function __construct() {
         $this->msaccountclient = new msaccount_client();
     }
 
     /**
-     * Get msaccount_api instance.
-     * @return null|static
+     * Get the instance of the msaccount_api object. Use this method to obtain an instance of the class rather than
+     * the constructor. Also tries to ensure that the user is logged in.
+     * @return null|static The instance.
      */
     public static function getinstance() {
         if (null === self::$instance) {
@@ -334,7 +342,7 @@ class msaccount_api {
     }
 
     /**
-     * Get msaccount client.
+     * Get the underlying msaccount client.
      * @return msaccount_client|null
      */
     public function get_msaccount_client() {
@@ -342,15 +350,15 @@ class msaccount_api {
     }
 
     /**
-     * Check is user is logged in onenote.
-     * @return bool
+     * Check if user is logged in to Microsoft Account. Also handles upgrading / refreshing the token if needed.
+     * @return bool True iff the user is logged in.
      */
     public function is_logged_in() {
         return $this->get_msaccount_client()->is_logged_in();
     }
 
     /**
-     * Get msaccount login url.
+     * Get the Microsoft Account login url.
      * @return mixed
      */
     public function get_login_url() {
@@ -358,7 +366,7 @@ class msaccount_api {
     }
 
     /**
-     * Logout from msaccount
+     * Logout from Microsoft Account.
      * @return mixed
      */
     public function log_out() {
@@ -366,7 +374,7 @@ class msaccount_api {
     }
 
     /**
-     * Make http get call.
+     * A wrapper for the myget() method in the underlying msaccount_client class.
      * @param $url
      * @param array $params
      * @param string $token
@@ -378,7 +386,7 @@ class msaccount_api {
     }
 
     /**
-     * Make http post call.
+     * A wrapper for the mypost() method in the underlying msaccount_client class.
      * @param $url
      * @param array $params
      * @param string $token
@@ -390,7 +398,8 @@ class msaccount_api {
     }
 
     /**
-     * Get access token.
+     * Get the OAuth access token for the currently logged in user. This may be used in HTTP requests that require
+     * authentication.
      * @return mixed
      */
     public function get_accesstoken() {
@@ -398,7 +407,7 @@ class msaccount_api {
     }
 
     /**
-     * Sets the header.
+     * A simple wrapper for the setHeader() method in the underyling msaccount_client class.
      * @param $header
      * @return mixed
      */
@@ -407,8 +416,9 @@ class msaccount_api {
     }
 
     /**
-     * Return sign in widget html.
-     * @return string
+     * Return the HTML for the sign in widget for the Microsoft Account.
+     * Please refer to the styles.css file for styling this widget.
+     * @return string HTML containing the sign in widget.
      */
     public function render_signin_widget() {
         $url = $this->get_login_url();
@@ -420,7 +430,7 @@ class msaccount_api {
 
     // These are useful primarily for testing purposes.
     /**
-     * Store refresh token.
+     * Store a refresh token into the database so it can be used to obtain a token for subsequent HTTP requests.
      * @param $refreshtoken
      */
     public function store_refresh_token($refreshtoken) {
@@ -428,8 +438,8 @@ class msaccount_api {
     }
 
     /**
-     * Get refresh token
-     * @return refresh_token
+     * Get the saved refresh token for the currently logged in user from the database.
+     * @return string Refresh token.
      */
     public function refresh_token() {
         return $this->get_msaccount_client()->refresh_token();

@@ -43,7 +43,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Get file feedback information from the database.
+     * Get feedback OneNote file information from the database.
      *
      * @param int $gradeid
      * @return mixed
@@ -148,7 +148,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Count the number of files.
+     * Count the number of feedback OneNote files.
      *
      * @param int $gradeid
      * @param string $area
@@ -163,7 +163,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Update the number of files in the file area.
+     * Update the number of feedback OneNote files in the OneNote file area.
      *
      * @param stdClass $grade The grade record
      * @return bool - true if the value was saved
@@ -185,7 +185,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Save the feedback files.
+     * Save the feedback OneNote files.
      *
      * @param stdClass $grade
      * @param stdClass $data
@@ -254,7 +254,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Display the list of files in the feedback status table.
+     * Display the list of feedback OneNote files in the feedback status table.
      *
      * @param stdClass $grade
      * @param bool $showviewlink - Set to true to show a link to see the full list of files
@@ -296,7 +296,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Display the list of files in the feedback status table.
+     * Display the list of feedback OneNote files in the feedback status table.
      *
      * @param stdClass $grade
      * @return string
@@ -319,7 +319,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Return true if there are no feedback files.
+     * Return true if there are no feedback OneNote files.
      *
      * @param stdClass $grade
      */
@@ -328,7 +328,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
-     * Get file areas returns a list of areas this plugin stores files.
+     * Get file areas returns a list of areas this plugin stores files in.
      *
      * @return array - An array of fileareas (keys) and descriptions (values)
      */
