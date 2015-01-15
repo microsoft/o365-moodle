@@ -30,7 +30,7 @@ require_capability('moodle/site:config', \context_system::instance());
 
 if ($mode === 'setsystemuser') {
     $SESSION->auth_oidc_justevent = true;
-    redirect(new \moodle_url('/auth/oidc/index.php'));
+    redirect(new \moodle_url('/auth/oidc/index.php', ['promptlogin' => 1]));
 } else if ($mode === 'healthcheck') {
     $PAGE->set_url('/local/o365/acp.php');
     $PAGE->set_context(\context_system::instance());

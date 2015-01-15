@@ -114,9 +114,9 @@ class oidcclient {
      *
      * @return array Array of request parameters.
      */
-    protected function getauthrequestparams() {
+    protected function getauthrequestparams($promptlogin = false) {
         $nonce = 'N'.uniqid();
-        return [
+        $params = [
             'response_type' => 'code',
             'client_id' => $this->clientid,
             'scope' => 'openid profile email',
@@ -124,8 +124,11 @@ class oidcclient {
             'response_mode' => 'form_post',
             'resource' => 'https://graph.windows.net',
             'state' => $this->getnewstate($nonce),
-            // 'prompt' => 'login',
         ];
+        if ($promptlogin === true) {
+            $params['prompt'] = 'login';
+        }
+        return $params;
     }
 
     /**
@@ -147,7 +150,7 @@ class oidcclient {
     /**
      * Perform an authorization request by redirecting resource owner's user agent to auth endpoint.
      */
-    public function authrequest() {
+    public function authrequest($promptlogin = false) {
         global $DB;
         if (empty($this->clientid)) {
             throw new \moodle_exception('erroroidcclientnocreds', 'auth_oidc');
@@ -157,7 +160,7 @@ class oidcclient {
             throw new \moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
         }
 
-        $params = $this->getauthrequestparams();
+        $params = $this->getauthrequestparams($promptlogin);
         $redirecturl = new \moodle_url($this->endpoints['auth'], $params);
         redirect($redirecturl);
     }

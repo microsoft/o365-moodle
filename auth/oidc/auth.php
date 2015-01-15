@@ -118,9 +118,9 @@ class auth_plugin_oidc extends \auth_plugin_base {
     /**
      * Initiate an authorization request to the configured OP.
      */
-    public function initiateauthrequest() {
+    public function initiateauthrequest($promptlogin = false) {
         $client = $this->get_oidcclient();
-        $client->authrequest();
+        $client->authrequest($promptlogin);
     }
 
     /**
