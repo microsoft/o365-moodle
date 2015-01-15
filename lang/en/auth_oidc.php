@@ -22,24 +22,24 @@
  */
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'This method uses OpenID Connect to provide single-sign-on functionality with a configurable identity providers.';
+$string['auth_oidcdescription'] = 'The OpenID Connect plugin provides single-sign-on functionality using configurable identity providers.';
 
 $string['cfg_authendpoint_key'] = 'Auth Endpoint';
-$string['cfg_authendpoint_desc'] = 'The URI of the auth endoint to use.';
+$string['cfg_authendpoint_desc'] = 'The URI of the auth endoint from your identity provider to use.';
 $string['cfg_clientid_key'] = 'Client ID';
-$string['cfg_clientid_desc'] = 'Your registered Client ID';
+$string['cfg_clientid_desc'] = 'Your registered Client ID on the identity provider';
 $string['cfg_clientsecret_key'] = 'Client Secret';
-$string['cfg_clientsecret_desc'] = 'Your registered Client Secret';
+$string['cfg_clientsecret_desc'] = 'Your registered Client Secret on the identity provider. On some providers, it is also referred to as a key.';
 $string['cfg_err_invalidauthendpoint'] = 'Invalid Auth Endpoint';
 $string['cfg_err_invalidtokenendpoint'] = 'Invalid Token Endpoint';
 $string['cfg_err_invalidclientid'] = 'Invalid client ID';
 $string['cfg_err_invalidclientsecret'] = 'Invalid client secret';
 $string['cfg_opname_key'] = 'Provider Name';
-$string['cfg_opname_desc'] = 'The name of the identity provider. This will be used throughout the user-facing portions of this plugin to identify your provider.';
+$string['cfg_opname_desc'] = 'This is an end-user-facing label that identifies the type of credentials the user must use to login. This label is used throughout the user-facing portions of this plugin to identify your provider.';
 $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI"<br />Your OpenID Connect identity provider should ask for this when registering Moodle as a client.';
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
-$string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint to use.';
+$string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
 
 $string['errorauthdisconnectemptypassword'] = 'Password cannot be empty';
 $string['errorauthdisconnectemptyusername'] = 'Username cannot be empty';
