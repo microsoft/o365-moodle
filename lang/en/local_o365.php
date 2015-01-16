@@ -79,7 +79,7 @@ $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
 $string['settings_tenant'] = 'Azure Active Directory Tenant';
-$string['settings_tenant_details'] = 'The AzureAD tenant';
+$string['settings_tenant_details'] = 'Used to Identify your organization within Azure AD. For example, if the URL of your Office 365 subscription is contoso.onmicrosoft.com, type contoso.';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
