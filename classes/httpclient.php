@@ -16,9 +16,10 @@
 
 /**
  * @package local_o365
+ * @author Dongsheng Cai <dongsheng@moodle.com>
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright Dongsheng Cai <dongsheng@moodle.com>; modified 2015 by Microsoft Open Technologies, Inc.
  */
 
 namespace local_o365;
