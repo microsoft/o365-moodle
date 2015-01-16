@@ -78,8 +78,8 @@ $string['settings_systemapiuser_change'] = 'Change User';
 $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
-$string['settings_tenant'] = 'Azure Active Directory Tenant';
-$string['settings_tenant_details'] = 'Used to Identify your organization within Azure AD. For example, if the URL of your Office 365 subscription is contoso.onmicrosoft.com, type contoso.';
+$string['settings_tenant'] = 'SharePoint Subdomain';
+$string['settings_tenant_details'] = 'The SharePoint subdomain to use for course SharePoint sites. This, in combination with the parent site setting below, determine where to create course SharePoint sites. For example, if you use SharePoint at http://contoso.sharepoint.com, enter contoso.';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
