@@ -15,23 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Flickr repository data generator
+ * Local OneNote plugin data generator
  *
- * @package    repository_flickr
+ * @package    local_onenote
  * @category   test
- * @copyright  2013 Frédéric Massart
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  Microsoft Open Technologies, Inc.
  */
-
-/**
- * Flickr repository data generator class
- *
- * @package    repository_flickr
- * @category   test
- * @copyright  2013 Frédéric Massart
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 
 class repository_onenote_generator extends testing_repository_generator {
 
