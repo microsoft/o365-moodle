@@ -1,28 +1,11 @@
 # Moodle Plugins for Microsoft Services
 *including* **Office 365** *and other Microsoft services*
 
-## Microsoft OneNote Block
+## o365 Local Plugin
 
-This plugin provides a container for the Microsoft Account signin button and also Microsoft OneNote related action buttons.
+This plugin provides libraries and services and power other Office365 plugins. In addition to providing implementations of Office365 apis, this plugin handles a wide variety of Moodle events to fully integrate Office365 into a Moodle installation.
 
-
-Design details
---------------
-
-There are several parts that make up the Microsoft OneNote Online API Local plugin.
-
-### Configuration
-None. This plugin depends upon the Microsoft Account local plugin to be configured for accessing the appropriate Microsoft Live application.
-It is recommended that this block should be configured to appear on all pages throughout the entire site.
-
-### get_content method
-This is the standard block get_content method that returns either the Microsoft Account signin widget if the user hasn't signed in yet or the appropriate OneNote action button if so.
-
-### Plugin dependencies
-block_onenote => local_onenote => local_msaccount
-
-
-This is part of the suite of Microsoft Services plugins for Moodle.
+This is part of the suite of Office365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
 
