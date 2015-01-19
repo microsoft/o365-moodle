@@ -5,22 +5,22 @@ This repo is where work on all Moodle plugins related to Microsoft services take
 
 Currently the following plugins are developed here:
 
-- moodle-auth_oidc
-- moodle-block_onenote
-- moodle-local_msaccount
-- moodle-local_o365
-- moodle-local_onenote
-- moodle-assignfeedback_onenote
-- moodle-assignsubmission_onenote
-- moodle-repository_office365
-- moodle-repository_onenote
-- moodle-profilefield_o365
-- moodle-profilefield_oidc
+- [moodle-auth_oidc](https://github.com/MSOpenTech/moodle-auth_oidc)
+- [moodle-block_onenote](https://github.com/MSOpenTech/moodle-block_onenote)
+- [moodle-local_msaccount](https://github.com/MSOpenTech/moodle-local_msaccount)
+- [moodle-local_o365](https://github.com/MSOpenTech/moodle-local_o365)
+- [moodle-local_onenote](https://github.com/MSOpenTech/moodle-local_onenote)
+- [moodle-assignfeedback_onenote](https://github.com/MSOpenTech/moodle-assignfeedback_onenote)
+- [moodle-assignsubmission_onenote](https://github.com/MSOpenTech/moodle-assignsubmission_onenote)
+- [moodle-repository_office365](https://github.com/MSOpenTech/moodle-repository_office365)
+- [moodle-repository_onenote](https://github.com/MSOpenTech/moodle-repository_onenote)
+- [moodle-profilefield_o365](https://github.com/MSOpenTech/moodle-profilefield_o365)
+- [moodle-profilefield_oidc](https://github.com/MSOpenTech/moodle-profilefield_oidc)
 
 The following plugins are "parent" plugins which install the above plugins as a collection:
 
-- moodle-local_office365
-- moodle-local_microsoftservices
+- [moodle-local_office365](https://github.com/MSOpenTech/moodle-local_office365)
+- [moodle-local_microsoftservices](https://github.com/MSOpenTech/moodle-local_microsoftservices)
 
 # Contributing
 
