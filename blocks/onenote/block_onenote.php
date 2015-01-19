@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
-
 /**
  * Onenote Block.
  */
@@ -63,6 +61,7 @@ class block_onenote extends block_base {
      */
     public function _get_content() {
         global $USER, $COURSE, $PAGE, $CFG;
+        require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
 
         $content = new stdClass;
         $content->text = '';
