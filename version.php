@@ -20,15 +20,15 @@
  * @package   filter_oembed
  * @copyright 2012 Matthew Cannings, Sandwell College; modified 2015 by Microsoft Open Technologies, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters... 
+ * code based on the following filters...
  * Screencast (Mark Schall)
- * Soundcloud (Troy Williams) 
+ * Soundcloud (Troy Williams)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2014062400;
-$plugin->requires  = 2014041100;
+$plugin->requires  = 2014051200;
 $plugin->component = 'filter_oembed';
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = 'oembed Filter (Build: 2014051201)';
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = '1.0.0.0';
