@@ -23,6 +23,10 @@ The following plugins are "parent" plugins which install the above plugins as a 
 - [moodle-local_office365](https://github.com/MSOpenTech/moodle-local_office365)
 - [moodle-local_microsoftservices](https://github.com/MSOpenTech/moodle-local_microsoftservices)
 
+# Documentation
+
+The documentation for installing, configuring, and using these plugins is available here: http://msopentech.com/wp-content/uploads/Office-365-plugins-for-Moodle-documentation.pdf.
+
 # Contributing
 
 Before we can accept your pull request, you'll need to electronically complete Microsoft Open Tech's [Contributor License Agreement](https://cla.msopentech.com/). If you've done this for other Microsoft Open Tech projects, then you're already covered.
