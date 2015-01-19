@@ -1,0 +1,41 @@
+.lazyvideo_placeholder {
+    width: 100%;
+}
+
+a.lazyvideo{
+	display:block;
+}
+.lazyvideo_container {
+    /*margin: 0 auto;*/
+    max-width: 560px;
+    position: relative;
+}
+.lazyvideo_container .lazyvideo_playbutton {
+    left: 40%;
+    position: absolute;
+    z-index: 1000 !important;
+    top: 40%;
+	width: 20%;
+	height: 25%;
+	background-image: url([[pix:filter_oembed|darkbutton]]);
+	background-repeat: no-repeat;
+	background-size: 100% auto;
+}
+.lazyvideo_container:hover   .lazyvideo_playbutton, .lazyvideo_playbutton:hover  {
+    background-image: url([[pix:filter_oembed|purplebutton]]);
+}
+ .lazyvideo_title, .lazyvideo_footer {
+    position: absolute;
+    background-color:#000;
+	width:100%;
+	color:#DDD;
+}
+ .lazyvideo_title {
+	top:0;
+}
+ .lazyvideo_footer{
+	bottom:0;
+}
+ .lazyvideo_text {
+    padding: 5px;
+}
