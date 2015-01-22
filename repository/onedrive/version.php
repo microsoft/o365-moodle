@@ -29,4 +29,4 @@ $plugin->requires  = 2014051200;
 $plugin->component = 'repository_onedrive';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '1.0.0.0';
-$plugin->dependencies = array('local_onedrive' => 2015011601);
+$plugin->dependencies = array('local_msaccount' => 2014111702);

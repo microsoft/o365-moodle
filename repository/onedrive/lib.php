@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/local/onedrive/onedrive_api.php');
+require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
 
 /**
  * Microsoft onedrive repository plugin.
@@ -32,7 +32,8 @@ require_once($CFG->dirroot.'/local/onedrive/onedrive_api.php');
  * @package    repository_onedrive
  */
 class repository_onedrive extends repository {
-    private $onedriveapi = null;
+    const API = 'https://apis.live.net/v5.0/';
+    private $msacountapi = null;
 
     /**
      * Constructor
@@ -44,7 +45,7 @@ class repository_onedrive extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $this->onedriveapi = onedrive_api::getinstance();
+        $this->msacountapi = msaccount_api::getinstance();
     }
 
     /**
@@ -53,7 +54,7 @@ class repository_onedrive extends repository {
      * @return bool true when logged in
      */
     public function check_login() {
-        return $this->onedriveapi->is_logged_in();
+        return $this->msacountapi->is_logged_in();
     }
 
     /**
@@ -62,7 +63,7 @@ class repository_onedrive extends repository {
      * @return array of login options
      */
     public function print_login() {
-        $url = $this->onedriveapi->get_login_url();
+        $url = $this->msacountapi->get_login_url();
 
         if ($this->options['ajax']) {
             $popup = new stdClass();
@@ -89,7 +90,7 @@ class repository_onedrive extends repository {
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onedrive.com/';
 
-        $fileslist = $this->onedriveapi->get_items_list($path);
+        $fileslist = $this->get_items_list($path);
         $fileslist = array_filter($fileslist, array($this, 'filter'));
         $ret['list'] = $fileslist;
 
@@ -105,11 +106,11 @@ class repository_onedrive extends repository {
                 if (!empty($folderid)) {
 
                     // If it is file, then break the loop.
-                    if(strpos($folderid ,'file') === 0){
+                    if (strpos($folderid , 'file') === 0) {
                         break;
                     }
                     $trail .= ('/'.$folderid);
-                    $ret['path'][] = array('name' => $this->onedriveapi->get_item_name($folderid), 'path' => $trail);
+                    $ret['path'][] = array('name' => $this->get_item_name($folderid), 'path' => $trail);
                 }
             }
         }
@@ -127,7 +128,7 @@ class repository_onedrive extends repository {
      */
     public function get_file($id, $filename = '') {
         $path = $this->prepare_file($filename);
-        return $this->onedriveapi->download_page($id, $path);
+        return;
     }
 
     /**
@@ -146,7 +147,7 @@ class repository_onedrive extends repository {
      * @return page to display
      */
     public function logout() {
-        $this->onedrive_api->log_out();
+        $this->msacountapi->log_out();
         return $this->print_login();
     }
 
@@ -175,5 +176,85 @@ class repository_onedrive extends repository {
      */
     public function supported_returntypes() {
         return FILE_INTERNAL;
+    }
+
+    /**
+     * Returns a list of OneDrive item(s) at the given path (folders or files).
+     *
+     * @param string $path the path containing folder id / file id.
+     * @return mixed Array of items formatted for fileapi
+     */
+    private function get_items_list($path) {
+
+        global $OUTPUT;
+
+        $parts = explode('/', $path);
+        $contentid = end($parts);
+
+        if (empty($contentid)) {
+            $url = self::API."/me/skydrive/files";
+        } else if (strpos($contentid, 'file') === 0) {
+            // Check if it is file id.
+            $url = self::API.$contentid;
+        } else {
+            // Check if it is folder id.
+            $url = self::API.$contentid."/files";
+        }
+
+        $response = json_decode($this->msacountapi->myget($url));
+
+        $items = array();
+
+        if (isset($response->error)) {
+            return $items;
+        }
+
+        if ($response && isset($response->data)) {
+            foreach ($response->data as $item) {
+                $items[] = array(
+                    'title' => $item->name,
+                    'path' => $path.'/'.urlencode($item->id),
+                    'date' => strtotime($item->updated_time),
+                    'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item->name, 90))->out(false),
+                    'source' => $item->id,
+                    'url' => $item->link,
+                    'author' => $item->from->name,
+                    'id' => $item->id,
+                    'children' => array()
+                );
+
+            }
+        } else if (!empty($response)) {
+            $items[] = array(
+                'title' => $response->name,
+                'path' => $path,
+                'date' => strtotime($response->updated_time),
+                'thumbnail' => $OUTPUT->pix_url(file_extension_icon($response->name, 90))->out(false),
+                'source' => $response->id,
+                'url' => $response->link,
+                'author' => $response->from->name,
+                'id' => $response->id,
+                'children' => array()
+            );
+        }
+        return $items;
+    }
+
+    /**
+     * Returns the name of the OneDrive item (folder or file) given its id.
+     *
+     * @param string $itemid the id of the OneDrive folder or file
+     * @return mixed item name or false in case of error
+     */
+    private function get_item_name($itemid) {
+
+        if (empty($itemid)) {
+            throw new coding_exception('Empty item_id passed to get_item_name');
+        }
+
+        $url = self::API.$itemid;
+        $response = json_decode($this->msacountapi->myget($url));
+
+        return $response->name.".zip";
     }
 }
