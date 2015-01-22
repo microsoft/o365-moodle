@@ -220,10 +220,18 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Get information about the set site.
      *
+     * @param string $subsiteurl The URL of the subsite to check, or null for the current site.
      * @return array|false Information about the site, or false if failure.
      */
-    public function get_site() {
+    public function get_site($subsiteurl = null) {
+        if (!empty($subsiteurl)) {
+            $cursite = $this->parentsite;
+            $this->set_site($subsiteurl);
+        }
         $result = $this->apicall('get', '/web');
+        if (!empty($subsiteurl)) {
+            $this->parentsite = $cursite;
+        }
         if (!empty($result)) {
             $result = json_decode($result, true);
             if (!empty($result) && is_array($result)) {
@@ -236,14 +244,11 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Determine whether a subsite exists.
      *
-     * @param string $subsiteurl The URL of the subsite to check.
+     * @param string $subsiteurl The URL of the subsite to check, or null for the current site.
      * @return bool Whether the site exists or not.
      */
-    public function site_exists($subsiteurl) {
-        $cursite = $this->parentsite;
-        $this->set_site($subsiteurl);
-        $siteinfo = $this->get_site();
-        $this->parentsite = $cursite;
+    public function site_exists($subsiteurl = null) {
+        $siteinfo = $this->get_site($subsiteurl);
         return (!empty($siteinfo)) ? true : false;
     }
 
@@ -456,6 +461,7 @@ class sharepoint extends \local_o365\rest\o365api {
         // Check if site exists.
         if ($this->site_exists($fullsiteurl) !== true) {
             // Create site.
+            $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
             $sitedata = $this->create_site($course->fullname, $siteurl, $course->summary);
             if (!empty($sitedata) && isset($sitedata['Id']) && isset($sitedata['ServerRelativeUrl'])) {
                 // Save site data.
@@ -475,7 +481,20 @@ class sharepoint extends \local_o365\rest\o365api {
             if (!empty($siterec) && $siterec->siteurl == $fullsiteurl) {
                 return $siterec;
             } else {
-                throw new \moodle_exception('erroro365apisiteexistsnolocal', 'local_o365');
+                $sitedata = $this->get_site($fullsiteurl);
+                if (!empty($sitedata) && isset($sitedata['Id']) && isset($sitedata['ServerRelativeUrl'])) {
+                    // Save site data.
+                    $siterec = new \stdClass;
+                    $siterec->courseid = $course->id;
+                    $siterec->siteid = $sitedata['Id'];
+                    $siterec->siteurl = $sitedata['ServerRelativeUrl'];
+                    $siterec->timecreated = $now;
+                    $siterec->timemodified = $now;
+                    $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
+                    return $siterec;
+                } else {
+                    throw new \moodle_exception('erroro365apisiteexistsnolocal', 'local_o365');
+                }
             }
         }
     }
@@ -541,17 +560,26 @@ class sharepoint extends \local_o365\rest\o365api {
         // Create teacher group and save in db.
         $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
         if (empty($grouprec)) {
-            $groupname = get_string('spsite_group_contributors_name', 'local_o365', $course->shortname);
-            $description = get_string('spsite_group_contributors_desc', 'local_o365', $course->shortname);
-            $groupdata = $this->create_group($groupname, $description);
-            $grouprec = new \stdClass;
-            $grouprec->coursespsiteid = $siterec->id;
-            $grouprec->groupid = $groupdata['Id'];
-            $grouprec->grouptitle = $groupdata['Title'];
-            $grouprec->permtype = 'contribute';
-            $grouprec->timecreated = $now;
-            $grouprec->timemodified = $now;
-            $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+            $groupname = $siterec->siteurl.' contribute';
+            $description = get_string('spsite_group_contributors_desc', 'local_o365', $siterec->siteurl);
+            $groupname = trim(base64_encode($groupname), '=');
+            $groupdata = $this->get_group($groupname);
+            if (empty($groupdata) || !isset($groupdata['Id']) || !isset($groupdata['Title'])) {
+                // Group does not exist, create it.
+                $groupdata = $this->create_group($groupname, $description);
+            }
+            if (!empty($groupdata) && isset($groupdata['Id']) && isset($groupdata['Title'])) {
+                $grouprec = new \stdClass;
+                $grouprec->coursespsiteid = $siterec->id;
+                $grouprec->groupid = $groupdata['Id'];
+                $grouprec->grouptitle = $groupdata['Title'];
+                $grouprec->permtype = 'contribute';
+                $grouprec->timecreated = $now;
+                $grouprec->timemodified = $now;
+                $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+            } else {
+                throw new \moodle_exception('errorcouldnotcreatespgroup', 'local_o365');
+            }
         }
 
         // Assign group permissions.
