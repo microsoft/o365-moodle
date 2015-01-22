@@ -21,4 +21,4 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-$string['pluginname'] = 'Microsoft Serices';
+$string['pluginname'] = 'Microsoft Services';
