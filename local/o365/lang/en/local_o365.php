@@ -48,6 +48,7 @@ $string['erroro365apiinvalidmethod'] = 'Invalid httpmethod passed to apicall';
 $string['erroro365apinoparentinfo'] = 'Could not find parent folder information';
 $string['erroro365apinotimplemented'] = 'This should be overridden.';
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
+$string['errorcouldnotcreatespgroup'] = 'Could not create the sharepoint group.';
 
 $string['eventcalendarsubscribed'] = 'User subscribed to a calendar';
 $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
