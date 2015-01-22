@@ -239,6 +239,16 @@ class observers {
         global $DB;
         $outlookresource = \local_o365\rest\calendar::get_resource();
         $oidcconfig = get_config('auth_oidc');
+        if (empty($oidcconfig)) {
+            return false;
+        }
+        if (empty($oidcconfig->clientid) || empty($oidcconfig->clientsecret)) {
+            return false;
+        }
+        if (empty($oidcconfig->tokenendpoint) || empty($oidcconfig->authendpoint)) {
+            return false;
+        }
+
         $httpclient = new \local_o365\httpclient();
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
                 $oidcconfig->tokenendpoint);
