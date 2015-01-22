@@ -73,6 +73,12 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @return array Array of idps.
      */
     public function loginpage_idp_list($wantsurl) {
+        if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
+            return [];
+        }
+        if (empty($this->config->authendpoint) || empty($this->config->tokenendpoint)) {
+            return [];
+        }
         return [
             [
                 'url' => new \moodle_url('/auth/oidc/'),
