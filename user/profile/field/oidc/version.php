@@ -23,11 +23,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015011602;
-$plugin->requires = 2014051200;
+$plugin->version = 2015012700;
+$plugin->requires = 2014111000;
 $plugin->component = 'profilefield_oidc';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '27.0.0.1';
+$plugin->release = '28.0.0.0';
 $plugin->dependencies = [
     'auth_oidc' => 2015011600
 ];
