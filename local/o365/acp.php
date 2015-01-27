@@ -106,7 +106,7 @@ if ($mode === 'setsystemuser') {
             $sharepoint->create_course_site($course);
             $successes[] = $course->id;
         } catch (\Exception $e) {
-            $failures[] = $course->id;
+            $failures[$course->id] = $e->getMessage();
         }
     }
     set_config('sharepoint_initialized', '1', 'local_o365');
