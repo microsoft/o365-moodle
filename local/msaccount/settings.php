@@ -25,13 +25,13 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
-    $settings = new admin_settingpage('local_msaccount', 'Microsoft Account');
+    $settings = new admin_settingpage('local_msaccount', get_string('pluginname', 'local_msaccount'));
     $ADMIN->add('localplugins', $settings);
 
+    $settings->add(new \local_msaccount\form\adminsetting\redirecturl('local_msaccount/redirect',
+                   get_string('redirect', 'local_msaccount'), '', '0'));
     $settings->add(new admin_setting_configtext('local_msaccount/clientid', get_string('clientid', 'local_msaccount'),
                    get_string('clientiddetails', 'local_msaccount'), '', PARAM_ALPHANUMEXT));
     $settings->add(new admin_setting_configtext('local_msaccount/clientsecret', get_string('clientsecret', 'local_msaccount'),
                    get_string('clientsecretdetails', 'local_msaccount'), '', PARAM_ALPHANUMEXT));
-    $settings->add(new admin_setting_configtext('local_msaccount/redirect', get_string('redirect', 'local_msaccount'),
-                   get_string('redirectdetails', 'local_msaccount'), '', PARAM_URL));
 }
