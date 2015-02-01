@@ -139,8 +139,7 @@ class filter_oembed extends moodle_text_filter {
  */
 function filter_oembed_youtubecallback($link) {
     global $CFG;
-//    $url = "https://gdata.youtube.com/feeds/api/videos/".trim($link[4])."?v=2";
-    $url = "http://www.youtube.com/oembed?url=".trim($link[1]).trim($link[3]).'/watch?v='.trim($link[4])."&format=json";
+    $url = "http://www.youtube.com/oembed?url=".trim($link[8])."&format=json";
     $jsonret = filter_oembed_curlcall($url);
     return filter_oembed_vidembed($jsonret);
 }
