@@ -141,7 +141,7 @@ function filter_oembed_youtubecallback($link) {
     global $CFG;
     $url = "http://www.youtube.com/oembed?url=".trim($link[1])."&format=json";
     $jsonret = filter_oembed_curlcall($url);
-    return filter_oembed_vidembed($jsonret);
+    return filter_oembed_vidembed($jsonret, trim($link[6]));
 }
 
 /**
@@ -314,12 +314,18 @@ function filter_oembed_curlcall($www) {
  * @param $json Response object returned from the OEmbed request.
  * @return string The HTML content to be embedded in the page.
  */
-function filter_oembed_vidembed($json) {
+function filter_oembed_vidembed($json, $params = '') {
 
     if ($json === null) {
         return '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>';
     }
 
+    $embed = htmlspecialchars($json['html']);
+    
+    if ($params != ''){
+        $embed = str_replace('?feature=oembed', '?feature=oembed'.htmlspecialchars($params), $embed );
+    }
+    
     if (get_config('filter_oembed', 'lazyload')) {
 
         $dom = new DOMDocument();
@@ -333,7 +339,7 @@ function filter_oembed_vidembed($json) {
         $height = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('height');
         $width = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('width');
 
-        $embedcode = '<a class="lvoembed lvvideo" data-embed="'.htmlspecialchars($json['html']).'"';
+        $embedcode = '<a class="lvoembed lvvideo" data-embed="'.$embed.'"';
         $embedcode .= 'href="#" data-height="'. $height .'" data-width="'. $width .'"><div class="lazyvideo_container">';
         $embedcode .= '<img class="lazyvideo_placeholder" src="'.$json['thumbnail_url'].'" />';
         $embedcode .= '<div class="lazyvideo_title"><div class="lazyvideo_text">'.$json['title'].'</div></div>';
