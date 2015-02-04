@@ -111,8 +111,8 @@ class onenote_api {
 
         // See if the file contains any references to images or other files and if so,
         // create a folder and download those, too.
-        $doc = new DOMDocument();
-        $doc->loadHTML($response);
+        $doc = new DOMDocument('1.0', 'UTF-8');
+        $doc->loadHTML(mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
         $xpath = new DOMXPath($doc);
 
         $this->handle_garbage_chars($xpath);
@@ -122,9 +122,10 @@ class onenote_api {
 
         $imgnodes = $xpath->query("//img");
 
-        if ($imgnodes && (count($imgnodes) > 0)) {
-            // Create temp folder.
-            $tempfolder = $this->create_temp_folder();
+        // Create temp folder.
+        $tempfolder = $this->create_temp_folder();
+
+        if ($imgnodes && ($imgnodes->length > 0)) {
 
             $filesfolder = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page_files'));
             if (!mkdir($filesfolder, 0777, true)) {
@@ -154,20 +155,26 @@ class onenote_api {
 
             // Save the html page itself.
             file_put_contents(join(DIRECTORY_SEPARATOR,
-                    array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
+                array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')),
+                mb_convert_encoding($doc->saveHTML($doc), 'HTML-ENTITIES', 'UTF-8'));
 
-            // Zip up the folder so it can be attached as a single file.
-            $fp = get_file_packer('application/zip');
-            $filelist = array();
-            $filelist[] = $tempfolder;
-
-            $fp->archive_to_pathname($filelist, $path);
-
-            fulldelete($tempfolder);
         } else {
-            file_put_contents($path, $response);
+
+            // Save the html page itself.
+            file_put_contents(join(DIRECTORY_SEPARATOR,
+                array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')),
+                mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
+
         }
 
+        // Zip up the folder so it can be attached as a single file.
+        $fp = get_file_packer('application/zip');
+        $filelist = array();
+        $filelist[] = $tempfolder;
+
+        $fp->archive_to_pathname($filelist, $path);
+
+        fulldelete($tempfolder);
         return array('path' => $path, 'url' => $url);
     }
 
@@ -759,7 +766,7 @@ class onenote_api {
     private function create_postdata($title, $bodycontent, $contextid, $boundary) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML($bodycontent);
+        $dom->loadHTML(mb_convert_encoding($bodycontent, 'HTML-ENTITIES', 'UTF-8'));
         libxml_clear_errors();
 
         $xpath = new DOMXPath($dom);
@@ -799,12 +806,12 @@ class onenote_api {
         }
 
         // Extract just the content of the body.
-        $domclone = new DOMDocument;
+        $domclone = new DOMDocument('1.0', 'UTF-8');
         foreach ($doc->childNodes as $child) {
             $domclone->appendChild($domclone->importNode($child, true));
         }
 
-        $output = $domclone->saveHTML();
+        $output = $domclone->saveHTML($domclone);
 
         $date = date("Y-m-d H:i:s");
 
@@ -834,7 +841,7 @@ class onenote_api {
         $dom = new DOMDocument();
 
         $pagefile = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
-        if (!$dom->loadHTMLFile($pagefile)) {
+        if (!$dom->loadHTML(mb_convert_encoding(file_get_contents($pagefile), 'HTML-ENTITIES', 'UTF-8'))) {
             return null;
         }
         $xpath = new DOMXPath($dom);
@@ -846,7 +853,7 @@ class onenote_api {
         $imgdata = '';
         $eol = "\r\n";
 
-        if ($imgnodes) {
+        if ($imgnodes && ($imgnodes->length > 0)) {
             foreach ($imgnodes as $imgnode) {
                 $srcnode = $imgnode->attributes->getNamedItem("src");
                 if (!$srcnode) {
@@ -875,12 +882,12 @@ class onenote_api {
         }
 
         // Extract just the content of the body.
-        $domclone = new DOMDocument;
+        $domclone = new DOMDocument('1.0', 'UTF-8');
         foreach ($doc->childNodes as $child) {
             $domclone->appendChild($domclone->importNode($child, true));
         }
 
-        $output = $domclone->saveHTML();
+        $output = $domclone->saveHTML($domclone);
         $date = date("Y-m-d H:i:s");
 
         $postdata = '';
