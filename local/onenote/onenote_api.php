@@ -821,7 +821,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' .
+        $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:10.5pt; color:rgb(51,51,51);">' .
                 $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $imgdata . $eol;
@@ -897,7 +897,7 @@ class onenote_api {
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
         $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', Arial, \'Lucida Grande\',';
-        $postdata .= 'sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= 'sans-serif;font-size:10.5pt; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $imgdata . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -1086,7 +1086,7 @@ class onenote_api {
 
         // Font sizes for each tag.
         $tagfontsizes = array('h1' => '24px', 'h2' => '22px', 'h3' => '18px',
-            'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '12px');
+            'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '10.5pt');
 
         // Process each tag.
         foreach ($tags as $tag) {
@@ -1163,8 +1163,8 @@ class onenote_api {
 
             foreach ($spannodes as $span) {
                 $style = $span->getAttribute('style');
-                // Replace 12px font size with 14px.
-                $span->setAttribute('style', str_replace('font-size:12px', 'font-size:14px', $style));
+                // Replace 12px font size with 10.5pt.
+                $span->setAttribute('style', str_replace('font-size:12px', 'font-size:10.5pt', $style));
             }
         }
     }
