@@ -123,8 +123,6 @@ abstract class o365api {
         $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
-        $options = ['CURLOPT_SSLVERSION' => 3];
-
-        return $this->httpclient->$httpmethod($requesturi, $params, $options);
+        return $this->httpclient->$httpmethod($requesturi, $params, []);
     }
 }
