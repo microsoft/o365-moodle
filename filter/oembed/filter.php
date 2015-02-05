@@ -141,7 +141,7 @@ function filter_oembed_youtubecallback($link) {
     global $CFG;
     $url = "http://www.youtube.com/oembed?url=".trim($link[1])."&format=json";
     $jsonret = filter_oembed_curlcall($url);
-    return filter_oembed_vidembed($jsonret, trim($link[6]));
+    return filter_oembed_vidembed($jsonret, trim($link[7]));
 }
 
 /**
@@ -311,7 +311,8 @@ function filter_oembed_curlcall($www) {
  * embeddable HTML returned from the OEmbed request. An error message is returned if there was an error during
  * the request.
  *
- * @param $json Response object returned from the OEmbed request.
+ * @param array $json Response object returned from the OEmbed request.
+ * @param string $params Additional parameters to include in the embed URL.
  * @return string The HTML content to be embedded in the page.
  */
 function filter_oembed_vidembed($json, $params = '') {
@@ -320,14 +321,14 @@ function filter_oembed_vidembed($json, $params = '') {
         return '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>';
     }
 
-    $embed = htmlspecialchars($json['html']);
-    
+    $embed = $json['html'];
+
     if ($params != ''){
         $embed = str_replace('?feature=oembed', '?feature=oembed'.htmlspecialchars($params), $embed );
     }
-    
-    if (get_config('filter_oembed', 'lazyload')) {
 
+    if (get_config('filter_oembed', 'lazyload')) {
+        $embed = htmlspecialchars($embed);
         $dom = new DOMDocument();
 
         // To surpress the loadHTML Warnings.
@@ -346,7 +347,7 @@ function filter_oembed_vidembed($json, $params = '') {
         $embedcode .= '<span class="lazyvideo_playbutton"></span>';
         $embedcode .= '</div></a>';
     } else {
-        $embedcode = $json['html'];
+        $embedcode = $embed;
     }
 
     return $embedcode;
