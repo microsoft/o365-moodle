@@ -111,8 +111,8 @@ class onenote_api {
 
         // See if the file contains any references to images or other files and if so,
         // create a folder and download those, too.
-        $doc = new DOMDocument();
-        $doc->loadHTML($response);
+        $doc = new DOMDocument('1.0', 'UTF-8');
+        $doc->loadHTML(mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
         $xpath = new DOMXPath($doc);
 
         $this->handle_garbage_chars($xpath);
@@ -122,9 +122,10 @@ class onenote_api {
 
         $imgnodes = $xpath->query("//img");
 
-        if ($imgnodes && (count($imgnodes) > 0)) {
-            // Create temp folder.
-            $tempfolder = $this->create_temp_folder();
+        // Create temp folder.
+        $tempfolder = $this->create_temp_folder();
+
+        if ($imgnodes && ($imgnodes->length > 0)) {
 
             $filesfolder = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page_files'));
             if (!mkdir($filesfolder, 0777, true)) {
@@ -154,20 +155,26 @@ class onenote_api {
 
             // Save the html page itself.
             file_put_contents(join(DIRECTORY_SEPARATOR,
-                    array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')), $doc->saveHTML());
+                array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')),
+                mb_convert_encoding($doc->saveHTML($doc), 'HTML-ENTITIES', 'UTF-8'));
 
-            // Zip up the folder so it can be attached as a single file.
-            $fp = get_file_packer('application/zip');
-            $filelist = array();
-            $filelist[] = $tempfolder;
-
-            $fp->archive_to_pathname($filelist, $path);
-
-            fulldelete($tempfolder);
         } else {
-            file_put_contents($path, $response);
+
+            // Save the html page itself.
+            file_put_contents(join(DIRECTORY_SEPARATOR,
+                array(rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html')),
+                mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
+
         }
 
+        // Zip up the folder so it can be attached as a single file.
+        $fp = get_file_packer('application/zip');
+        $filelist = array();
+        $filelist[] = $tempfolder;
+
+        $fp->archive_to_pathname($filelist, $path);
+
+        fulldelete($tempfolder);
         return array('path' => $path, 'url' => $url);
     }
 
@@ -759,7 +766,7 @@ class onenote_api {
     private function create_postdata($title, $bodycontent, $contextid, $boundary) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML($bodycontent);
+        $dom->loadHTML(mb_convert_encoding($bodycontent, 'HTML-ENTITIES', 'UTF-8'));
         libxml_clear_errors();
 
         $xpath = new DOMXPath($dom);
@@ -799,12 +806,12 @@ class onenote_api {
         }
 
         // Extract just the content of the body.
-        $domclone = new DOMDocument;
+        $domclone = new DOMDocument('1.0', 'UTF-8');
         foreach ($doc->childNodes as $child) {
             $domclone->appendChild($domclone->importNode($child, true));
         }
 
-        $output = $domclone->saveHTML();
+        $output = $domclone->saveHTML($domclone);
 
         $date = date("Y-m-d H:i:s");
 
@@ -814,7 +821,7 @@ class onenote_api {
         $postdata .= 'Content-Type: application/xhtml+xml' . $eol . $eol;
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
-        $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:12px; color:rgb(51,51,51);">' .
+        $postdata .= '<body style="font-family:\'Helvetica\',Arial,sans-serif;font-size:10.5pt; color:rgb(51,51,51);">' .
                 $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $imgdata . $eol;
@@ -834,7 +841,7 @@ class onenote_api {
         $dom = new DOMDocument();
 
         $pagefile = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
-        if (!$dom->loadHTMLFile($pagefile)) {
+        if (!$dom->loadHTML(mb_convert_encoding(file_get_contents($pagefile), 'HTML-ENTITIES', 'UTF-8'))) {
             return null;
         }
         $xpath = new DOMXPath($dom);
@@ -846,7 +853,7 @@ class onenote_api {
         $imgdata = '';
         $eol = "\r\n";
 
-        if ($imgnodes) {
+        if ($imgnodes && ($imgnodes->length > 0)) {
             foreach ($imgnodes as $imgnode) {
                 $srcnode = $imgnode->attributes->getNamedItem("src");
                 if (!$srcnode) {
@@ -875,12 +882,12 @@ class onenote_api {
         }
 
         // Extract just the content of the body.
-        $domclone = new DOMDocument;
+        $domclone = new DOMDocument('1.0', 'UTF-8');
         foreach ($doc->childNodes as $child) {
             $domclone->appendChild($domclone->importNode($child, true));
         }
 
-        $output = $domclone->saveHTML();
+        $output = $domclone->saveHTML($domclone);
         $date = date("Y-m-d H:i:s");
 
         $postdata = '';
@@ -890,7 +897,7 @@ class onenote_api {
         $postdata .= '<?xml version="1.0" encoding="utf-8" ?><html xmlns="http://www.w3.org/1999/xhtml" lang="en-us">' . $eol;
         $postdata .= '<head><title>' . $title . '</title>' . '<meta name="created" value="' . $date . '"/></head>' . $eol;
         $postdata .= '<body style="font-family:\'Helvetica\',\'Helvetica Neue\', Arial, \'Lucida Grande\',';
-        $postdata .= 'sans-serif;font-size:12px; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
+        $postdata .= 'sans-serif;font-size:10.5pt; color:rgb(51,51,51);">' . $output . '</body>' . $eol;
         $postdata .= '</html>' . $eol;
         $postdata .= $imgdata . $eol;
         $postdata .= '--' . $boundary . '--' . $eol . $eol;
@@ -1079,7 +1086,7 @@ class onenote_api {
 
         // Font sizes for each tag.
         $tagfontsizes = array('h1' => '24px', 'h2' => '22px', 'h3' => '18px',
-            'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '12px');
+            'h4' => '16px', 'h5' => '12px', 'h6' => '10px' , 'td' => '10.5pt');
 
         // Process each tag.
         foreach ($tags as $tag) {
@@ -1156,8 +1163,8 @@ class onenote_api {
 
             foreach ($spannodes as $span) {
                 $style = $span->getAttribute('style');
-                // Replace 12px font size with 14px.
-                $span->setAttribute('style', str_replace('font-size:12px', 'font-size:14px', $style));
+                // Replace 12px font size with 10.5pt.
+                $span->setAttribute('style', str_replace('font-size:12px', 'font-size:10.5pt', $style));
             }
         }
     }

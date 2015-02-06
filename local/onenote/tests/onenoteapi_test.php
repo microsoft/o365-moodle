@@ -328,13 +328,24 @@ class microsoft_onenote_testcase extends advanced_testcase {
         $htmldom->loadHTMLFile($pagefile);
         $htmldom->preservewhitespace = false;
 
-        $expectedhtml = '<h3 style="font-size:12px;color:#5b9bd5">';
-        $expectedhtml .= '<span style="font-family:Helvetica;font-size:18px;color:#333333">Heading 1</span></h3> ';
-        $expectedhtml .= '<p><span style="font-family:Helvetica;font-size:14px;color:#333333">This is test assignment.</span></p>';
+        $domclone = new DOMDocument;
+        $domclone->preservewhitespace = false;
+        $doc = $htmldom->getElementsByTagName("div")->item(0);
 
-        $h = $htmldom->saveHTML();
-        $h = trim(preg_replace('/\s+/', ' ', $h));
-        $this->assertContains($expectedhtml, $h, 'Html does not match');
+        foreach ($doc->childNodes as $child) {
+            $domclone->appendChild($domclone->importNode($child, true));
+        }
+
+        $output = $domclone->saveHTML();
+
+        $expectedhtml = '<h3 style="font-size:12pt;color:#5b9bd5;margin-top:11pt;margin-bottom:11pt">';
+        $expectedhtml .= '<span style="font-family:Helvetica;font-size:13.5pt;color:#333333">Heading 1</span></h3> ';
+        $expectedhtml .= '<p><span style="font-family:Helvetica;font-size:10.5pt;color:#333333">This is test assignment.</span></p> ';
+        $expectedhtml .= '<p><span style="font-family:Helvetica;font-size:10.5pt;color:#333333">&nbsp;</span></p>';
+
+        $output = trim(preg_replace('/\s+/', ' ', $output));
+
+        $this->assertContains($expectedhtml, $output, 'Html does not match');
     }
 
     /**
