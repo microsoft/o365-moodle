@@ -20,9 +20,9 @@
  * @package   filter_oembed
  * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft Open Technologies, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters... 
+ * code based on the following filters...
  * Screencast (Mark Schall)
- * Soundcloud (Troy Williams) 
+ * Soundcloud (Troy Williams)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -86,7 +86,7 @@ class filter_oembed extends moodle_text_filter {
         $newtext = $text; // We need to return the original value if regex fails!
 
         if (get_config('filter_oembed', 'youtube')) {
-            $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(youtube\.com|youtu\.be|youtube\.googleapis.com)\/(?:embed\/|v\/|watch\?v=|watch\?.+&amp;v=|watch\?.+&v=)?((\w|-){11})(.*?)"(.*?)>(.*?)<\/a>/is';
+            $search = '/<a\s[^>]*href="((https?:\/\/(www\.)?)(youtube\.com|youtu\.be|youtube\.googleapis.com)\/(?:embed\/|v\/|watch\?v=|watch\?.+&amp;v=|watch\?.+&v=)?((\w|-){11})(.*?))"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_youtubecallback', $newtext);
         }
         if (get_config('filter_oembed', 'vimeo')) {
@@ -139,9 +139,9 @@ class filter_oembed extends moodle_text_filter {
  */
 function filter_oembed_youtubecallback($link) {
     global $CFG;
-    $url = "http://www.youtube.com/oembed?url=".trim($link[8])."&format=json";
+    $url = "http://www.youtube.com/oembed?url=".trim($link[1])."&format=json";
     $jsonret = filter_oembed_curlcall($url);
-    return filter_oembed_vidembed($jsonret);
+    return filter_oembed_vidembed($jsonret, trim($link[7]));
 }
 
 /**
@@ -311,17 +311,24 @@ function filter_oembed_curlcall($www) {
  * embeddable HTML returned from the OEmbed request. An error message is returned if there was an error during
  * the request.
  *
- * @param $json Response object returned from the OEmbed request.
+ * @param array $json Response object returned from the OEmbed request.
+ * @param string $params Additional parameters to include in the embed URL.
  * @return string The HTML content to be embedded in the page.
  */
-function filter_oembed_vidembed($json) {
+function filter_oembed_vidembed($json, $params = '') {
 
     if ($json === null) {
         return '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>';
     }
 
-    if (get_config('filter_oembed', 'lazyload')) {
+    $embed = $json['html'];
 
+    if ($params != ''){
+        $embed = str_replace('?feature=oembed', '?feature=oembed'.htmlspecialchars($params), $embed );
+    }
+
+    if (get_config('filter_oembed', 'lazyload')) {
+        $embed = htmlspecialchars($embed);
         $dom = new DOMDocument();
 
         // To surpress the loadHTML Warnings.
@@ -333,14 +340,14 @@ function filter_oembed_vidembed($json) {
         $height = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('height');
         $width = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('width');
 
-        $embedcode = '<a class="lvoembed lvvideo" data-embed="'.htmlspecialchars($json['html']).'"';
+        $embedcode = '<a class="lvoembed lvvideo" data-embed="'.$embed.'"';
         $embedcode .= 'href="#" data-height="'. $height .'" data-width="'. $width .'"><div class="lazyvideo_container">';
         $embedcode .= '<img class="lazyvideo_placeholder" src="'.$json['thumbnail_url'].'" />';
         $embedcode .= '<div class="lazyvideo_title"><div class="lazyvideo_text">'.$json['title'].'</div></div>';
         $embedcode .= '<span class="lazyvideo_playbutton"></span>';
         $embedcode .= '</div></a>';
     } else {
-        $embedcode = $json['html'];
+        $embedcode = $embed;
     }
 
     return $embedcode;
