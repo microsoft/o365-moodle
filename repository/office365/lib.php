@@ -474,6 +474,14 @@ class repository_office365 extends \repository {
                     if ($clienttype === 'sharepoint') {
                         $source['parentsiteuri'] = $parentsiteuri;
                     }
+
+                    $author = '';
+                    if (!empty($content['createdBy']['user']['displayName'])) {
+                        $author = $content['createdBy']['user']['displayName'];
+                        $author = explode(',', $author);
+                        $author = $author[0];
+                    }
+
                     $list[] = [
                         'title' => $content['name'],
                         'date' => strtotime($content['dateTimeCreated']),
@@ -482,7 +490,7 @@ class repository_office365 extends \repository {
                         'size' => $content['size'],
                         'url' => $url,
                         'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
-                        'author' => $content['createdBy']['user']['displayName'],
+                        'author' => $author,
                         'source' => $this->pack_reference($source),
                     ];
                 }
