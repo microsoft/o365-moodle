@@ -98,9 +98,10 @@ abstract class o365api {
      * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
      * @param string $apimethod The API endpoint/method to call.
      * @param string $params Additional paramters to include.
+     * @param array $options Additional options for the request.
      * @return string The result of the API call.
      */
-    public function apicall($httpmethod, $apimethod, $params = '') {
+    public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
         $tokenvalid = $this->checktoken();
         if ($tokenvalid !== true) {
             throw new \moodle_exception('erroro365apiinvalidtoken', 'local_o365');
@@ -123,6 +124,6 @@ abstract class o365api {
         $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
-        return $this->httpclient->$httpmethod($requesturi, $params, []);
+        return $this->httpclient->$httpmethod($requesturi, $params, $options);
     }
 }
