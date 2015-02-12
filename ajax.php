@@ -21,13 +21,26 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+define('AJAX_SCRIPT', true);
+require_once(__DIR__.'/../../config.php');
+$mode = required_param('mode', PARAM_TEXT);
 
-$plugin->version = 2015012702;
-$plugin->requires = 2014111000;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.1';
-$plugin->dependencies = [
-    'auth_oidc' => 2015012700
-];
+require_login();
+require_capability('moodle/site:config', \context_system::instance());
+echo $OUTPUT->header();
+
+$result = new \stdClass;
+$result->success = false;
+
+if ($mode === 'checksharepointsite') {
+    $uncleanurl = required_param('site', PARAM_TEXT);
+    $oidcconfig = get_config('auth_oidc');
+    $httpclient = new \local_o365\httpclient();
+    $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
+            $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+    $result->response = \local_o365\rest\sharepoint::validate_site($uncleanurl, $clientdata, $httpclient);
+    $result->success = true;
+}
+
+echo json_encode($result);
+die();

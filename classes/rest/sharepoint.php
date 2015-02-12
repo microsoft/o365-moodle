@@ -31,13 +31,81 @@ class sharepoint extends \local_o365\rest\o365api {
     protected $parentsite = '';
 
     /**
+     * Validate that a given SharePoint url is accessible with the given client data.
+     *
+     * @param string $uncleanurl Uncleaned, unvalidated URL to check.
+     * @param \local_o365\oauth2\clientdata $clientdata oAuth2 Credentials
+     * @param \local_o365\httpclientinterface $httpclient An HttpClient to use for transport.
+     * @return string One of:
+     *                    "invalid" : The URL is not a usable SharePoint url.
+     *                    "notempty" : The URL is a usable SharePoint url, and the SharePoint site exists.
+     *                    "valid" : The URL is a usable SharePoint url, and the SharePoint site doesn't exist.
+     */
+    public static function validate_site($uncleanurl, \local_o365\oauth2\clientdata $clientdata,
+                                         \local_o365\httpclientinterface $httpclient) {
+        $siteinfo = static::parse_site_url($uncleanurl);
+        if (empty($siteinfo)) {
+            return 'invalid';
+        }
+
+        $token = \local_o365\oauth2\systemtoken::get_for_new_resource($siteinfo['resource'], $clientdata, $httpclient);
+        if (empty($token)) {
+            return 'invalid';
+        }
+
+        $sharepoint = new \local_o365\rest\sharepoint($token, $httpclient);
+        $sharepoint->override_resource($siteinfo['resource']);
+        $mainsiteinfo = $sharepoint->get_site();
+        if (!empty($mainsiteinfo) && !isset($mainsiteinfo['error']) && !empty($mainsiteinfo['Id'])) {
+            if ($siteinfo['subsiteurl'] !== '/') {
+                $subsiteinfo = $sharepoint->get_site($siteinfo['subsiteurl']);
+                if (empty($subsiteinfo)) {
+                    return 'valid';
+                } else {
+                    return 'notempty';
+                }
+            } else {
+                return 'notempty';
+            }
+        }
+
+        return 'invalid';
+    }
+
+    /**
+     * Validate and parse a SharePoint URL into a resource and subsite path.
+     *
+     * @param string $url The URL to validate and parse.
+     * @return array|bool The parsed URL into 'resource' and 'subsiteurl' keys, or false if invalid.
+     */
+    public static function parse_site_url($url) {
+        $cleanurl = clean_param($url, PARAM_URL);
+        if ($cleanurl !== $url) {
+            return false;
+        }
+        if (strpos($cleanurl, 'https://') !== 0) {
+            return false;
+        }
+
+        $cleanurlparts = parse_url($cleanurl);
+        if (empty($cleanurlparts) || empty($cleanurlparts['host'])) {
+            return false;
+        }
+
+        return [
+            'resource' => 'https://'.$cleanurlparts['host'],
+            'subsiteurl' => (!empty($cleanurlparts['path'])) ? $cleanurlparts['path'] : '/',
+        ];
+    }
+
+    /**
      * Determine if the API client is configured.
      *
      * @return bool Whether the API client is configured.
      */
     public static function is_configured() {
         $config = get_config('local_o365');
-        return (!empty($config->tenant)) ? true : false;
+        return (!empty($config->sharepointlink)) ? true : false;
     }
 
     /**
@@ -47,11 +115,24 @@ class sharepoint extends \local_o365\rest\o365api {
      */
     public static function get_resource() {
         $config = get_config('local_o365');
-        if (!empty($config->tenant)) {
-            return 'https://'.$config->tenant.'.sharepoint.com';
-        } else {
-            return false;
+        if (!empty($config->sharepointlink)) {
+            $siteinfo = static::parse_site_url($config->sharepointlink);
+            if (!empty($siteinfo)) {
+                return $siteinfo['resource'];
+            }
         }
+        return false;
+    }
+
+    /**
+     * Override the configured resource.
+     *
+     * @param string $resource The new resource to set.
+     * @return bool Success/Failure.
+     */
+    public function override_resource($resource) {
+        $this->resource = $resource;
+        return true;
     }
 
     /**
@@ -60,10 +141,11 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
+        $resource = (!empty($this->resource)) ? $this->resource : static::get_resource();
         if (empty($this->parentsite)) {
-            return static::get_resource().'/_api';
+            return $resource.'/_api';
         } else {
-            return static::get_resource().'/'.$this->parentsite.'/_api';
+            return $resource.'/'.$this->parentsite.'/_api';
         }
     }
 
@@ -74,7 +156,13 @@ class sharepoint extends \local_o365\rest\o365api {
      */
     public static function get_moodle_parent_site_uri() {
         $config = get_config('local_o365');
-        return (!empty($config->parentsiteuri)) ? $config->parentsiteuri : 'moodle';
+        if (!empty($config->sharepointlink)) {
+            $siteinfo = static::parse_site_url($config->sharepointlink);
+            if (!empty($siteinfo)) {
+                return trim($siteinfo['subsiteurl'], '/');
+            }
+        }
+        return 'moodle';
     }
 
     /**
@@ -483,6 +571,7 @@ class sharepoint extends \local_o365\rest\o365api {
             } else {
                 $sitedata = $this->get_site($fullsiteurl);
                 if (!empty($sitedata) && isset($sitedata['Id']) && isset($sitedata['ServerRelativeUrl'])) {
+                    $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
                     // Save site data.
                     $siterec = new \stdClass;
                     $siterec->courseid = $course->id;
