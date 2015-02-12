@@ -116,5 +116,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2014111716', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011604) {
+        // Migrate settings.
+        $config = get_config('local_o365');
+        if (empty($config->sharepointlink) && isset($config->tenant) && isset($config->parentsiteuri)) {
+            $sharepointlink = 'https://'.$config->tenant.'.sharepoint.com/'.$config->parentsiteuri;
+            set_config('sharepointlink', $sharepointlink, 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015011604', 'local', 'o365');
+    }
+
     return $result;
 }
