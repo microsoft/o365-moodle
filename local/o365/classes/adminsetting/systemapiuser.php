@@ -21,12 +21,12 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-namespace local_o365\form\adminsetting;
+namespace local_o365\adminsetting;
 
 /**
- * Admin setting to initialize sharepoint.
+ * Admin setting to set the system API user.
  */
-class sharepointinit extends \admin_setting {
+class systemapiuser extends \admin_setting {
     /** @var mixed int means PARAM_XXX type, string is a allowed format in regex */
     public $paramtype;
 
@@ -36,7 +36,7 @@ class sharepointinit extends \admin_setting {
     /**
      * Config text constructor
      *
-     * @param string $name unique ascii name.
+     * @param string $name unique ascii name
      * @param string $visiblename localised
      * @param string $description long localised info
      * @param string $defaultsetting
@@ -94,17 +94,13 @@ class sharepointinit extends \admin_setting {
         }
 
         $settinghtml = '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
+        $setuserurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'setsystemuser']);
         if (!empty($setuser)) {
-            $sitesinitialized = get_config('local_o365', 'sharepoint_initialized');
-            $initurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointinit']);
-            if (!empty($sitesinitialized)) {
-                $settinghtml .= get_string('settings_sharepointinit_initialized', 'local_o365');
-                $settinghtml .= ' '.\html_writer::link($initurl, get_string('settings_sharepointinit_reinitialize', 'local_o365'));
-            } else {
-                $settinghtml .= \html_writer::link($initurl, get_string('settings_sharepointinit_initialize', 'local_o365'));
-            }
+            $settinghtml .= get_string('settings_systemapiuser_userset', 'local_o365', $setuser).' ';
+            $settinghtml .= \html_writer::link($setuserurl, get_string('settings_systemapiuser_change', 'local_o365'));
         } else {
-            $settinghtml .= get_string('settings_sharepointinit_setsystemapiuser', 'local_o365');
+            $settinghtml .= get_string('settings_systemapiuser_usernotset', 'local_o365').' ';
+            $settinghtml .= \html_writer::link($setuserurl, get_string('settings_systemapiuser_setuser', 'local_o365'));
         }
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
     }

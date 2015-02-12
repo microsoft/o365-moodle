@@ -1,0 +1,32 @@
+.adminsetting_sharepointlink_message, .adminsetting_sharepointlink_status {
+	margin: 0 0 0.5rem 0;
+	padding: 0.5rem;
+}
+
+.adminsetting_sharepointlink_message img, .adminsetting_sharepointlink_status img {
+	margin-right: 0.25rem;
+}
+
+.adminsetting_sharepointlink_message span, .adminsetting_sharepointlink_status span {
+	vertical-align: middle;
+}
+
+.adminsetting_sharepointlink_status {
+	display: none;
+}
+
+.adminsetting_sharepointlink_status.empty {
+	display: block;
+	padding: 0;
+}
+
+.adminsetting_sharepointlink_message.loading {
+	display: block;
+	padding: 0;
+	margin: 0.25rem 0 0.5rem 0;
+}
+
+.sharepointlink_viewstatus .changesitelink {
+	display: inline-block;
+	margin-left: 1.5rem;
+}
