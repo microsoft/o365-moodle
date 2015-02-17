@@ -81,7 +81,8 @@ class jwt {
      * @return array|null An array of payload claims, or null if there was a problem decoding.
      */
     public static function decode_jws(array $jwtparts) {
-        $body = base64_decode($jwtparts[1]);
+        $body = strtr($jwtparts[1], '-_', '+/');
+        $body = base64_decode($body);
         if (!empty($body)) {
             $body = @json_decode($body, true);
         }
