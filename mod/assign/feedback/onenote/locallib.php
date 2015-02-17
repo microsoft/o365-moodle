@@ -254,6 +254,46 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     }
 
     /**
+     * Determine whether the plugin is being added to the front page.
+     *
+     * @return bool Whether the plugin is being added to the front page.
+     */
+    protected function isonfrontpage() {
+        if (!empty($this->assignment) && $this->assignment instanceof \assign) {
+            $coursectx = $this->assignment->get_course_context();
+            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof \context_course) ? true : false;
+            if ($coursectxvalid === true && $coursectx->instanceid == SITEID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Automatically disable plugin if we're on the front page.
+     *
+     * @return bool
+     */
+    public function is_enabled() {
+        if ($this->isonfrontpage() === true) {
+            return false;
+        }
+        return parent::is_enabled();
+    }
+
+    /**
+     * Automatically hide the setting for the submission plugin.
+     *
+     * @return bool
+     */
+    public function is_configurable() {
+        if ($this->isonfrontpage() === true) {
+            return false;
+        }
+        return parent::is_configurable();
+    }
+
+    /**
      * Display the list of feedback OneNote files in the feedback status table.
      *
      * @param stdClass $grade
