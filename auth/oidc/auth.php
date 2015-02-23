@@ -79,10 +79,25 @@ class auth_plugin_oidc extends \auth_plugin_base {
         if (empty($this->config->authendpoint) || empty($this->config->tokenendpoint)) {
             return [];
         }
+
+        if (!empty($this->config->customicon)) {
+            $icon = new \pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+        } else {
+            $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
+            $icon = explode(':', $icon);
+            if (isset($icon[1])) {
+                list($iconcomponent, $iconkey) = $icon;
+            } else {
+                $iconcomponent = 'auth_oidc';
+                $iconkey = 'o365';
+            }
+            $icon = new \pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+        }
+
         return [
             [
                 'url' => new \moodle_url('/auth/oidc/'),
-                'icon' => new \pix_icon('t/locked', get_string('pluginname', 'auth_oidc')),
+                'icon' => $icon,
                 'name' => $this->config->opname,
             ]
         ];
@@ -525,67 +540,5 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
         $params = [time() - (5 * 60)];
         $DB->delete_records_select('auth_oidc_state', 'timecreated < ?', $params);
-    }
-
-    /**
-     * Prints a form for configuring this authentication plugin.
-     *
-     * This function is called from admin/auth.php, and outputs a full page with
-     * a form for configuring this plugin.
-     *
-     * @param stdClass $config
-     * @param array $err errors
-     * @param array $userfields
-     * @return void
-     */
-    public function config_form($config, $err, $userfields) {
-        include(__DIR__.'/config.html');
-    }
-
-    /**
-     * A chance to validate form data, and last chance to do stuff before it is inserted in config_plugin.
-     *
-     * @param object object with submitted configuration settings (without system magic quotes)
-     * @param array $err array of error messages
-     */
-    public function validate_form($form, &$err) {
-        if (!empty($form->authendpoint)) {
-            if (clean_param($form->authendpoint, PARAM_URL) !== $form->authendpoint) {
-                $err['authendpoint'] = get_string('cfg_err_invalidauthendpoint', 'auth_oidc');
-            }
-            // Strip api-version=1.0 from AAD URLs until issues with OIDC are sorted out.
-            if (strpos($form->authendpoint, 'https://login.windows.net/') === 0) {
-                $needle = 'api-version=1.0';
-                if (substr($form->authendpoint, strlen($needle) * -1) === $needle) {
-                    $form->authendpoint = substr($form->authendpoint, 0, strlen($form->authendpoint) - strlen($needle));
-                }
-            }
-        }
-        if (!empty($form->tokenendpoint)) {
-            if (clean_param($form->tokenendpoint, PARAM_URL) !== $form->tokenendpoint) {
-                $err['tokenendpoint'] = get_string('cfg_err_invalidtokenendpoint', 'auth_oidc');
-            }
-            // Strip api-version=1.0 from AAD URLs until issues with OIDC are sorted out.
-            if (strpos($form->tokenendpoint, 'https://login.windows.net/') === 0) {
-                $needle = 'api-version=1.0';
-                if (substr($form->tokenendpoint, strlen($needle) * -1) === $needle) {
-                    $form->tokenendpoint = substr($form->tokenendpoint, 0, strlen($form->tokenendpoint) - strlen($needle));
-                }
-            }
-        }
-    }
-
-    /**
-     * Processes and stores configuration data for this authentication plugin.
-     *
-     * @param object object with submitted configuration settings (without system magic quotes)
-     */
-    public function process_config($config) {
-        set_config('opname', $config->opname, 'auth_oidc');
-        set_config('clientid', $config->clientid, 'auth_oidc');
-        set_config('clientsecret', $config->clientsecret, 'auth_oidc');
-        set_config('authendpoint', $config->authendpoint, 'auth_oidc');
-        set_config('tokenendpoint', $config->tokenendpoint, 'auth_oidc');
-        return true;
     }
 }
