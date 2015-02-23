@@ -324,10 +324,19 @@ class repository_office365 extends \repository {
             ['name' => 'Courses', 'path' => '/courses/'],
         ];
 
-        $courses = enrol_get_users_courses($USER->id);
+        $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
+        $courses = get_user_capability_course($reqcap, $USER->id, true, 'shortname');
+        // Reindex courses array using course id.
+        $coursesbyid = [];
+        foreach ($courses as $i => $course) {
+            $coursesbyid[$course->id] = $course;
+            unset($courses[$i]);
+        }
+        unset($courses);
+
         if ($path === '/') {
             // Show available courses.
-            foreach ($courses as $course) {
+            foreach ($coursesbyid as $course) {
                 $list[] = [
                     'title' => $course->shortname,
                     'path' => '/courses/'.$course->id,
@@ -344,11 +353,11 @@ class repository_office365 extends \repository {
             $courseid = (int)$pathparts[0];
             unset($pathparts[0]);
             $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
-            if (isset($courses[$courseid])) {
+            if (isset($coursesbyid[$courseid])) {
                 if ($this->path_is_upload($path) === false) {
                     $sharepointclient = $this->get_sharepoint_apiclient();
                     if (!empty($sharepointclient)) {
-                        $parentsiteuri = $sharepointclient->get_course_subsite_uri($courses[$courseid]->id);
+                        $parentsiteuri = $sharepointclient->get_course_subsite_uri($coursesbyid[$courseid]->id);
                         $sharepointclient->set_site($parentsiteuri);
                         try {
                             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
@@ -361,7 +370,7 @@ class repository_office365 extends \repository {
                 }
 
                 $curpath = '/courses/'.$courseid;
-                $breadcrumb[] = ['name' => $courses[$courseid]->shortname, 'path' => $curpath];
+                $breadcrumb[] = ['name' => $coursesbyid[$courseid]->shortname, 'path' => $curpath];
                 foreach ($pathparts as $pathpart) {
                     if (!empty($pathpart)) {
                         $curpath .= '/'.$pathpart;
@@ -423,34 +432,12 @@ class repository_office365 extends \repository {
             $pathprefix = '/courses'.$path;
         }
 
-        $canupload = false;
-        if ($clienttype === 'onedrive') {
-            $canupload = true;
-        } else if ($clienttype === 'sharepoint') {
-            $pathtrimmed = trim($path, '/');
-            $pathparts = explode('/', $pathtrimmed);
-            if (!is_numeric($pathparts[0])) {
-                throw new \moodle_exception('errorbadpath', 'repository_office365');
-            }
-            $courseid = (int)$pathparts[0];
-            $course = $DB->get_record('course', ['id' => $courseid]);
-            if (empty($course)) {
-                throw new \moodle_exception('errorcoursenotfound', 'repository_office365');
-            }
-            $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
-            $coursectx = \context_course::instance($courseid);
-            $parentsiteuri = \local_o365\rest\sharepoint::get_course_subsite_uri($course->id);
-            $canupload = has_capability($reqcap, $coursectx);
-        }
-
-        if ($canupload === true) {
-            $list[] = [
-                'title' => get_string('upload', 'repository_office365'),
-                'path' => $pathprefix.'/upload/',
-                'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
-                'children' => [],
-            ];
-        }
+        $list[] = [
+            'title' => get_string('upload', 'repository_office365'),
+            'path' => $pathprefix.'/upload/',
+            'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
+            'children' => [],
+        ];
 
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
