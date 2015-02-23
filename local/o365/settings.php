@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+$PAGE->requires->jquery();
+
 if ($hassiteconfig) {
     $settings = new \admin_settingpage('local_o365', get_string('pluginname', 'local_o365'));
     $ADMIN->add('localplugins', $settings);
@@ -33,15 +35,11 @@ if ($hassiteconfig) {
 
     $label = get_string('settings_systemapiuser', 'local_o365');
     $desc = get_string('settings_systemapiuser_details', 'local_o365');
-    $settings->add(new \local_o365\form\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
+    $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
 
-    $label = get_string('settings_parentsiteuri', 'local_o365');
-    $desc = get_string('settings_parentsiteuri_details', 'local_o365');
-    $settings->add(new \admin_setting_configtext('local_o365/parentsiteuri', $label, $desc, 'moodle', PARAM_ALPHANUMEXT));
-
-    $label = get_string('settings_sharepointinit', 'local_o365');
-    $desc = get_string('settings_sharepointinit_details', 'local_o365');
-    $settings->add(new \local_o365\form\adminsetting\sharepointinit('local_o365/initialize', $label, $desc, '', PARAM_RAW));
+    $label = get_string('settings_sharepointlink', 'local_o365');
+    $desc = get_string('settings_sharepointlink_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
 
     $label = get_string('settings_aadsync', 'local_o365');
     $desc = get_string('settings_aadsync_details', 'local_o365');
@@ -49,5 +47,5 @@ if ($hassiteconfig) {
 
     $label = get_string('settings_healthcheck', 'local_o365');
     $desc = get_string('settings_healthcheck_details', 'local_o365');
-    $settings->add(new \local_o365\form\adminsetting\healthcheck('local_o365/healthcheck', $label, $desc, '0'));
+    $settings->add(new \local_o365\adminsetting\healthcheck('local_o365/healthcheck', $label, $desc, '0'));
 }
