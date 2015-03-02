@@ -68,7 +68,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
             'givenName' => 'Test',
             'mail' => 'testuser'.$i.'@example.onmicrosoft.com',
             'surname' => 'User'.$i,
-			'preferredLanguage' => ($i == 3) ? 'de-DE' : 'en-US',
+            'preferredLanguage' => ($i == 3) ? 'de-DE' : 'en-US',
         ];
     }
 
@@ -300,7 +300,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
         $this->assertEquals('Toronto', $createduser->city);
         $this->assertEquals('CA', $createduser->country);
         $this->assertEquals('Dev', $createduser->department);
-		$this->assertEquals('de', $createduser->lang);
+        $this->assertEquals('de', $createduser->lang);
     }
 
     public function test_transform_full_request_uri() {
