@@ -81,7 +81,7 @@ class azuread extends \local_o365\rest\o365api {
     public function get_users($params = 'default') {
         $endpoint = "/users";
         if ($params === 'default') {
-            $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname'];
+            $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage'];
         }
         if (!empty($params) && is_array($params)) {
             $endpoint .= '?deltaLink=&$select='.implode(',', $params);
@@ -135,7 +135,7 @@ class azuread extends \local_o365\rest\o365api {
             'city' => (isset($aaddata['city'])) ? $aaddata['city'] : '',
             'country' => (isset($aaddata['country'])) ? $aaddata['country'] : '',
             'department' => (isset($aaddata['department'])) ? $aaddata['department'] : '',
-            'lang' => 'en',
+            'lang' => (isset($aaddata['preferredLanguage'])) ? substr($aaddata['preferredLanguage'], 0, 2) : 'en',
             'confirmed' => 1,
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
