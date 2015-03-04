@@ -91,7 +91,13 @@ $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh tok
 $string['task_syncusers'] = 'Sync users with AAD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
 
+$string['ucp_notconnected'] = 'Please connect to Office365 before visiting here.';
 $string['ucp_general_intro'] = 'Here you can manage your connection to Office 365.';
 $string['ucp_title'] = 'Office365 Connection Management';
 $string['ucp_calsync_title'] = 'Outlook Calendar Sync';
 $string['ucp_calsync_desc'] = 'Checked calendars will be synced from Moodle to your Outlook calendar.';
+$string['ucp_status_enabled'] = 'Active';
+$string['ucp_status_disabled'] = 'Not Connected';
+$string['ucp_connection_status'] = 'Office365 connection is:';
+$string['ucp_connection_start'] = 'Connect to Office365';
+$string['ucp_connection_stop'] = 'Disconnect from Office365';
