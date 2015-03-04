@@ -139,9 +139,9 @@ class auth_plugin_oidc extends \auth_plugin_base {
     /**
      * Initiate an authorization request to the configured OP.
      */
-    public function initiateauthrequest($promptlogin = false) {
+    public function initiateauthrequest($promptlogin = false, array $stateparams = array()) {
         $client = $this->get_oidcclient();
-        $client->authrequest($promptlogin);
+        $client->authrequest($promptlogin, $stateparams);
     }
 
     /**
@@ -152,11 +152,19 @@ class auth_plugin_oidc extends \auth_plugin_base {
     public function handleauthresponse(array $authparams) {
         global $DB, $CFG, $SESSION;
 
+        // Validate and expire state.
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
             throw new \moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
         $orignonce = $staterec->nonce;
+        $additionaldata = [];
+        if (!empty($staterec->additionaldata)) {
+            $additionaldata = @unserialize($staterec->additionaldata);
+            if (!is_array($additionaldata)) {
+                $additionaldata = [];
+            }
+        }
         $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
 
         $client = $this->get_oidcclient();
@@ -165,37 +173,49 @@ class auth_plugin_oidc extends \auth_plugin_base {
             throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
         }
 
+        // Get token.
         $tokenparams = $client->tokenrequest($authparams['code']);
-
         if (!isset($tokenparams['id_token'])) {
             throw new \moodle_exception('errorauthnoidtoken', 'auth_oidc');
         }
 
+        // Decode and verify idtoken.
         $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenparams['id_token']);
-
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
             throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
-
         $receivednonce = $idtoken->claim('nonce');
         if (empty($receivednonce) || $receivednonce !== $orignonce) {
             throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
+        // This is for setting the system API user.
         if (isset($SESSION->auth_oidc_justevent)) {
+            unset($SESSION->auth_oidc_justevent);
             $eventdata = ['other' => ['authparams' => $authparams, 'tokenparams' => $tokenparams]];
             $event = \auth_oidc\event\user_authed::create($eventdata);
             $event->trigger();
             return true;
         }
 
+        // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
         $oidcuniqid = $idtoken->claim('oid');
         if (empty($oidcuniqid)) {
             $oidcuniqid = $idtoken->claim('sub');
         }
+
         if (isloggedin() === true) {
-            $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken);
+            $connectiononly = false;
+            if (isset($SESSION->auth_oidc_connectiononly)) {
+                $connectiononly = true;
+                unset($SESSION->auth_oidc_connectiononly);
+            }
+            $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
+            $redirect = (!empty($additionaldata['redirect']))
+                    ? new \moodle_url($additionaldata['redirect']) : new \moodle_url('/auth/oidc/ucp.php');
+            redirect($redirect);
+            $additionaldata['redirect'];
         } else {
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
         }
@@ -203,93 +223,110 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
     /**
      * Handle OIDC disconnection from Moodle account.
+     *
+     * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
      */
-    public function disconnect() {
-        global $OUTPUT, $PAGE, $USER, $DB, $CFG;
-        require_once($CFG->dirroot.'/user/lib.php');
-        $PAGE->set_url('/auth/oidc/ucp.php');
-        $PAGE->set_context(\context_system::instance());
-        $PAGE->set_pagelayout('standard');
-        $USER->editing = false;
-
-        $ucptitle = get_string('ucp_disconnect_title', 'auth_oidc', $this->config->opname);
-        $PAGE->navbar->add($ucptitle, $PAGE->url);
-        $PAGE->set_title($ucptitle);
-
-        // We need the manual login plugin to be enabled for disconnection.
-        if (is_enabled_auth('manual') !== true) {
-            throw new \moodle_exception('errorauthmanualplugindisabled', 'auth_oidc');
+    public function disconnect($justremovetokens = false, \moodle_url $redirect = null) {
+        if ($redirect === null) {
+            $redirect = new \moodle_url('/auth/oidc/ucp.php');
         }
-
-        // Check to see if the user has a username created by OIDC, or a self-created username.
-        // OIDC-created usernames are usually very verbose, so we'll allow them to choose a sensible one.
-        // Otherwise, keep their existing username.
-        $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
-        $customdata = [
-            'canchooseusername' => (strtolower($oidctoken->oidcuniqid) === $USER->username) ? true : false,
-        ];
-
-        $mform = new \auth_oidc\form\disconnect('?action=disconnect', $customdata);
-
-        if ($mform->is_cancelled()) {
-            redirect(new \moodle_url('/auth/oidc/ucp.php'));
-        } else if ($fromform = $mform->get_data()) {
-
-            if (empty($fromform->password)) {
-                throw new \moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
-            }
-            $origusername = $USER->username;
-            $updateduser = new \stdClass;
-
-            if ($customdata['canchooseusername'] === true) {
-                if (empty($fromform)) {
-                    throw new \moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
-                }
-
-                if (strtolower($fromform->username) !== $USER->username) {
-                    $newusername = strtolower($fromform->username);
-                    $usercheck = ['username' => $newusername, 'mnethostid' => $CFG->mnet_localhost_id];
-                    if ($DB->record_exists('user', $usercheck) === false) {
-                        $updateduser->username = $newusername;
-                    } else {
-                        throw new \moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
-                    }
-                }
-            }
-
-            // Update user.
-            $updateduser->auth = 'manual';
-            $updateduser->id = $USER->id;
-            $updateduser->password = $fromform->password;
-            user_update_user($updateduser);
-
+        if ($justremovetokens === true) {
+            global $USER, $DB, $CFG;
             // Delete token data.
-            $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
-
+            $DB->delete_records('auth_oidc_token', ['username' => $USER->username]);
             $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
             $event = \auth_oidc\event\user_disconnected::create($eventdata);
             $event->trigger();
+            redirect($redirect);
+        } else {
+            global $OUTPUT, $PAGE, $USER, $DB, $CFG;
+            require_once($CFG->dirroot.'/user/lib.php');
+            $PAGE->set_url('/auth/oidc/ucp.php');
+            $PAGE->set_context(\context_system::instance());
+            $PAGE->set_pagelayout('standard');
+            $USER->editing = false;
 
-            $USER = $DB->get_record('user', ['id' => $USER->id]);
-            redirect(new \moodle_url('/auth/oidc/ucp.php'));
+            $ucptitle = get_string('ucp_disconnect_title', 'auth_oidc', $this->config->opname);
+            $PAGE->navbar->add($ucptitle, $PAGE->url);
+            $PAGE->set_title($ucptitle);
+
+            // We need the manual login plugin to be enabled for disconnection.
+            if (is_enabled_auth('manual') !== true) {
+                throw new \moodle_exception('errorauthmanualplugindisabled', 'auth_oidc');
+            }
+
+            // Check to see if the user has a username created by OIDC, or a self-created username.
+            // OIDC-created usernames are usually very verbose, so we'll allow them to choose a sensible one.
+            // Otherwise, keep their existing username.
+            $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
+            $customdata = [
+                'canchooseusername' => (isset($oidctoken->oidcuniqid) && strtolower($oidctoken->oidcuniqid) === $USER->username)
+                        ? true : false,
+            ];
+
+            $mform = new \auth_oidc\form\disconnect('?action=disconnectlogin', $customdata);
+
+            if ($mform->is_cancelled()) {
+                redirect($redirect);
+            } else if ($fromform = $mform->get_data()) {
+
+                if (empty($fromform->password)) {
+                    throw new \moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
+                }
+                $origusername = $USER->username;
+                $updateduser = new \stdClass;
+
+                if ($customdata['canchooseusername'] === true) {
+                    if (empty($fromform)) {
+                        throw new \moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
+                    }
+
+                    if (strtolower($fromform->username) !== $USER->username) {
+                        $newusername = strtolower($fromform->username);
+                        $usercheck = ['username' => $newusername, 'mnethostid' => $CFG->mnet_localhost_id];
+                        if ($DB->record_exists('user', $usercheck) === false) {
+                            $updateduser->username = $newusername;
+                        } else {
+                            throw new \moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
+                        }
+                    }
+                }
+
+                // Update user.
+                $updateduser->auth = 'manual';
+                $updateduser->id = $USER->id;
+                $updateduser->password = $fromform->password;
+                user_update_user($updateduser);
+
+                // Delete token data.
+                $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
+
+                $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+                $event = \auth_oidc\event\user_disconnected::create($eventdata);
+                $event->trigger();
+
+                $USER = $DB->get_record('user', ['id' => $USER->id]);
+                redirect($redirect);
+            }
+
+            echo $OUTPUT->header();
+            $mform->display();
+            echo $OUTPUT->footer();
         }
-
-        echo $OUTPUT->header();
-        $mform->display();
-        echo $OUTPUT->footer();
     }
 
     /**
-     * Handle a user migration event.
+     * Create auth/access token records for the user.
      *
      * @param string $oidcuniqid A unique identifier for the user.
      * @param array $authparams Paramteres receieved from the auth request.
      * @param array $tokenparams Parameters received from the token request.
      * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param \stdClass The Moodle user to create the tokens for.
+     * @return bool Success/Failure.
      */
-    protected function handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken) {
-        global $USER, $DB, $CFG;
-
+    protected function create_tokens_for_user($oidcuniqid, $authparams, $tokenparams, $idtoken, $user) {
+        global $DB, $CFG;
         // Check if OIDC user is already connected to a Moodle user.
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
         if (!empty($tokenrec)) {
@@ -298,11 +335,11 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if (empty($existinguser)) {
                 $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
             } else {
-                if ($USER->username === $tokenrec->username) {
+                if ($user->username === $tokenrec->username) {
                     // Already connected to current user.
-                    if ($USER->auth !== 'oidc') {
+                    if ($user->auth !== 'oidc') {
                         // Update auth plugin.
-                        $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+                        $DB->update_record('user', (object)['id' => $user->id, 'auth' => 'oidc']);
                     }
                     $tokenrec->authcode = $authparams['code'];
                     $tokenrec->token = $tokenparams['access_token'];
@@ -319,13 +356,13 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
 
         // Check if Moodle user is already connected to an OIDC user.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
+        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
         if (!empty($tokenrec)) {
             if ($tokenrec->oidcuniqid === $oidcuniqid) {
                 // Already connected to current user.
-                if ($USER->auth !== 'oidc') {
+                if ($user->auth !== 'oidc') {
                     // Update auth plugin.
-                    $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+                    $DB->update_record('user', (object)['id' => $user->id, 'auth' => 'oidc']);
                 }
                 $tokenrec->authcode = $authparams['code'];
                 $tokenrec->token = $tokenparams['access_token'];
@@ -342,7 +379,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         // Create token data.
         $tokenrec = new \stdClass;
         $tokenrec->oidcuniqid = $oidcuniqid;
-        $tokenrec->username = $USER->username;
+        $tokenrec->username = $user->username;
         $tokenrec->scope = $tokenparams['scope'];
         $tokenrec->resource = $tokenparams['resource'];
         $tokenrec->authcode = $authparams['code'];
@@ -353,17 +390,32 @@ class auth_plugin_oidc extends \auth_plugin_base {
         $tokenrec->id = $DB->insert_record('auth_oidc_token', $tokenrec);
 
         $eventdata = [
-            'objectid' => $USER->id,
-            'userid' => $USER->id,
-            'other' => ['username' => $USER->username]
+            'objectid' => $user->id,
+            'userid' => $user->id,
+            'other' => ['username' => $user->username, 'userid' => $user->id]
         ];
         $event = \auth_oidc\event\user_connected::create($eventdata);
         $event->trigger();
+        return true;
+    }
 
-        // Update auth plugin.
-        $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
-
-        redirect(new \moodle_url('/auth/oidc/ucp.php'));
+    /**
+     * Handle a user migration event.
+     *
+     * @param string $oidcuniqid A unique identifier for the user.
+     * @param array $authparams Paramteres receieved from the auth request.
+     * @param array $tokenparams Parameters received from the token request.
+     * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param bool $connectiononly Whether to just connect the user (true), or to connect and change login method (false).
+     */
+    protected function handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly = false) {
+        global $USER, $DB;
+        $this->create_tokens_for_user($oidcuniqid, $authparams, $tokenparams, $idtoken, $USER);
+        if ($connectiononly !== true) {
+            $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+            $USER = $DB->get_record('user', ['id' => $USER->id]);
+        }
+        return true;
     }
 
     /**

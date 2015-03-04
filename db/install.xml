@@ -11,6 +11,7 @@
         <FIELD NAME="state" TYPE="char" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="random state"/>
         <FIELD NAME="nonce" TYPE="char" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="nonce"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time login initiated"/>
+        <FIELD NAME="additionaldata" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="additional stored parameters"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
