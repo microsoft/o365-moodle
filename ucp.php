@@ -26,6 +26,7 @@ require_once(__DIR__.'/../../config.php');
 require_login();
 
 $action = optional_param('action', null, PARAM_TEXT);
+$o365loginconnected = ($USER->auth === 'oidc') ? true : false;
 $o365connected = $DB->record_exists('local_o365_token', ['user_id' => $USER->id]);
 
 $PAGE->set_url('/local/o365/ucp.php');
@@ -37,8 +38,10 @@ $PAGE->set_title($ucptitle);
 
 if (!empty($action)) {
     if ($action === 'calendar') {
+        if (empty($o365connected)) {
+            throw new \moodle_exception('ucp_notconnected', 'local_o365');
+        }
         $mform = new \local_o365\form\calendarsync('?action=calendar');
-
         if ($mform->is_cancelled()) {
             redirect(new \moodle_url('/local/o365/ucp.php'));
         } else if ($fromform = $mform->get_data()) {
@@ -147,12 +150,73 @@ if (!empty($action)) {
             $mform->display();
             echo $OUTPUT->footer();
         }
+    } else if ($action === 'connectlogin') {
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $auth = new \auth_plugin_oidc;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $auth->initiateauthrequest(false, ['redirect' => '/local/o365/ucp.php']);
+    } else if ($action === 'connecttoken') {
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $SESSION->auth_oidc_connectiononly = true;
+        $auth = new \auth_plugin_oidc;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $auth->initiateauthrequest(false, ['redirect' => '/local/o365/ucp.php']);
+    } else if ($action === 'disconnecttoken') {
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $auth = new \auth_plugin_oidc;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $redirect = new \moodle_url('/local/o365/ucp.php');
+        $auth->disconnect(true, $redirect);
     }
 } else {
+    $opname = 'Office365';
+
     echo $OUTPUT->header();
     echo \html_writer::tag('h2', $ucptitle);
     echo get_string('ucp_general_intro', 'local_o365');
     echo '<br /><br />';
-    echo \html_writer::link(new \moodle_url('?action=calendar'), get_string('ucp_calsync_title', 'local_o365'));
+
+    echo \html_writer::tag('h5', 'Connection Status');
+
+    echo \html_writer::start_div('auth_oidc_ucp_indicator');
+    echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
+    if ($o365loginconnected === true) {
+        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
+        if (is_enabled_auth('manual') === true) {
+            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+            $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
+            $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+            echo \html_writer::tag('h5', $linkhtml);
+        }
+    } else {
+        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
+        $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
+        $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
+        echo \html_writer::tag('h5', $linkhtml);
+    }
+    echo \html_writer::end_div();
+
+    echo \html_writer::start_div('auth_oidc_ucp_indicator');
+    echo \html_writer::tag('h4', get_string('ucp_connection_status', 'local_o365', $opname));
+    if ($o365connected === true) {
+        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'local_o365'), ['class' => 'notifysuccess']);
+        $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+        $strdisconnect = get_string('ucp_connection_stop', 'local_o365', $opname);
+        $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+        echo \html_writer::tag('h5', $linkhtml);
+    } else {
+        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'local_o365'), ['class' => 'notifyproblem']);
+        $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+        $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_connection_start', 'local_o365', $opname));
+        echo \html_writer::tag('h5', $linkhtml);
+    }
+    echo \html_writer::end_div();
+
+
+    if (!empty($o365connected)) {
+        echo '<br /><br />';
+        echo \html_writer::tag('h5', 'Office365 Features');
+        echo \html_writer::link(new \moodle_url('?action=calendar'), get_string('ucp_calsync_title', 'local_o365'));
+    }
     echo $OUTPUT->footer();
 }
