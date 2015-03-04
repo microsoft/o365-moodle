@@ -29,15 +29,18 @@ require_login();
 require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
 
 $action = optional_param('action', null, PARAM_TEXT);
+
 $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
 $oidcconnected = (!empty($oidctoken)) ? true : false;
 
+$oidcloginconnected = ($USER->auth === 'oidc') ? true : false;
+
 if (!empty($action)) {
-    if ($action === 'connect' && $oidcconnected === false) {
+    if ($action === 'connectlogin' && $oidcloginconnected === false) {
         $auth = new \auth_plugin_oidc;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
-    } else if ($action === 'disconnect' && $oidcconnected === true) {
+    } else if ($action === 'disconnectlogin' && $oidcloginconnected === true) {
         if (is_enabled_auth('manual') === true) {
             $auth = new \auth_plugin_oidc;
             $auth->set_httpclient(new \auth_oidc\httpclient());
@@ -64,36 +67,26 @@ if (!empty($action)) {
     echo get_string('ucp_general_intro', 'auth_oidc', $opname);
     echo '<br /><br />';
 
-    echo \html_writer::start_div();
-    $style = ['style' => 'display: inline-block; margin-right: 0.5rem;'];
-    echo \html_writer::tag('h4', get_string('ucp_status', 'auth_oidc', $opname), $style);
-    if ($oidcconnected === true) {
-        $style = ['class' => 'notifysuccess', 'style' => 'display: inline-block'];
-        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), $style);
-    } else {
-        $style = ['class' => 'notifyproblem', 'style' => 'display: inline-block'];
-        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), $style);
-    }
-    echo \html_writer::end_div();
-    echo '<br />';
-
-    if ($oidcconnected === true) {
+    // Login status.
+    echo \html_writer::start_div('auth_oidc_ucp_indicator');
+    echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
+    if ($oidcloginconnected === true) {
+        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
         if (is_enabled_auth('manual') === true) {
-            echo \html_writer::start_div();
-            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnect']);
-            $strdisconnect = get_string('ucp_connected_disconnect', 'auth_oidc', $opname);
+            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+            $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
             $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
             echo \html_writer::tag('h5', $linkhtml);
-            echo \html_writer::span(get_string('ucp_connected_disconnect_details', 'auth_oidc', $opname));
-            echo \html_writer::end_div();
+            echo \html_writer::span(get_string('ucp_login_stop_desc', 'auth_oidc', $opname));
         }
     } else {
-        echo \html_writer::start_div();
-        $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connect']);
-        $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_notconnected_start', 'auth_oidc', $opname));
+        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
+        $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
+        $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
         echo \html_writer::tag('h5', $linkhtml);
-        echo \html_writer::span(get_string('ucp_notconnected_start_details', 'auth_oidc', $opname));
-        echo \html_writer::end_div();
+        echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_oidc', $opname));
     }
+    echo \html_writer::end_div();
+
     echo $OUTPUT->footer();
 }
