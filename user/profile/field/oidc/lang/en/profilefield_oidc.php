@@ -25,4 +25,4 @@ $string['pluginname'] = 'OpenIDConnect Management';
 $string['connected'] = 'You are using {$a} to log in.';
 $string['notconnected'] = 'You are not using {$a} to log in.';
 $string['connected_link'] = 'Manage';
-$string['notconnected_link'] = 'Start using {$a}';
+$string['notconnected_link'] = 'Start using {$a} to log in.';

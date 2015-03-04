@@ -66,8 +66,8 @@ class observers {
     public static function handle_oidc_user_connected(\auth_oidc\event\user_connected $event) {
         // Get additional tokens for the user.
         $eventdata = $event->get_data();
-        if (!empty($eventdata['other']['username']) && !empty($eventdata['other']['userid'])) {
-            $tokenresult = static::get_additional_tokens_for_user($eventdata['other']['username'], $eventdata['other']['userid']);
+        if (!empty($eventdata['other']['username']) && !empty($eventdata['userid'])) {
+            $tokenresult = static::get_additional_tokens_for_user($eventdata['other']['username'], $eventdata['userid']);
         }
 
         return true;
@@ -136,7 +136,11 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_disconnected(\auth_oidc\event\user_disconnected $event) {
-
+        global $DB;
+        $eventdata = $event->get_data();
+        if (!empty($eventdata['userid'])) {
+            $DB->delete_records('local_o365_token', ['user_id' => $eventdata['userid']]);
+        }
     }
 
     /**

@@ -114,7 +114,7 @@ class oidcclient {
      *
      * @return array Array of request parameters.
      */
-    protected function getauthrequestparams($promptlogin = false) {
+    protected function getauthrequestparams($promptlogin = false, array $stateparams = array()) {
         $nonce = 'N'.uniqid();
         $params = [
             'response_type' => 'code',
@@ -123,7 +123,7 @@ class oidcclient {
             'nonce' => $nonce,
             'response_mode' => 'form_post',
             'resource' => 'https://graph.windows.net',
-            'state' => $this->getnewstate($nonce),
+            'state' => $this->getnewstate($nonce, $stateparams),
         ];
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
@@ -134,15 +134,17 @@ class oidcclient {
     /**
      * Generate a new state parameter.
      *
+     * @param string $nonce The generated nonce value.
      * @return string The new state value.
      */
-    protected function getnewstate($nonce) {
+    protected function getnewstate($nonce, array $stateparams = array()) {
         global $DB;
         $staterec = new \stdClass;
         $staterec->sesskey = sesskey();
         $staterec->state = random_string(15);
         $staterec->nonce = $nonce;
         $staterec->timecreated = time();
+        $staterec->additionaldata = serialize($stateparams);
         $DB->insert_record('auth_oidc_state', $staterec);
         return $staterec->state;
     }
@@ -150,7 +152,7 @@ class oidcclient {
     /**
      * Perform an authorization request by redirecting resource owner's user agent to auth endpoint.
      */
-    public function authrequest($promptlogin = false) {
+    public function authrequest($promptlogin = false, array $stateparams = array()) {
         global $DB;
         if (empty($this->clientid)) {
             throw new \moodle_exception('erroroidcclientnocreds', 'auth_oidc');
@@ -160,7 +162,7 @@ class oidcclient {
             throw new \moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
         }
 
-        $params = $this->getauthrequestparams($promptlogin);
+        $params = $this->getauthrequestparams($promptlogin, $stateparams);
         $redirecturl = new \moodle_url($this->endpoints['auth'], $params);
         redirect($redirecturl);
     }
