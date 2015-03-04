@@ -25,3 +25,4 @@ $string['pluginname'] = 'Office365 Connection';
 $string['connected_link'] = 'Manage';
 $string['connected_str'] = 'You are connected to Office 365.';
 $string['notconnected_str'] = 'You are not connected to Office 365.';
+$string['notconnected_link'] = 'Connect to Office 365';

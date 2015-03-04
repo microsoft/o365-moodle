@@ -42,5 +42,14 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2014111703', 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2015011604) {
+        $table = new xmldb_table('auth_oidc_state');
+        $field = new xmldb_field('additionaldata', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2015011604', 'auth', 'oidc');
+    }
+
     return $result;
 }
