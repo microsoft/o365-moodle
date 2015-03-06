@@ -61,6 +61,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         ];
 
         $this->config = (object)array_merge($default, $storedconfig, $forcedconfig);
+        $this->loginflow = (isset($this->config->loginflow) && $this->config->loginflow === 'rocreds') ? 'rocreds' : 'authreq';
     }
 
     /**
@@ -73,6 +74,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @return array Array of idps.
      */
     public function loginpage_idp_list($wantsurl) {
+        if ($this->loginflow !== 'authreq') {
+            return [];
+        }
+
         if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
             return [];
         }
@@ -119,7 +124,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
      */
     protected function get_oidcclient() {
         if (empty($this->httpclient) || !($this->httpclient instanceof \auth_oidc\httpclientinterface)) {
-            throw new \moodle_exception('errorauthnohttpclient', 'auth_oidc');
+            $this->httpclient = new \auth_oidc\httpclient();
         }
         if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
             throw new \moodle_exception('errorauthnocreds', 'auth_oidc');
@@ -145,12 +150,43 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
+     * Process an idtoken, extract uniqid and construct jwt object.
+     *
+     * @param string $idtoken Encoded id token.
+     * @param string $orignonce Original nonce to validate received nonce against.
+     * @return array List of oidcuniqid and constructed idtoken jwt.
+     */
+    protected function process_idtoken($idtoken, $orignonce = '') {
+        // Decode and verify idtoken.
+        $idtoken = \auth_oidc\jwt::instance_from_encoded($idtoken);
+        $sub = $idtoken->claim('sub');
+        if (empty($sub)) {
+            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+        }
+        $receivednonce = $idtoken->claim('nonce');
+        if (!empty($orignonce) && (empty($receivednonce) || $receivednonce !== $orignonce)) {
+            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+        }
+
+        // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
+        $oidcuniqid = $idtoken->claim('oid');
+        if (empty($oidcuniqid)) {
+            $oidcuniqid = $idtoken->claim('sub');
+        }
+        return [$oidcuniqid, $idtoken];
+    }
+
+    /**
      * Handle an authorization request response received from the configured OP.
      *
      * @param array $authparams Received parameters.
      */
     public function handleauthresponse(array $authparams) {
         global $DB, $CFG, $SESSION;
+
+        if (!isset($authparams['code'])) {
+            throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
+        }
 
         // Validate and expire state.
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
@@ -167,28 +203,15 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
         $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
 
+        // Get token from auth code.
         $client = $this->get_oidcclient();
-
-        if (!isset($authparams['code'])) {
-            throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
-        }
-
-        // Get token.
         $tokenparams = $client->tokenrequest($authparams['code']);
         if (!isset($tokenparams['id_token'])) {
             throw new \moodle_exception('errorauthnoidtoken', 'auth_oidc');
         }
 
         // Decode and verify idtoken.
-        $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenparams['id_token']);
-        $sub = $idtoken->claim('sub');
-        if (empty($sub)) {
-            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
-        }
-        $receivednonce = $idtoken->claim('nonce');
-        if (empty($receivednonce) || $receivednonce !== $orignonce) {
-            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
-        }
+        list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token'], $orignonce);
 
         // This is for setting the system API user.
         if (isset($SESSION->auth_oidc_justevent)) {
@@ -199,24 +222,18 @@ class auth_plugin_oidc extends \auth_plugin_base {
             return true;
         }
 
-        // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
-        $oidcuniqid = $idtoken->claim('oid');
-        if (empty($oidcuniqid)) {
-            $oidcuniqid = $idtoken->claim('sub');
-        }
-
         if (isloggedin() === true) {
+            // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
             $connectiononly = false;
             if (isset($SESSION->auth_oidc_connectiononly)) {
                 $connectiononly = true;
                 unset($SESSION->auth_oidc_connectiononly);
             }
             $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
-            $redirect = (!empty($additionaldata['redirect']))
-                    ? new \moodle_url($additionaldata['redirect']) : new \moodle_url('/auth/oidc/ucp.php');
-            redirect($redirect);
-            $additionaldata['redirect'];
+            $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
+            redirect(new \moodle_url($redirect));
         } else {
+            // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
         }
     }
@@ -506,18 +523,49 @@ class auth_plugin_oidc extends \auth_plugin_base {
      *
      * @return bool Authentication success or failure.
      */
-    public function user_login($username, $password) {
+    public function user_login($username, $password = null) {
         global $CFG, $DB;
 
-        // Check user exists.
-        $userfilters = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id, 'auth' => 'oidc'];
-        $userexists = $DB->record_exists('user', $userfilters);
+        if ($this->loginflow === 'authreq') {
+            // Check user exists.
+            $userfilters = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id, 'auth' => 'oidc'];
+            $userexists = $DB->record_exists('user', $userfilters);
 
-        // Check token exists.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
-        $code = optional_param('code', null, PARAM_RAW);
-        $tokenvalid = (!empty($tokenrec) && !empty($code) && $tokenrec->authcode === $code) ? true : false;
-        return ($userexists === true && $tokenvalid === true) ? true : false;
+            // Check token exists.
+            $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
+            $code = optional_param('code', null, PARAM_RAW);
+            $tokenvalid = (!empty($tokenrec) && !empty($code) && $tokenrec->authcode === $code) ? true : false;
+            return ($userexists === true && $tokenvalid === true) ? true : false;
+        } else if ($this->loginflow === 'rocreds') {
+            $client = $this->get_oidcclient();
+            $tokenparams = $client->rocredsrequest($username, $password);
+            if (!empty($tokenparams) && isset($tokenparams['token_type']) && $tokenparams['token_type'] === 'Bearer') {
+                list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token']);
+                $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+                if (!empty($tokenrec)) {
+                    $tokenrec->authcode = '';
+                    $tokenrec->token = $tokenparams['access_token'];
+                    $tokenrec->expiry = $tokenparams['expires_on'];
+                    $tokenrec->refreshtoken = $tokenparams['refresh_token'];
+                    $tokenrec->idtoken = $tokenparams['id_token'];
+                    $DB->update_record('auth_oidc_token', $tokenrec);
+                } else {
+                    $tokenrec = new \stdClass;
+                    $tokenrec->oidcuniqid = $oidcuniqid;
+                    $tokenrec->username = $username;
+                    $tokenrec->scope = $tokenparams['scope'];
+                    $tokenrec->resource = $tokenparams['resource'];
+                    $tokenrec->authcode = '';
+                    $tokenrec->token = $tokenparams['access_token'];
+                    $tokenrec->expiry = $tokenparams['expires_on'];
+                    $tokenrec->refreshtoken = $tokenparams['refresh_token'];
+                    $tokenrec->idtoken = $tokenparams['id_token'];
+                    $tokenrec->id = $DB->insert_record('auth_oidc_token', $tokenrec);
+                }
+                return true;
+            }
+            return false;
+        }
     }
 
     /**
