@@ -50,6 +50,11 @@ $configkey = get_string('cfg_redirecturi_key', 'auth_oidc');
 $configdesc = get_string('cfg_redirecturi_desc', 'auth_oidc');
 $settings->add(new \auth_oidc\form\adminsetting\redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
 
+$configkey = get_string('cfg_loginflow_key', 'auth_oidc');
+$configdesc = '';
+$configdefault = 'authreq';
+$settings->add(new \auth_oidc\form\adminsetting\loginflow('auth_oidc/loginflow', $configkey, $configdesc, $configdefault));
+
 $configkey = get_string('cfg_icon_key', 'auth_oidc');
 $configdesc = get_string('cfg_icon_desc', 'auth_oidc');
 $configdefault = 'auth_oidc:o365';
