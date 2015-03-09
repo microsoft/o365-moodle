@@ -37,7 +37,8 @@ $oidcloginconnected = ($USER->auth === 'oidc') ? true : false;
 
 if (!empty($action)) {
     if ($action === 'connectlogin' && $oidcloginconnected === false) {
-        $auth = new \auth_plugin_oidc;
+        // Use authorization request login flow to connect existing users.
+        $auth = new \auth_oidc\loginflow\authcode;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnectlogin' && $oidcloginconnected === true) {
