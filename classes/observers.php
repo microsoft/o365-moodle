@@ -74,25 +74,37 @@ class observers {
     }
 
     /**
-     * Handle a user being created by the OpenID Connect authentication plugin.
+     * Handle a user being created .
      *
      * Does the following:
-     *     - Gets additional information from AAD and updates the user.
+     *     - Check if user is using OpenID Connect auth plugin.
+     *     - If so, gets additional information from AAD and updates the user.
      *
-     * @param \auth_oidc\event\user_created $event The triggered event.
+     * @param \core\event\user_created $event The triggered event.
      * @return bool Success/Failure.
      */
-    public static function handle_oidc_user_created(\auth_oidc\event\user_created $event) {
+    public static function handle_user_created(\core\event\user_created $event) {
         global $DB;
         $eventdata = $event->get_data();
 
+        if (empty($eventdata['objectid'])) {
+            return false;
+        }
+        $createduserid = $eventdata['objectid'];
+
+        $user = $DB->get_record('user', ['id' => $createduserid]);
+        if (empty($user) || !isset($user->auth) || $user->auth !== 'oidc') {
+            return false;
+        }
+
+        // AAD must be configured for us to fetch data.
         $oidcconfig = get_config('auth_oidc');
         if (\local_o365\rest\azuread::is_configured() !== true || empty($oidcconfig)) {
             return true;
         }
 
         $aadresource = \local_o365\rest\azuread::get_resource();
-        $tokenparams = ['username' => $eventdata['other']['username'], 'resource' => $aadresource];
+        $tokenparams = ['username' => $user->username, 'resource' => $aadresource];
         $tokenrec = $DB->get_record('auth_oidc_token', $tokenparams);
         if (empty($tokenrec)) {
             // No OIDC token for this user and resource - maybe not an AAD user.
@@ -123,10 +135,12 @@ class observers {
             }
 
             if (!empty($updateduser)) {
-                $updateduser['id'] = $event->userid;
+                $updateduser['id'] = $createduserid;
                 $DB->update_record('user', (object)$updateduser);
             }
+            return true;
         }
+        return false;
     }
 
     /**

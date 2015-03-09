@@ -36,12 +36,6 @@ $observers = [
         'internal'    => false,
     ],
     [
-        'eventname'   => '\auth_oidc\event\user_created',
-        'callback'    => '\local_o365\observers::handle_oidc_user_created',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
         'eventname'   => '\auth_oidc\event\user_disconnected',
         'callback'    => '\local_o365\observers::handle_oidc_user_disconnected',
         'priority'    => 200,
@@ -130,6 +124,12 @@ $observers = [
     [
         'eventname'   => '\core\event\course_deleted',
         'callback'    => '\local_o365\observers::handle_course_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\user_created',
+        'callback'    => '\local_o365\observers::handle_user_created',
         'priority'    => 200,
         'internal'    => false,
     ],
