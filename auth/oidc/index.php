@@ -24,14 +24,6 @@
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
 
-$auth = new \auth_plugin_oidc;
+$auth = new \auth_plugin_oidc('authcode');
 $auth->set_httpclient(new \auth_oidc\httpclient());
-$state = optional_param('state', '', PARAM_RAW);
-$promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
-if (!empty($state)) {
-    // Response from OP.
-    $auth->handleauthresponse($_REQUEST);
-} else {
-    // Initial login request.
-    $auth->initiateauthrequest($promptlogin);
-}
+$auth->handleredirect();
