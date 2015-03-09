@@ -150,16 +150,13 @@ if (!empty($action)) {
             $mform->display();
             echo $OUTPUT->footer();
         }
-    } else if ($action === 'connectlogin') {
+    } else if ($action === 'connectlogin' || $action === 'connecttoken') {
         require_once($CFG->dirroot.'/auth/oidc/auth.php');
-        $auth = new \auth_plugin_oidc;
+        $auth = new \auth_oidc\loginflow\authcode;
         $auth->set_httpclient(new \auth_oidc\httpclient());
-        $auth->initiateauthrequest(false, ['redirect' => '/local/o365/ucp.php']);
-    } else if ($action === 'connecttoken') {
-        require_once($CFG->dirroot.'/auth/oidc/auth.php');
-        $SESSION->auth_oidc_connectiononly = true;
-        $auth = new \auth_plugin_oidc;
-        $auth->set_httpclient(new \auth_oidc\httpclient());
+        if ($action === 'connecttoken') {
+            $SESSION->auth_oidc_connectiononly = true;
+        }
         $auth->initiateauthrequest(false, ['redirect' => '/local/o365/ucp.php']);
     } else if ($action === 'disconnecttoken') {
         require_once($CFG->dirroot.'/auth/oidc/auth.php');
@@ -178,32 +175,36 @@ if (!empty($action)) {
 
     echo \html_writer::tag('h5', 'Connection Status');
 
-    echo \html_writer::start_div('auth_oidc_ucp_indicator');
-    echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
-    if ($o365loginconnected === true) {
-        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
-        if (is_enabled_auth('manual') === true) {
-            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-            $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
-            $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+    if (is_enabled_auth('oidc')) {
+        echo \html_writer::start_div('auth_oidc_ucp_indicator');
+        echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
+        if ($o365loginconnected === true) {
+            echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
+            if (is_enabled_auth('manual') === true) {
+                $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
+                $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+                echo \html_writer::tag('h5', $linkhtml);
+            }
+        } else {
+            echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
+            $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
+            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
         }
-    } else {
-        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
-        $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
-        $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
-        echo \html_writer::tag('h5', $linkhtml);
+        echo \html_writer::end_div();
     }
-    echo \html_writer::end_div();
 
     echo \html_writer::start_div('auth_oidc_ucp_indicator');
     echo \html_writer::tag('h4', get_string('ucp_connection_status', 'local_o365', $opname));
     if ($o365connected === true) {
         echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'local_o365'), ['class' => 'notifysuccess']);
-        $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
-        $strdisconnect = get_string('ucp_connection_stop', 'local_o365', $opname);
-        $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
-        echo \html_writer::tag('h5', $linkhtml);
+        if ($o365loginconnected !== true) {
+            $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+            $strdisconnect = get_string('ucp_connection_stop', 'local_o365', $opname);
+            $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+            echo \html_writer::tag('h5', $linkhtml);
+        }
     } else {
         echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'local_o365'), ['class' => 'notifyproblem']);
         $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
