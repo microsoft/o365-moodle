@@ -52,7 +52,7 @@ $settings->add(new \auth_oidc\form\adminsetting\redirecturi('auth_oidc/redirectu
 
 $configkey = get_string('cfg_loginflow_key', 'auth_oidc');
 $configdesc = '';
-$configdefault = 'authreq';
+$configdefault = 'authcode';
 $settings->add(new \auth_oidc\form\adminsetting\loginflow('auth_oidc/loginflow', $configkey, $configdesc, $configdefault));
 
 $configkey = get_string('cfg_icon_key', 'auth_oidc');
