@@ -62,9 +62,13 @@ $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with 
 
 $string['settings_aadsync'] = 'Sync users from AzureAD';
 $string['settings_aadsync_details'] = 'When enabled, users in the associated AzureAD directory are synced to Moodle. This creates users in Moodle that exist in AzureAD, and deletes the users from Moodle that were synced when they are deleted from AzureAD.';
+$string['settings_aadtenant'] = 'AzureAD Tenant';
+$string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example, if the URL of your Office 365 subscription is contoso.onmicrosoft.com, enter contoso.';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
+$string['settings_odburl'] = 'OneDrive for Business URL';
+$string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your AzureAD tenant. For example, if your AzureAD tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
 $string['settings_sharepointlink'] = 'SharePoint Link';
 $string['settings_sharepointlink_connected'] = 'Moodle is connected to this SharePoint site.';
 $string['settings_sharepointlink_changelink'] = 'Change Site';
@@ -81,8 +85,6 @@ $string['settings_systemapiuser_change'] = 'Change User';
 $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
-$string['settings_tenant'] = 'AzureAD Tenant';
-$string['settings_tenant_details'] = 'Used to Identify your organization within Azure AD. For example, if the URL of your Office 365 subscription is contoso.onmicrosoft.com, enter contoso.';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
