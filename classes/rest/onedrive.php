@@ -34,7 +34,7 @@ class onedrive extends \local_o365\rest\o365api {
      */
     public static function is_configured() {
         $config = get_config('local_o365');
-        return (!empty($config->tenant)) ? true : false;
+        return (!empty($config->odburl)) ? true : false;
     }
 
     /**
@@ -44,8 +44,8 @@ class onedrive extends \local_o365\rest\o365api {
      */
     public static function get_resource() {
         $config = get_config('local_o365');
-        if (!empty($config->tenant)) {
-            return 'https://'.$config->tenant.'-my.sharepoint.com';
+        if (!empty($config->odburl)) {
+            return 'https://'.$config->odburl;
         } else {
             return false;
         }
