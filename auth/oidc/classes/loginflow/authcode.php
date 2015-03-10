@@ -1,0 +1,306 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package auth_oidc
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ */
+
+namespace auth_oidc\loginflow;
+
+/**
+ * Login flow for the oauth2 authorization code grant.
+ */
+class authcode extends \auth_oidc\loginflow\base {
+    /**
+     * Returns a list of potential IdPs that this authentication plugin supports. Used to provide links on the login page.
+     *
+     * @param string $wantsurl The relative url fragment the user wants to get to.
+     * @return array Array of idps.
+     */
+    public function loginpage_idp_list($wantsurl) {
+        if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
+            return [];
+        }
+        if (empty($this->config->authendpoint) || empty($this->config->tokenendpoint)) {
+            return [];
+        }
+
+        if (!empty($this->config->customicon)) {
+            $icon = new \pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+        } else {
+            $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
+            $icon = explode(':', $icon);
+            if (isset($icon[1])) {
+                list($iconcomponent, $iconkey) = $icon;
+            } else {
+                $iconcomponent = 'auth_oidc';
+                $iconkey = 'o365';
+            }
+            $icon = new \pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+        }
+
+        return [
+            [
+                'url' => new \moodle_url('/auth/oidc/'),
+                'icon' => $icon,
+                'name' => $this->config->opname,
+            ]
+        ];
+    }
+
+    /**
+     * Handle requests to the redirect URL.
+     *
+     * @return mixed Determined by loginflow.
+     */
+    public function handleredirect() {
+        $state = optional_param('state', '', PARAM_RAW);
+        $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
+        if (!empty($state)) {
+            // Response from OP.
+            $this->handleauthresponse($_REQUEST);
+        } else {
+            // Initial login request.
+            $this->initiateauthrequest($promptlogin);
+        }
+    }
+
+    /**
+     * This is the primary method that is used by the authenticate_user_login() function in moodlelib.php.
+     *
+     * @param string $username The username (with system magic quotes)
+     * @param string $password The password (with system magic quotes)
+     * @return bool Authentication success or failure.
+     */
+    public function user_login($username, $password = null) {
+        global $CFG, $DB;
+
+        // Check user exists.
+        $userfilters = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id, 'auth' => 'oidc'];
+        $userexists = $DB->record_exists('user', $userfilters);
+
+        // Check token exists.
+        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
+        $code = optional_param('code', null, PARAM_RAW);
+        $tokenvalid = (!empty($tokenrec) && !empty($code) && $tokenrec->authcode === $code) ? true : false;
+        return ($userexists === true && $tokenvalid === true) ? true : false;
+    }
+
+    /**
+     * Initiate an authorization request to the configured OP.
+     */
+    public function initiateauthrequest($promptlogin = false, array $stateparams = array()) {
+        $client = $this->get_oidcclient();
+        $client->authrequest($promptlogin, $stateparams);
+    }
+
+    /**
+     * Handle an authorization request response received from the configured OP.
+     *
+     * @param array $authparams Received parameters.
+     */
+    protected function handleauthresponse(array $authparams) {
+        global $DB, $CFG, $SESSION;
+
+        if (!isset($authparams['code'])) {
+            throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
+        }
+
+        // Validate and expire state.
+        $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
+        if (empty($staterec)) {
+            throw new \moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
+        $orignonce = $staterec->nonce;
+        $additionaldata = [];
+        if (!empty($staterec->additionaldata)) {
+            $additionaldata = @unserialize($staterec->additionaldata);
+            if (!is_array($additionaldata)) {
+                $additionaldata = [];
+            }
+        }
+        $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
+
+        // Get token from auth code.
+        $client = $this->get_oidcclient();
+        $tokenparams = $client->tokenrequest($authparams['code']);
+        if (!isset($tokenparams['id_token'])) {
+            throw new \moodle_exception('errorauthnoidtoken', 'auth_oidc');
+        }
+
+        // Decode and verify idtoken.
+        list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token'], $orignonce);
+
+        // This is for setting the system API user.
+        if (isset($SESSION->auth_oidc_justevent)) {
+            unset($SESSION->auth_oidc_justevent);
+            $eventdata = ['other' => ['authparams' => $authparams, 'tokenparams' => $tokenparams]];
+            $event = \auth_oidc\event\user_authed::create($eventdata);
+            $event->trigger();
+            return true;
+        }
+
+        if (isloggedin() === true) {
+            // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
+            $connectiononly = false;
+            if (isset($SESSION->auth_oidc_connectiononly)) {
+                $connectiononly = true;
+                unset($SESSION->auth_oidc_connectiononly);
+            }
+            $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
+            $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
+            redirect(new \moodle_url($redirect));
+        } else {
+            // Otherwise it's a user logging in normally with OIDC.
+            $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
+        }
+    }
+
+    /**
+     * Handle a user migration event.
+     *
+     * @param string $oidcuniqid A unique identifier for the user.
+     * @param array $authparams Paramteres receieved from the auth request.
+     * @param array $tokenparams Parameters received from the token request.
+     * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param bool $connectiononly Whether to just connect the user (true), or to connect and change login method (false).
+     */
+    protected function handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly = false) {
+        global $USER, $DB, $CFG;
+
+        // Check if OIDC user is already connected to a Moodle user.
+        $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+        if (!empty($tokenrec)) {
+            $existinguserparams = ['username' => $tokenrec->username, 'mnethostid' => $CFG->mnet_localhost_id];
+            $existinguser = $DB->get_record('user', $existinguserparams);
+            if (empty($existinguser)) {
+                $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+            } else {
+                if ($USER->username === $tokenrec->username) {
+                    // Already connected to current user.
+                    if ($USER->auth !== 'oidc') {
+                        // Update auth plugin.
+                        $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+                        $USER = $DB->get_record('user', ['id' => $USER->id]);
+                        $USER->auth = 'oidc';
+                    }
+                    $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
+                    return true;
+                } else {
+                    // OIDC user connected to user that is not us. Can't continue.
+                    throw new \moodle_exception('errorauthuserconnectedtodifferent', 'auth_oidc');
+                }
+            }
+        }
+
+        // Check if Moodle user is already connected to an OIDC user.
+        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
+        if (!empty($tokenrec)) {
+            if ($tokenrec->oidcuniqid === $oidcuniqid) {
+                // Already connected to current user.
+                if ($USER->auth !== 'oidc') {
+                    // Update auth plugin.
+                    $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+                    $USER = $DB->get_record('user', ['id' => $USER->id]);
+                    $USER->auth = 'oidc';
+                }
+                $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
+                return true;
+            } else {
+                throw new \moodle_exception('errorauthuseralreadyconnected', 'auth_oidc');
+            }
+        }
+
+        // Create token data.
+        $tokenrec = $this->createtoken($oidcuniqid, $USER->username, $authparams, $tokenparams, $idtoken);
+
+        $eventdata = [
+            'objectid' => $USER->id,
+            'userid' => $USER->id,
+            'other' => ['username' => $USER->username, 'userid' => $USER->id]
+        ];
+        $event = \auth_oidc\event\user_connected::create($eventdata);
+        $event->trigger();
+
+        // Switch auth method, if requested.
+        if ($connectiononly !== true) {
+            $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+            $USER = $DB->get_record('user', ['id' => $USER->id]);
+            $USER->auth = 'oidc';
+        }
+
+        return true;
+    }
+
+    /**
+     * Handle a login event.
+     *
+     * @param string $oidcuniqid A unique identifier for the user.
+     * @param array $authparams Parameters receieved from the auth request.
+     * @param array $tokenparams Parameters received from the token request.
+     * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     */
+    protected function handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken) {
+        global $DB, $CFG;
+
+        $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+        if (!empty($tokenrec)) {
+            $username = $tokenrec->username;
+            $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
+        } else {
+            // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
+            $username = $idtoken->claim('upn');
+            if (empty($username)) {
+                $username = strtolower($oidcuniqid);
+            }
+            $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
+        }
+
+        $existinguserparams = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id];
+        if ($DB->record_exists('user', $existinguserparams) !== true) {
+            // User does not exist. Create user if site allows, otherwise fail.
+            if (empty($CFG->authpreventaccountcreation)) {
+                $user = create_user_record($username, null, 'oidc');
+            } else {
+                // Trigger login failed event.
+                $failurereason = AUTH_LOGIN_NOUSER;
+                $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
+                $event = \core\event\user_login_failed::create($eventdata);
+                $event->trigger();
+                throw new \moodle_exception('errorauthloginfailed', 'auth_oidc');
+            }
+        }
+
+        $user = authenticate_user_login($username, null, true);
+        if (empty($user)) {
+            throw new \moodle_exception('errorauthloginfailed', 'auth_oidc');
+        }
+
+        $eventdata = [
+            'objectid' => $user->id,
+            'userid' => $user->id,
+            'other' => ['username' => $user->username],
+        ];
+        $event = \auth_oidc\event\user_loggedin::create($eventdata);
+        $event->trigger();
+
+        complete_user_login($user);
+        redirect(core_login_get_return_url());
+    }
+}

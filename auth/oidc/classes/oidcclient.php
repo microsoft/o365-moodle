@@ -168,6 +168,40 @@ class oidcclient {
     }
 
     /**
+     * Make a token request using the resource-owner credentials login flow.
+     *
+     * @param string $username The resource owner's username.
+     * @param string $password The resource owner's password.
+     * @return array Received parameters.
+     */
+    public function rocredsrequest($username, $password) {
+        if (empty($this->endpoints['token'])) {
+            throw new \moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
+        }
+
+        if (strpos($this->endpoints['token'], 'https://') !== 0) {
+            throw new \moodle_exception('erroroidcclientinsecuretokenendpoint', 'auth_oidc');
+        }
+
+        $params = [
+            'grant_type' => 'password',
+            'username' => $username,
+            'password' => $password,
+            'scope' => 'openid profile email',
+            'resource' => 'https://graph.windows.net',
+            'client_id' => $this->clientid,
+            'client_secret' => $this->clientsecret,
+        ];
+
+        try {
+            $returned = $this->httpclient->post($this->endpoints['token'], $params);
+            return @json_decode($returned, true);
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    /**
      * Exchange an authorization code for an access token.
      *
      * @param string $tokenendpoint The token endpoint URI.
