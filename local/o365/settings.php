@@ -29,9 +29,13 @@ if ($hassiteconfig) {
     $settings = new \admin_settingpage('local_o365', get_string('pluginname', 'local_o365'));
     $ADMIN->add('localplugins', $settings);
 
-    $label = get_string('settings_tenant', 'local_o365');
-    $desc = get_string('settings_tenant_details', 'local_o365');
-    $settings->add(new \admin_setting_configtext('local_o365/tenant', $label, $desc, '', PARAM_ALPHANUMEXT));
+    $label = get_string('settings_aadtenant', 'local_o365');
+    $desc = get_string('settings_aadtenant_details', 'local_o365');
+    $settings->add(new \admin_setting_configtext('local_o365/aadtenant', $label, $desc, '', PARAM_ALPHANUMEXT));
+
+    $label = get_string('settings_odburl', 'local_o365');
+    $desc = get_string('settings_odburl_details', 'local_o365');
+    $settings->add(new \admin_setting_configtext('local_o365/odburl', $label, $desc, '', PARAM_ALPHANUMEXT));
 
     $label = get_string('settings_systemapiuser', 'local_o365');
     $desc = get_string('settings_systemapiuser_details', 'local_o365');
