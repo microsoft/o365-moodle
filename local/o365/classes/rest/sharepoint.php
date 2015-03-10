@@ -759,7 +759,7 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return string The result of the API call.
      */
     public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
-        $options = ['CURLOPT_SSLVERSION' => 3];
+        $options['CURLOPT_SSLVERSION'] = 4;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 }
