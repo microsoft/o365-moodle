@@ -36,14 +36,14 @@ class mockoidcclient extends \auth_oidc\oidcclient {
     /**
      * Stub method to access protected parent method.
      */
-    public function getnewstate($nonce) {
-        return parent::getnewstate($nonce);
+    public function getnewstate($nonce, array $stateparams = array()) {
+        return parent::getnewstate($nonce, $stateparams);
     }
 
     /**
      * Stub method to access protected parent method.
      */
-    public function getauthrequestparams() {
-        return parent::getauthrequestparams();
+    public function getauthrequestparams($promptlogin = false, array $stateparams = array()) {
+        return parent::getauthrequestparams($promptlogin, $stateparams);
     }
 }
