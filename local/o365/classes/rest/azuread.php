@@ -34,7 +34,7 @@ class azuread extends \local_o365\rest\o365api {
      */
     public static function is_configured() {
         $config = get_config('local_o365');
-        return (!empty($config->tenant)) ? true : false;
+        return (!empty($config->aadtenant)) ? true : false;
     }
 
     /**
@@ -65,8 +65,8 @@ class azuread extends \local_o365\rest\o365api {
      */
     public function get_apiuri() {
         $config = get_config('local_o365');
-        if (!empty($config->tenant)) {
-            return static::get_resource().'/'.$config->tenant.'.onmicrosoft.com';
+        if (!empty($config->aadtenant)) {
+            return static::get_resource().'/'.$config->aadtenant;
         } else {
             return false;
         }
