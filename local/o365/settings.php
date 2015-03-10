@@ -31,11 +31,11 @@ if ($hassiteconfig) {
 
     $label = get_string('settings_aadtenant', 'local_o365');
     $desc = get_string('settings_aadtenant_details', 'local_o365');
-    $settings->add(new \admin_setting_configtext('local_o365/aadtenant', $label, $desc, '', PARAM_ALPHANUMEXT));
+    $settings->add(new \admin_setting_configtext('local_o365/aadtenant', $label, $desc, '', PARAM_URL));
 
     $label = get_string('settings_odburl', 'local_o365');
     $desc = get_string('settings_odburl_details', 'local_o365');
-    $settings->add(new \admin_setting_configtext('local_o365/odburl', $label, $desc, '', PARAM_ALPHANUMEXT));
+    $settings->add(new \admin_setting_configtext('local_o365/odburl', $label, $desc, '', PARAM_URL));
 
     $label = get_string('settings_systemapiuser', 'local_o365');
     $desc = get_string('settings_systemapiuser_details', 'local_o365');
