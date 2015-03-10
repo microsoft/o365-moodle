@@ -126,5 +126,14 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011604', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011606) {
+        $config = get_config('local_o365');
+        if (!empty($config->tenant)) {
+            set_config('aadtenant', $config->tenant.'.onmicrosoft.com', 'local_o365');
+            set_config('odburl', $config->tenant.'-my.sharepoint.com', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015011606', 'local', 'o365');
+    }
+
     return $result;
 }
