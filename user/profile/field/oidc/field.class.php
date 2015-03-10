@@ -40,14 +40,13 @@ class profile_field_oidc extends \profile_field_base {
     public function display_data() {
         global $USER, $DB;
 
-        $oidcrec = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
         $label = get_string('pluginname', 'profilefield_oidc');
         $authconfig = get_config('auth_oidc');
         if (!empty($authconfig->opname)) {
             $label = $authconfig->opname;
         }
 
-        if (!empty($oidcrec)) {
+        if ($USER->auth === 'oidc') {
             $value = get_string('connected', 'profilefield_oidc', $label);
             $linkstr = get_string('connected_link', 'profilefield_oidc', $label);
         } else {

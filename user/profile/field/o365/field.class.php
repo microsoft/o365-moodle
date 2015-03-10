@@ -47,6 +47,9 @@ class profile_field_o365 extends \profile_field_base {
             $value .= ' '.\html_writer::link($manageurl, $linkstr);
         } else {
             $value = get_string('notconnected_str', 'profilefield_o365');
+            $linkstr = get_string('notconnected_link', 'profilefield_o365');
+            $manageurl = new \moodle_url('/local/o365/ucp.php');
+            $value .= ' '.\html_writer::link($manageurl, $linkstr);
         }
         return $value;
     }
