@@ -29,27 +29,47 @@ if ($hassiteconfig) {
     $settings = new \admin_settingpage('local_o365', get_string('pluginname', 'local_o365'));
     $ADMIN->add('localplugins', $settings);
 
-    $label = get_string('settings_aadtenant', 'local_o365');
-    $desc = get_string('settings_aadtenant_details', 'local_o365');
-    $settings->add(new \admin_setting_configtext('local_o365/aadtenant', $label, $desc, '', PARAM_URL));
+    $label = get_string('settings_healthcheck', 'local_o365');
+    $desc = get_string('settings_healthcheck_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\healthcheck('local_o365/healthcheck', $label, $desc, '0'));
 
-    $label = get_string('settings_odburl', 'local_o365');
-    $desc = get_string('settings_odburl_details', 'local_o365');
-    $settings->add(new \admin_setting_configtext('local_o365/odburl', $label, $desc, '', PARAM_URL));
+    $label = get_string('settings_header_options', 'local_o365');
+    $desc = '';
+    $settings->add(new admin_setting_heading('local_o365_options', $label, $desc));
 
     $label = get_string('settings_systemapiuser', 'local_o365');
     $desc = get_string('settings_systemapiuser_details', 'local_o365');
     $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
 
-    $label = get_string('settings_sharepointlink', 'local_o365');
-    $desc = get_string('settings_sharepointlink_details', 'local_o365');
-    $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
-
     $label = get_string('settings_aadsync', 'local_o365');
     $desc = get_string('settings_aadsync_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/aadsync', $label, $desc, '0'));
 
-    $label = get_string('settings_healthcheck', 'local_o365');
-    $desc = get_string('settings_healthcheck_details', 'local_o365');
-    $settings->add(new \local_o365\adminsetting\healthcheck('local_o365/healthcheck', $label, $desc, '0'));
+    $label = get_string('settings_header_setup', 'local_o365');
+    $desc = '';
+    $settings->add(new admin_setting_heading('local_o365_environment', $label, $desc));
+
+    $label = get_string('settings_detectoidc', 'local_o365');
+    $desc = get_string('settings_detectoidc_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\detectoidc('local_o365/detectoidc', $label, $desc));
+
+    $label = get_string('settings_detectperms', 'local_o365');
+    $desc = get_string('settings_detectperms_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\permissions('local_o365/detectperms', $label, $desc));
+
+    $label = get_string('settings_aadtenant', 'local_o365');
+    $desc = get_string('settings_aadtenant_details', 'local_o365');
+    $default = '';
+    $paramtype = PARAM_URL;
+    $settings->add(new \local_o365\adminsetting\serviceresource('local_o365/aadtenant', $label, $desc, $default, $paramtype));
+
+    $label = get_string('settings_odburl', 'local_o365');
+    $desc = get_string('settings_odburl_details', 'local_o365');
+    $default = '';
+    $paramtype = PARAM_URL;
+    $settings->add(new \local_o365\adminsetting\serviceresource('local_o365/odburl', $label, $desc, $default, $paramtype));
+
+    $label = get_string('settings_sharepointlink', 'local_o365');
+    $desc = get_string('settings_sharepointlink_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
 }

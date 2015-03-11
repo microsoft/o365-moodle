@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for AzureAD graph.
  */
 class azuread extends \local_o365\rest\o365api {
+    /** @var string A value to use for the AzureAD tenant. If null, will use value from local_o365/aadtenant config setting. */
+    protected $tenantoverride = null;
+
     /**
      * Determine if the API client is configured.
      *
@@ -54,8 +57,29 @@ class azuread extends \local_o365\rest\o365api {
      */
     protected function transform_full_request_uri($requesturi) {
         $requesturi .= (strpos($requesturi, '?') === false) ? '?' : '&';
-        $requesturi .= 'api-version=2013-04-05';
+        $requesturi .= 'api-version=1.5';
         return $requesturi;
+    }
+
+    /**
+     * Test a tenant value.
+     *
+     * @param string $tenant A tenant string to test.
+     * @return bool True if tenant succeeded, false if not.
+     */
+    public function test_tenant($tenant) {
+        if (!is_string($tenant)) {
+            throw new \coding_exception('tenant value must be a string');
+        }
+        $this->tenantoverride = $tenant;
+        $appinfo = $this->get_application_info();
+        $this->tenantoverride = null;
+        if (is_array($appinfo)) {
+            if (isset($appinfo['value']) && isset($appinfo['value'][0]['odata.type'])) {
+                return ($appinfo['value'][0]['odata.type'] === 'Microsoft.DirectoryServices.Application') ? true : false;
+            }
+        }
+        return false;
     }
 
     /**
@@ -64,12 +88,193 @@ class azuread extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        $config = get_config('local_o365');
-        if (!empty($config->aadtenant)) {
-            return static::get_resource().'/'.$config->aadtenant;
+        $tenant = null;
+        if (!empty($this->tenantoverride)) {
+            $tenant = $this->tenantoverride;
+        } else {
+            $config = get_config('local_o365');
+            if (!empty($config->aadtenant)) {
+                $tenant = $config->aadtenant;
+            }
+        }
+
+        if (!empty($tenant)) {
+            return static::get_resource().'/'.$tenant;
         } else {
             return false;
         }
+    }
+
+    /**
+     * Get information on the current application.
+     *
+     * @return array|null Array of application information, or null if failure.
+     */
+    public function get_application_info() {
+        $oidcconfig = get_config('auth_oidc');
+        $endpoint = '/applications/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
+        $response = $this->apicall('get', $endpoint);
+        if (!empty($response)) {
+            $response = @json_decode($response, true);
+            if (!empty($response) && is_array($response)) {
+                return $response;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check whether all permissions defined in $this->get_required_permissions have been assigned.
+     *
+     * @return array Array of missing permissions.
+     */
+    public function check_permissions() {
+        $neededperms = $this->get_required_permissions();
+        $servicestoget = array_keys($neededperms);
+        $allappdata = $this->get_service_data($servicestoget);
+        $currentperms = $this->get_current_permissions();
+        $missingperms = [];
+        foreach ($neededperms as $app => $perms) {
+            $appid = $allappdata[$app]['appId'];
+            $appname = $allappdata[$app]['appDisplayName'];
+            foreach ($perms as $permname => $neededtype) {
+                $permid = $allappdata[$app]['perms'][$permname]['id'];
+                if (!isset($currentperms[$appid][$permid])) {
+                    $missingperms[$appname][$permname] = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
+                }
+            }
+        }
+
+        // Determine whether we have write permissions.
+        $writeappid = $allappdata['Microsoft.Azure.ActiveDirectory']['appId'];
+        $writepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'];
+        $impersonatepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['user_impersonation']['id'];
+        $haswrite = (!empty($currentperms[$writeappid][$writepermid])) ? true : false;
+        $hasimpersonate = (!empty($currentperms[$writeappid][$impersonatepermid])) ? true : false;
+        $canfix = ($hasimpersonate === true) ? true : false;
+
+        return [$missingperms, $canfix];
+    }
+
+    /**
+     * Update permissions for the application.
+     *
+     * @return bool Whether the operation was successful.
+     */
+    public function push_permissions() {
+        $this->token->refresh();
+        $appinfo = $this->get_application_info();
+        $reqdperms = $this->get_required_permissions();
+        $svcdata = $this->get_service_data(array_keys($reqdperms));
+
+        $newperms = [];
+        foreach ($reqdperms as $appname => $perms) {
+            $appid = $svcdata[$appname]['appId'];
+            $appperms = ['resourceAppId' => $appid, 'resourceAccess' => []];
+            foreach ($perms as $permname => $permtype) {
+                $appperms['resourceAccess'][] = [
+                    'id' => $svcdata[$appname]['perms'][$permname]['id'],
+                    'type' => $permtype
+                ];
+            }
+            $newperms[] = $appperms;
+        }
+        $newperms = ['value' => $newperms];
+        $newperms = json_encode($newperms);
+        $endpoint = '/applications/'.$appinfo['value'][0]['objectId'].'/requiredResourceAccess';
+        $response = $this->apicall('merge', $endpoint, $newperms);
+
+        if ($response === '') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get the currently assigned permissions for this application.
+     *
+     * @return array Array of currently assign permissions, using service and permission IDs.
+     */
+    public function get_current_permissions() {
+        $currentperms = [];
+        $response = $this->get_application_info();
+        if (isset($response['value'][0]['requiredResourceAccess'])) {
+            foreach ($response['value'][0]['requiredResourceAccess'] as $i => $permset) {
+                if (isset($permset['resourceAppId']) && isset($permset['resourceAccess'])) {
+                    if (!isset($currentperms[$permset['resourceAppId']])) {
+                        $currentperms[$permset['resourceAppId']] = [];
+                    }
+                    foreach ($permset['resourceAccess'] as $i => $access) {
+                        if (isset($access['id']) && isset($access['type'])) {
+                            $currentperms[$permset['resourceAppId']][$access['id']] = $access['type'];
+                        }
+                    }
+                }
+            }
+            unset($response);
+        }
+        return $currentperms;
+    }
+
+    /**
+     * Get an array of the current required permissions.
+     *
+     * @return array Array of required AzureAD application permissions.
+     */
+    public function get_required_permissions() {
+        return [
+            'Microsoft.Azure.ActiveDirectory' => [
+                'Directory.Read' => 'Scope',
+                'UserProfile.Read' => 'Scope',
+            ],
+            'Microsoft.SharePoint' => [
+                'AllSites.Read' => 'Scope',
+                'AllSites.Write' => 'Scope',
+                'AllSites.Manage' => 'Scope',
+                'AllSites.FullControl' => 'Scope',
+                'MyFiles.Read' => 'Scope',
+                'MyFiles.Write' => 'Scope',
+            ],
+            'Microsoft.Exchange' => [
+                'Calendars.Read' => 'Scope',
+                'Calendars.Write' => 'Scope',
+            ],
+        ];
+    }
+
+    /**
+     * Get information on specified services.
+     *
+     * @param array $servicenames Array of service names to get. (See keys in get_required_permissions for examples.)
+     * @param bool $transform Whether to transform the result for easy consumption (see check_permissions and push_permissions)
+     * @return array|null Array of service information, or null if error.
+     */
+    public function get_service_data(array $servicenames, $transform = true) {
+        $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
+        $response = $this->apicall('get', '/servicePrincipals()?$filter='.$filterstr);
+        if (!empty($response)) {
+            $response = @json_decode($response, true);
+            if (!empty($response) && is_array($response)) {
+                if ($transform === true) {
+                    $transformed = [];
+                    foreach ($response['value'] as $i => $appdata) {
+                        $transformed[$appdata['displayName']] = [
+                            'appId' => $appdata['appId'],
+                            'appDisplayName' => $appdata['appDisplayName'],
+                            'perms' => []
+                        ];
+                        foreach ($appdata['oauth2Permissions'] as $i => $permdata) {
+                            $transformed[$appdata['displayName']]['perms'][$permdata['value']] = $permdata;
+                        }
+                    }
+                    return $transformed;
+                } else {
+                    return $response;
+                }
+            }
+        }
+        return null;
     }
 
     /**

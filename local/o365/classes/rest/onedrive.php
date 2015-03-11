@@ -38,6 +38,25 @@ class onedrive extends \local_o365\rest\o365api {
     }
 
     /**
+     * Validate that a given url is a valid OneDrive for Business SharePoint URL.
+     *
+     * @param string $resource Uncleaned, unvalidated URL to check.
+     * @param \local_o365\oauth2\clientdata $clientdata oAuth2 Credentials
+     * @param \local_o365\httpclientinterface $httpclient An HttpClient to use for transport.
+     * @return bool Whether the received resource is valid or not.
+     */
+    public static function validate_resource($resource, \local_o365\oauth2\clientdata $clientdata,
+                                             \local_o365\httpclientinterface $httpclient) {
+        $cleanresource = clean_param($resource, PARAM_URL);
+        if ($cleanresource !== $resource) {
+            return false;
+        }
+        $fullcleanresource = 'https://'.$cleanresource;
+        $token = \local_o365\oauth2\systemtoken::get_for_new_resource($fullcleanresource, $clientdata, $httpclient);
+        return (!empty($token)) ? true : false;
+    }
+
+    /**
      * Get the API client's oauth2 resource.
      *
      * @return string The resource for oauth2 tokens.
