@@ -44,7 +44,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($result && $oldversion < 2015012702) {
         $table = new xmldb_table('auth_oidc_state');
-        $field = new xmldb_field('additionaldata', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'timecreated');
+        $field = new xmldb_field('additionaldata', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timecreated');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
