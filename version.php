@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012705;
+$plugin->version = 2015012706;
 $plugin->requires = 2014111000;
 $plugin->component = 'auth_oidc';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.3';
+$plugin->release = '28.0.0.4';
