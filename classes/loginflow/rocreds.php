@@ -39,7 +39,19 @@ class rocreds extends \auth_oidc\loginflow\base {
 
         $client = $this->get_oidcclient();
         $authparams = ['code' => ''];
-        $tokenparams = $client->rocredsrequest($username, $password);
+
+        // Get OIDC username from token. If no token, user is a synced user and username will work.
+        $oidcusername = $username;
+        $oidctoken = $DB->get_records('auth_oidc_token', ['username' => $username]);
+        if (!empty($oidctoken)) {
+            $oidctoken = array_shift($oidctoken);
+            if (!empty($oidctoken) && !empty($oidctoken->oidcusername)) {
+                $oidcusername = $oidctoken->oidcusername;
+            }
+        }
+
+        // Make request.
+        $tokenparams = $client->rocredsrequest($oidcusername, $password);
         if (!empty($tokenparams) && isset($tokenparams['token_type']) && $tokenparams['token_type'] === 'Bearer') {
             list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token']);
             $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
