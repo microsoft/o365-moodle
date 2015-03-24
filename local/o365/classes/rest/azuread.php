@@ -333,7 +333,7 @@ class azuread extends \local_o365\rest\o365api {
 
         $newuser = (object)[
             'auth' => 'oidc',
-            'username' => trim(\core_text::strtolower($aaddata['objectId'])),
+            'username' => trim(\core_text::strtolower($aaddata['mail'])),
             'email' => $aaddata['mail'],
             'firstname' => $aaddata['givenName'],
             'lastname' => $aaddata['surname'],
