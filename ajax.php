@@ -32,13 +32,72 @@ echo $OUTPUT->header();
 $result = new \stdClass;
 $result->success = false;
 
+$httpclient = new \local_o365\httpclient();
+$oidccfg = get_config('auth_oidc');
+$clientcredspresent = (!empty($oidccfg->clientid) && !empty($oidccfg->clientsecret)) ? true : false;
+$endpointspresent = (!empty($oidccfg->authendpoint) && !empty($oidccfg->tokenendpoint)) ? true : false;
+if ($clientcredspresent !== true || $endpointspresent !== true) {
+    echo json_encode($result);
+    die();
+}
+$clientdata = new \local_o365\oauth2\clientdata($oidccfg->clientid, $oidccfg->clientsecret, $oidccfg->authendpoint,
+        $oidccfg->tokenendpoint);
+
 if ($mode === 'checksharepointsite') {
     $uncleanurl = required_param('site', PARAM_TEXT);
-    $oidcconfig = get_config('auth_oidc');
-    $httpclient = new \local_o365\httpclient();
-    $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-            $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
     $result->response = \local_o365\rest\sharepoint::validate_site($uncleanurl, $clientdata, $httpclient);
+    $result->success = true;
+} else if ($mode === 'checkserviceresource') {
+    $setting = required_param('setting', PARAM_TEXT);
+    $value = required_param('value', PARAM_TEXT);
+    if ($setting === 'aadtenant') {
+        $resource = \local_o365\rest\azuread::get_resource();
+        $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+        $apiclient = new \local_o365\rest\azuread($token, $httpclient);
+        $result->success = $apiclient->test_tenant($value);
+    } else if ($setting === 'odburl') {
+        $result->success = \local_o365\rest\onedrive::validate_resource($value, $clientdata, $httpclient);
+    }
+} else if ($mode === 'detectserviceresource') {
+    $setting = required_param('setting', PARAM_TEXT);
+    $resource = \local_o365\rest\discovery::get_resource();
+    $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+    $discovery = new \local_o365\rest\discovery($token, $httpclient);
+    if ($setting === 'aadtenant') {
+        $entitykey = 'Directory@AZURE';
+        $service = $discovery->get_service($entitykey);
+        if (!empty($service) && isset($service['serviceEndpointUri'])) {
+            $result->settingval = trim(parse_url($service['serviceEndpointUri'], PHP_URL_PATH), '/');
+            $result->success = true;
+        }
+    } else if ($setting === 'odburl') {
+        $entitykey = 'MyFiles@O365_SHAREPOINT';
+        $service = $discovery->get_service($entitykey);
+        if (!empty($service) && isset($service['serviceResourceId'])) {
+            $result->settingval = trim(parse_url($service['serviceResourceId'], PHP_URL_HOST), '/');
+            $result->success = true;
+        }
+    }
+} else if ($mode === 'fixappperms') {
+    $resource = \local_o365\rest\azuread::get_resource();
+    $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+    $apiclient = new \local_o365\rest\azuread($token, $httpclient);
+    $result->success = $apiclient->push_permissions();
+    if ($result->success === true) {
+        set_config('detectperms', 1, 'local_o365');
+    }
+} else if ($mode === 'getappperms') {
+    $resource = \local_o365\rest\azuread::get_resource();
+    $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+    $apiclient = new \local_o365\rest\azuread($token, $httpclient);
+    list($missingperms, $haswrite) = $apiclient->check_permissions();
+    $result->missingperms = $missingperms;
+    $result->haswrite = $haswrite;
+    if (empty($result->missingperms)) {
+        set_config('detectperms', 1, 'local_o365');
+    } else {
+        set_config('detectperms', 0, 'local_o365');
+    }
     $result->success = true;
 }
 

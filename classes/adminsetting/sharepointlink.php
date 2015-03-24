@@ -64,10 +64,16 @@ class sharepointlink extends \admin_setting {
      * @return string empty string if ok, string error message otherwise
      */
     public function write_setting($data) {
-        $this->config_write($this->name, $data);
-        $this->config_write('sharepoint_initialized', '0');
-        $sharepointinit = new \local_o365\task\sharepointinit();
-        \core\task\manager::queue_adhoc_task($sharepointinit);
+        $oldvalue = get_config($this->plugin, $this->name);
+        if ($oldvalue == $data) {
+            return '';
+        }
+        if (!empty($data)) {
+            $this->config_write($this->name, $data);
+            $this->config_write('sharepoint_initialized', '0');
+            $sharepointinit = new \local_o365\task\sharepointinit();
+            \core\task\manager::queue_adhoc_task($sharepointinit);
+        }
         return '';
     }
 
