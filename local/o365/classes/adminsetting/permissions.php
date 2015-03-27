@@ -76,13 +76,6 @@ class permissions extends \admin_setting {
         $settinghtml = '';
         if ($clientcredspresent === true && $endpointspresent === true) {
 
-            $oidcconfig = get_config('auth_oidc');
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-                    $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-            $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
-            $apiclient = new \local_o365\rest\azuread($token, $httpclient);
             $existingsetting = $this->config_read($this->name);
 
             if (!empty($existingsetting)) {
