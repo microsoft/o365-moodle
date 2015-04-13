@@ -46,18 +46,38 @@ class disconnect extends \moodleform {
         $mform->addElement('html', '<br />');
 
         $mform->addElement('header', 'userdetails', get_string('userdetails'));
-        $mform->addElement('text', 'username', get_string('username'));
-        $mform->addElement('passwordunmask', 'password', get_string('password'));
 
-        $mform->setType('username', PARAM_USERNAME);
-        $mform->addRule('username', null, 'required', null, 'client');
-        $mform->addRule('password', null, 'required', null, 'client');
+        $newmethod = [];
+        $attributes = [];
+        $manualenabled = (is_enabled_auth('manual') === true) ? true : false;
+        if ($manualenabled === true) {
+            $newmethod[] =& $mform->createElement('radio', 'newmethod', '', 'manual', 'manual', $attributes);
+        }
+        if (!empty($this->_customdata['prevmethod'])) {
+            $prevmethod = $this->_customdata['prevmethod'];
+            $newmethod[] =& $mform->createElement('radio', 'newmethod', '', $prevmethod, $prevmethod, $attributes);
+        }
+        $mform->addGroup($newmethod, 'newmethodar', get_string('errorauthdisconnectnewmethod', 'auth_oidc'), [' '], false);
+        if (!empty($this->_customdata['prevmethod'])) {
+            $mform->setDefault('newmethod', $this->_customdata['prevmethod']);
+        } else if ($manualenabled === true) {
+            $mform->setDefault('newmethod', 'manual');
+        }
 
-        // If the user cannot choose a username, set it to their current username and freeze.
-        if (isset($this->_customdata['canchooseusername']) && $this->_customdata['canchooseusername'] == false) {
-            $mform->setDefault('username', $USER->username);
-            $element = $mform->getElement('username');
-            $element->freeze();
+        if ($manualenabled === true) {
+            $mform->addElement('html', \html_writer::div(get_string('errorauthdisconnectifmanual', 'auth_oidc')));
+            $mform->addElement('text', 'username', get_string('username'));
+            $mform->addElement('passwordunmask', 'password', get_string('password'));
+            $mform->setType('username', PARAM_USERNAME);
+            $mform->disabledIf('username', 'newmethod', 'neq', 'manual');
+            $mform->disabledIf('password', 'newmethod', 'neq', 'manual');
+
+            // If the user cannot choose a username, set it to their current username and freeze.
+            if (isset($this->_customdata['canchooseusername']) && $this->_customdata['canchooseusername'] == false) {
+                $mform->setDefault('username', $USER->username);
+                $element = $mform->getElement('username');
+                $element->freeze();
+            }
         }
 
         $this->add_action_buttons();

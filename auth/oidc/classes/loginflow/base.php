@@ -149,9 +149,18 @@ class base {
             $PAGE->navbar->add($ucptitle, $PAGE->url);
             $PAGE->set_title($ucptitle);
 
-            // We need the manual login plugin to be enabled for disconnection.
-            if (is_enabled_auth('manual') !== true) {
-                throw new \moodle_exception('errorauthmanualplugindisabled', 'auth_oidc');
+            // Check if we have recorded the user's previous login method.
+            $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $USER->id]);
+            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true)
+                    ? $prevmethodrec->method : null;
+            // Manual is always available, we don't need it twice.
+            if ($prevauthmethod === 'manual') {
+                $prevauthmethod = null;
+            }
+
+            // We need either the user's previous method or the manual login plugin to be enabled for disconnection.
+            if (empty($prevauthmethod) && is_enabled_auth('manual') !== true) {
+                throw new \moodle_exception('errornodisconnectionauthmethod', 'auth_oidc');
             }
 
             // Check to see if the user has a username created by OIDC, or a self-created username.
@@ -159,7 +168,10 @@ class base {
             // Otherwise, keep their existing username.
             $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
             $ccun = (isset($oidctoken->oidcuniqid) && strtolower($oidctoken->oidcuniqid) === $USER->username) ? true : false;
-            $customdata = ['canchooseusername' => $ccun];
+            $customdata = [
+                'canchooseusername' => $ccun,
+                'prevmethod' => $prevauthmethod,
+            ];
 
             $mform = new \auth_oidc\form\disconnect('?action=disconnectlogin', $customdata);
 
@@ -167,32 +179,48 @@ class base {
                 redirect($redirect);
             } else if ($fromform = $mform->get_data()) {
 
-                if (empty($fromform->password)) {
-                    throw new \moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
-                }
                 $origusername = $USER->username;
+
+                if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod && $fromform->newmethod !== 'manual')) {
+                    throw new \moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
+                }
+
                 $updateduser = new \stdClass;
 
-                if ($customdata['canchooseusername'] === true) {
-                    if (empty($fromform)) {
-                        throw new \moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
+                if ($fromform->newmethod === 'manual') {
+                    if (empty($fromform->password)) {
+                        throw new \moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
                     }
-
-                    if (strtolower($fromform->username) !== $USER->username) {
-                        $newusername = strtolower($fromform->username);
-                        $usercheck = ['username' => $newusername, 'mnethostid' => $CFG->mnet_localhost_id];
-                        if ($DB->record_exists('user', $usercheck) === false) {
-                            $updateduser->username = $newusername;
-                        } else {
-                            throw new \moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
+                    if ($customdata['canchooseusername'] === true) {
+                        if (empty($fromform->username)) {
+                            throw new \moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
                         }
+
+                        if (strtolower($fromform->username) !== $USER->username) {
+                            $newusername = strtolower($fromform->username);
+                            $usercheck = ['username' => $newusername, 'mnethostid' => $CFG->mnet_localhost_id];
+                            if ($DB->record_exists('user', $usercheck) === false) {
+                                $updateduser->username = $newusername;
+                            } else {
+                                throw new \moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
+                            }
+                        }
+                    }
+                    $updateduser->auth = 'manual';
+                    $updateduser->password = $fromform->password;
+                } else if ($fromform->newmethod === $prevauthmethod) {
+                    $updateduser->auth = $prevauthmethod;
+                    //  We can't use user_update_user as it will rehash the value.
+                    if (!empty($prevmethodrec->password)) {
+                        $manualuserupdate = new \stdClass;
+                        $manualuserupdate->id = $USER->id;
+                        $manualuserupdate->password = $prevmethodrec->password;
+                        $DB->update_record('user', $manualuserupdate);
                     }
                 }
 
                 // Update user.
-                $updateduser->auth = 'manual';
                 $updateduser->id = $USER->id;
-                $updateduser->password = $fromform->password;
                 user_update_user($updateduser);
 
                 // Delete token data.
