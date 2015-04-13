@@ -240,6 +240,18 @@ class authcode extends \auth_oidc\loginflow\base {
 
         // Switch auth method, if requested.
         if ($connectiononly !== true) {
+            if ($USER->auth !== 'oidc') {
+                $DB->delete_records('auth_oidc_prevlogin', ['userid' => $USER->id]);
+                $userrec = $DB->get_record('user', ['id' => $USER->id]);
+                if (!empty($userrec)) {
+                    $prevloginrec = [
+                        'userid' => $userrec->id,
+                        'method' => $userrec->auth,
+                        'password' => $userrec->password,
+                    ];
+                    $DB->insert_record('auth_oidc_prevlogin', $prevloginrec);
+                }
+            }
             $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
             $USER = $DB->get_record('user', ['id' => $USER->id]);
             $USER->auth = 'oidc';

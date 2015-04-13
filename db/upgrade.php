@@ -114,5 +114,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011607', 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2015011612) {
+        if (!$dbman->table_exists('auth_oidc_prevlogin')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_oidc_prevlogin');
+        }
+        upgrade_plugin_savepoint($result, '2015011612', 'auth', 'oidc');
+    }
+
     return $result;
 }
