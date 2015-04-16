@@ -23,6 +23,8 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="eventid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle event id"/>
         <FIELD NAME="outlookeventid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="outlook event id"/>
+        <FIELD NAME="origin" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="event origin, moodle or o365"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id linked to outlookeventid"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -38,6 +40,9 @@
         <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
         <FIELD NAME="caltype" TYPE="char" LENGTH="31" NOTNULL="true" SEQUENCE="false" COMMENT="the type of calendar - site,user,course,group"/>
         <FIELD NAME="caltypeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the id of the entity the calendar is for, i.e. courseid"/>
+        <FIELD NAME="o365calid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the ID of the o365 calendar to sync to"/>
+        <FIELD NAME="isprimary" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Is the o365 calendar the default."/>
+        <FIELD NAME="syncbehav" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the sync behavior"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time subscription created"/>
       </FIELDS>
       <KEYS>
