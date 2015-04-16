@@ -52,7 +52,7 @@ if ($mode === 'checksharepointsite') {
     $value = required_param('value', PARAM_TEXT);
     if ($setting === 'aadtenant') {
         $resource = \local_o365\rest\azuread::get_resource();
-        $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
         $apiclient = new \local_o365\rest\azuread($token, $httpclient);
         $result->success = $apiclient->test_tenant($value);
     } else if ($setting === 'odburl') {
@@ -61,7 +61,7 @@ if ($mode === 'checksharepointsite') {
 } else if ($mode === 'detectserviceresource') {
     $setting = required_param('setting', PARAM_TEXT);
     $resource = \local_o365\rest\discovery::get_resource();
-    $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+    $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
     $discovery = new \local_o365\rest\discovery($token, $httpclient);
     if ($setting === 'aadtenant') {
         $entitykey = 'Directory@AZURE';
@@ -80,7 +80,7 @@ if ($mode === 'checksharepointsite') {
     }
 } else if ($mode === 'fixappperms') {
     $resource = \local_o365\rest\azuread::get_resource();
-    $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+    $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
     $apiclient = new \local_o365\rest\azuread($token, $httpclient);
     $result->success = $apiclient->push_permissions();
     if ($result->success === true) {
@@ -88,7 +88,7 @@ if ($mode === 'checksharepointsite') {
     }
 } else if ($mode === 'getappperms') {
     $resource = \local_o365\rest\azuread::get_resource();
-    $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+    $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
     $apiclient = new \local_o365\rest\azuread($token, $httpclient);
     list($missingperms, $haswrite) = $apiclient->check_permissions();
     $result->missingperms = $missingperms;

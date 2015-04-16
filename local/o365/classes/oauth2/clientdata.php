@@ -55,6 +55,22 @@ class clientdata {
     }
 
     /**
+     * Get an instance from auth_oidc config.
+     *
+     * @return \local_o365\oauth2\clientdata The constructed client data creds.
+     */
+    public static function instance_from_oidc() {
+        $cfg = get_config('auth_oidc');
+        if (empty($cfg) || !is_object($cfg)) {
+            throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
+        }
+        if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
+            throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
+        }
+        return new static($cfg->clientid, $cfg->clientsecret, $cfg->authendpoint, $cfg->tokenendpoint);
+    }
+
+    /**
      * Get the registerd client ID.
      *
      * @return string The registerd client ID.

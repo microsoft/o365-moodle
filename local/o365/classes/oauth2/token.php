@@ -48,6 +48,9 @@ class token {
     /** @var \local_o365\httpclientinterface An HTTP client used for refreshing the token if needed. */
     protected $httpclient;
 
+    /** @var int The ID of the user the token belongs to. */
+    protected $userid;
+
     /**
      * Constructor.
      *
@@ -59,13 +62,14 @@ class token {
      * @param \local_o365\oauth2\clientdata $clientdata Client data used for refreshing the token if needed.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
      */
-    public function __construct($token, $expiry, $refreshtoken, $scope, $resource, \local_o365\oauth2\clientdata $clientdata,
+    public function __construct($token, $expiry, $refreshtoken, $scope, $resource, $userid, \local_o365\oauth2\clientdata $clientdata,
                                 \local_o365\httpclientinterface $httpclient) {
         $this->token = $token;
         $this->expiry = $expiry;
         $this->refreshtoken = $refreshtoken;
         $this->scope = $scope;
         $this->resource = $resource;
+        $this->userid = $userid;
         $this->clientdata = $clientdata;
         $this->httpclient = $httpclient;
     }
@@ -125,17 +129,96 @@ class token {
     }
 
     /**
+     * Get a token for a given resource and user.
+     *
+     * @param string $resource The new resource.
+     * @param \local_o365\oauth2\clientdata $clientdata Client information.
+     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     */
+    public static function instance($userid, $resource, $clientdata, $httpclient) {
+        $token = static::get_stored_token($userid, $resource);
+        if (!empty($token)) {
+            $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['resource'],
+                    $token['user_id'], $clientdata, $httpclient);
+            return $token;
+        } else {
+            if ($resource === 'https://graph.windows.net') {
+                // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
+                return null;
+            } else {
+                $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
+                if (!empty($token)) {
+                    return $token;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get a token instance for a new resource.
+     *
+     * @param string $resource The new resource.
+     * @param \local_o365\oauth2\clientdata $clientdata Client information.
+     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     */
+    public static function get_for_new_resource($userid, $resource, $clientdata, $httpclient) {
+        $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient);
+        if (!empty($aadgraphtoken)) {
+            $params = [
+                'client_id' => $clientdata->get_clientid(),
+                'client_secret' => $clientdata->get_clientsecret(),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $aadgraphtoken->get_refreshtoken(),
+                'resource' => $resource,
+            ];
+            $tokenresult = $httpclient->post($clientdata->get_tokenendpoint(), $params);
+            $tokenresult = @json_decode($tokenresult, true);
+
+            if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
+                static::store_new_token($userid, $tokenresult['access_token'], $tokenresult['expires_on'],
+                        $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
+                $token = static::instance($userid, $resource, $clientdata, $httpclient);
+                return $token;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get stored token for a user and resourse.
      *
      * @param int $userid The ID of the user to get the token for.
      * @param string $resource The resource to get the token for.
-     * @return array Array of token data.
+     * @return array|null Array of token data or null if none found.
      */
-    protected function get_stored_token($userid, $resource) {
+    protected static function get_stored_token($userid, $resource) {
         global $DB;
-        $tokenparams = ['user_id' => $userid, 'resource' => $resource];
-        $record = $DB->get_record('local_o365_token', $tokenparams);
-        return (!empty($record)) ? (array)$record : $record;
+        if ($resource === 'https://graph.windows.net') {
+            $sql = 'SELECT tok.scope,
+                           tok.resource,
+                           tok.token,
+                           tok.expiry,
+                           tok.refreshtoken
+                      FROM {auth_oidc_token} tok
+                      JOIN {user} u
+                           ON u.username = tok.username
+                     WHERE u.id = ?';
+            $params = [$userid];
+            $record = $DB->get_record_sql($sql, $params);
+            if (!empty($record)) {
+                $record->user_id = $userid;
+                return (array)$record;
+            }
+        } else {
+            $record = $DB->get_record('local_o365_token', ['user_id' => $userid, 'resource' => $resource]);
+            if (!empty($record)) {
+                return (array)$record;
+            }
+        }
+        return null;
     }
 
     /**
@@ -155,13 +238,35 @@ class token {
         return false;
     }
 
+   /**
+     * Store a new token.
+     *
+     * @param string $token Token access token.
+     * @param int $expiry Token expiry timestamp.
+     * @param string $refreshtoken Token refresh token.
+     * @param string $scope Token scope.
+     * @param string $resource Token resource.
+     * @return array Array of new token information.
+     */
+    public static function store_new_token($userid, $token, $expiry, $refreshtoken, $scope, $resource) {
+        global $DB;
+        $newtoken = new \stdClass;
+        $newtoken->user_id = $userid;
+        $newtoken->resource = $resource;
+        $newtoken->scope = $scope;
+        $newtoken->token = $token;
+        $newtoken->expiry = $expiry;
+        $newtoken->refreshtoken = $refreshtoken;
+        $newtoken->id = $DB->insert_record('local_o365_token', $newtoken);
+        return $newtoken;
+    }
+
     /**
      * Refresh the token.
      *
      * @return bool Success/Failure.
      */
     public function refresh() {
-        global $USER;
         $params = [
             'client_id' => $this->clientdata->get_clientid(),
             'client_secret' => $this->clientdata->get_clientsecret(),
@@ -180,7 +285,7 @@ class token {
             $this->scope = $result['scope'];
             $this->resource = $result['resource'];
 
-            $existingtoken = $this->get_stored_token($USER->id, $origresource);
+            $existingtoken = $this->get_stored_token($this->userid, $origresource);
             if (!empty($existingtoken)) {
                 $newtoken = [
                     'scope' => $this->scope,

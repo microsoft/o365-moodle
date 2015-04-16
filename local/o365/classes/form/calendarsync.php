@@ -26,6 +26,7 @@ namespace local_o365\form;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/lib/formslib.php');
+\MoodleQuickForm::registerElementType('localo365calendar', "$CFG->dirroot/local/o365/classes/form/element/calendar.php", '\local_o365\form\element\calendar');
 
 /**
  * o365 Calendar Sync Form.
@@ -39,15 +40,25 @@ class calendarsync extends \moodleform {
 
         $mform =& $this->_form;
 
-        $usercourses = enrol_get_my_courses(['id', 'fullname']);
-
         $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
-        $mform->addElement('html', \html_writer::span(get_string('ucp_calsync_desc', 'local_o365')));
+        $mform->addElement('html', \html_writer::div(get_string('ucp_calsync_desc', 'local_o365')));
+        $mform->addElement('html', '<br />');
+        $mform->addElement('html', \html_writer::tag('b', get_string('ucp_calsync_availcal', 'local_o365')));
 
-        $mform->addElement('advcheckbox', 'sitecal', '', get_string('calendar_site', 'local_o365'));
-        $mform->addElement('advcheckbox', 'usercal', '', get_string('calendar_user', 'local_o365'));
-        foreach ($usercourses as $courseid => $course) {
-            $mform->addElement('advcheckbox', 'coursecal['.$course->id.']', '', $course->fullname);
+        $checkboxattrs = ['class' => 'calcheckbox', 'group' => '1'];
+
+        $sitecalcustom = $this->_customdata;
+        $sitecalcustom['cansyncin'] = $this->_customdata['cancreatesiteevents'];
+        $mform->addElement('localo365calendar', 'sitecal', '', get_string('calendar_site', 'local_o365'), $checkboxattrs, $sitecalcustom);
+
+        $usercalcustom = $this->_customdata;
+        $usercalcustom['cansyncin'] = true;
+        $mform->addElement('localo365calendar', 'usercal', '', get_string('calendar_user', 'local_o365'), $checkboxattrs, $usercalcustom);
+
+        foreach ($this->_customdata['usercourses'] as $courseid => $course) {
+            $coursecalcustom = $this->_customdata;
+            $coursecalcustom['cansyncin'] = (!empty($this->_customdata['cancreatecourseevents'][$courseid])) ? true : false;
+            $mform->addElement('localo365calendar', 'coursecal['.$course->id.']', '', $course->fullname, $checkboxattrs, $coursecalcustom);
         }
 
         $this->add_action_buttons();
