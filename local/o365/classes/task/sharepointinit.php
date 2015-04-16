@@ -55,7 +55,7 @@ class sharepointinit extends \core\task\adhoc_task {
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
                 $oidcconfig->tokenendpoint);
 
-        $sptoken = \local_o365\oauth2\systemtoken::instance($spresource, $clientdata, $httpclient);
+        $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
 
         if (empty($sptoken)) {
             throw new \moodle_exception('erroracpnosptoken', 'local_o365');

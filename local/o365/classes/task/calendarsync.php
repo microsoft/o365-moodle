@@ -28,6 +28,94 @@ namespace local_o365\task;
  */
 class calendarsync extends \core\task\adhoc_task {
     /**
+     * Ensures an event is synced for a *single* user.
+     *
+     * @param \local_o365\rest\calendar $cal The calendar object to use.
+     * @param int $eventid The ID of the event.
+     * @param int $userid The ID of the user who will own the event.
+     * @param string $subject The event's subject.
+     * @param string $body The body text of the event.
+     * @param int $timestart The timestamp for the event's start.
+     * @param int $timeend The timestamp for the event's end.
+     * @param string $calid The o365 ID of the calendar to create the event in.
+     * @return int The new ID from local_o365_calidmap.
+     */
+    protected function ensure_event_synced_for_user(\local_o365\rest\calendar $cal, $eventid, $userid, $subject, $body, $timestart,
+                                                    $timeend, $calid) {
+        global $DB;
+        $eventsynced = $DB->record_exists('local_o365_calidmap', ['eventid' => $eventid, 'userid' => $userid]);
+        if (!$eventsynced) {
+            return $this->create_event($cal, $eventid, $userid, $subject, $body, $timestart, $timeend, [], $calid);
+        }
+    }
+
+    /**
+     * Create and store an event.
+     *
+     * @param \local_o365\rest\calendar $cal The calendar object to use.
+     * @param int $eventid The ID of the event.
+     * @param int $userid The ID of the user who will own the event.
+     * @param string $subject The event's subject.
+     * @param string $body The body text of the event.
+     * @param int $timestart The timestamp for the event's start.
+     * @param int $timeend The timestamp for the event's end.
+     * @param array $attendees A list of users to include as event attendees.
+     * @param string $calid The o365 ID of the calendar to create the event in.
+     * @return int The new ID from local_o365_calidmap.
+     */
+    protected function create_event(\local_o365\rest\calendar $cal, $eventid, $userid, $subject, $body, $timestart,
+                                              $timeend, $attendees, $calid = null) {
+        global $DB;
+        $response = $cal->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid);
+        if (!empty($response) && is_array($response) && isset($response['Id'])) {
+            $idmaprec = [
+                'eventid' => $eventid,
+                'outlookeventid' => $response['Id'],
+                'userid' => $userid,
+                'origin' => 'moodle',
+            ];
+            return $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+        }
+    }
+
+    /**
+     * Get subscribers for a given calendar type and (optionally) id.
+     *
+     * @param string $caltype The calendar type.
+     * @param int $caltypeid The calendar type ID.
+     * @return array A list of arrays subscribers using their primary and non-primary calendars.
+     */
+    protected function get_subscribers($caltype, $caltypeid = null) {
+        global $DB;
+        $subscribersprimary = [];
+        $subscribersnotprimary = [];
+        $sql = 'SELECT u.id,
+                       u.email,
+                       u.firstname,
+                       u.lastname,
+                       sub.isprimary as subisprimary,
+                       sub.o365calid as subo365calid
+                  FROM {user} u
+                  JOIN {local_o365_calsub} sub ON sub.user_id = u.id
+                 WHERE sub.caltype = ? AND (sub.syncbehav = ? OR sub.syncbehav = ?)';
+        $params = [$caltype, 'out', 'both'];
+        if (!empty($caltypeid)) {
+            $sql .= ' AND sub.caltypeid = ? ';
+            $params[] = $caltypeid;
+        }
+        $allsubscribers = $DB->get_records_sql($sql, $params);
+        foreach ($allsubscribers as $userid => $subscriber) {
+            if (isset($subscriber->subisprimary) && $subscriber->subisprimary == '0') {
+                $subscribersnotprimary[$userid] = $subscriber;
+            } else {
+                $subscribersprimary[$userid] = $subscriber;
+            }
+        }
+        unset($allsubscribers);
+        return [$subscribersprimary, $subscribersnotprimary];
+    }
+
+    /**
      * Sync all site events with Outlook.
      *
      * @param int $timecreated The time the task was created.
@@ -42,47 +130,98 @@ class calendarsync extends \core\task\adhoc_task {
             return true;
         }
 
-        $oidcconfig = get_config('auth_oidc');
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $outlookresource = \local_o365\rest\calendar::get_resource();
         $httpclient = new \local_o365\httpclient();
 
-        $siteeventssubscriberssql = 'SELECT u.id, u.email, u.firstname, u.lastname
-                                       FROM {user} u
-                                       JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                                      WHERE sub.caltype = "site"';
-        $siteeventssubscribers = $DB->get_records_sql($siteeventssubscriberssql);
+        list($subscribersprimary, $subscribersnotprimary) = $this->get_subscribers('site');
 
-        $siteeventssql = 'SELECT ev.id,
-                                 idmap.outlookeventid,
-                                 ev.userid,
-                                 tok.token,
-                                 tok.expiry AS tokenexpiry,
-                                 tok.refreshtoken,
-                                 tok.scope AS tokenscope,
-                                 tok.resource AS tokenresource
-                            FROM {event} ev
-                            JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                       LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid AND tok.resource = ?
-                           WHERE ev.courseid = ?';
-        $siteevents = $DB->get_recordset_sql($siteeventssql, [$outlookresource, SITEID]);
-        foreach ($siteevents as $siteevent) {
-            if (!empty($siteevent->token)) {
-                mtrace('Syncing site event #'.$siteevent->id.' with user token.');
-                $token = new \local_o365\oauth2\token($siteevent->token, $siteevent->tokenexpiry, $siteevent->refreshtoken,
-                        $siteevent->tokenscope, $siteevent->tokenresource, $clientdata, $httpclient);
-            } else {
-                mtrace('Syncing site event #'.$siteevent->id.' with system token.');
-                $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
+        $sql = 'SELECT ev.id AS eventid,
+                       ev.name AS eventname,
+                       ev.description AS eventdescription,
+                       ev.timestart AS eventtimestart,
+                       ev.timeduration AS eventtimeduration,
+                       idmap.outlookeventid,
+                       ev.userid AS eventuserid
+                  FROM {event} ev
+             LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
+                 WHERE ev.courseid = ?';
+        $params = [SITEID];
+        $events = $DB->get_recordset_sql($sql, $params);
+        foreach ($events as $event) {
+            try {
+                mtrace('Syncing site event #'.$event->eventid);
+                $subject = $event->eventname;
+                $body = $event->eventdescription;
+                $evstart = $event->eventtimestart;
+                $evend = $evstart + $event->eventtimeduration;
+                // Sync primary cal users first.
+                if (!empty($subscribersprimary)) {
+                    // Get token for event creator, fall back to system token if no user token.
+                    $token = \local_o365\oauth2\token::instance($event->eventuserid, $outlookresource, $clientdata, $httpclient);
+                    if (empty($token)) {
+                        mtrace('No user token present, attempting to get system token.');
+                        $token = \local_o365\oauth2\systemtoken::instance(null, $outlookresource, $clientdata, $httpclient);
+                    }
+
+                    if (!empty($token)) {
+                        $cal = new \local_o365\rest\calendar($token, $httpclient);
+                        // If there's a stored outlookeventid we've already synced to o365 so update it. Otherwise create it.
+                        if (!empty($event->outlookeventid)) {
+                            $cal->update_event($event->outlookeventid, ['attendees' => $subscribersprimary]);
+                        } else {
+                            $calid = null;
+                            if (!empty($subscribersprimary[$event->eventuserid])) {
+                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid))
+                                    ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
+                            } else if (isset($subscribersnotprimary[$event->eventuserid])) {
+                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid))
+                                    ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
+                            }
+                            $this->create_event($cal, $event->eventid, $event->eventuserid, $subject, $body, $evstart, $evend,
+                                    $subscribersprimary, $calid);
+                        }
+                    } else {
+                        mtrace('Could not get any valid token for primary calendar sync.');
+                    }
+                }
+
+                // Delete event for users who have an idmap record but are no longer subscribed.
+                $sql = 'SELECT userid, id, eventid, outlookeventid FROM {local_o365_calidmap} WHERE eventid = ? AND origin = ?';
+                $idmapnosub = $DB->get_records_sql($sql, [$event->eventid, 'moodle']);
+                $idmapnosub = array_diff_key($idmapnosub, $subscribersnotprimary, $subscribersprimary);
+                if (isset($idmapnosub[$event->eventuserid])) {
+                    unset($idmapnosub[$event->eventuserid]);
+                }
+                foreach ($idmapnosub as $userid => $usercalidmap) {
+                    $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
+                    if (!empty($token)) {
+                       $cal = new \local_o365\rest\calendar($token, $httpclient);
+                       $response = $cal->delete_event($usercalidmap->outlookeventid);
+                       $DB->delete_records('local_o365_calidmap', ['id' => $usercalidmap->id]);
+                    }
+                }
+
+                // Sync non-primary cal users
+                if (!empty($subscribersnotprimary)) {
+                    foreach ($subscribersnotprimary as $userid => $user) {
+                        $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
+                        if (!empty($token)) {
+                            $cal = new \local_o365\rest\calendar($token, $httpclient);
+                            $calid = (!empty($user->subo365calid)) ? $user->subo365calid : null;
+                            $this->ensure_event_synced_for_user($cal, $event->eventid, $user->id, $subject, $body, $evstart,
+                                    $evend, $calid);
+                        }
+                    }
+                }
+
+            } catch (\Exception $e) {
+                // Could not sync this site event. Log and continue.
+                mtrace('Error syncing site event #'.$event->eventid.': '.$e->getMessage());
             }
-            $cal = new \local_o365\rest\calendar($token, $httpclient);
-            $cal->update_event($siteevent->outlookeventid, ['attendees' => $siteeventssubscribers]);
         }
-        $siteevents->close();
-
+        $events->close();
         set_config('cal_site_lastsync', $timestart, 'local_o365');
-
         return true;
     }
 
@@ -106,61 +245,118 @@ class calendarsync extends \core\task\adhoc_task {
             }
         }
 
-        $oidcconfig = get_config('auth_oidc');
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $outlookresource = \local_o365\rest\calendar::get_resource();
         $httpclient = new \local_o365\httpclient();
 
-        $courseeventssubscriberssql = 'SELECT u.id, u.email, u.firstname, u.lastname
-                                         FROM {user} u
-                                         JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                                        WHERE sub.caltype = "course" AND sub.caltypeid = ?';
-        $courseeventssubscribers = $DB->get_records_sql($courseeventssubscriberssql, [$courseid]);
+        list($subscribersprimary, $subscribersnotprimary) = $this->get_subscribers('course', $courseid);
 
-        $courseeventssql = 'SELECT ev.id,
-                                   idmap.outlookeventid,
-                                   ev.userid,
-                                   ev.groupid,
-                                   tok.token,
-                                   tok.expiry AS tokenexpiry,
-                                   tok.refreshtoken,
-                                   tok.scope AS tokenscope,
-                                   tok.resource AS tokenresource
-                              FROM {event} ev
-                              JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                         LEFT JOIN {local_o365_token} tok ON tok.user_id = ev.userid AND tok.resource = ?
-                             WHERE ev.courseid = ? ';
-        $courseevents = $DB->get_recordset_sql($courseeventssql, [$outlookresource, $courseid]);
-        foreach ($courseevents as $courseevent) {
+        $sql = 'SELECT ev.id AS eventid,
+                       ev.name AS eventname,
+                       ev.description AS eventdescription,
+                       ev.timestart AS eventtimestart,
+                       ev.timeduration AS eventtimeduration,
+                       idmap.outlookeventid,
+                       ev.userid AS eventuserid,
+                       ev.groupid
+                  FROM {event} ev
+             LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
+                 WHERE ev.courseid = ? ';
+        $params = [$courseid];
+        $events = $DB->get_recordset_sql($sql, $params);
+        foreach ($events as $event) {
             try {
-                if (!empty($courseevent->token)) {
-                    mtrace('Syncing course event #'.$courseevent->id.' with user token.');
-                    $token = new \local_o365\oauth2\token($courseevent->token, $courseevent->tokenexpiry,
-                            $courseevent->refreshtoken, $courseevent->tokenscope, $courseevent->tokenresource, $clientdata,
-                            $httpclient);
-                } else {
-                    mtrace('Syncing course event #'.$courseevent->id.' with system token.');
-                    $token = \local_o365\oauth2\systemtoken::instance($outlookresource, $clientdata, $httpclient);
+                mtrace('Syncing course event #'.$event->eventid);
+                $grouplimit = null;
+                // If this is a group event, get members and save for limiting later.
+                if (!empty($event->groupid)) {
+                    $sql = 'SELECT userid
+                              FROM {groups_members}
+                             WHERE grpmbr.groupid = ?';
+                    $params = [$event->groupid];
+                    $grouplimit = $DB->get_records_sql($sql, $params);
                 }
-                $cal = new \local_o365\rest\calendar($token, $httpclient);
-                if (!empty($courseevent->groupid)) {
-                    $groupeventsubscriberssql = 'SELECT u.id, u.email, u.firstname, u.lastname
-                                                   FROM {user} u
-                                                   JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                                                   JOIN {groups_members} grpmbr ON grpmbr.userid = u.id
-                                                  WHERE sub.caltype = "course" AND sub.caltypeid = ? AND grpmbr.groupid = ?';
-                    $groupeventsubscribers = $DB->get_records_sql($groupeventsubscriberssql, [$courseid, $courseevent->groupid]);
-                    $cal->update_event($courseevent->outlookeventid, ['attendees' => $groupeventsubscribers]);
-                } else {
-                    $cal->update_event($courseevent->outlookeventid, ['attendees' => $courseeventssubscribers]);
+
+                $subject = $event->eventname;
+                $body = $event->eventdescription;
+                $evstart = $event->eventtimestart;
+                $evend = $evstart + $event->eventtimeduration;
+
+                // Sync primary cal users first.
+                if (!empty($subscribersprimary)) {
+                    // Get token for event creator, fall back to system token if no user token.
+                    $token = \local_o365\oauth2\token::instance($event->eventuserid, $outlookresource, $clientdata, $httpclient);
+                    if (empty($token)) {
+                        mtrace('No user token present, attempting to get system token.');
+                        $token = \local_o365\oauth2\systemtoken::instance(null, $outlookresource, $clientdata, $httpclient);
+                    }
+
+                    if (!empty($token)) {
+                        $cal = new \local_o365\rest\calendar($token, $httpclient);
+
+                        // Determine attendees - if this is a group event, limit to group members.
+                        $eventattendees = ($grouplimit !== null && is_array($grouplimit))
+                            ? array_intersect_key($subscribersprimary, $grouplimit)
+                            : $subscribersprimary;
+
+                        // If there's a stored outlookeventid the event exists in o365, so update it. Otherwise create it.
+                        if (!empty($event->outlookeventid)) {
+                            $cal->update_event($event->outlookeventid, ['attendees' => $eventattendees]);
+                        } else {
+                            $calid = null;
+                            if (!empty($subscribersprimary[$event->eventuserid])) {
+                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid))
+                                    ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
+                            } else if (isset($subscribersnotprimary[$event->eventuserid])) {
+                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid))
+                                    ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
+                            }
+                            $this->create_event($cal, $event->eventid, $event->eventuserid, $subject, $body, $evstart, $evend,
+                                    $eventattendees, $calid);
+                        }
+                    } else {
+                        mtrace('Could not get any valid token for primary calendar sync.');
+                    }
+                }
+
+                // Delete event for users who have an idmap record but are no longer subscribed.
+                $sql = 'SELECT userid, id, eventid, outlookeventid FROM {local_o365_calidmap} WHERE eventid = ? AND origin = ?';
+                $idmapnosub = $DB->get_records_sql($sql, [$event->eventid, 'moodle']);
+                $idmapnosub = array_diff_key($idmapnosub, $subscribersnotprimary, $subscribersprimary);
+                if (isset($idmapnosub[$event->eventuserid])) {
+                    unset($idmapnosub[$event->eventuserid]);
+                }
+                foreach ($idmapnosub as $userid => $usercalidmap) {
+                    $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
+                    if (!empty($token)) {
+                       $cal = new \local_o365\rest\calendar($token, $httpclient);
+                       $response = $cal->delete_event($usercalidmap->outlookeventid);
+                       $DB->delete_records('local_o365_calidmap', ['id' => $usercalidmap->id]);
+                    }
+                }
+
+                // Sync non-primary cal users
+                if (!empty($subscribersnotprimary)) {
+                    foreach ($subscribersnotprimary as $userid => $user) {
+                        // If we're syncing a group event, only sync users in the group.
+                        if ($grouplimit !== null && is_array($grouplimit) && !isset($grouplimit[$user->id])) {
+                            continue;
+                        }
+                        $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
+                        if (!empty($token)) {
+                            $cal = new \local_o365\rest\calendar($token, $httpclient);
+                            $calid = (!empty($user->subo365calid)) ? $user->subo365calid : null;
+                            $this->ensure_event_synced_for_user($cal, $event->eventid, $user->id, $subject, $body, $evstart,
+                                    $evend, $calid);
+                        }
+                    }
                 }
             } catch (\Exception $e) {
-                // Could not sync this course event. Continue on.
-                mtrace('Error syncing course event #'.$courseevent->id.': '.$e->getMessage());
+                // Could not sync this course event. Log and continue.
+                mtrace('Error syncing course event #'.$event->eventid.': '.$e->getMessage());
             }
         }
-        $courseevents->close();
+        $events->close();
 
         if (!empty($lastcoursesync) && is_array($lastcoursesync)) {
             $lastcoursesync[$courseid] = $timestart;
@@ -187,74 +383,75 @@ class calendarsync extends \core\task\adhoc_task {
         $lastusersync = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'cal_user_lastsync']);
         if (!empty($lastusersync)) {
             $lastusersync = unserialize($lastusersync->value);
-            if (isset($lastusersync[$userid]) && (int)$lastusersync[$userid] > $timecreated) {
+            if (is_array($lastusersync) && isset($lastusersync[$userid]) && (int)$lastusersync[$userid] > $timecreated) {
                 // User events for this user have been synced since this event was created, so we don't have to do it again.
                 return true;
             }
         }
 
-        $oidcconfig = get_config('auth_oidc');
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $outlookresource = \local_o365\rest\calendar::get_resource();
         $httpclient = new \local_o365\httpclient();
 
-        $usereventssql = 'SELECT ev.id,
-                                 ev.name,
-                                 ev.description,
-                                 ev.timestart,
-                                 ev.timeduration,
-                                 idmap.outlookeventid,
-                                 sub.id AS calsubid,
-                                 tok.token,
-                                 tok.expiry AS tokenexpiry,
-                                 tok.refreshtoken,
-                                 tok.scope AS tokenscope,
-                                 tok.resource AS tokenresource
-                            FROM {event} ev
-                            JOIN {local_o365_token} tok ON tok.user_id = ev.userid
-                       LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid
-                       LEFT JOIN {local_o365_calsub} sub ON sub.user_id = ev.userid AND sub.caltype = "user"
-                           WHERE tok.resource = ? AND ev.courseid = 0 AND ev.groupid = 0 AND ev.userid = ?';
-        $userevents = $DB->get_recordset_sql($usereventssql, [$outlookresource, $userid]);
-        foreach ($userevents as $userevent) {
-            mtrace('Syncing user event #'.$userevent->id);
-            if (!empty($userevent->calsubid)) {
-                // Subscribed. Perform sync on unsynced events.
-                if (empty($userevent->outlookeventid)) {
-                    // Event not synced. Create o365 event.
-                    $token = new \local_o365\oauth2\token($userevent->token, $userevent->tokenexpiry, $userevent->refreshtoken,
-                            $userevent->tokenscope, $userevent->tokenresource, $clientdata, $httpclient);
-                    $cal = new \local_o365\rest\calendar($token, $httpclient);
-                    $subject = $userevent->name;
-                    $body = $userevent->description;
-                    $starttime = $userevent->timestart;
-                    $endtime = $userevent->timestart + $userevent->timeduration;
-                    $response = $cal->create_event($subject, $body, $starttime, $endtime, []);
-                    // Store ID.
-                    if (!empty($response) && is_array($response)) {
-                        if (isset($response['Id'])) {
-                            $idmaprec = [
-                                'eventid' => $userevent->id,
-                                'outlookeventid' => $response['Id'],
-                            ];
-                            $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                        }
+        $usertoken = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
+        if (empty($usertoken)) {
+            // No token, can't sync.
+            return false;
+        }
+
+        $subscription = $DB->get_record('local_o365_calsub', ['user_id' => $userid, 'caltype' => 'user']);
+
+        $sql = 'SELECT ev.id AS eventid,
+                       ev.name AS eventname,
+                       ev.description AS eventdescription,
+                       ev.timestart AS eventtimestart,
+                       ev.timeduration AS eventtimeduration,
+                       idmap.outlookeventid,
+                       idmap.origin AS idmaporigin
+                  FROM {event} ev
+             LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
+                 WHERE ev.courseid = 0
+                       AND ev.groupid = 0
+                       AND ev.userid = ?';
+        $events = $DB->get_recordset_sql($sql, [$userid]);
+        foreach ($events as $event) {
+            mtrace('Syncing user event #'.$event->eventid);
+            if (!empty($subscription)) {
+                if (empty($event->outlookeventid)) {
+                    // Event not synced, if outward subscription exists sync to o365.
+                    if ($subscription->syncbehav === 'out' || $subscription->syncbehav === 'both') {
+                        $cal = new \local_o365\rest\calendar($usertoken, $httpclient);
+                        $subject = $event->eventname;
+                        $body = $event->eventdescription;
+                        $evstart = $event->eventtimestart;
+                        $evend = $event->eventtimestart + $event->eventtimeduration;
+                        $calid = (!empty($subscription->o365calid)) ? $subscription->o365calid : null;
+                        $this->create_event($cal, $event->eventid, $userid, $subject, $body, $evstart, $evend, [], $calid);
+                    }
+                } else {
+                    // Event synced. If event was created in Moodle and subscription is inward-only, delete o365 event.
+                    if ($event->idmaporigin === 'moodle' && $subscription->syncbehav === 'in') {
+                        $cal = new \local_o365\rest\calendar($usertoken, $httpclient);
+                        $response = $cal->delete_event($event->outlookeventid);
+                        $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $event->outlookeventid]);
                     }
                 }
             } else {
-                // Not subscribed. Delete synced events.
-                if (!empty($userevent->outlookeventid)) {
-                    // Event synced. Deleted o365 event.
-                    $token = new \local_o365\oauth2\token($userevent->token, $userevent->tokenexpiry, $userevent->refreshtoken,
-                            $userevent->tokenscope, $userevent->tokenresource, $clientdata, $httpclient);
-                    $cal = new \local_o365\rest\calendar($token, $httpclient);
-                    $response = $cal->delete_event($userevent->outlookeventid);
-                    $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $userevent->outlookeventid]);
+                // No subscription exists. Delete relevant events.
+                if (!empty($event->outlookeventid)) {
+                    if ($event->idmaporigin === 'moodle') {
+                        // Event was created in Moodle, delete o365 event.
+                        $cal = new \local_o365\rest\calendar($usertoken, $httpclient);
+                        $response = $cal->delete_event($event->outlookeventid);
+                        $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $event->outlookeventid]);
+                    } else if ($event->idmaporigin === 'o365') {
+                        // Event was created in Office365, delete Moodle event.
+                        // TODO.
+                    }
                 }
             }
         }
-        $userevents->close();
+        $events->close();
 
         if (!empty($lastusersync) && is_array($lastusersync)) {
             $lastusersync[$userid] = $timestart;
