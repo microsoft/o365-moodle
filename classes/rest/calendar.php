@@ -46,6 +46,35 @@ class calendar extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a list of the user's o365 calendars.
+     *
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_calendars() {
+        $response = $this->apicall('get', '/calendars');
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
+     * Get a list of events.
+     *
+     * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
+     * @param  [type] $since      [description]
+     * @return [type]             [description]
+     */
+    public function get_events($calendarid = null, $since = null) {
+        $endpoint = (!empty($calendarid)) ? '/calendars/'.$calendarid.'/events' : '/events';
+        if (!empty($since)) {
+            $since = date('c', $since);
+            $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
+        }
+        $response = $this->apicall('get', $endpoint);
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
      * Create a new event in the user's o365 calendar.
      *
      * @param string $subject The event's title/subject.
@@ -54,9 +83,10 @@ class calendar extends \local_o365\rest\o365api {
      * @param int $endtime The timestamp when the event ends.
      * @param array $attendees Array of moodle user objects that are attending the event.
      * @param array $other Other parameters to include.
+     * @param string $calendarid The o365 ID of the calendar to create the event in.
      * @return array|null Returned response, or null if error.
      */
-    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array()) {
+    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
         $eventdata = [
             'Subject' => $subject,
             'Body' => [
@@ -73,11 +103,13 @@ class calendar extends \local_o365\rest\o365api {
                     'Address' => $attendee->email,
                     'Name' => $attendee->firstname.' '.$attendee->lastname,
                 ],
+                'Type' => 'Resource'
             ];
         }
         $eventdata = array_merge($eventdata, $other);
         $eventdata = json_encode($eventdata);
-        $response = $this->apicall('post', '/events', $eventdata);
+        $endpoint = (!empty($calendarid)) ? '/calendars/'.$calendarid.'/events' : '/events';
+        $response = $this->apicall('post', $endpoint, $eventdata);
         $response = @json_decode($response, true);
         return $response;
     }
@@ -90,6 +122,9 @@ class calendar extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function update_event($outlookeventid, $updated) {
+        if (empty($outlookeventid) || empty($updated)) {
+            return [];
+        }
         $updateddata = [];
         if (!empty($updated['subject'])) {
             $updateddata['Subject'] = $updated['subject'];
@@ -111,6 +146,7 @@ class calendar extends \local_o365\rest\o365api {
                         'Address' => $attendee->email,
                         'Name' => $attendee->firstname.' '.$attendee->lastname,
                     ],
+                    'Type' => 'Resource'
                 ];
             }
         }
@@ -127,7 +163,9 @@ class calendar extends \local_o365\rest\o365api {
      * @return bool Success/Failure.
      */
     public function delete_event($outlookeventid) {
-        $this->apicall('delete', '/events/'.$outlookeventid);
+        if (!empty($outlookeventid)) {
+            $this->apicall('delete', '/events/'.$outlookeventid);
+        }
         return true;
     }
 }
