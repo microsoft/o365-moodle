@@ -292,14 +292,6 @@ class authcode extends \auth_oidc\loginflow\base {
             throw new \moodle_exception('errorauthloginfailed', 'auth_oidc');
         }
 
-        $eventdata = [
-            'objectid' => $user->id,
-            'userid' => $user->id,
-            'other' => ['username' => $user->username],
-        ];
-        $event = \auth_oidc\event\user_loggedin::create($eventdata);
-        $event->trigger();
-
         complete_user_login($user);
         redirect(core_login_get_return_url());
     }
