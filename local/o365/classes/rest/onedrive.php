@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for o365 onedrive.
  */
 class onedrive extends \local_o365\rest\o365api {
+    /** @var string An override for the API url. */
+    protected $apiurioverride = null;
+
     /**
      * Determine if the API client is configured.
      *
@@ -71,11 +74,39 @@ class onedrive extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get the embedding URL for a given file id.
+     *
+     * @param string $fileid The ID of the file (from the odb api).
+     * @return string|null The URL to be embedded, or null if error.
+     */
+    public function get_embed_url($fileid) {
+        $fileinfo = $this->get_file_metadata($fileid);
+        $odburl = $this->get_resource();
+        if (isset($fileinfo['webUrl'])) {
+            if (strpos($fileinfo['webUrl'], $odburl) === 0) {
+                $filerelative = substr($fileinfo['webUrl'], strlen($odburl));
+
+            }
+        }
+        $filerelativeparts = explode('/', trim($filerelative, '/'));
+        $spapiurl = $odburl.'/'.$filerelativeparts[0].'/'.$filerelativeparts[1].'/_api';
+        $this->apiurioverride = $spapiurl;
+        $endpoint = '/web/GetFileByServerRelativeUrl(\''.$filerelative.'\')/ListItemAllFields/GetWOPIFrameUrl(3)';
+        $response = $this->apicall('post', $endpoint);
+        unset($this->apiurioverride);
+        $response = json_decode($response, true);
+        return (!empty($response) && isset($response['value'])) ? $response['value'] : null;
+    }
+
+    /**
      * Get the base URI that API calls should be sent to.
      *
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
+        if (!empty($this->apiurioverride)) {
+            return $this->apiurioverride;
+        }
         return static::get_resource().'/_api/v1.0/me/Files';
     }
 
