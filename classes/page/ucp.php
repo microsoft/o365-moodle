@@ -129,7 +129,7 @@ class ucp extends base {
             $existingsubsrs->close();
 
             // Handle changes to site and user calendar subscriptions.
-            foreach(['site', 'user'] as $caltype) {
+            foreach (['site', 'user'] as $caltype) {
                 $formkey = $caltype.'cal';
                 $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked']))
                         ? true : false;
