@@ -27,54 +27,54 @@ namespace local_o365\page;
  * Basic page-style class handling page setup and page modes.
  */
 class base {
-	/** @var string The page's URL (relative to Moodle root). */
-	protected $url = '';
+    /** @var string The page's URL (relative to Moodle root). */
+    protected $url = '';
 
-	/** @var string The page's title. */
-	protected $title = '';
+    /** @var string The page's title. */
+    protected $title = '';
 
-	/** @var \context The page's context. */
-	protected $context = null;
+    /** @var \context The page's context. */
+    protected $context = null;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param string $url The page's URL (relative to Moodle root).
-	 * @param string $title The page's title.
-	 * @param \context $context The page's context.
-	 */
-	public function __construct($url, $title, $context = null) {
-		global $PAGE;
-		$this->url = $url;
-		$this->title = $title;
-		$this->context = (!empty($context)) ? $context : \context_system::instance();
-		$PAGE->set_url($this->url);
+    /**
+     * Constructor.
+     *
+     * @param string $url The page's URL (relative to Moodle root).
+     * @param string $title The page's title.
+     * @param \context $context The page's context.
+     */
+    public function __construct($url, $title, $context = null) {
+        global $PAGE;
+        $this->url = $url;
+        $this->title = $title;
+        $this->context = (!empty($context)) ? $context : \context_system::instance();
+        $PAGE->set_url($this->url);
         $PAGE->set_context($this->context);
         $PAGE->set_pagelayout('standard');
         $PAGE->navbar->add($this->title, $this->url);
         $PAGE->set_title($this->title);
-	}
+    }
 
-	/**
-	 * Hook function run before the main page mode.
-	 *
-	 * @return bool True.
-	 */
-	public function header() {
-		return true;
-	}
+    /**
+     * Hook function run before the main page mode.
+     *
+     * @return bool True.
+     */
+    public function header() {
+        return true;
+    }
 
-	/**
-	 * Run a page mode.
-	 *
-	 * @param string $mode The page mode to run.
-	 */
-	public function run($mode) {
-		$this->header();
-		$methodname = (!empty($mode)) ? 'mode_'.$mode : 'mode_default';
-		if (!method_exists($this, $methodname)) {
-			$methodname = 'mode_default';
-		}
-		$this->$methodname();
-	}
+    /**
+     * Run a page mode.
+     *
+     * @param string $mode The page mode to run.
+     */
+    public function run($mode) {
+        $this->header();
+        $methodname = (!empty($mode)) ? 'mode_'.$mode : 'mode_default';
+        if (!method_exists($this, $methodname)) {
+            $methodname = 'mode_default';
+        }
+        $this->$methodname();
+    }
 }

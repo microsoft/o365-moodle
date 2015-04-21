@@ -196,13 +196,13 @@ class calendarsync extends \core\task\adhoc_task {
                 foreach ($idmapnosub as $userid => $usercalidmap) {
                     $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
                     if (!empty($token)) {
-                       $cal = new \local_o365\rest\calendar($token, $httpclient);
-                       $response = $cal->delete_event($usercalidmap->outlookeventid);
-                       $DB->delete_records('local_o365_calidmap', ['id' => $usercalidmap->id]);
+                        $cal = new \local_o365\rest\calendar($token, $httpclient);
+                        $response = $cal->delete_event($usercalidmap->outlookeventid);
+                        $DB->delete_records('local_o365_calidmap', ['id' => $usercalidmap->id]);
                     }
                 }
 
-                // Sync non-primary cal users
+                // Sync non-primary cal users.
                 if (!empty($subscribersnotprimary)) {
                     foreach ($subscribersnotprimary as $userid => $user) {
                         $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
@@ -329,13 +329,13 @@ class calendarsync extends \core\task\adhoc_task {
                 foreach ($idmapnosub as $userid => $usercalidmap) {
                     $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
                     if (!empty($token)) {
-                       $cal = new \local_o365\rest\calendar($token, $httpclient);
-                       $response = $cal->delete_event($usercalidmap->outlookeventid);
-                       $DB->delete_records('local_o365_calidmap', ['id' => $usercalidmap->id]);
+                        $cal = new \local_o365\rest\calendar($token, $httpclient);
+                        $response = $cal->delete_event($usercalidmap->outlookeventid);
+                        $DB->delete_records('local_o365_calidmap', ['id' => $usercalidmap->id]);
                     }
                 }
 
-                // Sync non-primary cal users
+                // Sync non-primary cal users.
                 if (!empty($subscribersnotprimary)) {
                     foreach ($subscribersnotprimary as $userid => $user) {
                         // If we're syncing a group event, only sync users in the group.
@@ -444,9 +444,6 @@ class calendarsync extends \core\task\adhoc_task {
                         $cal = new \local_o365\rest\calendar($usertoken, $httpclient);
                         $response = $cal->delete_event($event->outlookeventid);
                         $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $event->outlookeventid]);
-                    } else if ($event->idmaporigin === 'o365') {
-                        // Event was created in Office365, delete Moodle event.
-                        // TODO.
                     }
                 }
             }

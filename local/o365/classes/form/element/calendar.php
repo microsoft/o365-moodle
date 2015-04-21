@@ -1,4 +1,26 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_o365
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ */
+
 namespace local_o365\form\element;
 
 global $CFG;
@@ -9,13 +31,13 @@ require_once("$CFG->libdir/form/advcheckbox.php");
  */
 class calendar extends \MoodleQuickForm_advcheckbox {
     /** @var bool Whether the calendar is checked (subscribed) or not. */
-	protected $checked = false;
+    protected $checked = false;
 
     /** @var string The o365 calendar id. */
-	protected $syncwith = null;
+    protected $syncwith = null;
 
     /** @var string Sync behaviour: in/out/both. */
-	protected $syncbehav = 'out';
+    protected $syncbehav = 'out';
 
     /**
      * Constructor, accessed through __call constructor workaround.
@@ -37,29 +59,29 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @param string $method The method called.
      * @param array $arguments Array of arguments used in call.
      */
-	public function __call($method, $arguments) {
-		if ($method === 'local_o365\form\element\calendar') {
-			$func = [$this, 'calendarconstruct'];
-			call_user_func_array($func, $arguments);
-		}
-	}
+    public function __call($method, $arguments) {
+        if ($method === 'local_o365\form\element\calendar') {
+            $func = [$this, 'calendarconstruct'];
+            call_user_func_array($func, $arguments);
+        }
+    }
 
     /**
      * Set element value.
      *
      * @param array $value Array of information to set.
      */
- 	public function setValue($value) {
- 		if (!empty($value['checked'])) {
- 			$this->checked = true;
- 		}
- 		if (!empty($value['syncwith'])) {
- 			$this->syncwith = $value['syncwith'];
- 		}
-		if (!empty($value['syncbehav'])) {
-			$this->syncbehav = $value['syncbehav'];
-		}
- 	}
+    public function setValue($value) {
+        if (!empty($value['checked'])) {
+            $this->checked = true;
+        }
+        if (!empty($value['syncwith'])) {
+            $this->syncwith = $value['syncwith'];
+        }
+        if (!empty($value['syncbehav'])) {
+            $this->syncbehav = $value['syncbehav'];
+        }
+    }
 
     /**
      * Export value for the element.
@@ -69,8 +91,8 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @return array Exported value.
      */
     public function exportValue(&$submitValues, $assoc = false) {
-    	$value = $this->_findValue($submitValues);
-    	return $this->_prepareValue($value, $assoc);
+        $value = $this->_findValue($submitValues);
+        return $this->_prepareValue($value, $assoc);
     }
 
     /**
@@ -79,24 +101,24 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @return string The element HTML.
      */
     public function toHtml() {
-    	$checkboxid = $this->getAttribute('id').'_checkbox';
-    	$checkboxname = $this->getName().'[checked]';
-    	$checkboxchecked = ($this->checked === true) ? 'checked="checked"' : '';
+        $checkboxid = $this->getAttribute('id').'_checkbox';
+        $checkboxname = $this->getName().'[checked]';
+        $checkboxchecked = ($this->checked === true) ? 'checked="checked"' : '';
         $checkboxonclick = 'if($(this).is(\':checked\')){$(this).parent().siblings().show();}else{$(this).parent().siblings().hide();}';
-    	$html = '<div>';
-    	$html .= '<input type="checkbox" name="'.$checkboxname.'" onclick="'.$checkboxonclick.'" id="'.$checkboxid.'" '.$checkboxchecked.'/>';
-    	$html .= \html_writer::label($this->_text, $checkboxid);
-    	$html .= '</div>';
+        $html = '<div>';
+        $html .= '<input type="checkbox" name="'.$checkboxname.'" onclick="'.$checkboxonclick.'" id="'.$checkboxid.'" '.$checkboxchecked.'/>';
+        $html .= \html_writer::label($this->_text, $checkboxid);
+        $html .= '</div>';
 
-    	$showcontrols = ($this->checked === true) ? 'display:block;' : 'display:none;';
-    	$stylestr = 'margin-left: 2rem;'.$showcontrols;
+        $showcontrols = ($this->checked === true) ? 'display:block;' : 'display:none;';
+        $stylestr = 'margin-left: 2rem;'.$showcontrols;
 
-    	$availableo365calendars = (isset($this->customdata['o365calendars'])) ? $this->customdata['o365calendars'] : [];
-    	$availcalid = $this->getAttribute('id').'_syncwith';
-    	$availcalname = $this->getName().'[syncwith]';
-    	$html .= '<div style="'.$stylestr.'">';
-    	$html .= \html_writer::label(get_string('ucp_syncwith_title', 'local_o365'), $availcalid);
-		$calselectopts = [];
+        $availableo365calendars = (isset($this->customdata['o365calendars'])) ? $this->customdata['o365calendars'] : [];
+        $availcalid = $this->getAttribute('id').'_syncwith';
+        $availcalname = $this->getName().'[syncwith]';
+        $html .= '<div style="'.$stylestr.'">';
+        $html .= \html_writer::label(get_string('ucp_syncwith_title', 'local_o365'), $availcalid);
+        $calselectopts = [];
         foreach ($availableo365calendars as $i => $info) {
             $calselectopts[$info['id']] = $info['name'];
         }
@@ -104,19 +126,19 @@ class calendar extends \MoodleQuickForm_advcheckbox {
         $html .= '</div>';
 
         $syncbehavior = [
-        	'out' => get_string('ucp_syncdir_out', 'local_o365'),
+            'out' => get_string('ucp_syncdir_out', 'local_o365'),
         ];
         if ($this->customdata['cansyncin'] === true) {
-        	$syncbehavior['in'] = get_string('ucp_syncdir_in', 'local_o365');
-        	$syncbehavior['both'] = get_string('ucp_syncdir_both', 'local_o365');
+            $syncbehavior['in'] = get_string('ucp_syncdir_in', 'local_o365');
+            $syncbehavior['both'] = get_string('ucp_syncdir_both', 'local_o365');
         }
         $syncbehavid = $this->getAttribute('id').'_syncbehav';
-    	$syncbehavname = $this->getName().'[syncbehav]';
+        $syncbehavname = $this->getName().'[syncbehav]';
         $html .= '<div style="'.$stylestr.'">';
         $html .= \html_writer::label(get_string('ucp_syncdir_title', 'local_o365'), $syncbehavid);
         $html .= \html_writer::select($syncbehavior, $syncbehavname, $this->syncbehav, false, ['id' => $syncbehavid]);
         $html .= '</div>';
 
-    	return $html;
+        return $html;
     }
 }
