@@ -137,6 +137,27 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
+     * Post authentication hook.
+     *
+     * This method is called from authenticate_user_login() for all enabled auth plugins.
+     *
+     * @param object $user user object, later used for $USER
+     * @param string $username (with system magic quotes)
+     * @param string $password plain text password (with system magic quotes)
+     */
+    public function user_authenticated_hook(&$user, $username, $password) {
+        if (!empty($user) && !empty($user->auth) && $user->auth === 'oidc') {
+            $eventdata = [
+                'objectid' => $user->id,
+                'userid' => $user->id,
+                'other' => ['username' => $user->username],
+            ];
+            $event = \auth_oidc\event\user_loggedin::create($eventdata);
+            $event->trigger();
+        }
+    }
+
+    /**
      * Cron function.
      */
     public function cron() {
