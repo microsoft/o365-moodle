@@ -52,7 +52,7 @@ class usersync extends \core\task\scheduled_task {
             $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                     $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
             $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
             $azureadclient = new \local_o365\rest\azuread($token, $httpclient);
             $azureadclient->sync_users();
         }

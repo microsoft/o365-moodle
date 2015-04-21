@@ -63,7 +63,7 @@ class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
         $httpclient = new \local_o365\httpclient();
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
                 $oidcconfig->tokenendpoint);
-        $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource('https://graph.windows.net', $clientdata, $httpclient);
+        $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource(null, 'https://graph.windows.net', $clientdata, $httpclient);
         if (empty($systemtoken)) {
             return [
                 'result' => false,

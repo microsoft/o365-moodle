@@ -78,7 +78,7 @@ class local_o365_oauth2_token_testcase extends \advanced_testcase {
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                 $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
         $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-                $tokenrec->scope, $tokenrec->resource, $clientdata, $httpclient);
+                $tokenrec->scope, $tokenrec->resource, $tokenrec->user_id, $clientdata, $httpclient);
         $token->refresh();
 
         $this->assertEquals(1, $DB->count_records('local_o365_token'));
