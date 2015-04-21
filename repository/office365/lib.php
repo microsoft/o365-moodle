@@ -362,7 +362,7 @@ class repository_office365 extends \repository {
                         try {
                             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
                             $contents = $sharepointclient->get_files($fullpath);
-                            $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint');
+                            $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint', $parentsiteuri);
                         } catch (\Exception $e) {
                             $list = [];
                         }
@@ -420,10 +420,12 @@ class repository_office365 extends \repository {
      * Transform a onedrive API response for a folder into a list parameter that the respository class can understand.
      *
      * @param string $response The response from the API.
+     * @param string $path The list path.
      * @param string $clienttype The type of client that the response is from. onedrive/sharepoint.
+     * @param string $spparentsiteuri If using the Sharepoint clienttype, this is the parent site URI.
      * @return array A $list array to be used by the respository class in get_listing.
      */
-    protected function contents_api_response_to_list($response, $path, $clienttype) {
+    protected function contents_api_response_to_list($response, $path, $clienttype, $spparentsiteuri = null) {
         global $OUTPUT, $DB;
         $list = [];
         if ($clienttype === 'onedrive') {
@@ -459,7 +461,7 @@ class repository_office365 extends \repository {
                         'source' => $clienttype,
                     ];
                     if ($clienttype === 'sharepoint') {
-                        $source['parentsiteuri'] = $parentsiteuri;
+                        $source['parentsiteuri'] = $spparentsiteuri;
                     }
 
                     $author = '';
