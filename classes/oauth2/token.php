@@ -238,7 +238,7 @@ class token {
         return false;
     }
 
-   /**
+    /**
      * Store a new token.
      *
      * @param string $token Token access token.
