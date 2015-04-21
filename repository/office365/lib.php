@@ -627,6 +627,18 @@ class repository_office365 extends \repository {
      */
     public function send_file($storedfile, $lifetime=null , $filter=0, $forcedownload=false, array $options = null) {
         $reference = $this->unpack_reference($storedfile->get_reference());
+
+        if ($_SERVER['SCRIPT_NAME'] !== '/draftfile.php') {
+            if ($reference['source'] === 'onedrive') {
+                $sourceclient = $this->get_onedrive_apiclient();
+                $embedurl = $sourceclient->get_embed_url($reference['id']);
+                if (!empty($embedurl)) {
+                    header('Location: '.$embedurl);
+                    die();
+                }
+            }
+        }
+
         try {
             $fileinfo = $this->get_file($storedfile->get_reference());
             if (isset($fileinfo['path'])) {
