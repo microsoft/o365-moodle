@@ -126,7 +126,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
             ],
             [
                 'auth' => 'oidc',
-                'username' => '00000000-0000-0000-0000-000000000001',
+                'username' => 'testuser1@example.onmicrosoft.com',
                 'firstname' => 'Test',
                 'lastname' => 'User1',
                 'email' => 'testuser1@example.onmicrosoft.com',
@@ -153,7 +153,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
             ],
             [
                 'auth' => 'oidc',
-                'username' => '00000000-0000-0000-0000-000000000002',
+                'username' => 'testuser2@example.onmicrosoft.com',
                 'firstname' => 'Test',
                 'lastname' => 'User2',
                 'email' => 'testuser2@example.onmicrosoft.com',
@@ -179,7 +179,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
             ],
             [
                 'auth' => 'oidc',
-                'username' => '00000000-0000-0000-0000-000000000003',
+                'username' => 'testuser3@example.onmicrosoft.com',
                 'firstname' => 'Test',
                 'lastname' => 'User3',
                 'email' => 'testuser3@example.onmicrosoft.com',
@@ -204,7 +204,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
             ],
             [
                 'auth' => 'oidc',
-                'username' => '00000000-0000-0000-0000-000000000004',
+                'username' => 'testuser4@example.onmicrosoft.com',
                 'firstname' => 'Test',
                 'lastname' => 'User4',
                 'email' => 'testuser4@example.onmicrosoft.com',
@@ -234,7 +234,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
         $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
         $apiclient->create_user_from_aaddata($aaddata);
 
-        $userparams = ['auth' => 'oidc', 'username' => $aaddata['objectId']];
+        $userparams = ['auth' => 'oidc', 'username' => $aaddata['mail']];
         $this->assertTrue($DB->record_exists('user', $userparams));
         $createduser = $DB->get_record('user', $userparams);
 
@@ -258,14 +258,14 @@ class local_o365_azuread_testcase extends \advanced_testcase {
                 'firstname' => 'Test',
                 'lastname' => 'User'.$i,
                 'email' => 'testuser'.$i.'@example.onmicrosoft.com',
-				'lang' => 'en'
+                'lang' => 'en'
             ];
             $DB->insert_record('user', (object)$muser);
 
             $token = [
                 'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,
                 'authcode' => '000',
-                'username' => '00000000-0000-0000-0000-00000000000'.$i,
+                'username' => 'testuser'.$i.'@example.onmicrosoft.com',
                 'scope' => 'test',
                 'resource' => \local_o365\rest\azuread::get_resource(),
                 'token' => '000',
@@ -289,10 +289,10 @@ class local_o365_azuread_testcase extends \advanced_testcase {
         $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
         $apiclient->sync_users();
 
-        $existinguser = ['auth' => 'oidc', 'username' => '00000000-0000-0000-0000-000000000001'];
+        $existinguser = ['auth' => 'oidc', 'username' => 'testuser1@example.onmicrosoft.com'];
         $this->assertTrue($DB->record_exists('user', $existinguser));
 
-        $createduser = ['auth' => 'oidc', 'username' => '00000000-0000-0000-0000-000000000003'];
+        $createduser = ['auth' => 'oidc', 'username' => 'testuser3@example.onmicrosoft.com'];
         $this->assertTrue($DB->record_exists('user', $createduser));
         $createduser = $DB->get_record('user', $createduser);
         $this->assertEquals('Test', $createduser->firstname);
@@ -301,20 +301,23 @@ class local_o365_azuread_testcase extends \advanced_testcase {
         $this->assertEquals('Toronto', $createduser->city);
         $this->assertEquals('CA', $createduser->country);
         $this->assertEquals('Dev', $createduser->department);
-        $this->assertEquals('de', $createduser->lang);
+        $this->assertEquals('en', $createduser->lang);
     }
 
+    /**
+     * Test transform_full_request_uri method.
+     */
     public function test_transform_full_request_uri() {
         $httpclient = new \local_o365\tests\mockhttpclient();
         $apiclient = new azuread_mock($this->get_mock_token(), $httpclient);
 
         $requesturi = 'https://graph.windows.net/users';
-        $expecteduri = 'https://graph.windows.net/users?api-version=2013-04-05';
+        $expecteduri = 'https://graph.windows.net/users?api-version=1.5';
         $actualuri = $apiclient->transform_full_request_uri($requesturi);
         $this->assertEquals($expecteduri, $actualuri);
 
         $requesturi = 'https://graph.windows.net/users?something';
-        $expecteduri = 'https://graph.windows.net/users?something&api-version=2013-04-05';
+        $expecteduri = 'https://graph.windows.net/users?something&api-version=1.5';
         $actualuri = $apiclient->transform_full_request_uri($requesturi);
         $this->assertEquals($expecteduri, $actualuri);
     }
