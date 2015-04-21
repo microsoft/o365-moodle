@@ -27,4 +27,4 @@ $plugin->version = 2015012707;
 $plugin->requires = 2014111000;
 $plugin->component = 'auth_oidc';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.4';
+$plugin->release = '28.0.0.5';
