@@ -124,6 +124,9 @@ abstract class o365api {
         $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
+        // Sleep to avoid rate limiting.
+        usleep(1250000);
+
         return $this->httpclient->$httpmethod($requesturi, $params, $options);
     }
 }
