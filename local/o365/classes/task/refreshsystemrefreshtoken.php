@@ -47,7 +47,7 @@ class refreshsystemrefreshtoken extends \core\task\scheduled_task {
             $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                     $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
             $graphresource = 'https://graph.windows.net';
-            $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource($graphresource, $clientdata, $httpclient);
+            $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource(null, $graphresource, $clientdata, $httpclient);
         }
         return true;
     }

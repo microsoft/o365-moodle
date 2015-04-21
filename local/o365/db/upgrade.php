@@ -135,5 +135,82 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015012704', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015012707) {
+        $table = new xmldb_table('local_o365_calsub');
+        $field = new xmldb_field('o365calid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'caltypeid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('syncbehav', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'o365calid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2015012707', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015012708) {
+        $table = new xmldb_table('local_o365_calidmap');
+        $field = new xmldb_field('origin', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'outlookeventid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $idmaps = $DB->get_recordset('local_o365_calidmap');
+        foreach ($idmaps as $idmap) {
+            $newidmap = new \stdClass;
+            $newidmap->id = $idmap->id;
+            $newidmap->origin = 'moodle';
+            $DB->update_record('local_o365_calidmap', $newidmap);
+        }
+        $idmaps->close();
+
+        upgrade_plugin_savepoint($result, '2015012708', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015012709) {
+        $table = new xmldb_table('local_o365_calidmap');
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'origin');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('local_o365_calsub');
+        $field = new xmldb_field('isprimary', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'o365calid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Update the calidmap with the user id of the user who created the event. Before multi-cal syncing, the o365 event was
+        // always created in the calendar of the event creating user (with others as attendees).
+        $sql = 'SELECT idmap.id as idmapid,
+                       ev.userid as eventuserid
+                  FROM {local_o365_calidmap} idmap
+                  JOIN {event} ev ON idmap.eventid = ev.id';
+        $idmaps = $DB->get_recordset_sql($sql);
+        foreach ($idmaps as $idmap) {
+            $newidmap = new \stdClass;
+            $newidmap->id = $idmap->idmapid;
+            $newidmap->userid = $idmap->eventuserid;
+            $DB->update_record('local_o365_calidmap', $newidmap);
+        }
+        $idmaps->close();
+
+        upgrade_plugin_savepoint($result, '2015012709', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015012710) {
+        $calsubs = $DB->get_recordset('local_o365_calsub');
+        foreach ($calsubs as $i => $calsub) {
+            if (empty($calsub->syncbehav)) {
+                $newcalsub = new \stdClass;
+                $newcalsub->id = $calsub->id;
+                $newcalsub->syncbehav = 'out';
+                $DB->update_record('local_o365_calsub', $newcalsub);
+            }
+        }
+        $calsubs->close();
+        upgrade_plugin_savepoint($result, '2015012710', 'local', 'o365');
+    }
+
     return $result;
 }
