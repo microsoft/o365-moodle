@@ -209,7 +209,7 @@ class observers {
 
         // The token record created/updated on login by auth_oidc.
         $oidctokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
-        if (empty($oidctokenrec) || empty($oidctokenrec->authcode)) {
+        if (empty($oidctokenrec) || empty($oidctokenrec->refreshtoken)) {
             return false;
         }
 
@@ -228,8 +228,8 @@ class observers {
             $params = [
                 'client_id' => $oidcconfig->clientid,
                 'client_secret' => $oidcconfig->clientsecret,
-                'grant_type' => 'authorization_code',
-                'code' => $oidctokenrec->authcode,
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $oidctokenrec->refreshtoken,
                 'resource' => $resource,
             ];
             $tokenresult = $httpclient->post($oidcconfig->tokenendpoint, $params);
