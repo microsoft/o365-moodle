@@ -90,7 +90,7 @@ class repository_office365 extends \repository {
                     $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
             $token = new \local_o365\oauth2\token($this->onedrive['token']->token, $this->onedrive['token']->expiry,
                     $this->onedrive['token']->refreshtoken, $this->onedrive['token']->scope,
-                    $this->onedrive['token']->resource, $clientdata, $this->httpclient);
+                    $this->onedrive['token']->resource, $this->onedrive['token']->user_id, $clientdata, $this->httpclient);
             return new \local_o365\rest\onedrive($token, $this->httpclient);
         }
         return false;
@@ -107,7 +107,7 @@ class repository_office365 extends \repository {
                     $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
             $token = new \local_o365\oauth2\token($this->sharepoint['token']->token, $this->sharepoint['token']->expiry,
                     $this->sharepoint['token']->refreshtoken, $this->sharepoint['token']->scope,
-                    $this->sharepoint['token']->resource, $clientdata, $this->httpclient);
+                    $this->sharepoint['token']->resource, $this->sharepoint['token']->user_id, $clientdata, $this->httpclient);
 
             return new \local_o365\rest\sharepoint($token, $this->httpclient);
         }

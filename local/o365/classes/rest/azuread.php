@@ -124,6 +124,23 @@ class azuread extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get information on the current application.
+     *
+     * @return array|null Array of application information, or null if failure.
+     */
+    public function get_all_application_info() {
+        $endpoint = '/applications';
+        $response = $this->apicall('get', $endpoint);
+        if (!empty($response)) {
+            $response = @json_decode($response, true);
+            if (!empty($response) && is_array($response)) {
+                return $response;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Check whether all permissions defined in $this->get_required_permissions have been assigned.
      *
      * @return array Array of missing permissions.
@@ -443,7 +460,7 @@ class azuread extends \local_o365\rest\o365api {
             $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                     $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
             $resource = static::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance($resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
             $rawaaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
             if (!empty($rawaaduserdata) && isset($rawaaduserdata['objectId']) && isset($rawaaduserdata['userPrincipalName'])) {
