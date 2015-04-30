@@ -77,7 +77,7 @@ class authcode extends \auth_oidc\loginflow\base {
             $this->handleauthresponse($_REQUEST);
         } else {
             // Initial login request.
-            $this->initiateauthrequest($promptlogin);
+            $this->initiateauthrequest($promptlogin, ['forceflow' => 'authcode']);
         }
     }
 
@@ -116,7 +116,7 @@ class authcode extends \auth_oidc\loginflow\base {
      * @param array $authparams Received parameters.
      */
     protected function handleauthresponse(array $authparams) {
-        global $DB, $CFG, $SESSION;
+        global $DB, $CFG, $SESSION, $STATEADDITIONALDATA;
 
         if (!isset($authparams['code'])) {
             throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
@@ -135,6 +135,7 @@ class authcode extends \auth_oidc\loginflow\base {
                 $additionaldata = [];
             }
         }
+        $STATEADDITIONALDATA = $additionaldata;
         $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
 
         // Get token from auth code.
@@ -169,6 +170,7 @@ class authcode extends \auth_oidc\loginflow\base {
         } else {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
+            redirect(core_login_get_return_url());
         }
     }
 
@@ -305,6 +307,6 @@ class authcode extends \auth_oidc\loginflow\base {
         }
 
         complete_user_login($user);
-        redirect(core_login_get_return_url());
+        return true;
     }
 }
