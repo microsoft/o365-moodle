@@ -40,13 +40,19 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Constructor.
      */
     public function __construct($forceloginflow = null) {
+        global $STATEADDITIONALDATA;
         $loginflow = 'authcode';
-        if (!empty($forceloginflow) && is_string($forceloginflow)) {
-            $loginflow = $forceloginflow;
+
+        if (!empty($STATEADDITIONALDATA) && isset($STATEADDITIONALDATA['forceflow'])) {
+            $loginflow = $STATEADDITIONALDATA['forceflow'];
         } else {
-            $configuredloginflow = get_config('auth_oidc', 'loginflow');
-            if (!empty($configuredloginflow)) {
-                $loginflow = $configuredloginflow;
+            if (!empty($forceloginflow) && is_string($forceloginflow)) {
+                $loginflow = $forceloginflow;
+            } else {
+                $configuredloginflow = get_config('auth_oidc', 'loginflow');
+                if (!empty($configuredloginflow)) {
+                    $loginflow = $configuredloginflow;
+                }
             }
         }
         $loginflowclass = '\auth_oidc\loginflow\\'.$loginflow;
