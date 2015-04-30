@@ -298,15 +298,19 @@ class azuread extends \local_o365\rest\o365api {
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
+     * @param string $deltalink A deltalink param from a previous get_users query. For pagination.
      * @return array|null Array of user information, or null if failure.
      */
-    public function get_users($params = 'default') {
+    public function get_users($params = 'default', $deltalink = '') {
         $endpoint = "/users";
         if ($params === 'default') {
-            $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage'];
+            $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage', 'userPrincipalName'];
+        }
+        if (empty($deltalink) || !is_string($deltalink)) {
+            $deltalink = '';
         }
         if (!empty($params) && is_array($params)) {
-            $endpoint .= '?deltaLink=&$select='.implode(',', $params);
+            $endpoint .= '?deltaLink='.$deltalink.'&$select='.implode(',', $params);
         }
         $response = $this->apicall('get', $endpoint);
         if (!empty($response)) {
@@ -350,10 +354,10 @@ class azuread extends \local_o365\rest\o365api {
 
         $newuser = (object)[
             'auth' => 'oidc',
-            'username' => trim(\core_text::strtolower($aaddata['mail'])),
-            'email' => $aaddata['mail'],
-            'firstname' => $aaddata['givenName'],
-            'lastname' => $aaddata['surname'],
+            'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
+            'email' => (isset($aaddata['mail'])) ? $aaddata['mail'] : '',
+            'firstname' => (isset($aaddata['givenName'])) ? $aaddata['givenName'] : '',
+            'lastname' => (isset($aaddata['surname'])) ? $aaddata['surname'] : '',
             'city' => (isset($aaddata['city'])) ? $aaddata['city'] : '',
             'country' => (isset($aaddata['country'])) ? $aaddata['country'] : '',
             'department' => (isset($aaddata['department'])) ? $aaddata['department'] : '',
@@ -397,31 +401,27 @@ class azuread extends \local_o365\rest\o365api {
     /**
      * Sync AzureAD Moodle users with the configured AzureAD directory.
      *
+     * @param array $aadusers Array of AAD users from $this->get_users().
      * @return bool Success/Failure
      */
-    public function sync_users() {
+    public function sync_users(array $aadusers = array()) {
         global $DB, $CFG;
-        $users = $this->get_users();
-        if (!empty($users) && is_array($users) && !empty($users['value'])) {
-            $aadresource = static::get_resource();
-            $sql = 'SELECT token.oidcuniqid, user.id, user.username
-                      FROM {user} user
-                      JOIN {auth_oidc_token} token ON user.username = token.username
-                     WHERE user.auth = ? AND user.deleted = ? AND user.mnethostid = ? AND token.resource = ?';
-            $params = ['oidc', '0', $CFG->mnet_localhost_id, $aadresource];
-            $existingusers = $DB->get_records_sql($sql, $params);
-
-            foreach ($users['value'] as $user) {
-                if (!isset($existingusers[$user['objectId']])) {
-                    try {
-                        $this->create_user_from_aaddata($user);
-                    } catch (\Exception $e) {
-                        if (!PHPUNIT_TEST) {
-                            mtrace('Could not create user with objectid '.$user['objectId']);
-                        }
+        $aadresource = static::get_resource();
+        $sql = 'SELECT user.username
+                  FROM {user} user
+                 WHERE user.auth = ? AND user.deleted = ? AND user.mnethostid = ?';
+        $params = ['oidc', '0', $CFG->mnet_localhost_id, $aadresource];
+        $existingusers = $DB->get_records_sql($sql, $params);
+        foreach ($aadusers as $user) {
+            $userupn = \core_text::strtolower($user['userPrincipalName']);
+            if (!isset($existingusers[$userupn])) {
+                try {
+                    $this->create_user_from_aaddata($user);
+                } catch (\Exception $e) {
+                    if (!PHPUNIT_TEST) {
+                        mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
-                unset($existingusers[$user['objectId']]);
             }
         }
         return true;
