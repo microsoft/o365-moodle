@@ -54,6 +54,16 @@ abstract class o365api {
     }
 
     /**
+     * Determine whether the plugins are configured to use the chinese API.
+     *
+     * @return bool Whether we should use the chinese API (true), or not (false).
+     */
+    public static function use_chinese_api() {
+        $chineseapi = get_config('local_o365', 'chineseapi');
+        return (!empty($chineseapi)) ? true : false;
+    }
+
+    /**
      * Get the API client's oauth2 resource.
      *
      * @return string The resource for oauth2 tokens.

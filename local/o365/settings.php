@@ -45,6 +45,10 @@ if ($hassiteconfig) {
     $desc = get_string('settings_aadsync_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/aadsync', $label, $desc, '0'));
 
+    $label = get_string('settings_o365china', 'local_o365');
+    $desc = get_string('settings_o365china_details', 'local_o365');
+    $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
+
     $label = get_string('settings_header_setup', 'local_o365');
     $desc = '';
     $settings->add(new admin_setting_heading('local_o365_environment', $label, $desc));
