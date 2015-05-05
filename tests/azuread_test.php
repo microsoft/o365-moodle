@@ -66,6 +66,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
             'country' => 'CA',
             'department' => 'Dev',
             'givenName' => 'Test',
+            'userPrincipalName' => 'testuser'.$i.'@example.onmicrosoft.com',
             'mail' => 'testuser'.$i.'@example.onmicrosoft.com',
             'surname' => 'User'.$i,
             'preferredLanguage' => ($i == 3) ? 'de-DE' : 'en-US',
@@ -121,6 +122,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
                 'country' => 'CA',
                 'department' => 'Dev',
                 'givenName' => 'Test',
+                'userPrincipalName' => 'testuser1@example.onmicrosoft.com',
                 'mail' => 'testuser1@example.onmicrosoft.com',
                 'surname' => 'User1',
             ],
@@ -148,6 +150,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
                 'country' => 'CA',
                 'department' => 'Dev',
                 'givenName' => 'Test',
+                'userPrincipalName' => 'testuser2@example.onmicrosoft.com',
                 'mail' => 'testuser2@example.onmicrosoft.com',
                 'surname' => 'User2',
             ],
@@ -174,6 +177,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
                 'objectId' => '00000000-0000-0000-0000-000000000003',
                 'department' => 'Dev',
                 'givenName' => 'Test',
+                'userPrincipalName' => 'testuser3@example.onmicrosoft.com',
                 'mail' => 'testuser3@example.onmicrosoft.com',
                 'surname' => 'User3',
             ],
@@ -199,6 +203,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
                 'objectType' => 'User',
                 'objectId' => '00000000-0000-0000-0000-000000000004',
                 'givenName' => 'Test',
+                'userPrincipalName' => 'testuser4@example.onmicrosoft.com',
                 'mail' => 'testuser4@example.onmicrosoft.com',
                 'surname' => 'User4',
             ],
@@ -287,7 +292,8 @@ class local_o365_azuread_testcase extends \advanced_testcase {
         $httpclient->set_response($response);
 
         $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
-        $apiclient->sync_users();
+        $aadusers = $apiclient->get_users();
+        $apiclient->sync_users($aadusers['value']);
 
         $existinguser = ['auth' => 'oidc', 'username' => 'testuser1@example.onmicrosoft.com'];
         $this->assertTrue($DB->record_exists('user', $existinguser));
