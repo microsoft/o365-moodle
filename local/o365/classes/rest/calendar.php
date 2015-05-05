@@ -33,7 +33,7 @@ class calendar extends \local_o365\rest\o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-        return 'https://outlook.office365.com';
+        return (static::use_chinese_api() === true) ? 'https://partner.outlook.cn' : 'https://outlook.office365.com';
     }
 
     /**
