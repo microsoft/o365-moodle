@@ -39,17 +39,21 @@ class profile_field_o365 extends \profile_field_base {
 
     public function display_data() {
         global $DB, $USER;
-        $o365connected = $DB->record_exists('local_o365_token', ['user_id' => $USER->id]);
+        $o365connected = $DB->record_exists('local_o365_token', ['user_id' => $this->userid]);
         if ($o365connected === true) {
             $value = get_string('connected_str', 'profilefield_o365');
             $linkstr = get_string('connected_link', 'profilefield_o365');
-            $manageurl = new \moodle_url('/local/o365/ucp.php');
-            $value .= ' '.\html_writer::link($manageurl, $linkstr);
+            if ($USER->id == $this->userid) {
+                $manageurl = new \moodle_url('/local/o365/ucp.php');
+                $value .= ' '.\html_writer::link($manageurl, $linkstr);
+            }
         } else {
             $value = get_string('notconnected_str', 'profilefield_o365');
             $linkstr = get_string('notconnected_link', 'profilefield_o365');
-            $manageurl = new \moodle_url('/local/o365/ucp.php');
-            $value .= ' '.\html_writer::link($manageurl, $linkstr);
+            if ($USER->id == $this->userid) {
+                $manageurl = new \moodle_url('/local/o365/ucp.php');
+                $value .= ' '.\html_writer::link($manageurl, $linkstr);
+            }
         }
         return $value;
     }

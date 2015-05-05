@@ -46,15 +46,18 @@ class profile_field_oidc extends \profile_field_base {
             $label = $authconfig->opname;
         }
 
-        if ($USER->auth === 'oidc') {
+        $vieweduser = $DB->get_record('user', ['id' => $this->userid]);
+        if (!empty($vieweduser) && $vieweduser->auth === 'oidc') {
             $value = get_string('connected', 'profilefield_oidc', $label);
             $linkstr = get_string('connected_link', 'profilefield_oidc', $label);
         } else {
             $value = get_string('notconnected', 'profilefield_oidc', $label);
             $linkstr = get_string('notconnected_link', 'profilefield_oidc', $label);
         }
-        $manageurl = new \moodle_url('/auth/oidc/ucp.php');
-        $value .= ' '.html_writer::link($manageurl, $linkstr);
+        if ($USER->id == $this->userid) {
+            $manageurl = new \moodle_url('/auth/oidc/ucp.php');
+            $value .= ' '.html_writer::link($manageurl, $linkstr);
+        }
 
         return $value;
     }
