@@ -48,6 +48,27 @@ class ucp extends base {
     /**
      * Manage calendar syncing.
      */
+    public function mode_onenote() {
+        global $OUTPUT;
+        $mform = new \local_o365\form\onenote('?action=onenote');
+        if ($mform->is_cancelled()) {
+            redirect(new \moodle_url('/local/o365/ucp.php'));
+        } else if ($fromform = $mform->get_data()) {
+            $disableo365onenote = (!empty($fromform->disableo365onenote)) ? 1 : 0;
+            set_user_preference('local_o365_disableo365onenote', $disableo365onenote);
+            redirect(new \moodle_url('/local/o365/ucp.php'));
+        } else {
+            $defaultdata = ['disableo365onenote' => get_user_preferences('local_o365_disableo365onenote', 0)];
+            $mform->set_data($defaultdata);
+            echo $OUTPUT->header();
+            $mform->display();
+            echo $OUTPUT->footer();
+        }
+    }
+
+    /**
+     * Manage calendar syncing.
+     */
     public function mode_calendar() {
         global $DB, $USER, $OUTPUT, $PAGE;
         if (empty($this->o365connected)) {
@@ -394,6 +415,8 @@ class ucp extends base {
             echo '<br /><br />';
             echo \html_writer::tag('h5', get_string('ucp_features', 'local_o365'));
             echo \html_writer::link(new \moodle_url('?action=calendar'), get_string('ucp_calsync_title', 'local_o365'));
+            echo '<br />';
+            echo \html_writer::link(new \moodle_url('?action=onenote'), get_string('ucp_onenote_title', 'local_o365'));
         }
         echo $OUTPUT->footer();
     }
