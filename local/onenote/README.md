@@ -10,7 +10,7 @@ Usage
 -----
 
 Instantiation:
-        $onenoteapi = onenote_api::getinstance();
+        $onenoteapi = \local_onenote\api\base::getinstance();
 
 Logging the user in:
         $onenoteapi->is_logged_in();
@@ -27,7 +27,7 @@ There are several parts that make up the Microsoft OneNote Online API Local plug
 ### Configuration
 None. This plugin depends upon the Microsoft Account local plugin to be configured for accessing the appropriate Microsoft Live application.
 
-### onenote_api class
+### \local_onenote\api\base class
 This is a singleton class that provides simple wrappers for various authentication and the OneNote online REST API. Some of the functionality provided includes:
 - render_signin_widget: Returns the HTML for displaying the signin widget for Microsoft OneNote.
 - get_items_list: Used for drilling down the hierarchy of OneNote notebooks, sections, and pages.

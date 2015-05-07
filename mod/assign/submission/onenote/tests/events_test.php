@@ -76,7 +76,7 @@ class assignsubmission_onenote_events_testcase extends advanced_testcase {
         $dummy = (object) array(
             'contextid' => $this->context->id,
             'component' => 'assignsubmission_onenote',
-            'filearea' => ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            'filearea' => \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             'itemid' => $this->submission->id,
             'filepath' => '/',
             'filename' => 'myassignmnent.pdf'
@@ -85,13 +85,13 @@ class assignsubmission_onenote_events_testcase extends advanced_testcase {
         $dummy = (object) array(
             'contextid' => $this->context->id,
             'component' => 'assignsubmission_onenote',
-            'filearea' => ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            'filearea' => \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             'itemid' => $this->submission->id,
             'filepath' => '/',
             'filename' => 'myassignmnent.png'
         );
         $this->fi2 = $fs->create_file_from_string($dummy, 'Content of ' . $dummy->filename);
-        $this->files = $fs->get_area_files($this->context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+        $this->files = $fs->get_area_files($this->context->id, 'assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             $this->submission->id, 'id', false);
 
     }

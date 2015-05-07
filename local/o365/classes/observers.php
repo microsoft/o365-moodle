@@ -331,6 +331,7 @@ class observers {
         if (isset($event->courseid) && $event->courseid == SITEID) {
             // Site event.
             $sql = 'SELECT u.id,
+                           u.id as userid,
                            u.email,
                            u.firstname,
                            u.lastname,
@@ -345,6 +346,7 @@ class observers {
             // Course event - Get subscribed students.
             if (!empty($event->groupid)) {
                 $sql = 'SELECT u.id,
+                               u.id as userid,
                                u.email,
                                u.firstname,
                                u.lastname,
@@ -363,6 +365,7 @@ class observers {
                 $attendees = $DB->get_records_sql($sql, $params);
             } else {
                 $sql = 'SELECT u.id,
+                               u.id as userid,
                                u.email,
                                u.firstname,
                                u.lastname,
@@ -413,7 +416,7 @@ class observers {
             }
             if (isset($attendee->subisprimary) && $attendee->subisprimary == '0') {
                 $nonprimarycalsubs[] = $attendee;
-                unset($attendees[$i]);
+                unset($attendees[$userid]);
             }
         }
 

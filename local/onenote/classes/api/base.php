@@ -15,105 +15,151 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Convenient wrappers and helper for using the OneNote API
- * @package    local_onenote
+ * Convenient wrappers and helper for using the OneNote API.
+ *
+ * @package local_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com) Sushant Gawali (sushant@introp.net)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc.
+ * @copyright Microsoft Open Technologies, Inc.
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
-
-// File areas for OneNote submission assignment.
-define('ASSIGNSUBMISSION_ONENOTE_MAXFILES', 1);
-define('ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES', 5);
-define('ASSIGNSUBMISSION_ONENOTE_FILEAREA', 'submission_onenote_files');
-
-// File areas for onenote feedback assignment.
-define('ASSIGNFEEDBACK_ONENOTE_FILEAREA', 'feedback_files');
-define('ASSIGNFEEDBACK_ONENOTE_BATCH_FILEAREA', 'feedback_files_batch');
-define('ASSIGNFEEDBACK_ONENOTE_IMPORT_FILEAREA', 'feedback_files_import');
-define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES', 1);
-define('ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYUSERS', 5);
-define('ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME', 120);
+namespace local_onenote\api;
 
 /**
  * A helper class to access Microsoft OneNote using the REST api.
- * This is a singleton class.
- *
- * @package    local_onenote
  */
-class onenote_api {
-    /** @var string Base url to access API */
-    // TODO: Switch to non-beta version
-    const API = 'https://www.onenote.com/api/beta'; // 'https://www.onenote.com/api/v1.0';.
+abstract class base {
+    /** The maximum number of files allowed for OneNote submissions. */
+    const ASSIGNSUBMISSION_ONENOTE_MAXFILES = 1;
 
-    private static $instance = null;
-    private $msacountapi = null;
+    /** The maximum number of summary files allowed for OneNote submissions. */
+    const ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES = 5;
+
+    /** File area for OneNote submission assignment. */
+    const ASSIGNSUBMISSION_ONENOTE_FILEAREA = 'submission_onenote_files';
+
+    /** The maximum number of summary files allowed for OneNote feedback. */
+    const ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES = 1;
+
+    /** The maximum number of summary users allowed for OneNote feedback. */
+    const ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYUSERS = 5;
+
+    /** The maximum file unzip time allowed for OneNote feedback. */
+    const ASSIGNFEEDBACK_ONENOTE_MAXFILEUNZIPTIME = 120;
+
+    /** File area for OneNote feedback assignment. */
+    const ASSIGNFEEDBACK_ONENOTE_FILEAREA = 'feedback_files';
+
+    /** Batch file area for OneNote feedback assignment. */
+    const ASSIGNFEEDBACK_ONENOTE_BATCH_FILEAREA = 'feedback_files_batch';
+
+    /** Import file area for OneNote feedback assignment. */
+    const ASSIGNFEEDBACK_ONENOTE_IMPORT_FILEAREA = 'feedback_files_import';
+
+    /** @var \local_onenote\api\base The static stored singleton class. */
+    protected static $instance = null;
 
     /**
-     * Constructor.
+     * Make an API call.
      *
-     * Initializes msaccount_api instance which is used to do moest of the underlying authentication and
-     * REST API operations. This is a singleton class, do not use the constructor directly to create an instance.
-     * Use the getinstance() method instead.
+     * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
+     * @param string $apimethod The API endpoint/method to call.
+     * @param string $params Additional paramters to include.
+     * @param array $options Additional options for the request.
+     * @return string The result of the API call.
      */
-    protected function __construct() {
-        $this->msaccountapi = msaccount_api::getinstance();
-    }
+    abstract public function apicall($httpmethod, $apimethod, $params = '', $options = array());
 
     /**
-     * Gets the instance of onenote_api. Use this method to get an instance of the class instead of the constructor.
-     * @return null|static
+     * Get a full URL and include auth token. This is useful for associated resources: attached images, etc.
+     *
+     * @param string $url A full URL to get.
+     * @return string The result of the request.
+     */
+    abstract public function geturl($url, $options = array());
+
+    /**
+     * Get the token to authenticate with OneNote.
+     *
+     * @return string The token to authenticate with OneNote.
+     */
+    abstract public function get_token();
+
+    /**
+     * Determine whether the user is connected to OneNote.
+     *
+     * @return bool True if connected, false otherwise.
+     */
+    abstract public function is_logged_in();
+
+    /**
+     * Get the login url (if applicable).
+     *
+     * @return string The login URL.
+     */
+    abstract public function get_login_url();
+
+    /**
+     * End the connection to OneNote.
+     */
+    abstract public function log_out();
+
+    /**
+     * Return the HTML for the sign in widget for OneNote.
+     * Please refer to the styles.css file for styling this widget.
+     *
+     * @return string HTML containing the sign in widget.
+     */
+    abstract public function render_signin_widget();
+
+    /**
+     * Gets the instance of the correct api class. Use this method to get an instance of the api class.
+     *
+     * @return \local_onenote\api\base An implementation of the OneNote API.
      */
     public static function getinstance() {
-        if (null === self::$instance) {
-            self::$instance = new static();
+        global $USER, $SESSION, $CFG;
+
+        $msaccountclass = '\local_onenote\api\msaccount';
+        $o365class = '\local_onenote\api\o365';
+        $iso365user = ($USER->auth === 'oidc' && class_exists('\local_o365\rest\onenote')) ? true : false;
+        if ($iso365user === true) {
+            require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
+            $sesskey = 'msaccount_client-'.md5(\msaccount_client::SCOPE);
+            $disableo365onenote = get_user_preferences('local_o365_disableo365onenote', 0);
+            $class = (!empty($SESSION->$sesskey) || !empty($disableo365onenote)) ? $msaccountclass : $o365class;
+        } else {
+            $class = $msaccountclass;
         }
 
-        self::$instance->get_msaccount_api()->is_logged_in();
-
+        if (empty(self::$instance)) {
+            self::$instance = new $class();
+        }
         return self::$instance;
     }
 
     /**
-     * Return instance of the underlying msaccount_api.
-     * @return null|static
-     */
-    public function get_msaccount_api() {
-        return $this->msaccountapi;
-    }
-
-    /**
-     * Downloads a OneNote page, including any associated images etc. to a zip file from OneNote
-     * using an authenticated request.
+     * Downloads a OneNote page, including any associated images etc. to a zip file from OneNote using an authenticated request.
      *
-     * @param string $id id of OneNote page
-     * @param string $path path to save the zip file to
-     * @return array Array containing the path to the downloaded zip file and
-     * the url to the original OneNote page
+     * @param string $id ID of OneNote page.
+     * @param string $path Path to save the zip file to.
+     * @return array Array containing the path to the downloaded zip file and the url to the original OneNote page.
      */
     public function download_page($pageid, $path) {
+        $pageendpoint = '/pages/'.$pageid.'/content';
+        $response = $this->apicall('get', $pageendpoint);
 
-        $url = self::API."/pages/".$pageid."/content";
-
-        $response = $this->get_msaccount_api()->myget($url);
-
-        // On success, we get an HTML page as response. On failure, we get JSON error object,
-        // so we have to decode to check errors.
+        // On success, we get an HTML page as response. On failure, we get JSON error object, so we have to decode to check errors.
         $decodedresponse = json_decode($response);
 
-        if (!$response || isset($decodedresponse->error)) {
+        if (empty($response) || !empty($decodedresponse->error)) {
             return null;
         }
 
-        // See if the file contains any references to images or other files and if so,
-        // create a folder and download those, too.
-        $doc = new DOMDocument('1.0', 'UTF-8');
+        // See if the file contains any references to images or other files and if so, create a folder and download those, too.
+        $doc = new \DOMDocument('1.0', 'UTF-8');
         $doc->loadHTML(mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
-        $xpath = new DOMXPath($doc);
+        $xpath = new \DOMXPath($doc);
 
         $this->handle_garbage_chars($xpath);
 
@@ -140,7 +186,7 @@ class onenote_api {
                 if (!$srcnode) {
                     continue;
                 }
-                $response = $this->get_msaccount_api()->myget($srcnode->nodeValue);
+                $response = $this->geturl($srcnode->nodeValue);
                 file_put_contents($filesfolder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
 
                 // Update img src paths in the html accordingly.
@@ -175,28 +221,23 @@ class onenote_api {
         $fp->archive_to_pathname($filelist, $path);
 
         fulldelete($tempfolder);
-        return array('path' => $path, 'url' => $url);
+        return array('path' => $path, 'url' => static::API.$pageendpoint);
     }
 
     /**
      * Returns the name of the OneNote item (notebook or section) given its id.
      *
      * @param string $itemid the id of the OneNote notebook or section
-     * @return mixed item name or false in case of error
+     * @return string|bool item name or false in case of error
      */
     public function get_item_name($itemid) {
-
         if (empty($itemid)) {
-            throw new coding_exception('Empty item_id passed to get_item_name');
+            throw new \coding_exception('Empty item_id passed to get_item_name');
         }
 
-        $url = self::API."/notebooks/{$itemid}";
-        $response = json_decode($this->get_msaccount_api()->myget($url));
-
+        $response = json_decode($this->apicall('get', '/notebooks/'.$itemid));
         if (!$response || isset($response->error)) {
-            $url = self::API."/sections/{$itemid}";
-            $response = json_decode($this->get_msaccount_api()->myget($url));
-
+            $response = json_decode($this->apicall('get', '/sections/'.$itemid));
             if (!$response || isset($response->error)) {
                 return false;
             }
@@ -208,15 +249,15 @@ class onenote_api {
     /**
      * Returns a list of OneNote item(s) at the given path (notebooks or sections or pages).
      *
-     * @param string $path the path containing notebook id / section id / page id.
-     * @return mixed Array of items formatted for fileapi
+     * @param string $path The path containing notebook id / section id / page id.
+     * @return array Array of items formatted for fileapi.
      */
     public function get_items_list($path = '') {
         global $OUTPUT;
 
         if (empty($path)) {
             $itemtype = 'notebook';
-            $url = self::API."/notebooks";
+            $endpoint = '/notebooks';
         } else {
             $parts = explode('/', $path);
             $part1 = array_pop($parts);
@@ -224,19 +265,19 @@ class onenote_api {
 
             if ($part2) {
                 $itemtype = 'page';
-                $url = self::API."/sections/{$part1}/pages";
+                $endpoint = '/sections/'.$part1.'/pages';
             } else {
                 $itemtype = 'section';
-                $url = self::API."/notebooks/{$part1}/sections";
+                $endpoint = '/notebooks/'.$part1.'/sections';
             }
         }
 
-        $response = json_decode($this->get_msaccount_api()->myget($url));
+        $response = json_decode($this->apicall('get', $endpoint));
 
         $items = array();
 
         if (isset($response->error)) {
-            return $items;
+            throw new \Exception($response->error);
         }
 
         if ($response && $response->value) {
@@ -290,82 +331,59 @@ class onenote_api {
     }
 
     /**
-     * Ensure that data about the notebooks and sections in the logged-in user's OneNote account
-     * are in sync with our database tables.
+     * Ensure that notebook and section data in the logged-in user's OneNote account are in sync with our database tables.
      */
-    private function sync_notebook_data() {
+    public function sync_notebook_data() {
         global $DB;
-
-        $notebooks = $this->get_items_list('');
-
         $notebookname = get_string('notebookname', 'block_onenote');
-        $notebooksurl = self::API . "/notebooks/";
         $courses = enrol_get_my_courses(); // Get the current user enrolled courses.
-        $notebooksarray = array();
-
+        $notebooksarray = [];
+        $notebooks = $this->get_items_list('');
         if ($notebooks) {
             foreach ($notebooks as $notebook) {
-                if ($notebook['id']) {
+                if (isset($notebook['id'])) {
                     $notebooksarray[$notebook['id']] = $notebook['title'];
                 }
             }
         }
-
-        if (count($notebooksarray) > 0) {
-            if (!(in_array($notebookname, $notebooksarray))) {
-                $param = array(
-                    "name" => $notebookname
-                );
-
-                $notebookname = json_encode($param);
-                $creatednotebook = json_decode($this->get_msaccount_api()->mypost($notebooksurl, $notebookname));
-                $sections = array();
-
-                if ($creatednotebook) {
-                    $notebookid = $creatednotebook->id;
+        if (!(in_array($notebookname, $notebooksarray))) {
+            $notebookname = json_encode(['name' => $notebookname]);
+            $creatednotebook = json_decode($this->apicall('post', '/notebooks', $notebookname));
+            $sections = [];
+            if (!empty($creatednotebook)) {
+                if (!empty($courses)) {
+                    $this->sync_sections($courses, $creatednotebook->id, $sections);
                 }
-
-                if ($courses) {
-                    $this->sync_sections($courses, $notebookid, $sections);
+            }
+        } else {
+            $notebookid = array_search($notebookname, $notebooksarray);
+            $getsection = json_decode($this->apicall('get', '/notebooks/'.$notebookid.'/sections/'));
+            $sections = [];
+            if (isset($getsection->value)) {
+                foreach ($getsection->value as $section) {
+                    $sections[$section->id] = $section->name;
                 }
-            } else {
-                $notebookid = array_search($notebookname, $notebooksarray);
-                $sectionurl = self::API . "/notebooks/" . $notebookid . "/sections/";
-                $getsection = json_decode($this->get_msaccount_api()->myget($sectionurl));
-                $sections = array();
-
-                if (isset($getsection->value)) {
-                    foreach ($getsection->value as $section) {
-                        $sections[$section->id] = $section->name;
-                    }
-                }
-
-                if ($courses) {
-                    $this->sync_sections($courses, $notebookid, $sections);
-                }
+            }
+            if (!empty($courses)) {
+                $this->sync_sections($courses, $notebookid, $sections);
             }
         }
     }
 
     /**
      * Sync OneNote notebook sections in the currently logged-in user's account with our database.
-     * @param $courses Array of courses for the current user
-     * @param $notebookid the id of the OneNote notebook associated with the current user
-     * @param array $sections Array of sections within the this notebook
+     *
+     * @param array $courses Array of courses for the current user.
+     * @param string $notebookid The id of the OneNote notebook associated with the current user.
+     * @param array $sections Array of sections within the this notebook.
      */
-    private function sync_sections($courses, $notebookid, array $sections) {
-        $sectionurl = self::API . "/notebooks/" . $notebookid . "/sections/";
+    protected function sync_sections($courses, $notebookid, array $sections) {
+        $sectionendpoint = '/notebooks/'.$notebookid.'/sections/';
 
         foreach ($courses as $course) {
             if (!in_array($course->fullname, $sections)) {
-                $paramsection = array(
-                    "name" => $course->fullname
-                );
-
-                $section = json_encode($paramsection);
-                $response = $this->get_msaccount_api()->mypost($sectionurl, $section);
+                $response = $this->apicall('post', $sectionendpoint, json_encode(['name' => $course->fullname]));
                 $response = json_decode($response);
-
                 if ($response && isset($response->id)) {
                     $this->upsert_user_section($course->id, $response->id);
                 }
@@ -378,12 +396,13 @@ class onenote_api {
 
     /**
      * Insert or update OneNote notebook sections discovered during the sync process into the database.
-     * @param $courseid course id
-     * @param $sectionid OneNote section id
+     *
+     * @param $courseid Course id.
+     * @param $sectionid OneNote section id.
      */
-    private function upsert_user_section($courseid, $sectionid) {
+    protected function upsert_user_section($courseid, $sectionid) {
         global $DB, $USER;
-        $newsection = new stdClass();
+        $newsection = new \stdClass;
         $newsection->user_id = $USER->id;
         $newsection->course_id = $courseid;
         $newsection->section_id = $sectionid;
@@ -398,43 +417,12 @@ class onenote_api {
         }
     }
 
-    // Helper methods.
-
     /**
-     * Helper to call the is_logged_in() method of the msaccount_api class.
-     */
-    public function is_logged_in() {
-        return $this->get_msaccount_api()->is_logged_in();
-    }
-
-    /**
-     * Get the msaccount_api login url.
-     */
-    public function get_login_url() {
-        return $this->get_msaccount_api()->get_login_url();
-    }
-
-    /**
-     * Logout from the Microsoft Account.
-     */
-    public function log_out() {
-        return $this->get_msaccount_api()->log_out();
-    }
-
-    /**
-     * Return the HTML for the sign in widget for OneNote.
-     * Please refer to the styles.css file for styling this widget.
-     * @return string HTML containing the sign in widget.
-     */
-    public function render_signin_widget() {
-        return $this->get_msaccount_api()->render_signin_widget();
-    }
-
-    /**
-     * Render an action button for OneNote actions such as the user wanting to go to OneNote to view or work on their
-     * assignment or viewing or adding feedback.
-     * @param $buttontext Text to display inside the button.
-     * @param $cmid course module id.
+     * Render an action button for OneNote actions such as the user wanting to go to OneNote to view or work on their assignment
+     * or viewing or adding feedback.
+     *
+     * @param string $buttontext Text to display inside the button.
+     * @param int $cmid course module id.
      * @param bool $wantfeedbackpage True if this action is for a feedback page. False if it is for a submission page.
      * @param bool $isteacher Is the current user a teacher or a student?
      * @param null $submissionuserid User id associated with the submission.
@@ -443,8 +431,7 @@ class onenote_api {
      * @return string HTML string containing the widget to display on the page.
      */
     public function render_action_button($buttontext, $cmid, $wantfeedbackpage = false, $isteacher = false,
-        $submissionuserid = null, $submissionid = null, $gradeid = null) {
-
+                                         $submissionuserid = null, $submissionid = null, $gradeid = null) {
         $actionparams['action'] = 'openpage';
         $actionparams['cmid'] = $cmid;
         $actionparams['wantfeedback'] = $wantfeedbackpage;
@@ -453,10 +440,13 @@ class onenote_api {
         $actionparams['submissionid'] = $submissionid;
         $actionparams['gradeid'] = $gradeid;
 
-        $url = new moodle_url('/local/onenote/onenote_actions.php', $actionparams);
+        $url = new \moodle_url('/local/onenote/onenote_actions.php', $actionparams);
 
-        return '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
-                $url->out(false) . '" class="local_onenote_linkbutton">' . $buttontext . '</a>';
+        $attrs = [
+            'onclick' => 'window.open(this.href,\'_blank\'); return false;',
+            'class' => 'local_onenote_linkbutton',
+        ];
+        return \html_writer::link($url->out(false), $buttontext, $attrs);
     }
 
     /**
@@ -482,7 +472,7 @@ class onenote_api {
      *                  so create the page from the assignment prompt
      *             else bail out
      *
-     * @param $cmid course module id.
+     * @param int $cmid course module id.
      * @param bool $wantfeedbackpage True if this action is for a feedback page. False if it is for a submission page.
      * @param bool $isteacher Is the current user a teacher or a student?
      * @param null $submissionuserid User id associated with the submission.
@@ -496,7 +486,7 @@ class onenote_api {
 
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
         $assign = $DB->get_record('assign', array('id' => $cm->instance));
-        $context = context_module::instance($cm->id);
+        $context = \context_module::instance($cm->id);
         $userid = $USER->id;
 
         // If $submission_userId is given, then it contains the student's user id.
@@ -516,7 +506,7 @@ class onenote_api {
             $pageid = $wantfeedbackpage ? ($isteacher ? $record->feedback_teacher_page_id : $record->feedback_student_page_id) :
                                           ($isteacher ? $record->submission_teacher_page_id : $record->submission_student_page_id);
             if ($pageid) {
-                $page = json_decode($this->get_msaccount_api()->myget(self::API . '/pages/' . $pageid));
+                $page = json_decode($this->apicall('get', '/pages/'.$pageid));
                 if ($page && !isset($page->error)) {
                     $url = $page->links->oneNoteWebUrl->href;
                     return $url;
@@ -541,7 +531,7 @@ class onenote_api {
             $DB->update_record('onenote_assign_pages', $record);
         } else {
             // Prepare record object since we will use it further down to insert into database.
-            $record = new object();
+            $record = new \stdClass;
             $record->assign_id = $assign->id;
             $record->user_id = $studentuserid;
         }
@@ -559,12 +549,12 @@ class onenote_api {
         if ($wantfeedbackpage) {
             // If previously saved feedback does not exist.
             if (!$gradeid ||
-                !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+                !($files = $fs->get_area_files($context->id, 'assignfeedback_onenote', self::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
                         $gradeid, 'id', false))) {
                 if ($isteacher) {
                     // This must be the first time teacher is looking at student's submission
                     // So prepare feedback page from submission zip package.
-                    $files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                    $files = $fs->get_area_files($context->id, 'assignsubmission_onenote', self::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                         $submissionid, 'id', false);
 
                     if ($files) {
@@ -573,7 +563,7 @@ class onenote_api {
                         $fp = get_file_packer('application/zip');
                         $filelist = $fp->extract_to_pathname(reset($files), $tempfolder);
 
-                        $a = new stdClass();
+                        $a = new \stdClass;
                         $a->assign_name = $assign->name;
                         $a->student_firstname = $student->firstname;
                         $a->student_lastname = $student->lastname;
@@ -582,7 +572,7 @@ class onenote_api {
                             join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0')), $boundary);
                     } else {
                         // Student did not turn in a submission, so create an empty one.
-                        $a = new stdClass();
+                        $a = new \stdClass;
                         $a->assign_name = $assign->name;
                         $a->student_firstname = $student->firstname;
                         $a->student_lastname = $student->lastname;
@@ -599,7 +589,7 @@ class onenote_api {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $tempfolder);
 
-                $a = new stdClass();
+                $a = new \stdClass;
                 $a->assign_name = $assign->name;
                 $a->student_firstname = $student->firstname;
                 $a->student_lastname = $student->lastname;
@@ -610,14 +600,14 @@ class onenote_api {
         } else {
             // We want submission page.
             if (!$submissionid ||
-                !($files = $fs->get_area_files($context->id, 'assignsubmission_onenote', ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                !($files = $fs->get_area_files($context->id, 'assignsubmission_onenote', self::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                     $submissionid, 'id', false))) {
                 if ($isteacher) {
                     return null;
                 } else {
                     // This is a student and they are just starting to work on this assignment.
                     // So prepare page from the assignment prompt.
-                    $a = new stdClass();
+                    $a = new \stdClass;
                     $a->assign_name = $assign->name;
                     $a->student_firstname = $student->firstname;
                     $a->student_lastname = $student->lastname;
@@ -631,7 +621,7 @@ class onenote_api {
                 $fp = get_file_packer('application/zip');
                 $filelist = $fp->extract_to_pathname(reset($files), $tempfolder);
 
-                $a = new stdClass();
+                $a = new \stdClass;
                 $a->assign_name = $assign->name;
                 $a->student_firstname = $student->firstname;
                 $a->student_lastname = $student->lastname;
@@ -698,14 +688,14 @@ class onenote_api {
      * @param int $userid ID of user to get.
      * @return stdClass|null Either the found section, or null if not found.
      */
-    private function get_section($courseid, $userid) {
+    protected function get_section($courseid, $userid) {
         global $DB;
 
         $section = $DB->get_record('onenote_user_sections', array("course_id" => $courseid, "user_id" => $userid));
 
         // Need to make sure section actually exists in case user may have deleted it.
         if ($section && $section->section_id) {
-            $onenotesection = json_decode($this->get_msaccount_api()->myget(self::API . '/sections/' . $section->section_id));
+            $onenotesection = json_decode($this->apicall('get', '/sections/'.$section->section_id));
             if ($onenotesection && !isset($onenotesection->error)) {
                 return $section;
             }
@@ -723,27 +713,28 @@ class onenote_api {
 
     /**
      * Return the contents of the file, given its path, filename, and context.
-     * @param $path Path to the file.
-     * @param $filename File name.
-     * @param $contextid The context associated with the file.
+     * @param string $path Path to the file.
+     * @param string $filename File name.
+     * @param int $contextid The context associated with the file.
      * @return array Array containing the file name and content.
      */
-    private function get_file_contents($path, $filename, $contextid) {
+    protected function get_file_contents($path, $filename, $contextid) {
         // Get file contents.
         $fs = get_file_storage();
 
         // Prepare file record object.
-        $fileinfo = array(
+        $fileinfo = [
             'component' => 'mod_assign',     // Usually = table name.
             'filearea' => 'intro',     // Usually = table name.
             'itemid' => 0,               // Usually = ID of row in table.
             'contextid' => $contextid, // ID of context.
             'filepath' => $path,           // Any path beginning and ending in /.
-            'filename' => $filename);
+            'filename' => $filename
+        ];
 
         // Get file.
-        $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
-                $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
+        $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'], $fileinfo['itemid'],
+                $fileinfo['filepath'], $fileinfo['filename']);
 
         $contents = array();
 
@@ -757,19 +748,20 @@ class onenote_api {
 
     /**
      * Given the content of an HTML page, create postdata suitable for posting to OneNote for creating the page.
-     * @param $title Page title.
-     * @param $bodycontent String containing HTML for the page body.
-     * @param $contextid Context associated with the page.
-     * @param $boundary Boundary string to be used during the POST request.
+     *
+     * @param string $title Page title.
+     * @param string $bodycontent String containing HTML for the page body.
+     * @param int $contextid Context associated with the page.
+     * @param string $boundary Boundary string to be used during the POST request.
      * @return string Postdata suitable for posting to OneNote to create the page.
      */
-    private function create_postdata($title, $bodycontent, $contextid, $boundary) {
-        $dom = new DOMDocument();
+    protected function create_postdata($title, $bodycontent, $contextid, $boundary) {
+        $dom = new \DOMDocument();
         libxml_use_internal_errors(true);
         $dom->loadHTML(mb_convert_encoding($bodycontent, 'HTML-ENTITIES', 'UTF-8'));
         libxml_clear_errors();
 
-        $xpath = new DOMXPath($dom);
+        $xpath = new \DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
 
         // Process heading and td tags.
@@ -806,7 +798,7 @@ class onenote_api {
         }
 
         // Extract just the content of the body.
-        $domclone = new DOMDocument('1.0', 'UTF-8');
+        $domclone = new \DOMDocument('1.0', 'UTF-8');
         foreach ($doc->childNodes as $child) {
             $domclone->appendChild($domclone->importNode($child, true));
         }
@@ -832,19 +824,19 @@ class onenote_api {
 
     /**
      * Given the path to the HTML page folder, create postdata suitable for posting to OneNote for creating the page.
-     * @param $title Page title.
-     * @param $folder Path to the folder that contains the page HTML and subfolders containing any associated images.
-     * @param $boundary Boundary string to be used during the POST request.
+     * @param string $title Page title.
+     * @param string $folder Path to the folder that contains the page HTML and subfolders containing any associated images.
+     * @param string $boundary Boundary string to be used during the POST request.
      * @return string Postdata suitable for posting to OneNote to create the page.
      */
-    private function create_postdata_from_folder($title, $folder, $boundary) {
-        $dom = new DOMDocument();
+    protected function create_postdata_from_folder($title, $folder, $boundary) {
+        $dom = new \DOMDocument();
 
         $pagefile = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
         if (!$dom->loadHTML(mb_convert_encoding(file_get_contents($pagefile), 'HTML-ENTITIES', 'UTF-8'))) {
             return null;
         }
-        $xpath = new DOMXPath($dom);
+        $xpath = new \DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
 
         $this->handle_garbage_chars($xpath);
@@ -882,7 +874,7 @@ class onenote_api {
         }
 
         // Extract just the content of the body.
-        $domclone = new DOMDocument('1.0', 'UTF-8');
+        $domclone = new \DOMDocument('1.0', 'UTF-8');
         foreach ($doc->childNodes as $child) {
             $domclone->appendChild($domclone->importNode($child, true));
         }
@@ -907,20 +899,23 @@ class onenote_api {
 
     /**
      * Create a OneNote page inside the given section using the postdata containing the content of the page.
-     * @param $sectionid Id of OneNote section which the page will be created in.
-     * @param $postdata String containing the postdata containing the contents of the page.
-     * @param $boundary Boundary string to be used during the POST request.
+     * @param string $sectionid Id of OneNote section which the page will be created in.
+     * @param string $postdata String containing the postdata containing the contents of the page.
+     * @param string $boundary Boundary string to be used during the POST request.
      * @return mixed|null|string The HTTP response object from the POST request.
      */
-    private function create_page_from_postdata($sectionid, $postdata, $boundary) {
-        $token = $this->get_msaccount_api()->get_accesstoken()->token;
-        $url = self::API . '/sections/' . $sectionid . '/pages';
-        $encodedaccesstoken = rawurlencode($token);
+    protected function create_page_from_postdata($sectionid, $postdata, $boundary) {
+
+        $url = static::API.'/sections/'.$sectionid.'/pages';
+        $token = $this->get_token();
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: multipart/form-data; boundary=$boundary" . PHP_EOL .
-                "Authorization: Bearer " . $encodedaccesstoken));
+        $headers = [
+            'Content-Type: multipart/form-data; boundary='.$boundary,
+            'Authorization: Bearer '.rawurlencode($token)
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
@@ -933,11 +928,7 @@ class onenote_api {
             curl_close($ch);
 
             // If curl call fails and reason is net connectivity return it or return null.
-            if (in_array($errorno, array('6', '7', '28'))) {
-                return 'connection_error';
-            } else {
-                return null;
-            }
+            return (in_array($errorno, ['6', '7', '28'])) ? 'connection_error' : null;
         }
 
         $info = curl_getinfo($ch);
@@ -958,7 +949,7 @@ class onenote_api {
      * The workaround is to replace the last <br/> in a sequence with a <p/>.
      * @param $xpath The xpath object associdated with the HTML DOM for the page.
      */
-    private function process_br_tags($xpath) {
+    protected function process_br_tags($xpath) {
         $brnodes = $xpath->query('//br');
 
         if ($brnodes) {
@@ -976,7 +967,7 @@ class onenote_api {
                     $index++;
                 }
 
-                $pnode = new DOMElement('p', '&nbsp;');
+                $pnode = new \DOMElement('p', '&nbsp;');
                 $brnode->parentNode->replaceChild($pnode, $brnode);
                 $index++;
             }
@@ -989,7 +980,7 @@ class onenote_api {
      * They get converted into garbage chars like ￼. Replace them with <p/> tags.
      * @param $xpath The xpath object associdated with the HTML DOM for the page.
      */
-    private function handle_garbage_chars($xpath) {
+    protected function handle_garbage_chars($xpath) {
         $garbagenodes = $xpath->query("//p[contains(., 'ï¿¼')]");
 
         if ($garbagenodes) {
@@ -1006,7 +997,7 @@ class onenote_api {
                 $garbagenode->nodeValue = $nodevalue;
 
                 while ($replaced-- > 0) {
-                    $pnode = new DOMElement('p', '&nbsp;');
+                    $pnode = new \DOMElement('p', '&nbsp;');
                     $garbagenode->parentNode->insertBefore($pnode, $garbagenode->nextSibling);
                 }
 
@@ -1016,18 +1007,8 @@ class onenote_api {
     }
 
     /**
-     * Get the repo id for the onenote repo.
-     * @return int Repository ID for the OneNote repository.
-     */
-    public function get_onenote_repo_id() {
-        global $DB;
-        $repository = $DB->get_record('repository', array('type' => ' onenote'));
-        return $repository->id;
-    }
-
-    /**
-     * Create a temporary folder for storing the contents of an assignment submission or feedback page and
-     * return its path.
+     * Create a temporary folder for storing the contents of an assignment submission or feedback page and return its path.
+     *
      * @return null|string Path to the temp folder created.
      */
     public function create_temp_folder() {
@@ -1047,39 +1028,38 @@ class onenote_api {
 
     /**
      * Check if given user is a teacher capable of grading assignments in the given course.
-     * @param $cmid Course module id.
-     * @param $userid User id to be checked.
-     * @return bool
+     *
+     * @param int $cmid Course module id.
+     * @param int $userid User id to be checked.
+     * @return bool Whether the user is a grading user within a course.
      */
     public function is_teacher($cmid, $userid) {
-
-        $context = context_module::instance($cmid);
+        $context = \context_module::instance($cmid);
         return has_capability('mod/assign:grade', $context, $userid);
 
     }
 
     /**
      * Check if given user is a student capable of submitting assignment in the given course.
-     * @param $cmid Course module id.
-     * @param $userid User id to be checked.
-     * @return bool
+     *
+     * @param int $cmid Course module id.
+     * @param int $userid User id to be checked.
+     * @return bool Whether the user can submit assignments.
      */
     public function is_student($cmid, $userid) {
-
-        $context = context_module::instance($cmid);
+        $context = \context_module::instance($cmid);
         return has_capability('mod/assign:submit', $context, $userid);
 
     }
 
     /**
      * Function to add span elements for heading and td tags and respective font sizes.
-     * This is done becaues OneNote supports a subset of the full HTML and it needs a span element to specify
-     * font attributes.
+     * This is done becaues OneNote supports a subset of the full HTML and it needs a span element to specify font attributes.
      *
      * @param $dom HTML DOM of the page being processed.
      * @param $xpath XPath object associated with the HTML page.
      */
-    private function process_tags($dom, $xpath) {
+    protected function process_tags($dom, $xpath) {
 
         // List of tags we are processing.
         $tags = array('h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'td');
@@ -1131,8 +1111,8 @@ class onenote_api {
             }
         }
 
-         // Get all tables.
-         $tables = $xpath->query('//table');
+        // Get all tables.
+        $tables = $xpath->query('//table');
 
         if ($tables) {
             foreach ($tables as $table) {
@@ -1154,7 +1134,7 @@ class onenote_api {
      *
      * @param $xpath XPath object assoicated with the HTML page.
      */
-    private function process_span_tags($xpath) {
+    protected function process_span_tags($xpath) {
 
         // Get all the span tags.
         $spannodes = $xpath->query('//span');
