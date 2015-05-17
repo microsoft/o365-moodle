@@ -139,4 +139,20 @@ abstract class o365api {
 
         return $this->httpclient->$httpmethod($requesturi, $params, $options);
     }
+
+    /**
+     * Processes API responses.
+     *
+     * @param string $response The raw response from an API call.
+     * @return array|null Array if successful, null if not.
+     */
+    public function process_apicall_response($response) {
+        if (!empty($response)) {
+            $response = @json_decode($response, true);
+            if (!empty($response) && is_array($response)) {
+                return $response;
+            }
+        }
+        return null;
+    }
 }

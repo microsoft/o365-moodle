@@ -30,6 +30,8 @@ class onedrive extends \local_o365\rest\o365api {
     /** @var string An override for the API url. */
     protected $apiurioverride = null;
 
+    public $usespapi = false;
+
     /**
      * Determine if the API client is configured.
      *
@@ -107,7 +109,12 @@ class onedrive extends \local_o365\rest\o365api {
         if (!empty($this->apiurioverride)) {
             return $this->apiurioverride;
         }
-        return static::get_resource().'/_api/v1.0/me/Files';
+        if ($this->usespapi === true) {
+            //return static::get_resource().'/_api';
+            return static::get_resource().'/personal/james_pdyn_onmicrosoft_com/_api';
+        } else {
+            return static::get_resource().'/_api/v1.0/me/Files';
+        }
     }
 
     /**
