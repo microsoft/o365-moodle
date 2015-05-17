@@ -67,12 +67,14 @@ $.fn.detectperms = function(options) {
     }
 
     this.checkmissingperms = function() {
+        this.refreshbutton.html('Checking...');
         $.ajax({
             url: opts.url,
             type: 'GET',
             data: {mode: 'getappperms'},
             dataType: 'json',
             success: function(data) {
+                main.refreshbutton.html('Update');
                 if (typeof(data.success) != 'undefined' && typeof(data.missingperms) != 'undefined' && data.success === true) {
                     if (Object.keys(data.missingperms).length > 0) {
                         var status = $('<div>'+opts.strmissing+'<br /></div>');
