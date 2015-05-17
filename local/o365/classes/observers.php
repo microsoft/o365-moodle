@@ -556,7 +556,33 @@ class observers {
     }
 
     /**
-     * Handle user_enrolment_deleted event - clean up calendar subscriptions.
+     * Handle user_enrolment_created event.
+     *
+     * @param \core\event\user_enrolment_created $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_user_enrolment_created(\core\event\user_enrolment_created $event) {
+        $userid = $event->relateduserid;
+        $courseid = $event->courseid;
+
+        if (empty($userid) || empty($courseid)) {
+            return true;
+        }
+
+        // Remove user from course usergroup.
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $aadresource = \local_o365\rest\azuread::get_resource();
+        $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
+        $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
+        $aadclient->add_user_to_course_group($courseid, $userid);
+    }
+
+    /**
+     * Handle user_enrolment_deleted event
+     *
+     * Tasks
+     *     - clean up calendar subscriptions.
      *
      * @param \core\event\user_enrolment_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -566,6 +592,19 @@ class observers {
         $userid = $event->relateduserid;
         $courseid = $event->courseid;
 
+        if (empty($userid) || empty($courseid)) {
+            return true;
+        }
+
+        // Remove user from course usergroup.
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $aadresource = \local_o365\rest\azuread::get_resource();
+        $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
+        $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
+        $aadclient->remove_user_from_course_group($courseid, $userid);
+
+        // Clean up calendar subscriptions.
         $calsubparams = ['user_id' => $userid, 'caltype' => 'course', 'caltypeid' => $courseid];
         $subscriptions = $DB->get_recordset('local_o365_calsub', $calsubparams);
         foreach ($subscriptions as $subscription) {

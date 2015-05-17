@@ -167,6 +167,7 @@ class token {
     public static function get_for_new_resource($userid, $resource, $clientdata, $httpclient) {
         $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient);
         if (!empty($aadgraphtoken)) {
+            $aadgraphtoken->refresh();
             $params = [
                 'client_id' => $clientdata->get_clientid(),
                 'client_secret' => $clientdata->get_clientsecret(),
@@ -197,7 +198,8 @@ class token {
     protected static function get_stored_token($userid, $resource) {
         global $DB;
         if ($resource === 'https://graph.windows.net') {
-            $sql = 'SELECT tok.scope,
+            $sql = 'SELECT tok.id,
+                           tok.scope,
                            tok.resource,
                            tok.token,
                            tok.expiry,
@@ -274,7 +276,16 @@ class token {
             'refresh_token' => $this->refreshtoken,
             'resource' => $this->resource,
         ];
-        $result = $this->httpclient->post($this->clientdata->get_tokenendpoint(), $params);
+        $params = http_build_query($params, '', '&');
+        $tokenendpoint = $this->clientdata->get_tokenendpoint();
+
+        $header = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Content-Length: '.strlen($params)
+        ];
+        $this->httpclient->setHeader($header);
+
+        $result = $this->httpclient->post($tokenendpoint, $params);
         $result = json_decode($result, true);
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $origresource = $this->resource;
