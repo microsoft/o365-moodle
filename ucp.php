@@ -38,6 +38,9 @@ $oidcloginconnected = ($USER->auth === 'oidc') ? true : false;
 if (!empty($action)) {
     if ($action === 'connectlogin' && $oidcloginconnected === false) {
         // Use authorization request login flow to connect existing users.
+        if (!is_enabled_auth('oidc')) {
+            throw new \moodle_exception('erroroidcnotenabled', 'auth_oidc');
+        }
         $auth = new \auth_oidc\loginflow\authcode;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
