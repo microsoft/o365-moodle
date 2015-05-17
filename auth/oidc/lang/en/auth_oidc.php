@@ -89,6 +89,7 @@ $string['errorjwtempty'] = 'Empty or non-string JWT received.';
 $string['errorjwtinvalidheader'] = 'Invalid JWT header';
 $string['errorjwtmalformed'] = 'Malformed JWT received.';
 $string['errorjwtunsupportedalg'] = 'JWS Alg or JWE not supported';
+$string['erroroidcnotenabled'] = 'The OpenID Connect authentication plugin is not enabled.';
 $string['errornodisconnectionauthmethod'] = 'Cannot disconnect because there is no enabled auth plugin to fall back to. (either user\'s previous login method or the manual login method).';
 $string['erroroidcclientinvalidendpoint'] = 'Invalid Endpoint URI received.';
 $string['erroroidcclientnocreds'] = 'Please set client credentials with setcreds';
