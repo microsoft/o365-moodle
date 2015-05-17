@@ -34,7 +34,10 @@ $.fn.detectperms = function(options) {
         strerrorcheck: '',
         strerrorfix: '',
         strfixprereq: '',
-        strmissing: ''
+        strmissing: '',
+        strunifiedheader: '',
+        strunifiednomissing: '',
+        strnounified: ''
     };
     var opts = $.extend({}, defaultopts, options);
     var main = this;
@@ -106,6 +109,24 @@ $.fn.detectperms = function(options) {
                             .removeClass('alert-error').addClass('alert-success')
                             .find('img.smallicon').replaceWith(opts.iconvalid);
                         main.find('.permmessage').html(opts.strvalid);
+                    }
+
+                    if (typeof(data.hasunified) !== 'undefined') {
+                        main.find('.statusmessage').show();
+                        main.find('.statusmessage').append('<h5>'+opts.strunifiedheader+'</h5>');
+                        if (data.hasunified === true) {
+                            if (Object.keys(data.missingunifiedperms).length > 0) {
+                                main.find('.statusmessage').append(opts.strmissing+'<ul>');
+                                for (var perm in data.missingunifiedperms) {
+                                    main.find('.statusmessage').append('<li>'+perm+'</li>');
+                                }
+                                main.find('.statusmessage').append('</ul>');
+                            } else {
+                                main.find('.statusmessage').append('<ul><li>'+opts.strunifiednomissing+'</li></ul>');
+                            }
+                        } else {
+                            main.find('.statusmessage').append('<ul><li>'+opts.strnounified+'</li></ul>');
+                        }
                     }
                 } else {
                     main.find('.statusmessage').html('<div>'+opts.strerrorcheck+'</div>');

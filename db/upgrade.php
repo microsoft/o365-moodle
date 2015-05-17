@@ -212,5 +212,29 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011612', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011616) {
+        // Lengthen field.
+        $table = new xmldb_table('local_o365_token');
+        $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, 'user_id');
+        $dbman->change_field_type($table, $field);
+        upgrade_plugin_savepoint($result, '2015011616', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015011617) {
+        if (!$dbman->table_exists('local_o365_objects')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_objects');
+        }
+        upgrade_plugin_savepoint($result, '2015011617', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015011618) {
+        $table = new xmldb_table('local_o365_objects');
+        $field = new xmldb_field('subtype', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'type');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2015011618', 'local', 'o365');
+    }
+
     return $result;
 }
