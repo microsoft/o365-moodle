@@ -127,7 +127,23 @@ abstract class base {
             require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
             $sesskey = 'msaccount_client-'.md5(\msaccount_client::SCOPE);
             $disableo365onenote = get_user_preferences('local_o365_disableo365onenote', 0);
-            $class = (!empty($SESSION->$sesskey) || !empty($disableo365onenote)) ? $msaccountclass : $o365class;
+            $iso365user = (!empty($SESSION->$sesskey) || !empty($disableo365onenote)) ? false : $iso365user;
+
+            if ($iso365user === true) {
+                try {
+                    $httpclient = new \local_o365\httpclient();
+                    $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+                    $onenoteresource = \local_o365\rest\onenote::get_resource();
+                    $token = \local_o365\oauth2\token::instance($USER->id, $onenoteresource, $clientdata, $httpclient);
+                    if (empty($token)) {
+                        $iso365user = false;
+                    }
+                } catch (\Exception $e) {
+                    $iso365user = false;
+                }
+            }
+
+            $class = ($iso365user === true) ? $o365class : $msaccountclass;
         } else {
             $class = $msaccountclass;
         }
