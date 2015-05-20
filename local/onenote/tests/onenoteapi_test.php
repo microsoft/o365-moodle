@@ -22,7 +22,7 @@
  */
 
 /**
- * Unit tests for the onenote_api class.
+ * Unit tests for the \local_onenote\api\base class.
  *
  * In order to run these tests, you need to do the following:
  * 1) Create a file phpu_config_data.json and place it in the same folder as this file.
@@ -39,7 +39,6 @@
  */
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
-require_once($CFG->dirroot . '/local/onenote/onenote_api.php');
 require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
 
 /**
@@ -116,7 +115,7 @@ class microsoft_onenote_testcase extends advanced_testcase {
     public function set_test_config() {
         set_config('clientid', $this->config->client_id, 'local_msaccount');
         set_config('clientsecret', $this->config->client_secret, 'local_msaccount');
-        $this->onenoteapi = onenote_api::getinstance();
+        $this->onenoteapi = \local_onenote\api\base::getinstance();
     }
 
     /**

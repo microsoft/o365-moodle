@@ -61,40 +61,54 @@ class block_onenote extends block_base {
      */
     public function _get_content() {
         global $USER, $COURSE, $PAGE, $CFG;
-        require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
 
-        $content = new stdClass;
+        $action = optional_param('action', '', PARAM_TEXT);
+
+        $content = new \stdClass;
         $content->text = '';
         $content->footer = '';
-        $onenoteapi = onenote_api::getinstance();
+        $onenoteapi = \local_onenote\api\base::getinstance();
 
         if ($onenoteapi->is_logged_in()) {
             // Add the "save to onenote" button if we are on an assignment page.
-            if ($PAGE->cm && ($PAGE->cm->modname == 'assign') && (optional_param('action', '', PARAM_TEXT) == 'editsubmission') &&
-                    $onenoteapi->is_student($PAGE->cm->id, $USER->id)) {
+            $onassignpage = ($PAGE->cm && $PAGE->cm->modname == 'assign' && $action == 'editsubmission') ? true : false;
+            if ($onassignpage === true && $onenoteapi->is_student($PAGE->cm->id, $USER->id)) {
                 $content->text .= $onenoteapi->render_action_button(get_string('workonthis', 'block_onenote'), $PAGE->cm->id);
             } else {
-                $notebooks = $onenoteapi->get_items_list('');
-
-                if ($notebooks) {
-                    // Find moodle notebook.
-                    $moodlenotebook = null;
-                    $notebookname = get_string('notebookname', 'block_onenote');
-
-                    foreach ($notebooks as $notebook) {
-                        if ($notebook['title'] == $notebookname) {
-                            $moodlenotebook = $notebook;
-                            break;
+                // Find moodle notebook, create if not found.
+                $moodlenotebook = null;
+                for ($i = 0; $i < 2; $i++) {
+                    $notebooks = $onenoteapi->get_items_list('');
+                    if (!empty($notebooks)) {
+                        $notebookname = get_string('notebookname', 'block_onenote');
+                        foreach ($notebooks as $notebook) {
+                            if ($notebook['title'] == $notebookname) {
+                                $moodlenotebook = $notebook;
+                                break;
+                            }
                         }
                     }
-
-                    if ($moodlenotebook) {
-                        $url = new moodle_url($moodlenotebook['url']);
-                        $content->text .= '<a onclick="window.open(this.href,\'_blank\'); return false;" href="' .
-                            $url->out(false) .
-                            '" class="local_onenote_linkbutton">' . get_string('opennotebook', 'block_onenote') . '</a>';
+                    if (empty($moodlenotebook)) {
+                        $onenoteapi->sync_notebook_data();
+                    } else {
+                        break;
                     }
                 }
+
+                if (!empty($moodlenotebook)) {
+                    $url = new \moodle_url($moodlenotebook['url']);
+                    $stropennotebook = get_string('opennotebook', 'block_onenote');
+                    $linkattrs = [
+                        'onclick' => 'window.open(this.href,\'_blank\'); return false;',
+                        'class' => 'local_onenote_linkbutton',
+                    ];
+                    $content->text = \html_writer::link($url->out(false), $stropennotebook, $linkattrs);
+                } else {
+                    $content->text = get_string('error_nomoodlenotebook', 'block_onenote');
+                }
+            }
+            if (empty($content->text)) {
+                $content->text = get_string('connction_error', 'local_onenote');
             }
         } else {
             $content->text .= $onenoteapi->render_signin_widget();

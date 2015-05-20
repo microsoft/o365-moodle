@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/local/onenote/onenote_api.php');
-
 /**
  * Microsoft OneNote repository plugin.
  *
@@ -44,7 +42,7 @@ class repository_onenote extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $this->onenoteapi = onenote_api::getinstance();
+        $this->onenoteapi = \local_onenote\api\base::getinstance();
     }
 
     /**
@@ -143,7 +141,7 @@ class repository_onenote extends repository {
      * @return page to display
      */
     public function logout() {
-        $this->onenote_api->log_out();
+        $this->onenoteapi->log_out();
         return $this->print_login();
     }
 
