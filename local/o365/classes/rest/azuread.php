@@ -265,6 +265,11 @@ class azuread extends \local_o365\rest\o365api {
                 'Calendars.Read' => 'Scope',
                 'Calendars.ReadWrite' => 'Scope',
             ],
+            'OneNote' => [
+                'Notes.ReadWrite' => 'Scope',
+                'Notes.Read' => 'Scope',
+                'Notes.Create' => 'Scope',
+            ],
         ];
     }
 
