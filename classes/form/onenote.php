@@ -39,8 +39,7 @@ class onenote extends \moodleform {
 
         $mform =& $this->_form;
 
-
-		$mform->addElement('html', \html_writer::tag('h2', get_string('ucp_onenote_title', 'local_o365')));
+        $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_onenote_title', 'local_o365')));
         $mform->addElement('html', \html_writer::div(get_string('ucp_onenote_desc', 'local_o365')));
         $mform->addElement('html', '<br />');
         $mform->addElement('html', \html_writer::tag('b', get_string('ucp_options', 'local_o365')));

@@ -110,8 +110,7 @@ class onedrive extends \local_o365\rest\o365api {
             return $this->apiurioverride;
         }
         if ($this->usespapi === true) {
-            //return static::get_resource().'/_api';
-            return static::get_resource().'/personal/james_pdyn_onmicrosoft_com/_api';
+            return static::get_resource().'/_api';
         } else {
             return static::get_resource().'/_api/v1.0/me/Files';
         }

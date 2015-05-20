@@ -27,7 +27,7 @@ namespace local_o365\rest;
  * Client for unified Office365 API.
  */
 class unified extends \local_o365\rest\o365api {
-	/**
+    /**
      * Determine if the API client is configured.
      *
      * @return bool Whether the API client is configured.
@@ -65,12 +65,12 @@ class unified extends \local_o365\rest\o365api {
      * @return string The result of the API call.
      */
     public function tenantapicall($httpmethod, $apimethod, $params = '', $options = array()) {
-    	$config = get_config('local_o365');
+        $config = get_config('local_o365');
         if (empty($config->aadtenant)) {
-        	throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
+            throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
         }
-    	$apimethod = '/'.$config->aadtenant.$apimethod;
-    	return parent::apicall($httpmethod, $apimethod, $params, $options);
+        $apimethod = '/'.$config->aadtenant.$apimethod;
+        return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 
     /**
@@ -79,8 +79,8 @@ class unified extends \local_o365\rest\o365api {
      * @return array List of groups.
      */
     public function get_groups() {
-    	$response = $this->tenantapicall('get', '/groups');
-    	$response = $this->process_apicall_response($response);
+        $response = $this->tenantapicall('get', '/groups');
+        $response = $this->process_apicall_response($response);
         if (!empty($response) && isset($response['value'])) {
             return $response['value'];
         } else {
