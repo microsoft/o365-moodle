@@ -89,10 +89,22 @@ if ($mode === 'checksharepointsite') {
 } else if ($mode === 'getappperms') {
     $resource = \local_o365\rest\azuread::get_resource();
     $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
-    $apiclient = new \local_o365\rest\azuread($token, $httpclient);
-    list($missingperms, $haswrite) = $apiclient->check_permissions();
+    $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+    list($missingperms, $haswrite) = $aadapiclient->check_permissions();
     $result->missingperms = $missingperms;
     $result->haswrite = $haswrite;
+    $result->hasunified = false;
+    $httpclient = new \local_o365\httpclient();
+    try {
+        $unifiedresource = \local_o365\rest\unified::get_resource();
+        $token = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
+        $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
+        $result->hasunified = true;
+        $result->missingunifiedperms = $unifiedapiclient->check_permissions();
+    } catch (\Exception $e) {
+        // TODO: Better error reporting.
+    }
+
     if (empty($result->missingperms)) {
         set_config('detectperms', 1, 'local_o365');
     } else {

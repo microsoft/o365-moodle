@@ -138,7 +138,10 @@ class permissions extends \admin_setting {
                                     strerrorcheck: "'.get_string('settings_detectperms_errorcheck', 'local_o365').'",
                                     strerrorfix: "'.get_string('settings_detectperms_errorfix', 'local_o365').'",
                                     strfixprereq: "'.addslashes(get_string('settings_detectperms_fixprereq', 'local_o365')).'",
-                                    strmissing: "'.get_string('settings_detectperms_missing', 'local_o365').'"
+                                    strmissing: "'.get_string('settings_detectperms_missing', 'local_o365').'",
+                                    strunifiedheader: "'.addslashes(get_string('settings_detectperms_unifiedheader', 'local_o365')).'",
+                                    strunifiednomissing: "'.addslashes(get_string('settings_detectperms_unifiednomissing', 'local_o365')).'",
+                                    strnounified: "'.addslashes(get_string('settings_detectperms_nounified', 'local_o365')).'",
                                 };
                                 $("#admin-'.$this->name.'").detectperms(opts);
                             });

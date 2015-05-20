@@ -64,6 +64,8 @@ $string['settings_aadsync'] = 'Sync users from AzureAD';
 $string['settings_aadsync_details'] = 'When enabled, users in the associated AzureAD directory are synced to Moodle. This creates users in Moodle that exist in AzureAD, and deletes the users from Moodle that were synced when they are deleted from AzureAD.';
 $string['settings_aadtenant'] = 'AzureAD Tenant';
 $string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
+$string['settings_creategroups'] = 'Create User Groups';
+$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office365 unified API added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office 365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office 365 for China.';
 $string['settings_detectoidc'] = 'Application Credentials';
@@ -80,6 +82,9 @@ $string['settings_detectperms_errorcheck'] = 'An error occurred trying to check 
 $string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please set manually in Azure.';
 $string['settings_detectperms_fixperms'] = 'Fix permissions';
 $string['settings_detectperms_fixprereq'] = 'To fix this automatically, your system API user must be an administrator, and the "Access your organization\'s directory" permission must be enabled in Azure for the "Windows Azure Active Directory" application.';
+$string['settings_detectperms_nounified'] = 'Unified API not present, some new features may not work.';
+$string['settings_detectperms_unifiedheader'] = 'Unified API: This is a beta API required for "Create User Groups"';
+$string['settings_detectperms_unifiednomissing'] = 'All unified permissions present.';
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
 $string['settings_detectperms_invalid'] = 'Check permissions in AzureAD';
@@ -115,6 +120,7 @@ $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
 
 $string['task_calendarsyncin'] = 'Sync o365 events in to Moodle';
+$string['task_groupcreate'] = 'Create user groups in Office365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_syncusers'] = 'Sync users with AAD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';

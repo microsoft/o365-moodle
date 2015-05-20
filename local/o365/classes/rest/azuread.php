@@ -477,4 +477,103 @@ class azuread extends \local_o365\rest\o365api {
         }
         return false;
     }
+
+    /**
+     * Add a user to a course o365 usergoup.
+     *
+     * @param int $courseid The ID of the moodle group.
+     * @param int $userid The ID of the moodle user.
+     * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     */
+    public function add_user_to_course_group($courseid, $userid) {
+        global $DB;
+
+        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
+        if (empty($coursegroupobject)) {
+            return null;
+        }
+
+        $sql = 'SELECT u.*,
+                       tok.oidcuniqid as userobjectid
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u ON u.username = tok.username
+                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
+        $params = ['https://graph.windows.net', $userid];
+        $userobject = $DB->get_record_sql($sql, $params);
+        if (empty($userobject)) {
+            return null;
+        }
+
+        $response = $this->add_member_to_group($coursegroupobject->objectid, $userobject->userobjectid);
+        return $response;
+    }
+
+    /**
+     * Remove a user from a course o365 usergoup.
+     *
+     * @param int $courseid The ID of the moodle group.
+     * @param int $userid The ID of the moodle user.
+     * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     */
+    public function remove_user_from_course_group($courseid, $userid) {
+        global $DB;
+
+        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
+        if (empty($coursegroupobject)) {
+            return null;
+        }
+
+        $sql = 'SELECT u.*,
+                       tok.oidcuniqid as userobjectid
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u ON u.username = tok.username
+                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
+        $params = ['https://graph.windows.net', $userid];
+        $userobject = $DB->get_record_sql($sql, $params);
+        if (empty($userobject)) {
+            return null;
+        }
+
+        $response = $this->remove_member_from_group($coursegroupobject->objectid, $userobject->userobjectid);
+        return $response;
+    }
+
+    /**
+     * Add member to group.
+     *
+     * @param string $groupobjectid The object ID of the group to add to.
+     * @param string $memberobjectid The object ID of the item to add (can be group object id or user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function add_member_to_group($groupobjectid, $memberobjectid) {
+        $config = get_config('local_o365');
+        if (empty($config->aadtenant)) {
+            return null;
+        }
+        $endpoint = '/groups/'.$groupobjectid.'/$links/members';
+        $data = [
+            'url' => $this->get_apiuri().'/directoryObjects/'.$memberobjectid
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+        return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Remove member from group.
+     *
+     * @param string $groupobjectid The object ID of the group to remove from.
+     * @param string $memberobjectid The object ID of the item to remove (can be group object id or user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function remove_member_from_group($groupobjectid, $memberobjectid) {
+        $config = get_config('local_o365');
+        if (empty($config->aadtenant)) {
+            return null;
+        }
+        $endpoint = '/groups/'.$groupobjectid.'/$links/members/'.$memberobjectid;
+        $response = $this->apicall('delete', $endpoint);
+        return ($response === '') ? true : $response;
+    }
 }
