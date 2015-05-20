@@ -146,6 +146,7 @@ class azuread extends \local_o365\rest\o365api {
      * @return array Array of missing permissions.
      */
     public function check_permissions() {
+        $this->token->refresh();
         $neededperms = $this->get_required_permissions();
         $servicestoget = array_keys($neededperms);
         $allappdata = $this->get_service_data($servicestoget);
@@ -155,9 +156,16 @@ class azuread extends \local_o365\rest\o365api {
             $appid = $allappdata[$app]['appId'];
             $appname = $allappdata[$app]['appDisplayName'];
             foreach ($perms as $permname => $neededtype) {
-                $permid = $allappdata[$app]['perms'][$permname]['id'];
-                if (!isset($currentperms[$appid][$permid])) {
-                    $missingperms[$appname][$permname] = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
+                if (isset($allappdata[$app]['perms'][$permname])) {
+                    $permid = $allappdata[$app]['perms'][$permname]['id'];
+                    if (!isset($currentperms[$appid][$permid])) {
+                        $permdesc = (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName']))
+                                ? $allappdata[$app]['perms'][$permname]['adminConsentDisplayName']
+                                : $permname;
+                        $missingperms[$appname][$permname] = $permdesc;
+                    }
+                } else {
+                    $missingperms[$appname][$permname] = $permname;
                 }
             }
         }
@@ -255,7 +263,7 @@ class azuread extends \local_o365\rest\o365api {
             ],
             'Microsoft.Exchange' => [
                 'Calendars.Read' => 'Scope',
-                'Calendars.Write' => 'Scope',
+                'Calendars.ReadWrite' => 'Scope',
             ],
         ];
     }
