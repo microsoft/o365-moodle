@@ -175,7 +175,15 @@ class token {
                 'refresh_token' => $aadgraphtoken->get_refreshtoken(),
                 'resource' => $resource,
             ];
-            $tokenresult = $httpclient->post($clientdata->get_tokenendpoint(), $params);
+            $params = http_build_query($params, '', '&');
+            $tokenendpoint = $clientdata->get_tokenendpoint();
+
+            $header = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Content-Length: '.strlen($params)
+            ];
+            $httpclient->setHeader($header);
+            $tokenresult = $httpclient->post($tokenendpoint, $params);
             $tokenresult = @json_decode($tokenresult, true);
 
             if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
