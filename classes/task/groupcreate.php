@@ -42,6 +42,12 @@ class groupcreate extends \core\task\scheduled_task {
     public function execute() {
         global $DB;
 
+        $configsetting = get_config('local_o365', 'creategroups');
+        if (empty($configsetting)) {
+            mtrace('Groups not enabled, skipping...');
+            return true;
+        }
+
         $now = time();
 
         $httpclient = new \local_o365\httpclient();
@@ -49,10 +55,18 @@ class groupcreate extends \core\task\scheduled_task {
 
         $unifiedresource = \local_o365\rest\unified::get_resource();
         $unifiedtoken = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
+        if (empty($unifiedtoken)) {
+            mtrace('Could not get unified API token.');
+            return true;
+        }
         $unifiedclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
 
         $aadresource = \local_o365\rest\azuread::get_resource();
         $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
+        if (empty($aadtoken)) {
+            mtrace('Could not get AAD token.');
+            return true;
+        }
         $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
 
         $siterec = $DB->get_record('course', ['id' => SITEID]);
