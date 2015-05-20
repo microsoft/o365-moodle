@@ -64,6 +64,26 @@ abstract class o365api {
     }
 
     /**
+     * Automatically construct an instance of the API class for a given user.
+     *
+     * NOTE: Useful for one-offs, not efficient for bulk operations.
+     *
+     * @param int $userid The Moodle user ID to construct the API for.
+     * @return \local_o365\rest\o365api An instance of the requested API class with dependencies met for a given user.
+     */
+    public static function instance_for_user($userid) {
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $resource = static::get_resource();
+        $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+        if (!empty($token)) {
+            return new static($token, $httpclient);
+        } else {
+            throw new \moodle_exception('erroro365apinotoken', 'local_o365');
+        }
+    }
+
+    /**
      * Get the API client's oauth2 resource.
      *
      * @return string The resource for oauth2 tokens.
@@ -154,5 +174,24 @@ abstract class o365api {
             }
         }
         return null;
+    }
+
+    /*
+     * Get a full URL and include auth token. This is useful for associated resources: attached images, etc.
+     *
+     * @param string $url A full URL to get.
+     * @return string The result of the request.
+     */
+    public function geturl($url, $options = array()) {
+        $tokenvalid = $this->checktoken();
+        if ($tokenvalid !== true) {
+            throw new \moodle_exception('erroro365apiinvalidtoken', 'local_o365');
+        }
+        $header = [
+            'Authorization: Bearer '.$this->token->get_token(),
+        ];
+        $this->httpclient->resetHeader();
+        $this->httpclient->setHeader($header);
+        return $this->httpclient->get($url, '', $options);
     }
 }
