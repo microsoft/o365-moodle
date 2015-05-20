@@ -88,6 +88,25 @@
         <INDEX NAME="siteid" UNIQUE="false" FIELDS="siteid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_o365_objects" COMMENT="Stores information about Office365 objects.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the type of object this record represents"/>
+        <FIELD NAME="subtype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the subtype of object this record represents"/>
+        <FIELD NAME="objectid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="o365 object id"/>
+        <FIELD NAME="moodleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="corresponding moodle id"/>
+        <FIELD NAME="o365name" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="identifiable name in o365"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time record created"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time record modified"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="moodleid" UNIQUE="false" FIELDS="moodleid"/>
+        <INDEX NAME="objectid" UNIQUE="false" FIELDS="objectid"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="local_o365_spgroupdata" COMMENT="Stores information about sharepoint groups created for Moodle course sites.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
