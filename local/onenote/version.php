@@ -24,9 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012701;
+$plugin->version = 2015012702;
 $plugin->requires = 2014111000;
 $plugin->component = 'local_onenote';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.1';
-$plugin->dependencies = array('local_msaccount' => 2015012701);
+$plugin->release = '28.0.0.2';
