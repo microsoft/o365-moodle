@@ -15,29 +15,37 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package local_office365
+ * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+namespace local_o365\form;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012704;
-$plugin->requires = 2014111000;
-$plugin->component = 'local_office365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.4';
-$plugin->dependencies = [
-    'auth_oidc' => 2015012708,
-    'block_onenote' => 2015012700,
-    'local_o365' => 2015012711,
-    'local_onenote' => 2015012701,
-    'assignfeedback_onenote' => 2015012701,
-    'assignsubmission_onenote' => 2015012701,
-    'repository_onenote' => 2015012700,
-    'repository_office365' => 2015012703,
-    'profilefield_o365' => 2015012702,
-    'profilefield_oidc' => 2015012702,
-    'filter_oembed' => 2015012701,
-];
+require_once($CFG->dirroot.'/lib/formslib.php');
+
+/**
+ * o365 OneNote Preferences form.
+ */
+class onenote extends \moodleform {
+    /**
+     * Form definition.
+     */
+    protected function definition() {
+        global $USER;
+
+        $mform =& $this->_form;
+
+
+		$mform->addElement('html', \html_writer::tag('h2', get_string('ucp_onenote_title', 'local_o365')));
+        $mform->addElement('html', \html_writer::div(get_string('ucp_onenote_desc', 'local_o365')));
+        $mform->addElement('html', '<br />');
+        $mform->addElement('html', \html_writer::tag('b', get_string('ucp_options', 'local_o365')));
+        $mform->addElement('advcheckbox', 'disableo365onenote', get_string('ucp_onenote_disable', 'local_o365'));
+
+        $this->add_action_buttons();
+    }
+}

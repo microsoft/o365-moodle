@@ -22,7 +22,6 @@
  */
 
 require_once(__DIR__.'/../../config.php');
-require_once('onenote_api.php');
 
 require_login();
 $PAGE->set_url('/local/onenote/onenote_actions.php');
@@ -32,20 +31,20 @@ $action = required_param('action', PARAM_TEXT);
 $cmid = required_param('cmid', PARAM_INT);
 $wantfeedbackpage = optional_param('wantfeedback', false, PARAM_BOOL);
 $isteacher = optional_param('isteacher', false, PARAM_BOOL);
-$submissionuserid = optional_param('submissionuserid', null, PARAM_INT);
-$submissionid = optional_param('submissionid', null, PARAM_INT);
+$subuserid = optional_param('submissionuserid', null, PARAM_INT);
+$sub = optional_param('submissionid', null, PARAM_INT);
 $gradeid = optional_param('gradeid', null, PARAM_INT);
 
-$url = onenote_api::getinstance()->get_page($cmid, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid, $gradeid);
+$url = \local_onenote\api\base::getinstance()->get_page($cmid, $wantfeedbackpage, $isteacher, $subuserid, $sub, $gradeid);
 
 // If connection error then show message.
 if ($url == 'connection_error') {
-    throw new moodle_exception(get_string('connction_error', 'local_onenote'), 'onenote');
+    throw new \moodle_exception(get_string('connction_error', 'local_onenote'), 'onenote');
 }
 
 if ($url) {
     $url = new moodle_url($url);
     redirect($url);
 } else {
-    throw new moodle_exception(get_string('onenote_page_error', 'local_onenote'), 'onenote');
+    throw new \moodle_exception(get_string('onenote_page_error', 'local_onenote'), 'onenote');
 }
