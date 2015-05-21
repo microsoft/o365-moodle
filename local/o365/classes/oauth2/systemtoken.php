@@ -65,6 +65,23 @@ class systemtoken extends \local_o365\oauth2\token {
     }
 
     /**
+     * Delete a stored token.
+     *
+     * @param array $existingtoken The existing token record.
+     * @return bool Success/Failure.
+     */
+    protected function delete_stored_token($existingtoken) {
+        $tokens = get_config('local_o365', 'systemtokens');
+        $tokens = unserialize($tokens);
+        if (isset($tokens[$existingtoken['resource']])) {
+            unset($tokens[$existingtoken['resource']]);
+        }
+        $tokens = serialize($tokens);
+        set_config('systemtokens', $tokens, 'local_o365');
+        return true;
+    }
+
+    /**
      * Store a new system token.
      *
      * @param string $token Token access token.
