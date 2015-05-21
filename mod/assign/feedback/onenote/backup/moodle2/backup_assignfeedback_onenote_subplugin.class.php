@@ -41,7 +41,7 @@ class backup_assignfeedback_onenote_subplugin extends backup_subplugin {
         // Create XML elements.
         $subplugin = $this->get_subplugin_element();
         $subpluginwrapper = new backup_nested_element($this->get_recommended_name());
-        $subpluginelement = new backup_nested_element('feedback_file', null, array('numfiles', 'grade'));
+        $subpluginelement = new backup_nested_element('feedback_onenote', null, array('numfiles', 'grade'));
 
         // Connect XML elements into the tree.
         $subplugin->add_child($subpluginwrapper);
