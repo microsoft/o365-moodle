@@ -182,6 +182,7 @@ class token {
                 'Content-Type: application/x-www-form-urlencoded',
                 'Content-Length: '.strlen($params)
             ];
+            $httpclient->resetHeader();
             $httpclient->setHeader($header);
             $tokenresult = $httpclient->post($tokenendpoint, $params);
             $tokenresult = @json_decode($tokenresult, true);
@@ -291,6 +292,7 @@ class token {
             'Content-Type: application/x-www-form-urlencoded',
             'Content-Length: '.strlen($params)
         ];
+        $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
         $result = $this->httpclient->post($tokenendpoint, $params);
