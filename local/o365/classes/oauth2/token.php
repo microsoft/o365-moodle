@@ -62,8 +62,8 @@ class token {
      * @param \local_o365\oauth2\clientdata $clientdata Client data used for refreshing the token if needed.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
      */
-    public function __construct($token, $expiry, $refreshtoken, $scope, $resource, $userid, \local_o365\oauth2\clientdata $clientdata,
-                                \local_o365\httpclientinterface $httpclient) {
+    public function __construct($token, $expiry, $refreshtoken, $scope, $resource, $userid,
+                                \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
         $this->token = $token;
         $this->expiry = $expiry;
         $this->refreshtoken = $refreshtoken;
@@ -250,6 +250,21 @@ class token {
     }
 
     /**
+     * Delete a stored token.
+     *
+     * @param array $existingtoken The existing token record.
+     * @return bool Success/Failure.
+     */
+    protected function delete_stored_token($existingtoken) {
+        global $DB;
+        if (!empty($existingtoken['id'])) {
+            $DB->delete_records('local_o365_token', ['id' => $existingtoken['id']]);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Store a new token.
      *
      * @param string $token Token access token.
@@ -319,8 +334,23 @@ class token {
             }
             return true;
         } else {
-            throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
-            return false;
+            // Couldn't refresh token with the stored information. Wipe the stored information and go from the original login token.
+            $existingtoken = $this->get_stored_token($this->userid, $this->resource);
+            if (!empty($existingtoken)) {
+                $this->delete_stored_token($existingtoken);
+            }
+            $token = static::get_for_new_resource($this->userid, $this->resource, $this->clientdata, $this->httpclient);
+            if (!empty($token)) {
+                $this->token = $token->get_token();
+                $this->expiry = $token->get_expiry();
+                $this->refreshtoken = $token->get_refreshtoken();
+                $this->scope = $token->get_scope();
+                $this->resource = $token->get_resource();
+                return true;
+            } else {
+                throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
+                return false;
+            }
         }
     }
 }
