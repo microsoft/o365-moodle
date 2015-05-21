@@ -35,10 +35,13 @@ class repository_office365 extends \repository {
     protected $httpclient;
 
     /** @var array Array of onedrive status and token information. */
-    protected $onedrive = ['configured' => false, 'token' => []];
+    protected $onedrive = ['configured' => false];
 
     /** @var array Array of sharepoint status and token information. */
-    protected $sharepoint = ['configured' => false, 'token' => []];
+    protected $sharepoint = ['configured' => false];
+
+    /** @var \local_o365\oauth2\clientdata A clientdata object to use with an o365 api class. */
+    protected $clientdata = null;
 
     /**
      * Constructor
@@ -60,23 +63,33 @@ class repository_office365 extends \repository {
             throw new \moodle_exception('errorauthoidcnotconfig', 'repository_office365');
         }
 
-        $this->onedrive['configured'] = \local_o365\rest\onedrive::is_configured();
-        if ($this->onedrive['configured'] === true) {
-            $onedriveresource = \local_o365\rest\onedrive::get_resource();
-            $tokenrec = $DB->get_record('local_o365_token', ['user_id' => $USER->id, 'resource' => $onedriveresource]);
-            if (!empty($tokenrec)) {
-                $this->onedrive['token'] = $tokenrec;
-            }
-        }
+        $this->clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
+                    $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
 
+        $this->onedrive['configured'] = \local_o365\rest\onedrive::is_configured();
         $this->sharepoint['configured'] = \local_o365\rest\sharepoint::is_configured();
-        if ($this->sharepoint['configured'] === true) {
-            $sharepointresource = \local_o365\rest\sharepoint::get_resource();
-            $tokenrec = $DB->get_record('local_o365_token', ['user_id' => $USER->id, 'resource' => $sharepointresource]);
-            if (!empty($tokenrec)) {
-                $this->sharepoint['token'] = $tokenrec;
-            }
-        }
+    }
+
+    /**
+     * Get a OneDrive token.
+     *
+     * @return \local_o365\oauth2\token A OneDrive token object.
+     */
+    protected function get_onedrive_token() {
+        global $USER;
+        $resource = \local_o365\rest\onedrive::get_resource();
+        return \local_o365\oauth2\token::instance($USER->id, $resource, $this->clientdata, $this->httpclient);
+    }
+
+    /**
+     * Get a SharePoint token.
+     *
+     * @return \local_o365\oauth2\token A SharePoint token object.
+     */
+    protected function get_sharepoint_token() {
+        global $USER;
+        $resource = \local_o365\rest\sharepoint::get_resource();
+        return \local_o365\oauth2\token::instance($USER->id, $resource, $this->clientdata, $this->httpclient);
     }
 
     /**
@@ -85,13 +98,11 @@ class repository_office365 extends \repository {
      * @return \local_o365\rest\onedrive A onedrive API client object.
      */
     protected function get_onedrive_apiclient() {
-        if ($this->onedrive['configured'] === true && !empty($this->onedrive['token'])) {
-            $clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
-                    $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-            $token = new \local_o365\oauth2\token($this->onedrive['token']->token, $this->onedrive['token']->expiry,
-                    $this->onedrive['token']->refreshtoken, $this->onedrive['token']->scope,
-                    $this->onedrive['token']->resource, $this->onedrive['token']->user_id, $clientdata, $this->httpclient);
-            return new \local_o365\rest\onedrive($token, $this->httpclient);
+        if ($this->onedrive['configured'] === true) {
+            $token = $this->get_onedrive_token();
+            if (!empty($token)) {
+                return new \local_o365\rest\onedrive($token, $this->httpclient);
+            }
         }
         return false;
     }
@@ -102,14 +113,11 @@ class repository_office365 extends \repository {
      * @return \local_o365\rest\sharepoint A sharepoint API client object.
      */
     protected function get_sharepoint_apiclient() {
-        if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
-            $clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
-                    $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-            $token = new \local_o365\oauth2\token($this->sharepoint['token']->token, $this->sharepoint['token']->expiry,
-                    $this->sharepoint['token']->refreshtoken, $this->sharepoint['token']->scope,
-                    $this->sharepoint['token']->resource, $this->sharepoint['token']->user_id, $clientdata, $this->httpclient);
-
-            return new \local_o365\rest\sharepoint($token, $this->httpclient);
+        if ($this->sharepoint['configured'] === true) {
+            $token = $this->get_sharepoint_token();
+            if (!empty($token)) {
+                return new \local_o365\rest\sharepoint($token, $this->httpclient);
+            }
         }
         return false;
     }
@@ -160,18 +168,34 @@ class repository_office365 extends \repository {
         $list = [];
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
 
+        $onedriveactive = false;
+        if ($this->onedrive['configured'] === true) {
+            $onedrivetoken = $this->get_onedrive_token();
+            if (!empty($onedrivetoken)) {
+                $onedriveactive = true;
+            }
+        }
+
+        $sharepointactive = false;
+        if ($this->sharepoint['configured'] === true) {
+            $sharepointtoken = $this->get_sharepoint_token();
+            if (!empty($sharepointtoken)) {
+                $sharepointactive = true;
+            }
+        }
+
         if (strpos($path, '/my/') === 0) {
-            if ($this->onedrive['configured'] === true && !empty($this->onedrive['token'])) {
+            if ($onedriveactive === true) {
                 // Path is in my files.
                 list($list, $breadcrumb) = $this->get_listing_my(substr($path, 3));
             }
         } else if (strpos($path, '/courses/') === 0) {
-            if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
+            if ($sharepointactive === true) {
                 // Path is in course files.
                 list($list, $breadcrumb) = $this->get_listing_course(substr($path, 8));
             }
         } else {
-            if ($this->onedrive['configured'] === true && !empty($this->onedrive['token'])) {
+            if ($onedriveactive === true) {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
@@ -179,7 +203,7 @@ class repository_office365 extends \repository {
                     'children' => [],
                 ];
             }
-            if ($this->sharepoint['configured'] === true && !empty($this->sharepoint['token'])) {
+            if ($sharepointactive === true) {
                 $list[] = [
                     'title' => get_string('courses', 'repository_office365'),
                     'path' => '/courses/',
@@ -633,9 +657,13 @@ class repository_office365 extends \repository {
         if ($_SERVER['SCRIPT_NAME'] !== '/draftfile.php') {
             if ($reference['source'] === 'onedrive') {
                 $sourceclient = $this->get_onedrive_apiclient();
-                $embedurl = $sourceclient->get_embed_url($reference['id']);
+                $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
+                $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
                 if (!empty($embedurl)) {
                     header('Location: '.$embedurl);
+                    die();
+                } else if (!empty($fileurl)) {
+                    header('Location: '.$fileurl);
                     die();
                 }
             }
