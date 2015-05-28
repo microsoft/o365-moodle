@@ -43,14 +43,14 @@ class restore_assignfeedback_onenote_subplugin extends restore_subplugin {
 
         $elename = $this->get_namefor('grade');
         // We used get_recommended_name() so this works.
-        $elepath = $this->get_pathfor('/feedback_file');
+        $elepath = $this->get_pathfor('/feedback_onenote');
         $paths[] = new restore_path_element($elename, $elepath);
 
         return $paths;
     }
 
     /**
-     * Processes one feedback_file element
+     * Processes one feedback_onenote element
      * @param mixed $data
      */
     public function process_assignfeedback_onenote_grade($data) {
