@@ -167,7 +167,6 @@ class token {
     public static function get_for_new_resource($userid, $resource, $clientdata, $httpclient) {
         $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient);
         if (!empty($aadgraphtoken)) {
-            $aadgraphtoken->refresh();
             $params = [
                 'client_id' => $clientdata->get_clientid(),
                 'client_secret' => $clientdata->get_clientsecret(),
