@@ -79,25 +79,36 @@ class onedrive extends \local_o365\rest\o365api {
      * Get the embedding URL for a given file id.
      *
      * @param string $fileid The ID of the file (from the odb api).
+     * @param string $fileurl The o365 webUrl property of the file.
      * @return string|null The URL to be embedded, or null if error.
      */
-    public function get_embed_url($fileid) {
-        $fileinfo = $this->get_file_metadata($fileid);
-        $odburl = $this->get_resource();
-        if (isset($fileinfo['webUrl'])) {
-            if (strpos($fileinfo['webUrl'], $odburl) === 0) {
-                $filerelative = substr($fileinfo['webUrl'], strlen($odburl));
-
+    public function get_embed_url($fileid, $fileurl = '') {
+        if (empty($fileurl)) {
+            $fileinfo = $this->get_file_metadata($fileid);
+            if (isset($fileinfo['webUrl'])) {
+                $fileurl = $fileinfo['webUrl'];
             }
         }
-        $filerelativeparts = explode('/', trim($filerelative, '/'));
-        $spapiurl = $odburl.'/'.$filerelativeparts[0].'/'.$filerelativeparts[1].'/_api';
-        $this->apiurioverride = $spapiurl;
-        $endpoint = '/web/GetFileByServerRelativeUrl(\''.$filerelative.'\')/ListItemAllFields/GetWOPIFrameUrl(3)';
-        $response = $this->apicall('post', $endpoint);
-        unset($this->apiurioverride);
-        $response = json_decode($response, true);
-        return (!empty($response) && isset($response['value'])) ? $response['value'] : null;
+        if (!empty($fileurl)) {
+            $odburl = $this->get_resource();
+            if (strpos($fileurl, $odburl) === 0) {
+                $filerelative = substr($fileurl, strlen($odburl));
+                $filerelativeparts = explode('/', trim($filerelative, '/'));
+                $spapiurl = $odburl.'/'.$filerelativeparts[0].'/'.$filerelativeparts[1].'/_api';
+                $this->apiurioverride = $spapiurl;
+                if (substr($filerelative, -6) === '?web=1') {
+                    $filerelative = substr($filerelative, 0, -6);
+                }
+                $endpoint = '/web/GetFileByServerRelativeUrl(\''.$filerelative.'\')/ListItemAllFields/GetWOPIFrameUrl(3)';
+                $response = $this->apicall('post', $endpoint);
+                unset($this->apiurioverride);
+                $response = json_decode($response, true);
+                if (!empty($response) && isset($response['value'])) {
+                    return $response['value'];
+                }
+            }
+        }
+        return null;
     }
 
     /**
