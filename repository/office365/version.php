@@ -23,12 +23,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012704;
-$plugin->requires = 2014111000;
+$plugin->version = 2015060100;
+$plugin->requires = 2015051100;
 $plugin->component = 'repository_office365';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.4';
+$plugin->release = '29.0.0.0';
 $plugin->dependencies = [
-    'local_o365' => 2015012716,
-    'auth_oidc' => 2015012711
+    'local_o365' => 2015060100,
+    'auth_oidc' => 2015060100
 ];
