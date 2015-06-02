@@ -76,12 +76,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_connected(\auth_oidc\event\user_connected $event) {
-        // Get additional tokens for the user.
-        $eventdata = $event->get_data();
-        if (!empty($eventdata['other']['username']) && !empty($eventdata['userid'])) {
-            $tokenresult = static::get_additional_tokens_for_user($eventdata['other']['username'], $eventdata['userid']);
-        }
-
         return true;
     }
 
@@ -140,7 +134,6 @@ class observers {
         $eventdata = $event->get_data();
         if (!empty($eventdata['other']['username']) && !empty($eventdata['userid'])) {
             static::get_additional_user_info($eventdata['userid']);
-            static::get_additional_tokens_for_user($eventdata['other']['username'], $eventdata['userid']);
         }
 
         return true;
@@ -207,77 +200,6 @@ class observers {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Get additional tokens for a given user.
-     *
-     * @param string $username The username of the user to fetch OpenID Connect tokens for.
-     * @param int $userid The ID of the user to store the new tokens for.
-     * @return bool Success/Failure.
-     */
-    public static function get_additional_tokens_for_user($username, $userid) {
-        global $DB;
-
-        // Auth_oidc config gives us the client credentials and token endpoint.
-        $oidcconfig = get_config('auth_oidc');
-        if (empty($oidcconfig)) {
-            return false;
-        }
-        if (empty($oidcconfig->clientid) || empty($oidcconfig->clientsecret) || empty($oidcconfig->tokenendpoint)) {
-            return false;
-        }
-
-        // The token record created/updated on login by auth_oidc.
-        $oidctokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
-        if (empty($oidctokenrec) || empty($oidctokenrec->refreshtoken)) {
-            return false;
-        }
-
-        // Assemble resources.
-        $resources = [\local_o365\rest\calendar::get_resource()];
-        if (\local_o365\rest\onedrive::is_configured() !== false) {
-            $resources[] = \local_o365\rest\onedrive::get_resource();
-        }
-        if (\local_o365\rest\sharepoint::is_configured() !== false) {
-            $resources[] = \local_o365\rest\sharepoint::get_resource();
-        }
-
-        foreach ($resources as $resource) {
-            // Request token.
-            $httpclient = new \local_o365\httpclient();
-            $params = [
-                'client_id' => $oidcconfig->clientid,
-                'client_secret' => $oidcconfig->clientsecret,
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $oidctokenrec->refreshtoken,
-                'resource' => $resource,
-            ];
-            $tokenresult = $httpclient->post($oidcconfig->tokenendpoint, $params);
-            $tokenresult = @json_decode($tokenresult, true);
-            if (empty($tokenresult) || !is_array($tokenresult)) {
-                return false;
-            }
-
-            // Create/update the stored token record.
-            $o365tokenrec = $DB->get_record('local_o365_token', ['user_id' => $userid, 'resource' => $resource]);
-            if (!empty($o365tokenrec)) {
-                $o365tokenrec->scope = $tokenresult['scope'];
-                $o365tokenrec->token = $tokenresult['access_token'];
-                $o365tokenrec->expiry = $tokenresult['expires_on'];
-                $o365tokenrec->refreshtoken = $tokenresult['refresh_token'];
-                $DB->update_record('local_o365_token', $o365tokenrec);
-            } else {
-                $o365tokenrec = new \stdClass;
-                $o365tokenrec->user_id = $userid;
-                $o365tokenrec->resource = $tokenresult['resource'];
-                $o365tokenrec->scope = $tokenresult['scope'];
-                $o365tokenrec->token = $tokenresult['access_token'];
-                $o365tokenrec->expiry = $tokenresult['expires_on'];
-                $o365tokenrec->refreshtoken = $tokenresult['refresh_token'];
-                $o365tokenrec->id = $DB->insert_record('local_o365_token', $o365tokenrec);
-            }
-        }
     }
 
     /**
