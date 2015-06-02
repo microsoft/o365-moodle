@@ -76,6 +76,21 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_connected(\auth_oidc\event\user_connected $event) {
+        // Get additional tokens for the user.
+        $eventdata = $event->get_data();
+        if (!empty($eventdata['userid'])) {
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            if (!empty($clientdata)) {
+                try {
+                    $httpclient = new \local_o365\httpclient();
+                    $azureresource = \local_o365\rest\calendar::get_resource();
+                    $token = \local_o365\oauth2\token::instance($eventdata['userid'], $azureresource, $clientdata, $httpclient);
+                } catch (\Exception $e) {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
