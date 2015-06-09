@@ -62,14 +62,14 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($result && $oldversion < 2015012704) {
         // Update OIDC users.
-        $sql = 'SELECT user.id as userid,
-                       user.username as username,
+        $sql = 'SELECT u.id as userid,
+                       u.username as username,
                        tok.id as tokenid,
                        tok.oidcuniqid as oidcuniqid,
                        tok.idtoken as idtoken
                   FROM {auth_oidc_token} tok
-                  JOIN {user} user ON user.username = tok.username
-                 WHERE user.auth = ? AND deleted = 0';
+                  JOIN {user} u ON u.username = tok.username
+                 WHERE u.auth = ? AND deleted = 0';
         $params = ['oidc'];
         $userstoupdate = $DB->get_recordset_sql($sql, $params);
         foreach ($userstoupdate as $user) {
