@@ -146,16 +146,34 @@ abstract class o365api {
 
         $requesturi = $this->transform_full_request_uri($apiurl.$apimethod);
 
+        $contenttype = 'application/json;odata.metadata=full';
+        if (isset($options['contenttype'])) {
+            $contenttype = $options['contenttype'];
+            unset($options['contenttype']);
+        }
+
         $header = [
             'Accept: application/json',
-            'Content-Type: application/json;odata.metadata=full',
+            'Content-Type: '.$contenttype,
             'Authorization: Bearer '.$this->token->get_token(),
         ];
+
+        if (!empty($params) && is_string($params)) {
+            $header[] = 'Content-length: '.strlen($params);
+        }
+
         $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
         // Sleep to avoid rate limiting.
         usleep(1250000);
+
+/*
+echo $httpmethod.'<br />';
+echo $requesturi;
+var_dump($params);
+echo '<br />';
+*/
 
         return $this->httpclient->$httpmethod($requesturi, $params, $options);
     }

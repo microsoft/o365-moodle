@@ -75,16 +75,8 @@ class ucp extends base {
             throw new \moodle_exception('ucp_notconnected', 'local_o365');
         }
 
-        $outlookresource = \local_o365\rest\calendar::get_resource();
-        if (empty($outlookresource)) {
-            throw new \Exception('Not configured');
-        }
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $token = \local_o365\oauth2\token::instance($USER->id, $outlookresource, $clientdata, $httpclient);
-
-        $apiclient = new \local_o365\rest\calendar($token, $httpclient);
-        $response = $apiclient->get_calendars();
+        $calsync = new \local_o365\feature\calsync\main();
+        $o365calendars = $calsync->get_calendars();
 
         $customdata = [
             'o365calendars' => [],
@@ -92,13 +84,11 @@ class ucp extends base {
             'cancreatesiteevents' => false,
             'cancreatecourseevents' => [],
         ];
-        if (!empty($response['value']) && is_array($response['value'])) {
-            foreach ($response['value'] as $o365cal) {
-                $customdata['o365calendars'][] = [
-                    'id' => $o365cal['Id'],
-                    'name' => $o365cal['Name'],
-                ];
-            }
+        foreach ($o365calendars as $o365calendar) {
+            $customdata['o365calendars'][] = [
+                'id' => $o365calendar['Id'],
+                'name' => $o365calendar['Name'],
+            ];
         }
         $primarycalid = $customdata['o365calendars'][0]['id'];
 
@@ -109,193 +99,12 @@ class ucp extends base {
             $customdata['cancreatecourseevents'][$courseid] = $cancreateincourse;
         }
 
-        $mform = new \local_o365\form\calendarsync('?action=calendar', $customdata);
+        $mform = new \local_o365\feature\calsync\form\subscriptions('?action=calendar', $customdata);
         if ($mform->is_cancelled()) {
             redirect(new \moodle_url('/local/o365/ucp.php'));
         } else if ($fromform = $mform->get_data()) {
-            // Determine and organize existing subscriptions.
-            $currentcaldata = [
-                'site' => [
-                    'subscribed' => false,
-                    'recid' => null,
-                    'syncbehav' => null,
-                    'o365calid' => null,
-                ],
-                'user' => [
-                    'subscribed' => false,
-                    'recid' => null,
-                    'syncbehav' => null,
-                    'o365calid' => null,
-                ],
-                'course' => [],
-            ];
-
-            $existingcoursesubs = [];
-            $existingsubsrs = $DB->get_recordset('local_o365_calsub', ['user_id' => $USER->id]);
-            foreach ($existingsubsrs as $existingsubrec) {
-                if ($existingsubrec->caltype === 'site') {
-                    $currentcaldata['site']['subscribed'] = true;
-                    $currentcaldata['site']['recid'] = $existingsubrec->id;
-                    $currentcaldata['site']['syncbehav'] = $existingsubrec->syncbehav;
-                    $currentcaldata['site']['o365calid'] = $existingsubrec->o365calid;
-                } else if ($existingsubrec->caltype === 'user') {
-                    $currentcaldata['user']['subscribed'] = true;
-                    $currentcaldata['user']['recid'] = $existingsubrec->id;
-                    $currentcaldata['user']['syncbehav'] = $existingsubrec->syncbehav;
-                    $currentcaldata['user']['o365calid'] = $existingsubrec->o365calid;
-                } else if ($existingsubrec->caltype === 'course') {
-                    $existingcoursesubs[$existingsubrec->caltypeid] = $existingsubrec;
-                }
-            }
-            $existingsubsrs->close();
-
-            // Handle changes to site and user calendar subscriptions.
-            foreach (['site', 'user'] as $caltype) {
-                $formkey = $caltype.'cal';
-                $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked']))
-                        ? true : false;
-                $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith']))
-                        ? $fromform->{$formkey}['syncwith'] : '';
-                $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav']))
-                        ? $fromform->{$formkey}['syncbehav'] : 'out';
-                if ($caltype === 'site' && empty($customdata['cancreatesiteevents'])) {
-                    $syncbehav = 'out';
-                }
-                if ($calchecked !== true && $currentcaldata[$caltype]['subscribed'] === true) {
-                    $DB->delete_records('local_o365_calsub', ['user_id' => $USER->id, 'caltype' => $caltype]);
-                    $eventdata = [
-                        'objectid' => $currentcaldata[$caltype]['recid'],
-                        'userid' => $USER->id,
-                        'other' => ['caltype' => $caltype]
-                    ];
-                    $event = \local_o365\event\calendar_unsubscribed::create($eventdata);
-                    $event->trigger();
-                } else if ($calchecked === true) {
-                    $changed = false;
-                    if ($currentcaldata[$caltype]['subscribed'] !== $calchecked) {
-                        $changed = true;
-                    }
-                    if ($currentcaldata[$caltype]['syncbehav'] !== $syncbehav) {
-                        $changed = true;
-                    }
-                    if ($currentcaldata[$caltype]['o365calid'] !== $syncwith) {
-                        $changed = true;
-                    }
-
-                    if ($changed === true) {
-                        if ($currentcaldata[$caltype]['subscribed'] === false) {
-                            // Not currently subscribed.
-                            $newsub = [
-                                'user_id' => $USER->id,
-                                'caltype' => $caltype,
-                                'caltypeid' => ($caltype === 'site') ? 0 : $USER->id,
-                                'o365calid' => $syncwith,
-                                'syncbehav' => $syncbehav,
-                                'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
-                                'timecreated' => time()
-                            ];
-                            $newsub['id'] = $DB->insert_record('local_o365_calsub', (object)$newsub);
-                            $eventdata = [
-                                'objectid' => $newsub['id'],
-                                'userid' => $USER->id,
-                                'other' => ['caltype' => $caltype]
-                            ];
-                        } else {
-                            // Already subscribed, update behavior.
-                            $updatedinfo = [
-                                'id' => $currentcaldata[$caltype]['recid'],
-                                'o365calid' => $syncwith,
-                                'syncbehav' => $syncbehav,
-                                'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
-                            ];
-                            $DB->update_record('local_o365_calsub', $updatedinfo);
-                            $eventdata = [
-                                'objectid' => $currentcaldata[$caltype]['recid'],
-                                'userid' => $USER->id,
-                                'other' => ['caltype' => $caltype]
-                            ];
-                        }
-                        $event = \local_o365\event\calendar_subscribed::create($eventdata);
-                        $event->trigger();
-                    }
-                }
-            }
-
-            // The following calculates what courses need to be added or removed from the subscription table.
-            $newcoursesubs = [];
-            if (!empty($fromform->coursecal) && is_array($fromform->coursecal)) {
-                foreach ($fromform->coursecal as $courseid => $coursecaldata) {
-                    if (!empty($coursecaldata['checked'])) {
-                        $newcoursesubs[$courseid] = $coursecaldata;
-                    }
-                }
-            }
-            $todelete = array_diff_key($existingcoursesubs, $newcoursesubs);
-            $toadd = array_diff_key($newcoursesubs, $existingcoursesubs);
-            foreach ($todelete as $courseid => $unused) {
-                $DB->delete_records('local_o365_calsub', ['user_id' => $USER->id, 'caltype' => 'course', 'caltypeid' => $courseid]);
-                $eventdata = [
-                    'objectid' => $USER->id,
-                    'userid' => $USER->id,
-                    'other' => ['caltype' => 'course', 'caltypeid' => $courseid]
-                ];
-                $event = \local_o365\event\calendar_unsubscribed::create($eventdata);
-                $event->trigger();
-            }
-            foreach ($newcoursesubs as $courseid => $coursecaldata) {
-                $syncwith = (!empty($coursecaldata['syncwith']))
-                        ? $coursecaldata['syncwith'] : '';
-                $syncbehav = (!empty($coursecaldata['syncbehav']))
-                        ? $coursecaldata['syncbehav'] : 'out';
-                if (empty($customdata['cancreatecourseevents'][$courseid])) {
-                    $syncbehav = 'out';
-                }
-                if (isset($toadd[$courseid])) {
-                    // Not currently subscribed.
-                    $newsub = [
-                        'user_id' => $USER->id,
-                        'caltype' => 'course',
-                        'caltypeid' => $courseid,
-                        'o365calid' => $syncwith,
-                        'syncbehav' => $syncbehav,
-                        'timecreated' => time(),
-                        'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
-                    ];
-                    $DB->insert_record('local_o365_calsub', (object)$newsub);
-                    $eventdata = [
-                        'objectid' => $USER->id,
-                        'userid' => $USER->id,
-                        'other' => ['caltype' => 'course', 'caltypeid' => $courseid]
-                    ];
-                    $event = \local_o365\event\calendar_subscribed::create($eventdata);
-                    $event->trigger();
-                } else if (isset($existingcoursesubs[$courseid])) {
-                    $changed = false;
-                    if ($existingcoursesubs[$courseid]->syncbehav !== $syncbehav) {
-                        $changed = true;
-                    }
-                    if ($existingcoursesubs[$courseid]->o365calid !== $syncwith) {
-                        $changed = true;
-                    }
-                    if ($changed === true) {
-                        // Already subscribed, update behavior.
-                        $updatedrec = [
-                            'id' => $existingcoursesubs[$courseid]->id,
-                            'o365calid' => $syncwith,
-                            'syncbehav' => $syncbehav,
-                            'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
-                        ];
-                        $DB->update_record('local_o365_calsub', (object)$updatedrec);
-                        $eventdata = [
-                            'objectid' => $USER->id,
-                            'userid' => $USER->id,
-                            'other' => ['caltype' => 'course', 'caltypeid' => $courseid]
-                        ];
-                        $event = \local_o365\event\calendar_subscribed::create($eventdata);
-                        $event->trigger();
-                    }
-                }
-            }
+            \local_o365\feature\calsync\form\subscriptions::update_subscriptions($fromform, $primarycalid,
+                    $customdata['cancreatesiteevents'], $customdata['cancreatecourseevents']);
             redirect(new \moodle_url('/local/o365/ucp.php'));
         } else {
             $PAGE->requires->jquery();

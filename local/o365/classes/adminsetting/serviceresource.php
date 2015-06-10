@@ -74,6 +74,7 @@ class serviceresource extends \admin_setting_configtext {
             $strinvalid = get_string('settings_serviceresourceabstract_invalid', 'local_o365', $this->visiblename);
             $iconvalid = addslashes($OUTPUT->pix_icon('t/check', 'valid', 'moodle'));
             $iconinvalid = addslashes($OUTPUT->pix_icon('t/delete', 'invalid', 'moodle'));
+            $iconloading = addslashes($OUTPUT->pix_icon('i/ajaxloader', 'loading', 'moodle'));
             $ajaxurl = new \moodle_url('/local/o365/ajax.php');
             $settinghtml .= '<script>
                                 $(function() {
@@ -84,6 +85,7 @@ class serviceresource extends \admin_setting_configtext {
                                         strinvalid: "'.$strinvalid.'",
                                         iconvalid: "'.$iconvalid.'",
                                         iconinvalid: "'.$iconinvalid.'",
+                                        iconloading: "'.$iconloading.'"
                                     };
                                     $("#admin-'.$this->name.'").serviceresource(opts);
                                 });

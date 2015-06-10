@@ -65,6 +65,20 @@ $string['settings_aadsync'] = 'Sync users from AzureAD';
 $string['settings_aadsync_details'] = 'When enabled, users in the associated AzureAD directory are synced to Moodle. This creates users in Moodle that exist in AzureAD, and deletes the users from Moodle that were synced when they are deleted from AzureAD.';
 $string['settings_aadtenant'] = 'AzureAD Tenant';
 $string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
+
+$string['settings_azuresetup'] = 'Azure Setup';
+$string['settings_azuresetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. It can also fix some common errors.';
+$string['settings_azuresetup_update'] = 'Update';
+$string['settings_azuresetup_checking'] = 'Checking...';
+$string['settings_azuresetup_missingperms'] = 'Missing Permissions:';
+$string['settings_azuresetup_permscorrect'] = 'Permissions are correct.';
+$string['settings_azuresetup_errorcheck'] = 'An error occurred trying to check Azure setup.';
+$string['settings_azuresetup_unifiedheader'] = 'Unified API';
+$string['settings_azuresetup_unifieddesc'] = 'The unified API replaces the existing application-specific APIs. If available, you should add this to your Azure application to be ready for the future. Eventually, this will replace the legacy API.';
+$string['settings_azuresetup_unifiederror'] = 'There was an error checking for Unified API support.';
+$string['settings_azuresetup_unifiedactive'] = 'Unified API active.';
+$string['settings_azuresetup_unifiedmissing'] = 'The unified API was not found in this application.';
+
 $string['settings_creategroups'] = 'Create User Groups';
 $string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office365 unified API added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office 365 for China';
@@ -75,16 +89,16 @@ $string['settings_detectoidc_credsvalid'] = 'Credentials have been set.';
 $string['settings_detectoidc_credsvalid_link'] = 'Change';
 $string['settings_detectoidc_credsinvalid'] = 'Credentials have not been set or are incomplete.';
 $string['settings_detectoidc_credsinvalid_link'] = 'Set Credentials';
+
 $string['settings_detectperms'] = 'Application Permissions';
 $string['settings_detectperms_details'] = 'The use the plugin features, correct permissions must be set up for the application in AzureAD.';
 $string['settings_detectperms_nocreds'] = 'Application credentials need to be set first. See above setting.';
 $string['settings_detectperms_missing'] = 'Missing:';
-$string['settings_detectperms_errorcheck'] = 'An error occurred trying to check permissions.';
 $string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please set manually in Azure.';
 $string['settings_detectperms_fixperms'] = 'Fix permissions';
 $string['settings_detectperms_fixprereq'] = 'To fix this automatically, your system API user must be an administrator, and the "Access your organization\'s directory" permission must be enabled in Azure for the "Windows Azure Active Directory" application.';
 $string['settings_detectperms_nounified'] = 'Unified API not present, some new features may not work.';
-$string['settings_detectperms_unifiedheader'] = 'Unified API: This is a beta API required for "Create User Groups"';
+
 $string['settings_detectperms_unifiednomissing'] = 'All unified permissions present.';
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';

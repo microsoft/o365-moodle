@@ -42,13 +42,13 @@ class usersync extends \core\task\scheduled_task {
      * @param string $deltalink A full aad.nextLink URL.
      * @return string|null The extracted deltalink value, or null if none found.
      */
-    protected function parse_deltalink($deltalink) {
-        $deltalink = parse_url($deltalink);
-        if (isset($deltalink['query'])) {
+    protected function extract_skiptoken($nextlink) {
+        $nextlink = parse_url($nextlink);
+        if (isset($nextlink['query'])) {
             $output = [];
-            parse_str($deltalink['query'], $output);
-            if (isset($output['deltaLink'])) {
-                return $output['deltaLink'];
+            parse_str($nextlink['query'], $output);
+            if (isset($output['$skiptoken'])) {
+                return $output['$skiptoken'];
             }
         }
         return null;
@@ -64,53 +64,54 @@ class usersync extends \core\task\scheduled_task {
             return true;
         }
 
-        $oidcconfig = get_config('auth_oidc');
-        if (!empty($oidcconfig)) {
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-                    $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-            $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
-            $azureadclient = new \local_o365\rest\azuread($token, $httpclient);
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
 
-            $deltalink = get_config('local_o365', 'task_usersync_lastdeltalink');
-            if (empty($deltalink)) {
-                $deltalink = '';
-            }
-
-            for($i = 0; $i < 1; $i++) {
-                $users = $azureadclient->get_users('default', $deltalink);
-                if (!empty($users) && is_array($users) && !empty($users['value']) && is_array($users['value'])) {
-                    $azureadclient->sync_users($users['value']);
-                } else {
-                    // No users returned, we're likely past the last page of results. Erase deltalink state and exit loop.
-                    mtrace('No more users to sync.');
-                    set_config('task_usersync_lastdeltalink', '', 'local_o365');
-                    break;
-                }
-
-                // If we have an aad.nextLink, extract deltalink value and store in $deltalink for the next loop. Otherwise break.
-                if (!empty($users['aad.nextLink'])) {
-                    $deltalink = $this->parse_deltalink($users['aad.nextLink']);
-                    if (empty($deltalink)) {
-                        $deltalink = '';
-                        mtrace('Bad aad.nextlink received.');
-                        break;
-                    }
-                } else {
-                    $deltalink = '';
-                    mtrace('No aad.nextlink received.');
-                    break;
-                }
-            }
-
-            if (!empty($deltalink)) {
-                mtrace('Partial user sync completed. Saving place for next run.');
-            } else {
-                mtrace('Full user sync completed. Resetting saved state for new run.');
-            }
-            set_config('task_usersync_lastdeltalink', $deltalink, 'local_o365');
+        $skiptoken = get_config('local_o365', 'task_usersync_lastskiptoken');
+        if (empty($skiptoken)) {
+            $skiptoken = '';
         }
+
+        for($i = 0; $i < 1; $i++) {
+            $users = $usersync->get_users('default', $skiptoken);
+            if (!empty($users) && is_array($users) && !empty($users['value']) && is_array($users['value'])) {
+                $usersync->sync_users($users['value']);
+            } else {
+                // No users returned, we're likely past the last page of results. Erase deltalink state and exit loop.
+                mtrace('No more users to sync.');
+                set_config('task_usersync_lastskiptoken', '', 'local_o365');
+                break;
+            }
+
+            $nextlink = '';
+            if (isset($users['odata.nextLink'])) {
+                $nextlink = $users['odata.nextLink'];
+            } else if (isset($users['@odata.nextLink'])) {
+                $nextlink = $users['@odata.nextLink'];
+            }
+
+            // If we have an odata.nextLink, extract deltalink value and store in $deltalink for the next loop. Otherwise break.
+            if (!empty($nextlink)) {
+                $skiptoken = $this->extract_skiptoken($nextlink);
+                if (empty($skiptoken)) {
+                    $skiptoken = '';
+                    mtrace('Bad odata.nextLink received.');
+                    break;
+                }
+            } else {
+                $skiptoken = '';
+                mtrace('No odata.nextLink received.');
+                break;
+            }
+        }
+
+        if (!empty($skiptoken)) {
+            mtrace('Partial user sync completed. Saving place for next run.');
+        } else {
+            mtrace('Full user sync completed. Resetting saved state for new run.');
+        }
+        set_config('task_usersync_lastskiptoken', $skiptoken, 'local_o365');
         return true;
     }
 }
