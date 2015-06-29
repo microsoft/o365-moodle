@@ -453,11 +453,11 @@ class unified extends \local_o365\rest\o365api {
             'Directory.AccessAsUser.All',
             'Directory.ReadWrite.All',
             'Files.ReadWrite',
-            'User.ReadWrite',
             'User.ReadWrite.All',
             'Group.ReadWrite.All',
             'Sites.ReadWrite.All',
 
+            //'User.ReadWrite',
             //'User.Read',
             //'Group.Read.All',
             //'Directory.Read.All',

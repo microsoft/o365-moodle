@@ -34,6 +34,9 @@ $.fn.azuresetup = function(options) {
         strchecking: 'Checking...',
         strmissingperms: 'Missing Permissions:',
         strpermscorrect: 'Permissions correct.',
+        strfixperms: 'Fix Permissions',
+        strfixprereq: '',
+        strerrorfix: 'An error occurred trying to fix permissions.',
         strerrorcheck: 'An error occurred trying to check Azure setup.',
         strnoinfo: 'We don\'t have any information about your Azure setup yet. Please click the Update button to check.',
 
@@ -66,7 +69,7 @@ $.fn.azuresetup = function(options) {
                     main.find('.local_o365_statusmessage')
                             .removeClass('alert-error').addClass('alert-success')
                             .find('img.smallicon').replaceWith(opts.iconsuccess);
-                    main.find('.permmessage').html(opts.strvalid);
+                    main.find('.permmessage').html(opts.strpermscorrect);
                 } else {
                     main.find('.statusmessage').html('<div>'+opts.strerrorfix+'</div>');
                 }
