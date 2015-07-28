@@ -23,7 +23,9 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$PAGE->requires->jquery();
+if (!$PAGE->requires->is_head_done()) {
+    $PAGE->requires->jquery();
+}
 
 if ($hassiteconfig) {
     $settings = new \admin_settingpage('local_o365', get_string('pluginname', 'local_o365'));
