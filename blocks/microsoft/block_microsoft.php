@@ -50,6 +50,10 @@ class block_microsoft extends block_base {
             return $this->content;
         }
 
+        if (!$PAGE->requires->is_head_done()) {
+            $PAGE->requires->jquery();
+        }
+
         $this->content = new \stdClass;
         $this->content->text = '';
         $this->content->footer = '';
@@ -87,6 +91,7 @@ class block_microsoft extends block_base {
                 $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
                 $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
                 $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+                $items[] = $this->render_yammer();
 
                 $this->content->text .= \html_writer::alist($items);
             } else {
@@ -135,6 +140,45 @@ class block_microsoft extends block_base {
             }
         }
         return $moodlenotebook;
+    }
+
+    protected function render_yammer() {
+        global $PAGE;
+        $embedid = 'yammer'.uniqid();
+        $html = '';
+        $html .= '<br />';
+        $yammerattrs = [
+            'class' => 'servicelink block_microsoft_yammer',
+            'onclick' => '$(\'#'.$embedid.'\').toggle()',
+            'style' => 'display: block',
+        ];
+        $html .= \html_writer::link('javascript:;', 'Yammer', $yammerattrs);
+        $html .= '<script type="text/javascript" src="https://c64.assets-yammer.com/assets/platform_embed.js"></script>';
+        $html .= '<div id="'.$embedid.'" style="height:400px;"></div>';
+        $html .= '<script>';
+        $embedattrs = [
+            'container' => '#'.$embedid,
+            'network' => 'pdyn.onmicrosoft.com',
+        ];
+
+        $feedids = [
+            2 => '6131702',
+            3 => '6131708',
+            4 => '6131712',
+        ];
+        $feedid = 'none';
+        if ($PAGE->context instanceof \context_course) {
+            if (isset($feedids[$PAGE->context->instanceid])) {
+                $embedattrs['feedId'] = $feedids[$PAGE->context->instanceid];
+                $embedattrs['feedType'] = 'group';
+                $embedattrs['config']['defaultGroupId'] = $embedattrs['feedId'];
+                $feedid = $embedattrs['feedId'];
+            }
+        }
+
+        $html .= 'yam.connect.embedFeed('.json_encode($embedattrs).');';
+        $html .= '</script>';
+        return $html;
     }
 
     /**
