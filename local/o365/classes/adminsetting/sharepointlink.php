@@ -65,7 +65,7 @@ class sharepointlink extends \admin_setting {
      */
     public function write_setting($data) {
         $oldvalue = get_config($this->plugin, $this->name);
-        if ($oldvalue == $data) {
+        if ($oldvalue == $data && !empty($data)) {
             return '';
         }
         if (!empty($data)) {
@@ -73,6 +73,9 @@ class sharepointlink extends \admin_setting {
             $this->config_write('sharepoint_initialized', '0');
             $sharepointinit = new \local_o365\task\sharepointinit();
             \core\task\manager::queue_adhoc_task($sharepointinit);
+        } else {
+            // Support default value so it doesn't prompt for setting on install.
+            $this->config_write($this->name, '');
         }
         return '';
     }
