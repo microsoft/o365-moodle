@@ -71,7 +71,7 @@ class block_microsoft extends block_base {
 
                 $items = [];
 
-                if ($PAGE->context instanceof \context_course) {
+                if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
                     if (!empty($o365config->sharepointlink)) {
                         $courserec = $DB->get_record('course', ['id' => $PAGE->context->instanceid]);
                         if (!empty($courserec)) {
