@@ -122,7 +122,7 @@ abstract class base {
 
         $msaccountclass = '\local_onenote\api\msaccount';
         $o365class = '\local_onenote\api\o365';
-        $iso365user = (isset($USER->auth) && $USER->auth === 'oidc' && class_exists('\local_o365\rest\onenote')) ? true : false;
+        $iso365user = (\local_o365\utils::is_o365_connected($USER->id) === true && class_exists('\local_o365\rest\onenote')) ? true : false;
         if ($iso365user === true) {
             require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
             $sesskey = 'msaccount_client-'.md5(\msaccount_client::SCOPE);

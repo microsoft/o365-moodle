@@ -57,7 +57,7 @@ class block_microsoft extends block_base {
         $o365config = get_config('local_o365');
 
         try {
-            $o365connected = $DB->record_exists('local_o365_token', ['user_id' => $USER->id]);
+            $o365connected = \local_o365\utils::is_o365_connected($USER->id);
             if ($o365connected === true) {
                 $langconnected = get_string('o365connected', 'block_microsoft');
                 $this->content->text .= '<h5>'.$langconnected.'</h5>';
