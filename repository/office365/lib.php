@@ -159,7 +159,7 @@ class repository_office365 extends \repository {
         if (empty($context)) {
             $context = \context_system::instance();
         }
-        if ($context instanceof \context_course) {
+        if ($this->sharepoint['configured'] === true && $context instanceof \context_course) {
             if (empty($path)) {
                 $path = '/courses/'.$context->instanceid;
             }
