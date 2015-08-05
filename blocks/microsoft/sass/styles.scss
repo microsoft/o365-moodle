@@ -1,0 +1,40 @@
+.block_microsoft {
+    h5 {
+        font-size: 95%;
+    }
+    ul {
+        list-style: none;
+        padding-left: 0;
+        margin-left: 0;
+        a.servicelink {
+            background-position: 2px 0px;
+            background-size: 28px;
+            background-repeat: no-repeat;
+            background-color: transparent;
+            display: inline-block;
+            padding: 4px 4px 4px 40px;
+            margin: 0.2rem 0;
+            &:active, &:hover, &:visited {
+                text-decoration: none !important;
+            }
+        }
+    }
+    .block_microsoft_onenote {
+        background-image: url([[pix:block_microsoft|onenotecolor]]);
+    }
+    .block_microsoft_outlook {
+        background-image: url([[pix:block_microsoft|outlookcolor]]);
+    }
+    .block_microsoft_connection {
+        background-image: url([[pix:block_microsoft|o365color]]);
+    }
+    .block_microsoft_sharepoint {
+        background-image: url([[pix:block_microsoft|sharepointcolor]]);
+    }
+    .block_microsoft_preferences {
+        background-image: url([[pix:block_microsoft|msftcolor]]);
+    }
+    .block_microsoft_msasignin {
+        background-image: url([[pix:block_microsoft|msftcolor]]);
+    }
+}
