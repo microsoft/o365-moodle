@@ -41,7 +41,15 @@ class ucp extends base {
     public function header() {
         global $USER, $DB;
         $this->o365loginconnected = ($USER->auth === 'oidc') ? true : false;
-        $this->o365connected = $DB->record_exists('local_o365_token', ['user_id' => $USER->id]);
+        $this->o365connected = false;
+        if ($DB->record_exists('local_o365_token', ['user_id' => $USER->id])) {
+            $this->o365connected = true;
+        } else {
+            $oidcparams = ['resource' => 'https://graph.windows.net', 'username' => $USER->username];
+            if ($DB->record_exists('auth_oidc_token', $oidcparams)) {
+                $this->o365connected = true;
+            }
+        }
         return true;
     }
 
