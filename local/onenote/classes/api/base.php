@@ -1028,7 +1028,8 @@ abstract class base {
      * @return null|string Path to the temp folder created.
      */
     public function create_temp_folder() {
-        $tempfolder = join(DIRECTORY_SEPARATOR, array(rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR), uniqid('asg_')));
+        global $CFG;
+        $tempfolder = $CFG->tempdir.DIRECTORY_SEPARATOR.uniqid('asg_');
         if (file_exists($tempfolder)) {
             fulldelete($tempfolder);
         }
