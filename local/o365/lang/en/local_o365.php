@@ -51,6 +51,7 @@ $string['erroro365apinotoken'] = 'Did not have a token for the given resource an
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
 $string['errorcouldnotcreatespgroup'] = 'Could not create the SharePoint group.';
 
+$string['eventapifail'] = 'API failure';
 $string['eventcalendarsubscribed'] = 'User subscribed to a calendar';
 $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
 
