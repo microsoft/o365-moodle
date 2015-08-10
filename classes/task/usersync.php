@@ -78,7 +78,7 @@ class usersync extends \core\task\scheduled_task {
                 $deltalink = '';
             }
 
-            for($i = 0; $i < 1; $i++) {
+            for($i = 0; $i < 5; $i++) {
                 $users = $azureadclient->get_users('default', $deltalink);
                 if (!empty($users) && is_array($users) && !empty($users['value']) && is_array($users['value'])) {
                     $azureadclient->sync_users($users['value']);

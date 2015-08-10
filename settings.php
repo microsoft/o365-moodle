@@ -43,8 +43,9 @@ if ($hassiteconfig) {
     $desc = get_string('settings_systemapiuser_details', 'local_o365');
     $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
 
+    $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
     $label = get_string('settings_aadsync', 'local_o365');
-    $desc = get_string('settings_aadsync_details', 'local_o365');
+    $desc = get_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
     $settings->add(new \admin_setting_configcheckbox('local_o365/aadsync', $label, $desc, '0'));
 
     $label = get_string('settings_o365china', 'local_o365');
