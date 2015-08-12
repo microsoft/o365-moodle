@@ -73,7 +73,7 @@ class sharepointinit extends \core\task\adhoc_task {
             if (!empty($frontpagerec) && !empty($frontpagerec->shortname)) {
                 $moodlesitename = $frontpagerec->shortname;
             }
-            $sharepoint->create_site($moodlesitename, $moodlesiteuri, $moodlesitedesc);
+            $result = $sharepoint->create_site($moodlesitename, $moodlesiteuri, $moodlesitedesc);
             mtrace('Created parent site');
         }
 
