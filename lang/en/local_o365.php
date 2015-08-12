@@ -70,6 +70,8 @@ $string['settings_creategroups'] = 'Create User Groups';
 $string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office365 unified API added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office 365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office 365 for China.';
+$string['settings_debugmode'] = 'Record debug messages';
+$string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems.';
 $string['settings_detectoidc'] = 'Application Credentials';
 $string['settings_detectoidc_details'] = 'To communicate with Office365, Moodle needs credentials to identify itself. These are set in the "OpenID Connect" authentication plugin.';
 $string['settings_detectoidc_credsvalid'] = 'Credentials have been set.';
