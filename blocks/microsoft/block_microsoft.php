@@ -40,7 +40,7 @@ class block_microsoft extends block_base {
      * @return stdObject
      */
     public function get_content() {
-        global $PAGE, $DB, $USER;
+        global $USER, $DB;
 
         if (!isloggedin()) {
             return null;
@@ -54,59 +54,115 @@ class block_microsoft extends block_base {
         $this->content->text = '';
         $this->content->footer = '';
 
-        $o365config = get_config('local_o365');
-
         try {
             $o365connected = \local_o365\utils::is_o365_connected($USER->id);
             if ($o365connected === true) {
-                $langconnected = get_string('o365connected', 'block_microsoft');
-                $this->content->text .= '<h5>'.$langconnected.'</h5>';
-                $outlookurl = new \moodle_url('/local/o365/ucp.php?action=calendar');
-                $outlookstr = get_string('linkoutlook', 'block_microsoft');
-                $sharepointstr = get_string('linksharepoint', 'block_microsoft');
-                $prefsurl = new \moodle_url('/local/o365/ucp.php');
-                $prefsstr = get_string('linkprefs', 'block_microsoft');
-                $connecturl = new \moodle_url('/local/o365/ucp.php');
-                $connectstr = get_string('linkconnection', 'block_microsoft');
-
-                $items = [];
-
-                if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
-                    if (!empty($o365config->sharepointlink)) {
-                        $courserec = $DB->get_record('course', ['id' => $PAGE->context->instanceid]);
-                        if (!empty($courserec)) {
-                            $spurl = $o365config->sharepointlink.'/'.$courserec->shortname;
-                            $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];
-                            $items[] = html_writer::link($spurl, $sharepointstr, $spattrs);
-                            $items[] = '<hr/>';
-                        }
-                    }
-                }
-
-                $items[] = $this->render_onenote();
-                $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
-                $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
-                $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
-
-                $this->content->text .= \html_writer::alist($items);
+                $this->content->text .= $this->get_content_connected();
             } else {
-                $this->content->text .= '<h5>'.get_string('notconnected', 'block_microsoft').'</h5>';
-
-                $connecturl = new \moodle_url('/local/o365/ucp.php');
-                $connectstr = 'Connect to Office365';
-
-                $items = [
-                    \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']),
-                    $this->render_onenote()
-                ];
-                $this->content->text .= \html_writer::alist($items);
+                $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
+                if (!empty($connection)) {
+                    $uselogin = (!empty($connection->uselogin)) ? true : false;
+                    $this->content->text .= $this->get_content_matched($connection->aadupn, $uselogin);
+                } else {
+                    $this->content->text .= $this->get_content_notconnected();
+                }
             }
-
         } catch (\Exception $e) {
             $this->content->text = $e->getMessage();
         }
 
         return $this->content;
+    }
+
+    /**
+     * Get block content for an unconnected but matched user.
+     *
+     * @param string $o365account The o365 account the user was matched to.
+     * @param bool $uselogin Whether the match includes login change.
+     * @return string Block content.
+     */
+    protected function get_content_matched($o365account, $uselogin = false) {
+        $html = '';
+
+        $langmatched = get_string('o365matched_title', 'block_microsoft');
+        $html .= '<h5>'.$langmatched.'</h5>';
+
+        $langmatcheddesc = get_string('o365matched_desc', 'block_microsoft', $o365account);
+        $html .= '<p>'.$langmatcheddesc.'</p>';
+
+        $langlogin = get_string('logintoo365', 'block_microsoft');
+        $html .= '<p>'.get_string('o365matched_complete_authreq', 'block_microsoft').'</p>';
+
+        if ($uselogin === true) {
+            $html .= '<p>'.\html_writer::link(new \moodle_url('/local/o365/ucp.php'), $langlogin).'</p>';
+        } else {
+            $html .= '<p>'.\html_writer::link(new \moodle_url('/local/o365/ucp.php?action=connecttoken'), $langlogin).'</p>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Get content for a connected user.
+     *
+     * @return string Block content.
+     */
+    protected function get_content_connected() {
+        global $PAGE, $DB;
+        $o365config = get_config('local_o365');
+        $html = '';
+
+        $langconnected = get_string('o365connected', 'block_microsoft');
+        $html .= '<h5>'.$langconnected.'</h5>';
+        $outlookurl = new \moodle_url('/local/o365/ucp.php?action=calendar');
+        $outlookstr = get_string('linkoutlook', 'block_microsoft');
+        $sharepointstr = get_string('linksharepoint', 'block_microsoft');
+        $prefsurl = new \moodle_url('/local/o365/ucp.php');
+        $prefsstr = get_string('linkprefs', 'block_microsoft');
+        $connecturl = new \moodle_url('/local/o365/ucp.php');
+        $connectstr = get_string('linkconnection', 'block_microsoft');
+
+        $items = [];
+
+        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+            if (!empty($o365config->sharepointlink)) {
+                $courserec = $DB->get_record('course', ['id' => $PAGE->context->instanceid]);
+                if (!empty($courserec)) {
+                    $spurl = $o365config->sharepointlink.'/'.$courserec->shortname;
+                    $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];
+                    $items[] = html_writer::link($spurl, $sharepointstr, $spattrs);
+                    $items[] = '<hr/>';
+                }
+            }
+        }
+
+        $items[] = $this->render_onenote();
+        $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
+        $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
+        $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+
+        $html .= \html_writer::alist($items);
+
+        return $html;
+    }
+
+    /**
+     * Get block content for unconnected users.
+     *
+     * @return string Block content.
+     */
+    protected function get_content_notconnected() {
+        $html = '<h5>'.get_string('notconnected', 'block_microsoft').'</h5>';
+
+        $connecturl = new \moodle_url('/local/o365/ucp.php');
+        $connectstr = 'Connect to Office365';
+
+        $items = [
+            \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']),
+            $this->render_onenote()
+        ];
+        $html .= \html_writer::alist($items);
+        return $html;
     }
 
     /**
