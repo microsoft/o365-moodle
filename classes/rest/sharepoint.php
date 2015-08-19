@@ -55,21 +55,21 @@ class sharepoint extends \local_o365\rest\o365api {
 
         $sharepoint = new \local_o365\rest\sharepoint($token, $httpclient);
         $sharepoint->override_resource($siteinfo['resource']);
-        $mainsiteinfo = $sharepoint->get_site();
-        if (!empty($mainsiteinfo) && !isset($mainsiteinfo['error']) && !empty($mainsiteinfo['Id'])) {
-            if ($siteinfo['subsiteurl'] !== '/') {
-                $subsiteinfo = $sharepoint->get_site($siteinfo['subsiteurl']);
-                if (empty($subsiteinfo)) {
-                    return 'valid';
-                } else {
-                    return 'notempty';
-                }
-            } else {
-                return 'notempty';
-            }
+
+        // Try to get the / site's info to validate we can communicate with this parent Sharepoint site.
+        try {
+            $mainsiteinfo = $sharepoint->get_site();
+        } catch (\Exception $e) {
+            return 'invalid';
         }
 
-        return 'invalid';
+        if ($siteinfo['subsiteurl'] === '/') {
+            // We just successfully got the / site's info, so if we're going to use that, it's obviously not empty.
+            return 'notempty';
+        }
+
+        $subsiteexists = $sharepoint->site_exists($siteinfo['subsiteurl']);
+        return ($subsiteexists === true) ? 'notempty' : 'valid';
     }
 
     /**
@@ -196,16 +196,13 @@ class sharepoint extends \local_o365\rest\o365api {
         if ($useo365api === true) {
             $path = rawurlencode($path);
             $contents = $this->apicall('get', "/v1.0/files/getByPath('{$path}')/children");
-            $contents = json_decode($contents, true);
-            if (empty($contents)) {
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-            }
+            return $this->process_apicall_response($contents, ['value' => null]);
         } else {
             $path = rawurlencode('/'.$this->parentsite.'/Shared Documents'.$path);
             $responsefolders = $this->apicall('get', "/web/getfolderbyserverrelativeurl('{$path}')/folders");
-            $responsefolders = json_decode($responsefolders, true);
+            $responsefolders = $this->process_apicall_response($responsefolders, ['value' => null]);
             $responsefiles = $this->apicall('get', "/web/getfolderbyserverrelativeurl('{$path}')/files");
-            $responsefiles = json_decode($responsefiles, true);
+            $responsefiles = $this->process_apicall_response($responsefiles, ['value' => null]);
             $contents = array_merge($responsefolders['value'], $responsefiles['value']);
         }
         return $contents;
@@ -230,11 +227,8 @@ class sharepoint extends \local_o365\rest\o365api {
     public function get_folder_metadata($path) {
         $path = rawurlencode($path);
         $response = $this->apicall('get', "/v1.0/files/getByPath('{$path}')");
-        $response = json_decode($response, true);
-        if (empty($response)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $response;
+        $expectedparams = ['@odata.type' => '#Microsoft.FileServices.Folder', 'id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -245,11 +239,8 @@ class sharepoint extends \local_o365\rest\o365api {
      */
     public function get_file_metadata($fileid) {
         $response = $this->apicall('get', "/v1.0/files/{$fileid}");
-        $response = json_decode($response, true);
-        if (empty($response)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $response;
+        $expectedparams = ['@odata.type' => '#Microsoft.FileServices.File', 'id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -262,19 +253,12 @@ class sharepoint extends \local_o365\rest\o365api {
      */
     public function create_file($folderpath, $filename, $content) {
         $parentinfo = $this->get_folder_metadata($folderpath);
-        if (is_array($parentinfo) && isset($parentinfo['id'])) {
-            $filename = rawurlencode($filename);
-            $url = '/v1.0/files/'.$parentinfo['id'].'/children/'.$filename.'/content?nameConflict=overwrite';
-            $params = ['file' => $content];
-            $response = $this->apicall('put', $url, $params);
-            $response = json_decode($response, true);
-            if (empty($response)) {
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-            }
-            return $response;
-        } else {
-            throw new \moodle_exception('erroro365apinoparentinfo', 'local_o365');
-        }
+        $filename = rawurlencode($filename);
+        $url = '/v1.0/files/'.$parentinfo['id'].'/children/'.$filename.'/content?nameConflict=overwrite';
+        $params = ['file' => $content];
+        $response = $this->apicall('put', $url, $params);
+        $expectedparams = ['@odata.type' => '#Microsoft.FileServices.File', 'id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -297,12 +281,9 @@ class sharepoint extends \local_o365\rest\o365api {
             ],
         ];
         $webcreationinformation = json_encode($webcreationinformation);
-        $result = $this->apicall('post', '/web/webs/add', $webcreationinformation);
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $result;
+        $response = $this->apicall('post', '/web/webs/add', $webcreationinformation);
+        $expectedparams = ['odata.type' => 'SP.Web', 'Id' => null, 'ServerRelativeUrl' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -312,21 +293,20 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|false Information about the site, or false if failure.
      */
     public function get_site($subsiteurl = null) {
+        // Temporarily set the site to the requested site.
         if (!empty($subsiteurl)) {
             $cursite = $this->parentsite;
             $this->set_site($subsiteurl);
         }
-        $result = $this->apicall('get', '/web');
+        $response = $this->apicall('get', '/web');
+
+        // Reset the current site to the original value for subsequent calls.
         if (!empty($subsiteurl)) {
             $this->parentsite = $cursite;
         }
-        if (!empty($result)) {
-            $result = json_decode($result, true);
-            if (!empty($result) && is_array($result)) {
-                return $result;
-            }
-        }
-        return false;
+
+        $expectedparams = ['odata.type' => 'SP.Web', 'Id' => null, 'ServerRelativeUrl' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -336,8 +316,13 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return bool Whether the site exists or not.
      */
     public function site_exists($subsiteurl = null) {
-        $siteinfo = $this->get_site($subsiteurl);
-        return (!empty($siteinfo)) ? true : false;
+        try {
+            $siteinfo = $this->get_site($subsiteurl);
+            return true;
+        } catch (\Exception $e) {
+            // Since Sharepoint API uses the site URL in the API endpoint, an error here indicates the site doesn't exist.
+            return false;
+        }
     }
 
     /**
@@ -347,13 +332,13 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function update_site(array $updated) {
-        $updated = json_encode($updated);
-        $result = $this->apicall('merge', '/web', $updated);
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+        $response = $this->apicall('merge', '/web', json_encode($updated));
+        if ($response === '') {
+            // Empty response indicates success.
+            return true;
+        } else {
+            return $this->process_apicall_response($response);
         }
-        return $result;
     }
 
     /**
@@ -362,7 +347,25 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return string Returned response.
      */
     public function delete_site() {
-        return $this->apicall('delete', '/web');
+        $response = $this->apicall('delete', '/web');
+        if ($response === '') {
+            // Empty response indicates success.
+            return true;
+        } else {
+            return $this->process_apicall_response($response);
+        }
+    }
+
+    /**
+     * Get groups.
+     *
+     * @param string $name The name of the group.
+     * @param string $description The description of the group.
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_groups() {
+        $response = $this->apicall('get', '/web/sitegroups');
+        return $this->process_apicall_response($response);
     }
 
     /**
@@ -378,12 +381,9 @@ class sharepoint extends \local_o365\rest\o365api {
             'Description' => $description,
         ];
         $groupdata = json_encode($groupdata);
-        $result = $this->apicall('post', '/web/sitegroups', $groupdata);
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $result;
+        $response = $this->apicall('post', '/web/sitegroups', $groupdata);
+        $expectedparams = ['odata.type' => 'SP.Group', 'Id' => null, 'Title' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -393,12 +393,9 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function get_group($name) {
-        $result = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')');
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $result;
+        $response = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')');
+        $expectedparams = ['odata.type' => 'SP.Group', 'Id' => null, 'Title' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -408,12 +405,9 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function get_group_by_id($id) {
-        $result = $this->apicall('get', '/web/sitegroups/getbyid(\''.$id.'\')');
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $result;
+        $response = $this->apicall('get', '/web/sitegroups/getbyid(\''.$id.'\')');
+        $expectedparams = ['odata.type' => 'SP.Group', 'Id' => null, 'Title' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -423,12 +417,9 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function delete_group_by_id($id) {
-        $result = $this->apicall('post', '/web/sitegroups/removebyid(\''.$id.'\')');
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $result;
+        $response = $this->apicall('post', '/web/sitegroups/removebyid(\''.$id.'\')');
+        $expectedparams = ['odata.null' => true];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -438,12 +429,10 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function get_group_users($name) {
-        $result = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')/users');
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $result;
+        $name = rawurlencode($name);
+        $response = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')/users');
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -551,19 +540,14 @@ class sharepoint extends \local_o365\rest\o365api {
             // Create site.
             $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
             $sitedata = $this->create_site($course->fullname, $siteurl, $course->summary);
-            if (!empty($sitedata) && isset($sitedata['Id']) && isset($sitedata['ServerRelativeUrl'])) {
-                // Save site data.
-                $siterec = new \stdClass;
-                $siterec->courseid = $course->id;
-                $siterec->siteid = $sitedata['Id'];
-                $siterec->siteurl = $sitedata['ServerRelativeUrl'];
-                $siterec->timecreated = $now;
-                $siterec->timemodified = $now;
-                $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
-                return $siterec;
-            } else {
-                throw new \moodle_exception('erroro365apicouldnotcreatesite', 'local_o365');
-            }
+            $siterec = new \stdClass;
+            $siterec->courseid = $course->id;
+            $siterec->siteid = $sitedata['Id'];
+            $siterec->siteurl = $sitedata['ServerRelativeUrl'];
+            $siterec->timecreated = $now;
+            $siterec->timemodified = $now;
+            $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
+            return $siterec;
         } else {
             $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
             if (!empty($siterec) && $siterec->siteurl == $fullsiteurl) {
