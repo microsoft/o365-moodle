@@ -244,5 +244,29 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015012715', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015012718) {
+        $usersync = get_config('local_o365', 'aadsync');
+        if ($usersync === '1') {
+            set_config('aadsync', 'create', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015012718', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015012719) {
+        if (!$dbman->table_exists('local_o365_connections')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_connections');
+        }
+        upgrade_plugin_savepoint($result, '2015012719', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015012720) {
+        $table = new xmldb_table('local_o365_connections');
+        $field = new xmldb_field('uselogin', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'aadupn');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2015012720', 'local', 'o365');
+    }
+
     return $result;
 }
