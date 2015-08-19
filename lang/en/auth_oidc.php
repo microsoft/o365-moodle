@@ -26,6 +26,8 @@ $string['auth_oidcdescription'] = 'The OpenID Connect plugin provides single-sig
 
 $string['cfg_authendpoint_key'] = 'Auth Endpoint';
 $string['cfg_authendpoint_desc'] = 'The URI of the auth endoint from your identity provider to use.';
+$string['cfg_autoappend_key'] = 'Auto-Append';
+$string['cfg_autoappend_desc'] = 'Automatically append this string when logging in users using the Username/Password login flow. This is useful when your identity provider requires a common domain, but don\'t want to require users to type it in when logging in. For example, if the full OpenID Connect user is "james@example.com" and you enter "@example.com" here, the user will only have to enter "james" as their username. <br /><b>Note:</b> In the case where conflicting usernames exist - i.e. a Moodle user exists wth the same name, the priority of the authentication plugin is used to determine which user wins out.';
 $string['cfg_clientid_key'] = 'Client ID';
 $string['cfg_clientid_desc'] = 'Your registered Client ID on the identity provider';
 $string['cfg_clientsecret_key'] = 'Client Secret';
