@@ -73,6 +73,16 @@ class base {
     }
 
     /**
+     * Provides a hook into the login page.
+     *
+     * @param object &$frm Form object.
+     * @param object &$user User object.
+     */
+    public function loginpage_hook(&$frm, &$user) {
+        return true;
+    }
+
+    /**
      * Read user information from external database and returns it as array().
      *
      * @param string $username username
