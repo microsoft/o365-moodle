@@ -50,6 +50,12 @@ $configkey = get_string('cfg_redirecturi_key', 'auth_oidc');
 $configdesc = get_string('cfg_redirecturi_desc', 'auth_oidc');
 $settings->add(new \auth_oidc\form\adminsetting\redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
 
+$configkey = get_string('cfg_autoappend_key', 'auth_oidc');
+$configdesc = get_string('cfg_autoappend_desc', 'auth_oidc');
+$configdefault = '';
+$settings->add(new admin_setting_configtext('auth_oidc/autoappend', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
+
 $configkey = get_string('cfg_loginflow_key', 'auth_oidc');
 $configdesc = '';
 $configdefault = 'authcode';
