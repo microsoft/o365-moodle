@@ -43,10 +43,17 @@ if ($hassiteconfig) {
     $desc = get_string('settings_systemapiuser_details', 'local_o365');
     $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
 
-    $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
     $label = get_string('settings_aadsync', 'local_o365');
+    $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
     $desc = get_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
-    $settings->add(new \admin_setting_configcheckbox('local_o365/aadsync', $label, $desc, '0'));
+    $choices = [
+        'create' => 'Create accounts in Moodle for users in AzureAD',
+        'delete' => 'Delete previously synced accounts in Moodle when they are deleted from AzureAD',
+        'match' => 'Match preexisting Moodle users with same-named accounts in AzureAD',
+        'matchswitchauth' => 'Connect matched users by switching authentication to OpenID Connect',
+    ];
+    $default = ['create' => true];
+    $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
 
     $label = get_string('settings_o365china', 'local_o365');
     $desc = get_string('settings_o365china_details', 'local_o365');
