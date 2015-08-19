@@ -62,7 +62,7 @@ $string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem commun
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office 365 as the system API user.';
 
 $string['settings_aadsync'] = 'Sync users from AzureAD';
-$string['settings_aadsync_details'] = 'When enabled, users in the associated AzureAD directory are synced to Moodle. This creates users in Moodle that exist in AzureAD, and deletes the users from Moodle that were synced when they are deleted from AzureAD.';
+$string['settings_aadsync_details'] = 'When enabled, users in the associated AzureAD directory are synced to Moodle. This creates users in Moodle that exist in AzureAD, and deletes the users from Moodle that were synced when they are deleted from AzureAD.<br /><b>Note: </b>By default, this will sync up to 1000 users per day when the sync task is run at 1am. To sync more users, you can increase the freqency of the <b>Sync users with AAD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a>';
 $string['settings_aadtenant'] = 'AzureAD Tenant';
 $string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
 $string['settings_creategroups'] = 'Create User Groups';
