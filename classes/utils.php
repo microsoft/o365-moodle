@@ -55,4 +55,34 @@ class utils {
             return false;
         }
     }
+
+    public static function tostring($val) {
+        if (is_scalar($val)) {
+            if (is_bool($val)) {
+                return '(bool)'.(string)(int)$val;
+            } else {
+                return (string)$val;
+            }
+        } else {
+            return print_r($val, true);
+        }
+    }
+
+    /**
+     * Record a debug message.
+     *
+     * @param string $message The debug message to log.
+     */
+    public static function debug($message, $where = '', $debugdata = null) {
+        $debugmode = (bool)get_config('local_o365', 'debugmode');
+        if ($debugmode === true) {
+            $fullmessage = (!empty($where)) ? $where : 'Unknown function';
+            $fullmessage .= ': '.$message;
+            if (!empty($debugdata)) {
+                $fullmessage .= ' Data: '.static::tostring($debugdata);
+            }
+            $event = \local_o365\event\api_call_failed::create(['other' => $fullmessage]);
+            $event->trigger();
+        }
+    }
 }

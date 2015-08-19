@@ -80,7 +80,8 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_groups() {
         $response = $this->tenantapicall('get', '/groups');
-        $response = $this->process_apicall_response($response);
+        $expectedparams = ['value' => null];
+        $response = $this->process_apicall_response($response, $expectedparams);
         if (!empty($response) && isset($response['value'])) {
             return $response['value'];
         } else {
@@ -107,7 +108,8 @@ class unified extends \local_o365\rest\o365api {
             'mailNickname' => $mailnickname,
         ];
         $response = $this->tenantapicall('post', '/groups', json_encode($groupdata));
-        $response = $this->process_apicall_response($response);
+        $expectedparams = ['objectId' => null, 'objectType' => 'Group'];
+        $response = $this->process_apicall_response($response, $expectedparams);
         return $response;
     }
 
@@ -119,8 +121,8 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_group($objectid) {
         $response = $this->tenantapicall('get', '/groups/'.$objectid);
-        $response = $this->process_apicall_response($response);
-        return $response;
+        $expectedparams = ['objectId' => null, 'objectType' => 'Group'];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -143,8 +145,8 @@ class unified extends \local_o365\rest\o365api {
         $oidcconfig = get_config('auth_oidc');
         $endpoint = '/applications/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
         $response = $this->tenantapicall('get', $endpoint);
-        $response = $this->process_apicall_response($response);
-        return $response;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -156,8 +158,8 @@ class unified extends \local_o365\rest\o365api {
         $oidcconfig = get_config('auth_oidc');
         $endpoint = '/servicePrincipals/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
         $response = $this->tenantapicall('get', $endpoint);
-        $response = $this->process_apicall_response($response);
-        return $response;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -170,7 +172,8 @@ class unified extends \local_o365\rest\o365api {
         if (empty($response)) {
             $endpoint = '/servicePrincipals?$filter=displayName%20eq%20\'Microsoft.Azure.AgregatorService\'';
             $response = $this->tenantapicall('get', $endpoint);
-            $response = $this->process_apicall_response($response);
+            $expectedparams = ['value' => null];
+            $response = $this->process_apicall_response($response, $expectedparams);
         }
         return $response;
     }
