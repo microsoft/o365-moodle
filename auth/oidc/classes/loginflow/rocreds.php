@@ -28,6 +28,69 @@ namespace auth_oidc\loginflow;
  */
 class rocreds extends \auth_oidc\loginflow\base {
     /**
+     * Provides a hook into the login page.
+     *
+     * @param object &$frm Form object.
+     * @param object &$user User object.
+     */
+    public function loginpage_hook(&$frm, &$user) {
+        global $DB;
+
+        if (empty($frm)) {
+            $frm = data_submitted();
+        }
+        if (empty($frm)) {
+            return true;
+        }
+
+        $autoappend = get_config('auth_oidc', 'autoappend');
+        if (empty($autoappend)) {
+            // If we're not doing autoappend, just let things flow naturally.
+            return true;
+        }
+
+        $username = $frm->username;
+        $password = $frm->password;
+        $auth = 'oidc';
+
+        $existinguser = $DB->get_record('user', ['username' => $username]);
+        if (!empty($existinguser)) {
+            // We don't want to prevent access to existing accounts.
+            return true;
+        }
+
+        $username .= $autoappend;
+        $success = $this->user_login($username, $password);
+        if ($success !== true) {
+            // No o365 user, continue normally.
+            return false;
+        }
+
+        $existinguser = $DB->get_record('user', ['username' => $username]);
+        if (!empty($existinguser)) {
+            $user = $existinguser;
+            return true;
+        }
+
+        // The user is authenticated but user creation may be disabled.
+        if (!empty($CFG->authpreventaccountcreation)) {
+            $failurereason = AUTH_LOGIN_UNAUTHORISED;
+
+            // Trigger login failed event.
+            $event = \core\event\user_login_failed::create(array('other' => array('username' => $username,
+                    'reason' => $failurereason)));
+            $event->trigger();
+
+            error_log('[client '.getremoteaddr()."]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  ".
+                    $_SERVER['HTTP_USER_AGENT']);
+            return false;
+        }
+
+        $user = create_user_record($username, $password, $auth);
+        return true;
+    }
+
+    /**
      * This is the primary method that is used by the authenticate_user_login() function in moodlelib.php.
      *
      * @param string $username The username (with system magic quotes)
@@ -40,7 +103,6 @@ class rocreds extends \auth_oidc\loginflow\base {
         $client = $this->get_oidcclient();
         $authparams = ['code' => ''];
 
-        // Get OIDC username from token. If no token, user is a synced user and username will work.
         $oidcusername = $username;
         $oidctoken = $DB->get_records('auth_oidc_token', ['username' => $username]);
         if (!empty($oidctoken)) {
