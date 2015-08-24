@@ -23,15 +23,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015060101;
+$plugin->version = 2015060102;
 $plugin->requires = 2015051100;
 $plugin->component = 'local_office365';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '29.0.0.1';
+$plugin->release = '29.0.0.2';
 $plugin->dependencies = [
-    'auth_oidc' => 2015060101,
-    'block_microsoft' => 2015080400,
-    'local_o365' => 2015060101,
+    'auth_oidc' => 2015060102,
+    'block_microsoft' => 2015080401,
+    'local_o365' => 2015060105,
     'local_onenote' => 2015060101,
     'assignfeedback_onenote' => 2015060100,
     'assignsubmission_onenote' => 2015060100,
