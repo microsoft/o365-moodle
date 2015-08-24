@@ -84,6 +84,19 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
+     * Hook for overriding behaviour of login page.
+     * This method is called from login/index.php page for all enabled auth plugins.
+     *
+     * @global object
+     * @global object
+     */
+    public function loginpage_hook() {
+        global $frm;  // can be used to override submitted login form
+        global $user; // can be used to replace authenticate_user_login()
+        return $this->loginflow->loginpage_hook($frm, $user);
+    }
+
+    /**
      * Handle requests to the redirect URL.
      *
      * @return mixed Determined by loginflow.
