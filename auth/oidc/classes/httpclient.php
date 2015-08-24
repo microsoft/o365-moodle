@@ -61,7 +61,7 @@ class httpclient extends \curl implements \auth_oidc\httpclientinterface {
         global $CFG;
         $plugin = new \stdClass;
         require_once($CFG->dirroot.'/auth/oidc/version.php');
-        return $plugin->release;
+        return (isset($plugin->release)) ? $plugin->release : 'unknown';
     }
 
     /**
