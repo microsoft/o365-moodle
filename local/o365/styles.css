@@ -1,45 +1,76 @@
 .local_o365_statusmessage {
-	margin: 0 0 0.5rem 0;
-	padding: 0.5rem;
-}
+  margin: 0 0 0.5rem 0;
+  padding: 0.5rem; }
 
 .local_o365_statusmessage img {
-	margin-right: 0.25rem;
-}
+  margin-right: 0.25rem; }
 
 .local_o365_statusmessage span, .local_o365_statusmessage a {
-	vertical-align: middle;
-}
+  vertical-align: middle; }
 
 .adminsetting_sharepointlink_message, .adminsetting_sharepointlink_status {
-	margin: 0 0 0.5rem 0;
-	padding: 0.5rem;
-}
+  margin: 0 0 0.5rem 0;
+  padding: 0.5rem; }
 
 .adminsetting_sharepointlink_message img, .adminsetting_sharepointlink_status img {
-	margin-right: 0.25rem;
-}
+  margin-right: 0.25rem; }
 
 .adminsetting_sharepointlink_message span, .adminsetting_sharepointlink_status span {
-	vertical-align: middle;
-}
+  vertical-align: middle; }
 
 .adminsetting_sharepointlink_status {
-	display: none;
-}
+  display: none; }
 
 .adminsetting_sharepointlink_status.empty {
-	display: block;
-	padding: 0;
-}
+  display: block;
+  padding: 0; }
 
 .adminsetting_sharepointlink_message.loading {
-	display: block;
-	padding: 0;
-	margin: 0.25rem 0 0.5rem 0;
-}
+  display: block;
+  padding: 0;
+  margin: 0.25rem 0 0.5rem 0; }
 
 .sharepointlink_viewstatus .changesitelink {
-	display: inline-block;
-	margin-left: 1.5rem;
-}
+  display: inline-block;
+  margin-left: 1.5rem; }
+
+.o365_ucp_index .connectionstatus {
+  float: right;
+  width: 14rem;
+  padding: 0.5rem; }
+  .o365_ucp_index .connectionstatus img {
+    float: left;
+    padding: 0.25rem; }
+  .o365_ucp_index .connectionstatus small {
+    font-weight: bold;
+    font-size: 0.8rem; }
+.o365_ucp_index .features {
+  margin-right: 16rem; }
+  .o365_ucp_index .features > div {
+    margin-bottom: 1rem; }
+    .o365_ucp_index .features > div a, .o365_ucp_index .features > div b {
+      background-position: 2px 0px;
+      background-size: 28px;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      display: inline-block;
+      padding: 4px 4px 4px 40px; }
+  .o365_ucp_index .features .feature_aadlogin a, .o365_ucp_index .features .feature_aadlogin b {
+    background-image: url([[pix:block_microsoft|o365color]]); }
+  .o365_ucp_index .features .feature_calendar a, .o365_ucp_index .features .feature_calendar b {
+    background-image: url([[pix:block_microsoft|outlookcolor]]); }
+  .o365_ucp_index .features .feature_onenote a, .o365_ucp_index .features .feature_onenote b {
+    background-image: url([[pix:block_microsoft|onenotecolor]]); }
+
+.o365_ucp_featurepage h3.featureheader {
+  background-position: center left;
+  background-size: 28px;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  padding: 4px 4px 4px 35px; }
+  .o365_ucp_featurepage h3.featureheader.feature_aadlogin {
+    background-image: url([[pix:block_microsoft|o365color]]); }
+  .o365_ucp_featurepage h3.featureheader.feature_calendar {
+    background-image: url([[pix:block_microsoft|outlookcolor]]); }
+  .o365_ucp_featurepage h3.featureheader.feature_onenote {
+    background-image: url([[pix:block_microsoft|onenotecolor]]); }
