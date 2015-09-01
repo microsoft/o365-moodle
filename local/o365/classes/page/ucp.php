@@ -361,63 +361,139 @@ class ucp extends base {
     }
 
     /**
-     * Default mode - show connection status and a list of features to manage.
+     * AAD Login status page.
      */
-    public function mode_default() {
+    public function mode_aadlogin() {
         global $OUTPUT;
-
         $opname = 'Office365';
         echo $OUTPUT->header();
-        echo \html_writer::tag('h2', $this->title);
-        echo get_string('ucp_general_intro', 'local_o365');
-        echo '<br /><br />';
-        echo \html_writer::tag('h5', get_string('ucp_connectionstatus', 'local_o365'));
-
-        if (is_enabled_auth('oidc')) {
-            echo \html_writer::start_div('auth_oidc_ucp_indicator');
-            echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
-            if ($this->o365loginconnected === true) {
-                echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
-                if (is_enabled_auth('manual') === true) {
-                    $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-                    $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
-                    $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
-                    echo \html_writer::tag('h5', $linkhtml);
-                }
-            } else {
-                echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
-                $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
-                $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
-                echo \html_writer::tag('h5', $linkhtml);
-            }
-            echo \html_writer::end_div();
-        }
-
-        echo \html_writer::start_div('auth_oidc_ucp_indicator');
-        echo \html_writer::tag('h4', get_string('ucp_connection_status', 'local_o365', $opname));
+        echo \html_writer::start_div('o365_ucp_featurepage');
+        $strtitle = get_string('ucp_index_aadlogin_title', 'local_o365');
+        echo \html_writer::tag('h3', $strtitle, ['class' => 'featureheader feature_aadlogin']);
         if ($this->o365connected === true) {
-            echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'local_o365'), ['class' => 'notifysuccess']);
-            if ($this->o365loginconnected !== true) {
-                $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
-                $strdisconnect = get_string('ucp_connection_stop', 'local_o365', $opname);
+            echo 'You are currently using Office 365 to log in to Moodle';
+            if (is_enabled_auth('manual') === true) {
+                $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
                 $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
                 echo \html_writer::tag('h5', $linkhtml);
             }
         } else {
-            echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'local_o365'), ['class' => 'notifyproblem']);
-            $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
-            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_connection_start', 'local_o365', $opname));
+            echo 'You are not currently using Office 365 to log in to Moodle';
+            $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
+            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
         }
         echo \html_writer::end_div();
+        echo $OUTPUT->footer();
+    }
 
-        if (!empty($this->o365connected)) {
-            echo '<br /><br />';
-            echo \html_writer::tag('h5', get_string('ucp_features', 'local_o365'));
-            echo \html_writer::link(new \moodle_url('?action=calendar'), get_string('ucp_calsync_title', 'local_o365'));
-            echo '<br />';
-            echo \html_writer::link(new \moodle_url('?action=onenote'), get_string('ucp_onenote_title', 'local_o365'));
+    /**
+     * Print a feature on the index page.
+     *
+     * @param string $id The feature identifier: "aadlogin", "calendar", "onenote".
+     * @param bool $enabled Whether the feature is accessible or not.
+     * @return string HTML for the feature entry.
+     */
+    protected function print_index_feature($id, $enabled) {
+        $html = \html_writer::start_div('feature_'.$id);
+        $featureuri = new \moodle_url('/local/o365/ucp.php?action='.$id);
+        $strtitle = get_string('ucp_index_'.$id.'_title', 'local_o365');
+
+        if ($enabled === true) {
+            $html .= \html_writer::link($featureuri, $strtitle);
+        } else {
+            $html .= \html_writer::tag('b', $strtitle);
         }
+
+        $strdesc = get_string('ucp_index_'.$id.'_desc', 'local_o365');
+        $html .= \html_writer::tag('p', $strdesc);
+        $html .= \html_writer::end_div();
+        return $html;
+    }
+
+    /**
+     * Get HTML for the connection status indicator box.
+     *
+     * @param string $status The current connection status.
+     * @return string The HTML for the connection status indicator box.
+     */
+    protected function print_connection_status($status = 'connected') {
+        global $OUTPUT, $USER, $DB;
+        $classes = 'connectionstatus';
+        $icon = '';
+        $msg = '';
+        switch ($status) {
+            case 'connected':
+                $classes .= ' alert-success';
+                $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
+                $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
+                break;
+
+            case 'matched':
+                $matchrec = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
+                $classes .= ' alert-info';
+                $msg = get_string('ucp_index_connectionstatus_matched', 'local_o365', $matchrec->aadupn);
+                $connecturl = new \moodle_url('/local/o365/ucp.php?action=connecttoken');
+                $msg .= '<br /><br />'.\html_writer::link($connecturl, 'Click here to log in.');
+                break;
+
+            case 'notconnected':
+                $classes .= ' alert-error';
+                $icon = $OUTPUT->pix_icon('i/info', 'valid', 'moodle');
+                $msg = get_string('ucp_index_connectionstatus_notconnected', 'local_o365');
+                $connecturl = new \moodle_url('/local/o365/ucp.php?action=connecttoken');
+                $msg .= '<br /><br />'.\html_writer::link($connecturl, 'Click here to connect.');
+                break;
+        }
+
+        $html = \html_writer::start_div($classes);
+        $html .= \html_writer::tag('h5', 'Connection Status');
+        $html .= $icon;
+        $html .= \html_writer::tag('p', $msg);
+        $html .= \html_writer::end_div();
+        return $html;
+    }
+
+    /**
+     * Default mode - show connection status and a list of features to manage.
+     */
+    public function mode_default() {
+        global $OUTPUT, $DB, $USER;
+
+        $opname = 'Office365';
+        echo $OUTPUT->header();
+        echo \html_writer::start_div('o365_ucp_index');
+        echo \html_writer::tag('h2', $this->title);
+        echo get_string('ucp_general_intro', 'local_o365');
+
+        if ($this->o365connected === true) {
+            echo $this->print_connection_status('connected');
+        } else {
+            $matchrec = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
+            if (!empty($matchrec)) {
+                echo $this->print_connection_status('matched');
+            } else {
+                echo $this->print_connection_status('notconnected');
+            }
+        }
+
+        echo \html_writer::start_div('features');
+        echo '<br />';
+        echo \html_writer::tag('h5', get_string('ucp_features', 'local_o365'));
+        $introstr = get_string('ucp_features_intro', 'local_o365');
+        if ($this->o365connected !== true) {
+            $introstr .= get_string('ucp_features_intro_notconnected', 'local_o365');
+        }
+        echo \html_writer::tag('p', $introstr);
+
+        echo $this->print_index_feature('aadlogin', true);
+        echo $this->print_index_feature('calendar', $this->o365connected);
+        echo $this->print_index_feature('onenote', $this->o365connected);
+
+        echo \html_writer::end_div();
+
+        echo \html_writer::end_div();
         echo $OUTPUT->footer();
     }
 }
