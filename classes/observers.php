@@ -162,57 +162,57 @@ class observers {
     public static function get_additional_user_info($userid) {
         global $DB;
 
-        // AAD must be configured for us to fetch data.
-        if (\local_o365\rest\azuread::is_configured() !== true) {
-            return true;
-        }
-
-        $aadresource = \local_o365\rest\azuread::get_resource();
-        $sql = 'SELECT tok.*
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u
-                       ON tok.username = u.username
-                 WHERE u.id = ? AND tok.resource = ?';
-        $params = [$userid, $aadresource];
-        $tokenrec = $DB->get_record_sql($sql, $params);
-        if (empty($tokenrec)) {
-            // No OIDC token for this user and resource - maybe not an AAD user.
-            return false;
-        }
-
         try {
+            // AAD must be configured for us to fetch data.
+            if (\local_o365\rest\azuread::is_configured() !== true) {
+                return true;
+            }
+
+            $aadresource = \local_o365\rest\azuread::get_resource();
+            $sql = 'SELECT tok.*
+                      FROM {auth_oidc_token} tok
+                      JOIN {user} u
+                           ON tok.username = u.username
+                     WHERE u.id = ? AND tok.resource = ?';
+            $params = [$userid, $aadresource];
+            $tokenrec = $DB->get_record_sql($sql, $params);
+            if (empty($tokenrec)) {
+                // No OIDC token for this user and resource - maybe not an AAD user.
+                return false;
+            }
+
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $token = \local_o365\oauth2\token::instance($userid, $aadresource, $clientdata, $httpclient);
             $apiclient = new \local_o365\rest\azuread($token, $httpclient);
+
+            $aaduserdata = $apiclient->get_user($tokenrec->oidcuniqid);
+            if (!empty($aaduserdata)) {
+                $updateduser = [];
+                $parammap = [
+                    'mail' => 'email',
+                    'city' => 'city',
+                    'country' => 'country',
+                    'department' => 'department'
+                ];
+                foreach ($parammap as $aadparam => $moodleparam) {
+                    if (!empty($aaduserdata[$aadparam])) {
+                        $updateduser[$moodleparam] = $aaduserdata[$aadparam];
+                    }
+                }
+
+                if (!empty($aaduserdata['preferredLanguage'])) {
+                    $updateduser['lang'] = substr($aaduserdata['preferredLanguage'], 0, 2);
+                }
+
+                if (!empty($updateduser)) {
+                    $updateduser['id'] = $userid;
+                    $DB->update_record('user', (object)$updateduser);
+                }
+                return true;
+            }
         } catch (\Exception $e) {
             return false;
-        }
-
-        $aaduserdata = $apiclient->get_user($tokenrec->oidcuniqid);
-        if (!empty($aaduserdata)) {
-            $updateduser = [];
-            $parammap = [
-                'mail' => 'email',
-                'city' => 'city',
-                'country' => 'country',
-                'department' => 'department'
-            ];
-            foreach ($parammap as $aadparam => $moodleparam) {
-                if (!empty($aaduserdata[$aadparam])) {
-                    $updateduser[$moodleparam] = $aaduserdata[$aadparam];
-                }
-            }
-
-            if (!empty($aaduserdata['preferredLanguage'])) {
-                $updateduser['lang'] = substr($aaduserdata['preferredLanguage'], 0, 2);
-            }
-
-            if (!empty($updateduser)) {
-                $updateduser['id'] = $userid;
-                $DB->update_record('user', (object)$updateduser);
-            }
-            return true;
         }
         return false;
     }
