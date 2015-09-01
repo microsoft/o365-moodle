@@ -242,6 +242,9 @@ class token {
         global $DB;
         if (!empty($existingtoken) && !empty($newtoken)) {
             $newtoken['id'] = $existingtoken['id'];
+            if (empty($newtoken['refreshtoken'])) {
+                $newtoken['refreshtoken'] = '';
+            }
             $DB->update_record('local_o365_token', (object)$newtoken);
             return true;
         }
@@ -280,8 +283,13 @@ class token {
         $newtoken->resource = $resource;
         $newtoken->scope = $scope;
         $newtoken->token = $token;
-        $newtoken->expiry = $expiry;
-        $newtoken->refreshtoken = $refreshtoken;
+
+        // Default expiry is 1 hour, if we didn't get an expiry, play it safe and expire in 45 mins.
+        $newtoken->expiry = (!empty($expiry)) ? $expiry : time() + (60*45);
+
+        // Refresh tokens *sometimes* don't exist...
+        $newtoken->refreshtoken = (!empty($refreshtoken)) ? $refreshtoken : '';
+
         $newtoken->id = $DB->insert_record('local_o365_token', $newtoken);
         return $newtoken;
     }
@@ -292,25 +300,28 @@ class token {
      * @return bool Success/Failure.
      */
     public function refresh() {
-        $params = [
-            'client_id' => $this->clientdata->get_clientid(),
-            'client_secret' => $this->clientdata->get_clientsecret(),
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $this->refreshtoken,
-            'resource' => $this->resource,
-        ];
-        $params = http_build_query($params, '', '&');
-        $tokenendpoint = $this->clientdata->get_tokenendpoint();
+        $result = '';
+        if (!empty($this->refreshtoken)) {
+            $params = [
+                'client_id' => $this->clientdata->get_clientid(),
+                'client_secret' => $this->clientdata->get_clientsecret(),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $this->refreshtoken,
+                'resource' => $this->resource,
+            ];
+            $params = http_build_query($params, '', '&');
+            $tokenendpoint = $this->clientdata->get_tokenendpoint();
 
-        $header = [
-            'Content-Type: application/x-www-form-urlencoded',
-            'Content-Length: '.strlen($params)
-        ];
-        $this->httpclient->resetHeader();
-        $this->httpclient->setHeader($header);
+            $header = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Content-Length: '.strlen($params)
+            ];
+            $this->httpclient->resetHeader();
+            $this->httpclient->setHeader($header);
 
-        $result = $this->httpclient->post($tokenendpoint, $params);
-        $result = json_decode($result, true);
+            $result = $this->httpclient->post($tokenendpoint, $params);
+            $result = json_decode($result, true);
+        }
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $origresource = $this->resource;
 
