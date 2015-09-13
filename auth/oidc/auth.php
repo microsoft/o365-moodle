@@ -122,6 +122,11 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @return bool Authentication success or failure.
      */
     public function user_login($username, $password = null) {
+        global $CFG;
+        // Short circuit for guest user.
+        if (!empty($CFG->guestloginbutton) && $username === 'guest' && $password === 'guest') {
+            return false;
+        }
         return $this->loginflow->user_login($username, $password);
     }
 
