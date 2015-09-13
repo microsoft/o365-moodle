@@ -46,6 +46,11 @@ $configdesc = get_string('cfg_tokenendpoint_desc', 'auth_oidc');
 $configdefault = 'https://login.windows.net/common/oauth2/token';
 $settings->add(new admin_setting_configtext('auth_oidc/tokenendpoint', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
+$configkey = get_string('cfg_oidcresource_key', 'auth_oidc');
+$configdesc = get_string('cfg_oidcresource_desc', 'auth_oidc');
+$configdefault = 'https://graph.windows.net';
+$settings->add(new admin_setting_configtext('auth_oidc/oidcresource', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
 $configkey = get_string('cfg_redirecturi_key', 'auth_oidc');
 $configdesc = get_string('cfg_redirecturi_desc', 'auth_oidc');
 $settings->add(new \auth_oidc\form\adminsetting\redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
