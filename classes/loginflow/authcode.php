@@ -297,13 +297,13 @@ class authcode extends \auth_oidc\loginflow\base {
                 $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
                 $event = \core\event\user_login_failed::create($eventdata);
                 $event->trigger();
-                throw new \moodle_exception('errorauthloginfailed', 'auth_oidc');
+                throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc');
             }
         }
 
         $user = authenticate_user_login($username, null, true);
         if (empty($user)) {
-            throw new \moodle_exception('errorauthloginfailed', 'auth_oidc');
+            throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc');
         }
 
         complete_user_login($user);
