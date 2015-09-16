@@ -23,11 +23,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015011604;
+$plugin->version = 2015011605;
 $plugin->requires = 2014051200;
 $plugin->component = 'profilefield_o365';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '27.0.0.3';
+$plugin->release = '27.0.0.4';
 $plugin->dependencies = [
-    'local_o365' => 2015011615
+    'local_o365' => 2015011628
 ];
