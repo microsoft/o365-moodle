@@ -24,7 +24,7 @@
 namespace local_o365\task;
 
 /**
- * AdHoc task to sync Moodle calendar events with Office365.
+ * AdHoc task to sync Moodle calendar events with Office 365.
  */
 class calendarsync extends \core\task\adhoc_task {
     /**

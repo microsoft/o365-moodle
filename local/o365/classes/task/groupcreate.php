@@ -24,7 +24,7 @@
 namespace local_o365\task;
 
 /**
- * Create any needed groups in Office365.
+ * Create any needed groups in Office 365.
  */
 class groupcreate extends \core\task\scheduled_task {
     /**

@@ -21,7 +21,7 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-$string['pluginname'] = 'Office365 Connection';
+$string['pluginname'] = 'Office 365 Connection';
 $string['connected_link'] = 'Manage';
 $string['connected_str'] = 'User is connected to Office 365.';
 $string['notconnected_str'] = 'User is not connected to Office 365.';
