@@ -3,9 +3,9 @@
 
 ## Microsoft block
 
-This plugin provides easy access to all Microsoft Account and Office365 services for Moodle.
+This plugin provides easy access to all Microsoft Account and Office 365 services for Moodle.
 
-This is part of the suite of Office365 plugins for Moodle.
+This is part of the suite of Office 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
 

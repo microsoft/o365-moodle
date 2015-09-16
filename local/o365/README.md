@@ -3,9 +3,9 @@
 
 ## o365 Local Plugin
 
-This plugin provides libraries and services and power other Office365 plugins. In addition to providing implementations of Office365 apis, this plugin handles a wide variety of Moodle events to fully integrate Office365 into a Moodle installation.
+This plugin provides libraries and services and power other Office 365 plugins. In addition to providing implementations of Office 365 apis, this plugin handles a wide variety of Moodle events to fully integrate Office 365 into a Moodle installation.
 
-This is part of the suite of Office365 plugins for Moodle.
+This is part of the suite of Office 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
 

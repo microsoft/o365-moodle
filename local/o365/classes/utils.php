@@ -28,7 +28,7 @@ namespace local_o365;
  */
 class utils {
     /**
-     * Determine if a user is connected to Office365.
+     * Determine if a user is connected to Office 365.
      *
      * @param int $userid The user's ID.
      * @return bool Whether they are connected (true) or not (false).
