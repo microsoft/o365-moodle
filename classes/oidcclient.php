@@ -58,10 +58,11 @@ class oidcclient {
      * @param string $secret The registered client secret.
      * @param string $redirecturi The registered client redirect URI.
      */
-    public function setcreds($id, $secret, $redirecturi) {
+    public function setcreds($id, $secret, $redirecturi, $resource) {
         $this->clientid = $id;
         $this->clientsecret = $secret;
         $this->redirecturi = $redirecturi;
+        $this->resource = (!empty($resource)) ? $resource : 'https://graph.windows.net';
     }
 
     /**
@@ -89,6 +90,15 @@ class oidcclient {
      */
     public function get_redirecturi() {
         return (isset($this->redirecturi)) ? $this->redirecturi : null;
+    }
+
+    /**
+     * Get the set resource.
+     *
+     * @return string The set resource.
+     */
+    public function get_resource() {
+        return (isset($this->resource)) ? $this->resource : null;
     }
 
     /**
@@ -122,7 +132,7 @@ class oidcclient {
             'scope' => 'openid profile email',
             'nonce' => $nonce,
             'response_mode' => 'form_post',
-            'resource' => 'https://graph.windows.net',
+            'resource' => $this->resource,
             'state' => $this->getnewstate($nonce, $stateparams),
         ];
         if ($promptlogin === true) {
@@ -188,7 +198,7 @@ class oidcclient {
             'username' => $username,
             'password' => $password,
             'scope' => 'openid profile email',
-            'resource' => 'https://graph.windows.net',
+            'resource' => $this->resource,
             'client_id' => $this->clientid,
             'client_secret' => $this->clientsecret,
         ];
