@@ -23,7 +23,7 @@
 
 $string['pluginname'] = 'Microsoft Office 365 Integration';
 
-$string['acp_title'] = 'Office365 Administration Control Panel';
+$string['acp_title'] = 'Office 365 Administration Control Panel';
 $string['acp_healthcheck'] = 'Health Check';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
@@ -57,9 +57,9 @@ $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
 
 $string['healthcheck_fixlink'] = 'Click here to fix it.';
 $string['healthcheck_systemapiuser_title'] = 'System API User';
-$string['healthcheck_systemtoken_result_notoken'] = 'Moodle does not have a token to communicate with Office365 as the system API user. This can usually be resolved by resetting the system API user.';
+$string['healthcheck_systemtoken_result_notoken'] = 'Moodle does not have a token to communicate with Office 365 as the system API user. This can usually be resolved by resetting the system API user.';
 $string['healthcheck_systemtoken_result_noclientcreds'] = 'There are not application credentials present in the OpenID Connect plugin. Without these credentials, Moodle cannot perform any communication with Office 365. Click here to visit the settings page and enter your credentials.';
-$string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Office365 as the system API user. This can usually be resolved by resetting the system API user.';
+$string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Office 365 as the system API user. This can usually be resolved by resetting the system API user.';
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office 365 as the system API user.';
 
 $string['settings_aadsync'] = 'Sync users with AzureAD';
@@ -67,13 +67,13 @@ $string['settings_aadsync_details'] = 'When enabled, Moodle and AzureAD users ar
 $string['settings_aadtenant'] = 'AzureAD Tenant';
 $string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
 $string['settings_creategroups'] = 'Create User Groups';
-$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office365 unified API added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
+$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office 365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office 365 unified API added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office 365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office 365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems.';
 $string['settings_detectoidc'] = 'Application Credentials';
-$string['settings_detectoidc_details'] = 'To communicate with Office365, Moodle needs credentials to identify itself. These are set in the "OpenID Connect" authentication plugin.';
+$string['settings_detectoidc_details'] = 'To communicate with Office 365, Moodle needs credentials to identify itself. These are set in the "OpenID Connect" authentication plugin.';
 $string['settings_detectoidc_credsvalid'] = 'Credentials have been set.';
 $string['settings_detectoidc_credsvalid_link'] = 'Change';
 $string['settings_detectoidc_credsinvalid'] = 'Credentials have not been set or are incomplete.';
@@ -124,7 +124,7 @@ $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
 
 $string['task_calendarsyncin'] = 'Sync o365 events in to Moodle';
-$string['task_groupcreate'] = 'Create user groups in Office365';
+$string['task_groupcreate'] = 'Create user groups in Office 365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_syncusers'] = 'Sync users with AAD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
@@ -133,9 +133,9 @@ $string['ucp_connectionstatus'] = 'Connection Status';
 $string['ucp_calsync_availcal'] = 'Available Moodle Calendars';
 $string['ucp_calsync_title'] = 'Outlook Calendar Sync';
 $string['ucp_calsync_desc'] = 'Checked calendars will be synced from Moodle to your Outlook calendar.';
-$string['ucp_connection_status'] = 'Office365 connection is:';
-$string['ucp_connection_start'] = 'Connect to Office365';
-$string['ucp_connection_stop'] = 'Disconnect from Office365';
+$string['ucp_connection_status'] = 'Office 365 connection is:';
+$string['ucp_connection_start'] = 'Connect to Office 365';
+$string['ucp_connection_stop'] = 'Disconnect from Office 365';
 $string['ucp_features'] = 'Office&nbsp;365 Features';
 $string['ucp_features_intro'] = 'Below is a list of the features you can use to enhance Moodle with Office&nbsp;365.';
 $string['ucp_features_intro_notconnected'] = 'Some of these may not be available until you are connected to Office&nbsp;365.';
@@ -149,10 +149,10 @@ $string['ucp_index_connectionstatus_matched'] = 'You have been matched with Offi
 $string['ucp_index_connectionstatus_notconnected'] = 'You are not currently connected to Office 365';
 $string['ucp_index_onenote_title'] = 'OneNote';
 $string['ucp_index_onenote_desc'] = 'OneNote integration allows you to use Office 365 OneNote with Moodle. You can complete assignments using OneNote and easily take notes for your courses.';
-$string['ucp_notconnected'] = 'Please connect to Office365 before visiting here.';
+$string['ucp_notconnected'] = 'Please connect to Office 365 before visiting here.';
 $string['ucp_onenote_title'] = 'OneNote';
-$string['ucp_onenote_desc'] = 'This page provides options for Office365 OneNote.';
-$string['ucp_onenote_disable'] = 'Disable Office365 OneNote';
+$string['ucp_onenote_desc'] = 'This page provides options for Office 365 OneNote.';
+$string['ucp_onenote_disable'] = 'Disable Office 365 OneNote';
 $string['ucp_status_enabled'] = 'Active';
 $string['ucp_status_disabled'] = 'Not Connected';
 $string['ucp_syncwith_title'] = 'Sync With:';
