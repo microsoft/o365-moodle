@@ -1,12 +1,12 @@
 # Moodle Plugins for Microsoft Services
 *including* **Office 365** *and other Microsoft services*
 
-## Office365 Profile Field
+## Office 365 Profile Field
 
-This plugin provides a link in users' profiles to access Office365 management functions.
+This plugin provides a link in users' profiles to access Office 365 management functions.
 
 
-This is part of the suite of Office365 plugins for Moodle.
+This is part of the suite of Office 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
 
