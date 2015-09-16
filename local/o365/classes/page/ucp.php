@@ -365,7 +365,7 @@ class ucp extends base {
      */
     public function mode_aadlogin() {
         global $OUTPUT;
-        $opname = 'Office365';
+        $opname = 'Office 365';
         echo $OUTPUT->header();
         echo \html_writer::start_div('o365_ucp_featurepage');
         $strtitle = get_string('ucp_index_aadlogin_title', 'local_o365');
@@ -461,7 +461,7 @@ class ucp extends base {
     public function mode_default() {
         global $OUTPUT, $DB, $USER;
 
-        $opname = 'Office365';
+        $opname = 'Office 365';
         echo $OUTPUT->header();
         echo \html_writer::start_div('o365_ucp_index');
         echo \html_writer::tag('h2', $this->title);
