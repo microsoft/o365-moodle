@@ -70,18 +70,25 @@ class detectoidc extends \admin_setting {
     }
 
     /**
+     * Determine whether this setup step has been completed.
+     *
+     * @return bool True if setup step has been completed, false otherwise.
+     */
+    public static function setup_step_complete() {
+        $oidcconfig = get_config('auth_oidc');
+        $clientcredspresent = (!empty($oidcconfig->clientid) && !empty($oidcconfig->clientsecret)) ? true : false;
+        $endpointspresent = (!empty($oidcconfig->authendpoint) && !empty($oidcconfig->tokenendpoint)) ? true : false;
+        return ($clientcredspresent === true && $endpointspresent === true) ? true : false;
+    }
+
+    /**
      * Return an XHTML string for the setting
      * @return string Returns an XHTML string
      */
     public function output_html($data, $query='') {
-        global $CFG, $OUTPUT;
-
+        global $OUTPUT;
         $settingspage = new \moodle_url('/admin/settings.php?section=authsettingoidc');
-        $oidcconfig = get_config('auth_oidc');
-        $clientcredspresent = (!empty($oidcconfig->clientid) && !empty($oidcconfig->clientsecret)) ? true : false;
-        $endpointspresent = (!empty($oidcconfig->authendpoint) && !empty($oidcconfig->tokenendpoint)) ? true : false;
-
-        if ($clientcredspresent === true && $endpointspresent === true) {
+        if (static::setup_step_complete() === true) {
             $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_detectoidc_credsvalid', 'local_o365'));
             $linkstr = get_string('settings_detectoidc_credsvalid_link', 'local_o365');

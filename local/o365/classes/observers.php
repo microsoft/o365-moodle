@@ -29,18 +29,6 @@ require_once($CFG->dirroot.'/lib/filelib.php');
  * Handles events.
  */
 class observers {
-    /** @var bool Flag indicating whether we're currently importing events. */
-    public static $importingevents = false;
-
-    /**
-     * Set class static flag indicating whether we're currently importing events.
-     *
-     * @param bool $status Import status.
-     */
-    public static function set_event_import($status) {
-        static::$importingevents = $status;
-    }
-
     /**
      * Handle an authentication-only OIDC event.
      *
@@ -218,284 +206,6 @@ class observers {
     }
 
     /**
-     * Construct a calendar API client using the system API user.
-     *
-     * @param int $userid The userid to get the outlook token for.
-     * @return \local_o365\rest\calendar|bool A constructed calendar API client, or false if error.
-     */
-    public static function construct_calendar_api($userid, $systemfallback = true) {
-        $outlookresource = \local_o365\rest\calendar::get_resource();
-        $httpclient = new \local_o365\httpclient();
-
-        try {
-            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        $token = \local_o365\oauth2\token::instance($userid, $outlookresource, $clientdata, $httpclient);
-        if (empty($token) && $systemfallback === true) {
-            $token = \local_o365\oauth2\systemtoken::instance(null, $outlookresource, $clientdata, $httpclient);
-        }
-        if (empty($token)) {
-            return false;
-        }
-        $cal = new \local_o365\rest\calendar($token, $httpclient);
-        return $cal;
-    }
-
-    /**
-     * Handle a calendar_event_created event.
-     *
-     * @param \core\event\calendar_event_created $event The triggered event.
-     * @return bool Success/Failure.
-     */
-    public static function handle_calendar_event_created(\core\event\calendar_event_created $event) {
-        global $DB;
-
-        if (static::$importingevents === true) {
-            return true;
-        }
-
-        // Assemble basic event data.
-        $event = $DB->get_record('event', ['id' => $event->objectid]);
-        $subject = $event->name;
-        $body = $event->description;
-        $timestart = $event->timestart;
-        $timeend = $timestart + $event->timeduration;
-
-        // Get attendees.
-        if (isset($event->courseid) && $event->courseid == SITEID) {
-            // Site event.
-            $sql = 'SELECT u.id,
-                           u.id as userid,
-                           u.email,
-                           u.firstname,
-                           u.lastname,
-                           sub.isprimary as subisprimary,
-                           sub.o365calid as subo365calid
-                      FROM {user} u
-                      JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                     WHERE sub.caltype = ? AND (sub.syncbehav = ? OR sub.syncbehav = ?)';
-            $params = ['site', 'out', 'both'];
-            $attendees = $DB->get_records_sql($sql, $params);
-        } else if (isset($event->courseid) && $event->courseid != SITEID && $event->courseid > 0) {
-            // Course event - Get subscribed students.
-            if (!empty($event->groupid)) {
-                $sql = 'SELECT u.id,
-                               u.id as userid,
-                               u.email,
-                               u.firstname,
-                               u.lastname,
-                               sub.isprimary as subisprimary,
-                               sub.o365calid as subo365calid
-                          FROM {user} u
-                          JOIN {user_enrolments} ue ON ue.userid = u.id
-                          JOIN {enrol} e ON e.id = ue.enrolid
-                          JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                               AND sub.caltype = ?
-                               AND sub.caltypeid = e.courseid
-                               AND (sub.syncbehav = ? OR sub.syncbehav = ?)
-                          JOIN {groups_members} grpmbr ON grpmbr.userid = u.id
-                         WHERE e.courseid = ? AND grpmbr.groupid = ?';
-                $params = ['course', 'out', 'both', $event->courseid, $event->groupid];
-                $attendees = $DB->get_records_sql($sql, $params);
-            } else {
-                $sql = 'SELECT u.id,
-                               u.id as userid,
-                               u.email,
-                               u.firstname,
-                               u.lastname,
-                               sub.isprimary as subisprimary,
-                               sub.o365calid as subo365calid
-                          FROM {user} u
-                          JOIN {user_enrolments} ue ON ue.userid = u.id
-                          JOIN {enrol} e ON e.id = ue.enrolid
-                          JOIN {local_o365_calsub} sub ON sub.user_id = u.id
-                               AND sub.caltype = ?
-                               AND sub.caltypeid = e.courseid
-                               AND (sub.syncbehav = ? OR sub.syncbehav = ?)
-                         WHERE e.courseid = ?';
-                $params = ['course', 'out', 'both', $event->courseid];
-                $attendees = $DB->get_records_sql($sql, $params);
-            }
-        } else {
-            // Personal user event. Only sync if user is subscribed to their events.
-            $select = 'caltype = ? AND user_id = ? AND (syncbehav = ? OR syncbehav = ?)';
-            $params = ['user', $event->userid, 'out', 'both'];
-            $calsub = $DB->get_record_select('local_o365_calsub', $select, $params);
-            if (!empty($calsub)) {
-                // Send event to o365 and store ID.
-                $cal = static::construct_calendar_api($event->userid);
-                if (!empty($cal)) {
-                    $calid = (!empty($calsub->o365calid)) ? $calsub->o365calid : null;
-                    $response = $cal->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
-                    if (!empty($response) && is_array($response) && isset($response['Id'])) {
-                        $idmaprec = [
-                            'eventid' => $event->id,
-                            'outlookeventid' => $response['Id'],
-                            'userid' => $event->userid,
-                            'origin' => 'moodle',
-                        ];
-                        $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                    }
-                }
-            }
-            return true;
-        }
-
-        // Move users who've subscribed to non-primary calendars.
-        $nonprimarycalsubs = [];
-        $eventcreatorsub = null;
-        foreach ($attendees as $userid => $attendee) {
-            if ($userid == $event->userid) {
-                $eventcreatorsub = $attendee;
-            }
-            if (isset($attendee->subisprimary) && $attendee->subisprimary == '0') {
-                $nonprimarycalsubs[] = $attendee;
-                unset($attendees[$userid]);
-            }
-        }
-
-        // Sync primary-calendar users as attendees on a single event.
-        if (!empty($attendees)) {
-            $cal = static::construct_calendar_api($event->userid);
-            if (!empty($cal)) {
-                $calid = (!empty($eventcreatorsub) && !empty($eventcreatorsub->subo365calid)) ? $eventcreatorsub->subo365calid : null;
-                $response = $cal->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid);
-                if (!empty($response) && is_array($response) && isset($response['Id'])) {
-                    $idmaprec = [
-                        'eventid' => $event->id,
-                        'outlookeventid' => $response['Id'],
-                        'userid' => $event->userid,
-                        'origin' => 'moodle',
-                    ];
-                    $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                }
-            }
-        }
-
-        // Sync non-primary attendees individually.
-        foreach ($nonprimarycalsubs as $attendee) {
-            $cal = static::construct_calendar_api($attendee->id);
-            if (!empty($cal)) {
-                $calid = (!empty($attendee->subo365calid)) ? $attendee->subo365calid : null;
-                $response = $cal->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
-                if (!empty($response) && is_array($response) && isset($response['Id'])) {
-                    $idmaprec = [
-                        'eventid' => $event->id,
-                        'outlookeventid' => $response['Id'],
-                        'userid' => $attendee->userid,
-                        'origin' => 'moodle',
-                    ];
-                    $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Handle a calendar_event_updated event.
-     *
-     * @param \core\event\calendar_event_updated $event The triggered event.
-     * @return bool Success/Failure.
-     */
-    public static function handle_calendar_event_updated(\core\event\calendar_event_updated $event) {
-        global $DB;
-
-        // Get o365 event id (and determine if we can sync this event).
-        $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $event->objectid]);
-        if (empty($idmaprecs)) {
-            return true;
-        }
-
-        // Send updated information to o365.
-        $event = $DB->get_record('event', ['id' => $event->objectid]);
-        $updated = [
-            'subject' => $event->name,
-            'body' => $event->description,
-            'starttime' => $event->timestart,
-            'endtime' => $event->timestart + $event->timeduration,
-        ];
-
-        foreach ($idmaprecs as $idmaprec) {
-            $cal = static::construct_calendar_api($idmaprec->userid);
-            if (!empty($cal)) {
-                $cal->update_event($idmaprec->outlookeventid, $updated);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Handle a calendar_event_deleted event.
-     *
-     * @param \core\event\calendar_event_deleted $event The triggered event.
-     * @return bool Success/Failure.
-     */
-    public static function handle_calendar_event_deleted(\core\event\calendar_event_deleted $event) {
-        global $DB;
-
-        // Get o365 event ids (and determine if we can sync this event).
-        $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $event->objectid]);
-        if (empty($idmaprecs)) {
-            return true;
-        }
-
-        foreach ($idmaprecs as $idmaprec) {
-            $cal = static::construct_calendar_api($idmaprec->userid);
-            if (!empty($cal)) {
-                $cal->delete_event($idmaprec->outlookeventid);
-            }
-        }
-
-        // Clean up idmap table.
-        $DB->delete_records('local_o365_calidmap', ['eventid' => $event->objectid]);
-
-        return true;
-    }
-
-    /**
-     * Handle calendar_subscribed event - queue calendar sync jobs for cron.
-     *
-     * @param \local_o365\event\calendar_subscribed $event The triggered event.
-     * @return bool Success/Failure.
-     */
-    public static function handle_calendar_subscribed(\local_o365\event\calendar_subscribed $event) {
-        $eventdata = $event->get_data();
-        $calsubscribe = new \local_o365\task\calendarsync();
-        $calsubscribe->set_custom_data([
-            'caltype' => $eventdata['other']['caltype'],
-            'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
-            'userid' => $eventdata['userid'],
-            'timecreated' => time(),
-        ]);
-        \core\task\manager::queue_adhoc_task($calsubscribe);
-        return true;
-    }
-
-    /**
-     * Handle calendar_unsubscribed event - queue calendar sync jobs for cron.
-     *
-     * @param \local_o365\event\calendar_unsubscribed $event The triggered event.
-     * @return bool Success/Failure.
-     */
-    public static function handle_calendar_unsubscribed(\local_o365\event\calendar_unsubscribed $event) {
-        $eventdata = $event->get_data();
-        $calunsubscribe = new \local_o365\task\calendarsync();
-        $calunsubscribe->set_custom_data([
-            'caltype' => $eventdata['other']['caltype'],
-            'caltypeid' => ((isset($eventdata['other']['caltypeid'])) ? $eventdata['other']['caltypeid'] : 0),
-            'userid' => $eventdata['userid'],
-            'timecreated' => time(),
-        ]);
-        \core\task\manager::queue_adhoc_task($calunsubscribe);
-        return true;
-    }
-
-    /**
      * Handle user_enrolment_created event.
      *
      * @param \core\event\user_enrolment_created $event The triggered event.
@@ -527,7 +237,7 @@ class observers {
      * Handle user_enrolment_deleted event
      *
      * Tasks
-     *     - clean up calendar subscriptions.
+     *     - remove user from course usergroups.
      *
      * @param \core\event\user_enrolment_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -554,23 +264,6 @@ class observers {
             }
         }
 
-        // Clean up calendar subscriptions.
-        $calsubparams = ['user_id' => $userid, 'caltype' => 'course', 'caltypeid' => $courseid];
-        $subscriptions = $DB->get_recordset('local_o365_calsub', $calsubparams);
-        foreach ($subscriptions as $subscription) {
-            $eventdata = [
-                'objectid' => $subscription->id,
-                'userid' => $userid,
-                'other' => [
-                    'caltype' => 'course',
-                    'caltypeid' => $courseid
-                ]
-            ];
-            $event = \local_o365\event\calendar_unsubscribed::create($eventdata);
-            $event->trigger();
-        }
-        $subscriptions->close();
-        $DB->delete_records('local_o365_calsub', $calsubparams);
         return true;
     }
 
@@ -598,7 +291,7 @@ class observers {
     }
 
     /**
-     * Handle course_created event - clean up calendar subscriptions.
+     * Handle course_created event.
      *
      * Does the following:
      *     - create a sharepoint site and associated groups.
@@ -614,7 +307,7 @@ class observers {
     }
 
     /**
-     * Handle course_updated event - clean up calendar subscriptions.
+     * Handle course_updated event.
      *
      * Does the following:
      *     - update associated sharepoint sites and associated groups.
@@ -637,7 +330,6 @@ class observers {
      * Handle course_deleted event
      *
      * Does the following:
-     *     - clean up calendar subscriptions.
      *     - delete sharepoint sites and groups, and local sharepoint site data.
      *
      * @param \core\event\course_deleted $event The triggered event.
@@ -646,7 +338,6 @@ class observers {
     public static function handle_course_deleted(\core\event\course_deleted $event) {
         global $DB;
         $courseid = $event->objectid;
-        $DB->delete_records('local_o365_calsub', ['caltype' => 'course', 'caltypeid' => $courseid]);
 
         $sharepoint = static::construct_sharepoint_api_with_system_user();
         if (!empty($sharepoint)) {
@@ -807,7 +498,7 @@ class observers {
     }
 
     /**
-     * Handle user_deleted event - clean up calendar subscriptions.
+     * Handle user_deleted event.
      *
      * @param \core\event\user_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -815,7 +506,6 @@ class observers {
     public static function handle_user_deleted(\core\event\user_deleted $event) {
         global $DB;
         $userid = $event->objectid;
-        $DB->delete_records('local_o365_calsub', ['user_id' => $userid]);
         $DB->delete_records('local_o365_token', ['user_id' => $userid]);
         $DB->delete_records('local_o365_aaduserdata', ['muserid' => $userid]);
         return true;
