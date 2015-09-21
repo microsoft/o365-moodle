@@ -22,6 +22,56 @@
  */
 
 $observers = [
+    // Calendar sync.
+    [
+        'eventname'   => '\core\event\user_enrolment_deleted',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_user_enrolment_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\course_deleted',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_course_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\calendar_event_created',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_calendar_event_created',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\calendar_event_updated',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_calendar_event_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\calendar_event_deleted',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_calendar_event_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\local_o365\event\calendar_subscribed',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_calendar_subscribed',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\local_o365\event\calendar_unsubscribed',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_calendar_unsubscribed',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\user_deleted',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_user_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+
     // Events from auth_oidc.
     [
         'eventname'   => '\auth_oidc\event\user_authed',
@@ -49,36 +99,6 @@ $observers = [
     ],
 
     // Events from core.
-    [
-        'eventname'   => '\core\event\calendar_event_created',
-        'callback'    => '\local_o365\observers::handle_calendar_event_created',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\calendar_event_updated',
-        'callback'    => '\local_o365\observers::handle_calendar_event_updated',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\calendar_event_deleted',
-        'callback'    => '\local_o365\observers::handle_calendar_event_deleted',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\local_o365\event\calendar_subscribed',
-        'callback'    => '\local_o365\observers::handle_calendar_subscribed',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\local_o365\event\calendar_unsubscribed',
-        'callback'    => '\local_o365\observers::handle_calendar_unsubscribed',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
     [
         'eventname'   => '\core\event\user_enrolment_created',
         'callback'    => '\local_o365\observers::handle_user_enrolment_created',
