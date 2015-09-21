@@ -31,7 +31,10 @@ $.fn.serviceresource = function(options) {
         iconvalid: '',
         strinvalid: '',
         iconinvalid: '',
-        strerror: 'An error occurred detecting setting. Please set manually.'
+        iconloading: '',
+        strerror: 'An error occurred detecting setting. Please set manually.',
+        strdetecting: 'Detecting...',
+        strdetect: 'Detect'
     };
     var opts = $.extend({}, defaultopts, options);
     var main = this;
@@ -66,27 +69,34 @@ $.fn.serviceresource = function(options) {
                 value: val
             },
             dataType: 'json',
-            success: function(data) {
-                if (typeof(data.success) != 'undefined' && data.success === true) {
-                    main.find('.local_o365_statusmessage').show().removeClass('alert-error').removeClass('alert-info').addClass('alert-success');
-                    main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconvalid);
-                    main.find('.local_o365_statusmessage').find('.statusmessage').html(opts.strvalid);
-                } else {
-                    main.find('.local_o365_statusmessage').show().removeClass('alert-success').removeClass('alert-info').addClass('alert-error');
-                    main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconinvalid);
-                    main.find('.local_o365_statusmessage').find('.statusmessage').html(opts.strinvalid);
+            success: function(resp) {
+                if (typeof(resp.success) != 'undefined') {
+                    if (resp.success === true && typeof(resp.data) != 'undefined' && typeof(resp.data.valid) != 'undefined') {
+                        if (resp.data.valid === true) {
+                            main.successmessage(opts.strvalid);
+                        } else {
+                            main.errormessage(opts.strinvalid);
+                        }
+                        return true;
+                    }
+
+                    if (resp.success === false && typeof(resp.errormessage) != 'undefined') {
+                        main.errormessage(resp.errormessage);
+                        return true;
+                    }
                 }
+
+                main.errormessage(opts.strerror);
                 return true;
             },
             error: function(data) {
-                main.find('.local_o365_statusmessage').show().removeClass('alert-success').removeClass('alert-info').addClass('alert-error');
-                main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconinvalid);
-                main.find('.local_o365_statusmessage').find('.statusmessage').html(opts.strerror);
+                main.errormessage(opts.strerror);
             }
         });
     }
 
     this.detectsetting = function() {
+        this.detectbutton.html(opts.strdetecting);
         $.ajax({
             url: opts.url,
             type: 'GET',
@@ -95,25 +105,41 @@ $.fn.serviceresource = function(options) {
                 setting: opts.setting
             },
             dataType: 'json',
-            success: function(data) {
-                if (typeof(data.success) != 'undefined' && typeof(data.settingval) === 'string' && data.success === true) {
-                    main.input.val(data.settingval);
-                    main.find('.local_o365_statusmessage').show().removeClass('alert-error').removeClass('alert-info').addClass('alert-success');
-                    main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconvalid);
-                    main.find('.local_o365_statusmessage').find('.statusmessage').html(opts.strvalid);
-                } else {
-                    main.find('.local_o365_statusmessage').show().removeClass('alert-success').removeClass('alert-info').addClass('alert-error');
-                    main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconinvalid);
-                    main.find('.local_o365_statusmessage').find('.statusmessage').html(opts.strerror);
+            success: function(resp) {
+                main.detectbutton.html(opts.strdetect);
+                if (typeof(resp.success) != 'undefined') {
+                    if (resp.success === true && typeof(resp.data) != 'undefined' && typeof(resp.data.settingval) === 'string') {
+                        main.input.val(resp.data.settingval);
+                        main.successmessage(opts.strvalid);
+                        return true;
+                    }
+
+                    if (resp.success === false && typeof(resp.errormessage) != 'undefined') {
+                        main.errormessage(resp.errormessage);
+                        return true;
+                    }
                 }
+
+                main.errormessage(opts.strerror);
                 return true;
             },
             error: function(data) {
-                main.find('.local_o365_statusmessage').show().removeClass('alert-success').removeClass('alert-info').addClass('alert-error');
-                main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconinvalid);
-                main.find('.local_o365_statusmessage').find('.statusmessage').html(opts.strerror);
+                main.detectbutton.html(opts.strdetect);
+                main.errormessage(opts.strerror);
             }
         });
+    }
+
+    this.successmessage = function(message) {
+        main.find('.local_o365_statusmessage').show().removeClass('alert-error').removeClass('alert-info').addClass('alert-success');
+        main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconvalid);
+        main.find('.local_o365_statusmessage').find('.statusmessage').html(message);
+    }
+
+    this.errormessage = function(message) {
+        main.find('.local_o365_statusmessage').show().removeClass('alert-success').removeClass('alert-info').addClass('alert-error');
+        main.find('.local_o365_statusmessage').find('img.smallicon').replaceWith(opts.iconinvalid);
+        main.find('.local_o365_statusmessage').find('.statusmessage').html(message);
     }
 
     this.input.on('input', function(e) {
