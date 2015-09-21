@@ -72,18 +72,21 @@ $.fn.sharepointlink = function(options) {
             type: 'GET',
             data: {mode: 'checksharepointsite', site: q},
             dataType: 'json',
-            success: function(data) {
-                if (typeof(data.success) != 'undefined' && typeof(data.response) != 'undefined' && data.success === true) {
-                    if (data.response === 'valid') {
-                        main.setstatus('valid');
-                    } else if (data.response === 'notempty') {
-                        main.setstatus('notempty');
-                    } else {
-                        main.setstatus('invalid');
+            success: function(resp) {
+                if (typeof(resp.success) != 'undefined') {
+                    if (resp.success === true && typeof(resp.data) != 'undefined' && typeof(resp.data.result) != 'undefined') {
+                        if (resp.data.result === 'valid') {
+                            main.setstatus('valid');
+                        } else if (resp.data.result === 'notempty') {
+                            main.setstatus('notempty');
+                        } else {
+                            main.setstatus('invalid');
+                        }
+                        return true;
                     }
-                } else {
-                    main.setstatus('invalid');
                 }
+                main.setstatus('invalid');
+                return true;
             },
             error: function(data) {
                 main.setstatus('invalid');

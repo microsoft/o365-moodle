@@ -34,7 +34,16 @@ class unified extends \local_o365\rest\o365api {
      */
     public static function is_configured() {
         $config = get_config('local_o365');
-        return (!empty($config->aadtenant)) ? true : false;
+        return (static::is_enabled() && !empty($config->aadtenant) && !empty($config->unifiedapiactive)) ? true : false;
+    }
+
+    /**
+     * Switch to disable unified API until release.
+     *
+     * @return bool Whether the unified API is enabled.
+     */
+    public static function is_enabled() {
+        return true;
     }
 
     /**
@@ -134,6 +143,209 @@ class unified extends \local_o365\rest\o365api {
     public function delete_group($objectid) {
         $response = $this->tenantapicall('delete', '/groups/'.$objectid);
         return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Get all users in the configured directory.
+     *
+     * @param string|array $params Requested user parameters.
+     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
+     * @return array|null Array of user information, or null if failure.
+     */
+    public function get_users($params = 'default', $skiptoken = '') {
+        $endpoint = "/users";
+        if ($params === 'default') {
+            $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage', 'userPrincipalName'];
+        }
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $endpoint .= '?$skiptoken='.$skiptoken;
+        }
+        $response = $this->tenantapicall('get', $endpoint);
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Get a list of the user's o365 calendars.
+     *
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_calendars() {
+        $response = $this->apicall('get', '/me/calendars');
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
+     * Create a new event in the user's o365 calendar.
+     *
+     * @param string $subject The event's title/subject.
+     * @param string $body The event's body/description.
+     * @param int $starttime The timestamp when the event starts.
+     * @param int $endtime The timestamp when the event ends.
+     * @param array $attendees Array of moodle user objects that are attending the event.
+     * @param array $other Other parameters to include.
+     * @param string $calendarid The o365 ID of the calendar to create the event in.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
+        $eventdata = [
+            'Subject' => $subject,
+            'Body' => [
+                'ContentType' => 'HTML',
+                'Content' => $body,
+            ],
+            'Start' => date('c', $starttime),
+            'End' => date('c', $endtime),
+            'Attendees' => [],
+        ];
+        foreach ($attendees as $attendee) {
+            $eventdata['Attendees'][] = [
+                'EmailAddress' => [
+                    'Address' => $attendee->email,
+                    'Name' => $attendee->firstname.' '.$attendee->lastname,
+                ],
+                'Type' => 'Resource'
+            ];
+        }
+        $eventdata = array_merge($eventdata, $other);
+        $eventdata = json_encode($eventdata);
+        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
+        $response = $this->apicall('post', $endpoint, $eventdata);
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
+     * Get a list of events.
+     *
+     * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
+     * @param string $since datetime date('c') to get events since.
+     * @return array Array of events.
+     */
+    public function get_events($calendarid = null, $since = null) {
+        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
+        if (!empty($since)) {
+            $since = date('c', $since);
+            $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
+        }
+        $response = $this->apicall('get', $endpoint);
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Update an event.
+     *
+     * @param string $outlookeventid The event ID in o365 outlook.
+     * @param array $updated Array of updated information. Keys are 'subject', 'body', 'starttime', 'endtime', and 'attendees'.
+     * @return array|null Returned response, or null if error.
+     */
+    public function update_event($outlookeventid, $updated) {
+        if (empty($outlookeventid) || empty($updated)) {
+            return [];
+        }
+        $updateddata = [];
+        if (!empty($updated['subject'])) {
+            $updateddata['Subject'] = $updated['subject'];
+        }
+        if (!empty($updated['body'])) {
+            $updateddata['Body'] = ['ContentType' => 'HTML', 'Content' => $updated['body']];
+        }
+        if (!empty($updated['starttime'])) {
+            $updateddata['Start'] = date('c', $updated['starttime']);
+        }
+        if (!empty($updated['endtime'])) {
+            $updateddata['End'] = date('c', $updated['endtime']);
+        }
+        if (isset($updated['attendees'])) {
+            $updateddata['Attendees'] = [];
+            foreach ($updated['attendees'] as $attendee) {
+                $updateddata['Attendees'][] = [
+                    'EmailAddress' => [
+                        'Address' => $attendee->email,
+                        'Name' => $attendee->firstname.' '.$attendee->lastname,
+                    ],
+                    'Type' => 'Resource'
+                ];
+            }
+        }
+        $updateddata = json_encode($updateddata);
+        $response = $this->apicall('patch', '/me/events/'.$outlookeventid, $updateddata);
+        $response = @json_decode($response, true);
+        return $response;
+    }
+
+    /**
+     * Delete an event.
+     *
+     * @param string $outlookeventid The event ID in o365 outlook.
+     * @return bool Success/Failure.
+     */
+    public function delete_event($outlookeventid) {
+        if (!empty($outlookeventid)) {
+            $this->apicall('delete', '/me/events/'.$outlookeventid);
+        }
+        return true;
+    }
+
+    /**
+     * Create a file.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function create_file($parentid, $filename, $content, $contenttype = 'text/plain') {
+        $params = json_encode(['name' => $filename, 'type' => 'File']);
+        $endpoint = '/me/files';
+        $fileresponse = $this->apicall('post', $endpoint, $params);
+        $fileresponse = $this->process_apicall_response($fileresponse);
+        if (isset($fileresponse['id'])) {
+            $endpoint = '/me/files/'.$fileresponse['id'].'/uploadContent';
+            $contentresponse = $this->apicall('post', $endpoint, $content, ['contenttype' => $contenttype]);
+        }
+        return $fileresponse;
+    }
+
+    /**
+     * Get a file by it's file id.
+     *
+     * @param string $parentid The parent id to use.
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_files($parentid = '') {
+        $endpoint = '/me/files';
+        if (!empty($parentid) && $parentid !== '/') {
+            $endpoint .= "/{$parentid}/children";
+        }
+        $response = $this->apicall('get', $endpoint);
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Get a file's metadata by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_file_metadata($fileid) {
+        $response = $this->apicall('get', "/me/files/{$fileid}");
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Get a file by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_file_by_id($fileid) {
+        return $this->apicall('get', "/me/files/{$fileid}/content");
     }
 
     /**
@@ -249,24 +461,13 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_required_permissions() {
         return [
-            'User.Read',
-            'User.ReadWrite',
-            'Group.Read.All',
-            'Directory.Read.All',
-            'Directory.ReadWrite.All',
-            'Directory.AccessAsUser.All',
-            'Calendars.Read',
             'Calendars.ReadWrite',
-            'Files.Read',
+            'Directory.AccessAsUser.All',
+            'Directory.ReadWrite.All',
             'Files.ReadWrite',
-            'Files.ReadWrite.Selected',
-            'Files.Read.Selected',
-            'Sites.Read.All',
-            'Sites.ReadWrite.All',
             'User.ReadWrite.All',
             'Group.ReadWrite.All',
-            'User.ReadBasic.All',
-            'User.Read.All',
+            'Sites.ReadWrite.All',
         ];
     }
 

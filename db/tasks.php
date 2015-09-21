@@ -50,7 +50,7 @@ $tasks = [
         'month' => '*'
     ],
     [
-        'classname' => 'local_o365\task\calendarsyncin',
+        'classname' => 'local_o365\feature\calsync\task\importfromoutlook',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',

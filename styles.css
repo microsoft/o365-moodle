@@ -1,29 +1,24 @@
 .local_o365_statusmessage {
-  margin: 0 0 0.5rem 0;
+  margin: 0.25rem 0;
   padding: 0.5rem; }
-
-.local_o365_statusmessage img {
-  margin-right: 0.25rem; }
-
-.local_o365_statusmessage span, .local_o365_statusmessage a {
-  vertical-align: middle; }
+  .local_o365_statusmessage img {
+    margin-right: 0.25rem; }
+  .local_o365_statusmessage span, .local_o365_statusmessage a {
+    vertical-align: middle; }
 
 .adminsetting_sharepointlink_message, .adminsetting_sharepointlink_status {
   margin: 0 0 0.5rem 0;
   padding: 0.5rem; }
-
-.adminsetting_sharepointlink_message img, .adminsetting_sharepointlink_status img {
-  margin-right: 0.25rem; }
-
-.adminsetting_sharepointlink_message span, .adminsetting_sharepointlink_status span {
-  vertical-align: middle; }
+  .adminsetting_sharepointlink_message img, .adminsetting_sharepointlink_status img {
+    margin-right: 0.25rem; }
+  .adminsetting_sharepointlink_message span, .adminsetting_sharepointlink_status span {
+    vertical-align: middle; }
 
 .adminsetting_sharepointlink_status {
   display: none; }
-
-.adminsetting_sharepointlink_status.empty {
-  display: block;
-  padding: 0; }
+  .adminsetting_sharepointlink_status.empty {
+    display: block;
+    padding: 0; }
 
 .adminsetting_sharepointlink_message.loading {
   display: block;
@@ -33,6 +28,14 @@
 .sharepointlink_viewstatus .changesitelink {
   display: inline-block;
   margin-left: 1.5rem; }
+
+#admin-azuresetup button.refreshperms {
+  margin: 0 0 0.75rem; }
+
+.adminsetting_azuresetup_results section {
+  margin-bottom: 1rem; }
+  .adminsetting_azuresetup_results section h5 {
+    margin: 0 0 0.25rem; }
 
 .o365_ucp_index .connectionstatus {
   float: right;
