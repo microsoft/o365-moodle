@@ -112,15 +112,13 @@ class main {
         global $DB;
         $apiclient = $this->construct_calendar_api($muserid, true);
         $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, $other, $calid);
-        if (!empty($response) && is_array($response) && isset($response['Id'])) {
-            $idmaprec = [
-                'eventid' => $eventid,
-                'outlookeventid' => $response['Id'],
-                'userid' => $muserid,
-                'origin' => 'moodle',
-            ];
-            return $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-        }
+        $idmaprec = [
+            'eventid' => $eventid,
+            'outlookeventid' => $response['Id'],
+            'userid' => $muserid,
+            'origin' => 'moodle',
+        ];
+        return $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
     }
 
     /**
@@ -234,15 +232,13 @@ class main {
                 $apiclient = $this->construct_calendar_api($event->userid);
                 $calid = (!empty($calsub->o365calid) && empty($calsub->isprimary)) ? $calsub->o365calid : null;
                 $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
-                if (!empty($response) && is_array($response) && isset($response['Id'])) {
-                    $idmaprec = [
-                        'eventid' => $event->id,
-                        'outlookeventid' => $response['Id'],
-                        'userid' => $event->userid,
-                        'origin' => 'moodle',
-                    ];
-                    $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                }
+                $idmaprec = [
+                    'eventid' => $event->id,
+                    'outlookeventid' => $response['Id'],
+                    'userid' => $event->userid,
+                    'origin' => 'moodle',
+                ];
+                $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
             }
             return true;
         }
@@ -268,15 +264,13 @@ class main {
                 $calid = null;
             }
             $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid);
-            if (!empty($response) && is_array($response) && isset($response['Id'])) {
-                $idmaprec = [
-                    'eventid' => $event->id,
-                    'outlookeventid' => $response['Id'],
-                    'userid' => $event->userid,
-                    'origin' => 'moodle',
-                ];
-                $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-            }
+            $idmaprec = [
+                'eventid' => $event->id,
+                'outlookeventid' => $response['Id'],
+                'userid' => $event->userid,
+                'origin' => 'moodle',
+            ];
+            $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
         }
 
         // Sync non-primary attendees individually.
@@ -284,15 +278,13 @@ class main {
             $apiclient = $this->construct_calendar_api($attendee->id);
             $calid = (!empty($attendee->subo365calid)) ? $attendee->subo365calid : null;
             $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
-            if (!empty($response) && is_array($response) && isset($response['Id'])) {
-                $idmaprec = [
-                    'eventid' => $event->id,
-                    'outlookeventid' => $response['Id'],
-                    'userid' => $attendee->userid,
-                    'origin' => 'moodle',
-                ];
-                $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-            }
+            $idmaprec = [
+                'eventid' => $event->id,
+                'outlookeventid' => $response['Id'],
+                'userid' => $attendee->userid,
+                'origin' => 'moodle',
+            ];
+            $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
         }
 
         return true;

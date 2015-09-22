@@ -52,8 +52,7 @@ class calendar extends \local_o365\rest\o365api {
      */
     public function get_calendars() {
         $response = $this->apicall('get', '/calendars');
-        $response = @json_decode($response, true);
-        return $response;
+        return $this->process_apicall_response($response, ['value' => null]);
     }
 
     /**
@@ -70,8 +69,7 @@ class calendar extends \local_o365\rest\o365api {
             $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
-        $response = @json_decode($response, true);
-        return $response;
+        return $this->process_apicall_response($response, ['value' => null]);
     }
 
     /**
@@ -110,8 +108,7 @@ class calendar extends \local_o365\rest\o365api {
         $eventdata = json_encode($eventdata);
         $endpoint = (!empty($calendarid)) ? '/calendars/'.$calendarid.'/events' : '/events';
         $response = $this->apicall('post', $endpoint, $eventdata);
-        $response = @json_decode($response, true);
-        return $response;
+        return $this->process_apicall_response($response, ['Id' => null]);
     }
 
     /**
