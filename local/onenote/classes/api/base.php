@@ -293,7 +293,8 @@ abstract class base {
         $items = array();
 
         if (isset($response->error)) {
-            throw new \Exception($response->error);
+            $error = (is_string($response->error)) ? $response->error : print_r($response->error, true);
+            throw new \Exception($error);
         }
 
         if ($response && $response->value) {
