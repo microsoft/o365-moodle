@@ -22,6 +22,38 @@
  */
 
 $observers = [
+    // User groups
+    [
+        'eventname'   => '\core\event\group_created',
+        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_created',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\group_deleted',
+        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_deleted',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\group_updated',
+        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\group_member_added',
+        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_member_added',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\group_member_removed',
+        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_member_removed',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+
     // Calendar sync.
     [
         'eventname'   => '\core\event\user_enrolment_deleted',
