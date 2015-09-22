@@ -110,9 +110,9 @@ class unified extends \local_o365\rest\o365api {
         }
 
         $groupdata = [
-            'groupType' => 'Unified',
+            'groupTypes' => ['Unified'],
             'displayName' => $name,
-            'mailEnabled' => true,
+            'mailEnabled' => false,
             'securityEnabled' => true,
             'mailNickname' => $mailnickname,
         ];
