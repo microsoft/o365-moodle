@@ -6,18 +6,26 @@
 This plugin is a shell plugin that has dependencies on all Microsoft Services plugins. This helps keep related plugins together.
 
 This plugin requires all Microsoft Services plugins:
-  * block_onenote
-  * local_msaccount
-  * local_onenote
-  * assignfeedback_onenote
-  * assignsubmission_onenote
-  * repository_onenote
-  * filter_oembed
-
+  - [moodle-block_microsoft](https://github.com/MSOpenTech/moodle-block_microsoft)
+  - [moodle-local_msaccount](https://github.com/MSOpenTech/moodle-local_msaccount)
+  - [moodle-local_onenote](https://github.com/MSOpenTech/moodle-local_onenote)
+  - [moodle-assignfeedback_onenote](https://github.com/MSOpenTech/moodle-assignfeedback_onenote)
+  - [moodle-assignsubmission_onenote](https://github.com/MSOpenTech/moodle-assignsubmission_onenote)
+  - [moodle-repository_onenote](https://github.com/MSOpenTech/moodle-repository_onenote)
+  - [moodle-filter_oembed](https://github.com/MSOpenTech/moodle-filter_oembed)
 
 This is part of the suite of Microsoft Services plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
+
+## Installation.
+
+1. Unpack the plugin into /local/microsoftservices within your Moodle install.
+2. From the Moodle Administration block, expand Site Administration and click "Notifications".
+3. Follow the on-screen instuctions to attempt to install the plugins.
+4. You'll see a list of missing dependencies needed to complete the installation. Each of these is also available from Github at the links above. Install each of the dependencies. When complete, you'll have the entire set of plugins installed and this plugin's install can complete.
+
+For more documentation, visit https://docs.moodle.org/29/en/Office365
 
 # Contributing
 
