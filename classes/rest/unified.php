@@ -101,8 +101,10 @@ class unified extends \local_o365\rest\o365api {
      */
     public function create_group($name, $mailnickname = null) {
         if (empty($mailnickname)) {
-            $mailnickname = strtolower(preg_replace('/[^a-z0-9]+/iu', '', $name));
+            $mailnickname = $name;
         }
+
+        $mailnickname = strtolower(preg_replace('/[^a-z0-9_]+/iu', '', $mailnickname));
 
         $groupdata = [
             'groupTypes' => ['Unified'],
