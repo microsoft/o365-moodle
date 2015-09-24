@@ -24,7 +24,7 @@
 namespace local_o365\task;
 
 /**
- * Scheduled task to sync users with AAD.
+ * Scheduled task to sync users with Azure AD.
  */
 class usersync extends \core\task\scheduled_task {
     /**
@@ -60,7 +60,7 @@ class usersync extends \core\task\scheduled_task {
     public function execute() {
         $aadsyncenabled = get_config('local_o365', 'aadsync');
         if (empty($aadsyncenabled)) {
-            mtrace('AAD sync disabled. Nothing to do.');
+            mtrace('Azure AD sync disabled. Nothing to do.');
             return true;
         }
 
