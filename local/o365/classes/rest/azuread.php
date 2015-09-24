@@ -24,10 +24,10 @@
 namespace local_o365\rest;
 
 /**
- * API client for AzureAD graph.
+ * API client for Azure AD graph.
  */
 class azuread extends \local_o365\rest\o365api {
-    /** @var string A value to use for the AzureAD tenant. If null, will use value from local_o365/aadtenant config setting. */
+    /** @var string A value to use for the Azure AD tenant. If null, will use value from local_o365/aadtenant config setting. */
     protected $tenantoverride = null;
 
     /**
@@ -245,7 +245,7 @@ class azuread extends \local_o365\rest\o365api {
     /**
      * Get an array of the current required permissions.
      *
-     * @return array Array of required AzureAD application permissions.
+     * @return array Array of required Azure AD application permissions.
      */
     public function get_required_permissions() {
         return [
@@ -348,10 +348,10 @@ class azuread extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get the AzureAD UPN of a connected Moodle user.
+     * Get the Azure AD UPN of a connected Moodle user.
      *
      * @param \stdClass $user The Moodle user.
-     * @return string|bool The user's AzureAD UPN, or false if failure.
+     * @return string|bool The user's Azure AD UPN, or false if failure.
      */
     public static function get_muser_upn($user) {
         global $DB;
