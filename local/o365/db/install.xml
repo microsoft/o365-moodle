@@ -155,20 +155,5 @@
         <INDEX NAME="groupid" UNIQUE="false" FIELDS="groupid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_o365_aaduserdata" COMMENT="Stores information about AzureAD users.">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="muserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id"/>
-        <FIELD NAME="objectid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="user object id"/>
-        <FIELD NAME="userupn" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="user UPN"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="muserid" UNIQUE="false" FIELDS="muserid"/>
-        <INDEX NAME="objectid" UNIQUE="false" FIELDS="objectid"/>
-      </INDEXES>
-    </TABLE>
   </TABLES>
 </XMLDB>
