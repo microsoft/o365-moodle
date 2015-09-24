@@ -268,5 +268,28 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011625', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011630) {
+        if ($dbman->table_exists('local_o365_aaduserdata')) {
+            $now = time();
+            $aaduserdatars = $DB->get_recordset('local_o365_aaduserdata');
+            foreach ($aaduserdatars as $aaduserdatarec) {
+                $objectrec = (object)[
+                    'type' => 'user',
+                    'subtype' => '',
+                    'objectid' => $aaduserdatarec->objectid,
+                    'moodleid' => $aaduserdatarec->muserid,
+                    'o365name' => $aaduserdatarec->userupn,
+                    'timecreated' => $now,
+                    'timemodified' => $now,
+                ];
+                $objectrec->id = $DB->insert_record('local_o365_objects', $objectrec);
+                if (!empty($objectrec->id)) {
+                    $DB->delete_records('local_o365_aaduserdata', ['id' => $aaduserdatarec->id]);
+                }
+            }
+        }
+        upgrade_plugin_savepoint($result, '2015011630', 'local', 'o365');
+    }
+
     return $result;
 }
