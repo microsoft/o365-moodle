@@ -126,12 +126,15 @@ class block_microsoft extends block_base {
 
         if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
             if (!empty($o365config->sharepointlink)) {
-                $courserec = $DB->get_record('course', ['id' => $PAGE->context->instanceid]);
-                if (!empty($courserec)) {
-                    $spurl = $o365config->sharepointlink.'/'.$courserec->shortname;
-                    $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];
-                    $items[] = html_writer::link($spurl, $sharepointstr, $spattrs);
-                    $items[] = '<hr/>';
+                $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
+                if (!empty($coursespsite)) {
+                    $spsite = \local_o365\rest\sharepoint::get_resource();
+                    if (!empty($spsite)) {
+                        $spurl = $spsite.'/'.$coursespsite->siteurl;
+                        $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];
+                        $items[] = html_writer::link($spurl, $sharepointstr, $spattrs);
+                        $items[] = '<hr/>';
+                    }
                 }
             }
         }
