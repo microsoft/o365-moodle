@@ -584,7 +584,7 @@ class sharepoint extends \local_o365\rest\o365api {
         // Assign users to group.
         foreach ($users as $user) {
             // Only Azure AD users can be added to sharepoint.
-            if ($user->auth !== 'oidc') {
+            if (\local_o365\utils::is_o365_connected($user->id) !== true) {
                 continue;
             }
 
