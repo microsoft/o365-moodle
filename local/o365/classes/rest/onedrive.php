@@ -136,11 +136,8 @@ class onedrive extends \local_o365\rest\o365api {
     public function get_contents($path) {
         $path = rawurlencode($path);
         $response = $this->apicall('get', "/getByPath('{$path}')/children");
-        $response = json_decode($response, true);
-        if (empty($response)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $response;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -161,11 +158,8 @@ class onedrive extends \local_o365\rest\o365api {
      */
     public function get_file_metadata($fileid) {
         $response = $this->apicall('get', "/{$fileid}");
-        $response = json_decode($response, true);
-        if (empty($response)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $response;
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -177,11 +171,8 @@ class onedrive extends \local_o365\rest\o365api {
     public function get_folder_metadata($path) {
         $path = rawurlencode($path);
         $response = $this->apicall('get', "/getByPath('{$path}')");
-        $response = json_decode($response, true);
-        if (empty($response)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-        return $response;
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -199,11 +190,8 @@ class onedrive extends \local_o365\rest\o365api {
             $url = '/'.$parentinfo['id'].'/children/'.$filename.'/content?nameConflict=overwrite';
             $params = ['file' => $content];
             $response = $this->apicall('put', $url, $params);
-            $response = json_decode($response, true);
-            if (empty($response)) {
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-            }
-            return $response;
+            $expectedparams = ['id' => null];
+            return $this->process_apicall_response($response, $expectedparams);
         } else {
             throw new \moodle_exception('erroro365apinoparentinfo', 'local_o365');
         }

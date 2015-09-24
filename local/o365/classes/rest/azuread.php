@@ -326,13 +326,8 @@ class azuread extends \local_o365\rest\o365api {
             $endpoint .= '?$skiptoken='.$skiptoken.'&$select='.implode(',', $params);
         }
         $response = $this->apicall('get', $endpoint);
-        if (!empty($response)) {
-            $response = @json_decode($response, true);
-            if (!empty($response) && is_array($response)) {
-                return $response;
-            }
-        }
-        return null;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -344,13 +339,12 @@ class azuread extends \local_o365\rest\o365api {
     public function get_user($oid) {
         $endpoint = "/users/{$oid}";
         $response = $this->apicall('get', $endpoint);
-        if (!empty($response)) {
-            $response = @json_decode($response, true);
-            if (!empty($response) && is_array($response)) {
-                return $response;
-            }
-        }
-        return null;
+        $expectedparams = [
+            'odata.type' => 'Microsoft.DirectoryServices.User',
+            'objectId' => null,
+            'userPrincipalName' => null,
+        ];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -366,6 +360,7 @@ class azuread extends \local_o365\rest\o365api {
         if (is_numeric($user)) {
             $user = $DB->get_record('user', ['id' => $user]);
             if (empty($user)) {
+                \local_o365\utils::debug('User not found', 'rest\azuread\get_muser_upn', $user);
                 return false;
             }
         }
@@ -379,6 +374,7 @@ class azuread extends \local_o365\rest\o365api {
             $authoidcuserdata = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
             if (empty($authoidcuserdata)) {
                 // No data for the user in the OIDC token table. Can't proceed.
+                \local_o365\utils::debug('No oidc token found for user.', 'rest\azuread\get_muser_upn', $user->username);
                 return false;
             }
             $oidcconfig = get_config('auth_oidc');
