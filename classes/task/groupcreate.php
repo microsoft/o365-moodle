@@ -64,7 +64,7 @@ class groupcreate extends \core\task\scheduled_task {
         $aadresource = \local_o365\rest\azuread::get_resource();
         $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
         if (empty($aadtoken)) {
-            mtrace('Could not get AAD token.');
+            mtrace('Could not get Azure AD token.');
             return true;
         }
         $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
