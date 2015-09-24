@@ -366,9 +366,9 @@ class azuread extends \local_o365\rest\o365api {
         }
 
         // Get user UPN.
-        $aaduserdata = $DB->get_record('local_o365_aaduserdata', ['muserid' => $user->id]);
-        if (!empty($aaduserdata)) {
-            return $aaduserdata->userupn;
+        $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
+        if (!empty($userobjectdata)) {
+            return $userobjectdata->o365name;
         } else {
             // Get user data.
             $authoidcuserdata = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
@@ -377,27 +377,24 @@ class azuread extends \local_o365\rest\o365api {
                 \local_o365\utils::debug('No oidc token found for user.', 'rest\azuread\get_muser_upn', $user->username);
                 return false;
             }
-            $oidcconfig = get_config('auth_oidc');
             $httpclient = new \local_o365\httpclient();
-            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-                    $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $resource = static::get_resource();
             $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-            $rawaaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
-            if (!empty($rawaaduserdata) && isset($rawaaduserdata['objectId']) && isset($rawaaduserdata['userPrincipalName'])) {
-                // Save user data.
-                $aaduserdata = new \stdClass;
-                $aaduserdata->muserid = $user->id;
-                $aaduserdata->objectid = $rawaaduserdata['objectId'];
-                $aaduserdata->userupn = $rawaaduserdata['userPrincipalName'];
-                $aaduserdata->timecreated = $now;
-                $aaduserdata->timemodified = $now;
-                $aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
-                return $aaduserdata->userupn;
-            }
+            $aaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
+            $userobjectdata = (object)[
+                'type' => 'user',
+                'subtype' => '',
+                'objectid' => $aaduserdata['objectId'],
+                'o365name' => $aaduserdata['userPrincipalName'],
+                'moodleid' => $user->id,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ];
+            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+            return $userobjectdata->o365name;
         }
-        return false;
     }
 
     /**
