@@ -335,7 +335,7 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get a file by it's file id.
+     * Get a file's content by it's file id.
      *
      * @param string $fileid The file's ID.
      * @return string The file's content.

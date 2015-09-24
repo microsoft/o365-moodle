@@ -31,7 +31,7 @@ class observers {
      * @param string $caller The calling function, used for logging.
      * @return \local_o365\rest\azuread An AzureAD API instance.
      */
-    public static function get_azuread_api($caller = '') {
+    public static function get_azuread_api($caller = 'get_azuread_api') {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         $resource = \local_o365\rest\azuread::get_resource();
@@ -40,9 +40,7 @@ class observers {
             return new \local_o365\rest\azuread($token, $httpclient);
         } else {
             $msg = 'Couldn\'t construct azuread api client because we didn\'t have a system API user token.';
-            $caller = (!empty($caller))
-                ? '\local_o365\feature\usergroups\observers::'.$caller
-                : '\local_o365\feature\usergroups\observers::get_azuread_api';
+            $caller = '\local_o365\feature\usergroups\observers::'.$caller;
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
@@ -54,7 +52,7 @@ class observers {
      * @param string $caller The calling function, used for logging.
      * @return \local_o365\rest\unified A Unified API instance.
      */
-    public static function get_unified_api($caller = '') {
+    public static function get_unified_api($caller = 'get_unified_api') {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         $resource = \local_o365\rest\unified::get_resource();
@@ -63,9 +61,7 @@ class observers {
             return new \local_o365\rest\unified($token, $httpclient);
         } else {
             $msg = 'Couldn\'t construct unified api client because we didn\'t have a system API user token.';
-            $caller = (!empty($caller))
-                ? '\local_o365\feature\usergroups\observers::'.$caller
-                : '\local_o365\feature\usergroups\observers::get_unified_api';
+            $caller = '\local_o365\feature\usergroups\observers::'.$caller;
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
