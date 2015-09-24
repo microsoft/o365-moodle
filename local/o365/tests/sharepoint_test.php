@@ -215,10 +215,16 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
         $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
 
-        $aaduserdata = new \stdClass;
-        $aaduserdata->muserid = $user1->id;
-        $aaduserdata->userupn = 'test@example.onmicrosoft.com';
-        $aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
+        $aaduserdata = (object)[
+            'type' => 'user',
+            'subtype' => '',
+            'objectid' => '',
+            'moodleid' => $user1->id,
+            'o365name' => 'test@example.onmicrosoft.com',
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ];
+        $aaduserdata->id = $DB->insert_record('local_o365_objects', $aaduserdata);
 
         $result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
 
@@ -247,10 +253,16 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
         $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
 
-        $aaduserdata = new \stdClass;
-        $aaduserdata->muserid = $user1->id;
-        $aaduserdata->userupn = 'test@example.onmicrosoft.com';
-        $aaduserdata->id = $DB->insert_record('local_o365_aaduserdata', $aaduserdata);
+        $aaduserdata = (object)[
+            'type' => 'user',
+            'subtype' => '',
+            'objectid' => '',
+            'moodleid' => $user1->id,
+            'o365name' => 'test@example.onmicrosoft.com',
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ];
+        $aaduserdata->id = $DB->insert_record('local_o365_objects', $aaduserdata);
 
         $result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
 
