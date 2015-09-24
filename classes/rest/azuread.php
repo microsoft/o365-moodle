@@ -323,7 +323,7 @@ class azuread extends \local_o365\rest\o365api {
             $skiptoken = '';
         }
         if (!empty($params) && is_array($params)) {
-            $endpoint .= '?$skiptoken='.$skiptoken.'&$select='.implode(',', $params);
+            $endpoint .= '?$skiptoken='.$skiptoken;
         }
         $response = $this->apicall('get', $endpoint);
         if (!empty($response)) {
