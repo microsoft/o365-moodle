@@ -26,7 +26,7 @@ namespace local_o365\adminsetting;
 /**
  * Admin setting to detect and set permissions in AAD.
  */
-class permissions extends \admin_setting {
+class azuresetup extends \admin_setting {
 
     /**
      * Constructor.
@@ -68,52 +68,24 @@ class permissions extends \admin_setting {
      * @return string Returns an XHTML string
      */
     public function output_html($data, $query = '') {
-        global $CFG, $OUTPUT;
+        global $OUTPUT;
 
-        $oidcconfig = get_config('auth_oidc');
-        $clientcredspresent = (!empty($oidcconfig->clientid) && !empty($oidcconfig->clientsecret)) ? true : false;
-        $endpointspresent = (!empty($oidcconfig->authendpoint) && !empty($oidcconfig->tokenendpoint)) ? true : false;
-        $settinghtml = '';
-        if ($clientcredspresent === true && $endpointspresent === true) {
+        $button = \html_writer::tag('button', get_string('settings_detectperms_update', 'local_o365'), ['class' => 'refreshperms']);
+        $results = \html_writer::tag('div', '', ['class' => 'results']);
+        $settinghtml = $button.$results;
 
+        if (\local_o365\adminsetting\detectoidc::setup_step_complete() === true) {
             $existingsetting = $this->config_read($this->name);
-
             if (!empty($existingsetting)) {
-                $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
                 $messageattrs = [
                     'class' => 'permmessage'
                 ];
                 $message = \html_writer::tag('span', get_string('settings_detectperms_valid', 'local_o365'), $messageattrs);
-                $buttonattrs = [
-                    'class' => 'refreshperms',
-                    'style' => 'margin: 0 0 0 1rem;'
-                ];
-                $button = \html_writer::tag('button', get_string('settings_detectperms_update', 'local_o365'), $buttonattrs);
-                $statusmessage = \html_writer::tag('div', '', ['class' => 'statusmessage']);
-                $wrapperattrs = [
-                    'class' => 'alert-success local_o365_statusmessage',
-                    'style' => 'display: inline-block; width: 100%; box-sizing: border-box;'
-                ];
-                $settinghtml .= \html_writer::tag('div', $icon.$message.$button.$statusmessage, $wrapperattrs);
             } else {
-                $icon = $OUTPUT->pix_icon('t/delete', 'invalid', 'moodle');
                 $messageattrs = [
                     'class' => 'permmessage'
                 ];
                 $message = \html_writer::tag('span', get_string('settings_detectperms_invalid', 'local_o365'), $messageattrs);
-                $buttonattrs = [
-                    'class' => 'refreshperms',
-                    'style' => 'margin: 0 0 0 1rem;'
-                ];
-                $button = \html_writer::tag('button', get_string('settings_detectperms_update', 'local_o365'), $buttonattrs);
-
-                $statusmessage = \html_writer::tag('div', '', ['class' => 'statusmessage']);
-
-                $wrapperattrs = [
-                    'class' => 'alert-error local_o365_statusmessage',
-                    'style' => 'display: inline-block; width: 100%; box-sizing: border-box;'
-                ];
-                $settinghtml .= \html_writer::tag('div', $icon.$message.$button.$statusmessage, $wrapperattrs);
             }
         } else {
             $icon = $OUTPUT->pix_icon('i/warning', 'prerequisite not complete', 'moodle');
@@ -122,28 +94,46 @@ class permissions extends \admin_setting {
         }
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
-        $scripturl = new \moodle_url('/local/o365/classes/adminsetting/permissions.js');
+        $scripturl = new \moodle_url('/local/o365/classes/adminsetting/azuresetup.js');
         $settinghtml .= '<script src="'.$scripturl->out().'"></script>';
+
+        $lastresults = get_config('local_o365', 'azuresetupresult');
+        if (!empty($lastresults)) {
+            $lastresults = @unserialize($lastresults);
+        }
+        $lastresults = (!empty($lastresults) && is_object($lastresults)) ? $lastresults : false;
+        $lastresults = json_encode(['success' => true, 'data' => $lastresults]);
+
+        $unifiedenabled = (\local_o365\rest\unified::is_enabled() === true) ? 'true' : 'false';
 
         $ajaxurl = new \moodle_url('/local/o365/ajax.php');
         $settinghtml .= '<script>
                             $(function() {
                                 var opts = {
                                     url: "'.$ajaxurl->out().'",
-                                    strvalid: "'.get_string('settings_detectperms_valid', 'local_o365').'",
-                                    iconvalid: "'.addslashes($OUTPUT->pix_icon('t/check', 'valid', 'moodle')).'",
-                                    strinvalid: "'.get_string('settings_detectperms_invalid', 'local_o365').'",
-                                    iconinvalid: "'.addslashes($OUTPUT->pix_icon('t/delete', 'invalid', 'moodle')).'",
-                                    strfixperms: "'.get_string('settings_detectperms_fixperms', 'local_o365').'",
-                                    strerrorcheck: "'.get_string('settings_detectperms_errorcheck', 'local_o365').'",
-                                    strerrorfix: "'.get_string('settings_detectperms_errorfix', 'local_o365').'",
-                                    strfixprereq: "'.addslashes(get_string('settings_detectperms_fixprereq', 'local_o365')).'",
-                                    strmissing: "'.get_string('settings_detectperms_missing', 'local_o365').'",
-                                    strunifiedheader: "'.addslashes(get_string('settings_detectperms_unifiedheader', 'local_o365')).'",
-                                    strunifiednomissing: "'.addslashes(get_string('settings_detectperms_unifiednomissing', 'local_o365')).'",
-                                    strnounified: "'.addslashes(get_string('settings_detectperms_nounified', 'local_o365')).'",
+                                    lastresults: '.$lastresults.',
+                                    iconsuccess: "'.addslashes($OUTPUT->pix_icon('t/check', 'success', 'moodle')).'",
+                                    iconinfo: "'.addslashes($OUTPUT->pix_icon('i/warning', 'information', 'moodle')).'",
+                                    iconerror: "'.addslashes($OUTPUT->pix_icon('t/delete', 'error', 'moodle')).'",
+
+                                    strupdate: "'.addslashes(get_string('settings_azuresetup_update', 'local_o365')).'",
+                                    strchecking: "'.addslashes(get_string('settings_azuresetup_checking', 'local_o365')).'",
+                                    strmissingperms: "'.addslashes(get_string('settings_azuresetup_missingperms', 'local_o365')).'",
+                                    strpermscorrect: "'.addslashes(get_string('settings_azuresetup_permscorrect', 'local_o365')).'",
+                                    strerrorcheck: "'.addslashes(get_string('settings_azuresetup_errorcheck', 'local_o365')).'",
+
+                                    showunified: '.$unifiedenabled.',
+                                    strunifiedheader: "'.addslashes(get_string('settings_azuresetup_unifiedheader', 'local_o365')).'",
+                                    strunifieddesc: "'.addslashes(get_string('settings_azuresetup_unifieddesc', 'local_o365')).'",
+                                    strunifiederror: "'.addslashes(get_string('settings_azuresetup_unifiederror', 'local_o365')).'",
+                                    strunifiedmissing: "'.addslashes(get_string('settings_azuresetup_unifiedmissing', 'local_o365')).'",
+                                    strunifiedactive: "'.addslashes(get_string('settings_azuresetup_unifiedactive', 'local_o365')).'",
+
+                                    strlegacyheader: "'.addslashes(get_string('settings_azuresetup_legacyheader', 'local_o365')).'",
+                                    strlegacydesc: "'.addslashes(get_string('settings_azuresetup_legacydesc', 'local_o365')).'",
+                                    strlegacyerror: "'.addslashes(get_string('settings_azuresetup_legacyerror', 'local_o365')).'",
                                 };
-                                $("#admin-'.$this->name.'").detectperms(opts);
+                                $("#admin-'.$this->name.'").azuresetup(opts);
                             });
                         </script>';
 
