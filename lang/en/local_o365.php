@@ -106,7 +106,7 @@ $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or cli
 $string['settings_sharepointlink'] = 'SharePoint Link';
 $string['settings_sharepointlink_connected'] = 'Moodle is connected to this SharePoint site.';
 $string['settings_sharepointlink_changelink'] = 'Change Site';
-$string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site.';
+$string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
 $string['settings_sharepointlink_enterurl'] = 'Enter a URL above.';
 $string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365/SharePoint">Read more about connecting Moodle and SharePoint</a>';
 $string['settings_sharepointlink_status_invalid'] = 'This is not a usable SharePoint site.';
