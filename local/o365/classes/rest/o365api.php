@@ -179,9 +179,6 @@ abstract class o365api {
      * @return array|null Array if successful, null if not.
      */
     public function process_apicall_response($response, array $expectedstructure = array()) {
-        if (empty($response)) {
-        }
-
         $backtrace = debug_backtrace(0);
         $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
         $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
