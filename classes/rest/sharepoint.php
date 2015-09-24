@@ -79,16 +79,25 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|bool The parsed URL into 'resource' and 'subsiteurl' keys, or false if invalid.
      */
     public static function parse_site_url($url) {
+        $caller = 'rest\sharepoint::parse_site_url';
         $cleanurl = clean_param($url, PARAM_URL);
         if ($cleanurl !== $url) {
+            $errmsg = 'Site url failed clean_param';
+            $debugdata = ['orig' => $url, 'clean' => $cleanurl];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
             return false;
         }
         if (strpos($cleanurl, 'https://') !== 0) {
+            $errmsg = 'Site url was not https.';
+            \local_o365\utils::debug($errmsg, $caller, $cleanurl);
             return false;
         }
 
         $cleanurlparts = parse_url($cleanurl);
         if (empty($cleanurlparts) || empty($cleanurlparts['host'])) {
+            $errmsg = 'Site url failed parse_url.';
+            $debugdata = ['cleanurl' => $cleanurl, 'parts' => $cleanurlparts];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
             return false;
         }
 
