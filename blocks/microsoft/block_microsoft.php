@@ -119,7 +119,7 @@ class block_microsoft extends block_base {
         $sharepointstr = get_string('linksharepoint', 'block_microsoft');
         $prefsurl = new \moodle_url('/local/o365/ucp.php');
         $prefsstr = get_string('linkprefs', 'block_microsoft');
-        $connecturl = new \moodle_url('/local/o365/ucp.php');
+        $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
         $connectstr = get_string('linkconnection', 'block_microsoft');
 
         $items = [];
