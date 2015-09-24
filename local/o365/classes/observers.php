@@ -173,32 +173,29 @@ class observers {
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $token = \local_o365\oauth2\token::instance($userid, $aadresource, $clientdata, $httpclient);
             $apiclient = new \local_o365\rest\azuread($token, $httpclient);
-
             $aaduserdata = $apiclient->get_user($tokenrec->oidcuniqid);
-            if (!empty($aaduserdata)) {
-                $updateduser = [];
-                $parammap = [
-                    'mail' => 'email',
-                    'city' => 'city',
-                    'country' => 'country',
-                    'department' => 'department'
-                ];
-                foreach ($parammap as $aadparam => $moodleparam) {
-                    if (!empty($aaduserdata[$aadparam])) {
-                        $updateduser[$moodleparam] = $aaduserdata[$aadparam];
-                    }
+            $updateduser = [];
+            $parammap = [
+                'mail' => 'email',
+                'city' => 'city',
+                'country' => 'country',
+                'department' => 'department'
+            ];
+            foreach ($parammap as $aadparam => $moodleparam) {
+                if (!empty($aaduserdata[$aadparam])) {
+                    $updateduser[$moodleparam] = $aaduserdata[$aadparam];
                 }
-
-                if (!empty($aaduserdata['preferredLanguage'])) {
-                    $updateduser['lang'] = substr($aaduserdata['preferredLanguage'], 0, 2);
-                }
-
-                if (!empty($updateduser)) {
-                    $updateduser['id'] = $userid;
-                    $DB->update_record('user', (object)$updateduser);
-                }
-                return true;
             }
+
+            if (!empty($aaduserdata['preferredLanguage'])) {
+                $updateduser['lang'] = substr($aaduserdata['preferredLanguage'], 0, 2);
+            }
+
+            if (!empty($updateduser)) {
+                $updateduser['id'] = $userid;
+                $DB->update_record('user', (object)$updateduser);
+            }
+            return true;
         } catch (\Exception $e) {
             return false;
         }
