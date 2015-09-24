@@ -79,9 +79,9 @@ class main {
     }
 
     /**
-     * Create a Moodle user from AzureAD user data.
+     * Create a Moodle user from Azure AD user data.
      *
-     * @param array $aaddata Array of AzureAD user data.
+     * @param array $aaddata Array of Azure AD user data.
      * @return \stdClass An object representing the created Moodle user.
      */
     public function create_user_from_aaddata($aaddata) {
@@ -137,9 +137,9 @@ class main {
     }
 
     /**
-     * Sync AzureAD Moodle users with the configured AzureAD directory.
+     * Sync Azure AD Moodle users with the configured Azure AD directory.
      *
-     * @param array $aadusers Array of AAD users from $this->get_users().
+     * @param array $aadusers Array of Azure AD users from $this->get_users().
      * @return bool Success/Failure
      */
     public function sync_users(array $aadusers = array()) {
@@ -209,7 +209,7 @@ class main {
                 }
 
                 if ($existinguser->auth !== 'oidc' && empty($existinguser->tok)) {
-                    mtrace('Found a user in AAD that seems to match a user in Moodle');
+                    mtrace('Found a user in Azure AD that seems to match a user in Moodle');
                     mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
 
                     if (!isset($aadsync['match'])) {

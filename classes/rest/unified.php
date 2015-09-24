@@ -453,7 +453,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get an array of the current required permissions.
      *
-     * @return array Array of required AzureAD application permissions.
+     * @return array Array of required Azure AD application permissions.
      */
     public function get_required_permissions() {
         return [
