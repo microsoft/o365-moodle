@@ -439,7 +439,7 @@ class sharepoint extends \local_o365\rest\o365api {
      * Add a user to a group.
      *
      * @param string $userupn An AAD user's UPN.
-     * @param string $groupid The group's id.
+     * @param string $groupid The group's SharePoint id.
      * @param int $muserid Optional. If present, will record assignment in database.
      * @return array|null Returned response, or null if error.
      */
