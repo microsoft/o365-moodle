@@ -61,8 +61,10 @@ class utils {
             if (is_bool($val)) {
                 return '(bool)'.(string)(int)$val;
             } else {
-                return (string)$val;
+                return '('.gettype($val).')'.(string)$val;
             }
+        } else if (is_null($val)) {
+            return '(null)';
         } else {
             return print_r($val, true);
         }
@@ -78,9 +80,7 @@ class utils {
         if ($debugmode === true) {
             $fullmessage = (!empty($where)) ? $where : 'Unknown function';
             $fullmessage .= ': '.$message;
-            if (!empty($debugdata)) {
-                $fullmessage .= ' Data: '.static::tostring($debugdata);
-            }
+            $fullmessage .= ' Data: '.static::tostring($debugdata);
             $event = \local_o365\event\api_call_failed::create(['other' => $fullmessage]);
             $event->trigger();
         }
