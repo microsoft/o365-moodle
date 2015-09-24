@@ -178,7 +178,7 @@ class ucp extends base {
     }
 
     /**
-     * AAD Login status page.
+     * Azure AD Login status page.
      */
     public function mode_aadlogin() {
         global $OUTPUT;

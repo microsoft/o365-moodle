@@ -52,10 +52,10 @@ class local_o365_azuread_testcase extends \advanced_testcase {
     }
 
     /**
-     * Get sample AAD userdata.
+     * Get sample Azure AD userdata.
      *
      * @param int $i A counter to generate unique data.
-     * @return array Array of AAD user data.
+     * @return array Array of Azure AD user data.
      */
     protected function get_aad_userinfo($i = 0) {
         return [
@@ -230,7 +230,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
      * Test create_user_from_aaddata method.
      *
      * @dataProvider dataprovider_create_user_from_aaddata
-     * @param array $aaddata The AzureAD user data to create the user from.
+     * @param array $aaddata The Azure AD user data to create the user from.
      * @param array $expecteduser The expected user data to be created.
      */
     public function test_create_user_from_aaddata($aaddata, $expecteduser) {
