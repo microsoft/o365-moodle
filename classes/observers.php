@@ -504,7 +504,7 @@ class observers {
         global $DB;
         $userid = $event->objectid;
         $DB->delete_records('local_o365_token', ['user_id' => $userid]);
-        $DB->delete_records('local_o365_aaduserdata', ['muserid' => $userid]);
+        $DB->delete_records('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
         return true;
     }
 }
