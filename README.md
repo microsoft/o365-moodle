@@ -23,6 +23,16 @@ The following plugins are "parent" plugins which install the above plugins as a 
 - [moodle-local_office365](https://github.com/MSOpenTech/moodle-local_office365)
 - [moodle-local_microsoftservices](https://github.com/MSOpenTech/moodle-local_microsoftservices)
 
+# About this repository
+The master branch of this repository contains the most up-to-date code. As issues are completed and new features are added, they are immediately added to master. Master should be fairly stable, however it is the absolute newest code and not intended for production systems. Periodically (about every two weeks), all completed issues are packaged into releases and added to the STABLE branches. You'll find a stable branch for each version of Moodle supported - MOODLE_27_STABLE would be for Moodle 2.7, for example. These branches contain production-ready, stable code.
+
+# Installation
+1. The file structure of this repository mimics that of a Moodle install, so the /auth/oidc folder in this repository would go in the /auth/oidc folder of your Moodle install, for example. Place each folder of this repository in your Moodle install according to the folder structure of this repository.
+2. From the Moodle Administration block, expand Site Administration and click "Notifications".
+3. Follow the on-screen instuctions to install each plugin.
+
+For more documentation, including details on how to configure the plugins, visit https://docs.moodle.org/29/en/Office365
+
 # Documentation
 
 The documentation for installing, configuring, and using these plugins is available here: http://msopentech.com/wp-content/uploads/Office-365-plugins-for-Moodle-documentation.pdf.
