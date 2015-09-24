@@ -90,12 +90,7 @@ class unified extends \local_o365\rest\o365api {
     public function get_groups() {
         $response = $this->tenantapicall('get', '/groups');
         $expectedparams = ['value' => null];
-        $response = $this->process_apicall_response($response, $expectedparams);
-        if (!empty($response) && isset($response['value'])) {
-            return $response['value'];
-        } else {
-            return null;
-        }
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -175,8 +170,8 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_calendars() {
         $response = $this->apicall('get', '/me/calendars');
-        $response = @json_decode($response, true);
-        return $response;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -215,8 +210,8 @@ class unified extends \local_o365\rest\o365api {
         $eventdata = json_encode($eventdata);
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
         $response = $this->apicall('post', $endpoint, $eventdata);
-        $response = @json_decode($response, true);
-        return $response;
+        $expectedparams = ['Id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -233,8 +228,8 @@ class unified extends \local_o365\rest\o365api {
             $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
-        $response = $this->process_apicall_response($response);
-        return $response;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -275,8 +270,8 @@ class unified extends \local_o365\rest\o365api {
         }
         $updateddata = json_encode($updateddata);
         $response = $this->apicall('patch', '/me/events/'.$outlookeventid, $updateddata);
-        $response = @json_decode($response, true);
-        return $response;
+        $expectedparams = ['Id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -302,7 +297,8 @@ class unified extends \local_o365\rest\o365api {
         $params = json_encode(['name' => $filename, 'type' => 'File']);
         $endpoint = '/me/files';
         $fileresponse = $this->apicall('post', $endpoint, $params);
-        $fileresponse = $this->process_apicall_response($fileresponse);
+        $expectedparams = ['id' => null];
+        $fileresponse = $this->process_apicall_response($fileresponse, $expectedparams);
         if (isset($fileresponse['id'])) {
             $endpoint = '/me/files/'.$fileresponse['id'].'/uploadContent';
             $contentresponse = $this->apicall('post', $endpoint, $content, ['contenttype' => $contenttype]);
@@ -322,8 +318,8 @@ class unified extends \local_o365\rest\o365api {
             $endpoint .= "/{$parentid}/children";
         }
         $response = $this->apicall('get', $endpoint);
-        $response = $this->process_apicall_response($response);
-        return $response;
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -334,8 +330,8 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_file_metadata($fileid) {
         $response = $this->apicall('get', "/me/files/{$fileid}");
-        $response = $this->process_apicall_response($response);
-        return $response;
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**

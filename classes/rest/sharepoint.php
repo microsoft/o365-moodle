@@ -448,12 +448,9 @@ class sharepoint extends \local_o365\rest\o365api {
         $loginname = 'i:0#.f|membership|'.$userupn;
         $userdata = ['LoginName' => $loginname];
         $userdata = json_encode($userdata);
-        $result = $this->apicall('post', '/web/sitegroups/getbyid(\''.$groupid.'\')/users', $userdata);
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
-
+        $response = $this->apicall('post', '/web/sitegroups/getbyid(\''.$groupid.'\')/users', $userdata);
+        $expectedparams = ['odata.type' => 'SP.User', 'Id' => null];
+        $response = $this->process_apicall_response($response, $expectedparams);
         if (!empty($muserid)) {
             $recorded = $DB->record_exists('local_o365_spgroupassign', ['userid' => $muserid, 'groupid' => $groupid]);
             if (empty($recorded)) {
@@ -464,7 +461,7 @@ class sharepoint extends \local_o365\rest\o365api {
                 $DB->insert_record('local_o365_spgroupassign', $record);
             }
         }
-        return $result;
+        return $response;
     }
 
     /**
@@ -480,15 +477,13 @@ class sharepoint extends \local_o365\rest\o365api {
         $loginname = 'i:0#.f|membership|'.$userupn;
         $loginname = urlencode($loginname);
         $endpoint = '/web/sitegroups/getbyid('.$groupid.')/users/removebyloginname(@v)?@v=\''.$loginname.'\'';
-        $result = $this->apicall('post', $endpoint, '');
-        $result = json_decode($result, true);
-        if (empty($result)) {
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
-        }
+        $response = $this->apicall('post', $endpoint, '');
+        $expectedparams = ['odata.null' => true];
+        $response = $this->process_apicall_response($response, $expectedparams);
         if (!empty($muserid)) {
             $recorded = $DB->delete_records('local_o365_spgroupassign', ['userid' => $muserid, 'groupid' => $groupid]);
         }
-        return $result;
+        return $response;
     }
 
     /**
@@ -509,7 +504,8 @@ class sharepoint extends \local_o365\rest\o365api {
         }
         $roledefid = $permdefids[$permissiontype];
         $response = $this->apicall('post', "/web/roleassignments/addroleassignment(principalid={$groupid},roledefid={$roledefid})");
-        return $response;
+        $expectedparams = ['odata.null' => true];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -675,6 +671,8 @@ class sharepoint extends \local_o365\rest\o365api {
 
         $spsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $courseid]);
         if (empty($spsite)) {
+            $errmsg = 'Did not update SharePoint course site because we found no record of one.';
+            \local_o365\utils::debug($errmsg, 'rest\sharepoint\update_course_site', $courseid);
             return false;
         }
 
@@ -685,6 +683,7 @@ class sharepoint extends \local_o365\rest\o365api {
             $updated = ['Title' => $fullname];
             $this->update_site($updated);
         } catch (\Exception $e) {
+            // API call errors are logged in update_site().
             return false;
         }
         return true;
@@ -709,6 +708,8 @@ class sharepoint extends \local_o365\rest\o365api {
         $spsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $courseid]);
         if (empty($spsite)) {
             // No site created (that we know about).
+            $errmsg = 'Did not delete course SharePoint site because no record of a SharePoint site for that course was found.';
+            \local_o365\utils::debug($errmsg, 'rest\sharepoint\delete_course_site', $courseid);
             return false;
         }
         $this->set_site($spsite->siteurl);
@@ -725,6 +726,7 @@ class sharepoint extends \local_o365\rest\o365api {
                 $DB->delete_records('local_o365_spgroupdata', ['id' => $spgroup->id]);
             } catch (\Exception $e) {
                 // If the API call failed we can still continue.
+                // Error is logged in API call function if failed.
             }
         }
         $this->delete_site();

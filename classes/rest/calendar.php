@@ -149,8 +149,8 @@ class calendar extends \local_o365\rest\o365api {
         }
         $updateddata = json_encode($updateddata);
         $response = $this->apicall('patch', '/events/'.$outlookeventid, $updateddata);
-        $response = @json_decode($response, true);
-        return $response;
+        $expectedparams = ['Id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
