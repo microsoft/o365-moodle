@@ -24,7 +24,7 @@
 namespace local_o365\adminsetting;
 
 /**
- * Admin setting to detect and set permissions in AAD.
+ * Admin setting to detect and set permissions in Azure AD.
  */
 class azuresetup extends \admin_setting {
 

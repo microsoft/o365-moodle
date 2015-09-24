@@ -438,7 +438,7 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Add a user to a group.
      *
-     * @param string $userupn An AAD user's UPN.
+     * @param string $userupn An Azure AD user's UPN.
      * @param string $groupid The group's SharePoint id.
      * @param int $muserid Optional. If present, will record assignment in database.
      * @return array|null Returned response, or null if error.
@@ -467,7 +467,7 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Remove a user from a group.
      *
-     * @param string $userupn An AAD user's UPN.
+     * @param string $userupn An Azure AD user's UPN.
      * @param string $groupid The group's id.
      * @param int $muserid Optional. If present, will removed record of assignment in database.
      * @return array|null Returned response, or null if error.
@@ -583,7 +583,7 @@ class sharepoint extends \local_o365\rest\o365api {
 
         // Assign users to group.
         foreach ($users as $user) {
-            // Only AAD users can be added to sharepoint.
+            // Only Azure AD users can be added to sharepoint.
             if ($user->auth !== 'oidc') {
                 continue;
             }
