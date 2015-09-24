@@ -119,7 +119,13 @@ class sharepoint extends \local_o365\rest\o365api {
             $siteinfo = static::parse_site_url($config->sharepointlink);
             if (!empty($siteinfo)) {
                 return $siteinfo['resource'];
+            } else {
+                $errmsg = 'Sharepoint link URL was not valid';
+                \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource', $config->sharepointlink);
             }
+        } else {
+            $errmsg = 'No Sharepoint link URL was found. Plugin not configured?';
+            \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource');
         }
         return false;
     }
@@ -316,13 +322,18 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return bool Whether the site exists or not.
      */
     public function site_exists($subsiteurl = null) {
-        try {
-            $siteinfo = $this->get_site($subsiteurl);
-            return true;
-        } catch (\Exception $e) {
-            // Since Sharepoint API uses the site URL in the API endpoint, an error here indicates the site doesn't exist.
-            return false;
+        if (!empty($subsiteurl)) {
+            $cursite = $this->parentsite;
+            $this->set_site($subsiteurl);
         }
+        $response = $this->apicall('get', '/web');
+
+        // Reset the current site to the original value for subsequent calls.
+        if (!empty($subsiteurl)) {
+            $this->parentsite = $cursite;
+        }
+
+        return (!empty($response)) ? true : false;
     }
 
     /**
@@ -396,6 +407,22 @@ class sharepoint extends \local_o365\rest\o365api {
         $response = $this->apicall('get', '/web/sitegroups/getbyname(\''.$name.'\')');
         $expectedparams = ['odata.type' => 'SP.Group', 'Id' => null, 'Title' => null];
         return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Determine if a group exists.
+     *
+     * @param string $name The group's name.
+     * @return bool True if it exists, false otherwise.
+     */
+    public function group_exists($name) {
+        try {
+            $group = $this->get_group($name);
+            return true;
+        } catch (\Exception $e) {
+            // An API call error here would indicate the group doesn't exist.
+            return false;
+        }
     }
 
     /**
@@ -527,13 +554,24 @@ class sharepoint extends \local_o365\rest\o365api {
     protected function create_course_subsite($course) {
         global $DB;
         $now = time();
+        $caller = '\local_o365\rest\sharepoint::create_course_subsite';
 
-        $siteurl = $course->shortname;
+        // To account for times when the course shortname might change, look for a coursespsite record for the course with the same
+        // parent site URL.
+        $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
+        if (!empty($siterec) && strpos($siterec->siteurl, '/'.$this->parentsite.'/') === 0) {
+            $debugdata = ['courseid' => $course->id, 'spsiteid' => $siterec->id];
+            \local_o365\utils::debug('Found a stored subsite record for this course.', $caller, $debugdata);
+            return $siterec;
+        }
+
+        $siteurl = strtolower(preg_replace('/[^a-z0-9_]+/iu', '', $course->shortname));
         $fullsiteurl = '/'.$this->parentsite.'/'.$siteurl;
 
         // Check if site exists.
         if ($this->site_exists($fullsiteurl) !== true) {
             // Create site.
+            \local_o365\utils::debug('Creating site '.$fullsiteurl, $caller);
             $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
             $sitedata = $this->create_site($course->fullname, $siteurl, $course->summary);
             $siterec = new \stdClass;
@@ -545,25 +583,30 @@ class sharepoint extends \local_o365\rest\o365api {
             $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
             return $siterec;
         } else {
-            $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
-            if (!empty($siterec) && $siterec->siteurl == $fullsiteurl) {
+            $debugmsg = 'Subsite already exists, looking for local data.';
+            \local_o365\utils::debug($debugmsg, $caller, $fullsiteurl);
+            if (!empty($siterec)) {
+                // We have a local spsite record for the course, but for a different parent site, so our record is out of date.
+                $sitedata = $this->get_site($fullsiteurl);
+                $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
+                // Save site data.
+                $siterec = new \stdClass;
+                $siterec->courseid = $course->id;
+                $siterec->siteid = $sitedata['Id'];
+                $siterec->siteurl = $sitedata['ServerRelativeUrl'];
+                $siterec->timecreated = $now;
+                $siterec->timemodified = $now;
+                $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
                 return $siterec;
             } else {
-                $sitedata = $this->get_site($fullsiteurl);
-                if (!empty($sitedata) && isset($sitedata['Id']) && isset($sitedata['ServerRelativeUrl'])) {
-                    $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
-                    // Save site data.
-                    $siterec = new \stdClass;
-                    $siterec->courseid = $course->id;
-                    $siterec->siteid = $sitedata['Id'];
-                    $siterec->siteurl = $sitedata['ServerRelativeUrl'];
-                    $siterec->timecreated = $now;
-                    $siterec->timemodified = $now;
-                    $siterec->id = $DB->insert_record('local_o365_coursespsite', $siterec);
-                    return $siterec;
-                } else {
-                    throw new \moodle_exception('erroro365apisiteexistsnolocal', 'local_o365');
-                }
+                $errmsg = 'Can\'t create a SharePoint subsite site because one exists but we don\'t have a local record.';
+                $debugdata = [
+                    'fullsiteurl' => $fullsiteurl,
+                    'courseid' => $course->id,
+                    'courseshortname' => $course->shortname
+                ];
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                throw new \moodle_exception('erroro365apisiteexistsnolocal', 'local_o365');
             }
         }
     }
@@ -632,11 +675,15 @@ class sharepoint extends \local_o365\rest\o365api {
             $groupname = $siterec->siteurl.' contribute';
             $description = get_string('spsite_group_contributors_desc', 'local_o365', $siterec->siteurl);
             $groupname = trim(base64_encode($groupname), '=');
-            $groupdata = $this->get_group($groupname);
-            if (empty($groupdata) || !isset($groupdata['Id']) || !isset($groupdata['Title'])) {
-                // Group does not exist, create it.
+
+            // Get or create the group.
+            try {
+                $groupdata = $this->get_group($groupname);
+            } catch (\Exception $e) {
+                // An error here indicates the group does not exist. Create it.
                 $groupdata = $this->create_group($groupname, $description);
             }
+
             if (!empty($groupdata) && isset($groupdata['Id']) && isset($groupdata['Title'])) {
                 $grouprec = new \stdClass;
                 $grouprec->coursespsiteid = $siterec->id;

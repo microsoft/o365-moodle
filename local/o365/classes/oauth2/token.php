@@ -145,6 +145,7 @@ class token {
         } else {
             if ($resource === 'https://graph.windows.net') {
                 // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
+                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', 'local_o365\oauth2\token::instance');
                 return null;
             } else {
                 $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
@@ -191,6 +192,19 @@ class token {
                         $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
                 $token = static::instance($userid, $resource, $clientdata, $httpclient);
                 return $token;
+            } else {
+                $errmsg = 'Problem encountered getting a new token.';
+                if (isset($tokenresult['access_token'])) {
+                    $tokenresult['access_token'] = '---';
+                }
+                if (isset($tokenresult['refresh_token'])) {
+                    $tokenresult['refresh_token'] = '---';
+                }
+                $debuginfo = [
+                    'tokenresult' => $tokenresult,
+                    'resource' => $resource
+                ];
+                \local_o365\utils::debug($errmsg, 'local_o365\oauth2\token::get_for_new_resource', $debuginfo);
             }
         }
         return false;
@@ -285,7 +299,7 @@ class token {
         $newtoken->token = $token;
 
         // Default expiry is 1 hour, if we didn't get an expiry, play it safe and expire in 45 mins.
-        $newtoken->expiry = (!empty($expiry)) ? $expiry : time() + (60*45);
+        $newtoken->expiry = (!empty($expiry)) ? $expiry : time() + (60 * 45);
 
         // Refresh tokens *sometimes* don't exist...
         $newtoken->refreshtoken = (!empty($refreshtoken)) ? $refreshtoken : '';
