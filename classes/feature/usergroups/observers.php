@@ -224,15 +224,15 @@ class observers {
         }
 
         // Look up user.
-        $aaduserdata = $DB->get_record('local_o365_aaduserdata', ['muserid' => $newmemberid]);
-        if (empty($aaduserdata)) {
+        $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $newmemberid]);
+        if (empty($userobjectdata)) {
             $msg = 'Not adding user "'.$newmemberid.'" to group "'.$usergroupid.'" because we don\'t have AAD data for them.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
 
-        $result = $azureadapiclient->add_member_to_group($groupobjectrec->objectid, $aaduserdata->objectid);
+        $result = $azureadapiclient->add_member_to_group($groupobjectrec->objectid, $userobjectdata->objectid);
         if ($result !== true) {
             $msg = 'Couldn\'t add user to group.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
@@ -271,15 +271,15 @@ class observers {
         }
 
         // Look up user.
-        $aaduserdata = $DB->get_record('local_o365_aaduserdata', ['muserid' => $newmemberid]);
-        if (empty($aaduserdata)) {
+        $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $newmemberid]);
+        if (empty($userobjectdata)) {
             $msg = 'Not removing user "'.$newmemberid.'" from group "'.$usergroupid.'" because we don\'t have AAD data for them.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_removed';
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
 
-        $result = $azureadapiclient->remove_member_from_group($groupobjectrec->objectid, $aaduserdata->objectid);
+        $result = $azureadapiclient->remove_member_from_group($groupobjectrec->objectid, $userobjectdata->objectid);
         if ($result !== true) {
             $msg = 'Couldn\'t remove user from group.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_removed';
