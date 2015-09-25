@@ -159,9 +159,11 @@ class azuread extends \local_o365\rest\o365api {
                 if (isset($allappdata[$app]['perms'][$permname])) {
                     $permid = $allappdata[$app]['perms'][$permname]['id'];
                     if (!isset($currentperms[$appid][$permid])) {
-                        $permdesc = (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName']))
-                                ? $allappdata[$app]['perms'][$permname]['adminConsentDisplayName']
-                                : $permname;
+                        if (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName'])) {
+                            $permdesc = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
+                        } else {
+                            $permdesc = $permname;
+                        }
                         $missingperms[$appname][$permname] = $permdesc;
                     }
                 } else {
