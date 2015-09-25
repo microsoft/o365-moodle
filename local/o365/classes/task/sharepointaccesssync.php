@@ -179,6 +179,9 @@ class sharepointaccesssync extends \core\task\adhoc_task {
                 $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
                 if (!empty($sptoken)) {
                     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
+                } else {
+                    $errmsg = 'Could not get system API user token for SharePoint';
+                    \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointaccesssync::execute');
                 }
             }
         }
