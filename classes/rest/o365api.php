@@ -33,6 +33,9 @@ abstract class o365api {
     /** @var \local_o365\httpclientinterface An HTTP client to use for communication. */
     protected $httpclient;
 
+    /** @var bool Disable rate limit protection. */
+    protected $disableratelimit = false;
+
     /**
      * Constructor.
      *
@@ -166,7 +169,11 @@ abstract class o365api {
         $this->httpclient->setHeader($header);
 
         // Sleep to avoid rate limiting.
-        usleep(1250000);
+        if (empty($this->disableratelimit)) {
+            usleep(1250000);
+        } else {
+            usleep(250000);
+        }
 
         return $this->httpclient->$httpmethod($requesturi, $params, $options);
     }
