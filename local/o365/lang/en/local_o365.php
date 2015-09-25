@@ -63,9 +63,13 @@ $string['healthcheck_systemtoken_result_noclientcreds'] = 'There are not applica
 $string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Office 365 as the system API user. This can usually be resolved by resetting the system API user.';
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office 365 as the system API user.';
 
-$string['settings_aadsync'] = 'Sync users with AzureAD';
-$string['settings_aadsync_details'] = 'When enabled, Moodle and AzureAD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with AAD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a><br /><br />';
-$string['settings_aadtenant'] = 'AzureAD Tenant';
+$string['settings_aadsync'] = 'Sync users with Azure AD';
+$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a><br /><br />';
+$string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
+$string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
+$string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
+$string['settings_aadsync_matchswitchauth'] = 'Connect matched users by switching authentication to OpenID Connect';
+$string['settings_aadtenant'] = 'Azure AD Tenant';
 $string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
 
 $string['settings_azuresetup'] = 'Azure Setup';
@@ -98,7 +102,7 @@ $string['settings_detectoidc_credsinvalid'] = 'Credentials have not been set or 
 $string['settings_detectoidc_credsinvalid_link'] = 'Set Credentials';
 
 $string['settings_detectperms'] = 'Application Permissions';
-$string['settings_detectperms_details'] = 'The use the plugin features, correct permissions must be set up for the application in AzureAD.';
+$string['settings_detectperms_details'] = 'The use the plugin features, correct permissions must be set up for the application in Azure AD.';
 $string['settings_detectperms_nocreds'] = 'Application credentials need to be set first. See above setting.';
 $string['settings_detectperms_missing'] = 'Missing:';
 $string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please set manually in Azure.';
@@ -109,14 +113,14 @@ $string['settings_detectperms_nounified'] = 'Unified API not present, some new f
 $string['settings_detectperms_unifiednomissing'] = 'All unified permissions present.';
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
-$string['settings_detectperms_invalid'] = 'Check permissions in AzureAD';
+$string['settings_detectperms_invalid'] = 'Check permissions in Azure AD';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_options'] = 'Options';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
 $string['settings_odburl'] = 'OneDrive for Business URL';
-$string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your AzureAD tenant. For example, if your AzureAD tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
+$string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your Azure AD tenant. For example, if your Azure AD tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
 $string['settings_serviceresourceabstract_valid'] = '{$a} is usable.';
 $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem to be usable.';
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
@@ -144,7 +148,7 @@ $string['spsite_group_contributors_desc'] = 'All users who have access to manage
 $string['task_calendarsyncin'] = 'Sync o365 events in to Moodle';
 $string['task_groupcreate'] = 'Create user groups in Office 365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
-$string['task_syncusers'] = 'Sync users with AAD.';
+$string['task_syncusers'] = 'Sync users with Azure AD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
 
 $string['ucp_connectionstatus'] = 'Connection Status';

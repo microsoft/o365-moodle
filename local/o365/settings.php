@@ -47,10 +47,10 @@ if ($hassiteconfig) {
     $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
     $desc = get_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
     $choices = [
-        'create' => 'Create accounts in Moodle for users in AzureAD',
-        'delete' => 'Delete previously synced accounts in Moodle when they are deleted from AzureAD',
-        'match' => 'Match preexisting Moodle users with same-named accounts in AzureAD',
-        'matchswitchauth' => 'Connect matched users by switching authentication to OpenID Connect',
+        'create' => get_string('settings_aadsync_create', 'local_o365'),
+        'delete' => get_string('settings_aadsync_delete', 'local_o365'),
+        'match' => get_string('settings_aadsync_match', 'local_o365'),
+        'matchswitchauth' => get_string('settings_aadsync_matchswitchauth', 'local_o365'),
     ];
     $default = ['create' => true];
     $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));

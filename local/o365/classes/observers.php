@@ -87,7 +87,7 @@ class observers {
      *
      * Does the following:
      *     - Check if user is using OpenID Connect auth plugin.
-     *     - If so, gets additional information from AAD and updates the user.
+     *     - If so, gets additional information from Azure AD and updates the user.
      *
      * @param \core\event\user_created $event The triggered event.
      * @return bool Success/Failure.
@@ -143,7 +143,7 @@ class observers {
     }
 
     /**
-     * Get additional information about a user from AzureAD.
+     * Get additional information about a user from Azure AD.
      *
      * @return bool Success/Failure.
      */
@@ -151,7 +151,7 @@ class observers {
         global $DB;
 
         try {
-            // AAD must be configured for us to fetch data.
+            // Azure AD must be configured for us to fetch data.
             if (\local_o365\rest\azuread::is_configured() !== true) {
                 return true;
             }
@@ -165,7 +165,7 @@ class observers {
             $params = [$userid, $aadresource];
             $tokenrec = $DB->get_record_sql($sql, $params);
             if (empty($tokenrec)) {
-                // No OIDC token for this user and resource - maybe not an AAD user.
+                // No OIDC token for this user and resource - maybe not an Azure AD user.
                 return false;
             }
 
