@@ -311,19 +311,19 @@ class azuread extends \local_o365\rest\o365api {
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
-     * @param string $deltalink A deltalink param from a previous get_users query. For pagination.
+     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
      * @return array|null Array of user information, or null if failure.
      */
-    public function get_users($params = 'default', $deltalink = '') {
+    public function get_users($params = 'default', $skiptoken = '') {
         $endpoint = '/users';
         if ($params === 'default') {
             $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage', 'userPrincipalName'];
         }
-        if (empty($deltalink) || !is_string($deltalink)) {
-            $deltalink = '';
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
         }
         if (!empty($params) && is_array($params)) {
-            $endpoint .= '?deltaLink='.$deltalink.'&$select='.implode(',', $params);
+            $endpoint .= '?$skiptoken='.$skiptoken.'&$select='.implode(',', $params);
         }
         $response = $this->apicall('get', $endpoint);
         if (!empty($response)) {
@@ -351,167 +351,6 @@ class azuread extends \local_o365\rest\o365api {
             }
         }
         return null;
-    }
-
-    /**
-     * Create a Moodle user from AzureAD user data.
-     *
-     * @param array $aaddata Array of AzureAD user data.
-     * @return \stdClass An object representing the created Moodle user.
-     */
-    public function create_user_from_aaddata($aaddata) {
-        global $CFG;
-
-        require_once($CFG->dirroot.'/user/profile/lib.php');
-        require_once($CFG->dirroot.'/user/lib.php');
-
-        $newuser = (object)[
-            'auth' => 'oidc',
-            'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
-            'email' => (isset($aaddata['mail'])) ? $aaddata['mail'] : '',
-            'firstname' => (isset($aaddata['givenName'])) ? $aaddata['givenName'] : '',
-            'lastname' => (isset($aaddata['surname'])) ? $aaddata['surname'] : '',
-            'city' => (isset($aaddata['city'])) ? $aaddata['city'] : '',
-            'country' => (isset($aaddata['country'])) ? $aaddata['country'] : '',
-            'department' => (isset($aaddata['department'])) ? $aaddata['department'] : '',
-            'lang' => (isset($aaddata['preferredLanguage'])) ? substr($aaddata['preferredLanguage'], 0, 2) : 'en',
-            'confirmed' => 1,
-            'timecreated' => time(),
-            'mnethostid' => $CFG->mnet_localhost_id,
-        ];
-        $password = null;
-        $newuser->idnumber = $newuser->username;
-
-        if (!empty($newuser->email)) {
-            if (email_is_not_allowed($newuser->email)) {
-                unset($newuser->email);
-            }
-        }
-
-        if (empty($newuser->lang) || !get_string_manager()->translation_exists($newuser->lang)) {
-            $newuser->lang = $CFG->lang;
-        }
-
-        $newuser->timemodified = $newuser->timecreated;
-        $newuser->id = user_create_user($newuser, false, false);
-
-        // Save user profile data.
-        profile_save_data($newuser);
-
-        $user = get_complete_user_data('id', $newuser->id);
-        if (!empty($CFG->{'auth_'.$newuser->auth.'_forcechangepassword'})) {
-            set_user_preference('auth_forcepasswordchange', 1, $user);
-        }
-        // Set the password.
-        update_internal_user_password($user, $password);
-
-        // Trigger event.
-        \core\event\user_created::create_from_userid($newuser->id)->trigger();
-
-        return $user;
-    }
-
-    /**
-     * Sync AzureAD Moodle users with the configured AzureAD directory.
-     *
-     * @param array $aadusers Array of AAD users from $this->get_users().
-     * @return bool Success/Failure
-     */
-    public function sync_users(array $aadusers = array()) {
-        global $DB, $CFG;
-
-        $aadsync = get_config('local_o365', 'aadsync');
-        $aadsync = array_flip(explode(',', $aadsync));
-
-        $usernames = [];
-        foreach ($aadusers as $i => $user) {
-            $upnlower = \core_text::strtolower($user['userPrincipalName']);
-            $aadusers[$i]['upnlower'] = $upnlower;
-
-            $usernames[] = $upnlower;
-
-            $upnsplit = explode('@', $upnlower);
-            if (!empty($upnsplit[0])) {
-                $aadusers[$i]['upnsplit0'] = $upnsplit[0];
-                $usernames[] = $upnsplit[0];
-            }
-        }
-
-        list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames);
-        $sql = 'SELECT u.username,
-                       u.id as muserid,
-                       u.auth,
-                       tok.id as tokid,
-                       conn.id as existingconnectionid
-                  FROM {user} u
-             LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
-             LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
-                 WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
-        $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
-        $existingusers = $DB->get_records_sql($sql, $params);
-
-        foreach ($aadusers as $user) {
-            mtrace(' ');
-            mtrace('Syncing user '.$user['upnlower']);
-            if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
-                mtrace('User is deleted. Skipping.');
-                continue;
-            }
-            if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
-                mtrace('User doesn\'t exist in Moodle');
-                if (!isset($aadsync['create'])) {
-                    mtrace('Not creating a Moodle user because that sync option is disabled.');
-                    continue;
-                }
-
-                try {
-                    // Create moodle account, if enabled.
-                    $user = $this->create_user_from_aaddata($user);
-                    if (!empty($user)) {
-                        mtrace('Created user #'.$user->id);
-                    }
-                } catch (\Exception $e) {
-                    if (!PHPUNIT_TEST) {
-                        mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                    }
-                }
-            } else {
-                $existinguser = null;
-                if (isset($existingusers[$user['upnlower']])) {
-                    $existinguser = $existingusers[$user['upnlower']];
-                } else if (isset($existingusers[$user['upnsplit0']])) {
-                    $existinguser = $existingusers[$user['upnsplit0']];
-                }
-
-                if ($existinguser->auth !== 'oidc' && empty($existinguser->tok)) {
-                    mtrace('Found a user in AAD that seems to match a user in Moodle');
-                    mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
-
-                    if (!isset($aadsync['match'])) {
-                        mtrace('Not matching user because that sync option is disabled.');
-                        continue;
-                    }
-
-                    if (!empty($existinguser->existingconnectionid)) {
-                        mtrace('User is already matched.');
-                        continue;
-                    }
-
-                    // Match to o365 account, if enabled.
-                    $matchrec = [
-                        'muserid' => $existinguser->muserid,
-                        'aadupn' => $user['upnlower'],
-                        'uselogin' => (isset($aadsync['matchswitchauth'])) ? 1 : 0,
-                    ];
-                    $DB->insert_record('local_o365_connections', $matchrec);
-                    mtrace('Matched user.');
-                } else {
-                    // User already connected.
-                    mtrace('User is already synced.');
-                }
-            }
-        }
-        return true;
     }
 
     /**

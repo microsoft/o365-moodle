@@ -21,7 +21,7 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-namespace local_o365\form\element;
+namespace local_o365\feature\calsync\form\element;
 
 global $CFG;
 require_once("$CFG->libdir/form/advcheckbox.php");
@@ -60,7 +60,7 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @param array $arguments Array of arguments used in call.
      */
     public function __call($method, $arguments) {
-        if ($method === 'local_o365\form\element\calendar') {
+        if ($method === 'local_o365\feature\calsync\form\element\calendar') {
             $func = [$this, 'calendarconstruct'];
             call_user_func_array($func, $arguments);
         }
