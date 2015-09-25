@@ -93,6 +93,10 @@ class sharepointinit extends \core\task\adhoc_task {
                 $failures[$course->id] = $e->getMessage();
             }
         }
+        if (!empty($failures)) {
+            $errmsg = 'Encountered problems creating course sites.';
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute', $failures);
+        }
         set_config('sharepoint_initialized', '1', 'local_o365');
     }
 }
