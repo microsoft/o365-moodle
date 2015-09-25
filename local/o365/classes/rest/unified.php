@@ -457,6 +457,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_required_permissions() {
         return [
+            'openid',
             'Calendars.ReadWrite',
             'Directory.AccessAsUser.All',
             'Directory.ReadWrite.All',
@@ -473,9 +474,11 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of missing permissions, permission key as array key, human-readable name as values.
      */
     public function check_permissions() {
+        $this->disableratelimit = true;
         $currentperms = $this->get_unified_api_permissions();
         $neededperms = $this->get_required_permissions();
         $availableperms = $this->get_available_permissions();
+        $this->disableratelimit = false;
 
         if ($currentperms === null || $availableperms === null) {
             return null;
@@ -489,20 +492,20 @@ class unified extends \local_o365\rest\o365api {
             return [];
         }
 
-        $availablepermsnames = [];
+        // Assemble friendly names for permissions.
+        $permnames = [];
         foreach ($availableperms as $perminfo) {
             if (!isset($perminfo['value']) || !isset($perminfo['adminConsentDisplayName'])) {
                 continue;
             }
-            $availablepermsnames[$perminfo['value']] = $perminfo['adminConsentDisplayName'];
+            $permnames[$perminfo['value']] = $perminfo['adminConsentDisplayName'];
         }
 
-        $return = [];
+        $missingpermsreturn = [];
         foreach ($missingperms as $missingperm) {
-            $return[$missingperm] = (isset($availablepermsnames[$missingperm]))
-                    ? $availablepermsnames[$missingperm]
-                    : $missingperm;
+            $missingpermsreturn[$missingperm] = (isset($permnames[$missingperm])) ? $permnames[$missingperm] : $missingperm;
         }
-        return $return;
+
+        return $missingpermsreturn;
     }
 }

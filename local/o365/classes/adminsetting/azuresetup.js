@@ -145,7 +145,7 @@ $.fn.azuresetup = function(options) {
                 if (Object.keys(data.missingperms).length > 0) {
                     var missingpermsbox = opts.strmissingperms+'<ul>';
                     for (var perm in data.missingperms) {
-                        missingpermsbox += '<li>'+perm+'</li>';
+                        missingpermsbox += '<li>'+data.missingperms[perm]+'</li>';
                     }
                     missingpermsbox += '</ul>';
                     content.append(main.rendererrorbox(missingpermsbox));
