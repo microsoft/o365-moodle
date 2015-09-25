@@ -23,6 +23,14 @@ This is part of the suite of Microsoft Services plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
 
+## Installation.
+
+1. Unpack the plugin into /repository/onenote within your Moodle install.
+2. From the Moodle Administration block, expand Site Administration and click "Notifications".
+3. Follow the on-screen instuctions to install the plugin.
+
+For more documentation, visit https://docs.moodle.org/29/en/Office365
+
 # Contributing
 
 Before we can accept your pull request, you'll need to electronically complete Microsoft Open Tech's [Contributor License Agreement](https://cla.msopentech.com/). If you've done this for other Microsoft Open Tech projects, then you're already covered.

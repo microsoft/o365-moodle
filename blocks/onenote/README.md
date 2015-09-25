@@ -5,26 +5,18 @@
 
 This plugin provides a container for the Microsoft Account signin button and also Microsoft OneNote related action buttons.
 
-
-Design details
---------------
-
-There are several parts that make up the Microsoft OneNote Online API Local plugin.
-
-### Configuration
-None. This plugin depends upon the Microsoft Account local plugin to be configured for accessing the appropriate Microsoft Live application.
-It is recommended that this block should be configured to appear on all pages throughout the entire site.
-
-### get_content method
-This is the standard block get_content method that returns either the Microsoft Account signin widget if the user hasn't signed in yet or the appropriate OneNote action button if so.
-
-### Plugin dependencies
-block_onenote => local_onenote => local_msaccount
-
-
 This is part of the suite of Microsoft Services plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/MSOpenTech/o365-moodle
+
+## Installation.
+
+1. Unpack the plugin into /blocks/onenote within your Moodle install.
+2. From the Moodle Administration block, expand Site Administration and click "Notifications".
+3. Follow the on-screen instuctions to install the plugin.
+4. Add the block to any page you want it displayed.
+
+For more documentation, visit https://docs.moodle.org/29/en/Office365
 
 # Contributing
 
