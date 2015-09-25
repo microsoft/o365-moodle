@@ -25,20 +25,18 @@
  * Office 365 repository.
  */
 class repository_office365 extends \repository {
-    /** @var \stdClass The auth_oidc config options. */
-    protected $oidcconfig;
-
-    /** @var \stdClass The local_o365 config options. */
-    protected $o365config;
 
     /** @var \local_o365\httpclient An HTTP client to use. */
     protected $httpclient;
 
-    /** @var array Array of onedrive status and token information. */
-    protected $onedrive = ['configured' => false];
+    /** @var bool Whether onedrive is configured. */
+    protected $onedriveconfigured = false;
 
-    /** @var array Array of sharepoint status and token information. */
-    protected $sharepoint = ['configured' => false];
+    /** @var bool Whether sharepoint is configured. */
+    protected $sharepointconfigured = false;
+
+    /** @var bool Whether the unified API is configured. */
+    protected $unifiedconfigured = false;
 
     /** @var \local_o365\oauth2\clientdata A clientdata object to use with an o365 api class. */
     protected $clientdata = null;
@@ -53,21 +51,22 @@ class repository_office365 extends \repository {
      */
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array(), $readonly = 0) {
         parent::__construct($repositoryid, $context, $options, $readonly);
-        global $DB, $USER;
-
-        $this->o365config = get_config('local_o365');
-        $this->oidcconfig = get_config('auth_oidc');
         $this->httpclient = new \local_o365\httpclient();
+        $this->clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $this->onedriveconfigured = \local_o365\rest\onedrive::is_configured();
+        $this->unifiedconfigured = \local_o365\rest\unified::is_configured();
+        $this->sharepointconfigured = \local_o365\rest\sharepoint::is_configured();
+    }
 
-        if (empty($this->oidcconfig)) {
-            throw new \moodle_exception('errorauthoidcnotconfig', 'repository_office365');
-        }
-
-        $this->clientdata = new \local_o365\oauth2\clientdata($this->oidcconfig->clientid, $this->oidcconfig->clientsecret,
-                    $this->oidcconfig->authendpoint, $this->oidcconfig->tokenendpoint);
-
-        $this->onedrive['configured'] = \local_o365\rest\onedrive::is_configured();
-        $this->sharepoint['configured'] = \local_o365\rest\sharepoint::is_configured();
+    /**
+     * Get a unified api token.
+     *
+     * @return \local_o365\oauth2\token A unified api token object.
+     */
+    protected function get_unified_token() {
+        global $USER;
+        $resource = \local_o365\rest\unified::get_resource();
+        return \local_o365\oauth2\token::instance($USER->id, $resource, $this->clientdata, $this->httpclient);
     }
 
     /**
@@ -93,12 +92,27 @@ class repository_office365 extends \repository {
     }
 
     /**
+     * Get a unified API client.
+     *
+     * @return \local_o365\rest\unified A unified API client object.
+     */
+    protected function get_unified_apiclient() {
+        if ($this->unifiedconfigured === true) {
+            $token = $this->get_unified_token();
+            if (!empty($token)) {
+                return new \local_o365\rest\unified($token, $this->httpclient);
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get a onedrive API client.
      *
      * @return \local_o365\rest\onedrive A onedrive API client object.
      */
     protected function get_onedrive_apiclient() {
-        if ($this->onedrive['configured'] === true) {
+        if ($this->onedriveconfigured === true) {
             $token = $this->get_onedrive_token();
             if (!empty($token)) {
                 return new \local_o365\rest\onedrive($token, $this->httpclient);
@@ -113,7 +127,7 @@ class repository_office365 extends \repository {
      * @return \local_o365\rest\sharepoint A sharepoint API client object.
      */
     protected function get_sharepoint_apiclient() {
-        if ($this->sharepoint['configured'] === true) {
+        if ($this->sharepointconfigured === true) {
             $token = $this->get_sharepoint_token();
             if (!empty($token)) {
                 return new \local_o365\rest\sharepoint($token, $this->httpclient);
@@ -159,7 +173,7 @@ class repository_office365 extends \repository {
         if (empty($context)) {
             $context = \context_system::instance();
         }
-        if ($this->sharepoint['configured'] === true && $context instanceof \context_course) {
+        if ($this->sharepointconfigured === true && $context instanceof \context_course) {
             if (empty($path)) {
                 $path = '/courses/'.$context->instanceid;
             }
@@ -168,8 +182,16 @@ class repository_office365 extends \repository {
         $list = [];
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
 
+        $unifiedactive = false;
+        if ($this->unifiedconfigured === true) {
+            $unifiedtoken = $this->get_unified_token();
+            if (!empty($unifiedtoken)) {
+                $unifiedactive = true;
+            }
+        }
+
         $onedriveactive = false;
-        if ($this->onedrive['configured'] === true) {
+        if ($this->onedriveconfigured === true) {
             $onedrivetoken = $this->get_onedrive_token();
             if (!empty($onedrivetoken)) {
                 $onedriveactive = true;
@@ -177,7 +199,7 @@ class repository_office365 extends \repository {
         }
 
         $sharepointactive = false;
-        if ($this->sharepoint['configured'] === true) {
+        if ($this->sharepointconfigured === true) {
             $sharepointtoken = $this->get_sharepoint_token();
             if (!empty($sharepointtoken)) {
                 $sharepointactive = true;
@@ -185,7 +207,10 @@ class repository_office365 extends \repository {
         }
 
         if (strpos($path, '/my/') === 0) {
-            if ($onedriveactive === true) {
+            if ($unifiedactive === true) {
+                // Path is in my files.
+                list($list, $breadcrumb) = $this->get_listing_my_unified(substr($path, 3));
+            } else if ($onedriveactive === true) {
                 // Path is in my files.
                 list($list, $breadcrumb) = $this->get_listing_my(substr($path, 3));
             }
@@ -195,7 +220,7 @@ class repository_office365 extends \repository {
                 list($list, $breadcrumb) = $this->get_listing_course(substr($path, 8));
             }
         } else {
-            if ($onedriveactive === true) {
+            if ($unifiedactive === true || $onedriveactive === true) {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
@@ -284,9 +309,14 @@ class repository_office365 extends \repository {
         $content = file_get_contents($_FILES['repo_upload_file']['tmp_name']);
 
         if ($clienttype === 'onedrive') {
-            $onedrive = $this->get_onedrive_apiclient();
-            $result = $onedrive->create_file($filepath, $filename, $content);
-            $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype]);
+            if ($this->unifiedconfigured === true) {
+                $apiclient = $this->get_unified_apiclient();
+                $result = $apiclient->create_file('', $filename, $content, 'application/octet-stream');
+            } else {
+                $apiclient = $this->get_onedrive_apiclient();
+                $result = $apiclient->create_file($filepath, $filename, $content);
+            }
+            $source = $this->pack_reference(['id' => $result['id'], 'source' => 'onedrive']);
         } else if ($clienttype === 'sharepoint') {
             $pathtrimmed = trim($filepath, '/');
             $pathparts = explode('/', $pathtrimmed);
@@ -408,13 +438,37 @@ class repository_office365 extends \repository {
     }
 
     /**
+     * Get listing for a personal onedrive folder using the unified api.
+     *
+     * @param string $path Folder path.
+     * @return array List of $list array and $path array.
+     */
+    protected function get_listing_my_unified($path = '') {
+        $path = (empty($path)) ? '/' : $path;
+
+        $list = [];
+        if ($this->path_is_upload($path) !== true) {
+            $unified = $this->get_unified_apiclient();
+            $contents = $unified->get_files($path);
+            $list = $this->contents_api_response_to_list($contents, $path, 'unified');
+        } else {
+            $list = [];
+        }
+
+        // Generate path.
+        $strmyfiles = get_string('myfiles', 'repository_office365');
+        $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strmyfiles, 'path' => '/my/']];
+
+        return [$list, $breadcrumb];
+    }
+
+    /**
      * Get listing for a personal onedrive folder.
      *
      * @param string $path Folder path.
      * @return array List of $list array and $path array.
      */
     protected function get_listing_my($path = '') {
-        global $OUTPUT;
         $path = (empty($path)) ? '/' : $path;
 
         $list = [];
@@ -454,20 +508,28 @@ class repository_office365 extends \repository {
         $list = [];
         if ($clienttype === 'onedrive') {
             $pathprefix = '/my'.$path;
+        } else if ($clienttype === 'unified') {
+            $pathprefix = '/my';
         } else if ($clienttype === 'sharepoint') {
             $pathprefix = '/courses'.$path;
         }
 
-        $list[] = [
-            'title' => get_string('upload', 'repository_office365'),
-            'path' => $pathprefix.'/upload/',
-            'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
-            'children' => [],
-        ];
+        if (($clienttype === 'unified' && $path === '/') || $clienttype !== 'unified') {
+            $list[] = [
+                'title' => get_string('upload', 'repository_office365'),
+                'path' => $pathprefix.'/upload/',
+                'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
+                'children' => [],
+            ];
+        }
 
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
-                $itempath = $pathprefix.'/'.$content['name'];
+                if ($clienttype === 'unified') {
+                    $itempath = $pathprefix.'/'.$content['id'];
+                } else {
+                    $itempath = $pathprefix.'/'.$content['name'];
+                }
                 if ($content['type'] === 'Folder') {
                     $list[] = [
                         'title' => $content['name'],
@@ -482,7 +544,7 @@ class repository_office365 extends \repository {
                     $url = $content['webUrl'].'?web=1';
                     $source = [
                         'id' => $content['id'],
-                        'source' => $clienttype,
+                        'source' => ($clienttype === 'sharepoint') ? 'sharepoint' : 'onedrive',
                     ];
                     if ($clienttype === 'sharepoint') {
                         $source['parentsiteuri'] = $spparentsiteuri;
@@ -538,7 +600,11 @@ class repository_office365 extends \repository {
         $reference = $this->unpack_reference($reference);
 
         if ($reference['source'] === 'onedrive') {
-            $sourceclient = $this->get_onedrive_apiclient();
+            if ($this->unifiedconfigured === true) {
+                $sourceclient = $this->get_unified_apiclient();
+            } else {
+                $sourceclient = $this->get_onedrive_apiclient();
+            }
         } else if ($reference['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
             if (isset($reference['parentsiteuri'])) {
@@ -602,7 +668,11 @@ class repository_office365 extends \repository {
 
             try {
                 if ($filesource === 'onedrive') {
-                    $sourceclient = $this->get_onedrive_apiclient();
+                    if ($this->unifiedconfigured === true) {
+                        $sourceclient = $this->get_unified_apiclient();
+                    } else {
+                        $sourceclient = $this->get_onedrive_apiclient();
+                    }
                 } else if ($filesource === 'sharepoint') {
                     $sourceclient = $this->get_sharepoint_apiclient();
                     if (isset($sourceunpacked['parentsiteuri'])) {
@@ -651,10 +721,10 @@ class repository_office365 extends \repository {
      * @param bool $forcedownload If true (default false), forces download of file rather than view in browser/plugin
      * @param array $options additional options affecting the file serving
      */
-    public function send_file($storedfile, $lifetime=null , $filter=0, $forcedownload=false, array $options = null) {
+    public function send_file($storedfile, $lifetime = null , $filter = 0, $forcedownload = false, array $options = null) {
         $reference = $this->unpack_reference($storedfile->get_reference());
 
-        if ($_SERVER['SCRIPT_NAME'] !== '/draftfile.php') {
+        if (false && $_SERVER['SCRIPT_NAME'] !== '/draftfile.php') {
             if ($reference['source'] === 'onedrive') {
                 $sourceclient = $this->get_onedrive_apiclient();
                 $fileurl = (isset($reference['url'])) ? $reference['url'] : '';

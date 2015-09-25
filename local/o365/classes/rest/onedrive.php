@@ -144,17 +144,6 @@ class onedrive extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get a file by it's path.
-     *
-     * @param string $path The file's path.
-     * @return string The file's content.
-     */
-    public function get_file_by_path($path) {
-        $path = rawurlencode($path);
-        return $this->apicall('get', "/getByPath('{$path}')/content");
-    }
-
-    /**
      * Get a file by it's file id.
      *
      * @param string $fileid The file's ID.
