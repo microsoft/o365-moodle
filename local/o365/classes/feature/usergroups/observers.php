@@ -26,10 +26,10 @@ namespace local_o365\feature\usergroups;
 class observers {
 
     /**
-     * Get an AzureAD API instance.
+     * Get an Azure AD API instance.
      *
      * @param string $caller The calling function, used for logging.
-     * @return \local_o365\rest\azuread An AzureAD API instance.
+     * @return \local_o365\rest\azuread An Azure AD API instance.
      */
     public static function get_azuread_api($caller = 'get_azuread_api') {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
@@ -222,7 +222,7 @@ class observers {
         // Look up user.
         $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $newmemberid]);
         if (empty($userobjectdata)) {
-            $msg = 'Not adding user "'.$newmemberid.'" to group "'.$usergroupid.'" because we don\'t have AAD data for them.';
+            $msg = 'Not adding user "'.$newmemberid.'" to group "'.$usergroupid.'" because we don\'t have Azure AD data for them.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
             \local_o365\utils::debug($msg, $caller);
             return false;
@@ -269,7 +269,7 @@ class observers {
         // Look up user.
         $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $newmemberid]);
         if (empty($userobjectdata)) {
-            $msg = 'Not removing user "'.$newmemberid.'" from group "'.$usergroupid.'" because we don\'t have AAD data for them.';
+            $msg = 'Not removing user "'.$newmemberid.'" from group "'.$usergroupid.'". No Azure AD data for user found.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_removed';
             \local_o365\utils::debug($msg, $caller);
             return false;
