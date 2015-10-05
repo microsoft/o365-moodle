@@ -159,8 +159,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         foreach ($idmaps as $idmap) {
             $newidmap = new \stdClass;
             $newidmap->id = $idmap->id;
-            $newidmap->origin = 'moodle';
-            $DB->update_record('local_o365_calidmap', $newidmap);
+            if (empty($idmap->origin)) {
+                $newidmap->origin = 'moodle';
+                $DB->update_record('local_o365_calidmap', $newidmap);
+            }
         }
         $idmaps->close();
 
@@ -189,9 +191,11 @@ function xmldb_local_o365_upgrade($oldversion) {
         $idmaps = $DB->get_recordset_sql($sql);
         foreach ($idmaps as $idmap) {
             $newidmap = new \stdClass;
-            $newidmap->id = $idmap->idmapid;
-            $newidmap->userid = $idmap->eventuserid;
-            $DB->update_record('local_o365_calidmap', $newidmap);
+            if (empty($idmap->userid)) {
+                $newidmap->id = $idmap->idmapid;
+                $newidmap->userid = $idmap->eventuserid;
+                $DB->update_record('local_o365_calidmap', $newidmap);
+            }
         }
         $idmaps->close();
 
