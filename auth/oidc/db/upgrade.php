@@ -66,7 +66,8 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                        u.username as username,
                        tok.id as tokenid,
                        tok.oidcuniqid as oidcuniqid,
-                       tok.idtoken as idtoken
+                       tok.idtoken as idtoken,
+                       tok.oidcusername as oidcusername
                   FROM {auth_oidc_token} tok
                   JOIN {user} u ON u.username = tok.username
                  WHERE u.auth = ? AND deleted = 0';
@@ -86,10 +87,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 }
 
                 // Populate token oidcusername.
-                $updatedtoken = new \stdClass;
-                $updatedtoken->id = $user->tokenid;
-                $updatedtoken->oidcusername = $oidcusername;
-                $DB->update_record('auth_oidc_token', $updatedtoken);
+                if (empty($user->oidcusername)) {
+                    $updatedtoken = new \stdClass;
+                    $updatedtoken->id = $user->tokenid;
+                    $updatedtoken->oidcusername = $oidcusername;
+                    $DB->update_record('auth_oidc_token', $updatedtoken);
+                }
 
                 // Update user username (if applicable), so user can use rocreds loginflow.
                 if ($user->username == strtolower($user->oidcuniqid)) {
