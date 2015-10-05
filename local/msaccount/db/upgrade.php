@@ -33,41 +33,11 @@ function xmldb_local_msaccount_upgrade($oldversion) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014111702) {
-        // Define table to be created.
-        $table = new xmldb_table('msaccount_refresh_tokens');
-
-        // Adding fields to table.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('user_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_field('refresh_token', XMLDB_TYPE_CHAR, '500', null, null, null, null);
-
-        // Adding keys to table.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-        // Create table.
-        if ($dbman->table_exists($table)) {
-            $dbman->drop_table($table);
+        if (!$dbman->table_exists('msaccount_refresh_tokens')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'msaccount_refresh_tokens');
         }
-        $dbman->create_table($table);
-
-        // Msaccount savepoint reached.
         upgrade_plugin_savepoint(true, 2014111702, 'local', 'msaccount');
     }
-
-    // Moodle v2.3.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Moodle v2.4.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Moodle v2.5.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Moodle v2.6.0 release upgrade line.
-    // Put any upgrade step following this.
-
-    // Moodle v2.7.0 release upgrade line.
-    // Put any upgrade step following this.
 
     return true;
 }
