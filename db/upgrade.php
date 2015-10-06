@@ -295,5 +295,12 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011630', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011632) {
+        // Clean up old "calendarsyncin" task record, if present. Replaced by \local_o365\feature\calsync\task\importfromoutlook.
+        $conditions = ['component' => 'local_o365', 'classname' => '\local_o365\task\calendarsyncin'];
+        $DB->delete_records('task_scheduled', $conditions);
+        upgrade_plugin_savepoint($result, '2015011632', 'local', 'o365');
+    }
+
     return $result;
 }
