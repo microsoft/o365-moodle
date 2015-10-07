@@ -198,19 +198,26 @@ abstract class base {
             // Save images etc.
             $i = 1;
             foreach ($imgnodes as $imgnode) {
-                $srcnode = $imgnode->attributes->getNamedItem("src");
-                if (!$srcnode) {
-                    continue;
-                }
-                $response = $this->geturl($srcnode->nodeValue);
-                file_put_contents($filesfolder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
+                try {
+                    $srcnode = $imgnode->attributes->getNamedItem("src");
+                    if (!$srcnode) {
+                        continue;
+                    }
+                    $response = $this->geturl($srcnode->nodeValue);
+                    if (empty($response)) {
+                        continue;
+                    }
+                    file_put_contents($filesfolder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
 
-                // Update img src paths in the html accordingly.
-                $srcnode->nodeValue = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
+                    // Update img src paths in the html accordingly.
+                    $srcnode->nodeValue = '.' . DIRECTORY_SEPARATOR . 'page_files' . DIRECTORY_SEPARATOR . 'img_' . $i;
 
-                // Remove data_fullres_src if present.
-                if ($imgnode->attributes->getNamedItem("data-fullres-src")) {
-                    $imgnode->removeAttribute("data-fullres-src");
+                    // Remove data_fullres_src if present.
+                    if ($imgnode->attributes->getNamedItem("data-fullres-src")) {
+                        $imgnode->removeAttribute("data-fullres-src");
+                    }
+                } catch (\Exception $e) {
+                    // Skip image if there is a problem.
                 }
                 $i++;
             }
@@ -656,7 +663,7 @@ abstract class base {
                 $response = $this->create_page_from_postdata($sectionid, $postdata, $boundary);
 
                 // If we get proper response then break the loop.
-                if ($response != 'connection_error') {
+                if (!empty($response) && $response != 'connection_error') {
                     break;
                 }
                 usleep(500000);
@@ -922,39 +929,46 @@ abstract class base {
      * @return mixed|null|string The HTTP response object from the POST request.
      */
     protected function create_page_from_postdata($sectionid, $postdata, $boundary) {
+        try {
+            $url = static::API.'/sections/'.$sectionid.'/pages';
+            $token = $this->get_token();
+            if (empty($token)) {
+                \local_o365\utils::debug('Could not get user token', 'create_page_from_postdata');
+                return null;
+            }
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_HEADER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $headers = [
+                'Content-Type: multipart/form-data; boundary='.$boundary,
+                'Authorization: Bearer '.rawurlencode($token)
+            ];
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
 
-        $url = static::API.'/sections/'.$sectionid.'/pages';
-        $token = $this->get_token();
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $headers = [
-            'Content-Type: multipart/form-data; boundary='.$boundary,
-            'Authorization: Bearer '.rawurlencode($token)
-        ];
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+            $rawresponse = curl_exec($ch);
 
-        $rawresponse = curl_exec($ch);
+            // Check if curl call fails.
+            if ($rawresponse === false) {
+                $errorno = curl_errno($ch);
+                curl_close($ch);
 
-        // Check if curl call fails.
-        if ($rawresponse === false) {
-            $errorno = curl_errno($ch);
+                // If curl call fails and reason is net connectivity return it or return null.
+                return (in_array($errorno, ['6', '7', '28'])) ? 'connection_error' : null;
+            }
+
+            $info = curl_getinfo($ch);
             curl_close($ch);
 
-            // If curl call fails and reason is net connectivity return it or return null.
-            return (in_array($errorno, ['6', '7', '28'])) ? 'connection_error' : null;
-        }
-
-        $info = curl_getinfo($ch);
-        curl_close($ch);
-
-        if ($info['http_code'] == 201) {
-            $responsewithoutheader = substr($rawresponse, $info['header_size']);
-            $response = json_decode($responsewithoutheader);
-            return $response;
+            if ($info['http_code'] == 201) {
+                $responsewithoutheader = substr($rawresponse, $info['header_size']);
+                $response = json_decode($responsewithoutheader);
+                return $response;
+            }
+        } catch (\Exception $e) {
+            \local_o365\utils::debug($e->getMessage());
         }
 
         return null;

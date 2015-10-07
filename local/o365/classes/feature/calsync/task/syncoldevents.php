@@ -331,6 +331,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $usertoken = $calsync->get_user_token($userid);
         if (empty($usertoken)) {
             // No token, can't sync.
+            \local_o365\utils::debug('Could not get user token for calendar sync.');
             return false;
         }
 
@@ -411,6 +412,11 @@ class syncoldevents extends \core\task\adhoc_task {
     public function execute() {
         $opdata = $this->get_custom_data();
         $timecreated = (isset($opdata->timecreated)) ? $opdata->timecreated : time();
+
+        if (\local_o365\utils::is_configured() !== true) {
+            \local_o365\utils::debug(get_string('erroracpauthoidcnotconfig', 'local_o365'), get_called_class());
+            return false;
+        }
 
         // Sync site events.
         if ($opdata->caltype === 'site') {
