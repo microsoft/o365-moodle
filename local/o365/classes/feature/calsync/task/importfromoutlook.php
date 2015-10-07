@@ -43,6 +43,10 @@ class importfromoutlook extends \core\task\scheduled_task {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/calendar/lib.php');
 
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
         // Get calendars set to sync in.
         $starttime = time();
 
