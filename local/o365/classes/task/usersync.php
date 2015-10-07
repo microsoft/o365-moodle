@@ -58,6 +58,10 @@ class usersync extends \core\task\scheduled_task {
      * Do the job.
      */
     public function execute() {
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
         $aadsyncenabled = get_config('local_o365', 'aadsync');
         if (empty($aadsyncenabled)) {
             mtrace('Azure AD sync disabled. Nothing to do.');

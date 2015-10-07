@@ -58,13 +58,13 @@ class o365 extends base {
     public function geturl($url, $options = array()) {
         global $USER;
         $o365onenoteapi = \local_o365\rest\onenote::instance_for_user($USER->id);
-        return $o365onenoteapi->geturl($url, $options);
+        return (!empty($o365onenoteapi)) ? $o365onenoteapi->geturl($url, $options) : '';
     }
 
     /**
      * Get the token to authenticate with OneNote.
      *
-     * @return string The token to authenticate with OneNote.
+     * @return string|bool The token to authenticate with OneNote, or false if problem.
      */
     public function get_token() {
         global $USER;
@@ -72,7 +72,7 @@ class o365 extends base {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $resource = \local_o365\rest\onenote::get_resource();
         $token = \local_o365\oauth2\token::instance($USER->id, $resource, $clientdata, $httpclient);
-        return $token->get_token();
+        return (!empty($token)) ? $token->get_token() : false;
     }
 
     /**
