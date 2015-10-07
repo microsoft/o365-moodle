@@ -380,7 +380,12 @@ class azuread extends \local_o365\rest\o365api {
                 return false;
             }
             $httpclient = new \local_o365\httpclient();
-            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            try {
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage());
+                return false;
+            }
             $resource = static::get_resource();
             $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);

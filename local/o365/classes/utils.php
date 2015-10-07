@@ -28,6 +28,24 @@ namespace local_o365;
  */
 class utils {
     /**
+     * Determine whether the plugins are configured.
+     *
+     * Determines whether essential configuration has been completed.
+     *
+     * @return bool Whether the plugins are configured.
+     */
+    public static function is_configured() {
+        $cfg = get_config('auth_oidc');
+        if (empty($cfg) || !is_object($cfg)) {
+            return false;
+        }
+        if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Determine if a user is connected to Office 365.
      *
      * @param int $userid The user's ID.

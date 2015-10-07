@@ -42,6 +42,10 @@ class groupcreate extends \core\task\scheduled_task {
     public function execute() {
         global $DB;
 
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
         $configsetting = get_config('local_o365', 'creategroups');
         if (empty($configsetting)) {
             mtrace('Groups not enabled, skipping...');
