@@ -180,7 +180,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
     protected function get_response_assign_group_permission() {
         $response = '{
             "odata.metadata":"https://pdyn.sharepoint.com/moodle/_api/$metadata#Edm.Null",
-            "odata.null":1}';
+            "odata.null":true}';
         return $response;
     }
 
@@ -215,6 +215,15 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
         $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
 
+        $testtoken = (object)[
+            'user_id' => $user1->id,
+            'scope' => '',
+            'token' => '',
+            'refreshtoken' => '',
+            'expiry' => 0
+        ];
+        $testtoken->id = $DB->insert_record('local_o365_token', $testtoken);
+
         $aaduserdata = (object)[
             'type' => 'user',
             'subtype' => '',
@@ -229,7 +238,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $result = $this->getDataGenerator()->role_assign($role, $user1->id, $coursecontext);
 
         $httpclient = new \local_o365\tests\mockhttpclient();
-        $httpclient->set_responses([$this->get_response_add_user_to_group($aaduserdata->userupn)]);
+        $httpclient->set_responses([$this->get_response_add_user_to_group($aaduserdata->o365name)]);
         $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
         $results = $apiclient->add_users_with_capability_to_group($coursecontext, $requiredcapability, 10);
 
@@ -252,6 +261,15 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
 
         $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
         $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
+
+        $testtoken = (object)[
+            'user_id' => $user1->id,
+            'scope' => '',
+            'token' => '',
+            'refreshtoken' => '',
+            'expiry' => 0
+        ];
+        $testtoken->id = $DB->insert_record('local_o365_token', $testtoken);
 
         $aaduserdata = (object)[
             'type' => 'user',
@@ -277,7 +295,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
             // Indicate permissions assigned.
             $this->get_response_assign_group_permission(),
             // Indicate user added to group.
-            $this->get_response_add_user_to_group($aaduserdata->userupn),
+            $this->get_response_add_user_to_group($aaduserdata->o365name),
         ];
         $httpclient->set_responses($httpresponses);
         $apiclient = new \local_o365\rest\sharepoint($this->get_mock_token(), $httpclient);
