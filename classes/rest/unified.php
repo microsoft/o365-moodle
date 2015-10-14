@@ -43,7 +43,7 @@ class unified extends \local_o365\rest\o365api {
      * @return bool Whether the unified API is enabled.
      */
     public static function is_enabled() {
-        return true;
+        return false;
     }
 
     /**
@@ -462,7 +462,7 @@ class unified extends \local_o365\rest\o365api {
             'openid',
             'Calendars.ReadWrite',
             'Directory.AccessAsUser.All',
-            'Directory.ReadWrite.All',
+            'Directory.Write',
             'Files.ReadWrite',
             'User.ReadWrite.All',
             'Group.ReadWrite.All',
