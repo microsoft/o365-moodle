@@ -200,12 +200,22 @@ abstract class o365api {
         if (isset($result['odata.error'])) {
             $errmsg = 'Error response received.';
             \local_o365\utils::debug($errmsg, $caller, $result['odata.error']);
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+            if (isset($result['odata.error']['message']) && isset($result['odata.error']['message']['value'])) {
+                $apierrormessage = $result['odata.error']['message']['value'];
+                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $apierrormessage);
+            } else {
+                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+            }
         }
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
             \local_o365\utils::debug($errmsg, $caller, $result['error']);
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+            if (isset($result['error']['message']) && isset($result['error']['message']['value'])) {
+                $apierrormessage = $result['error']['message']['value'];
+                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $apierrormessage);
+            } else {
+                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+            }
         }
 
         foreach ($expectedstructure as $key => $val) {

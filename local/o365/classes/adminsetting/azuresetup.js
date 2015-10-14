@@ -137,6 +137,10 @@ $.fn.azuresetup = function(options) {
      * @return object jQuery object for rendered results section.
      */
     this.rendersection_unifiedapi = function(data) {
+        if (typeof(data.error) !== 'undefined') {
+            return main.rendererrorbox(data.error);
+        }
+
         var unifiedactive = (typeof(data.active) !== 'undefined' && data.active === true) ? true : false;
         if (unifiedactive === true) {
             var content = $('<div></div>');
@@ -168,7 +172,11 @@ $.fn.azuresetup = function(options) {
      * @return object jQuery object for rendered results section.
      */
     this.rendersection_legacyapi = function(data) {
-        if (Object.keys(data.missingperms).length > 0) {
+        if (typeof(data.error) !== 'undefined') {
+            return main.rendererrorbox(data.error);
+        }
+
+        if (typeof(data.missingperms) !== 'undefined' && Object.keys(data.missingperms).length > 0) {
             // Render missing permissions.
             var content = opts.strmissingperms+'<br />';
             for (var appname in data.missingperms) {

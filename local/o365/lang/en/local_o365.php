@@ -40,6 +40,7 @@ $string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
 $string['errorcreatingsharepointclient'] = 'Could not get SharePoint api client';
 $string['errorchecksystemapiuser'] = 'Could not get a system API user token, please run the health check, ensure that your Moodle cron is running, and refresh the system API user if necessary.';
 $string['erroro365apibadcall'] = 'Error in API call.';
+$string['erroro365apibadcall_message'] = 'Error in API call: {$a}';
 $string['erroro365apibadpermission'] = 'Permission not found';
 $string['erroro365apicouldnotcreatesite'] = 'Problem creating site.';
 $string['erroro365apicoursenotfound'] = 'Course not found.';
