@@ -47,16 +47,18 @@ class sharepointaccesssync extends \core\task\adhoc_task {
                              JOIN {local_o365_spgroupdata} grp ON grp.coursespsiteid = site.id
                             WHERE site.courseid = ? AND grp.permtype = ?';
             $spgrouprec = $DB->get_record_sql($spgroupsql, [$courseid, 'contribute']);
-            foreach ($users as $user) {
-                $userid = (is_numeric($user)) ? $user : $user->id;
-                $userupn = \local_o365\rest\azuread::get_muser_upn($user);
-                $hascap = has_capability($requiredcap, $context, $user);
-                if ($hascap === true) {
-                    // Add to group.
-                    $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $userid);
-                } else {
-                    // Remove from group.
-                    $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $userid);
+            if (!empty($spgrouprec)) {
+                foreach ($users as $user) {
+                    $userid = (is_numeric($user)) ? $user : $user->id;
+                    $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+                    $hascap = has_capability($requiredcap, $context, $user);
+                    if ($hascap === true) {
+                        // Add to group.
+                        $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $userid);
+                    } else {
+                        // Remove from group.
+                        $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $userid);
+                    }
                 }
             }
         }
