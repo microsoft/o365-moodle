@@ -75,10 +75,6 @@ if ($hassiteconfig) {
     $desc = get_string('settings_detectoidc_details', 'local_o365');
     $settings->add(new \local_o365\adminsetting\detectoidc('local_o365/detectoidc', $label, $desc));
 
-    $label = get_string('settings_azuresetup', 'local_o365');
-    $desc = get_string('settings_azuresetup_details', 'local_o365');
-    $settings->add(new \local_o365\adminsetting\azuresetup('local_o365/azuresetup', $label, $desc));
-
     $label = get_string('settings_aadtenant', 'local_o365');
     $desc = get_string('settings_aadtenant_details', 'local_o365');
     $default = '';
@@ -90,6 +86,10 @@ if ($hassiteconfig) {
     $default = '';
     $paramtype = PARAM_URL;
     $settings->add(new \local_o365\adminsetting\serviceresource('local_o365/odburl', $label, $desc, $default, $paramtype));
+
+    $label = get_string('settings_azuresetup', 'local_o365');
+    $desc = get_string('settings_azuresetup_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\azuresetup('local_o365/azuresetup', $label, $desc));
 
     $label = get_string('settings_sharepointlink', 'local_o365');
     $desc = get_string('settings_sharepointlink_details', 'local_o365');
