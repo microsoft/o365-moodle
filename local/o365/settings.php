@@ -59,6 +59,10 @@ if ($hassiteconfig) {
     $desc = get_string('settings_o365china_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
 
+    $label = get_string('settings_enableunifiedapi', 'local_o365');
+    $desc = get_string('settings_enableunifiedapi_details', 'local_o365');
+    $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '0'));
+
     $label = get_string('settings_creategroups', 'local_o365');
     $desc = get_string('settings_creategroups_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/creategroups', $label, $desc, '0'));
