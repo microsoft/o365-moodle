@@ -43,7 +43,8 @@ class unified extends \local_o365\rest\o365api {
      * @return bool Whether the unified API is enabled.
      */
     public static function is_enabled() {
-        return true;
+        $enabled = get_config('local_o365', 'enableunifiedapi');
+        return (!empty($enabled)) ? true : false;
     }
 
     /**
