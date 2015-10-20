@@ -24,15 +24,15 @@
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect plugin provides single-sign-on functionality using configurable identity providers.';
 
-$string['cfg_authendpoint_key'] = 'Auth Endpoint';
-$string['cfg_authendpoint_desc'] = 'The URI of the auth endoint from your identity provider to use.';
+$string['cfg_authendpoint_key'] = 'Authorization Endpoint';
+$string['cfg_authendpoint_desc'] = 'The URI of the Authorization endoint from your identity provider to use.';
 $string['cfg_autoappend_key'] = 'Auto-Append';
 $string['cfg_autoappend_desc'] = 'Automatically append this string when logging in users using the Username/Password login flow. This is useful when your identity provider requires a common domain, but don\'t want to require users to type it in when logging in. For example, if the full OpenID Connect user is "james@example.com" and you enter "@example.com" here, the user will only have to enter "james" as their username. <br /><b>Note:</b> In the case where conflicting usernames exist - i.e. a Moodle user exists wth the same name, the priority of the authentication plugin is used to determine which user wins out.';
 $string['cfg_clientid_key'] = 'Client ID';
 $string['cfg_clientid_desc'] = 'Your registered Client ID on the identity provider';
 $string['cfg_clientsecret_key'] = 'Client Secret';
 $string['cfg_clientsecret_desc'] = 'Your registered Client Secret on the identity provider. On some providers, it is also referred to as a key.';
-$string['cfg_err_invalidauthendpoint'] = 'Invalid Auth Endpoint';
+$string['cfg_err_invalidauthendpoint'] = 'Invalid Authorization Endpoint';
 $string['cfg_err_invalidtokenendpoint'] = 'Invalid Token Endpoint';
 $string['cfg_err_invalidclientid'] = 'Invalid client ID';
 $string['cfg_err_invalidclientsecret'] = 'Invalid client secret';
@@ -82,7 +82,7 @@ $string['errorauthnoauthcode'] = 'Auth code not received.';
 $string['errorauthnocreds'] = 'Please configure OpenID Connect client credentials.';
 $string['errorauthnoendpoints'] = 'Please configure OpenID Connect server endpoints.';
 $string['errorauthnohttpclient'] = 'Please set an HTTP client.';
-$string['errorauthnoidtoken'] = 'OIDC id_token not received.';
+$string['errorauthnoidtoken'] = 'OpenID Connect id_token not received.';
 $string['errorauthunknownstate'] = 'Unknown state.';
 $string['errorauthuseralreadyconnected'] = 'You\'re already connected to a different OpenID Connect user.';
 $string['errorauthuserconnectedtodifferent'] = 'The OpenID Connect user that authenticated is already connected to a Moodle user.';
@@ -94,10 +94,10 @@ $string['errorjwtinvalidheader'] = 'Invalid JWT header';
 $string['errorjwtmalformed'] = 'Malformed JWT received.';
 $string['errorjwtunsupportedalg'] = 'JWS Alg or JWE not supported';
 $string['erroroidcnotenabled'] = 'The OpenID Connect authentication plugin is not enabled.';
-$string['errornodisconnectionauthmethod'] = 'Cannot disconnect because there is no enabled auth plugin to fall back to. (either user\'s previous login method or the manual login method).';
+$string['errornodisconnectionauthmethod'] = 'Cannot disconnect because there is no enabled authentication plugin to fall back to. (either user\'s previous login method or the manual login method).';
 $string['erroroidcclientinvalidendpoint'] = 'Invalid Endpoint URI received.';
 $string['erroroidcclientnocreds'] = 'Please set client credentials with setcreds';
-$string['erroroidcclientnoauthendpoint'] = 'No auth endpoint set. Please set with $this->setendpoints';
+$string['erroroidcclientnoauthendpoint'] = 'No authorization endpoint set. Please set with $this->setendpoints';
 $string['erroroidcclientnotokenendpoint'] = 'No token endpoint set. Please set with $this->setendpoints';
 $string['erroroidcclientinsecuretokenendpoint'] = 'The token endpoint must be using SSL/TLS for this.';
 $string['errorucpinvalidaction'] = 'Invalid action received.';
@@ -110,6 +110,8 @@ $string['eventuserdisconnected'] = 'User disconnected from OpenID Connect';
 
 $string['oidc:manageconnection'] = 'Manage OpenID Connect Connection';
 
+// In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
+// "Office 365", "OpenID Connect", etc.
 $string['ucp_general_intro'] = 'Here you can manage your connection to {$a}. If enabled, you will be able to use your {$a} account to log in to Moodle instead of a separate username and password. Once connected, you\'ll no longer have to remember a username and password for Moodle, all log-ins will be handled by {$a}.';
 $string['ucp_login_start'] = 'Start using {$a} to log in to Moodle';
 $string['ucp_login_start_desc'] = 'This will switch your account to use {$a} to log in to Moodle. Once enabled, you will log in using your {$a} credentials - your current Moodle username and password will not work. You can disconnect your account at any time and return to logging in normally.';
