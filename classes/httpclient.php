@@ -87,4 +87,20 @@ class httpclient extends \curl implements \auth_oidc\httpclientinterface {
         $this->resetHeader();
         return $result;
     }
+
+    /**
+     * HTTP POST method.
+     *
+     * @param string $url
+     * @param array|string $params
+     * @param array $options
+     * @return bool
+     */
+    public function post($url, $params = '', $options = array()) {
+        // Encode data to disable uploading files when values are prefixed @.
+        if (is_array($params)) {
+            $params = http_build_query($params, '', '&');
+        }
+        return parent::post($url, $params, $options);
+    }
 }
