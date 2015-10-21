@@ -185,33 +185,45 @@ class ajax extends base {
 
         // Legacy API.
         $legacyapi = new \stdClass;
-        $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-        list($missingperms, $haswrite) = $aadapiclient->check_permissions();
-        $legacyapi->missingperms = $missingperms;
-        $legacyapi->haswrite = $haswrite;
+        try {
+            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+            list($missingperms, $haswrite) = $aadapiclient->check_permissions();
+            $legacyapi->missingperms = $missingperms;
+            $legacyapi->haswrite = $haswrite;
+        } catch (\Exception $e) {
+            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy');
+            $legacyapi->error = $e->getMessage();
+        }
+        $data->legacyapi = $legacyapi;
 
         // Unified API.
         $unifiedapi = new \stdClass;
         $unifiedapi->active = false;
-        $httpclient = new \local_o365\httpclient();
-        $unifiedresource = \local_o365\rest\unified::get_resource();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
-        if (empty($token)) {
-            throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
+        if (\local_o365\rest\unified::is_enabled() === true) {
+            try {
+                $httpclient = new \local_o365\httpclient();
+                $unifiedresource = \local_o365\rest\unified::get_resource();
+                $token = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
+                if (empty($token)) {
+                    throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
+                }
+                $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
+                $unifiedpermsresult = $unifiedapiclient->check_permissions();
+                if ($unifiedpermsresult === null) {
+                    $unifiedapi->active = false;
+                } else {
+                    $unifiedapi->active = true;
+                    $unifiedapi->missingperms = $unifiedpermsresult;
+                }
+            } catch (\Exception $e) {
+                $unifiedapi->active = false;
+                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified');
+                $unifiedapi->error = $e->getMessage();
+            }
         }
-        $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
-        $unifiedpermsresult = $unifiedapiclient->check_permissions();
-        if ($unifiedpermsresult === null) {
-            $unifiedapi->active = false;
-        } else {
-            $unifiedapi->active = true;
-            $unifiedapi->missingperms = $unifiedpermsresult;
-        }
-
-        $data->legacyapi = $legacyapi;
         $data->unifiedapi = $unifiedapi;
-        set_config('azuresetupresult', serialize($data), 'local_o365');
         set_config('unifiedapiactive', (int)$unifiedapi->active, 'local_o365');
+        set_config('azuresetupresult', serialize($data), 'local_o365');
 
         $success = true;
         echo $this->ajax_response($data, $success);
