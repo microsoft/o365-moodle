@@ -23,7 +23,7 @@
  */
 
 $string['configmaxbytes'] = 'Maximum OneNote size';
-$string['countfiles'] = '{$a} OneNotes';
+$string['countfiles'] = 'OneNotes: {$a}';
 $string['default'] = 'Enabled by default';
 $string['default_help'] = 'When set, this feedback method is enabled by default for all new assignments.';
 $string['enabled'] = 'OneNote feedback';

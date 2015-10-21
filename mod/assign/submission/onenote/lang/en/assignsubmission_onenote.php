@@ -24,7 +24,7 @@
 
 
 $string['configmaxbytes'] = 'Maximum OneNote page size';
-$string['countfiles'] = '{$a} OneNote pages';
+$string['countfiles'] = 'OneNotes: {$a}';
 $string['default'] = 'Enabled by default';
 $string['default_help'] = 'When set, this submission method is enabled by default for all new assignments.';
 $string['enabled'] = 'OneNote submissions';
@@ -36,7 +36,7 @@ $string['maxfilessubmission'] = 'Maximum number of uploaded OneNote pages';
 $string['maxfilessubmission_help'] = 'If OneNote submissions are enabled, each student will be able to upload up to this number of OneNote pages for their submission.';
 $string['maximumsubmissionsize'] = 'OneNote page size';
 $string['maximumsubmissionsize_help'] = 'Sets the maximum submission size of OneNote pages.';
-$string['numfilesforlog'] = 'The number of OneNote page(s) : {$a} OneNote page(s).';
+$string['numfilesforlog'] = 'The number of OneNote page(s) : {$a}';
 $string['pluginname'] = 'OneNote submissions';
 $string['siteuploadlimit'] = 'Site upload limit';
 $string['submissionfilearea'] = 'Uploaded submission OneNote pages';
