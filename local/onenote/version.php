@@ -29,3 +29,6 @@ $plugin->requires = 2014051200;
 $plugin->component = 'local_onenote';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '27.0.0.6';
+$plugin->dependencies = [
+    'local_msaccount' => 2015011603.1,
+];
