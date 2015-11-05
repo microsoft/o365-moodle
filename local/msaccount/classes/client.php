@@ -22,6 +22,7 @@
  * @copyright  Microsoft Open Technologies, Inc.
  */
 
+namespace local_msaccount;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -30,7 +31,7 @@ require_once($CFG->libdir.'/oauthlib.php');
 /*
  * Subclass the oauth2_client class because we want to override some of its methods
  */
-class msaccount_client extends oauth2_client {
+class client extends \oauth2_client {
     /** @var string OAuth 2.0 scope */
     const SCOPE = 'office.onenote_update wl.skydrive wl.offline_access';
 
@@ -38,14 +39,14 @@ class msaccount_client extends oauth2_client {
     private $tokenasparam = true;
 
     /**
-     * Construct a msaccount_client object.
+     * Construct a local_msaccount\client object.
      *
      * @param string $clientid client id for OAuth 2.0 provided by microsoft
      * @param string $clientsecret secret for OAuth 2.0 provided by microsoft
      * @param moodle_url $returnurl url to return to after succseful auth
      */
     public function __construct() {
-        $returnurl = new moodle_url('/local/msaccount/msaccount_redirect.php');
+        $returnurl = new \moodle_url('/local/msaccount/msaccount_redirect.php');
         $returnurl->param('sesskey', sesskey());
 
         parent::__construct(get_config('local_msaccount', 'clientid'), get_config('local_msaccount', 'clientsecret'),
@@ -305,144 +306,4 @@ class msaccount_client extends oauth2_client {
         $this->tokenasparam = true;
         return $response;
     }
-}
-
-/**
- * A helper class to access Microsoft Account using the REST api.
- * This is a singleton class.
- * All access to Microsoft Account should be through this class instead of directly accessing the msaccount_client class.
- *
- * @package    local_msaccount
- */
-class msaccount_api {
-
-    private static $instance = null;
-    private $msaccountclient = null;
-
-    /**
-     * Constructor for msaccount class. This is a singleton class so do not use the constructor directly.
-     */
-    protected function __construct() {
-        $this->msaccountclient = new msaccount_client();
-    }
-
-    /**
-     * Get the instance of the msaccount_api object. Use this method to obtain an instance of the class rather than
-     * the constructor. Also tries to ensure that the user is logged in.
-     * @return null|static The instance.
-     */
-    public static function getinstance() {
-        if (null === self::$instance) {
-            self::$instance = new static();
-        }
-
-        self::$instance->msaccountclient->is_logged_in();
-
-        return self::$instance;
-    }
-
-    /**
-     * Get the underlying msaccount client.
-     * @return msaccount_client|null
-     */
-    public function get_msaccount_client() {
-        return $this->msaccountclient;
-    }
-
-    /**
-     * Check if user is logged in to Microsoft Account. Also handles upgrading / refreshing the token if needed.
-     * @return bool True iff the user is logged in.
-     */
-    public function is_logged_in() {
-        return $this->get_msaccount_client()->is_logged_in();
-    }
-
-    /**
-     * Get the Microsoft Account login url.
-     * @return mixed
-     */
-    public function get_login_url() {
-        return $this->get_msaccount_client()->get_login_url();
-    }
-
-    /**
-     * Logout from Microsoft Account.
-     * @return mixed
-     */
-    public function log_out() {
-        return $this->get_msaccount_client()->log_out();
-    }
-
-    /**
-     * A wrapper for the myget() method in the underlying msaccount_client class.
-     * @param $url
-     * @param array $params
-     * @param string $token
-     * @param string $secret
-     * @return mixed
-     */
-    public function myget($url, $params=array(), $token='', $secret='') {
-        return $this->get_msaccount_client()->myget($url, $params, $token, $secret);
-    }
-
-    /**
-     * A wrapper for the mypost() method in the underlying msaccount_client class.
-     * @param $url
-     * @param array $params
-     * @param string $token
-     * @param string $secret
-     * @return mixed
-     */
-    public function mypost($url, $params=array(), $token='', $secret='') {
-        return $this->get_msaccount_client()->mypost($url, $params, $token, $secret);
-    }
-
-    /**
-     * Get the OAuth access token for the currently logged in user. This may be used in HTTP requests that require
-     * authentication.
-     * @return mixed
-     */
-    public function get_accesstoken() {
-        return $this->get_msaccount_client()->get_accesstoken();
-    }
-
-    /**
-     * A simple wrapper for the setHeader() method in the underyling msaccount_client class.
-     * @param $header
-     * @return mixed
-     */
-    public function setHeader($header) {
-        return $this->get_msaccount_client()->setHeader($header);
-    }
-
-    /**
-     * Return the HTML for the sign in widget for the Microsoft Account.
-     * Please refer to the styles.css file for styling this widget.
-     * @return string HTML containing the sign in widget.
-     */
-    public function render_signin_widget() {
-        $url = $this->get_login_url();
-
-        return '<a onclick="window.open(this.href,\'mywin\',' .
-            '\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;"' .
-            'href="'.$url->out(false).'" class="local_msaccount_linkbutton">' . get_string('signin', 'local_msaccount') . '</a>';
-    }
-
-    // These are useful primarily for testing purposes.
-    /**
-     * Store a refresh token into the database so it can be used to obtain a token for subsequent HTTP requests.
-     * @param $refreshtoken
-     */
-    public function store_refresh_token($refreshtoken) {
-        $this->get_msaccount_client()->store_refresh_token($refreshtoken);
-    }
-
-    /**
-     * Get the saved refresh token for the currently logged in user from the database.
-     * @return string Refresh token.
-     */
-    public function refresh_token() {
-        return $this->get_msaccount_client()->refresh_token();
-    }
-
 }

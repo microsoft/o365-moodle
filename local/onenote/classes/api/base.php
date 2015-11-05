@@ -124,8 +124,7 @@ abstract class base {
         $o365class = '\local_onenote\api\o365';
         $iso365user = (\local_o365\utils::is_o365_connected($USER->id) === true && class_exists('\local_o365\rest\onenote')) ? true : false;
         if ($iso365user === true) {
-            require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
-            $sesskey = 'msaccount_client-'.md5(\msaccount_client::SCOPE);
+            $sesskey = 'msaccount_client-'.md5(\local_msaccount\client::SCOPE);
             $disableo365onenote = get_user_preferences('local_o365_disableo365onenote', 0);
             $iso365user = (!empty($SESSION->$sesskey) || !empty($disableo365onenote)) ? false : $iso365user;
 
