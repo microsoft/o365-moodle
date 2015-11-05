@@ -22,9 +22,8 @@
  */
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
-require_once(dirname(__FILE__).'/msaccount_client.php');
 
-if (!msaccount_api::getinstance()->is_logged_in()) { // Upgrades token and then checks for success.
+if (!\local_msaccount\api::getinstance()->is_logged_in()) { // Upgrades token and then checks for success.
     throw new moodle_exception('Unable to log in to Microsoft Account.');
 }
 $strhttpsbug = get_string('cannotaccessparentwin', 'local_msaccount');
