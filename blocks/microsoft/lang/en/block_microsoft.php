@@ -22,8 +22,10 @@
  */
 
 $string['pluginname'] = 'Microsoft block';
+$string['contactadmin'] = 'Contact administrator for more information.';
 $string['error_nomoodlenotebook'] = 'Could not find your Moodle notebook.';
 $string['linkonenote'] = 'Moodle OneNote notebook';
+$string['linkonenote_unavailable'] = 'OneNote unavailable';
 $string['linksharepoint'] = 'Course SharePoint site';
 $string['linkoutlook'] = 'Configure Outlook sync';
 $string['linkprefs'] = 'Preferences';
