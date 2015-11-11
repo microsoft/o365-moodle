@@ -297,15 +297,14 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function create_file($parentid, $filename, $content, $contenttype = 'text/plain') {
-        $params = json_encode(['name' => $filename, 'type' => 'File']);
-        $endpoint = '/me/files';
-        $fileresponse = $this->apicall('post', $endpoint, $params);
+        if (!empty($parentid)) {
+            $endpoint = "/me/drive/items/{$parentid}/children/{$filename}/content";
+        } else {
+            $endpoint = "/me/drive/root:/{$filename}/content";
+        }
+        $fileresponse = $this->apicall('put', $endpoint, ['file' => $content], ['contenttype' => $contenttype]);
         $expectedparams = ['id' => null];
         $fileresponse = $this->process_apicall_response($fileresponse, $expectedparams);
-        if (isset($fileresponse['id'])) {
-            $endpoint = '/me/files/'.$fileresponse['id'].'/uploadContent';
-            $contentresponse = $this->apicall('post', $endpoint, $content, ['contenttype' => $contenttype]);
-        }
         return $fileresponse;
     }
 
@@ -316,9 +315,10 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function get_files($parentid = '') {
-        $endpoint = '/me/files';
         if (!empty($parentid) && $parentid !== '/') {
-            $endpoint .= "/{$parentid}/children";
+            $endpoint = "/me/drive/items/{$parentid}/children";
+        } else {
+            $endpoint = '/me/drive/root/children';
         }
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
@@ -332,7 +332,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function get_file_metadata($fileid) {
-        $response = $this->apicall('get', "/me/files/{$fileid}");
+        $response = $this->apicall('get', "/me/drive/items/{$fileid}");
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -344,7 +344,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function get_file_by_id($fileid) {
-        return $this->apicall('get', "/me/files/{$fileid}/content");
+        return $this->apicall('get', "/me/drive/items/{$fileid}/content");
     }
 
     /**
