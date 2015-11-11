@@ -161,7 +161,7 @@ abstract class o365api {
             'Authorization: Bearer '.$this->token->get_token(),
         ];
 
-        if (!empty($params) && is_string($params)) {
+        if ($httpmethod !== 'put' && !empty($params) && is_string($params)) {
             $header[] = 'Content-length: '.strlen($params);
         }
 
@@ -170,7 +170,7 @@ abstract class o365api {
 
         // Sleep to avoid rate limiting.
         if (empty($this->disableratelimit)) {
-            usleep(1250000);
+            usleep(1050000);
         } else {
             usleep(250000);
         }
@@ -210,8 +210,13 @@ abstract class o365api {
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
             \local_o365\utils::debug($errmsg, $caller, $result['error']);
-            if (isset($result['error']['message']) && isset($result['error']['message']['value'])) {
-                $apierrormessage = $result['error']['message']['value'];
+            if (isset($result['error']['message'])) {
+                $apierrormessage = 'Unknown error, check logs for more information.';
+                if (is_string($result['error']['message'])) {
+                    $apierrormessage = $result['error']['message'];
+                } else if (is_array($result['error']['message']) && isset($result['error']['message']['value'])) {
+                    $apierrormessage = $result['error']['message']['value'];
+                }
                 throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $apierrormessage);
             } else {
                 throw new \moodle_exception('erroro365apibadcall', 'local_o365');
