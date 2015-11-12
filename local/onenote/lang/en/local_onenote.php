@@ -27,3 +27,4 @@ $string['submissiontitle'] = 'Submission: {$a->assign_name} [{$a->student_firstn
 $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname} {$a->student_lastname}]';
 $string['connction_error'] = 'Cannot open OneNote page due to connection error. Please try after some time.';
 $string['onenote_page_error'] = 'Could not open the OneNote page for this submission or feedback.';
+$string['error_noapiavailable'] = 'No OneNote API is available. If using the Office 365 plugin set, we were not able to contact OneNote. Otherwise, please install local_msaccount.';
