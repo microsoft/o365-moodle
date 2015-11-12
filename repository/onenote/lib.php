@@ -42,7 +42,11 @@ class repository_onenote extends repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
 
-        $this->onenoteapi = \local_onenote\api\base::getinstance();
+        try {
+            $this->onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            $this->onenoteapi = false;
+        }
     }
 
     /**
@@ -51,7 +55,7 @@ class repository_onenote extends repository {
      * @return bool true when logged in
      */
     public function check_login() {
-        return $this->onenoteapi->is_logged_in();
+        return (!empty($this->onenoteapi)) ? $this->onenoteapi->is_logged_in() : false;
     }
 
     /**
@@ -60,6 +64,10 @@ class repository_onenote extends repository {
      * @return array of login options
      */
     public function print_login() {
+        if (empty($this->onenoteapi)) {
+            throw new \moodle_exception('error_noapiavailable', 'local_onenote');
+        }
+
         $url = $this->onenoteapi->get_login_url();
 
         if ($this->options['ajax']) {
@@ -87,14 +95,20 @@ class repository_onenote extends repository {
         $ret['nosearch'] = true;
         $ret['manage'] = 'https://onenote.com/';
 
-        $fileslist = $this->onenoteapi->get_items_list($path);
-        // Filter list for accepted types. Hopefully this will be done by core some day.
-        $fileslist = array_filter($fileslist, array($this, 'filter'));
-        $ret['list'] = $fileslist;
-
         // Generate path bar, always start with the plugin name.
         $ret['path']   = array();
         $ret['path'][] = array('name' => $this->name, 'path' => '');
+
+        // Get + filter list of files.
+        try {
+            $fileslist = $this->onenoteapi->get_items_list($path);
+        } catch (\Exception $e) {
+            // Problem getting an API class.
+            $ret['list'] = [];
+            return $ret;
+        }
+        $fileslist = array_filter($fileslist, array($this, 'filter'));
+        $ret['list'] = $fileslist;
 
         // Now add each level folder.
         $trail = '';
@@ -122,7 +136,9 @@ class repository_onenote extends repository {
      */
     public function get_file($id, $filename = '') {
         $path = $this->prepare_file($filename);
-        return $this->onenoteapi->download_page($id, $path);
+        return (!empty($this->onenoteapi))
+            ? $this->onenoteapi->download_page($id, $path)
+            : get_string('error_noapiavailable', 'local_onenote');
     }
 
     /**
@@ -141,7 +157,9 @@ class repository_onenote extends repository {
      * @return page to display
      */
     public function logout() {
-        $this->onenoteapi->log_out();
+        if (!empty($this->onenoteapi)) {
+            $this->onenoteapi->log_out();
+        }
         return $this->print_login();
     }
 

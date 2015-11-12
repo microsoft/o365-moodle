@@ -35,7 +35,8 @@ $subuserid = optional_param('submissionuserid', null, PARAM_INT);
 $sub = optional_param('submissionid', null, PARAM_INT);
 $gradeid = optional_param('gradeid', null, PARAM_INT);
 
-$url = \local_onenote\api\base::getinstance()->get_page($cmid, $wantfeedbackpage, $isteacher, $subuserid, $sub, $gradeid);
+$onenoteapi = \local_onenote\api\base::getinstance();
+$url = $onenoteapi->get_page($cmid, $wantfeedbackpage, $isteacher, $subuserid, $sub, $gradeid);
 
 // If connection error then show message.
 if ($url == 'connection_error') {
