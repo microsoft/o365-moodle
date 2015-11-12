@@ -90,6 +90,20 @@ class main {
         require_once($CFG->dirroot.'/user/profile/lib.php');
         require_once($CFG->dirroot.'/user/lib.php');
 
+        // Locate country code.
+        if (isset($aaddata['country'])) {
+            $countries = get_string_manager()->get_list_of_countries();
+            foreach ($countries as $code => $name) {
+                if ($aaddata['country'] == $name) {
+                    $aaddata['country'] = $code;
+                }
+            }
+            if (strlen($aaddata['country']) > 2) {
+                // Limit string to 2 chars to prevent sql error.
+                $aaddata['country'] = substr($aaddata['country'], 0, 2);
+            }
+        }
+
         $newuser = (object)[
             'auth' => 'oidc',
             'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
