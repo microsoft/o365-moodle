@@ -126,7 +126,7 @@ class client extends \oauth2_client {
         }
 
         if (!$this->info['http_code'] === 200) {
-            throw new moodle_exception('Could not upgrade oauth token');
+            throw new \moodle_exception('Could not upgrade oauth token');
         }
 
         $r = json_decode($response);
@@ -136,7 +136,7 @@ class client extends \oauth2_client {
         }
 
         // Store the token an expiry time.
-        $accesstoken = new stdClass;
+        $accesstoken = new \stdClass;
         $accesstoken->token = $r->access_token;
         $accesstoken->expires = (time() + ($r->expires_in - 10)); // Expires 10 seconds before actual expiry.
         $this->store_token($accesstoken);
@@ -195,7 +195,7 @@ class client extends \oauth2_client {
         }
 
         // Store the new token with new expiry time.
-        $accesstoken = new stdClass;
+        $accesstoken = new \stdClass;
         $accesstoken->token = $r->access_token;
         $accesstoken->expires = (time() + ($r->expires_in - 10)); // Expires 10 seconds before actual expiry.
         $this->store_token($accesstoken);
@@ -218,7 +218,7 @@ class client extends \oauth2_client {
             $record->refresh_token = $refreshtoken;
             $DB->update_record('msaccount_refresh_tokens', $record);
         } else {
-            $record = new stdClass();
+            $record = new \stdClass();
             $record->user_id = $USER->id;
             $record->refresh_token = $refreshtoken;
             $DB->insert_record('msaccount_refresh_tokens', $record);

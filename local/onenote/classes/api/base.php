@@ -122,11 +122,14 @@ abstract class base {
 
         $msaccountclass = '\local_onenote\api\msaccount';
         $o365class = '\local_onenote\api\o365';
+        $class = '';
         $iso365user = (\local_o365\utils::is_o365_connected($USER->id) === true && class_exists('\local_o365\rest\onenote')) ? true : false;
         if ($iso365user === true) {
-            $sesskey = 'msaccount_client-'.md5(\local_msaccount\client::SCOPE);
+            $sesskey = class_exists('\local_msaccount\client') ? 'msaccount_client-'.md5(\local_msaccount\client::SCOPE) : null;
             $disableo365onenote = get_user_preferences('local_o365_disableo365onenote', 0);
-            $iso365user = (!empty($SESSION->$sesskey) || !empty($disableo365onenote)) ? false : $iso365user;
+
+            // If the user is logged in to msaccount OneNote, or has o365 OneNote disabled.
+            $iso365user = ((!empty($sesskey) && !empty($SESSION->$sesskey)) || !empty($disableo365onenote)) ? false : $iso365user;
 
             if ($iso365user === true) {
                 try {
@@ -142,9 +145,17 @@ abstract class base {
                 }
             }
 
-            $class = ($iso365user === true) ? $o365class : $msaccountclass;
+            if ($iso365user === true) {
+                $class = $o365class;
+            } else {
+                $class = (class_exists('\local_msaccount\client')) ? $msaccountclass : null;
+            }
         } else {
-            $class = $msaccountclass;
+            $class = (class_exists('\local_msaccount\client')) ? $msaccountclass : null;
+        }
+
+        if (empty($class)) {
+            throw new \moodle_exception('error_noapiavailable', 'local_onenote');
         }
 
         if (empty(self::$instance)) {
