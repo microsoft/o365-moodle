@@ -227,7 +227,7 @@ abstract class o365api {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "'.$key.'"';
                 \local_o365\utils::debug($errmsg, $caller, $result);
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
 
             if ($val !== null && $result[$key] !== $val) {
@@ -235,7 +235,7 @@ abstract class o365api {
                 $strval = \local_o365\utils::tostring($val);
                 $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
                 \local_o365\utils::debug($errmsg, $caller, $result);
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
         }
         return $result;
