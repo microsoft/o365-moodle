@@ -115,7 +115,7 @@ class unified extends \local_o365\rest\o365api {
             'mailNickname' => $mailnickname,
         ];
         $response = $this->tenantapicall('post', '/groups', json_encode($groupdata));
-        $expectedparams = ['objectId' => null, 'objectType' => 'Group'];
+        $expectedparams = ['id' => null];
         $response = $this->process_apicall_response($response, $expectedparams);
         return $response;
     }
@@ -128,7 +128,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_group($objectid) {
         $response = $this->tenantapicall('get', '/groups/'.$objectid);
-        $expectedparams = ['objectId' => null, 'objectType' => 'Group'];
+        $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
 
@@ -415,10 +415,10 @@ class unified extends \local_o365\rest\o365api {
         if (empty($appinfo) || !is_array($appinfo)) {
             return null;
         }
-        if (!isset($appinfo['value']) || !isset($appinfo['value'][0]) || !isset($appinfo['value'][0]['objectId'])) {
+        if (!isset($appinfo['value']) || !isset($appinfo['value'][0]) || !isset($appinfo['value'][0]['id'])) {
             return null;
         }
-        $appobjectid = $appinfo['value'][0]['objectId'];
+        $appobjectid = $appinfo['value'][0]['id'];
         $endpoint = '/oauth2PermissionGrants?$filter=clientId%20eq%20\''.$appobjectid.'\'';
         if (!empty($resourceid)) {
             $endpoint .= '%20and%20resourceId%20eq%20\''.$resourceid.'\'';
@@ -438,10 +438,10 @@ class unified extends \local_o365\rest\o365api {
         if (empty($apiinfo) || !is_array($apiinfo)) {
             return null;
         }
-        if (!isset($apiinfo['value']) || !isset($apiinfo['value'][0]) || !isset($apiinfo['value'][0]['objectId'])) {
+        if (!isset($apiinfo['value']) || !isset($apiinfo['value'][0]) || !isset($apiinfo['value'][0]['id'])) {
             return null;
         }
-        $apiobjectid = $apiinfo['value'][0]['objectId'];
+        $apiobjectid = $apiinfo['value'][0]['id'];
         $permgrants = $this->get_permission_grants($apiobjectid);
         if (empty($permgrants) || !is_array($permgrants)) {
             return null;
