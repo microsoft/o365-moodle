@@ -29,5 +29,6 @@ $plugin->component = 'block_microsoft';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '29.0.0.3';
 $plugin->dependencies = [
-    'local_onenote' => 2015060102
+    'local_onenote' => 2015060102,
+    'local_o365' => 2015060114,
 ];
