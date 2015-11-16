@@ -63,6 +63,7 @@ class importfromoutlook extends \core\task\scheduled_task {
         $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
         foreach ($calsubs as $i => $calsub) {
             try {
+                mtrace('Syncing events for user #'.$calsub->user_id);
                 $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime);
                 if (!empty($events) && is_array($events) && isset($events['value']) && is_array($events['value'])) {
                     if (!empty($events['value'])) {
@@ -74,6 +75,14 @@ class importfromoutlook extends \core\task\scheduled_task {
                             $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
                             if ($idmapexists === false) {
                                 // Create Moodle event.
+
+                                // These may be an array if using the unified API.
+                                $starttime = (is_array($event['Start']))
+                                        ? $event['Start']['DateTime'].' '.$event['Start']['TimeZone'] : $event['Start'];
+
+                                $endtime = (is_array($event['End']))
+                                        ? $event['End']['DateTime'].' '.$event['End']['TimeZone'] : $event['End'];
+
                                 $eventparams = [
                                     'name' => $event['Subject'],
                                     'description' => $event['Body']['Content'],
@@ -81,12 +90,12 @@ class importfromoutlook extends \core\task\scheduled_task {
                                     'repeatid' => 0,
                                     'modulename' => 0,
                                     'instance' => 0,
-                                    'timestart' => strtotime($event['Start']),
+                                    'timestart' => strtotime($starttime),
                                     'visible' => 1,
                                     'uuid' => '',
                                     'sequence' => 1,
                                 ];
-                                $end = strtotime($event['End']);
+                                $end = strtotime($endtime);
                                 $eventparams['timeduration'] = $end - $eventparams['timestart'];
 
                                 if ($calsub->caltype === 'user') {
@@ -112,9 +121,12 @@ class importfromoutlook extends \core\task\scheduled_task {
                         mtrace('No new events to sync in.');
                     }
                 } else {
-                    mtrace('Bad response received when fetching events.');
+                    $errmsg = 'Bad response received when fetching events.';
+                    \local_o365\utils::debug($errmsg, 'importfromoutlook', $events);
+                    mtrace($errmsg);
                 }
             } catch (\Exception $e) {
+                \local_o365\utils::debug('Error syncing events', 'importfromoutlook', $e->getMessage());
                 mtrace('Error: '.$e->getMessage());
             }
         }
