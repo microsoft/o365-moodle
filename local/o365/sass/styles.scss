@@ -82,13 +82,13 @@
 			}
 		}
 		.feature_aadlogin a, .feature_aadlogin b {
-			background-image: url([[pix:block_microsoft|o365color]]);
+			background-image: url([[pix:local_o365|o365color]]);
 		}
 		.feature_calendar a, .feature_calendar b {
-			background-image: url([[pix:block_microsoft|outlookcolor]]);
+			background-image: url([[pix:local_o365|outlookcolor]]);
 		}
 		.feature_onenote a, .feature_onenote b {
-			background-image: url([[pix:block_microsoft|onenotecolor]]);
+			background-image: url([[pix:local_o365|onenotecolor]]);
 		}
 	}
 }
@@ -101,13 +101,13 @@
         background-color: transparent;
         padding: 4px 4px 4px 35px;
 		&.feature_aadlogin {
-			background-image: url([[pix:block_microsoft|o365color]]);
+			background-image: url([[pix:local_o365|o365color]]);
 		}
 		&.feature_calendar {
-			background-image: url([[pix:block_microsoft|outlookcolor]]);
+			background-image: url([[pix:local_o365|outlookcolor]]);
 		}
 		&.feature_onenote {
-			background-image: url([[pix:block_microsoft|onenotecolor]]);
+			background-image: url([[pix:local_o365|onenotecolor]]);
 		}
 	}
 }
