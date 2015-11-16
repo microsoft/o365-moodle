@@ -39,7 +39,7 @@ The documentation for installing, configuring, and using these plugins is availa
 
 # Contributing
 
-Before we can accept your pull request, you'll need to electronically complete Microsoft Open Tech's [Contributor License Agreement](https://cla.msopentech.com/). If you've done this for other Microsoft Open Tech projects, then you're already covered.
+Before we can accept your pull request, you'll need to electronically complete Microsoft Open Tech's [Contributor License Agreement](https://cla2.msopentech.com/). If you've done this for other Microsoft Open Tech projects, then you're already covered.
 
 [Why a CLA?](https://www.gnu.org/licenses/why-assign.html) (from the FSF)
 
