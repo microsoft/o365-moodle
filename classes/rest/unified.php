@@ -228,7 +228,7 @@ class unified extends \local_o365\rest\o365api {
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
         if (!empty($since)) {
             $since = date('c', $since);
-            $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
+            $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
