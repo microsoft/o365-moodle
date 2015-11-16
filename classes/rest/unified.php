@@ -463,11 +463,12 @@ class unified extends \local_o365\rest\o365api {
             'openid',
             'Calendars.ReadWrite',
             'Directory.AccessAsUser.All',
-            'Directory.Write',
+            'Directory.ReadWrite.All',
             'Files.ReadWrite',
+            'Notes.ReadWrite.All',
             'User.ReadWrite.All',
             'Group.ReadWrite.All',
-            'Sites.ReadWrite.All',
+            'Sites.Read.All',
         ];
     }
 
@@ -477,6 +478,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of missing permissions, permission key as array key, human-readable name as values.
      */
     public function check_permissions() {
+        $this->token->refresh();
         $this->disableratelimit = true;
         $currentperms = $this->get_unified_api_permissions();
         $neededperms = $this->get_required_permissions();
