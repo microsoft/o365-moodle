@@ -128,6 +128,7 @@ $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem 
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
 $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or click "Detect" to attempt to detect correct value.';
 $string['settings_sharepointlink'] = 'SharePoint Link';
+$string['settings_sharepointlink_error'] = 'There was a problem setting up SharePoint. <br /><br /><ul><li>If you have debug logging enabled ("Record debug messages" setting above), more information may be available in the Moodle log report. (Site Administration > Reports > Logs).</li><li>To retry setup, click "Change Site", choose a new SharePoint site, click "Save Changes" at the bottom of this page, and run the Moodle cron.</ul>';
 $string['settings_sharepointlink_connected'] = 'Moodle is connected to this SharePoint site.';
 $string['settings_sharepointlink_changelink'] = 'Change Site';
 $string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
