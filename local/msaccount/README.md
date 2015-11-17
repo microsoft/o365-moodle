@@ -9,7 +9,7 @@ Usage
 -----
 
 Instantiation:
-    $msaccountapi = msaccount_api::getinstance();
+    $msaccountapi = \local_msaccount\api::getinstance();
 
 Logging the user in:
         $msaccount_api->is_logged_in();
@@ -26,11 +26,11 @@ There are several parts that make up the Microsoft Account API plugin.
 ### Configuration
 This allows an administrator to specify OAuth2 settings such as client id and secret for the Microsoft Account application associated with this Moodle installation.
 
-### msaccount_api class
-This is a singleton class that provides simple wrappers for various methods provided by the msaccount_client class. Please use this class for accessing all the functionality provided by the msaccount_client class.
+### local_msaccount\api class
+This is a singleton class that provides simple wrappers for various methods provided by the local_msaccount\client class. Please use this class for accessing all the functionality provided by the local_msaccount\client class.
 
-### msaccount_client class
-Note: Please do not use this class directly. Instead, use the msaccount_api class described above.
+### local_msaccount\client class
+Note: Please do not use this class directly. Instead, use the local_msaccount\api class described above.
 
 This class is derived from Moodle's oauth2_client class and:
 - adds support for retrieving and saving refresh tokens and logging in using the refresh token if the main token expires.

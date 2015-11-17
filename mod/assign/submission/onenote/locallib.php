@@ -137,7 +137,14 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
 
-        $onenoteapi = \local_onenote\api\base::getinstance();
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            $html = '<div>'.$e->getMessage().'</div>';
+            $mform->addElement('html', $html);
+            return false;
+        }
+
         $cmid = $this->assignment->get_course_module()->id;
         $isstudent = $onenoteapi->is_student($cmid, $USER->id);
 
@@ -198,7 +205,14 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
 
-        $onenoteapi = \local_onenote\api\base::getinstance();
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            // Display error.
+            $this->set_error($e->getMessage());
+            return false;
+        }
+
         $tempfolder = $onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
 
@@ -365,7 +379,12 @@ class assign_submission_onenote extends assign_submission_plugin {
         $count = $this->count_files($submission->id, \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         $showviewlink = $count > \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_MAXSUMMARYFILES;
 
-        $onenoteapi = \local_onenote\api\base::getinstance();
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
         $o = '';
 
