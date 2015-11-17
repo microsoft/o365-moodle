@@ -142,10 +142,16 @@ class sharepointlink extends \admin_setting {
             $message = \html_writer::tag('span', get_string('settings_sharepointlink_initializing', 'local_o365'));
             $messageattrs = ['class' => 'adminsetting_sharepointlink_message loading'];
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
-        } else {
+        } else if ($sitesinitialized === '1') {
             $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_sharepointlink_connected', 'local_o365'));
             $messageattrs = ['class' => 'adminsetting_sharepointlink_message alert-success'];
+            $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
+        } else {
+            // Error reported.
+            $icon = $OUTPUT->pix_icon('i/warning', 'error', 'moodle');
+            $message = \html_writer::tag('span', get_string('settings_sharepointlink_error', 'local_o365'));
+            $messageattrs = ['class' => 'adminsetting_sharepointlink_message alert-error'];
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         }
         $settinghtml .= \html_writer::end_tag('div', []);
