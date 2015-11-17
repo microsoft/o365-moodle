@@ -119,7 +119,13 @@ class authcode extends \auth_oidc\loginflow\base {
         global $DB, $CFG, $SESSION, $STATEADDITIONALDATA;
 
         if (!isset($authparams['code'])) {
+            \auth_oidc\utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
             throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
+        }
+
+        if (!isset($authparams['state'])) {
+            \auth_oidc\utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
+            throw new \moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
         // Validate and expire state.

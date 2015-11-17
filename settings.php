@@ -60,11 +60,14 @@ $configdesc = get_string('cfg_autoappend_desc', 'auth_oidc');
 $configdefault = '';
 $settings->add(new admin_setting_configtext('auth_oidc/autoappend', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
-
 $configkey = get_string('cfg_loginflow_key', 'auth_oidc');
 $configdesc = '';
 $configdefault = 'authcode';
 $settings->add(new \auth_oidc\form\adminsetting\loginflow('auth_oidc/loginflow', $configkey, $configdesc, $configdefault));
+
+$label = get_string('cfg_debugmode_key', 'auth_oidc');
+$desc = get_string('cfg_debugmode_desc', 'auth_oidc');
+$settings->add(new \admin_setting_configcheckbox('auth_oidc/debugmode', $label, $desc, '0'));
 
 $configkey = get_string('cfg_icon_key', 'auth_oidc');
 $configdesc = get_string('cfg_icon_desc', 'auth_oidc');

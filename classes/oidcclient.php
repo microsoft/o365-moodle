@@ -205,9 +205,10 @@ class oidcclient {
 
         try {
             $returned = $this->httpclient->post($this->endpoints['token'], $params);
-            return @json_decode($returned, true);
+            return \auth_oidc\utils::process_json_response($returned, ['token_type' => null, 'id_token' => null]);
         } catch (\Exception $e) {
-            return $e->getMessage();
+            \auth_oidc\utils::debug('Error in rocredsrequest request', 'oidcclient::rocredsrequest', $e->getMessage());
+            return false;
         }
     }
 
@@ -231,11 +232,7 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi,
         ];
 
-        try {
-            $returned = $this->httpclient->post($this->endpoints['token'], $params);
-            return @json_decode($returned, true);
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $returned = $this->httpclient->post($this->endpoints['token'], $params);
+        return \auth_oidc\utils::process_json_response($returned, ['id_token' => null]);
     }
 }
