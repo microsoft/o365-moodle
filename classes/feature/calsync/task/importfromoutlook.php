@@ -69,20 +69,14 @@ class importfromoutlook extends \core\task\scheduled_task {
                     if (!empty($events['value'])) {
                         foreach ($events['value'] as $i => $event) {
                             if (!isset($event['Id'])) {
-                                mtrace('Skipped an event because of malformed data.');
+                                $errmsg = 'Skipped an event because of malformed data.';
+                                \local_o365\utils::debug($errmsg, 'importfromoutlook', $event);
+                                mtrace($errmsg);
                                 continue;
                             }
                             $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
                             if ($idmapexists === false) {
                                 // Create Moodle event.
-
-                                // These may be an array if using the unified API.
-                                $starttime = (is_array($event['Start']))
-                                        ? $event['Start']['DateTime'].' '.$event['Start']['TimeZone'] : $event['Start'];
-
-                                $endtime = (is_array($event['End']))
-                                        ? $event['End']['DateTime'].' '.$event['End']['TimeZone'] : $event['End'];
-
                                 $eventparams = [
                                     'name' => $event['Subject'],
                                     'description' => $event['Body']['Content'],
@@ -90,12 +84,12 @@ class importfromoutlook extends \core\task\scheduled_task {
                                     'repeatid' => 0,
                                     'modulename' => 0,
                                     'instance' => 0,
-                                    'timestart' => strtotime($starttime),
+                                    'timestart' => strtotime($event['Start']),
                                     'visible' => 1,
                                     'uuid' => '',
                                     'sequence' => 1,
                                 ];
-                                $end = strtotime($endtime);
+                                $end = strtotime($event['End']);
                                 $eventparams['timeduration'] = $end - $eventparams['timestart'];
 
                                 if ($calsub->caltype === 'user') {
