@@ -193,9 +193,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     /**
      * Save the feedback OneNote files.
      *
-     * @param stdClass $grade
+     * @param stdClass $grade Grade data.
      * @param stdClass $data
-     * @return bool
+     * @return bool True on successful save, false on error.
      */
     public function save(stdClass $grade, stdClass $data) {
         global $DB, $COURSE;
@@ -203,8 +203,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         // Get the OneNote page id corresponding to the teacher's feedback for this submission.
         $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
         if (!$record || !$record->feedback_teacher_page_id) {
-            $this->set_error(get_string('feedbacknotstarted', 'assignfeedback_onenote'));
-            return false;
+            return true;
         }
 
         try {
