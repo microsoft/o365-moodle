@@ -297,10 +297,11 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function create_file($parentid, $filename, $content, $contenttype = 'text/plain') {
+        $filename = rawurlencode($filename);
         if (!empty($parentid)) {
             $endpoint = "/me/drive/items/{$parentid}/children/{$filename}/content";
         } else {
-            $endpoint = "/me/drive/root:/{$filename}/content";
+            $endpoint = "/me/drive/root:/{$filename}:/content";
         }
         $fileresponse = $this->apicall('put', $endpoint, ['file' => $content], ['contenttype' => $contenttype]);
         $expectedparams = ['id' => null];
