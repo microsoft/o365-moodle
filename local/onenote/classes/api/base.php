@@ -305,13 +305,22 @@ abstract class base {
             }
         }
 
-        $response = json_decode($this->apicall('get', $endpoint));
+        $rawresponse = $this->apicall('get', $endpoint);
+        $response = json_decode($rawresponse);
+        if (empty($response)) {
+            throw new \moodle_exception('connction_error', 'local_onenote', '', null, $rawresponse);
+        }
 
         $items = array();
 
         if (isset($response->error)) {
-            $error = (is_string($response->error)) ? $response->error : print_r($response->error, true);
-            throw new \Exception($error);
+            if (is_string($response->error)) {
+                throw new \Exception($response->error);
+            } else if (isset($response->error->message) && is_string($response->error->message)) {
+                throw new \Exception($response->error->message);
+            } else {
+                throw new \Exception(print_r($response->error, true));
+            }
         }
 
         if ($response && $response->value) {

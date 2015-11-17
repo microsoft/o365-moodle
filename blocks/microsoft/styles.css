@@ -4,7 +4,7 @@
   list-style: none;
   padding-left: 0;
   margin-left: 0; }
-  .block_microsoft ul a.servicelink {
+  .block_microsoft ul .servicelink {
     background-position: 2px 0px;
     background-size: 28px;
     background-repeat: no-repeat;
@@ -12,7 +12,7 @@
     display: inline-block;
     padding: 4px 4px 4px 40px;
     margin: 0.2rem 0; }
-    .block_microsoft ul a.servicelink:active, .block_microsoft ul a.servicelink:hover, .block_microsoft ul a.servicelink:visited {
+    .block_microsoft ul .servicelink:active, .block_microsoft ul .servicelink:hover, .block_microsoft ul .servicelink:visited {
       text-decoration: none !important; }
 .block_microsoft .block_microsoft_onenote {
   background-image: url([[pix:block_microsoft|onenotecolor]]); }
