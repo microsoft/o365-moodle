@@ -275,6 +275,7 @@ class repository_office365 extends \repository {
      */
     public function upload($saveasfilename, $maxbytes) {
         global $CFG, $USER, $SESSION;
+        $caller = '\repository_office365::upload';
 
         $types = optional_param_array('accepted_types', '*', PARAM_RAW);
         $savepath = optional_param('savepath', '/', PARAM_PATH);
@@ -296,6 +297,11 @@ class repository_office365 extends \repository {
                     $clienttype = 'sharepoint';
                     $filepath = substr($filepath, 8);
                 } else {
+                    $errmsg = get_string('errorbadclienttype', 'repository_office365');
+                    $debugdata = [
+                        'filepath' => $filepath,
+                    ];
+                    \local_o365\utils::debug($errmsg, $caller, $debugdata);
                     throw new \moodle_exception('errorbadclienttype', 'repository_office365');
                 }
             }
@@ -320,6 +326,11 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($filepath, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
+                $errmsg = get_string('errorbadpath', 'repository_office365');
+                $debugdata = [
+                    'filepath' => $filepath,
+                ];
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
                 throw new \moodle_exception('errorbadpath', 'repository_office365');
             }
             $courseid = (int)$pathparts[0];
@@ -328,6 +339,13 @@ class repository_office365 extends \repository {
             $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
             $courses = enrol_get_users_courses($USER->id);
             if (!isset($courses[$courseid])) {
+                $errmsg = get_string('erroraccessdenied', 'repository_office365');
+                $debugdata = [
+                    'courseid' => $courseid,
+                    'courses' => $courses,
+                    'filepath' => $filepath,
+                ];
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
                 throw new \moodle_exception('erroraccessdenied', 'repository_office365');
             }
             $curcourse = $courses[$courseid];
@@ -338,6 +356,11 @@ class repository_office365 extends \repository {
             $result = $sharepoint->create_file($fullpath, $filename, $content);
             $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'parentsiteuri' => $parentsiteuri]);
         } else {
+            $errmsg = get_string('errorbadclienttype', 'repository_office365');
+            $debugdata = [
+                'clienttype' => $clienttype,
+            ];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
             throw new \moodle_exception('errorbadclienttype', 'repository_office365');
         }
 
@@ -371,6 +394,7 @@ class repository_office365 extends \repository {
     protected function get_listing_course($path = '') {
         global $USER, $OUTPUT;
 
+        $caller = '\repository_office365::get_listing_course';
         $list = [];
         $breadcrumb = [
             ['name' => $this->name, 'path' => '/'],
@@ -401,6 +425,11 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($path, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0])) {
+                $errmsg = get_string('errorbadpath', 'repository_office365');
+                $debugdata = [
+                    'path' => $path,
+                ];
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
                 throw new \moodle_exception('errorbadpath', 'repository_office365');
             }
             $courseid = (int)$pathparts[0];
@@ -417,6 +446,12 @@ class repository_office365 extends \repository {
                             $contents = $sharepointclient->get_files($fullpath);
                             $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint', $parentsiteuri);
                         } catch (\Exception $e) {
+                            $errmsg = 'Exception when retrieving share point files';
+                            $debugdata = [
+                                'fullpath' => (!empty($relpath)) ? '/'.$relpath : '/',
+                                'message' => $e->getMessage(),
+                            ];
+                            \local_o365\utils::debug($errmsg, $caller, $debugdata);
                             $list = [];
                         }
                     }
@@ -651,6 +686,7 @@ class repository_office365 extends \repository {
      *   url: URL to the source (from parameters)
      */
     public function get_file($reference, $filename = '') {
+        $caller = '\repository_office365::get_file';
         $reference = $this->unpack_reference($reference);
 
         if ($reference['source'] === 'onedrive') {
@@ -677,6 +713,12 @@ class repository_office365 extends \repository {
             }
         }
         if (empty($result)) {
+            $errmsg = get_string('errorwhiledownload', 'repository_office365');
+            $debugdata = [
+                'reference' => $reference,
+                'filename' => $filename,
+            ];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
             throw new \moodle_exception('errorwhiledownload', 'repository_office365');
         }
         return ['path' => $path, 'url' => $reference];
@@ -709,6 +751,7 @@ class repository_office365 extends \repository {
      * @return string file reference, ready to be stored
      */
     public function get_file_reference($source) {
+        $caller = '\repository_office365::get_file_reference';
         $sourceunpacked = $this->unpack_reference($source);
         if (isset($sourceunpacked['source']) && isset($sourceunpacked['id'])) {
             $fileid = $sourceunpacked['id'];
@@ -743,10 +786,26 @@ class repository_office365 extends \repository {
                     $reference['url'] = $filemetadata['webUrl'].'?web=1';
                 }
             } catch (\Exception $e) {
-                // There was a problem making the API call.
+                $errmsg = 'There was a problem making the API call.';
+                $debugdata = [
+                    'source' => $filesource,
+                    'id' => $fileid,
+                    'message' => $e->getMessage(),
+                ];
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
             }
 
             return $this->pack_reference($reference);
+        } else {
+            $errmsg = '';
+            if (!isset($sourceunpacked['source'])) {
+                $errmsg = 'Source is not set.';
+            }
+            if (isset($sourceunpacked['id'])) {
+                $errmsg .= ' id is not set.';
+            }
+            $debugdata = ['sourceunpacked' => $sourceunpacked];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
         }
         return $source;
     }
@@ -776,6 +835,7 @@ class repository_office365 extends \repository {
      * @param array $options additional options affecting the file serving
      */
     public function send_file($storedfile, $lifetime = null , $filter = 0, $forcedownload = false, array $options = null) {
+        $caller = '\repository_office365::send_file';
         $reference = $this->unpack_reference($storedfile->get_reference());
 
         if (false && $_SERVER['SCRIPT_NAME'] !== '/draftfile.php') {
@@ -801,6 +861,14 @@ class repository_office365 extends \repository {
                 // Set this file and other similar aliases synchronised.
                 $storedfile->set_synchronized($contenthash, $filesize);
             } else {
+                $errmsg = get_string('errorwhiledownload', 'repository_office365');
+                $debugdata = [
+                    'fileinfo' => $fileinfo,
+                ];
+                if (!isset($fileinfo['path'])) {
+                    $debugdata['message'] = '$fileinfo["path"] is not set.';
+                }
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             if (!is_array($options)) {
@@ -809,6 +877,12 @@ class repository_office365 extends \repository {
             $options['sendcachedexternalfile'] = true;
             send_stored_file($storedfile, $lifetime, $filter, $forcedownload, $options);
         } catch (\Exception $e) {
+            $errmsg = 'File not found';
+            $debugdata = [
+                'reference' => $reference,
+                'message' => $e->getMessage(),
+            ];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
             send_file_not_found();
         }
     }
