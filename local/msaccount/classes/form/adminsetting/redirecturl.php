@@ -80,9 +80,8 @@ class redirecturl extends \admin_setting {
      */
     public function output_html($data, $query='') {
         global $CFG;
-        require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
         $a = new \stdClass;
-        $a->callbackurl = \msaccount_client::callback_url()->out(false);
+        $a->callbackurl = \local_msaccount\client::callback_url()->out(false);
         $settinghtml = get_string('settingredirect', 'local_msaccount', $a);
         $settinghtml .= '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);

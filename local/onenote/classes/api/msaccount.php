@@ -27,29 +27,27 @@ namespace local_onenote\api;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/local/msaccount/msaccount_client.php');
-
 class msaccount extends base {
     /** @var string Base url to access API */
     const API = 'https://www.onenote.com/api/beta'; // TODO: Switch to non-beta version: 'https://www.onenote.com/api/v1.0'.
 
-    /** @var \msaccount_api An instance of the MS Account API to perform api calls with. */
+    /** @var \local_msaccount\api An instance of the MS Account API to perform api calls with. */
     protected $msacountapi = null;
 
     /**
      * Constructor.
      *
-     * Initializes msaccount_api instance which is used to do moest of the underlying authentication and
+     * Initializes local_msaccount\api instance which is used to do moest of the underlying authentication and
      * REST API operations. This is a singleton class, do not use the constructor directly to create an instance.
      * Use the getinstance() method instead.
      */
     protected function __construct() {
-        $this->msaccountapi = \msaccount_api::getinstance();
+        $this->msaccountapi = \local_msaccount\api::getinstance();
         $this->msaccountapi->is_logged_in();
     }
 
     /**
-     * Return instance of the underlying msaccount_api.
+     * Return instance of the underlying local_msaccount\api.
      * @return null|static
      */
     public function get_msaccount_api() {
