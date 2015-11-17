@@ -301,10 +301,12 @@ class base {
         $idtoken = \auth_oidc\jwt::instance_from_encoded($idtoken);
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
+            \auth_oidc\utils::debug('Invalid idtoken', 'base::process_idtoken', $idtoken);
             throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
         $receivednonce = $idtoken->claim('nonce');
         if (!empty($orignonce) && (empty($receivednonce) || $receivednonce !== $orignonce)) {
+            \auth_oidc\utils::debug('Invalid nonce', 'base::process_idtoken', $idtoken);
             throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
