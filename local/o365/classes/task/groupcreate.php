@@ -88,16 +88,16 @@ class groupcreate extends \core\task\scheduled_task {
             $groupname = $siterec->shortname.': '.$course->fullname;
             $groupshortname = $siteshortname.'_'.$course->shortname;
             $response = $unifiedclient->create_group($groupname, $groupshortname);
-            if (empty($response) || !is_array($response) || empty($response['objectId'])) {
+            if (empty($response) || !is_array($response) || empty($response['id'])) {
                 mtrace('Could not create group for course #'.$course->id);
                 var_dump($response);
                 continue;
             }
-            mtrace('Created group '.$response['objectId'].' for course #'.$course->id);
+            mtrace('Created group '.$response['id'].' for course #'.$course->id);
             $objectrec = [
                 'type' => 'group',
                 'subtype' => 'course',
-                'objectid' => $response['objectId'],
+                'objectid' => $response['id'],
                 'moodleid' => $course->id,
                 'o365name' => $groupname,
                 'timecreated' => $now,
