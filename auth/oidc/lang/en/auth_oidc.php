@@ -55,6 +55,8 @@ $string['cfg_iconalt_check'] = 'Checkmark icon';
 $string['cfg_iconalt_rightarrow'] = 'Right-facing arrow icon';
 $string['cfg_customicon_key'] = 'Custom Icon';
 $string['cfg_customicon_desc'] = 'If you\'d like to use your own icon, upload it here. This overrides any icon chosen above. <br /><br /><b>Notes on using custom icons:</b><ul><li>This image will <b>not</b> be resized on the login page, so we recommend uploading an image no bigger than 35x35 pixels.</li><li>If you have uploaded a custom icon and want to go back to one of the stock icons, click the custom icon in the box above, then click "Delete", then click "OK", then click "Save Changes" at the bottom of this form. The selected stock icon will now appear on the Moodle login page.</li></ul>';
+$string['cfg_debugmode_key'] = 'Record debug messages';
+$string['cfg_debugmode_desc'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems.';
 $string['cfg_loginflow_key'] = 'Login Flow';
 $string['cfg_loginflow_authcode'] = 'Authorization Request';
 $string['cfg_loginflow_authcode_desc'] = 'Using this flow, the user clicks the name of the identity provider (See "Provider Name" above) on the Moodle login page and is redirected to the provider to log in. Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently. This is the most standardized, secure way for the user log in.';
@@ -68,6 +70,7 @@ $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI". Your OpenID Connect identity provider should ask for this when registering Moodle as a client. <br /><b>NOTE:</b> You must enter this in your OpenID Connect provider *exactly* as it appears here. Any difference will prevent logins using OpenID Connect.';
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
 $string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
+$string['event_debug'] = 'Debug message';
 
 $string['errorauthdisconnectemptypassword'] = 'Password cannot be empty';
 $string['errorauthdisconnectemptyusername'] = 'Username cannot be empty';
@@ -101,6 +104,8 @@ $string['erroroidcclientnoauthendpoint'] = 'No authorization endpoint set. Pleas
 $string['erroroidcclientnotokenendpoint'] = 'No token endpoint set. Please set with $this->setendpoints';
 $string['erroroidcclientinsecuretokenendpoint'] = 'The token endpoint must be using SSL/TLS for this.';
 $string['errorucpinvalidaction'] = 'Invalid action received.';
+$string['erroroidccall'] = 'Error in OpenID Connect. Please check logs for more information.';
+$string['erroroidccall_message'] = 'Error in OpenID Connect: {$a}';
 
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';
 $string['eventusercreated'] = 'User created with OpenID Connect';
