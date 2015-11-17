@@ -174,7 +174,16 @@ class unified extends \local_o365\rest\o365api {
     public function get_calendars() {
         $response = $this->apicall('get', '/me/calendars');
         $expectedparams = ['value' => null];
-        return $this->process_apicall_response($response, $expectedparams);
+        $return = $this->process_apicall_response($response, $expectedparams);
+        foreach ($return['value'] as $i => $calendar) {
+            if (!isset($calendar['Id']) && isset($calendar['id'])) {
+                $return['value'][$i]['Id'] = $calendar['id'];
+            }
+            if (!isset($calendar['Name']) && isset($calendar['name'])) {
+                $return['value'][$i]['Name'] = $calendar['name'];
+            }
+        }
+        return $return;
     }
 
     /**
@@ -196,8 +205,14 @@ class unified extends \local_o365\rest\o365api {
                 'ContentType' => 'HTML',
                 'Content' => $body,
             ],
-            'Start' => date('c', $starttime),
-            'End' => date('c', $endtime),
+            'Start' => [
+                'dateTime' => date('c', $starttime),
+                'timeZone' => date('T', $starttime),
+            ],
+            'End' => [
+                'dateTime' => date('c', $endtime),
+                'timeZone' => date('T', $endtime),
+            ],
             'Attendees' => [],
         ];
         foreach ($attendees as $attendee) {
@@ -213,8 +228,12 @@ class unified extends \local_o365\rest\o365api {
         $eventdata = json_encode($eventdata);
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
         $response = $this->apicall('post', $endpoint, $eventdata);
-        $expectedparams = ['Id' => null];
-        return $this->process_apicall_response($response, $expectedparams);
+        $expectedparams = ['id' => null];
+        $return = $this->process_apicall_response($response, $expectedparams);
+        if (!isset($return['Id']) && isset($return['id'])) {
+            $return['Id'] = $return['id'];
+        }
+        return $return;
     }
 
     /**
@@ -232,7 +251,37 @@ class unified extends \local_o365\rest\o365api {
         }
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
-        return $this->process_apicall_response($response, $expectedparams);
+        $return = $this->process_apicall_response($response, $expectedparams);
+        foreach ($return['value'] as $i => $event) {
+            // Converts params to the old legacy parameter used by the rest of the code from the new unified parameter.
+            if (!isset($event['Id']) && isset($event['id'])) {
+                $return['value'][$i]['Id'] = $event['id'];
+            }
+            if (!isset($event['Subject']) && isset($event['subject'])) {
+                $return['value'][$i]['Subject'] = $event['subject'];
+            }
+            if (!isset($event['Body']) && isset($event['body'])) {
+                $return['value'][$i]['Body'] = $event['body'];
+                if (!isset($return['value'][$i]['Body']['Content']) && isset($return['value'][$i]['body']['content'])) {
+                    $return['value'][$i]['Body']['Content'] = $return['value'][$i]['body']['content'];
+                }
+            }
+            if (!isset($event['Start']) && isset($event['start'])) {
+                if (is_array($event['start'])) {
+                    $return['value'][$i]['Start'] = $event['start']['dateTime'].' '.$event['start']['timeZone'];
+                } else {
+                    $return['value'][$i]['Start'] = $event['start'];
+                }
+            }
+            if (!isset($event['End']) && isset($event['end'])) {
+                if (is_array($event['end'])) {
+                    $return['value'][$i]['End'] = $event['end']['dateTime'].' '.$event['end']['timeZone'];
+                } else {
+                    $return['value'][$i]['End'] = $event['end'];
+                }
+            }
+        }
+        return $return;
     }
 
     /**
@@ -254,10 +303,16 @@ class unified extends \local_o365\rest\o365api {
             $updateddata['Body'] = ['ContentType' => 'HTML', 'Content' => $updated['body']];
         }
         if (!empty($updated['starttime'])) {
-            $updateddata['Start'] = date('c', $updated['starttime']);
+            $updateddata['Start'] = [
+                'dateTime' => date('c', $updated['starttime']),
+                'timeZone' => date('T', $updated['starttime']),
+            ];
         }
         if (!empty($updated['endtime'])) {
-            $updateddata['End'] = date('c', $updated['endtime']);
+            $updateddata['End'] = [
+                'dateTime' => date('c', $updated['endtime']),
+                'timeZone' => date('T', $updated['endtime']),
+            ];
         }
         if (isset($updated['attendees'])) {
             $updateddata['Attendees'] = [];
@@ -273,7 +328,7 @@ class unified extends \local_o365\rest\o365api {
         }
         $updateddata = json_encode($updateddata);
         $response = $this->apicall('patch', '/me/events/'.$outlookeventid, $updateddata);
-        $expectedparams = ['Id' => null];
+        $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
 
