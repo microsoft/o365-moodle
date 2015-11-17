@@ -157,7 +157,9 @@ class authcode extends \auth_oidc\loginflow\base {
             return true;
         }
 
-        if (isloggedin() === true) {
+        // Check if OIDC user is already migrated.
+        $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+        if (isloggedin() === true && empty($tokenrec)) {
             // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
             $connectiononly = false;
             if (isset($SESSION->auth_oidc_connectiononly)) {
