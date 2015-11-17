@@ -59,11 +59,11 @@
       display: inline-block;
       padding: 4px 4px 4px 40px; }
   .o365_ucp_index .features .feature_aadlogin a, .o365_ucp_index .features .feature_aadlogin b {
-    background-image: url([[pix:block_microsoft|o365color]]); }
+    background-image: url([[pix:local_o365|o365color]]); }
   .o365_ucp_index .features .feature_calendar a, .o365_ucp_index .features .feature_calendar b {
-    background-image: url([[pix:block_microsoft|outlookcolor]]); }
+    background-image: url([[pix:local_o365|outlookcolor]]); }
   .o365_ucp_index .features .feature_onenote a, .o365_ucp_index .features .feature_onenote b {
-    background-image: url([[pix:block_microsoft|onenotecolor]]); }
+    background-image: url([[pix:local_o365|onenotecolor]]); }
 
 .o365_ucp_featurepage h3.featureheader {
   background-position: center left;
@@ -72,8 +72,8 @@
   background-color: transparent;
   padding: 4px 4px 4px 35px; }
   .o365_ucp_featurepage h3.featureheader.feature_aadlogin {
-    background-image: url([[pix:block_microsoft|o365color]]); }
+    background-image: url([[pix:local_o365|o365color]]); }
   .o365_ucp_featurepage h3.featureheader.feature_calendar {
-    background-image: url([[pix:block_microsoft|outlookcolor]]); }
+    background-image: url([[pix:local_o365|outlookcolor]]); }
   .o365_ucp_featurepage h3.featureheader.feature_onenote {
-    background-image: url([[pix:block_microsoft|onenotecolor]]); }
+    background-image: url([[pix:local_o365|onenotecolor]]); }
