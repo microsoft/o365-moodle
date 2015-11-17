@@ -265,6 +265,7 @@ class base {
      * @return \auth_oidc\oidcclient The constructed client.
      */
     protected function get_oidcclient() {
+        global $CFG;
         if (empty($this->httpclient) || !($this->httpclient instanceof \auth_oidc\httpclientinterface)) {
             $this->httpclient = new \auth_oidc\httpclient();
         }
@@ -277,11 +278,12 @@ class base {
 
         $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
         $clientsecret = (isset($this->config->clientsecret)) ? $this->config->clientsecret : null;
-        $redirecturi = new \moodle_url('/auth/oidc/');
+        $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
+        $redirecturi .= '/auth/oidc/';
         $resource = (isset($this->config->oidcresource)) ? $this->config->oidcresource : null;
 
         $client = new \auth_oidc\oidcclient($this->httpclient);
-        $client->setcreds($clientid, $clientsecret, $redirecturi->out(), $resource);
+        $client->setcreds($clientid, $clientsecret, $redirecturi, $resource);
 
         $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
         return $client;
