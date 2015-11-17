@@ -41,42 +41,67 @@ class sharepointinit extends \core\task\adhoc_task {
      */
     public function execute() {
         global $DB;
-        $oidcconfig = get_config('auth_oidc');
-        if (empty($oidcconfig)) {
-            throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
-        }
 
-        $spresource = \local_o365\rest\sharepoint::get_resource();
-        if (empty($spresource)) {
-            throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
-        }
-
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
-                $oidcconfig->tokenendpoint);
-
-        $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
-
-        if (empty($sptoken)) {
-            throw new \moodle_exception('erroracpnosptoken', 'local_o365');
-        }
-
-        $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
-        $sharepoint->set_site('');
-
-        $moodlesiteuri = $sharepoint->get_moodle_parent_site_uri();
-
-        if ($sharepoint->site_exists($moodlesiteuri) === false) {
-            $moodlesitename = get_string('acp_parentsite_name', 'local_o365');
-            $moodlesitedesc = get_string('acp_parentsite_desc', 'local_o365');
-            $frontpagerec = $DB->get_record('course', ['id' => SITEID], 'id,shortname');
-            if (!empty($frontpagerec) && !empty($frontpagerec->shortname)) {
-                $moodlesitename = $frontpagerec->shortname;
+        // API Setup.
+        try {
+            $spresource = \local_o365\rest\sharepoint::get_resource();
+            if (empty($spresource)) {
+                throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
             }
-            $result = $sharepoint->create_site($moodlesitename, $moodlesiteuri, $moodlesitedesc);
-            mtrace('Created parent site');
+
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+
+            $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
+            if (empty($sptoken)) {
+                throw new \moodle_exception('erroracpnosptoken', 'local_o365');
+            }
+
+            $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
+        } catch (\Exception $e) {
+            $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: '.$e->getMessage();
+            mtrace($errmsg);
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+            return false;
         }
 
+        // Create parent site(s).
+        try {
+            mtrace('Creating parent site for Moodle...');
+            $moodlesiteuri = $sharepoint->get_moodle_parent_site_uri();
+            $sitelevels = explode('/', $moodlesiteuri);
+            $currentparentsite = '';
+            foreach ($sitelevels as $partialurl) {
+                $sharepoint->set_site($currentparentsite);
+                if ($sharepoint->site_exists($currentparentsite.'/'.$partialurl) === false) {
+                    $moodlesitename = get_string('acp_parentsite_name', 'local_o365');
+                    $moodlesitedesc = get_string('acp_parentsite_desc', 'local_o365');
+                    $frontpagerec = $DB->get_record('course', ['id' => SITEID], 'id,shortname');
+                    if (!empty($frontpagerec) && !empty($frontpagerec->shortname)) {
+                        $moodlesitename = $frontpagerec->shortname;
+                    }
+                    mtrace('Setting parent site to "'.$currentparentsite.'", creating subsite "'.$partialurl.'"');
+                    $result = $sharepoint->create_site($moodlesitename, $partialurl, $moodlesitedesc);
+                    $currentparentsite .= '/'.$partialurl;
+                    mtrace('Created parent site "'.$currentparentsite.'"');
+                } else {
+                    $currentparentsite .= '/'.$partialurl;
+                    mtrace('Parent site "'.$currentparentsite.'" already exists.');
+                }
+            }
+            mtrace('Finished creating Moodle parent site.');
+        } catch (\Exception $e) {
+            $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
+            mtrace($errmsg);
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+            return false;
+        }
+
+        // Create course sites.
+        mtrace('Creating course subsites in "'.$moodlesiteuri.'"');
+        $sharepoint->set_site($moodlesiteuri);
         $courses = $DB->get_recordset('course');
         $successes = [];
         $failures = [];
@@ -90,13 +115,19 @@ class sharepointinit extends \core\task\adhoc_task {
                 $successes[] = $course->id;
                 mtrace('Created course subsite for course '.$course->id);
             } catch (\Exception $e) {
+                mtrace('Encountered error creating course subsite for course '.$course->id);
                 $failures[$course->id] = $e->getMessage();
             }
         }
         if (!empty($failures)) {
-            $errmsg = 'Encountered problems creating course sites.';
+            $errmsg = 'ERROR: Encountered problems creating course sites.';
+            mtrace($errmsg.' See logs.');
             \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute', $failures);
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+        } else {
+            set_config('sharepoint_initialized', '1', 'local_o365');
+            mtrace('SharePoint successfully initialized.');
+            return true;
         }
-        set_config('sharepoint_initialized', '1', 'local_o365');
     }
 }
