@@ -18,17 +18,11 @@
  * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2015 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2015012707.1;
-$plugin->requires = 2014111000;
-$plugin->component = 'repository_office365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.7';
-$plugin->dependencies = [
-    'local_o365' => 2015012726,
-    'auth_oidc' => 2015012715,
+$definitions = [
+    'unifiedfolderids' => [
+        'mode' => cache_store::MODE_SESSION
+    ]
 ];

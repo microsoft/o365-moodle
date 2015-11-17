@@ -115,7 +115,7 @@ class unified extends \local_o365\rest\o365api {
             'mailNickname' => $mailnickname,
         ];
         $response = $this->tenantapicall('post', '/groups', json_encode($groupdata));
-        $expectedparams = ['objectId' => null, 'objectType' => 'Group'];
+        $expectedparams = ['id' => null];
         $response = $this->process_apicall_response($response, $expectedparams);
         return $response;
     }
@@ -128,7 +128,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_group($objectid) {
         $response = $this->tenantapicall('get', '/groups/'.$objectid);
-        $expectedparams = ['objectId' => null, 'objectType' => 'Group'];
+        $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
 
@@ -228,7 +228,7 @@ class unified extends \local_o365\rest\o365api {
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
         if (!empty($since)) {
             $since = date('c', $since);
-            $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
+            $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
@@ -297,15 +297,14 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function create_file($parentid, $filename, $content, $contenttype = 'text/plain') {
-        $params = json_encode(['name' => $filename, 'type' => 'File']);
-        $endpoint = '/me/files';
-        $fileresponse = $this->apicall('post', $endpoint, $params);
+        if (!empty($parentid)) {
+            $endpoint = "/me/drive/items/{$parentid}/children/{$filename}/content";
+        } else {
+            $endpoint = "/me/drive/root:/{$filename}/content";
+        }
+        $fileresponse = $this->apicall('put', $endpoint, ['file' => $content], ['contenttype' => $contenttype]);
         $expectedparams = ['id' => null];
         $fileresponse = $this->process_apicall_response($fileresponse, $expectedparams);
-        if (isset($fileresponse['id'])) {
-            $endpoint = '/me/files/'.$fileresponse['id'].'/uploadContent';
-            $contentresponse = $this->apicall('post', $endpoint, $content, ['contenttype' => $contenttype]);
-        }
         return $fileresponse;
     }
 
@@ -316,9 +315,10 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function get_files($parentid = '') {
-        $endpoint = '/me/files';
         if (!empty($parentid) && $parentid !== '/') {
-            $endpoint .= "/{$parentid}/children";
+            $endpoint = "/me/drive/items/{$parentid}/children";
+        } else {
+            $endpoint = '/me/drive/root/children';
         }
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
@@ -332,7 +332,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function get_file_metadata($fileid) {
-        $response = $this->apicall('get', "/me/files/{$fileid}");
+        $response = $this->apicall('get', "/me/drive/items/{$fileid}");
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -344,7 +344,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string The file's content.
      */
     public function get_file_by_id($fileid) {
-        return $this->apicall('get', "/me/files/{$fileid}/content");
+        return $this->apicall('get', "/me/drive/items/{$fileid}/content");
     }
 
     /**
@@ -415,10 +415,10 @@ class unified extends \local_o365\rest\o365api {
         if (empty($appinfo) || !is_array($appinfo)) {
             return null;
         }
-        if (!isset($appinfo['value']) || !isset($appinfo['value'][0]) || !isset($appinfo['value'][0]['objectId'])) {
+        if (!isset($appinfo['value']) || !isset($appinfo['value'][0]) || !isset($appinfo['value'][0]['id'])) {
             return null;
         }
-        $appobjectid = $appinfo['value'][0]['objectId'];
+        $appobjectid = $appinfo['value'][0]['id'];
         $endpoint = '/oauth2PermissionGrants?$filter=clientId%20eq%20\''.$appobjectid.'\'';
         if (!empty($resourceid)) {
             $endpoint .= '%20and%20resourceId%20eq%20\''.$resourceid.'\'';
@@ -438,10 +438,10 @@ class unified extends \local_o365\rest\o365api {
         if (empty($apiinfo) || !is_array($apiinfo)) {
             return null;
         }
-        if (!isset($apiinfo['value']) || !isset($apiinfo['value'][0]) || !isset($apiinfo['value'][0]['objectId'])) {
+        if (!isset($apiinfo['value']) || !isset($apiinfo['value'][0]) || !isset($apiinfo['value'][0]['id'])) {
             return null;
         }
-        $apiobjectid = $apiinfo['value'][0]['objectId'];
+        $apiobjectid = $apiinfo['value'][0]['id'];
         $permgrants = $this->get_permission_grants($apiobjectid);
         if (empty($permgrants) || !is_array($permgrants)) {
             return null;
@@ -463,11 +463,12 @@ class unified extends \local_o365\rest\o365api {
             'openid',
             'Calendars.ReadWrite',
             'Directory.AccessAsUser.All',
-            'Directory.Write',
+            'Directory.ReadWrite.All',
             'Files.ReadWrite',
+            'Notes.ReadWrite.All',
             'User.ReadWrite.All',
             'Group.ReadWrite.All',
-            'Sites.ReadWrite.All',
+            'Sites.Read.All',
         ];
     }
 
@@ -477,6 +478,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of missing permissions, permission key as array key, human-readable name as values.
      */
     public function check_permissions() {
+        $this->token->refresh();
         $this->disableratelimit = true;
         $currentperms = $this->get_unified_api_permissions();
         $neededperms = $this->get_required_permissions();
