@@ -118,7 +118,15 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         global $USER;
 
         $gradeid = $grade ? $grade->id : 0;
-        $onenoteapi = \local_onenote\api\base::getinstance();
+
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            $html = '<div>'.$e->getMessage().'</div>';
+            $mform->addElement('html', $html);
+            return false;
+        }
+
         $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
 
         if (!$isteacher) {
@@ -199,7 +207,14 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             return false;
         }
 
-        $onenoteapi = \local_onenote\api\base::getinstance();
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            // Display error.
+            $this->set_error($e->getMessage());
+            return false;
+        }
+
         $tempfolder = $onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
 
@@ -304,7 +319,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         // Show a view all link if the number of files is over this limit.
         $count = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $showviewlink = $count > \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
-        $onenoteapi = \local_onenote\api\base::getinstance();
+
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
 
         $o = '';
 
