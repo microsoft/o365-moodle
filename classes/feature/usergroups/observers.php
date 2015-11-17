@@ -137,7 +137,7 @@ class observers {
             'type' => 'group',
             'subtype' => 'usergroup',
             'moodleid' => $usergroupid,
-            'objectid' => $o365group['objectId'],
+            'objectid' => $o365group['id'],
             'o365name' => '',
             'timecreated' => $now,
             'timemodified' => $now,
