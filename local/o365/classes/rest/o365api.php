@@ -202,7 +202,7 @@ abstract class o365api {
             \local_o365\utils::debug($errmsg, $caller, $result['odata.error']);
             if (isset($result['odata.error']['message']) && isset($result['odata.error']['message']['value'])) {
                 $apierrormessage = $result['odata.error']['message']['value'];
-                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $apierrormessage);
+                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
             } else {
                 throw new \moodle_exception('erroro365apibadcall', 'local_o365');
             }
@@ -217,7 +217,7 @@ abstract class o365api {
                 } else if (is_array($result['error']['message']) && isset($result['error']['message']['value'])) {
                     $apierrormessage = $result['error']['message']['value'];
                 }
-                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $apierrormessage);
+                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
             } else {
                 throw new \moodle_exception('erroro365apibadcall', 'local_o365');
             }
