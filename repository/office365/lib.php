@@ -316,7 +316,8 @@ class repository_office365 extends \repository {
         if ($clienttype === 'onedrive') {
             if ($this->unifiedconfigured === true) {
                 $apiclient = $this->get_unified_apiclient();
-                $result = $apiclient->create_file('', $filename, $content, 'application/octet-stream');
+                $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
+                $result = $apiclient->create_file($parentid, $filename, $content, 'application/octet-stream');
             } else {
                 $apiclient = $this->get_onedrive_apiclient();
                 $result = $apiclient->create_file($filepath, $filename, $content);
@@ -561,20 +562,21 @@ class repository_office365 extends \repository {
         $list = [];
         if ($clienttype === 'onedrive') {
             $pathprefix = '/my'.$path;
+            $uploadpathprefix = $pathprefix;
         } else if ($clienttype === 'unified') {
             $pathprefix = '/my';
+            $uploadpathprefix = $pathprefix.$path;
         } else if ($clienttype === 'sharepoint') {
             $pathprefix = '/courses'.$path;
+            $uploadpathprefix = $pathprefix;
         }
 
-        if ($clienttype !== 'unified') {
-            $list[] = [
-                'title' => get_string('upload', 'repository_office365'),
-                'path' => $pathprefix.'/upload/',
-                'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
-                'children' => [],
-            ];
-        }
+        $list[] = [
+            'title' => get_string('upload', 'repository_office365'),
+            'path' => $uploadpathprefix.'/upload/',
+            'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
+            'children' => [],
+        ];
 
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
