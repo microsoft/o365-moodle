@@ -40,12 +40,12 @@ $url = $onenoteapi->get_page($cmid, $wantfeedbackpage, $isteacher, $subuserid, $
 
 // If connection error then show message.
 if ($url == 'connection_error') {
-    throw new \moodle_exception(get_string('connction_error', 'local_onenote'), 'onenote');
+    throw new \moodle_exception('connction_error', 'local_onenote');
 }
 
 if ($url) {
     $url = new moodle_url($url);
     redirect($url);
 } else {
-    throw new \moodle_exception(get_string('onenote_page_error', 'local_onenote'), 'onenote');
+    throw new \moodle_exception('onenote_page_error', 'local_onenote');
 }

@@ -204,40 +204,49 @@ class block_microsoft extends block_base {
     protected function render_onenote() {
         global $USER, $PAGE;
         $action = optional_param('action', '', PARAM_TEXT);
-        $onenoteapi = \local_onenote\api\base::getinstance();
-        $output = '';
-        if ($onenoteapi->is_logged_in()) {
-            // Add the "save to onenote" button if we are on an assignment page.
-            $onassignpage = ($PAGE->cm && $PAGE->cm->modname == 'assign' && $action == 'editsubmission') ? true : false;
-            if ($onassignpage === true && $onenoteapi->is_student($PAGE->cm->id, $USER->id)) {
-                $workstr = get_string('workonthis', 'block_microsoft');
-                $output .= $onenoteapi->render_action_button($workstr, $PAGE->cm->id).'<br /><br />';
-            }
-            // Find moodle notebook, create if not found.
-            $moodlenotebook = null;
+        try {
+            $onenoteapi = \local_onenote\api\base::getinstance();
+            $output = '';
+            if ($onenoteapi->is_logged_in()) {
+                // Add the "save to onenote" button if we are on an assignment page.
+                $onassignpage = ($PAGE->cm && $PAGE->cm->modname == 'assign' && $action == 'editsubmission') ? true : false;
+                if ($onassignpage === true && $onenoteapi->is_student($PAGE->cm->id, $USER->id)) {
+                    $workstr = get_string('workonthis', 'block_microsoft');
+                    $output .= $onenoteapi->render_action_button($workstr, $PAGE->cm->id).'<br /><br />';
+                }
+                // Find moodle notebook, create if not found.
+                $moodlenotebook = null;
 
-            $cache = \cache::make('block_microsoft', 'onenotenotebook');
-            $moodlenotebook = $cache->get($USER->id);
-            if (empty($moodlenotebook)) {
-                $moodlenotebook = $this->get_onenote_notebook($onenoteapi);
-                $result = $cache->set($USER->id, $moodlenotebook);
-            }
+                $cache = \cache::make('block_microsoft', 'onenotenotebook');
+                $moodlenotebook = $cache->get($USER->id);
+                if (empty($moodlenotebook)) {
+                    $moodlenotebook = $this->get_onenote_notebook($onenoteapi);
+                    $result = $cache->set($USER->id, $moodlenotebook);
+                }
 
-            if (!empty($moodlenotebook)) {
-                $url = new \moodle_url($moodlenotebook['url']);
-                $stropennotebook = get_string('linkonenote', 'block_microsoft');
-                $linkattrs = [
-                    'onclick' => 'window.open(this.href,\'_blank\'); return false;',
-                    'class' => 'servicelink block_microsoft_onenote',
-                ];
-                $output .= \html_writer::link($url->out(false), $stropennotebook, $linkattrs);
+                if (!empty($moodlenotebook)) {
+                    $url = new \moodle_url($moodlenotebook['url']);
+                    $stropennotebook = get_string('linkonenote', 'block_microsoft');
+                    $linkattrs = [
+                        'onclick' => 'window.open(this.href,\'_blank\'); return false;',
+                        'class' => 'servicelink block_microsoft_onenote',
+                    ];
+                    $output .= \html_writer::link($url->out(false), $stropennotebook, $linkattrs);
+                } else {
+                    $output .= get_string('error_nomoodlenotebook', 'block_microsoft');
+                }
             } else {
-                $output .= get_string('error_nomoodlenotebook', 'block_microsoft');
+                $output .= $this->render_signin_widget($onenoteapi->get_login_url());
             }
-        } else {
-            $output .= $this->render_signin_widget($onenoteapi->get_login_url());
+            return $output;
+        } catch (\Exception $e) {
+            if (class_exists('\local_o365\utils')) {
+                $debuginfo = (!empty($e->debuginfo)) ? $e->debuginfo : null;
+                \local_o365\utils::debug($e->getMessage(), 'block_microsoft', $debuginfo);
+            }
+            return '<span class="block_microsoft_onenote servicelink">'.get_string('linkonenote_unavailable', 'block_microsoft')
+                    .'<br /><small>'.get_string('contactadmin', 'block_microsoft').'</small></span>';
         }
-        return $output;
     }
 
     /**
