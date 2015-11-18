@@ -58,11 +58,10 @@ class filter_oembed_testcase extends basic_testcase {
         $tedlink = '<p><a href="https://www.ted.com/talks/aj_jacobs_how_healthy_living_nearly_killed_me">Ted</a></p>';
         $slidesharelink = '<p><a href="http://www.slideshare.net/timbrown/ideo-values-slideshare1">slideshare</a></p>';
         $issuulink = '<p><a href="http://issuu.com/hujawes/docs/dehorew">issuu</a></p>';
-        $screenrlink = '<p><a href="https://www.screenr.com/wxVH">screenr</a></p>';
         $polleverywherelink = '<p><a href="https://www.polleverywhere.com/multiple_choice_polls/AyCp2jkJ2HqYKXc/web">';
         $polleverywherelink .= '$popolleverywhere</a></p>';
 
-        $filterinput = $souncloudlink.$youtubelink.$officemixlink.$vimeolink.$tedlink.$slidesharelink.$issuulink.$screenrlink;
+        $filterinput = $souncloudlink.$youtubelink.$officemixlink.$vimeolink.$tedlink.$slidesharelink.$issuulink;
         $filterinput .= $polleverywherelink;
 
         $filteroutput = $this->filter->filter($filterinput);
@@ -93,9 +92,6 @@ class filter_oembed_testcase extends basic_testcase {
         $issuuoutput .= ' class="issuuembed"></div><script type="text/javascript" src="//e.issuu.com/embed.js" async="true">';
         $issuuoutput .= '</script>';
         $this->assertContains($issuuoutput, $filteroutput, 'Issuu filter fails');
-
-        $screenroutput = '<iframe src="https://www.screenr.com/embed/wxVH" width="650" height="396" frameborder="0"></iframe>';
-        $this->assertContains($screenroutput, $filteroutput, 'Screenr filter fails');
 
         $polleverywhereoutput = '<script src="http://www.polleverywhere.com/multiple_choice_polls/AyCp2jkJ2HqYKXc/web.js';
         $polleverywhereoutput .= '?results_count_format=percent"></script>';
