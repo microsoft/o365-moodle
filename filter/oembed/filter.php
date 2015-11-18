@@ -105,10 +105,6 @@ class filter_oembed extends moodle_text_filter {
             $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(issuu\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_issuucallback', $newtext);
         }
-        if (get_config('filter_oembed', 'screenr')) {
-            $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(screenr\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
-            $newtext = preg_replace_callback($search, 'filter_oembed_screenrcallback', $newtext);
-        }
         if (get_config('filter_oembed', 'soundcloud')) {
             $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(soundcloud\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_soundcloudcallback', $newtext);
@@ -240,19 +236,6 @@ function filter_oembed_issuucallback($link) {
     $url = "http://issuu.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json";
     $json = filter_oembed_curlcall($url);
     return $json === null ? '<h3>'. get_string('connection_error', 'filter_oembed') .'</h3>' : $json['html'];
-}
-
-/**
- * Looks for links pointing to Screenr content and processes them.
- *
- * @param $link HTML tag containing a link
- * @return string HTML content after processing.
- */
-function filter_oembed_screenrcallback($link) {
-    global $CFG;
-    $url = "http://www.screenr.com/api/oembed.json?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4]).'&maxwidth=480&maxheight=270';
-    $json = filter_oembed_curlcall($url);
-    return filter_oembed_vidembed($json);
 }
 
 /**
