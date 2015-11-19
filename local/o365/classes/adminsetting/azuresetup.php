@@ -100,9 +100,11 @@ class azuresetup extends \admin_setting {
         $lastresults = get_config('local_o365', 'azuresetupresult');
         if (!empty($lastresults)) {
             $lastresults = @unserialize($lastresults);
+            $lastresults = (!empty($lastresults) && is_object($lastresults)) ? $lastresults : false;
+            $lastresults = json_encode(['success' => true, 'data' => $lastresults]);
+        } else {
+            $lastresults = json_encode(false);
         }
-        $lastresults = (!empty($lastresults) && is_object($lastresults)) ? $lastresults : false;
-        $lastresults = json_encode(['success' => true, 'data' => $lastresults]);
 
         $unifiedenabled = (\local_o365\rest\unified::is_enabled() === true) ? 'true' : 'false';
 
