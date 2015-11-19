@@ -67,12 +67,10 @@ class discovery extends \local_o365\rest\o365api {
      */
     public function get_service($entitykey) {
         $response = $this->apicall('get', '/');
-        $response = @json_decode($response, true);
-        if (!empty($response) && !empty($response['value'])) {
-            foreach ($response['value'] as $service) {
-                if ($service['entityKey'] === $entitykey) {
-                    return $service;
-                }
+        $response = $this->process_apicall_response($response, ['value' => null]);
+        foreach ($response['value'] as $service) {
+            if ($service['entityKey'] === $entitykey) {
+                return $service;
             }
         }
         return null;

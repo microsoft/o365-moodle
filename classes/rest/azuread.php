@@ -74,10 +74,8 @@ class azuread extends \local_o365\rest\o365api {
         $this->tenantoverride = $tenant;
         $appinfo = $this->get_application_info();
         $this->tenantoverride = null;
-        if (is_array($appinfo)) {
-            if (isset($appinfo['value']) && isset($appinfo['value'][0]['odata.type'])) {
-                return ($appinfo['value'][0]['odata.type'] === 'Microsoft.DirectoryServices.Application') ? true : false;
-            }
+        if (isset($appinfo['value']) && isset($appinfo['value'][0]['odata.type'])) {
+            return ($appinfo['value'][0]['odata.type'] === 'Microsoft.DirectoryServices.Application') ? true : false;
         }
         return false;
     }
@@ -114,13 +112,7 @@ class azuread extends \local_o365\rest\o365api {
         $oidcconfig = get_config('auth_oidc');
         $endpoint = '/applications/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
         $response = $this->apicall('get', $endpoint);
-        if (!empty($response)) {
-            $response = @json_decode($response, true);
-            if (!empty($response) && is_array($response)) {
-                return $response;
-            }
-        }
-        return null;
+        return $this->process_apicall_response($response, ['value' => null]);
     }
 
     /**

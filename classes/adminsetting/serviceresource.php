@@ -72,6 +72,9 @@ class serviceresource extends \admin_setting_configtext {
 
             $strvalid = get_string('settings_serviceresourceabstract_valid', 'local_o365', $this->visiblename);
             $strinvalid = get_string('settings_serviceresourceabstract_invalid', 'local_o365', $this->visiblename);
+            $strerror = get_string('settings_serviceresourceabstract_error', 'local_o365', $this->visiblename);
+            $strdetect = get_string('settings_serviceresourceabstract_detect', 'local_o365', $this->visiblename);
+            $strdetecting = get_string('settings_serviceresourceabstract_detecting', 'local_o365', $this->visiblename);
             $iconvalid = addslashes($OUTPUT->pix_icon('t/check', 'valid', 'moodle'));
             $iconinvalid = addslashes($OUTPUT->pix_icon('t/delete', 'invalid', 'moodle'));
             $iconloading = addslashes($OUTPUT->pix_icon('i/ajaxloader', 'loading', 'moodle'));
@@ -85,7 +88,10 @@ class serviceresource extends \admin_setting_configtext {
                                         strinvalid: "'.$strinvalid.'",
                                         iconvalid: "'.$iconvalid.'",
                                         iconinvalid: "'.$iconinvalid.'",
-                                        iconloading: "'.$iconloading.'"
+                                        iconloading: "'.$iconloading.'",
+                                        strerror: "'.$strerror.'",
+                                        strdetecting: "'.$strdetecting.'",
+                                        strdetect: "'.$strdetect.'"
                                     };
                                     $("#admin-'.$this->name.'").serviceresource(opts);
                                 });
