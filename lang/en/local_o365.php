@@ -70,10 +70,11 @@ $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodl
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD<br /><small>This will look at the username in Office 365 and the username in Moodle and attempt to find matches. Matches are case-insentitive and ignore the Office 365 tenant. For example, BoB.SmiTh in Moodle would match bob.smith@example.onmicrosoft.com. Users who are matched will have their Moodle and Office accounts connected and will be able to use all Office 365/Moodle integration features. The user\'s authentication method will not change unless the setting below is enabled.</small>';
 $string['settings_aadsync_matchswitchauth'] = 'Switch matched users to Office 365 (OpenID Connect) authentication<br /><small>This requires the "Match" setting above to be enabled. When a user is matched, enabling this setting will switch their authentication method to OpenID Connect. They will then log in to Moodle with their Office 365 credentials. <b>Note:</b> Please ensure the OpenID Connect authentication plugin is enabled if you want to use this setting.</small>';
 $string['settings_aadtenant'] = 'Azure AD Tenant';
-$string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
+$string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com".';
+$string['settings_aadtenant_error'] = 'We could not detect your AzureAD tenant.<br />Please ensure "Windows Azure Active Directory" has been added to your registered Azure application, and that the "Read directory data" permission is enabled.';
 
 $string['settings_azuresetup'] = 'Azure Setup';
-$string['settings_azuresetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. It can also fix some common errors.';
+$string['settings_azuresetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure can take a moment to appear here. If you have made a change in Azure and do not see it reflected here, wait a moment and try again.';
 $string['settings_azuresetup_update'] = 'Update';
 $string['settings_azuresetup_checking'] = 'Checking...';
 $string['settings_azuresetup_missingperms'] = 'Missing Permissions:';
@@ -89,7 +90,7 @@ $string['settings_azuresetup_legacydesc'] = 'The Office&nbsp;365 API is made up 
 $string['settings_azuresetup_legacyerror'] = 'There was an error checking Office&nbsp;365 API settings.';
 
 $string['settings_creategroups'] = 'Create User Groups';
-$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office&nbsp;365 unified API added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
+$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office&nbsp;365 unified API to be enabled (see above), and added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
@@ -114,15 +115,21 @@ $string['settings_detectperms_unifiednomissing'] = 'All unified permissions pres
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
 $string['settings_detectperms_invalid'] = 'Check permissions in Azure AD';
-$string['settings_enableunifiedapi'] = 'Enable Unified API';
-$string['settings_enableunifiedapi_details'] = 'The unified API is a preview API that provides some new features like the "Create user groups" setting below. It will eventually replace the application-specific Office APIs, however it is still in preview and is subject to change which may break some functionality. If you\'d like to try it out, enable this setting and click "Save changes". Add the "Unified API" to your application in Azure then return here and run the "Azure Setup" tool below.';
+$string['settings_enableunifiedapi'] = 'Enable Microsoft Graph API';
+$string['settings_enableunifiedapi_details'] = 'The Microsoft Graph API is a preview API that provides some new features like the "Create user groups" setting below. It will eventually replace the existing Office APIs, however it is still in preview and is subject to change which may break some functionality. If you\'d like to try it out, enable this setting and click "Save changes". Add "Microsoft Graph" to your application in Azure, then return here and run the "Azure Setup" tool below.';
 $string['settings_header_setup'] = 'Setup';
+$string['settings_header_setup_desc'] = 'Follow these steps in order from top to bottom to get the plugin set up.';
 $string['settings_header_options'] = 'Options';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
 $string['settings_odburl'] = 'OneDrive for Business URL';
 $string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your Azure AD tenant. For example, if your Azure AD tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
+$string['settings_odburl_error'] = 'We could not determine your OneDrive for Business URL.<br />Please make sure "Office 365 SharePoint Online" has been added to your registered application in Azure.';
+$string['settings_serviceresourceabstract_detect'] = 'Detect';
+$string['settings_serviceresourceabstract_detecting'] = 'Detecting...';
+$string['settings_serviceresourceabstract_error'] = 'An error occurred detecting setting. Please set manually.';
+$string['settings_serviceresourceabstract_noperms'] = 'We experienced a problem detecting this setting.<br />Please ensure "Windows Azure Active Directory" has been added to your registered Azure application, and that the "Read directory data" permission is enabled.';
 $string['settings_serviceresourceabstract_valid'] = '{$a} is usable.';
 $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem to be usable.';
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
@@ -133,17 +140,17 @@ $string['settings_sharepointlink_connected'] = 'Moodle is connected to this Shar
 $string['settings_sharepointlink_changelink'] = 'Change Site';
 $string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
 $string['settings_sharepointlink_enterurl'] = 'Enter a URL above.';
-$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365/SharePoint">Read more about connecting Moodle and SharePoint</a>';
+$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365#SharePoint_Connection">Read more about connecting Moodle and SharePoint</a>';
 $string['settings_sharepointlink_status_invalid'] = 'This is not a usable SharePoint site.';
 $string['settings_sharepointlink_status_notempty'] = 'This site is usable, but already exists. Moodle may conflict with existing content. For best results, enter a SharePoint site that doesn\'t exist and Moodle will create it.';
 $string['settings_sharepointlink_status_valid'] = 'This SharePoint site will be created by Moodle and used for Moodle content.';
 $string['settings_sharepointlink_status_checking'] = 'Checking entered SharePoint site...';
 $string['settings_systemapiuser'] = 'System API User';
 $string['settings_systemapiuser_details'] = 'Any Azure AD user, but it should be either the account of an administrator, or a dedicated account. This account is used to perform operations that are not user-specific. For example, managing course SharePoint sites.';
-$string['settings_systemapiuser_change'] = 'Change User';
+$string['settings_systemapiuser_change'] = 'Change user';
 $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
-$string['settings_systemapiuser_setuser'] = 'Set User';
+$string['settings_systemapiuser_setuser'] = 'Set user';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';

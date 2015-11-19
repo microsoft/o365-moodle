@@ -39,10 +39,6 @@ if ($hassiteconfig) {
     $desc = '';
     $settings->add(new admin_setting_heading('local_o365_options', $label, $desc));
 
-    $label = get_string('settings_systemapiuser', 'local_o365');
-    $desc = get_string('settings_systemapiuser_details', 'local_o365');
-    $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
-
     $label = get_string('settings_aadsync', 'local_o365');
     $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
     $desc = get_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
@@ -52,7 +48,7 @@ if ($hassiteconfig) {
         'match' => get_string('settings_aadsync_match', 'local_o365'),
         'matchswitchauth' => get_string('settings_aadsync_matchswitchauth', 'local_o365'),
     ];
-    $default = ['create' => true];
+    $default = [];
     $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
 
     $label = get_string('settings_o365china', 'local_o365');
@@ -72,12 +68,16 @@ if ($hassiteconfig) {
     $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
 
     $label = get_string('settings_header_setup', 'local_o365');
-    $desc = '';
+    $desc = get_string('settings_header_setup_desc', 'local_o365');
     $settings->add(new admin_setting_heading('local_o365_environment', $label, $desc));
 
     $label = get_string('settings_detectoidc', 'local_o365');
     $desc = get_string('settings_detectoidc_details', 'local_o365');
     $settings->add(new \local_o365\adminsetting\detectoidc('local_o365/detectoidc', $label, $desc));
+
+    $label = get_string('settings_systemapiuser', 'local_o365');
+    $desc = get_string('settings_systemapiuser_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
 
     $label = get_string('settings_aadtenant', 'local_o365');
     $desc = get_string('settings_aadtenant_details', 'local_o365');
