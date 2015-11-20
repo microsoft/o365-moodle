@@ -276,6 +276,60 @@ class azuread extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get information on the current application.
+     *
+     * @return array|null Array of service information, or null if error.
+     */
+    public function get_application_serviceprincipal_info() {
+        $oidcconfig = get_config('auth_oidc');
+        $endpoint = '/servicePrincipals()?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
+        $params = array(
+            'appId' => $oidcconfig->clientid,
+        );
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = array('value' => null);
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get information on specified services.
+     *
+     * @param int $muserid Moodle userid.
+     * @param string $userid Azure object id for user.
+     * @return array|null Array of result, or null if error.
+     */
+    public function assign_user($muserid, $userid, $appobjectid) {
+        global $DB;
+        $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+        if (empty($record) || $record->assigned == 0) {
+            if (empty($record)) {
+                $record = new \stdClass;
+                $record->muserid = $muserid;
+                $record->userobjectid = $userid;
+                $record->assigned = 1;
+                $DB->insert_record('local_o365_appassign', $record);
+            } else {
+                $record->assigned = 1;
+                $DB->update_record('local_o365_appassign', $record);
+            }
+            $endpoint = '/users/'.$userid.'/appRoleAssignments';
+            $routeid = '00000000-0000-0000-0000-000000000000';
+            $params = array(
+                'id' => $routeid,
+                'resourceId' => $appobjectid,
+                'principalId' => $userid
+            );
+            $response = $this->apicall('post', $endpoint, json_encode($params));
+            $expectedparams = array(
+                'odata.type' => 'Microsoft.DirectoryServices.AppRoleAssignment',
+                'objectType' => 'AppRoleAssignment',
+            );
+            return $this->process_apicall_response($response, $expectedparams);
+        }
+        return null;
+    }
+
+    /**
      * Get information on specified services.
      *
      * @param array $servicenames Array of service names to get. (See keys in get_required_permissions for examples.)
