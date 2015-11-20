@@ -69,6 +69,7 @@ $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azu
 $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD<br /><small>This will look at the username in Office 365 and the username in Moodle and attempt to find matches. Matches are case-insentitive and ignore the Office 365 tenant. For example, BoB.SmiTh in Moodle would match bob.smith@example.onmicrosoft.com. Users who are matched will have their Moodle and Office accounts connected and will be able to use all Office 365/Moodle integration features. The user\'s authentication method will not change unless the setting below is enabled.</small>';
 $string['settings_aadsync_matchswitchauth'] = 'Switch matched users to Office 365 (OpenID Connect) authentication<br /><small>This requires the "Match" setting above to be enabled. When a user is matched, enabling this setting will switch their authentication method to OpenID Connect. They will then log in to Moodle with their Office 365 credentials. <b>Note:</b> Please ensure the OpenID Connect authentication plugin is enabled if you want to use this setting.</small>';
+$string['settings_aadsync_appassign'] = 'Assign users to application during sync';
 $string['settings_aadtenant'] = 'Azure AD Tenant';
 $string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com"';
 
