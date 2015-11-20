@@ -302,5 +302,12 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015060111', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015111900.01) {
+        $table = new xmldb_table('local_o365_appassign');
+        if (!$dbman->table_exists($table)) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_appassign');
+        }
+        upgrade_plugin_savepoint($result, '2015111900.01', 'local', 'o365');
+    }
     return $result;
 }
