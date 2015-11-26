@@ -30,6 +30,7 @@ $string['errorbadclienttype'] = 'Invalid client type.';
 $string['errorbadpath'] = 'Bad Path';
 $string['errorcoursenotfound'] = 'Course not found';
 $string['errorwhiledownload'] = 'An error occurred while downloading the file';
+$string['erroro365required'] = 'This file is currently only available to Office 365 users.';
 
 $string['file'] = 'File';
 $string['myfiles'] = 'My Files';
