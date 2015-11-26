@@ -61,44 +61,67 @@ class repository_office365 extends \repository {
     /**
      * Get a unified api token.
      *
+     * @param bool $system If true, get a system API ser token instead of the user's token.
+     * @param int|null $userid The userid to get a token for. If null, the current user will be used.
      * @return \local_o365\oauth2\token A unified api token object.
      */
-    protected function get_unified_token() {
+    protected function get_unified_token($system = false, $userid = null) {
         global $USER;
         $resource = \local_o365\rest\unified::get_resource();
-        return \local_o365\oauth2\token::instance($USER->id, $resource, $this->clientdata, $this->httpclient);
+        if ($system === true) {
+            return \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+        } else {
+            $userid = (!empty($userid)) ? $userid : $USER->id;
+            return \local_o365\oauth2\token::instance($userid, $resource, $this->clientdata, $this->httpclient);
+        }
     }
 
     /**
      * Get a OneDrive token.
      *
+     * @param bool $system If true, get a system API ser token instead of the user's token.
+     * @param int|null $userid The userid to get a token for. If null, the current user will be used.
      * @return \local_o365\oauth2\token A OneDrive token object.
      */
-    protected function get_onedrive_token() {
+    protected function get_onedrive_token($system = false, $userid = null) {
         global $USER;
         $resource = \local_o365\rest\onedrive::get_resource();
-        return \local_o365\oauth2\token::instance($USER->id, $resource, $this->clientdata, $this->httpclient);
+        if ($system === true) {
+            return \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+        } else {
+            $userid = (!empty($userid)) ? $userid : $USER->id;
+            return \local_o365\oauth2\token::instance($userid, $resource, $this->clientdata, $this->httpclient);
+        }
     }
 
     /**
      * Get a SharePoint token.
      *
+     * @param bool $system If true, get a system API ser token instead of the user's token.
+     * @param int|null $userid The userid to get a token for. If null, the current user will be used.
      * @return \local_o365\oauth2\token A SharePoint token object.
      */
-    protected function get_sharepoint_token() {
+    protected function get_sharepoint_token($system = false, $userid = null) {
         global $USER;
         $resource = \local_o365\rest\sharepoint::get_resource();
-        return \local_o365\oauth2\token::instance($USER->id, $resource, $this->clientdata, $this->httpclient);
+        if ($system === true) {
+            return \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+        } else {
+            $userid = (!empty($userid)) ? $userid : $USER->id;
+            return \local_o365\oauth2\token::instance($userid, $resource, $this->clientdata, $this->httpclient);
+        }
     }
 
     /**
      * Get a unified API client.
      *
+     * @param bool $system If true, get a system API ser token instead of the user's token.
+     * @param int|null $userid The userid to get an API client for. If null, the current user will be used.
      * @return \local_o365\rest\unified A unified API client object.
      */
-    protected function get_unified_apiclient() {
+    protected function get_unified_apiclient($system = false, $userid = null) {
         if ($this->unifiedconfigured === true) {
-            $token = $this->get_unified_token();
+            $token = $this->get_unified_token($system, $userid);
             if (!empty($token)) {
                 return new \local_o365\rest\unified($token, $this->httpclient);
             }
@@ -109,11 +132,13 @@ class repository_office365 extends \repository {
     /**
      * Get a onedrive API client.
      *
+     * @param bool $system If true, get a system API ser token instead of the user's token.
+     * @param int|null $userid The userid to get an API client for. If null, the current user will be used.
      * @return \local_o365\rest\onedrive A onedrive API client object.
      */
-    protected function get_onedrive_apiclient() {
+    protected function get_onedrive_apiclient($system = false, $userid = null) {
         if ($this->onedriveconfigured === true) {
-            $token = $this->get_onedrive_token();
+            $token = $this->get_onedrive_token($system, $userid);
             if (!empty($token)) {
                 return new \local_o365\rest\onedrive($token, $this->httpclient);
             }
@@ -124,11 +149,13 @@ class repository_office365 extends \repository {
     /**
      * Get a sharepoint API client.
      *
+     * @param bool $system If true, get a system API ser token instead of the user's token.
+     * @param int|null $userid The userid to get an API client for. If null, the current user will be used.
      * @return \local_o365\rest\sharepoint A sharepoint API client object.
      */
-    protected function get_sharepoint_apiclient() {
+    protected function get_sharepoint_apiclient($system = false, $userid = null) {
         if ($this->sharepointconfigured === true) {
-            $token = $this->get_sharepoint_token();
+            $token = $this->get_sharepoint_token($system, $userid);
             if (!empty($token)) {
                 return new \local_o365\rest\sharepoint($token, $this->httpclient);
             }
@@ -697,8 +724,16 @@ class repository_office365 extends \repository {
             } else {
                 $sourceclient = $this->get_onedrive_apiclient();
             }
+            if (empty($sourceclient)) {
+                \local_o365\utils::debug('Could not construct onedrive api.', $caller);
+                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
+            }
         } else if ($reference['source'] === 'sharepoint') {
             $sourceclient = $this->get_sharepoint_apiclient();
+            if (empty($sourceclient)) {
+                \local_o365\utils::debug('Could not construct sharepoint api.', $caller);
+                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
+            }
             if (isset($reference['parentsiteuri'])) {
                 $parentsiteuri = $reference['parentsiteuri'];
             } else {
@@ -826,6 +861,26 @@ class repository_office365 extends \repository {
     }
 
     /**
+     * Determine whether a "send_file" request should be a redirect to the embed URL for a file.
+     *
+     * @param array $reference The file reference array.
+     * @param bool $forcedownload The send_file "forcedownload" param.
+     * @return bool True if we should do embedding, false otherwise.
+     */
+    public function do_embedding($reference, $forcedownload) {
+        if ($_SERVER['SCRIPT_NAME'] === '/draftfile.php') {
+            return false;
+        }
+        if (empty($reference['source']) || $reference['source'] !== 'onedrive') {
+            return false;
+        }
+        if (!empty($forcedownload)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Repository method to serve the referenced file
      *
      * @see send_stored_file
@@ -837,55 +892,58 @@ class repository_office365 extends \repository {
      * @param array $options additional options affecting the file serving
      */
     public function send_file($storedfile, $lifetime = null , $filter = 0, $forcedownload = false, array $options = null) {
+        global $USER;
         $caller = '\repository_office365::send_file';
         $reference = $this->unpack_reference($storedfile->get_reference());
 
-        if (false && $_SERVER['SCRIPT_NAME'] !== '/draftfile.php') {
-            if ($reference['source'] === 'onedrive') {
-                $sourceclient = $this->get_onedrive_apiclient();
-                $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
-                $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
-                if (!empty($embedurl)) {
-                    header('Location: '.$embedurl);
-                    die();
-                } else if (!empty($fileurl)) {
-                    header('Location: '.$fileurl);
-                    die();
+        $fileuserid = $storedfile->get_userid();
+        $sourceclient = $this->get_onedrive_apiclient(false, $fileuserid);
+        if (empty($sourceclient)) {
+            \local_o365\utils::debug('Could not construct api client for user', 'send_file', $fileuserid);
+            send_file_not_found();
+            die();
+        }
+        $fileinfo = $sourceclient->get_file_metadata($reference['id']);
+
+        // Do embedding if relevant.
+        $doembed = $this->do_embedding($reference, $forcedownload);
+        if ($doembed === true) {
+            if (\local_o365\utils::is_o365_connected($USER->id) !== true) {
+                // Embedding currently only supported for logged-in Office 365 users.
+                echo get_string('erroro365required', 'repository_office365');
+                die();
+            }
+            if (!empty($sourceclient)) {
+                if (isset($fileinfo['webUrl'])) {
+                    $fileurl = $fileinfo['webUrl'];
+                } else {
+                    $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
                 }
+                if (empty($fileurl)) {
+                    $errstr = 'Embed was requested, but could not get file info to complete request.';
+                    \local_o365\utils::debug($errstr, 'send_file', ['reference' => $reference, 'fileinfo' => $fileinfo]);
+                } else {
+                    try {
+                        $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
+                        $embedurl = (isset($embedurl['value'])) ? $embedurl['value'] : '';
+                    } catch (\Exception $e) {
+                        // Note: exceptions will already be logged in get_embed_url.
+                        $embedurl = '';
+                    }
+                    if (!empty($embedurl)) {
+                        redirect($embedurl);
+                    } else if (!empty($fileurl)) {
+                        redirect($fileurl);
+                    } else {
+                        $errstr = 'Embed was requested, but could not complete.';
+                        \local_o365\utils::debug($errstr, 'send_file', $reference);
+                    }
+                }
+            } else {
+                \local_o365\utils::debug('Could not construct OneDrive client for system api user.', 'send_file');
             }
         }
 
-        try {
-            $fileinfo = $this->get_file($storedfile->get_reference());
-            if (isset($fileinfo['path'])) {
-                $fs = get_file_storage();
-                list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($fileinfo['path']);
-                // Set this file and other similar aliases synchronised.
-                $storedfile->set_synchronized($contenthash, $filesize);
-            } else {
-                $errmsg = get_string('errorwhiledownload', 'repository_office365');
-                $debugdata = [
-                    'fileinfo' => $fileinfo,
-                ];
-                if (!isset($fileinfo['path'])) {
-                    $debugdata['message'] = '$fileinfo["path"] is not set.';
-                }
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
-                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
-            }
-            if (!is_array($options)) {
-                $options = [];
-            }
-            $options['sendcachedexternalfile'] = true;
-            send_stored_file($storedfile, $lifetime, $filter, $forcedownload, $options);
-        } catch (\Exception $e) {
-            $errmsg = 'File not found';
-            $debugdata = [
-                'reference' => $reference,
-                'message' => $e->getMessage(),
-            ];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
-            send_file_not_found();
-        }
+        redirect($fileinfo['webUrl']);
     }
 }
