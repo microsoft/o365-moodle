@@ -102,10 +102,8 @@ class onedrive extends \local_o365\rest\o365api {
                 $endpoint = '/web/GetFileByServerRelativeUrl(\''.$filerelative.'\')/ListItemAllFields/GetWOPIFrameUrl(3)';
                 $response = $this->apicall('post', $endpoint);
                 unset($this->apiurioverride);
-                $response = json_decode($response, true);
-                if (!empty($response) && isset($response['value'])) {
-                    return $response['value'];
-                }
+                $expectedparams = ['value' => null];
+                return $this->process_apicall_response($response, $expectedparams);
             }
         }
         return null;
