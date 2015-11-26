@@ -122,9 +122,12 @@ class oidcclient {
     /**
      * Get an array of authorization request parameters.
      *
+     * @param bool $promptlogin Whether to prompt for login or use existing session.
+     * @param array $stateparams Parameters to store as state.
+     * @param array $extraparams Additional parameters to send with the OIDC request.
      * @return array Array of request parameters.
      */
-    protected function getauthrequestparams($promptlogin = false, array $stateparams = array()) {
+    protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         $nonce = 'N'.uniqid();
         $params = [
             'response_type' => 'code',
@@ -138,6 +141,9 @@ class oidcclient {
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
         }
+
+        $params = array_merge($params, $extraparams);
+
         return $params;
     }
 
@@ -161,8 +167,12 @@ class oidcclient {
 
     /**
      * Perform an authorization request by redirecting resource owner's user agent to auth endpoint.
+     *
+     * @param bool $promptlogin Whether to prompt for login or use existing session.
+     * @param array $stateparams Parameters to store as state.
+     * @param array $extraparams Additional parameters to send with the OIDC request.
      */
-    public function authrequest($promptlogin = false, array $stateparams = array()) {
+    public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         global $DB;
         if (empty($this->clientid)) {
             throw new \moodle_exception('erroroidcclientnocreds', 'auth_oidc');
@@ -172,7 +182,7 @@ class oidcclient {
             throw new \moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
         }
 
-        $params = $this->getauthrequestparams($promptlogin, $stateparams);
+        $params = $this->getauthrequestparams($promptlogin, $stateparams, $extraparams);
         $redirecturl = new \moodle_url($this->endpoints['auth'], $params);
         redirect($redirecturl);
     }
