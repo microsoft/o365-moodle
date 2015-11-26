@@ -60,6 +60,11 @@ $configdesc = get_string('cfg_autoappend_desc', 'auth_oidc');
 $configdefault = '';
 $settings->add(new admin_setting_configtext('auth_oidc/autoappend', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
+$configkey = get_string('cfg_domainhint_key', 'auth_oidc');
+$configdesc = get_string('cfg_domainhint_desc', 'auth_oidc');
+$configdefault = '';
+$settings->add(new admin_setting_configtext('auth_oidc/domainhint', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
 $configkey = get_string('cfg_loginflow_key', 'auth_oidc');
 $configdesc = '';
 $configdefault = 'authcode';
