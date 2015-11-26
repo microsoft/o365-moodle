@@ -104,10 +104,14 @@ class authcode extends \auth_oidc\loginflow\base {
 
     /**
      * Initiate an authorization request to the configured OP.
+     *
+     * @param bool $promptlogin Whether to prompt for login or use existing session.
+     * @param array $stateparams Parameters to store as state.
+     * @param array $extraparams Additional parameters to send with the OIDC request.
      */
-    public function initiateauthrequest($promptlogin = false, array $stateparams = array()) {
+    public function initiateauthrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         $client = $this->get_oidcclient();
-        $client->authrequest($promptlogin, $stateparams);
+        $client->authrequest($promptlogin, $stateparams, $extraparams);
     }
 
     /**
