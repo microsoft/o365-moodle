@@ -168,6 +168,8 @@ $string['settings_systemapiuser_change'] = 'Change User';
 $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
+$string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
+$string['settings_usersynccreationrestriction_details'] = 'If enabled, only users that have the specified value for the specified Azure field will be created during user sync.';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
