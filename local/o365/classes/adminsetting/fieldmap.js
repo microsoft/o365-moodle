@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -21,13 +20,32 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+$(function() {
 
-$plugin->version = 2015011636.01;
-$plugin->requires = 2014051200;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '27.0.0.19';
-$plugin->dependencies = [
-    'auth_oidc' => 2015011623
-];
+
+$.fn.fieldmap = function(options) {
+    var defaultopts = {};
+    var opts = $.extend({}, defaultopts, options);
+    var main = this;
+    console.log(main);
+
+    this.addrow = function() {
+        var row = main.find('textarea.maptpl').val();
+        main.find('table.fieldlist').append(row);
+    }
+
+    this.init = function() {
+        main.find('button.addmapping').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            main.addrow();
+        });
+        main.find('table.fieldlist').on('click', 'button.removerow', function(e) {
+            $(this).parents('tr').remove();
+        });
+    }
+
+    this.init();
+}
+
+});
