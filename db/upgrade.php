@@ -302,5 +302,18 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011632', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011636.01) {
+        $fieldmapdefault = [
+            'givenName/firstname/always',
+            'surname/lastname/always',
+            'mail/email/always',
+            'city/city/always',
+            'country/country/always',
+            'department/department/always',
+            'preferredLanguage/lang/always',
+        ];
+        set_config('fieldmap', serialize($fieldmapdefault), 'local_o365');
+    }
+
     return $result;
 }
