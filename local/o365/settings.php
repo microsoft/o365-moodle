@@ -55,6 +55,12 @@ if ($hassiteconfig) {
     $default = ['create' => true];
     $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
 
+    $key = 'local_o365/usersynccreationrestriction';
+    $label = get_string('settings_usersynccreationrestriction', 'local_o365');
+    $desc = get_string('settings_usersynccreationrestriction_details', 'local_o365');
+    $default = [];
+    $settings->add(new \local_o365\adminsetting\usersynccreationrestriction($key, $label, $desc, $default));
+
     $label = get_string('settings_fieldmap', 'local_o365');
     $desc = get_string('settings_fieldmap_details', 'local_o365');
     $default = [
