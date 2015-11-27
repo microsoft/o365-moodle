@@ -111,7 +111,7 @@ class observers {
 
         $user = $DB->get_record('user', ['id' => $createduserid]);
         if (!empty($user) && isset($user->auth) && $user->auth === 'oidc') {
-            static::get_additional_user_info($createduserid);
+            static::get_additional_user_info($createduserid, 'create');
         }
 
         return true;
@@ -148,7 +148,7 @@ class observers {
         // Get additional tokens for the user.
         $eventdata = $event->get_data();
         if (!empty($eventdata['other']['username']) && !empty($eventdata['userid'])) {
-            static::get_additional_user_info($eventdata['userid']);
+            static::get_additional_user_info($eventdata['userid'], 'login');
         }
 
         return true;
@@ -157,9 +157,11 @@ class observers {
     /**
      * Get additional information about a user from Azure AD.
      *
+     * @param int $userid The ID of the user we want more information about.
+     * @param string $eventtype The type of event that triggered this call. "login" or "create".
      * @return bool Success/Failure.
      */
-    public static function get_additional_user_info($userid) {
+    public static function get_additional_user_info($userid, $eventtype) {
         global $DB;
 
         try {
@@ -186,26 +188,14 @@ class observers {
             $token = \local_o365\oauth2\token::instance($userid, $aadresource, $clientdata, $httpclient);
             $apiclient = new \local_o365\rest\azuread($token, $httpclient);
             $aaduserdata = $apiclient->get_user($tokenrec->oidcuniqid);
-            $updateduser = [];
-            $parammap = [
-                'mail' => 'email',
-                'city' => 'city',
-                'country' => 'country',
-                'department' => 'department'
-            ];
-            foreach ($parammap as $aadparam => $moodleparam) {
-                if (!empty($aaduserdata[$aadparam])) {
-                    $updateduser[$moodleparam] = $aaduserdata[$aadparam];
-                }
-            }
 
-            if (!empty($aaduserdata['preferredLanguage'])) {
-                $updateduser['lang'] = substr($aaduserdata['preferredLanguage'], 0, 2);
-            }
+            $updateduser = new \stdClass;
+            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($aaduserdata, $updateduser, $eventtype);
 
             if (!empty($updateduser)) {
-                $updateduser['id'] = $userid;
-                $DB->update_record('user', (object)$updateduser);
+                $updateduser->id = $userid;
+                $DB->update_record('user', $updateduser);
+                profile_save_data($updateduser);
             }
             return true;
         } catch (\Exception $e) {
