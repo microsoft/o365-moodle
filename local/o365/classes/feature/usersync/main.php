@@ -117,6 +117,35 @@ class main {
     }
 
     /**
+     * Check the configured user creation restriction and determine whether a user can be created.
+     *
+     * @param array $aaddata Array of user data from Azure AD.
+     * @return bool Whether the user can be created.
+     */
+    protected function check_usercreationrestriction($aaddata) {
+        $restriction = get_config('local_o365', 'usersynccreationrestriction');
+        if (empty($restriction)) {
+            return true;
+        }
+        $restriction = @unserialize($restriction);
+        if (empty($restriction) || !is_array($restriction)) {
+            return true;
+        }
+        if (empty($restriction['remotefield']) || empty($restriction['value'])) {
+            return true;
+        }
+
+        if (!isset($aaddata[$restriction['remotefield']])) {
+            return false;
+        }
+
+        if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Create a Moodle user from Azure AD user data.
      *
      * @param array $aaddata Array of Azure AD user data.
@@ -127,6 +156,12 @@ class main {
 
         require_once($CFG->dirroot.'/user/profile/lib.php');
         require_once($CFG->dirroot.'/user/lib.php');
+
+        $creationallowed = $this->check_usercreationrestriction($aaddata);
+        if ($creationallowed !== true) {
+            mtrace('Cannot create user because they do not meet the configured user creation restrictions.');
+            return false;
+        }
 
         // Locate country code.
         if (isset($aaddata['country'])) {
