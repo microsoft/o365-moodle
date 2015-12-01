@@ -38,3 +38,4 @@ $string['office365:view'] = 'View OneDrive for Business repository';
 $string['pluginname'] = 'OneDrive for Business';
 $string['pluginname_help'] = 'A OneDrive for Business Repository';
 $string['upload'] = 'Upload New File';
+$string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Office 365 plugins</a></p>';
