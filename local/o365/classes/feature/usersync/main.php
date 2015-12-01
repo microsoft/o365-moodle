@@ -79,6 +79,73 @@ class main {
     }
 
     /**
+     * Apply the configured field map.
+     *
+     * @param array $aaddata User data from Azure AD.
+     * @param array $user Moodle user data.
+     * @param string $eventtype 'login', or 'create'
+     * @return array Modified Moodle user data.
+     */
+    public static function apply_configured_fieldmap(array $aaddata, \stdClass $user, $eventtype) {
+        $fieldmaps = get_config('local_o365', 'fieldmap');
+        $fieldmaps = (!empty($fieldmaps)) ? @unserialize($fieldmaps) : [];
+        if (empty($fieldmaps) || !is_array($fieldmaps)) {
+            return $user;
+        }
+
+        foreach ($fieldmaps as $fieldmap) {
+            $fieldmap = explode('/', $fieldmap);
+            if (count($fieldmap) !== 3) {
+                continue;
+            }
+            list($remotefield, $localfield, $behavior) = $fieldmap;
+            if ($behavior !== 'on'.$eventtype && $behavior !== 'always') {
+                // Field mapping doesn't apply to this event type.
+                continue;
+            }
+            if (isset($aaddata[$remotefield])) {
+                $user->$localfield = $aaddata[$remotefield];
+            }
+        }
+
+        // Lang cannot be longer than 2 chars.
+        if (!empty($user->lang) && strlen($user->lang) > 2) {
+            $user->lang = substr($user->lang, 0, 2);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Check the configured user creation restriction and determine whether a user can be created.
+     *
+     * @param array $aaddata Array of user data from Azure AD.
+     * @return bool Whether the user can be created.
+     */
+    protected function check_usercreationrestriction($aaddata) {
+        $restriction = get_config('local_o365', 'usersynccreationrestriction');
+        if (empty($restriction)) {
+            return true;
+        }
+        $restriction = @unserialize($restriction);
+        if (empty($restriction) || !is_array($restriction)) {
+            return true;
+        }
+        if (empty($restriction['remotefield']) || empty($restriction['value'])) {
+            return true;
+        }
+
+        if (!isset($aaddata[$restriction['remotefield']])) {
+            return false;
+        }
+
+        if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Create a Moodle user from Azure AD user data.
      *
      * @param array $aaddata Array of Azure AD user data.
@@ -89,6 +156,12 @@ class main {
 
         require_once($CFG->dirroot.'/user/profile/lib.php');
         require_once($CFG->dirroot.'/user/lib.php');
+
+        $creationallowed = $this->check_usercreationrestriction($aaddata);
+        if ($creationallowed !== true) {
+            mtrace('Cannot create user because they do not meet the configured user creation restrictions.');
+            return false;
+        }
 
         // Locate country code.
         if (isset($aaddata['country'])) {
@@ -107,17 +180,14 @@ class main {
         $newuser = (object)[
             'auth' => 'oidc',
             'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
-            'email' => (isset($aaddata['mail'])) ? $aaddata['mail'] : '',
-            'firstname' => (isset($aaddata['givenName'])) ? $aaddata['givenName'] : '',
-            'lastname' => (isset($aaddata['surname'])) ? $aaddata['surname'] : '',
-            'city' => (isset($aaddata['city'])) ? $aaddata['city'] : '',
-            'country' => (isset($aaddata['country'])) ? $aaddata['country'] : '',
-            'department' => (isset($aaddata['department'])) ? $aaddata['department'] : '',
-            'lang' => (isset($aaddata['preferredLanguage'])) ? substr($aaddata['preferredLanguage'], 0, 2) : 'en',
+            'lang' => 'en',
             'confirmed' => 1,
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
         ];
+
+        $newuser = static::apply_configured_fieldmap($aaddata, $newuser, 'create');
+
         $password = null;
         $newuser->idnumber = $newuser->username;
 
