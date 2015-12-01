@@ -98,6 +98,12 @@ class base {
 
         $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
 
+        // O365 provides custom field mapping, skip OIDC mapping if O365 is present.
+        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
+        if (!empty($o365installed)) {
+            return [];
+        }
+
         $userinfo = [
             'lang' => 'en',
             'idnumber' => $username,
