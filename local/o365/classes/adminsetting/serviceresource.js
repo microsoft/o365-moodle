@@ -32,9 +32,9 @@ $.fn.serviceresource = function(options) {
         strinvalid: '',
         iconinvalid: '',
         iconloading: '',
-        strerror: 'An error occurred detecting setting. Please set manually.',
-        strdetecting: 'Detecting...',
-        strdetect: 'Detect'
+        strerror: '',
+        strdetecting: '',
+        strdetect: ''
     };
     var opts = $.extend({}, defaultopts, options);
     var main = this;

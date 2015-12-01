@@ -79,6 +79,7 @@ class systemapiuser extends \admin_setting {
      * @return string Returns an XHTML string
      */
     public function output_html($data, $query='') {
+        global $OUTPUT;
         $tokens = get_config('local_o365', 'systemtokens');
         $setuser = '';
         if (!empty($tokens)) {
@@ -96,11 +97,19 @@ class systemapiuser extends \admin_setting {
         $settinghtml = '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
         $setuserurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'setsystemuser']);
         if (!empty($setuser)) {
-            $settinghtml .= get_string('settings_systemapiuser_userset', 'local_o365', $setuser).' ';
-            $settinghtml .= \html_writer::link($setuserurl, get_string('settings_systemapiuser_change', 'local_o365'));
+            $message = \html_writer::tag('span', get_string('settings_systemapiuser_userset', 'local_o365', $setuser)).' ';
+            $linkstr = get_string('settings_systemapiuser_change', 'local_o365');
+            $message .= \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-left: 0.5rem']);
+            $messageattrs = ['class' => 'local_o365_statusmessage alert-success'];
+            $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
+            $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         } else {
-            $settinghtml .= get_string('settings_systemapiuser_usernotset', 'local_o365').' ';
-            $settinghtml .= \html_writer::link($setuserurl, get_string('settings_systemapiuser_setuser', 'local_o365'));
+            $message = \html_writer::tag('span', get_string('settings_systemapiuser_usernotset', 'local_o365')).' ';
+            $linkstr = get_string('settings_systemapiuser_setuser', 'local_o365');
+            $message .= \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-left: 0.5rem']);
+            $messageattrs = ['class' => 'local_o365_statusmessage alert-info'];
+            $icon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
+            $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         }
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
     }
