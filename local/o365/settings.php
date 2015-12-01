@@ -55,6 +55,25 @@ if ($hassiteconfig) {
     $default = ['create' => true];
     $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
 
+    $key = 'local_o365/usersynccreationrestriction';
+    $label = get_string('settings_usersynccreationrestriction', 'local_o365');
+    $desc = get_string('settings_usersynccreationrestriction_details', 'local_o365');
+    $default = [];
+    $settings->add(new \local_o365\adminsetting\usersynccreationrestriction($key, $label, $desc, $default));
+
+    $label = get_string('settings_fieldmap', 'local_o365');
+    $desc = get_string('settings_fieldmap_details', 'local_o365');
+    $default = [
+        'givenName/firstname/always',
+        'surname/lastname/always',
+        'mail/email/always',
+        'city/city/always',
+        'country/country/always',
+        'department/department/always',
+        'preferredLanguage/lang/always',
+    ];
+    $settings->add(new \local_o365\adminsetting\fieldmap('local_o365/fieldmap', $label, $desc, $default));
+
     $label = get_string('settings_o365china', 'local_o365');
     $desc = get_string('settings_o365china_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
