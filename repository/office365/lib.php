@@ -946,4 +946,36 @@ class repository_office365 extends \repository {
 
         redirect($fileinfo['webUrl']);
     }
+
+    /**
+     * Validate Admin Settings Moodle form
+     *
+     * @static
+     * @param moodleform $mform Moodle form (passed by reference)
+     * @param array $data array of ("fieldname"=>value) of submitted data
+     * @param array $errors array of ("fieldname"=>errormessage) of errors
+     * @return array array of errors
+     */
+    public static function type_form_validation($mform, $data, $errors) {
+        global $CFG;
+        if (\local_o365\utils::is_configured() !== true) {
+            array_push($errors, get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
+        }
+        return $errors;
+    }
+
+    /**
+     * Setup repistory form.
+     *
+     * @param moodleform $mform Moodle form (passed by reference)
+     * @param string $classname repository class name
+     */
+    public static function type_config_form($mform, $classname = 'repository') {
+        global $CFG;
+        $a = new stdClass;
+        if (\local_o365\utils::is_configured() !== true) {
+            $mform->addElement('static', null, '', get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
+        }
+        parent::type_config_form($mform);
+    }
 }

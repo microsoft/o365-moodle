@@ -28,3 +28,4 @@ $string['configplugin'] = 'Configure Microsoft OneNote';
 $string['oauthinfo'] = '<p>To use this plugin, you must register your site <a href="https://account.live.com/developers/applications">with Microsoft</a>.<p>As part of the registration process, you will need to enter the following URL as \'Redirect domain\':</p><p>{$a->callbackurl}</p>Once registered, you will be provided with a client ID and secret which can be entered here.</p>';
 $string['pluginname'] = 'Microsoft OneNote';
 $string['onenote:view'] = 'View OneNote Notebooks';
+$string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Office 365 plugins</a></p>';
