@@ -51,6 +51,8 @@ $.fn.azuresetup = function(options) {
         strlegacyheader: 'Legacy API',
         strlegacydesc: 'The legacy API is made up of application-specific APIs.',
         strlegacyerror: 'There was an error checking legacy API settings.',
+
+        strtenanterror: 'Please use the dectect button to set your Azure AD Tenant before updating Azure Setup',
     };
     var opts = $.extend({}, defaultopts, options);
     var main = this;
@@ -259,11 +261,25 @@ $.fn.azuresetup = function(options) {
     }
 
     this.checksetup = function() {
+        // Check to see if Azure AD Tenant is set.
+        if ($('#id_s_local_o365_aadtenant').val().length == 0) {
+             main.refreshbutton.html(opts.strupdate);
+                var content = main.rendererrorbox(opts.strerrorcheck+' ('+opts.strtenanterror+')');
+                main.updatedisplay(content);
+                return;
+        }
         this.refreshbutton.html(opts.strchecking);
+        opts.showunified = $('#id_s_local_o365_enableunifiedapi').prop('checked');
         $.ajax({
             url: opts.url,
             type: 'GET',
-            data: {mode: 'checksetup'},
+            data: {
+                mode: 'checksetup',
+                chineseapi: $('#id_s_local_o365_chineseapi').prop('checked') ? 1 : 0,
+                enableunifiedapi: $('#id_s_local_o365_enableunifiedapi').prop('checked') ? 1 : 0,
+                aadtenant: $('#id_s_local_o365_aadtenant').val(),
+                odburl: $('#id_s_local_o365_odburl').val(),
+            },
             dataType: 'json',
             success: function(resp) {
                 main.refreshbutton.html(opts.strupdate);
