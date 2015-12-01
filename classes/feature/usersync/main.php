@@ -39,9 +39,9 @@ class main {
      *                     value here and set $systemfallback to true.
      * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
      */
-    public function construct_user_api($muserid = null, $systemfallback = true) {
+    public function construct_user_api($muserid = null, $systemfallback = true, $forcelegacy = false) {
         $unifiedconfigured = \local_o365\rest\unified::is_configured();
-        if ($unifiedconfigured === true) {
+        if ($unifiedconfigured === true && !$forcelegacy) {
             $resource = \local_o365\rest\unified::get_resource();
         } else {
             $resource = \local_o365\rest\azuread::get_resource();
@@ -58,12 +58,51 @@ class main {
             throw new \Exception('No token available for user #'.$muserid);
         }
 
-        if ($unifiedconfigured === true) {
+        if ($unifiedconfigured === true && !$forcelegacy) {
             $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
         } else {
             $apiclient = new \local_o365\rest\azuread($token, $this->httpclient);
         }
         return $apiclient;
+    }
+
+    /**
+     * Get information on the app.
+     *
+     * @return array|null Array of app service information, or null if failure.
+     */
+    public function get_application_serviceprincipal_info() {
+        $apiclient = $this->construct_user_api(0, true);
+        return $apiclient->get_application_serviceprincipal_info();
+    }
+
+    /**
+     * Get all users in the configured directory.
+     *
+     * @param string|array $params Requested user parameters.
+     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
+     * @return array|null Array of user information, or null if failure.
+     */
+    public function assign_user($muserid, $userid, $appobjectid) {
+        global $DB;
+        // Force using legacy api.
+        $apiclient = $this->construct_user_api(0, true, true);
+        $result = $apiclient->assign_user($muserid, $userid, $appobjectid);
+        if (!empty($result['odata.error'])) {
+            $error = '';
+            $code = '';
+            if (!empty($result['odata.error']['code'])) {
+                $code = $result['odata.error']['code'];
+            }
+            if (!empty($result['odata.error']['message']['value'])) {
+                $error = $result['odata.error']['message']['value'];
+            }
+            $user = $DB->get_record('user', array('id' => $muserid));
+            mtrace('Error assigning users "'.$user->username.'" Reason: '.$code.' '.$error);
+        } else {
+            mtrace('User assigned to application.');
+        }
+        return $result;
     }
 
     /**
@@ -246,15 +285,29 @@ class main {
             }
         }
 
+        // Retrieve object id for app.
+        $appinfo = $this->get_application_serviceprincipal_info();
+
+        $objectid = null;
+        if (!empty($appinfo)) {
+            if (\local_o365\rest\unified::is_configured()) {
+                $objectid = $appinfo['value'][0]['id'];
+            } else {
+                $objectid = $appinfo['value'][0]['objectId'];
+            }
+        }
+
         list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames);
         $sql = 'SELECT u.username,
                        u.id as muserid,
                        u.auth,
                        tok.id as tokid,
-                       conn.id as existingconnectionid
+                       conn.id as existingconnectionid,
+                       assign.assigned assigned
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
+             LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
                  WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
         $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
@@ -265,6 +318,11 @@ class main {
             if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
                 mtrace('User is deleted. Skipping.');
                 continue;
+            }
+            if (\local_o365\rest\unified::is_configured()) {
+                $userobjectid = $user['id'];
+            } else {
+                $userobjectid = $user['objectId'];
             }
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
                 mtrace('User doesn\'t exist in Moodle');
@@ -284,12 +342,33 @@ class main {
                         mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
+                try {
+                    if (!empty($user) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
+                        $this->assign_user($user->id, $userobjectid, $objectid);
+                    }
+                } catch (\Exception $e) {
+                    if (!PHPUNIT_TEST) {
+                        mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
+                    }
+                }
             } else {
                 $existinguser = null;
                 if (isset($existingusers[$user['upnlower']])) {
                     $existinguser = $existingusers[$user['upnlower']];
                 } else if (isset($existingusers[$user['upnsplit0']])) {
                     $existinguser = $existingusers[$user['upnsplit0']];
+                }
+                // Assign user to app if not already assigned.
+                if (empty($user->assigned)) {
+                    try {
+                        if (!empty($existinguser->muserid) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
+                            $this->assign_user($existinguser->muserid, $userobjectid, $objectid);
+                        }
+                    } catch (\Exception $e) {
+                        if (!PHPUNIT_TEST) {
+                            mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
+                        }
+                    }
                 }
 
                 if ($existinguser->auth !== 'oidc' && empty($existinguser->tok)) {
