@@ -143,26 +143,49 @@ class ucp extends base {
     }
 
     /**
+     * Initiate an OIDC authorization request.
+     *
+     * @param bool $uselogin Whether to switch the user's Moodle login method to OpenID Connect upon successful authorization.
+     */
+    protected function doauthrequest($uselogin) {
+        global $CFG, $SESSION, $DB, $USER;
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $stateparams = ['redirect' => '/local/o365/ucp.php'];
+        $extraparams = [];
+        $promptlogin = false;
+        $o365connected = \local_o365\utils::is_o365_connected($USER->id);
+        if ($o365connected === true) {
+            // User is already connected.
+            redirect('/local/o365/ucp.php');
+        }
+
+        $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
+        if (!empty($connection)) {
+            // Matched user.
+            $extraparams['login_hint'] = $connection->aadupn;
+            $promptlogin = true;
+        }
+        $auth = new \auth_oidc\loginflow\authcode;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        if ($uselogin !== true) {
+            $SESSION->auth_oidc_connectiononly = true;
+            $stateparams['connectiononly'] = true;
+        }
+        $auth->initiateauthrequest($promptlogin, $stateparams, $extraparams);
+    }
+
+    /**
      * Connect to o365 and use o365 login.
      */
     public function mode_connectlogin() {
-        global $CFG;
-        require_once($CFG->dirroot.'/auth/oidc/auth.php');
-        $auth = new \auth_oidc\loginflow\authcode;
-        $auth->set_httpclient(new \auth_oidc\httpclient());
-        $auth->initiateauthrequest(false, ['redirect' => '/local/o365/ucp.php']);
+        $this->doauthrequest(true);
     }
 
     /**
      * Connect to o365 without switching user's login method.
      */
     public function mode_connecttoken() {
-        global $CFG, $SESSION;
-        require_once($CFG->dirroot.'/auth/oidc/auth.php');
-        $auth = new \auth_oidc\loginflow\authcode;
-        $auth->set_httpclient(new \auth_oidc\httpclient());
-        $SESSION->auth_oidc_connectiononly = true;
-        $auth->initiateauthrequest(false, ['redirect' => '/local/o365/ucp.php']);
+        $this->doauthrequest(false);
     }
 
     /**
