@@ -51,8 +51,9 @@ if ($hassiteconfig) {
         'delete' => get_string('settings_aadsync_delete', 'local_o365'),
         'match' => get_string('settings_aadsync_match', 'local_o365'),
         'matchswitchauth' => get_string('settings_aadsync_matchswitchauth', 'local_o365'),
+        'appassign' => get_string('settings_aadsync_appassign', 'local_o365'),
     ];
-    $default = ['create' => true];
+    $default = ['create' => true, 'appassign' => true];
     $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
 
     $key = 'local_o365/usersynccreationrestriction';
