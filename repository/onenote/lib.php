@@ -41,7 +41,6 @@ class repository_onenote extends repository {
      */
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
         parent::__construct($repositoryid, $context, $options);
-
         try {
             $this->onenoteapi = \local_onenote\api\base::getinstance();
         } catch (\Exception $e) {
@@ -59,13 +58,34 @@ class repository_onenote extends repository {
     }
 
     /**
+     * Check whether we have API access.
+     *
+     * @return bool Whether API access is active.
+     */
+    public function check_api() {
+        if (!empty($this->onenoteapi)) {
+            if (class_exists('\local_onenote\api\o365') && $this->onenoteapi instanceof \local_onenote\api\o365) {
+                if (\local_o365\utils::is_configured() === true) {
+                    return true;
+                }
+            }
+            if (class_exists('\local_onenote\api\msaccount') && $this->onenoteapi instanceof \local_onenote\api\msaccount) {
+                if (\local_msaccount\client::is_configured() === true) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Print the login form, if required
      *
      * @return array of login options
      */
     public function print_login() {
-        if (empty($this->onenoteapi)) {
-            throw new \moodle_exception('error_noapiavailable', 'local_onenote');
+        if ($this->check_api() !== true) {
+            throw new \moodle_exception('errorauthoidcnotconfig', 'repository_onenote');
         }
 
         $url = $this->onenoteapi->get_login_url();
@@ -90,6 +110,10 @@ class repository_onenote extends repository {
      * @return array list of files including meta information as specified by parent.
      */
     public function get_listing($path='', $page = '') {
+        if ($this->check_api() !== true) {
+            throw new \moodle_exception('errorauthoidcnotconfig', 'repository_onenote');
+        }
+
         $ret = array();
         $ret['dynload'] = true;
         $ret['nosearch'] = true;
