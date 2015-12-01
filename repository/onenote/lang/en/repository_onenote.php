@@ -28,3 +28,4 @@ $string['configplugin'] = 'Configure Microsoft OneNote';
 $string['oauthinfo'] = '<p>To use this plugin, you must register your site <a href="https://account.live.com/developers/applications">with Microsoft</a>.<p>As part of the registration process, you will need to enter the following URL as \'Redirect domain\':</p><p>{$a->callbackurl}</p>Once registered, you will be provided with a client ID and secret which can be entered here.</p>';
 $string['pluginname'] = 'Microsoft OneNote';
 $string['onenote:view'] = 'View OneNote Notebooks';
+$string['errorauthoidcnotconfig'] = 'The OpenID Connect authentication plugin or the Microsoft Account local plugin must be configured to use the OneNote repository.';

@@ -52,7 +52,9 @@ class repository_office365 extends \repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array(), $readonly = 0) {
         parent::__construct($repositoryid, $context, $options, $readonly);
         $this->httpclient = new \local_o365\httpclient();
-        $this->clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        if (\local_o365\utils::is_configured()) {
+            $this->clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        }
         $this->onedriveconfigured = \local_o365\rest\onedrive::is_configured();
         $this->unifiedconfigured = \local_o365\rest\unified::is_configured();
         $this->sharepointconfigured = \local_o365\rest\sharepoint::is_configured();
@@ -187,6 +189,10 @@ class repository_office365 extends \repository {
      */
     public function get_listing($path = '', $page = '') {
         global $OUTPUT, $SESSION;
+
+        if (\local_o365\utils::is_configured() !== true) {
+            throw new \moodle_exception('errorauthoidcnotconfig', 'repository_office365');
+        }
 
         $clientid = optional_param('client_id', '', PARAM_TEXT);
         if (!empty($clientid)) {
