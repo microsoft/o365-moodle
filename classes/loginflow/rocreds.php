@@ -116,6 +116,15 @@ class rocreds extends \auth_oidc\loginflow\base {
         $tokenparams = $client->rocredsrequest($oidcusername, $password);
         if (!empty($tokenparams) && isset($tokenparams['token_type']) && $tokenparams['token_type'] === 'Bearer') {
             list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token']);
+
+            // Check restrictions.
+            $passed = $this->checkrestrictions($idtoken);
+            if ($passed !== true) {
+                $errstr = 'User prevented from logging in due to restrictions.';
+                \auth_oidc\utils::debug($errstr, 'handleauthresponse', $idtoken);
+                return false;
+            }
+
             $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
             if (!empty($tokenrec)) {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);

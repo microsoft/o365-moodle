@@ -154,6 +154,14 @@ class authcode extends \auth_oidc\loginflow\base {
         // Decode and verify idtoken.
         list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token'], $orignonce);
 
+        // Check restrictions.
+        $passed = $this->checkrestrictions($idtoken);
+        if ($passed !== true) {
+            $errstr = 'User prevented from logging in due to restrictions.';
+            \auth_oidc\utils::debug($errstr, 'handleauthresponse', $idtoken);
+            throw new \moodle_exception('errorrestricted', 'auth_oidc');
+        }
+
         // This is for setting the system API user.
         if (isset($SESSION->auth_oidc_justevent)) {
             unset($SESSION->auth_oidc_justevent);
