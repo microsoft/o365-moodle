@@ -138,6 +138,11 @@ class oidcclient {
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
         }
+
+        $domainhint = get_config('auth_oidc', 'domainhint');
+        if (!empty($domainhint)) {
+            $params['domain_hint'] = $domainhint;
+        }
         return $params;
     }
 
