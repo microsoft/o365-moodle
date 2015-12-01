@@ -155,5 +155,20 @@
         <INDEX NAME="groupid" UNIQUE="false" FIELDS="groupid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_o365_appassign" COMMENT="Stores information on which accounts are assigned to the app.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="muserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id"/>
+        <FIELD NAME="userobjectid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="User object id"/>
+        <FIELD NAME="assigned" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Is assigned to application"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="muserid" UNIQUE="true" FIELDS="muserid"/>
+        <INDEX NAME="userobjectid" UNIQUE="true" FIELDS="userobjectid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>
