@@ -324,6 +324,61 @@ class base {
         return [$oidcuniqid, $idtoken];
     }
 
+    /**
+     * Check user restrictions, if present.
+     *
+     * This check will return false if there are restrictions in place that the user did not meet, otherwise it will return
+     * true. If there are no restrictions in place, this will return true.
+     *
+     * @param \auth_oidc\jwt $idtoken The ID token of the user who is trying to log in.
+     * @return bool Whether the restriction check passed.
+     */
+    protected function checkrestrictions(\auth_oidc\jwt $idtoken) {
+        $restrictions = (isset($this->config->userrestrictions)) ? trim($this->config->userrestrictions) : '';
+        $hasrestrictions = false;
+        $userpassed = false;
+        if ($restrictions !== '') {
+            $restrictions = explode("\n", $restrictions);
+            // Match "UPN" (Azure-specific) if available, otherwise match oidc-standard "sub".
+            $tomatch = $idtoken->claim('upn');
+            if (empty($tomatch)) {
+                $tomatch = $idtoken->claim('sub');
+            }
+            foreach ($restrictions as $restriction) {
+                $restriction = trim($restriction);
+                if ($restriction !== '') {
+                    $hasrestrictions = true;
+                    ob_start();
+                    try {
+                        $count = @preg_match('/'.$restriction.'/', $tomatch, $matches);
+                        if (!empty($count)) {
+                            $userpassed = true;
+                            break;
+                        }
+                    } catch (\Exception $e) {
+                        $debugdata = [
+                            'exception' => $e,
+                            'restriction' => $restriction,
+                            'tomatch' => $tomatch,
+                        ];
+                        \auth_oidc\utils::debug('Error running user restrictions.', 'handleauthresponse', $debugdata);
+                    }
+                    $contents = ob_get_contents();
+                    ob_end_clean();
+                    if (!empty($contents)) {
+                        $debugdata = [
+                            'contents' => $contents,
+                            'restriction' => $restriction,
+                            'tomatch' => $tomatch,
+                        ];
+                        \auth_oidc\utils::debug('Output while running user restrictions.', 'handleauthresponse', $debugdata);
+                    }
+                }
+            }
+        }
+        return ($hasrestrictions === true && $userpassed !== true) ? false : true;
+    }
+
 
     /**
      * Create a token for a user, thus linking a Moodle user to an OpenID Connect user.
