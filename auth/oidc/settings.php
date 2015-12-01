@@ -65,6 +65,11 @@ $configdesc = '';
 $configdefault = 'authcode';
 $settings->add(new \auth_oidc\form\adminsetting\loginflow('auth_oidc/loginflow', $configkey, $configdesc, $configdefault));
 
+$configkey = get_string('cfg_userrestrictions_key', 'auth_oidc');
+$configdesc = get_string('cfg_userrestrictions_desc', 'auth_oidc');
+$configdefault = '';
+$settings->add(new admin_setting_configtextarea('auth_oidc/userrestrictions', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
 $label = get_string('cfg_debugmode_key', 'auth_oidc');
 $desc = get_string('cfg_debugmode_desc', 'auth_oidc');
 $settings->add(new \admin_setting_configcheckbox('auth_oidc/debugmode', $label, $desc, '0'));

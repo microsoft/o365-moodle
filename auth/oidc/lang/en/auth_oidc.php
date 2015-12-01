@@ -70,6 +70,8 @@ $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI". Your OpenID Connect identity provider should ask for this when registering Moodle as a client. <br /><b>NOTE:</b> You must enter this in your OpenID Connect provider *exactly* as it appears here. Any difference will prevent logins using OpenID Connect.';
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
 $string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
+$string['cfg_userrestrictions_key'] = 'User Restrictions';
+$string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect provider will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
 $string['event_debug'] = 'Debug message';
 
 $string['errorauthdisconnectemptypassword'] = 'Password cannot be empty';
@@ -103,6 +105,7 @@ $string['erroroidcclientnocreds'] = 'Please set client credentials with setcreds
 $string['erroroidcclientnoauthendpoint'] = 'No authorization endpoint set. Please set with $this->setendpoints';
 $string['erroroidcclientnotokenendpoint'] = 'No token endpoint set. Please set with $this->setendpoints';
 $string['erroroidcclientinsecuretokenendpoint'] = 'The token endpoint must be using SSL/TLS for this.';
+$string['errorrestricted'] = 'This site has restrictions in place on the users that can log in with OpenID Connect. These restrictions currently prevent you from completing this login attempt.';
 $string['errorucpinvalidaction'] = 'Invalid action received.';
 $string['erroroidccall'] = 'Error in OpenID Connect. Please check logs for more information.';
 $string['erroroidccall_message'] = 'Error in OpenID Connect: {$a}';
