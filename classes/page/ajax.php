@@ -175,6 +175,18 @@ class ajax extends base {
         $data = new \stdClass;
         $success = false;
 
+        $enableunifiedapi = optional_param('enableunifiedapi', 0, PARAM_INT);
+        set_config('enableunifiedapi', $enableunifiedapi, 'local_o365');
+
+        $chineseapi = optional_param('chineseapi', 0, PARAM_INT);
+        set_config('chineseapi', $chineseapi, 'local_o365');
+
+        $aadtenant = required_param('aadtenant', PARAM_TEXT);
+        set_config('aadtenant', $aadtenant, 'local_o365');
+
+        $odburl = required_param('odburl', PARAM_TEXT);
+        set_config('odburl', $odburl, 'local_o365');
+
         $resource = \local_o365\rest\azuread::get_resource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
