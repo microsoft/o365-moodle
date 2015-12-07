@@ -804,4 +804,32 @@ class sharepoint extends \local_o365\rest\o365api {
         $options['CURLOPT_SSLVERSION'] = 4;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
+
+    /**
+     * Get video embed code.
+     *
+     * @param string $channelid The ID of the channel which contains the video.
+     * @param string $videoid The ID of the video.
+     * @param int $width Width of video in pixels.
+     * @param int $height Height of video.
+     * @return string Return embed code.
+     */
+    public function get_video_embed_code($channelid, $videoid, $width = 640, $height = 360) {
+        $response = $this->apicall('get', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetVideoEmbedCode?width=$width&height=$height");
+        $expectedparams = ['value' => null];
+        $response = $this->process_apicall_response($response, $expectedparams);
+        return $response['value'];
+    }
+
+    /**
+     * Get video service url.
+     *
+     * @return string Video service portal api url.
+     */
+    public function videoservice_discover() {
+        $response = $this->apicall('get', "/VideoService.Discover");
+        $expectedparams = ['IsVideoPortalEnabled' => null, 'VideoPortalUrl' => null];
+        $response = $this->process_apicall_response($response, $expectedparams);
+        return $response['VideoPortalUrl'];
+    }
 }
