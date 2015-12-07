@@ -20,9 +20,9 @@
  * @package   filter_oembed
  * @copyright 2012 Matthew Cannings, Sandwell College; modified 2015 by Microsoft Open Technologies, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters... 
+ * code based on the following filters...
  * Screencast (Mark Schall)
- * Soundcloud (Troy Williams) 
+ * Soundcloud (Troy Williams)
  */
 
 defined('MOODLE_INTERNAL') || die;
@@ -46,6 +46,8 @@ if ($ADMIN->fulltree) {
     $item = new admin_setting_configselect('filter_oembed/soundcloud', get_string('soundcloud', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/pollev', get_string('pollev', 'filter_oembed'), '', 1, $torf);
+    $settings->add($item);
+    $item = new admin_setting_configselect('filter_oembed/o365video', get_string('o365video', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);
     $settings->add($item);
