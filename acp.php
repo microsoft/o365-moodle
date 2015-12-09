@@ -23,44 +23,11 @@
 
 require_once(__DIR__.'/../../config.php');
 
-$mode = required_param('mode', PARAM_TEXT);
-
 require_login();
 require_capability('moodle/site:config', \context_system::instance());
 
-if ($mode === 'setsystemuser') {
-    $SESSION->auth_oidc_justevent = true;
-    redirect(new \moodle_url('/auth/oidc/index.php', ['promptlogin' => 1]));
-} else if ($mode === 'healthcheck') {
-    $PAGE->set_url('/local/o365/acp.php');
-    $PAGE->set_context(\context_system::instance());
-    $PAGE->set_pagelayout('standard');
-    $acptitle = get_string('acp_title', 'local_o365');
-    $PAGE->navbar->add($acptitle, $PAGE->url);
-    $PAGE->set_title($acptitle);
-    echo $OUTPUT->header();
-    echo \html_writer::tag('h5', $acptitle);
-    echo \html_writer::tag('h2', get_string('acp_healthcheck', 'local_o365'));
-    echo '<br />';
-
-    $healthchecks = ['systemapiuser'];
-    foreach ($healthchecks as $healthcheck) {
-        $healthcheckclass = '\local_o365\healthcheck\\'.$healthcheck;
-        $healthcheck = new $healthcheckclass();
-        $result = $healthcheck->run();
-
-        echo '<h5>'.$healthcheck->get_name().'</h5>';
-        if ($result['result'] === true) {
-            echo '<div class="alert-success">'.$result['message'].'</div>';
-        } else {
-            echo '<div class="alert-error">';
-            echo $result['message'];
-            if (isset($result['fixlink'])) {
-                echo '<br /><br />'.\html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));
-            }
-            echo '</div>';
-        }
-    }
-
-    echo $OUTPUT->footer();
-}
+$mode = optional_param('mode', null, PARAM_TEXT);
+$acptitle = get_string('acp_title', 'local_o365');
+$url = '/local/o365/acp.php';
+$page = new \local_o365\page\acp($url, $acptitle);
+$page->run($mode);
