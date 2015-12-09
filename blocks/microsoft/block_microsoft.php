@@ -158,7 +158,7 @@ class block_microsoft extends block_base {
         $html = '<h5>'.get_string('notconnected', 'block_microsoft').'</h5>';
 
         $connecturl = new \moodle_url('/local/o365/ucp.php');
-        $connectstr = 'Connect to Office 365';
+        $connectstr = get_string('connecttoo365', 'block_microsoft');
 
         $items = [
             \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']),
