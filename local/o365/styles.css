@@ -77,3 +77,18 @@
     background-image: url([[pix:local_o365|outlookcolor]]); }
   .o365_ucp_featurepage h3.featureheader.feature_onenote {
     background-image: url([[pix:local_o365|onenotecolor]]); }
+
+.o365toollink {
+  margin-bottom: 1rem; }
+
+.matchqueuetoolbar {
+  margin: 0.75rem 0 0.5rem 0; }
+
+table.matchqueue {
+  width: 100%; }
+  table.matchqueue td, table.matchqueue th {
+    padding: 0.25rem 0.5rem;
+    vertical-align: top; }
+    table.matchqueue td:first-child, table.matchqueue th:first-child {
+      width: 1.5rem;
+      text-align: center; }
