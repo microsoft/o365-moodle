@@ -326,5 +326,33 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint($result, '2015060115.02', 'local', 'o365');
     }
+
+    if ($result && $oldversion < 2015060116.01) {
+        $table = new xmldb_table('local_o365_matchqueue');
+        if (!$dbman->table_exists($table)) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_matchqueue');
+        }
+        upgrade_plugin_savepoint($result, '2015060116.01', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015060116.03) {
+        // Create new indexes.
+        $table = new xmldb_table('auth_oidc_token');
+        $index = new xmldb_index('oidcusername', XMLDB_INDEX_NOTUNIQUE, ['oidcusername']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        $table = new xmldb_table('local_o365_matchqueue');
+        $index = new xmldb_index('completed', XMLDB_INDEX_NOTUNIQUE, ['completed']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        $index = new xmldb_index('o365username', XMLDB_INDEX_NOTUNIQUE, ['o365username']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        upgrade_plugin_savepoint($result, '2015060116.03', 'local', 'o365');
+    }
+
     return $result;
 }

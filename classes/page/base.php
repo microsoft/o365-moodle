@@ -65,6 +65,30 @@ class base {
     }
 
     /**
+     * Default action.
+     */
+    public function mode_default() {
+        return true;
+    }
+
+    /**
+     * Standard page header.
+     */
+    protected function standard_header() {
+        global $OUTPUT;
+        echo $OUTPUT->header();
+        echo \html_writer::tag('h5', $this->title);
+    }
+
+    /**
+     * Standard page footer.
+     */
+    protected function standard_footer() {
+        global $OUTPUT;
+        echo $OUTPUT->footer();
+    }
+
+    /**
      * Run a page mode.
      *
      * @param string $mode The page mode to run.
