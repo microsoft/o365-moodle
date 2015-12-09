@@ -170,5 +170,22 @@
         <INDEX NAME="userobjectid" UNIQUE="true" FIELDS="userobjectid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_o365_matchqueue" COMMENT="Stores the queue of users waiting to be matched.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="musername" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="moodle username"/>
+        <FIELD NAME="o365username" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="o365 username"/>
+        <FIELD NAME="completed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="whether this was completed successfully"/>
+        <FIELD NAME="errormessage" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="if there was an error, stores the error message"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="musername" UNIQUE="false" FIELDS="musername"/>
+        <INDEX NAME="completed" UNIQUE="false" FIELDS="completed"/>
+        <INDEX NAME="o365username" UNIQUE="false" FIELDS="o365username"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

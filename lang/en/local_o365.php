@@ -23,8 +23,30 @@
 
 $string['pluginname'] = 'Microsoft Office 365 Integration';
 
-$string['acp_title'] = 'Office&nbsp;365 Administration Control Panel';
+$string['acp_title'] = 'Microsoft Office 365 Integration Administration Control Panel';
 $string['acp_healthcheck'] = 'Health Check';
+$string['acp_usermatch'] = 'User Matching';
+$string['acp_usermatch_desc'] = 'This tool allows you to match Moodle users to Office 365 users. You will upload a file containing Moodle users and associated Office 365 users, and a cron task will verify the data and set up the match.';
+$string['acp_usermatch_matchqueue'] = 'Step 2: Match Queue';
+$string['acp_usermatch_matchqueue_clearall'] = 'Clear All';
+$string['acp_usermatch_matchqueue_clearerrors'] = 'Clear Errors';
+$string['acp_usermatch_matchqueue_clearqueued'] = 'Clear Queued';
+$string['acp_usermatch_matchqueue_clearsuccess'] = 'Clear Successful';
+$string['acp_usermatch_matchqueue_column_muser'] = 'Moodle Username';
+$string['acp_usermatch_matchqueue_column_o365user'] = 'Office 365 Username';
+$string['acp_usermatch_matchqueue_column_status'] = 'Status';
+$string['acp_usermatch_matchqueue_desc'] = 'This table shows the current status of the match operation. Every time the matching cron job runs, a batch of the following users will be processed.<br /><b>Note:</b> This page will not update dynamically, refresh this page to view the current status.';
+$string['acp_usermatch_matchqueue_empty'] = 'The match queue is currently empty. Upload a data file using the file picker above to add users to the queue.';
+$string['acp_usermatch_matchqueue_status_error'] = 'Error: {$a}';
+$string['acp_usermatch_matchqueue_status_queued'] = 'Queued';
+$string['acp_usermatch_matchqueue_status_success'] = 'Successful';
+$string['acp_usermatch_upload'] = 'Step 1: Upload New Matches';
+$string['acp_usermatch_upload_desc'] = 'Upload a data file containing Moodle and Office 365 usernames to match Moodle users to Office 365 users.<br /><br />This file should be a simple plain-text CSV file containing two items per line: the Moodle username, and the Office 365 username. Do not include any headers or additional data.<br />For example: <pre>moodleuser1,bob.smith@example.onmicrosoft.com<br />moodleuser2,john.doe@example.onmicrosoft.com</pre>';
+$string['acp_usermatch_upload_err_badmime'] = 'Type {$a} is not supported. Please upload a plain-text CSV.';
+$string['acp_usermatch_upload_err_data'] = 'Line #{$a} contained invalid data. Each line in the CSV file should have two items: the Moodle username and the Office 365 username.';
+$string['acp_usermatch_upload_err_fileopen'] = 'Could not open file for processing. Are the permissions correct in your Moodledata directory?';
+$string['acp_usermatch_upload_err_nofile'] = 'No file was received to add to the queue.';
+$string['acp_usermatch_upload_submit'] = 'Add Data File To Match Queue';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
@@ -145,6 +167,7 @@ $string['settings_fieldmap_update_always'] = 'On login & creation';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_setup_desc'] = 'Follow these steps in order from top to bottom to get the plugin set up.';
 $string['settings_header_options'] = 'Options';
+$string['settings_header_tools'] = 'Tools';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
@@ -176,6 +199,8 @@ $string['settings_systemapiuser_change'] = 'Change user';
 $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
+$string['settings_usermatch'] = 'User Matching';
+$string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Office 365 users based on an custom uploaded data file.';
 $string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only users that have the specified value for the specified Azure field will be created during user sync.';
 
@@ -187,6 +212,13 @@ $string['task_groupcreate'] = 'Create user groups in Office&nbsp;365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_syncusers'] = 'Sync users with Azure AD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
+$string['task_processmatchqueue'] = 'Process Match Queue';
+$string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to an Office 365 user.';
+$string['task_processmatchqueue_err_museralreadyo365'] = 'Moodle user is already connected to Office 365.';
+$string['task_processmatchqueue_err_nomuser'] = 'No Moodle user found with this username.';
+$string['task_processmatchqueue_err_noo365user'] = 'No Office 365 user found with this username.';
+$string['task_processmatchqueue_err_o365useralreadymatched'] = 'Office 365 user is already matched to a Moodle user.';
+$string['task_processmatchqueue_err_o365useralreadyconnected'] = 'Office 365 user is already connected to a Moodle user.';
 
 $string['ucp_connectionstatus'] = 'Connection Status';
 $string['ucp_calsync_availcal'] = 'Available Moodle Calendars';

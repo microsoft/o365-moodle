@@ -31,9 +31,21 @@ if ($hassiteconfig) {
     $settings = new \admin_settingpage('local_o365', get_string('pluginname', 'local_o365'));
     $ADMIN->add('localplugins', $settings);
 
+    $label = get_string('settings_header_tools', 'local_o365');
+    $desc = '';
+    $settings->add(new admin_setting_heading('local_o365_tools', $label, $desc));
+
     $label = get_string('settings_healthcheck', 'local_o365');
+    $linktext = get_string('settings_healthcheck_linktext', 'local_o365');
+    $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
     $desc = get_string('settings_healthcheck_details', 'local_o365');
-    $settings->add(new \local_o365\adminsetting\healthcheck('local_o365/healthcheck', $label, $desc, '0'));
+    $settings->add(new \local_o365\adminsetting\toollink('local_o365/healthcheck', $label, $linktext, $linkurl, $desc));
+
+    $label = get_string('settings_usermatch', 'local_o365');
+    $linktext = get_string('settings_usermatch', 'local_o365');
+    $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatch']);
+    $desc = get_string('settings_usermatch_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\toollink('local_o365/usermatch', $label, $linktext, $linkurl, $desc));
 
     $label = get_string('settings_header_options', 'local_o365');
     $desc = '';

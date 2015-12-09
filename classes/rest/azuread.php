@@ -396,6 +396,19 @@ class azuread extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a user by the user's userPrincipalName
+     *
+     * @param string $upn The user's userPrincipalName
+     * @return array Array of user data.
+     */
+    public function get_user_by_upn($upn) {
+        $endpoint = '/users/'.rawurlencode($upn);
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['objectId' => null, 'userPrincipalName' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
      * Get the Azure AD UPN of a connected Moodle user.
      *
      * @param \stdClass $user The Moodle user.
