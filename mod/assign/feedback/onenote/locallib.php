@@ -132,7 +132,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if (!$isteacher) {
             return false;
         }
-        $o = '<hr/><b>OneNote actions:</b>&nbsp;&nbsp;&nbsp;&nbsp;';
+        $o = '<hr/><b>'.get_string('onenoteactions', 'assignfeedback_onenote').'</b>&nbsp;&nbsp;&nbsp;&nbsp;';
 
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
