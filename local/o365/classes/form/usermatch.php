@@ -21,13 +21,22 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+namespace local_o365\form;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015060116.03;
-$plugin->requires = 2015051100;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '29.0.0.10';
-$plugin->dependencies = [
-    'auth_oidc' => 2015060108
-];
+require_once($CFG->dirroot.'/lib/formslib.php');
+
+/**
+ * o365 User Match Form.
+ */
+class usermatch extends \moodleform {
+    /**
+     * Form definition.
+     */
+    protected function definition() {
+        $mform =& $this->_form;
+        $mform->addElement('filepicker', 'matchdatafile', get_string('file'), null, []);
+        $this->add_action_buttons(false, get_string('acp_usermatch_upload_submit', 'local_o365'));
+    }
+}
