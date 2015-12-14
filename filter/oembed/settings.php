@@ -47,6 +47,8 @@ if ($ADMIN->fulltree) {
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/pollev', get_string('pollev', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
+    $item = new admin_setting_configselect('filter_oembed/sway', get_string('sway', 'filter_oembed'), '', 1, $torf);
+    $settings->add($item);
     $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);
     $settings->add($item);
 }
