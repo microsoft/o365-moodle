@@ -52,7 +52,8 @@ class serviceresource extends \admin_setting_configtext {
         $input = \html_writer::empty_tag('input', $inputattrs);
         if ($clientcredspresent === true && $endpointspresent === true) {
             $buttonattrs = ['class' => 'detect'];
-            $detectbutton = \html_writer::tag('button', 'Detect', $buttonattrs);
+            $strdetect = get_string('settings_serviceresourceabstract_detect', 'local_o365');
+            $detectbutton = \html_writer::tag('button', $strdetect, $buttonattrs);
             $settinghtml .= \html_writer::div($input.$detectbutton);
             if (!empty($data)) {
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');

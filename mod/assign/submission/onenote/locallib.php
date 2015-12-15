@@ -402,7 +402,7 @@ class assign_submission_onenote extends assign_submission_plugin {
                 }
 
                 // Show standard link to download zip package.
-                $o .= '<p>Download:</p>';
+                $o .= '<p>'.get_string('download', 'assignsubmission_onenote').'</p>';
                 $o .= $this->assignment->render_area_files('assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                         $submission->id);
             }

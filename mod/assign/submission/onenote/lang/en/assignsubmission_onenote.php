@@ -51,3 +51,4 @@ $string['signinhelp1'] = 'Click on the button above to sign in to OneNote if you
 $string['signinhelp2'] = 'Click on the button above to sign in to OneNote if you want to view the submission there.';
 $string['submissionnotstarted'] = 'Please work on the assignment in OneNote and then save your changes.';
 $string['submissionlimitexceed'] = 'Your submission size exceeds the acceptable limit.';
+$string['download'] = 'Download';
