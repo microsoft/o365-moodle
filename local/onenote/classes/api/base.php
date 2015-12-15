@@ -799,26 +799,29 @@ abstract class base {
      * @return string Postdata suitable for posting to OneNote to create the page.
      */
     protected function create_postdata($title, $bodycontent, $contextid, $boundary) {
-        $dom = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        $dom->loadHTML(mb_convert_encoding($bodycontent, 'HTML-ENTITIES', 'UTF-8'));
-        libxml_clear_errors();
+        if (!empty($bodycontent)) {
+            $dom = new \DOMDocument();
+            libxml_use_internal_errors(true);
+            $dom->loadHTML(mb_convert_encoding($bodycontent, 'HTML-ENTITIES', 'UTF-8'));
+            libxml_clear_errors();
 
-        $xpath = new \DOMXPath($dom);
-        $doc = $dom->getElementsByTagName("body")->item(0);
+            $xpath = new \DOMXPath($dom);
+            $doc = $dom->getElementsByTagName("body")->item(0);
 
-        // Process heading and td tags.
-        $this->process_tags($dom, $xpath);
+            // Process heading and td tags.
+            $this->process_tags($dom, $xpath);
 
-        // Handle <br/> problem.
-        $this->process_br_tags($xpath);
+            // Handle <br/> problem.
+            $this->process_br_tags($xpath);
 
-        // Process images.
-        $src = $xpath->query("//@src");
+            // Process images.
+            $src = $xpath->query("//@src");
+        }
+
         $imgdata = '';
         $eol = "\r\n";
 
-        if ($src) {
+        if (!empty($src)) {
             foreach ($src as $s) {
                 $pathparts = pathinfo(urldecode($s->nodeValue));
                 $path = substr($pathparts['dirname'], strlen('@@PLUGINFILE@@')) . DIRECTORY_SEPARATOR;
@@ -842,8 +845,11 @@ abstract class base {
 
         // Extract just the content of the body.
         $domclone = new \DOMDocument('1.0', 'UTF-8');
-        foreach ($doc->childNodes as $child) {
-            $domclone->appendChild($domclone->importNode($child, true));
+
+        if (!empty($doc)) {
+            foreach ($doc->childNodes as $child) {
+                $domclone->appendChild($domclone->importNode($child, true));
+            }
         }
 
         $output = $domclone->saveHTML($domclone);
