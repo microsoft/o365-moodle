@@ -6,7 +6,9 @@ This repo is where work on all Moodle plugins related to Microsoft services take
 Currently the following plugins are developed here:
 
 - [moodle-auth_oidc](https://github.com/MSOpenTech/moodle-auth_oidc)
+- [moodle-block_microsoft](https://github.com/MSOpenTech/moodle-block_microsoft)
 - [moodle-block_onenote](https://github.com/MSOpenTech/moodle-block_onenote)
+- [moodle-filter_oembed](https://github.com/MSOpenTech/moodle-filter_oembed)
 - [moodle-local_msaccount](https://github.com/MSOpenTech/moodle-local_msaccount)
 - [moodle-local_o365](https://github.com/MSOpenTech/moodle-local_o365)
 - [moodle-local_onenote](https://github.com/MSOpenTech/moodle-local_onenote)
@@ -16,7 +18,6 @@ Currently the following plugins are developed here:
 - [moodle-repository_onenote](https://github.com/MSOpenTech/moodle-repository_onenote)
 - [moodle-profilefield_o365](https://github.com/MSOpenTech/moodle-profilefield_o365)
 - [moodle-profilefield_oidc](https://github.com/MSOpenTech/moodle-profilefield_oidc)
-- [moodle-filter_oembed](https://github.com/MSOpenTech/moodle-filter_oembed)
 
 The following plugins are "parent" plugins which install the above plugins as a collection:
 
