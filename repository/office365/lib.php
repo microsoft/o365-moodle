@@ -432,7 +432,7 @@ class repository_office365 extends \repository {
         $list = [];
         $breadcrumb = [
             ['name' => $this->name, 'path' => '/'],
-            ['name' => 'Courses', 'path' => '/courses/'],
+            ['name' => get_string('courses', 'repository_office365'), 'path' => '/courses/'],
         ];
 
         $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
@@ -493,9 +493,12 @@ class repository_office365 extends \repository {
 
                 $curpath = '/courses/'.$courseid;
                 $breadcrumb[] = ['name' => $coursesbyid[$courseid]->shortname, 'path' => $curpath];
-                foreach ($pathparts as $pathpart) {
+                foreach ($pathparts as $i => $pathpart) {
                     if (!empty($pathpart)) {
                         $curpath .= '/'.$pathpart;
+                        if ($i === (count($pathparts)) && $pathpart === 'upload') {
+                            $pathpart = get_string('upload', 'repository_office365');
+                        }
                         $breadcrumb[] = ['name' => $pathpart, 'path' => $curpath];
                     }
                 }
@@ -515,20 +518,22 @@ class repository_office365 extends \repository {
         $path = (empty($path)) ? '/' : $path;
 
         $list = [];
-        if ($this->path_is_upload($path) !== true) {
-            $unified = $this->get_unified_apiclient();
-            $contents = $unified->get_files($path);
-            $list = $this->contents_api_response_to_list($contents, $path, 'unified');
+
+        $unified = $this->get_unified_apiclient();
+        $realpath = $path;
+        if ($this->path_is_upload($path) === true) {
+            $realpath = substr($path, 0, -strlen('/upload/'));
         } else {
-            $list = [];
+            $contents = $unified->get_files($realpath);
+            $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
         }
 
         // Generate path.
         $strmyfiles = get_string('myfiles', 'repository_office365');
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strmyfiles, 'path' => '/my/']];
 
-        if ($path !== '/' && $this->path_is_upload($path) !== true) {
-            $metadata = $unified->get_file_metadata($path);
+        if ($realpath !== '/') {
+            $metadata = $unified->get_file_metadata($realpath);
             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
                 $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
                 $cache = \cache::make('repository_office365', 'unifiedfolderids');
@@ -544,6 +549,10 @@ class repository_office365 extends \repository {
                 }
             }
             $breadcrumb[] = ['name' => $metadata['name'], 'path' => '/my/'.$metadata['id']];
+        }
+
+        if ($this->path_is_upload($path) === true) {
+            $breadcrumb[] = ['name' => get_string('upload', 'repository_office365'), 'path' => '/my/'.$metadata['id'].'/upload/'];
         }
 
         return [$list, $breadcrumb];
@@ -572,11 +581,22 @@ class repository_office365 extends \repository {
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strmyfiles, 'path' => '/my/']];
         $pathparts = explode('/', $path);
         $curpath = '/my';
-        foreach ($pathparts as $pathpart) {
-            if (!empty($pathpart)) {
-                $curpath .= '/'.$pathpart;
-                $breadcrumb[] = ['name' => $pathpart, 'path' => $curpath];
+
+        // Remove empty paths (we do this in a separate loop for proper upload detection in the next loop.
+        foreach ($pathparts as $i => $pathpart) {
+            if (empty($pathpart)) {
+                unset($pathparts[$i]);
             }
+        }
+        $pathparts = array_values($pathparts);
+
+        foreach ($pathparts as $i => $pathpart) {
+            $curpath .= '/'.$pathpart;
+            $pathname = $pathpart;
+            if ($i === (count($pathparts) - 1) && $pathpart === 'upload') {
+                $pathname = get_string('upload', 'repository_office365');
+            }
+            $breadcrumb[] = ['name' => $pathname, 'path' => $curpath];
         }
         return [$list, $breadcrumb];
     }
