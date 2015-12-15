@@ -127,6 +127,10 @@ class filter_oembed extends moodle_text_filter {
             $search = '/<a\s[^>]*href="(https?:\/\/)('.$odburl.'|'.$trimedurl.')\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_o365videocallback', $newtext);
         }
+        if (get_config('filter_oembed', 'sway')) {
+            $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(sway\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
+            $newtext = preg_replace_callback($search, 'filter_oembed_swaycallback', $newtext);
+        }
         if (empty($newtext) or $newtext === $text) {
             // Error or not filtered.
             unset($newtext);
@@ -313,6 +317,46 @@ function filter_oembed_o365videocallback($link) {
         \local_o365\utils::debug('filter_oembed share point execption: '.$e->getMessage(), 'filter_oembed_o365videocallback');
     }
     return $link[0];
+}
+
+/**
+ * Looks for links pointing to sway.com content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
+function filter_oembed_swaycallback($link) {
+    global $CFG;
+    $width = 500;
+    $height = 760;
+    $link[4] = preg_replace("/&amp;/", "&", $link[4]);
+    $id = preg_replace("/^(.*)(\?(.*)?)/", "$1", $link[4]);
+    $url = "https://www.sway.com/s/".trim($id)."/embed";
+    // Check for optional width and height passed as query string.
+    if (preg_match("/width/", $link[4])) {
+        $query = array();
+        parse_str(preg_replace("/^(.*)\?/", "", $link[4]), $query);
+        if (!empty($query['width'])) {
+            $width = $query['width'];
+        }
+        if (!empty($query['height'])) {
+            $height = $query['height'];
+        }
+    }
+    $options = array(
+        'class' => 'oembed_sway',
+        'width' => $width.'px',
+        'height' => $height.'px',
+        'src' => $url,
+        'frameborder' => '0',
+        'marginwidth' => '0',
+        'scrolling' => 'no',
+        'style' => 'border: none; max-width:100%; max-height:100vh',
+        'allowfullscreen' => '',
+        'webkitallowfullscreen' => '',
+        'msallowfullscreen' => '',
+    );
+    return html_writer::tag('iframe', '', $options);
 }
 
 /**

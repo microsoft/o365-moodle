@@ -35,6 +35,7 @@ $string['issuu'] = 'Issuu';
 $string['screenr'] = 'Screenr';
 $string['soundcloud'] = 'SoundCloud';
 $string['pollev'] = 'Poll Everywhere';
+$string['sway'] = 'Sway';
 $string['lazyload'] = 'Delay Embed Loading (Lazyload)';
 $string['connection_error'] = 'Error while accessing the embedded media. Please try refreshing the page.';
 $string['o365video'] = 'Office 365 Video';
