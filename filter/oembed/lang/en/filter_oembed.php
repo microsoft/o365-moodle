@@ -20,9 +20,9 @@
  * @package   filter_clickview
  * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft Open Technologies, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters... 
+ * code based on the following filters...
  * Screencast (Mark Schall)
- * Soundcloud (Troy Williams) 
+ * Soundcloud (Troy Williams)
  */
 
 $string['filtername'] = 'oEmbed Filter';
@@ -37,3 +37,4 @@ $string['soundcloud'] = 'SoundCloud';
 $string['pollev'] = 'Poll Everywhere';
 $string['lazyload'] = 'Delay Embed Loading (Lazyload)';
 $string['connection_error'] = 'Error while accessing the embedded media. Please try refreshing the page.';
+$string['o365video'] = 'Office 365 Video';
