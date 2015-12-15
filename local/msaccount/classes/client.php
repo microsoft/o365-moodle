@@ -54,6 +54,18 @@ class client extends \oauth2_client {
     }
 
     /**
+     * Determine if the msaccount client is configured.
+     *
+     * @return bool Whether the API client is configured.
+     */
+    public static function is_configured() {
+        if (empty(get_config('local_msaccount', 'clientid')) || empty(get_config('local_msaccount', 'clientsecret'))) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Returns the auth url for OAuth 2.0 request.
      *
      * @return string the auth url
