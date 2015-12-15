@@ -29,6 +29,7 @@ global $CFG;
  * Tests jwt
  *
  * @group auth_oidc
+ * @group office365
  */
 class auth_oidc_jwt_testcase extends \advanced_testcase {
     /**

@@ -41,6 +41,7 @@ class azuread_mock extends \local_o365\rest\azuread {
  * Tests \local_o365\rest\azuread.
  *
  * @group local_o365
+ * @group office365
  */
 class local_o365_azuread_testcase extends \advanced_testcase {
     /**
