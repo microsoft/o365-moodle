@@ -244,6 +244,8 @@ class azuread extends \local_o365\rest\o365api {
     public function get_required_permissions() {
         return [
             'Microsoft.Azure.ActiveDirectory' => [
+                'Directory.ReadWrite.All' => 'Scope',
+                'user_impersonation' => 'Scope',
                 'Directory.Read' => 'Scope',
                 'User.Read.All' => 'Scope',
             ],
@@ -294,16 +296,6 @@ class azuread extends \local_o365\rest\o365api {
         global $DB;
         $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
         if (empty($record) || $record->assigned == 0) {
-            if (empty($record)) {
-                $record = new \stdClass;
-                $record->muserid = $muserid;
-                $record->userobjectid = $userid;
-                $record->assigned = 1;
-                $DB->insert_record('local_o365_appassign', $record);
-            } else {
-                $record->assigned = 1;
-                $DB->update_record('local_o365_appassign', $record);
-            }
             $endpoint = '/users/'.$userid.'/appRoleAssignments';
             $routeid = '00000000-0000-0000-0000-000000000000';
             $params = array(
@@ -316,7 +308,18 @@ class azuread extends \local_o365\rest\o365api {
                 'odata.type' => 'Microsoft.DirectoryServices.AppRoleAssignment',
                 'objectType' => 'AppRoleAssignment',
             );
-            return $this->process_apicall_response($response, $expectedparams);
+            $response = $this->process_apicall_response($response, $expectedparams);
+            if (empty($record)) {
+                $record = new \stdClass;
+                $record->muserid = $muserid;
+                $record->userobjectid = $userid;
+                $record->assigned = 1;
+                $DB->insert_record('local_o365_appassign', $record);
+            } else {
+                $record->assigned = 1;
+                $DB->update_record('local_o365_appassign', $record);
+            }
+            return $response;
         }
         return null;
     }
