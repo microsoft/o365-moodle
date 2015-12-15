@@ -29,6 +29,7 @@ global $CFG;
  * Tests \local_o365\rest\sharepoint.
  *
  * @group local_o365
+ * @group office365
  */
 class local_o365_sharepoint_testcase extends \advanced_testcase {
     /**
