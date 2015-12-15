@@ -29,6 +29,7 @@ global $CFG;
  * Tests \local_o365\feature\usersync\main.
  *
  * @group local_o365
+ * @group office365
  */
 class local_o365_usersync_testcase extends \advanced_testcase {
     /**
@@ -252,13 +253,13 @@ class local_o365_usersync_testcase extends \advanced_testcase {
      */
     public function test_sync_users() {
         global $CFG, $DB;
-
+        set_config('aadsync', 'create', 'local_o365');
         for ($i = 1; $i <= 2; $i++) {
             $muser = [
                 'auth' => 'oidc',
                 'deleted' => '0',
                 'mnethostid' => $CFG->mnet_localhost_id,
-                'username' => '00000000-0000-0000-0000-00000000000'.$i,
+                'username' => 'testuser'.$i.'@example.onmicrosoft.com',
                 'firstname' => 'Test',
                 'lastname' => 'User'.$i,
                 'email' => 'testuser'.$i.'@example.onmicrosoft.com',
