@@ -29,6 +29,7 @@ global $CFG;
  * Tests oidcclient.
  *
  * @group auth_oidc
+ * @group office365
  */
 class auth_oidc_oidcclient_testcase extends \advanced_testcase {
     /**
