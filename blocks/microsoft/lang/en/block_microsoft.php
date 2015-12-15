@@ -45,3 +45,4 @@ $string['notconnected'] = 'You are <span class="notifyproblem">not connected</sp
 $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
 $string['msalogin'] = 'Log in with Microsoft Account';
 $string['logintoo365'] = 'Log in to Office&nbsp;365';
+$string['connecttoo365'] = 'Connect to Office 365';
