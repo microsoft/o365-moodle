@@ -121,6 +121,12 @@ class filter_oembed extends moodle_text_filter {
             $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(polleverywhere\.com)\/(polls|multiple_choice_polls|free_text_polls)\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_pollevcallback', $newtext);
         }
+        $odburl = get_config('local_o365', 'odburl');
+        if (get_config('filter_oembed', 'o365video') && !empty($odburl)) {
+            $trimedurl = preg_replace("/-my/", "", $odburl);
+            $search = '/<a\s[^>]*href="(https?:\/\/)('.$odburl.'|'.$trimedurl.')\/(.*?)"(.*?)>(.*?)<\/a>/is';
+            $newtext = preg_replace_callback($search, 'filter_oembed_o365videocallback', $newtext);
+        }
         if (empty($newtext) or $newtext === $text) {
             // Error or not filtered.
             unset($newtext);
@@ -256,6 +262,57 @@ function filter_oembed_soundcloudcallback($link) {
     $url = "http://soundcloud.com/oembed?url=".trim($link[1]).trim($link[3]).'/'.trim($link[4])."&format=json&maxwidth=480&maxheight=270'";
     $json = filter_oembed_curlcall($url);
     return filter_oembed_vidembed($json);
+}
+
+/**
+ * Looks for links pointing to Office 365 Video content and processes them.
+ *
+ * @param $link HTML tag containing a link
+ * @return string HTML content after processing.
+ */
+function filter_oembed_o365videocallback($link) {
+    if (empty($link[3])) {
+        return $link[0];
+    }
+    $link[3] = preg_replace("/&amp;/", "&", $link[3]);
+    $values = array();
+    parse_str($link[3], $values);
+    if (empty($values['chid']) || empty($values['vid'])) {
+        return $link[0];
+    }
+    if (!\local_o365\rest\sharepoint::is_configured()) {
+        \local_o365\utils::debug('filter_oembed share point is not configured', 'filter_oembed_o365videocallback');
+        return $link[0];
+    }
+    try {
+        $spresource = \local_o365\rest\sharepoint::get_resource();
+        if (!empty($spresource)) {
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
+            if (!empty($sptoken)) {
+                $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
+                // Retrieve api url for video service.
+                $url = $sharepoint->videoservice_discover();
+                if (!empty($url)) {
+                    $sharepoint->override_resource($url);
+                    $width = 640;
+                    if (!empty($values['width'])) {
+                        $width = $values['width'];
+                    }
+                    $height = 360;
+                    if (!empty($values['height'])) {
+                        $height = $values['height'];
+                    }
+                    // Retrieve embed code.
+                    return $sharepoint->get_video_embed_code($values['chid'], $values['vid'], $width, $height);
+                }
+            }
+        }
+    } catch (\Exception $e) {
+        \local_o365\utils::debug('filter_oembed share point execption: '.$e->getMessage(), 'filter_oembed_o365videocallback');
+    }
+    return $link[0];
 }
 
 /**
