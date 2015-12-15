@@ -29,3 +29,4 @@ $string['oauthinfo'] = '<p>To use this plugin, you must register your site <a hr
 $string['pluginname'] = 'Microsoft OneNote';
 $string['onenote:view'] = 'View OneNote Notebooks';
 $string['errorauthoidcnotconfig'] = 'The OpenID Connect authentication plugin or the Microsoft Account local plugin must be configured to use the OneNote repository.';
+$string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Office 365 plugins</a></p>';
