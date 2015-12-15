@@ -62,7 +62,59 @@ class unified extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        return 'https://graph.microsoft.com/beta';
+        return 'https://graph.microsoft.com';
+    }
+
+    /**
+     * Make an API call.
+     *
+     * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
+     * @param string $apimethod The API endpoint/method to call.
+     * @param string $params Additional paramters to include.
+     * @param array $options Additional options for the request.
+     * @return string The result of the API call.
+     */
+    public function betaapicall($httpmethod, $apimethod, $params = '', $options = array()) {
+        if ($apimethod[0] !== '/') {
+            $apimethod = '/'.$apimethod;
+        }
+        $apimethod = '/beta'.$apimethod;
+        return parent::apicall($httpmethod, $apimethod, $params, $options);
+    }
+
+    /**
+     * Make an API call.
+     *
+     * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
+     * @param string $apimethod The API endpoint/method to call.
+     * @param string $params Additional paramters to include.
+     * @param array $options Additional options for the request.
+     * @return string The result of the API call.
+     */
+    public function betatenantapicall($httpmethod, $apimethod, $params = '', $options = array()) {
+        $config = get_config('local_o365');
+        if (empty($config->aadtenant)) {
+            throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
+        }
+        $apimethod = '/beta/'.$config->aadtenant.$apimethod;
+        return parent::apicall($httpmethod, $apimethod, $params, $options);
+    }
+
+    /**
+     * Make an API call.
+     *
+     * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
+     * @param string $apimethod The API endpoint/method to call.
+     * @param string $params Additional paramters to include.
+     * @param array $options Additional options for the request.
+     * @return string The result of the API call.
+     */
+    public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
+        if ($apimethod[0] !== '/') {
+            $apimethod = '/'.$apimethod;
+        }
+        $apimethod = '/v1.0'.$apimethod;
+        return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 
     /**
@@ -79,7 +131,7 @@ class unified extends \local_o365\rest\o365api {
         if (empty($config->aadtenant)) {
             throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
         }
-        $apimethod = '/'.$config->aadtenant.$apimethod;
+        $apimethod = '/v1.0/'.$config->aadtenant.$apimethod;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 
@@ -89,7 +141,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array List of groups.
      */
     public function get_groups() {
-        $response = $this->tenantapicall('get', '/groups');
+        $response = $this->apicall('get', '/groups');
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -111,10 +163,10 @@ class unified extends \local_o365\rest\o365api {
             'groupTypes' => ['Unified'],
             'displayName' => $name,
             'mailEnabled' => false,
-            'securityEnabled' => true,
+            'securityEnabled' => false,
             'mailNickname' => $mailnickname,
         ];
-        $response = $this->tenantapicall('post', '/groups', json_encode($groupdata));
+        $response = $this->apicall('post', '/groups', json_encode($groupdata));
         $expectedparams = ['id' => null];
         $response = $this->process_apicall_response($response, $expectedparams);
         return $response;
@@ -127,7 +179,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of returned o365 group data.
      */
     public function get_group($objectid) {
-        $response = $this->tenantapicall('get', '/groups/'.$objectid);
+        $response = $this->apicall('get', '/groups/'.$objectid);
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -139,7 +191,7 @@ class unified extends \local_o365\rest\o365api {
      * @return bool|string True if group successfully deleted, otherwise returned string (may contain error info, etc).
      */
     public function delete_group($objectid) {
-        $response = $this->tenantapicall('delete', '/groups/'.$objectid);
+        $response = $this->apicall('delete', '/groups/'.$objectid);
         return ($response === '') ? true : $response;
     }
 
@@ -152,17 +204,49 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_users($params = 'default', $skiptoken = '') {
         $endpoint = "/users";
+        $odataqueries = [];
         if ($params === 'default') {
-            $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage', 'userPrincipalName'];
+            $params = [
+                'id',
+                'userPrincipalName',
+                'displayName',
+                'givenName',
+                'surname',
+                'mail',
+                'streetAddress',
+                'city',
+                'postalCode',
+                'state',
+                'country',
+                'jobTitle',
+                'department',
+                'companyName',
+                'preferredLanguage',
+                'telephoneNumber',
+                'facsimileTelephoneNumber',
+                'mobile',
+            ];
+            $odataqueries[] = '$select='.implode(',', $params);
         }
         if (empty($skiptoken) || !is_string($skiptoken)) {
             $skiptoken = '';
         }
         if (!empty($skiptoken)) {
-            $endpoint .= '?$skiptoken='.$skiptoken;
+            $odataqueries[] = '$skiptoken='.$skiptoken;
         }
-        $response = $this->tenantapicall('get', $endpoint);
-        $response = $this->process_apicall_response($response);
+        if (!empty($odataqueries)) {
+            $endpoint .= '?'.implode('&', $odataqueries);
+        }
+        $response = $this->apicall('get', $endpoint);
+        $response = $this->process_apicall_response($response, ['value' => null]);
+        if (!empty($response)) {
+            if (is_array($response['value'])) {
+                foreach ($response['value'] as $i => $user) {
+                    // Legacy value.
+                    $response['value'][$i]['objectId'] = $response['value'][$i]['id'];
+                }
+            }
+        }
         return $response;
     }
 
@@ -189,6 +273,7 @@ class unified extends \local_o365\rest\o365api {
         $expectedparams = ['value' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
         foreach ($return['value'] as $i => $calendar) {
+            // Set legacy values.
             if (!isset($calendar['Id']) && isset($calendar['id'])) {
                 $return['value'][$i]['Id'] = $calendar['id'];
             }
@@ -213,33 +298,33 @@ class unified extends \local_o365\rest\o365api {
      */
     public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
         $eventdata = [
-            'Subject' => $subject,
-            'Body' => [
-                'ContentType' => 'HTML',
-                'Content' => $body,
+            'subject' => $subject,
+            'body' => [
+                'contentType' => 'HTML',
+                'content' => $body,
             ],
-            'Start' => [
+            'start' => [
                 'dateTime' => date('c', $starttime),
                 'timeZone' => date('T', $starttime),
             ],
-            'End' => [
+            'end' => [
                 'dateTime' => date('c', $endtime),
                 'timeZone' => date('T', $endtime),
             ],
-            'Attendees' => [],
+            'attendees' => [],
         ];
         foreach ($attendees as $attendee) {
-            $eventdata['Attendees'][] = [
+            $eventdata['attendees'][] = [
                 'EmailAddress' => [
                     'Address' => $attendee->email,
                     'Name' => $attendee->firstname.' '.$attendee->lastname,
                 ],
-                'Type' => 'Resource'
+                'type' => 'Resource'
             ];
         }
         $eventdata = array_merge($eventdata, $other);
         $eventdata = json_encode($eventdata);
-        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
+        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         $response = $this->apicall('post', $endpoint, $eventdata);
         $expectedparams = ['id' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
@@ -257,7 +342,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of events.
      */
     public function get_events($calendarid = null, $since = null) {
-        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/events';
+        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
             $since = date('c', $since);
             $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
@@ -340,7 +425,7 @@ class unified extends \local_o365\rest\o365api {
             }
         }
         $updateddata = json_encode($updateddata);
-        $response = $this->apicall('patch', '/me/events/'.$outlookeventid, $updateddata);
+        $response = $this->betaapicall('patch', '/me/events/'.$outlookeventid, $updateddata);
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -353,7 +438,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function delete_event($outlookeventid) {
         if (!empty($outlookeventid)) {
-            $this->apicall('delete', '/me/events/'.$outlookeventid);
+            $this->betaapicall('delete', '/me/events/'.$outlookeventid);
         }
         return true;
     }
@@ -424,7 +509,7 @@ class unified extends \local_o365\rest\o365api {
     public function get_application_info() {
         $oidcconfig = get_config('auth_oidc');
         $endpoint = '/applications/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
-        $response = $this->tenantapicall('get', $endpoint);
+        $response = $this->betatenantapicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -437,7 +522,7 @@ class unified extends \local_o365\rest\o365api {
     public function get_application_serviceprincipal_info() {
         $oidcconfig = get_config('auth_oidc');
         $endpoint = '/servicePrincipals/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
-        $response = $this->tenantapicall('get', $endpoint);
+        $response = $this->betatenantapicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -451,7 +536,7 @@ class unified extends \local_o365\rest\o365api {
         static $response = null;
         if (empty($response)) {
             $endpoint = '/servicePrincipals?$filter=displayName%20eq%20\'Microsoft.Azure.AgregatorService\'';
-            $response = $this->tenantapicall('get', $endpoint);
+            $response = $this->betatenantapicall('get', $endpoint);
             $expectedparams = ['value' => null];
             $response = $this->process_apicall_response($response, $expectedparams);
         }
@@ -492,7 +577,7 @@ class unified extends \local_o365\rest\o365api {
         if (!empty($resourceid)) {
             $endpoint .= '%20and%20resourceId%20eq%20\''.$resourceid.'\'';
         }
-        $response = $this->tenantapicall('get', $endpoint);
+        $response = $this->betatenantapicall('get', $endpoint);
         $response = $this->process_apicall_response($response);
         return $response;
     }
