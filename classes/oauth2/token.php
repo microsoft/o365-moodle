@@ -136,7 +136,7 @@ class token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function instance($userid, $resource, $clientdata, $httpclient) {
+    public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
         $token = static::get_stored_token($userid, $resource);
         if (!empty($token)) {
             $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['resource'],
@@ -165,7 +165,7 @@ class token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function get_for_new_resource($userid, $resource, $clientdata, $httpclient) {
+    public static function get_for_new_resource($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
         $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient);
         if (!empty($aadgraphtoken)) {
             $params = [
