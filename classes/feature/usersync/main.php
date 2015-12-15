@@ -260,6 +260,17 @@ class main {
     }
 
     /**
+     * Selectively run mtrace.
+     *
+     * @param string $msg The message.
+     */
+    public static function mtrace($msg) {
+        if (!PHPUNIT_TEST) {
+            mtrace($msg);
+        }
+    }
+
+    /**
      * Sync Azure AD Moodle users with the configured Azure AD directory.
      *
      * @param array $aadusers Array of Azure AD users from $this->get_users().
@@ -286,7 +297,9 @@ class main {
         }
 
         // Retrieve object id for app.
-        $appinfo = $this->get_application_serviceprincipal_info();
+        if (!PHPUNIT_TEST) {
+            $appinfo = $this->get_application_serviceprincipal_info();
+        }
 
         $objectid = null;
         if (!empty($appinfo)) {
@@ -313,10 +326,10 @@ class main {
         $existingusers = $DB->get_records_sql($sql, $params);
 
         foreach ($aadusers as $user) {
-            mtrace(' ');
-            mtrace('Syncing user '.$user['upnlower']);
+            $this->mtrace(' ');
+            $this->mtrace('Syncing user '.$user['upnlower']);
             if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
-                mtrace('User is deleted. Skipping.');
+                $this->mtrace('User is deleted. Skipping.');
                 continue;
             }
             if (\local_o365\rest\unified::is_configured()) {
@@ -325,9 +338,9 @@ class main {
                 $userobjectid = $user['objectId'];
             }
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
-                mtrace('User doesn\'t exist in Moodle');
+                $this->mtrace('User doesn\'t exist in Moodle');
                 if (!isset($aadsync['create'])) {
-                    mtrace('Not creating a Moodle user because that sync option is disabled.');
+                    $this->mtrace('Not creating a Moodle user because that sync option is disabled.');
                     continue;
                 }
 
@@ -335,21 +348,19 @@ class main {
                     // Create moodle account, if enabled.
                     $user = $this->create_user_from_aaddata($user);
                     if (!empty($user)) {
-                        mtrace('Created user #'.$user->id);
+                        $this->mtrace('Created user #'.$user->id);
                     }
                 } catch (\Exception $e) {
-                    if (!PHPUNIT_TEST) {
-                        mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                    }
+                    $this->mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
                 try {
-                    if (!empty($user) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
-                        $this->assign_user($user->id, $userobjectid, $objectid);
+                    if (!PHPUNIT_TEST) {
+                        if (!empty($user) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
+                            $this->assign_user($user->id, $userobjectid, $objectid);
+                        }
                     }
                 } catch (\Exception $e) {
-                    if (!PHPUNIT_TEST) {
-                        mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                    }
+                    $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
             } else {
                 $existinguser = null;
@@ -361,27 +372,27 @@ class main {
                 // Assign user to app if not already assigned.
                 if (empty($user->assigned)) {
                     try {
-                        if (!empty($existinguser->muserid) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
-                            $this->assign_user($existinguser->muserid, $userobjectid, $objectid);
+                        if (!PHPUNIT_TEST) {
+                            if (!empty($existinguser->muserid) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
+                                $this->assign_user($existinguser->muserid, $userobjectid, $objectid);
+                            }
                         }
                     } catch (\Exception $e) {
-                        if (!PHPUNIT_TEST) {
-                            mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                        }
+                        $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
 
                 if ($existinguser->auth !== 'oidc' && empty($existinguser->tok)) {
-                    mtrace('Found a user in Azure AD that seems to match a user in Moodle');
-                    mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
+                    $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
+                    $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
 
                     if (!isset($aadsync['match'])) {
-                        mtrace('Not matching user because that sync option is disabled.');
+                        $this->mtrace('Not matching user because that sync option is disabled.');
                         continue;
                     }
 
                     if (!empty($existinguser->existingconnectionid)) {
-                        mtrace('User is already matched.');
+                        $this->mtrace('User is already matched.');
                         continue;
                     }
 
@@ -392,10 +403,10 @@ class main {
                         'uselogin' => (isset($aadsync['matchswitchauth'])) ? 1 : 0,
                     ];
                     $DB->insert_record('local_o365_connections', $matchrec);
-                    mtrace('Matched user.');
+                    $this->mtrace('Matched user.');
                 } else {
                     // User already connected.
-                    mtrace('User is already synced.');
+                    $this->mtrace('User is already synced.');
                 }
             }
         }
