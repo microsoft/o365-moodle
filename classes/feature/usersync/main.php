@@ -346,17 +346,17 @@ class main {
 
                 try {
                     // Create moodle account, if enabled.
-                    $user = $this->create_user_from_aaddata($user);
-                    if (!empty($user)) {
-                        $this->mtrace('Created user #'.$user->id);
+                    $newmuser = $this->create_user_from_aaddata($user);
+                    if (!empty($newmuser)) {
+                        $this->mtrace('Created user #'.$newmuser->id);
                     }
                 } catch (\Exception $e) {
                     $this->mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
                 try {
                     if (!PHPUNIT_TEST) {
-                        if (!empty($user) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
-                            $this->assign_user($user->id, $userobjectid, $objectid);
+                        if (!empty($newmuser) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
+                            $this->assign_user($newmuser->id, $userobjectid, $objectid);
                         }
                     }
                 } catch (\Exception $e) {
@@ -370,7 +370,7 @@ class main {
                     $existinguser = $existingusers[$user['upnsplit0']];
                 }
                 // Assign user to app if not already assigned.
-                if (empty($user->assigned)) {
+                if (empty($existinguser->assigned)) {
                     try {
                         if (!PHPUNIT_TEST) {
                             if (!empty($existinguser->muserid) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
