@@ -167,6 +167,19 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a user by the user's userPrincipalName
+     *
+     * @param string $upn The user's userPrincipalName
+     * @return array Array of user data.
+     */
+    public function get_user_by_upn($upn) {
+        $endpoint = '/users/'.rawurlencode($upn);
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['id' => null, 'userPrincipalName' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
      * Get a list of the user's o365 calendars.
      *
      * @return array|null Returned response, or null if error.
