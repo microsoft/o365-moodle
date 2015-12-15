@@ -25,7 +25,7 @@ $string['configplugin'] = 'Configure OneDrive for Business Repository';
 $string['courses'] = 'Courses';
 
 $string['erroraccessdenied'] = 'Access denied';
-$string['errorauthoidcnotconfig'] = 'Azure AD SSO not configured';
+$string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the OneDrive for Business repository.';
 $string['errorbadclienttype'] = 'Invalid client type.';
 $string['errorbadpath'] = 'Bad Path';
 $string['errorcoursenotfound'] = 'Course not found';
