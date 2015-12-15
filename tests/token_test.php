@@ -29,6 +29,7 @@ global $CFG;
  * Tests \local_o365\oauth2\token
  *
  * @group local_o365
+ * @group office365
  */
 class local_o365_oauth2_token_testcase extends \advanced_testcase {
     /**
