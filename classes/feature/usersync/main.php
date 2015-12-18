@@ -67,6 +67,37 @@ class main {
     }
 
     /**
+     * Construct a outlook API client using the system API user.
+     *
+     * @param int $muserid The userid to get the outlook token for. Call with null to retrieve system token.
+     * @param boolean $systemfallback Set to true to use system token as fall back.
+     * @return \local_o365\rest\o365api|bool A constructed calendar API client (unified or legacy), or false if error.
+     */
+    public function construct_outlook_api($muserid, $systemfallback = true) {
+        $unifiedconfigured = \local_o365\rest\unified::is_configured();
+        if ($unifiedconfigured === true) {
+            $resource = \local_o365\rest\unified::get_resource();
+        } else {
+            $resource = \local_o365\rest\outlook::get_resource();
+        }
+
+        $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
+        if (empty($token) && $systemfallback === true) {
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+        }
+        if (empty($token)) {
+            throw new \Exception('No token available for user #'.$muserid);
+        }
+
+        if ($unifiedconfigured === true) {
+            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
+        } else {
+            $apiclient = new \local_o365\rest\outlook($token, $this->httpclient);
+        }
+        return $apiclient;
+    }
+
+    /**
      * Get information on the app.
      *
      * @return array|null Array of app service information, or null if failure.
@@ -77,9 +108,10 @@ class main {
     }
 
     /**
-     * Get all users in the configured directory.
+     * Assign user to application.
      *
      * @param string|array $params Requested user parameters.
+     * @param string $userid Object id of user.
      * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
      * @return array|null Array of user information, or null if failure.
      */
@@ -101,6 +133,76 @@ class main {
             mtrace('Error assigning users "'.$user->username.'" Reason: '.$code.' '.$error);
         } else {
             mtrace('User assigned to application.');
+        }
+        return $result;
+    }
+
+    /**
+     * Assign photo to Moodle user account.
+     *
+     * @param string|array $params Requested user parameters.
+     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
+     * @return boolean True on photo updated.
+     */
+    public function assign_photo($muserid, $user) {
+        global $DB, $CFG, $PAGE;
+        require_once("$CFG->libdir/gdlib.php");
+        $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+        $photoid = '';
+        if (!empty($record->photoid)) {
+            $photoid = $record->photoid;
+        }
+        $result = false;
+        $apiclient = $this->construct_outlook_api($muserid, true);
+        $size = $apiclient->get_photo_metadata($user);
+        $muser = $DB->get_record('user', array('id' => $muserid), 'id, picture', MUST_EXIST);
+        // If there is no meta data, there is no photo.
+        if (empty($size)) {
+            // Profile photo has been deleted.
+            if (!empty($muser->picture)) {
+                // User has no photo. Deleting previous profile photo.
+                $fs = \get_file_storage();
+                $fs->delete_area_files($context->id, 'user', 'icon');
+                $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
+            }
+            $result = false;
+        } else if ($size['@odata.mediaEtag'] !== $photoid) {
+            if (!empty($size['height']) && !empty($size['width'])) {
+                $image = $apiclient->get_photo($user, $size['height'], $size['width']);
+            } else {
+                $image = $apiclient->get_photo($user);
+            }
+            // Check if json error message was returned.
+            if (!preg_match('/^{/', $image)) {
+                // Update profile picture.
+                $tempfile = tempnam($CFG->tempdir.'/', 'profileimage').'.jpg';
+                if (!$fp = fopen($tempfile, 'w+b')) {
+                    @unlink($tempfile);
+                    return false;
+                }
+                fwrite($fp, $image);
+                fclose($fp);
+                $context = \context_user::instance($muserid, MUST_EXIST);
+                $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
+                $photoid = $size['@odata.mediaEtag'];
+                if ($newpicture != $muser->picture) {
+                    $DB->set_field('user', 'picture', $newpicture, array('id' => $muser->id));
+                    $result = true;
+                }
+                @unlink($tempfile);
+            }
+        }
+        if (empty($record)) {
+            $record = new \stdClass();
+            $record->muserid = $muserid;
+            $record->assigned = 0;
+        }
+        $record->photoid = $photoid;
+        $record->photoupdated = time();
+        if (empty($record->id)) {
+            $DB->insert_record('local_o365_appassign', $record);
+        } else {
+            $DB->update_record('local_o365_appassign', $record);
         }
         return $result;
     }
@@ -280,6 +382,7 @@ class main {
         global $DB, $CFG;
 
         $aadsync = get_config('local_o365', 'aadsync');
+        $photoexpire = get_config('local_o365', 'photoexpire');
         $aadsync = array_flip(explode(',', $aadsync));
 
         $usernames = [];
@@ -316,7 +419,9 @@ class main {
                        u.auth,
                        tok.id as tokid,
                        conn.id as existingconnectionid,
-                       assign.assigned assigned
+                       assign.assigned assigned,
+                       assign.photoid photoid,
+                       assign.photoupdated photoupdated
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
@@ -362,6 +467,15 @@ class main {
                 } catch (\Exception $e) {
                     $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
+                try {
+                    if (!PHPUNIT_TEST) {
+                        if (!empty($newmuser) && isset($aadsync['photosync'])) {
+                            $this->assign_photo($newmuser->id, $user['upnlower']);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not assign photo to user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
             } else {
                 $existinguser = null;
                 if (isset($existingusers[$user['upnlower']])) {
@@ -379,6 +493,15 @@ class main {
                         }
                     } catch (\Exception $e) {
                         $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
+                    }
+                }
+                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire*3600) < time())) {
+                    try {
+                        if (!PHPUNIT_TEST) {
+                            $this->assign_photo($existinguser->muserid, $user['upnlower']);
+                        }
+                    } catch (\Exception $e) {
+                        $this->mtrace('Could not assign profile photo to user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
 
