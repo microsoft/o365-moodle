@@ -40,7 +40,7 @@ $string['o365matched_title'] = 'You are <span style="color: #960">almost</span> 
 $string['o365matched_desc'] = 'You have been matched with the Office&nbsp;365 user <b>"{$a}"</b>';
 $string['o365matched_complete_userpass'] = 'To complete the connection, please enter the password for this Office&nbsp;365 user and click "Connect"';
 $string['o365matched_complete_authreq'] = 'To complete the connection, please click the link below and log in to this Office&nbsp;365 account.';
-$string['o365connected'] = 'You are currently <span class="notifysuccess">connected</span> to Office&nbsp;365';
+$string['o365connected'] = '{$a->firstname} you are currently <span class="notifysuccess">connected</span> to Office&nbsp;365';
 $string['notconnected'] = 'You are <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
 $string['msalogin'] = 'Log in with Microsoft Account';

@@ -108,12 +108,27 @@ class block_microsoft extends block_base {
      * @return string Block content.
      */
     protected function get_content_connected() {
-        global $PAGE, $DB;
+        global $PAGE, $DB, $CFG, $SESSION, $USER, $OUTPUT;
         $o365config = get_config('local_o365');
         $html = '';
 
-        $langconnected = get_string('o365connected', 'block_microsoft');
+        $aadsync = get_config('local_o365', 'aadsync');
+        $aadsync = array_flip(explode(',', $aadsync));
+        // Only profile sync once for each session.
+        if (empty($SESSION->block_microsoft_profilesync) && isset($aadsync['photosynconlogin'])) {
+            $PAGE->requires->jquery();
+            $PAGE->requires->js('/blocks/microsoft/js/microsoft.js');
+            $PAGE->requires->js_init_call('microsoft_update_profile', array($CFG->wwwroot));
+        }
+
+        $user = $DB->get_record('user', array('id' => $USER->id));
+        $langconnected = get_string('o365connected', 'block_microsoft', $user);
         $html .= '<h5>'.$langconnected.'</h5>';
+        if (!empty($user->picture)) {
+            $html .= '<div class="profilepicture">';
+            $html .= $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
+            $html .= '</div>';
+        }
         $outlookurl = new \moodle_url('/local/o365/ucp.php?action=calendar');
         $outlookstr = get_string('linkoutlook', 'block_microsoft');
         $sharepointstr = get_string('linksharepoint', 'block_microsoft');
@@ -155,6 +170,7 @@ class block_microsoft extends block_base {
      * @return string Block content.
      */
     protected function get_content_notconnected() {
+        global $DB, $USER, $OUTPUT;
         $html = '<h5>'.get_string('notconnected', 'block_microsoft').'</h5>';
 
         $connecturl = new \moodle_url('/local/o365/ucp.php');
