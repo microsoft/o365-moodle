@@ -15,19 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package local_o365
+ * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2015 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2015012734;
-$plugin->requires = 2014111000;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.20';
-$plugin->dependencies = [
-    'auth_oidc' => 2015012720
-];
+require_once(__DIR__.'/../../config.php');
+require_login();
+$aadsync = get_config('local_o365', 'aadsync');
+$aadsync = array_flip(explode(',', $aadsync));
+// Only profile sync once for each session.
+if (empty($SESSION->block_microsoft_profilesync) && isset($aadsync['photosynconlogin'])) {
+    $PAGE->requires->jquery();
+    $usersync = new \local_o365\feature\usersync\main();
+    $usersync->assign_photo($USER->id, null);
+    $SESSION->block_microsoft_profilesync = true;
+}
