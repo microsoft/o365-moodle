@@ -38,12 +38,12 @@ $settings->add(new admin_setting_configtext('auth_oidc/clientsecret', $configkey
 
 $configkey = get_string('cfg_authendpoint_key', 'auth_oidc');
 $configdesc = get_string('cfg_authendpoint_desc', 'auth_oidc');
-$configdefault = 'https://login.windows.net/common/oauth2/authorize';
+$configdefault = 'https://login.microsoftonline.com/common/oauth2/authorize';
 $settings->add(new admin_setting_configtext('auth_oidc/authendpoint', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
 $configkey = get_string('cfg_tokenendpoint_key', 'auth_oidc');
 $configdesc = get_string('cfg_tokenendpoint_desc', 'auth_oidc');
-$configdefault = 'https://login.windows.net/common/oauth2/token';
+$configdefault = 'https://login.microsoftonline.com/common/oauth2/token';
 $settings->add(new admin_setting_configtext('auth_oidc/tokenendpoint', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
 $configkey = get_string('cfg_oidcresource_key', 'auth_oidc');
