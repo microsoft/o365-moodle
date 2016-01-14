@@ -120,7 +120,7 @@ class authcode extends \auth_oidc\loginflow\base {
      * @param array $authparams Received parameters.
      */
     protected function handleauthresponse(array $authparams) {
-        global $DB, $CFG, $SESSION, $STATEADDITIONALDATA;
+        global $DB, $CFG, $SESSION, $STATEADDITIONALDATA, $USER;
 
         if (!isset($authparams['code'])) {
             \auth_oidc\utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
@@ -177,7 +177,7 @@ class authcode extends \auth_oidc\loginflow\base {
 
         // Check if OIDC user is already migrated.
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
-        if (isloggedin() === true && empty($tokenrec)) {
+        if (isloggedin() === true && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
             // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
             $connectiononly = false;
             if (isset($SESSION->auth_oidc_connectiononly)) {
