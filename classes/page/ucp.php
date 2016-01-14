@@ -154,7 +154,7 @@ class ucp extends base {
         $extraparams = [];
         $promptlogin = false;
         $o365connected = \local_o365\utils::is_o365_connected($USER->id);
-        if ($o365connected === true) {
+        if ($o365connected === true && isset($USER->auth) && $USER->auth === 'oidc') {
             // User is already connected.
             redirect('/local/o365/ucp.php');
         }
@@ -204,13 +204,13 @@ class ucp extends base {
      * Azure AD Login status page.
      */
     public function mode_aadlogin() {
-        global $OUTPUT;
+        global $OUTPUT, $USER;
         $opname = 'Office 365';
         echo $OUTPUT->header();
         echo \html_writer::start_div('o365_ucp_featurepage');
         $strtitle = get_string('ucp_index_aadlogin_title', 'local_o365');
         echo \html_writer::tag('h3', $strtitle, ['class' => 'featureheader feature_aadlogin']);
-        if ($this->o365connected === true) {
+        if ($this->o365connected === true && isset($USER->auth) && $USER->auth === 'oidc') {
             echo 'You are currently using Office 365 to log in to Moodle';
             if (is_enabled_auth('manual') === true) {
                 $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
