@@ -211,15 +211,15 @@ class ucp extends base {
         $strtitle = get_string('ucp_index_aadlogin_title', 'local_o365');
         echo \html_writer::tag('h3', $strtitle, ['class' => 'featureheader feature_aadlogin']);
         if ($this->o365connected === true && isset($USER->auth) && $USER->auth === 'oidc') {
-            echo 'You are currently using Office 365 to log in to Moodle';
+            echo get_string('ucp_index_aadlogin_active', 'local_o365');
             if (is_enabled_auth('manual') === true) {
-                $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                $disconnectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
                 $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
-                $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+                $linkhtml = \html_writer::link($disconnectlinkuri, $strdisconnect);
                 echo \html_writer::tag('h5', $linkhtml);
             }
         } else {
-            echo 'You are not currently using Office 365 to log in to Moodle';
+            echo get_string('ucp_index_aadlogin_inactive', 'local_o365');
             $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
             $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
@@ -267,28 +267,42 @@ class ucp extends base {
             case 'connected':
                 $classes .= ' alert-success';
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
-                $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
+                if (isset($USER->auth) && $USER->auth !== 'oidc') {
+                    $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
+                    $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+                    $msg .= '<br /><br />';
+                    $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                } else {
+                    $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
+                    $msg .= '<br /><br />';
+                    $msg .= get_string('ucp_index_aadlogin_active', 'local_o365');
+                    $disconnecturl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                    $msg .= '<br /><br />';
+                    $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                }
                 break;
 
             case 'matched':
                 $matchrec = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
                 $classes .= ' alert-info';
                 $msg = get_string('ucp_index_connectionstatus_matched', 'local_o365', $matchrec->aadupn);
-                $connecturl = new \moodle_url('/local/o365/ucp.php?action=connecttoken');
-                $msg .= '<br /><br />'.\html_writer::link($connecturl, 'Click here to log in.');
+                $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                $msg .= '<br /><br />';
+                $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_login', 'local_o365'));
                 break;
 
             case 'notconnected':
                 $classes .= ' alert-error';
                 $icon = $OUTPUT->pix_icon('i/info', 'valid', 'moodle');
                 $msg = get_string('ucp_index_connectionstatus_notconnected', 'local_o365');
-                $connecturl = new \moodle_url('/local/o365/ucp.php?action=connecttoken');
-                $msg .= '<br /><br />'.\html_writer::link($connecturl, 'Click here to connect.');
+                $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                $msg .= '<br /><br />';
+                $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_connect', 'local_o365'));
                 break;
         }
 
         $html = \html_writer::start_div($classes);
-        $html .= \html_writer::tag('h5', 'Connection Status');
+        $html .= \html_writer::tag('h5', get_string('ucp_index_connectionstatus_title', 'local_o365'));
         $html .= $icon;
         $html .= \html_writer::tag('p', $msg);
         $html .= \html_writer::end_div();
