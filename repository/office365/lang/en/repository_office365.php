@@ -21,6 +21,7 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+$string['cachedef_unifiedfolderids'] = 'OneDrive for Business - Unified folder IDs';
 $string['configplugin'] = 'Configure OneDrive for Business Repository';
 $string['courses'] = 'Courses';
 
