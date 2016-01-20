@@ -161,13 +161,14 @@
         <FIELD NAME="muserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id"/>
         <FIELD NAME="userobjectid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="User object id"/>
         <FIELD NAME="assigned" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Is assigned to application"/>
+        <FIELD NAME="photoid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="photo etag id"/>
+        <FIELD NAME="photoupdated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="last time photo was updated"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="muserid" UNIQUE="true" FIELDS="muserid"/>
-        <INDEX NAME="userobjectid" UNIQUE="true" FIELDS="userobjectid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_matchqueue" COMMENT="Stores the queue of users waiting to be matched.">
