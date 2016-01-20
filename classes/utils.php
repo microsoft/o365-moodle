@@ -53,11 +53,14 @@ class utils {
      */
     public static function limit_to_o365_users($userids) {
         global $DB;
+        if (empty($userids)) {
+            return [];
+        }
         list($idsql, $idparams) = $DB->get_in_or_equal($userids);
         $sql = 'SELECT u.id as userid
                   FROM {user} u
              LEFT JOIN {local_o365_token} localtok ON localtok.user_id = u.id
-             LEFT JOIN {auth_oidc_token) authtok ON authtok.resource = ? AND tok.username = u.username
+             LEFT JOIN {auth_oidc_token} authtok ON authtok.resource = ? AND authtok.username = u.username
                  WHERE u.id '.$idsql.'
                        AND (localtok.id IS NOT NULL OR authtok.id IS NOT NULL)';
         $params = ['https://graph.windows.net'];
