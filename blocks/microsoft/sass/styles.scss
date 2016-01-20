@@ -1,6 +1,7 @@
 .block_microsoft {
     h5 {
         font-size: 95%;
+        text-align: center;
     }
     ul {
         list-style: none;
@@ -36,5 +37,11 @@
     }
     .block_microsoft_msasignin {
         background-image: url([[pix:block_microsoft|msftcolor]]);
+    }
+    .block_microsoft_profile {
+        border-radius: 50%;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
 }

@@ -667,4 +667,50 @@ class unified extends \local_o365\rest\o365api {
 
         return $missingpermsreturn;
     }
+
+    /**
+     * Get a users photo.
+     * @param $user User to retrieve photo.
+     * @param $height Height of image to retrieve.
+     * @param $width Width of image to retrieve.
+     * @return array|null Returned binary photo data, false if there is no photo.
+     */
+    public function get_photo($user, $height = null, $width = null) {
+        if (!empty($width) && !empty($height)) {
+            return $this->betaapicall('get', "/Users('$user')/Photos('".$height."x".$width."')/\$value");
+        } else {
+            return $this->apicall('get', "/Users('$user')/Photo/\$value");
+        }
+        return false;
+    }
+
+    /**
+     * Get photo meta data.
+     * @param $user User to retrieve photo meta data for.
+     * @param $minsize Minimum size to retrieve. 0 to return all sizes.
+     * @return array|null Return array of sizes or single size if minsize is set, or false if error.
+     */
+    public function get_photo_metadata($user, $minsize = 100) {
+        $response = $this->betaapicall('get', "/Users('$user')/Photos");
+        $data = json_decode($response, true);
+        // Photo not found.
+        if (!empty($data['error'])) {
+            return false;
+        }
+        $expected = array('value' => null);
+        $photo = $this->process_apicall_response($response, $expected);
+        if (empty($minsize)) {
+            return $photo['value'];
+        }
+        $lastsize = $photo['value'];
+        if (count($photo['value'])) {
+            foreach ($photo['value'] as $size) {
+                $lastsize = $size;
+                if ($size['height'] >= $minsize) {
+                    break;
+                }
+            }
+        }
+        return $lastsize;
+    }
 }
