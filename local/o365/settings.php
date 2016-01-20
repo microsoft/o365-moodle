@@ -60,6 +60,8 @@ if ($hassiteconfig) {
         'match' => get_string('settings_aadsync_match', 'local_o365'),
         'matchswitchauth' => get_string('settings_aadsync_matchswitchauth', 'local_o365'),
         'appassign' => get_string('settings_aadsync_appassign', 'local_o365'),
+        'photosync' => get_string('settings_aadsync_photosync', 'local_o365'),
+        'photosynconlogin' => get_string('settings_aadsync_photosynconlogin', 'local_o365'),
     ];
     $default = [];
     $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
@@ -98,6 +100,10 @@ if ($hassiteconfig) {
     $label = get_string('settings_debugmode', 'local_o365');
     $desc = get_string('settings_debugmode_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
+
+    $label = get_string('settings_photoexpire', 'local_o365');
+    $desc = get_string('settings_photoexpire_details', 'local_o365');
+    $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
 
     $label = get_string('settings_header_setup', 'local_o365');
     $desc = get_string('settings_header_setup_desc', 'local_o365');
