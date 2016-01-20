@@ -63,8 +63,8 @@ class usersync extends \core\task\scheduled_task {
         }
 
         $aadsyncenabled = get_config('local_o365', 'aadsync');
-        if (empty($aadsyncenabled)) {
-            mtrace('Azure AD sync disabled. Nothing to do.');
+        if (empty($aadsyncenabled) || $aadsyncenabled === 'photosynconlogin') {
+            mtrace('Azure AD cron sync disabled. Nothing to do.');
             return true;
         }
 
