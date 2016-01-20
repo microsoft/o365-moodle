@@ -46,6 +46,31 @@ class utils {
     }
 
     /**
+     * Filters an array of userids to users that are currently connected to O365.
+     *
+     * @param array $userids The full array of userids.
+     * @return array Array of userids that are o365 connected.
+     */
+    public static function limit_to_o365_users($userids) {
+        global $DB;
+        list($idsql, $idparams) = $DB->get_in_or_equal($userids);
+        $sql = 'SELECT u.id as userid
+                  FROM {user} u
+             LEFT JOIN {local_o365_token} localtok ON localtok.user_id = u.id
+             LEFT JOIN {auth_oidc_token) authtok ON authtok.resource = ? AND tok.username = u.username
+                 WHERE u.id '.$idsql.'
+                       AND (localtok.id IS NOT NULL OR authtok.id IS NOT NULL)';
+        $params = ['https://graph.windows.net'];
+        $params = array_merge($params, $idparams);
+        $records = $DB->get_recordset_sql($sql, $params);
+        $return = [];
+        foreach ($records as $record) {
+            $return[$record->userid] = (int)$record->userid;
+        }
+        return array_values($return);
+    }
+
+    /**
      * Determine if a user is connected to Office 365.
      *
      * @param int $userid The user's ID.
