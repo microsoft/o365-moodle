@@ -43,6 +43,9 @@ class sharepoint extends \local_o365\rest\o365api {
      */
     public static function validate_site($uncleanurl, \local_o365\oauth2\clientdata $clientdata,
                                          \local_o365\httpclientinterface $httpclient) {
+        // Ensure url starts with https.
+        $uncleanurl = preg_replace('/^https?:\/\//', '', $uncleanurl);
+        $uncleanurl = 'https://'.$uncleanurl;
         $siteinfo = static::parse_site_url($uncleanurl);
         if (empty($siteinfo)) {
             return 'invalid';
@@ -320,7 +323,7 @@ class sharepoint extends \local_o365\rest\o365api {
             $this->parentsite = $cursite;
         }
 
-        $expectedparams = ['odata.type' => 'SP.Web', 'Id' => null, 'ServerRelativeUrl' => null];
+        $expectedparams = ['odata.type' => 'SP.Web', 'Id' => null, 'ServerRelativeUrl' => null, 'WebTemplate' => 'STS'];
         return $this->process_apicall_response($response, $expectedparams);
     }
 
