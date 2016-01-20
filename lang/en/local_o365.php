@@ -73,6 +73,7 @@ $string['erroro365apinotimplemented'] = 'This should be overridden.';
 $string['erroro365apinotoken'] = 'Did not have a token for the given resource and user, and could not get one. Is the user\'s refresh token expired?';
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
 $string['errorcouldnotcreatespgroup'] = 'Could not create the SharePoint group.';
+$string['errorusermatched'] = 'The Office 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 
 $string['eventapifail'] = 'API failure';
 $string['eventcalendarsubscribed'] = 'User subscribed to a calendar';
