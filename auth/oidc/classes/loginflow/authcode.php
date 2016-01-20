@@ -283,6 +283,23 @@ class authcode extends \auth_oidc\loginflow\base {
     }
 
     /**
+     * Determines whether the given Azure AD UPN is already matched to a Moodle user (and has not been completed).
+     *
+     * @return false|stdClass Either the matched Moodle user record, or false if not matched.
+     */
+    protected function check_for_matched($aadupn) {
+        global $DB;
+        $dbman = $DB->get_manager();
+        if ($dbman->table_exists('local_o365_connections')) {
+            $match = $DB->get_record('local_o365_connections', ['aadupn' => $aadupn]);
+            if (!empty($match) && \local_o365\utils::is_o365_connected($match->muserid) !== true) {
+                return $DB->get_record('user', ['id' => $match->muserid]);
+            }
+        }
+        return false;
+    }
+
+    /**
      * Handle a login event.
      *
      * @param string $oidcuniqid A unique identifier for the user.
@@ -302,6 +319,11 @@ class authcode extends \auth_oidc\loginflow\base {
             $username = $idtoken->claim('upn');
             if (empty($username)) {
                 $username = strtolower($oidcuniqid);
+            }
+            $matchedwith = $this->check_for_matched($username);
+            if (!empty($matchedwith)) {
+                $matchedwith->aadupn = $username;
+                throw new \moodle_exception('errorusermatched', 'local_o365', null, $matchedwith);
             }
             $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
         }
