@@ -50,14 +50,27 @@ class sharepointaccesssync extends \core\task\adhoc_task {
             if (!empty($spgrouprec)) {
                 foreach ($users as $user) {
                     $userid = (is_numeric($user)) ? $user : $user->id;
+                    if (!\local_o365\utils::is_o365_connected($userid)) {
+                        continue;
+                    }
                     $userupn = \local_o365\rest\azuread::get_muser_upn($user);
                     $hascap = has_capability($requiredcap, $context, $user);
                     if ($hascap === true) {
                         // Add to group.
-                        $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $userid);
+                        try {
+                            mtrace('Adding user #'.$userid.' to group id '.$spgrouprec->groupid.'...');
+                            $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $userid);
+                        } catch (\Exception $e) {
+                            mtrace('Error: '.$e->getMessage());
+                        }
                     } else {
                         // Remove from group.
-                        $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $userid);
+                        try {
+                            mtrace('Removing user #'.$userid.' from group id '.$spgrouprec->groupid.'...');
+                            $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $userid);
+                        } catch (\Exception $e) {
+                            mtrace('Error: '.$e->getMessage());
+                        }
                     }
                 }
             }
@@ -121,12 +134,18 @@ class sharepointaccesssync extends \core\task\adhoc_task {
         global $DB;
         $roleassignmentssorted = [];
         $roleassignments = $DB->get_recordset('role_assignments', ['roleid' => $roleid], '', 'contextid, userid');
+        $o365userids = [];
         foreach ($roleassignments as $roleassignment) {
             $roleassignmentssorted[$roleassignment->contextid][] = $roleassignment->userid;
+            $o365userids[$roleassignment->userid] = (int)$roleassignment->userid;
         }
         $roleassignments->close();
 
+        // Limit recorded users to o365 users.
+        $o365userids = \local_o365\utils::limit_to_o365_users($o365userids);
+
         foreach ($roleassignmentssorted as $contextid => $users) {
+            $users = array_intersect($users, $o365userids);
             $context = \context::instance_by_id($contextid);
             if ($context->contextlevel == CONTEXT_COURSE) {
                 $this->sync_spsiteaccess_for_courses_and_users([$context->instanceid], $users, $requiredcap, $sharepoint);
