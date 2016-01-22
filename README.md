@@ -5,24 +5,24 @@ This repo is where work on all Moodle plugins related to Microsoft services take
 
 Currently the following plugins are developed here:
 
-- [moodle-auth_oidc](https://github.com/MSOpenTech/moodle-auth_oidc)
-- [moodle-block_microsoft](https://github.com/MSOpenTech/moodle-block_microsoft)
-- [moodle-block_onenote](https://github.com/MSOpenTech/moodle-block_onenote)
-- [moodle-filter_oembed](https://github.com/MSOpenTech/moodle-filter_oembed)
-- [moodle-local_msaccount](https://github.com/MSOpenTech/moodle-local_msaccount)
-- [moodle-local_o365](https://github.com/MSOpenTech/moodle-local_o365)
-- [moodle-local_onenote](https://github.com/MSOpenTech/moodle-local_onenote)
-- [moodle-assignfeedback_onenote](https://github.com/MSOpenTech/moodle-assignfeedback_onenote)
-- [moodle-assignsubmission_onenote](https://github.com/MSOpenTech/moodle-assignsubmission_onenote)
-- [moodle-repository_office365](https://github.com/MSOpenTech/moodle-repository_office365)
-- [moodle-repository_onenote](https://github.com/MSOpenTech/moodle-repository_onenote)
-- [moodle-profilefield_o365](https://github.com/MSOpenTech/moodle-profilefield_o365)
-- [moodle-profilefield_oidc](https://github.com/MSOpenTech/moodle-profilefield_oidc)
+- [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
+- [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
+- [moodle-block_onenote](https://github.com/Microsoft/moodle-block_onenote)
+- [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
+- [moodle-local_msaccount](https://github.com/Microsoft/moodle-local_msaccount)
+- [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
+- [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
+- [moodle-assignfeedback_onenote](https://github.com/Microsoft/moodle-assignfeedback_onenote)
+- [moodle-assignsubmission_onenote](https://github.com/Microsoft/moodle-assignsubmission_onenote)
+- [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
+- [moodle-repository_onenote](https://github.com/Microsoft/moodle-repository_onenote)
+- [moodle-profilefield_o365](https://github.com/Microsoft/moodle-profilefield_o365)
+- [moodle-profilefield_oidc](https://github.com/Microsoft/moodle-profilefield_oidc)
 
 The following plugins are "parent" plugins which install the above plugins as a collection:
 
-- [moodle-local_office365](https://github.com/MSOpenTech/moodle-local_office365)
-- [moodle-local_microsoftservices](https://github.com/MSOpenTech/moodle-local_microsoftservices)
+- [moodle-local_office365](https://github.com/Microsoft/moodle-local_office365)
+- [moodle-local_microsoftservices](https://github.com/Microsoft/moodle-local_microsoftservices)
 
 # About this repository
 The master branch of this repository contains the most up-to-date code. As issues are completed and new features are added, they are immediately added to master. Master should be fairly stable, however it is the absolute newest code and not intended for production systems. Periodically (about every two weeks), all completed issues are packaged into releases and added to the STABLE branches. You'll find a stable branch for each version of Moodle supported - MOODLE_27_STABLE would be for Moodle 2.7, for example. These branches contain production-ready, stable code.
