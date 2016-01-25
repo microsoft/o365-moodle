@@ -184,6 +184,9 @@ class authcode extends \auth_oidc\loginflow\base {
                 $connectiononly = true;
                 unset($SESSION->auth_oidc_connectiononly);
             }
+            if (isset($STATEADDITIONALDATA['connectiononly']) && $STATEADDITIONALDATA['connectiononly'] === true) {
+                $connectiononly = true;
+            }
             $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
             $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
             redirect(new \moodle_url($redirect));
@@ -216,7 +219,7 @@ class authcode extends \auth_oidc\loginflow\base {
             } else {
                 if ($USER->username === $tokenrec->username) {
                     // Already connected to current user.
-                    if ($USER->auth !== 'oidc') {
+                    if ($connectiononly !== true && $USER->auth !== 'oidc') {
                         // Update auth plugin.
                         $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
                         $USER = $DB->get_record('user', ['id' => $USER->id]);
@@ -236,7 +239,7 @@ class authcode extends \auth_oidc\loginflow\base {
         if (!empty($tokenrec)) {
             if ($tokenrec->oidcuniqid === $oidcuniqid) {
                 // Already connected to current user.
-                if ($USER->auth !== 'oidc') {
+                if ($connectiononly !== true && $USER->auth !== 'oidc') {
                     // Update auth plugin.
                     $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
                     $USER = $DB->get_record('user', ['id' => $USER->id]);
