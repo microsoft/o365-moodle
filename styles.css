@@ -47,6 +47,9 @@
   .o365_ucp_index .connectionstatus small {
     font-weight: bold;
     font-size: 0.8rem; }
+  .o365_ucp_index .connectionstatus img.smallicon {
+    width: 12px;
+    height: 12px; }
 .o365_ucp_index .features {
   margin-right: 16rem; }
   .o365_ucp_index .features > div {
