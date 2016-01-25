@@ -269,9 +269,15 @@ class ucp extends base {
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
                 if (isset($USER->auth) && $USER->auth !== 'oidc') {
                     $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
-                    $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+                    $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                    $disconnecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
                     $msg .= '<br /><br />';
-                    $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                    $msg .= \html_writer::tag('b', get_string('ucp_index_connectionstatus_manage', 'local_o365')).'<br />';
+                    $msg .= $OUTPUT->pix_icon('t/delete', 'valid', 'moodle');
+                    $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                    $msg .= '<br />';
+                    $msg .= $OUTPUT->pix_icon('i/reload', 'valid', 'moodle');
+                    $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
                 } else {
                     $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
                     $msg .= '<br /><br />';
