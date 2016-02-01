@@ -52,7 +52,7 @@ $.fn.azuresetup = function(options) {
         strlegacydesc: 'The legacy API is made up of application-specific APIs.',
         strlegacyerror: 'There was an error checking legacy API settings.',
 
-        strtenanterror: 'Please use the dectect button to set your Azure AD Tenant before updating Azure Setup',
+        strtenanterror: 'Please use the dectect button to set your Azure AD Tenant before updating Azure Setup.',
     };
     var opts = $.extend({}, defaultopts, options);
     var main = this;
