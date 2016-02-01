@@ -27,6 +27,8 @@
   background-image: url([[pix:block_microsoft|msftcolor]]); }
 .block_microsoft .block_microsoft_msasignin {
   background-image: url([[pix:block_microsoft|msftcolor]]); }
+.block_microsoft .block_microsoft_downloado365 {
+  background-image: url([[pix:block_microsoft|o365color]]); }
 .block_microsoft .block_microsoft_profile {
   border-radius: 50%;
   display: block;
