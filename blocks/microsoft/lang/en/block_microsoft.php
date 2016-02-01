@@ -46,3 +46,6 @@ $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
 $string['msalogin'] = 'Log in with Microsoft Account';
 $string['logintoo365'] = 'Log in to Office&nbsp;365';
 $string['connecttoo365'] = 'Connect to Office 365';
+$string['geto365'] = 'Get Office 365';
+$string['settings_showo365download'] = 'Show Office 365 download links';
+$string['settings_showo365download_desc'] = 'Enable or disable the Office 365 download links in the block.';
