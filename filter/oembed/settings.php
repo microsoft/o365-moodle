@@ -28,7 +28,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    $torf = array('1' => 'Yes', '0' => 'No');
+    $torf = array('1' => get_string('yes'), '0' => get_string('no'));
     $item = new admin_setting_configselect('filter_oembed/youtube', get_string('youtube', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/vimeo', get_string('vimeo', 'filter_oembed'), '', 1, $torf);
