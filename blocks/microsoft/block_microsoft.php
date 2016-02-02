@@ -35,6 +35,15 @@ class block_microsoft extends block_base {
     }
 
     /**
+     * Whether the block has settings.
+     *
+     * @return bool Has settings or not.
+     */
+    public function has_config() {
+        return true;
+    }
+
+    /**
      * Get the content of the block.
      *
      * @return stdObject
@@ -159,6 +168,11 @@ class block_microsoft extends block_base {
         $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
 
+        $downloadlinks = $this->get_content_o365download();
+        foreach ($downloadlinks as $link) {
+            $items[] = $link;
+        }
+
         $html .= \html_writer::alist($items);
 
         return $html;
@@ -180,8 +194,32 @@ class block_microsoft extends block_base {
             \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']),
             $this->render_onenote()
         ];
+
+        $downloadlinks = $this->get_content_o365download();
+        foreach ($downloadlinks as $link) {
+            $items[] = $link;
+        }
+
         $html .= \html_writer::alist($items);
         return $html;
+    }
+
+    /**
+     * Get Office 365 download links (if enabled).
+     *
+     * @return array Array of download link HTML, or empty array if download links disabled.
+     */
+    protected function get_content_o365download() {
+        $linksenabled = get_config('block_microsoft', 'showo365download');
+        if (empty($linksenabled)) {
+            return [];
+        }
+
+        $url = 'http://office.com/getoffice365';
+        $str = get_string('geto365', 'block_microsoft');
+        return [
+            \html_writer::link($url, $str, ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']),
+        ];
     }
 
     /**
