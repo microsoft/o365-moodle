@@ -375,5 +375,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015060118', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015060120) {
+        // Delete custom profile fields for data type o365 and oidc which are no longer used.
+        $fields = $DB->get_records_sql("SELECT * FROM {user_info_field} WHERE datatype IN ('o365', 'oidc')");
+        foreach ($fields as $field) {
+            $DB->delete_records('user_info_data', array('fieldid' => $field->id));
+            $DB->delete_records('user_info_field', array('id' => $field->id));
+        }
+        upgrade_plugin_savepoint($result, '2015060120', 'local', 'o365');
+    }
+
     return $result;
 }
