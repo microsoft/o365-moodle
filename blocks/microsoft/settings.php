@@ -15,20 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Microsoft block settings.
+ *
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->version = 2015111902.01;
-$plugin->requires = 2015111600;
-$plugin->component = 'block_microsoft';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.2';
-$plugin->dependencies = [
-    'local_onenote' => 2015111901,
-    'local_o365' => 2015111904,
-];
+$label = get_string('settings_showo365download', 'block_microsoft');
+$desc = get_string('settings_showo365download_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/showo365download', $label, $desc, 1));
