@@ -308,7 +308,19 @@ class azuread extends \local_o365\rest\o365api {
                 'odata.type' => 'Microsoft.DirectoryServices.AppRoleAssignment',
                 'objectType' => 'AppRoleAssignment',
             );
-            $response = $this->process_apicall_response($response, $expectedparams);
+
+            try {
+                $response = $this->process_apicall_response($response, $expectedparams);
+            } catch (\Exception $e) {
+                // This error here probably means the user is already assigned, so we can continue. process_apicall_response
+                // will log any real errors anyway.
+                $msg = 'One or more properties are invalid.';
+                $string = get_string('erroro365apibadcall_message', 'local_o365', htmlentities($msg));
+                if ($e->getMessage() !== $string) {
+                    throw $e;
+                }
+            }
+
             if (empty($record)) {
                 $record = new \stdClass;
                 $record->muserid = $muserid;
