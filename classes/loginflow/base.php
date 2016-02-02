@@ -237,7 +237,12 @@ class base {
 
                 // Update user.
                 $updateduser->id = $USER->id;
-                user_update_user($updateduser);
+                try {
+                    user_update_user($updateduser);
+                } catch (\Exception $e) {
+                    $continueurl = new \moodle_url('/auth/oidc/ucp.php?action=disconnectlogin');
+                    throw new \moodle_exception($e->errorcode, '', $continueurl);
+                }
 
                 // Delete token data.
                 $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
