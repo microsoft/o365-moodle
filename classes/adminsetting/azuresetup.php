@@ -122,18 +122,25 @@ class azuresetup extends \admin_setting {
                                     strchecking: "'.addslashes(get_string('settings_azuresetup_checking', 'local_o365')).'",
                                     strmissingperms: "'.addslashes(get_string('settings_azuresetup_missingperms', 'local_o365')).'",
                                     strpermscorrect: "'.addslashes(get_string('settings_azuresetup_permscorrect', 'local_o365')).'",
+                                    strfixperms: "'.addslashes(get_string('settings_detectperms_fixperms', 'local_o365')).'",
+                                    strfixprereq: "'.addslashes(get_string('settings_detectperms_fixprereq', 'local_o365')).'",
+                                    strerrorfix: "'.addslashes(get_string('settings_detectperms_errorfix', 'local_o365')).'",
                                     strerrorcheck: "'.addslashes(get_string('settings_azuresetup_errorcheck', 'local_o365')).'",
+                                    strnoinfo: "'.addslashes(get_string('settings_azuresetup_noinfo', 'local_o365')).'",
 
                                     showunified: '.$unifiedenabled.',
                                     strunifiedheader: "'.addslashes(get_string('settings_azuresetup_unifiedheader', 'local_o365')).'",
                                     strunifieddesc: "'.addslashes(get_string('settings_azuresetup_unifieddesc', 'local_o365')).'",
                                     strunifiederror: "'.addslashes(get_string('settings_azuresetup_unifiederror', 'local_o365')).'",
+                                    strunifiedpermerror: "'.addslashes(get_string('settings_azuresetup_strunifiedpermerror', 'local_o365')).'",
                                     strunifiedmissing: "'.addslashes(get_string('settings_azuresetup_unifiedmissing', 'local_o365')).'",
                                     strunifiedactive: "'.addslashes(get_string('settings_azuresetup_unifiedactive', 'local_o365')).'",
 
                                     strlegacyheader: "'.addslashes(get_string('settings_azuresetup_legacyheader', 'local_o365')).'",
                                     strlegacydesc: "'.addslashes(get_string('settings_azuresetup_legacydesc', 'local_o365')).'",
                                     strlegacyerror: "'.addslashes(get_string('settings_azuresetup_legacyerror', 'local_o365')).'",
+
+                                    strtenanterror: "'.addslashes(get_string('settings_azuresetup_strtenanterror', 'local_o365')).'"
                                 };
                                 $("#admin-'.$this->name.'").azuresetup(opts);
                             });
