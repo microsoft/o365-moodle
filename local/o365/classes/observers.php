@@ -128,8 +128,8 @@ class observers {
         $eventdata = $event->get_data();
         if (!empty($eventdata['userid'])) {
             $DB->delete_records('local_o365_token', ['user_id' => $eventdata['userid']]);
-            $DB->delete_records('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
-            $DB->delete_records('local_o365_connections', ['muserid' => $userid]);
+            $DB->delete_records('local_o365_objects', ['type' => 'user', 'moodleid' => $eventdata['userid']]);
+            $DB->delete_records('local_o365_connections', ['muserid' => $eventdata['userid']]);
         }
     }
 
