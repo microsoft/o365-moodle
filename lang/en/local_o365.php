@@ -87,7 +87,7 @@ $string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem commun
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office&nbsp;365 as the system API user.';
 
 $string['settings_aadsync'] = 'Sync users with Azure AD';
-$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a><br /><br />';
+$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a>.<br /><br />';
 $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
 $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
@@ -108,6 +108,9 @@ $string['settings_azuresetup_checking'] = 'Checking...';
 $string['settings_azuresetup_missingperms'] = 'Missing Permissions:';
 $string['settings_azuresetup_permscorrect'] = 'Permissions are correct.';
 $string['settings_azuresetup_errorcheck'] = 'An error occurred trying to check Azure setup.';
+$string['settings_azuresetup_noinfo'] = 'We don\'t have any information about your Azure setup yet. Please click the Update button to check.';
+$string['settings_azuresetup_strunifiedpermerror'] = 'There was an error checking Unified API permissions.';
+$string['settings_azuresetup_strtenanterror'] = 'Please use the dectect button to set your Azure AD Tenant before updating Azure Setup.';
 $string['settings_azuresetup_unifiedheader'] = 'Unified API';
 $string['settings_azuresetup_unifieddesc'] = 'The unified API replaces the existing application-specific APIs. If available, you should add this to your Azure application to be ready for the future. Eventually, this will replace the legacy API.';
 $string['settings_azuresetup_unifiederror'] = 'There was an error checking for Unified API support.';
@@ -193,7 +196,7 @@ $string['settings_sharepointlink_connected'] = 'Moodle is connected to this Shar
 $string['settings_sharepointlink_changelink'] = 'Change Site';
 $string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
 $string['settings_sharepointlink_enterurl'] = 'Enter a URL above.';
-$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365#SharePoint_Connection">Read more about connecting Moodle and SharePoint</a>';
+$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365#SharePoint_Connection">Read more about connecting Moodle and SharePoint</a>.';
 $string['settings_sharepointlink_status_invalid'] = 'This is not a usable SharePoint site.';
 $string['settings_sharepointlink_status_notempty'] = 'This site is usable, but already exists. Moodle may conflict with existing content. For best results, enter a SharePoint site that doesn\'t exist and Moodle will create it.';
 $string['settings_sharepointlink_status_valid'] = 'This SharePoint site will be created by Moodle and used for Moodle content.';
