@@ -51,6 +51,16 @@ if ($ADMIN->fulltree) {
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/sway', get_string('sway', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
+
+    // New provider method.
+    $providers = \filter_oembed::get_supported_providers();
+    foreach ($providers as $provider) {
+        $enabledkey = 'provider_'.$provider.'_enabled';
+        $name = get_string('provider_'.$provider, 'filter_oembed');
+        $item = new \admin_setting_configselect('filter_oembed/'.$enabledkey, $name, '', 1, $torf);
+        $settings->add($item);
+    }
+
     $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);
     $settings->add($item);
 }
