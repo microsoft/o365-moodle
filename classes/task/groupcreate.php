@@ -79,10 +79,9 @@ class groupcreate extends \core\task\scheduled_task {
         $sql = 'SELECT crs.*
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
-                 WHERE obj.id IS NULL AND crs.id != ?
-                 LIMIT 0, 5';
+                 WHERE obj.id IS NULL AND crs.id != ?';
         $params = ['group', 'course', SITEID];
-        $courses = $DB->get_recordset_sql($sql, $params);
+        $courses = $DB->get_recordset_sql($sql, $params, 0, 5);
         foreach ($courses as $course) {
             // Create group.
             $groupname = $siterec->shortname.': '.$course->fullname;
