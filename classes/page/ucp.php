@@ -205,6 +205,7 @@ class ucp extends base {
      */
     public function mode_aadlogin() {
         global $OUTPUT, $USER;
+        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
         $opname = 'Office 365';
         echo $OUTPUT->header();
         echo \html_writer::start_div('o365_ucp_featurepage');
@@ -347,7 +348,9 @@ class ucp extends base {
         }
         echo \html_writer::tag('p', $introstr);
 
-        echo $this->print_index_feature('aadlogin', true);
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+            echo $this->print_index_feature('aadlogin', true);
+        }
         echo $this->print_index_feature('calendar', $this->o365connected);
         echo $this->print_index_feature('onenote', $this->o365connected);
 
