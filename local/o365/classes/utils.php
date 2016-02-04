@@ -88,10 +88,9 @@ class utils {
                 $sql = 'SELECT *
                           FROM {auth_oidc_token} tok
                           JOIN {user} u ON tok.username = u.username
-                         WHERE tok.resource = ? AND u.id = ?
-                         LIMIT 0, 1';
+                         WHERE tok.resource = ? AND u.id = ?';
                 $params = ['https://graph.windows.net', $userid];
-                $records = $DB->get_records_sql($sql, $params);
+                $records = $DB->get_records_sql($sql, $params, 0, 1);
                 if (!empty($records)) {
                     return true;
                 }
