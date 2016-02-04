@@ -80,11 +80,10 @@ class processmatchqueue extends \core\task\scheduled_task {
              LEFT JOIN {local_o365_connections} muserconn ON muserconn.muserid = u.id
              LEFT JOIN {local_o365_connections} officeconn ON officeconn.aadupn = mq.o365username
              LEFT JOIN {auth_oidc_token} oidctok ON oidctok.oidcusername = mq.o365username
-                 WHERE mq.completed = ? AND mq.errormessage = ""
-              ORDER BY mq.id ASC
-                 LIMIT 0, 100';
-        $params = ['0'];
-        $matchqueue = $DB->get_recordset_sql($sql, $params);
+                 WHERE mq.completed = ? AND mq.errormessage = ?
+              ORDER BY mq.id ASC';
+        $params = ['0', ''];
+        $matchqueue = $DB->get_recordset_sql($sql, $params, 0, 100);
         $apiclient = $this->get_api();
         foreach ($matchqueue as $matchrec) {
             mtrace('Processing '.$matchrec->musername.'/'.$matchrec->o365username);
