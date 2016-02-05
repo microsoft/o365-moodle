@@ -86,7 +86,7 @@ class filter_oembed extends moodle_text_filter {
         $newtext = $text; // We need to return the original value if regex fails!
 
         if (get_config('filter_oembed', 'youtube')) {
-            $search = '/<a\s[^>]*href="((https?:\/\/(www\.)?)(youtube\.com|youtu\.be|youtube\.googleapis.com)\/(?:embed\/|v\/|watch\?v=|watch\?.+&amp;v=|watch\?.+&v=)?((\w|-){11})(.*?))"(.*?)>(.*?)<\/a>/is';
+            $search = '/<a\s[^>]*href="((https?:\/\/(www\.)?)(youtube\.com|youtu\.be|youtube\.googleapis.com)\/(?:embed\/|v\/|watch\?v=|watch\?.+?&amp;v=|watch\?.+?&v=)?((\w|-){11})(.*?))"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_youtubecallback', $newtext);
         }
         if (get_config('filter_oembed', 'vimeo')) {
@@ -149,7 +149,7 @@ class filter_oembed extends moodle_text_filter {
  */
 function filter_oembed_youtubecallback($link) {
     global $CFG;
-    $url = "http://www.youtube.com/oembed?url=".trim($link[1])."&format=json";
+    $url = "http://www.youtube.com/oembed?url=".urlencode(trim($link[1]))."&format=json";
     $jsonret = filter_oembed_curlcall($url);
     return filter_oembed_vidembed($jsonret, trim($link[7]));
 }
