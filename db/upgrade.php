@@ -132,5 +132,20 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011615', 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2015011627.01) {
+        // Ensure the username field in auth_oidc_token is lowercase.
+        $authtokensrs = $DB->get_recordset('auth_oidc_token');
+        foreach ($authtokensrs as $authtokenrec) {
+            $newusername = trim(\core_text::strtolower($authtokenrec->username));
+            if ($newusername !== $authtokenrec->username) {
+                $updatedrec = new \stdClass;
+                $updatedrec->id = $authtokenrec->id;
+                $updatedrec->username = $newusername;
+                $DB->update_record('auth_oidc_token', $updatedrec);
+            }
+        }
+        upgrade_plugin_savepoint($result, '2015011627.01', 'auth', 'oidc');
+    }
+
     return $result;
 }
