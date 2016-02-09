@@ -119,6 +119,8 @@ class filter_oembed extends moodle_text_filter {
         }
         $odburl = get_config('local_o365', 'odburl');
         if (get_config('filter_oembed', 'o365video') && !empty($odburl)) {
+            $odburl = preg_replace('/^https?:\/\//', '', $odburl);
+            $odburl = preg_replace('/\/.*/', '', $odburl);
             $trimedurl = preg_replace("/-my/", "", $odburl);
             $search = '/<a\s[^>]*href="(https?:\/\/)('.$odburl.'|'.$trimedurl.')\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_o365videocallback', $newtext);
