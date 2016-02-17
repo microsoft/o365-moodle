@@ -39,8 +39,6 @@ if ($ADMIN->fulltree) {
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/officemix', get_string('officemix', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/screenr', get_string('screenr', 'filter_oembed'), '', 1, $torf);
-    $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/issuu', get_string('issuu', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
     $item = new admin_setting_configselect('filter_oembed/soundcloud', get_string('soundcloud', 'filter_oembed'), '', 1, $torf);
