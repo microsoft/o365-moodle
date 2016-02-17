@@ -59,7 +59,9 @@ class client extends \oauth2_client {
      * @return bool Whether the API client is configured.
      */
     public static function is_configured() {
-        if (empty(get_config('local_msaccount', 'clientid')) || empty(get_config('local_msaccount', 'clientsecret'))) {
+        $clientid = get_config('local_msaccount', 'clientid');
+        $clientsecret = get_config('local_msaccount', 'clientsecret');
+        if (empty($clientid) || empty($clientsecret)) {
             return false;
         }
         return true;
