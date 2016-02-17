@@ -1,0 +1,24 @@
+<?php
+$string['configmaxbytes'] = 'Tamanho máximo do OneNote';
+$string['countfiles'] = 'OneNotes: {$a}';
+$string['default'] = 'Ativado por padrão';
+$string['default_help'] = 'Quando definido, esse método de feedback é ativado por padrão para todas as novas tarefas.';
+$string['enabled'] = 'Feedback no OneNote';
+$string['enabled_help'] = 'Se essa configuração estiver ativada, o professor poderá fazer o upload de páginas do OneNote com feedback ao corrigir suas tarefas. Os professores podem optar por fazer anotações no envio do aluno no OneNote ou fazer o upload de uma página totalmente nova do OneNote.';
+$string['onenote'] = 'OneNotes de feedback';
+$string['filesadded'] = 'OneNotes de feedback adicionados: {$a}';
+$string['maxbytes'] = 'Tamanho máximo de pacote do OneNote';
+$string['maxfiles'] = 'Número máximo de uploads de OneNotes';
+$string['maximumsize'] = 'Tamanho máximo de pacote do OneNote';
+$string['moreusers'] = 'Mais {$a}...';
+$string['nochanges'] = 'Nenhuma alteração';
+$string['pluginname'] = 'Feedback no OneNote';
+$string['addfeedback'] = 'Adicionar feedback';
+$string['addfeedbackhelp'] = 'Clique no botão acima para adicionar seu feedback referente ao envio do aluno no OneNote. Você pode voltar aqui posteriormente para salvar seu trabalho de volta no Moodle.';
+$string['signinhelp1'] = 'Clique no botão acima para fazer login no OneNote e poder adicionar nele seu feedback referente ao envio do aluno.';
+$string['signinhelp2'] = 'Clique no botão acima para fazer login no OneNote caso queira visualizar o feedback nele.';
+$string['viewfeedback'] = 'Visualizar feedback';
+$string['feedbackdownloadfailed'] = 'Não foi possível fazer o download do feedback do OneNote. Tente novamente.';
+$string['notsignedin'] = 'Faça login no OneNote antes de tentar salvar suas alterações.';
+$string['feedbacknotstarted'] = 'Adicione seu feedback usando o OneNote e depois salve suas alterações.';
+$string['feedbacklimitexceed'] = 'O tamanho do feedback ultrapassa o limite máximo.';
