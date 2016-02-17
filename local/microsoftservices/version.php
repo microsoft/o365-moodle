@@ -23,17 +23,17 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111901;
+$plugin->version = 2015111902;
 $plugin->requires = 2015111600;
 $plugin->component = 'local_microsoftservices';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.1';
+$plugin->release = '30.0.0.2';
 $plugin->dependencies = [
-    'block_microsoft' => 2015111901,
-    'local_msaccount' => 2015111901,
-    'local_onenote' => 2015111901,
-    'assignfeedback_onenote' => 2015111901,
-    'assignsubmission_onenote' => 2015111901,
-    'repository_onenote' => 2015111901,
-    'filter_oembed' => 2015111901,
+    'block_microsoft' => 2015111904,
+    'local_msaccount' => 2015111902,
+    'local_onenote' => 2015111902,
+    'assignfeedback_onenote' => 2015111902,
+    'assignsubmission_onenote' => 2015111902,
+    'repository_onenote' => 2015111902,
+    'filter_oembed' => 2015111903,
 ];
