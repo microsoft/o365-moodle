@@ -72,12 +72,18 @@ class authcode extends \auth_oidc\loginflow\base {
     public function handleredirect() {
         $state = optional_param('state', '', PARAM_RAW);
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
+        $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
         if (!empty($state)) {
             // Response from OP.
             $this->handleauthresponse($_REQUEST);
         } else {
             // Initial login request.
-            $this->initiateauthrequest($promptlogin, ['forceflow' => 'authcode']);
+            $stateparams = ['forceflow' => 'authcode'];
+            $extraparams = [];
+            if ($promptaconsent === true) {
+                $extraparams = ['prompt' => 'admin_consent'];
+            }
+            $this->initiateauthrequest($promptlogin, $stateparams, $extraparams);
         }
     }
 
