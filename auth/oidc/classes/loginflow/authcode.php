@@ -327,13 +327,14 @@ class authcode extends \auth_oidc\loginflow\base {
             // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
             $username = $idtoken->claim('upn');
             if (empty($username)) {
-                $username = strtolower($oidcuniqid);
+                $username = $oidcuniqid;
             }
             $matchedwith = $this->check_for_matched($username);
             if (!empty($matchedwith)) {
                 $matchedwith->aadupn = $username;
                 throw new \moodle_exception('errorusermatched', 'local_o365', null, $matchedwith);
             }
+            $username = trim(\core_text::strtolower($username));
             $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
         }
 
