@@ -143,8 +143,6 @@ class block_microsoft extends block_base {
         $sharepointstr = get_string('linksharepoint', 'block_microsoft');
         $prefsurl = new \moodle_url('/local/o365/ucp.php');
         $prefsstr = get_string('linkprefs', 'block_microsoft');
-        $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
-        $connectstr = get_string('linkconnection', 'block_microsoft');
 
         $items = [];
 
@@ -166,7 +164,12 @@ class block_microsoft extends block_base {
         $items[] = $this->render_onenote();
         $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
         $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
-        $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+            $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
+            $connectstr = get_string('linkconnection', 'block_microsoft');
+            $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+        }
 
         $downloadlinks = $this->get_content_o365download();
         foreach ($downloadlinks as $link) {
