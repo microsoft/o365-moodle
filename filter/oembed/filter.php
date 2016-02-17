@@ -131,6 +131,19 @@ class filter_oembed extends moodle_text_filter {
             $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(sway\.com)\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_swaycallback', $newtext);
         }
+
+        // New method for embed providers.
+        $providers = static::get_supported_providers();
+        $filterconfig = get_config('filter_oembed');
+        foreach ($providers as $provider) {
+            $enabledkey = 'provider_'.$provider.'_enabled';
+            if (!empty($filterconfig->$enabledkey)) {
+                $providerclass = '\filter_oembed\provider\\'.$provider;
+                $provider = new $providerclass();
+                $newtext = $provider->filter($newtext);
+            }
+        }
+
         if (empty($newtext) or $newtext === $text) {
             // Error or not filtered.
             unset($newtext);
@@ -138,6 +151,17 @@ class filter_oembed extends moodle_text_filter {
         }
 
         return $newtext;
+    }
+
+    /**
+     * Return list of supported providers.
+     *
+     * @return array Array of supported providers.
+     */
+    public static function get_supported_providers() {
+        return [
+            'docsdotcom',
+        ];
     }
 }
 
