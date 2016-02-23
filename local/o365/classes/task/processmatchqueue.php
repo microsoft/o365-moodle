@@ -70,6 +70,10 @@ class processmatchqueue extends \core\task\scheduled_task {
     public function execute() {
         global $DB;
 
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
         $sql = 'SELECT mq.*,
                        u.id as muserid,
                        muserconn.id as muserexistingconnectionid,
