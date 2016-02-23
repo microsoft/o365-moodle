@@ -188,22 +188,22 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      * Do the job.
      */
     public function execute() {
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
         $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
 
-        $oidcconfig = get_config('auth_oidc');
-        if (!empty($oidcconfig)) {
-            $spresource = \local_o365\rest\sharepoint::get_resource();
-            if (!empty($spresource)) {
-                $httpclient = new \local_o365\httpclient();
-                $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-                        $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-                $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
-                if (!empty($sptoken)) {
-                    $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
-                } else {
-                    $errmsg = 'Could not get system API user token for SharePoint';
-                    \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointaccesssync::execute');
-                }
+        $spresource = \local_o365\rest\sharepoint::get_resource();
+        if (!empty($spresource)) {
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
+            if (!empty($sptoken)) {
+                $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
+            } else {
+                $errmsg = 'Could not get system API user token for SharePoint';
+                \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointaccesssync::execute');
             }
         }
 
