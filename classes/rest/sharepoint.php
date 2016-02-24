@@ -262,6 +262,38 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get the embedding URL for a given file id.
+     *
+     * @param string $fileid The ID of the file (from the odb api).
+     * @param string $fileurl The o365 webUrl property of the file.
+     * @return string|null The URL to be embedded, or null if error.
+     */
+    public function get_embed_url($fileid, $fileurl = '') {
+        if (empty($fileurl)) {
+            $fileinfo = $this->get_file_metadata($fileid);
+            if (isset($fileinfo['webUrl'])) {
+                $fileurl = $fileinfo['webUrl'];
+            }
+        }
+
+        if (!empty($fileurl)) {
+            $spurl = $this->get_resource();
+            if (strpos($fileurl, $spurl) === 0) {
+                $filerelative = substr($fileurl, strlen($spurl));
+                $filerelativeparts = explode('/', trim($filerelative, '/'));
+                if (substr($filerelative, -6) === '?web=1') {
+                    $filerelative = substr($filerelative, 0, -6);
+                }
+                $endpoint = '/web/GetFileByServerRelativeUrl(\''.$filerelative.'\')/ListItemAllFields/GetWOPIFrameUrl(3)';
+                $response = $this->apicall('post', $endpoint);
+                $expectedparams = ['value' => null];
+                return $this->process_apicall_response($response, $expectedparams);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Create a new file.
      *
      * @param string $folderpath The path to the file.
