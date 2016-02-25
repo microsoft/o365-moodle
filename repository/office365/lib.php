@@ -897,7 +897,7 @@ class repository_office365 extends \repository {
         if ($_SERVER['SCRIPT_NAME'] === '/draftfile.php') {
             return false;
         }
-        if (empty($reference['source']) || $reference['source'] !== 'onedrive') {
+        if (empty($reference['source'])) {
             return false;
         }
         if (!empty($forcedownload)) {
@@ -923,7 +923,34 @@ class repository_office365 extends \repository {
         $reference = $this->unpack_reference($storedfile->get_reference());
 
         $fileuserid = $storedfile->get_userid();
-        $sourceclient = $this->get_onedrive_apiclient(false, $fileuserid);
+
+        if (!isset($reference['source'])) {
+            \local_o365\utils::debug('File reference is broken - no source parameter.', 'send_file', $reference);
+            send_file_not_found();
+            die();
+        }
+
+        switch ($reference['source']) {
+            case 'sharepoint':
+                $sourceclient = $this->get_sharepoint_apiclient(false, $fileuserid);
+                if (isset($reference['parentsiteuri'])) {
+                    $parentsiteuri = $reference['parentsiteuri'];
+                } else {
+                    $parentsiteuri = $sourceclient->get_moodle_parent_site_uri();
+                }
+                $sourceclient->set_site($parentsiteuri);
+                break;
+
+            case 'onedrive':
+                $sourceclient = $this->get_onedrive_apiclient(false, $fileuserid);
+                break;
+
+            default:
+                \local_o365\utils::debug('File reference is broken - invalid source parameter.', 'send_file', $reference);
+                send_file_not_found();
+                die();
+        }
+
         if (empty($sourceclient)) {
             \local_o365\utils::debug('Could not construct api client for user', 'send_file', $fileuserid);
             send_file_not_found();
