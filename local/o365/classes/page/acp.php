@@ -278,4 +278,73 @@ class acp extends base {
         }
         $this->standard_footer();
     }
+
+    /**
+     * Resync course usergroup membership.
+     */
+    public function mode_maintenance_coursegroupusers() {
+        global $DB;
+        $courseid = optional_param('courseid', 0, PARAM_INT);
+        \core_php_time_limit::raise(0);
+        raise_memory_limit(MEMORY_EXTRA);
+        disable_output_buffering();
+
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $graphresource = \local_o365\rest\unified::get_resource();
+        $graphtoken = \local_o365\oauth2\systemtoken::instance(null, $graphresource, $clientdata, $httpclient);
+        if (empty($graphtoken)) {
+            mtrace('Could not get unified API token.');
+            return true;
+        }
+        $graphclient = new \local_o365\rest\unified($graphtoken, $httpclient);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
+
+        $sql = 'SELECT crs.id,
+                       obj.objectid as groupobjectid
+                  FROM {course} crs
+                  JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
+                 WHERE crs.id != ?';
+        $params = ['group', 'course', SITEID];
+        if (!empty($courseid)) {
+            $sql .= ' AND crs.id = ?';
+            $params[] = $courseid;
+        }
+        $courses = $DB->get_recordset_sql($sql, $params);
+        foreach ($courses as $course) {
+            try {
+                echo '<pre>';
+                $coursegroups->resync_group_membership($course->id, $course->groupobjectid);
+                echo '</pre>';
+                mtrace(PHP_EOL);
+            } catch (\Exception $e) {
+                mtrace('Could not sync course '.$course->id.'. Reason: '.$e->getMessage());
+            }
+        }
+        $courses->close();
+
+        die();
+    }
+
+    /**
+     * Maintenance tools.
+     */
+    public function mode_maintenance() {
+        global $DB, $OUTPUT, $PAGE, $SESSION;
+        $PAGE->navbar->add(get_string('acp_maintenance', 'local_o365'), new \moodle_url($this->url, ['mode' => 'maintenance']));
+        $PAGE->requires->jquery();
+        $this->standard_header();
+
+        echo \html_writer::tag('h2', get_string('acp_maintenance', 'local_o365'));
+        echo \html_writer::div(get_string('acp_maintenance_desc', 'local_o365'));
+        echo \html_writer::empty_tag('br');
+        echo \html_writer::div(get_string('acp_maintenance_warning', 'local_o365'), 'alert alert-info');
+
+        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_coursegroupusers']);
+        $toolname = get_string('acp_maintenance_coursegroupusers', 'local_o365');
+        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo \html_writer::div(get_string('acp_maintenance_coursegroupusers_desc', 'local_o365'));
+
+        $this->standard_footer();
+    }
 }
