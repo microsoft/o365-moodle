@@ -378,7 +378,7 @@ abstract class base {
      */
     public function sync_notebook_data() {
         global $DB;
-        $notebookname = get_string('notebookname', 'block_onenote');
+        $notebookname = get_string('notebookname', 'local_onenote');
         $courses = enrol_get_my_courses(); // Get the current user enrolled courses.
         $notebooksarray = [];
         $notebooks = $this->get_items_list('');
