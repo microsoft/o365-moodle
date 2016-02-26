@@ -28,3 +28,4 @@ $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname}
 $string['connction_error'] = 'Cannot connect to OneNote. Please wait a few moments and retry.';
 $string['onenote_page_error'] = 'Could not open the OneNote page for this submission or feedback.';
 $string['error_noapiavailable'] = 'No OneNote API is available. If using the Office 365 plugin set, we were not able to contact OneNote. Otherwise, please install local_msaccount.';
+$string['notebookname'] = 'Moodle Notebook';
