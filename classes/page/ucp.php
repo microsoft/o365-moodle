@@ -71,6 +71,9 @@ class ucp extends base {
      */
     public function mode_calendar() {
         global $DB, $USER, $OUTPUT, $PAGE;
+
+        $PAGE->navbar->add(get_string('ucp_calsync_title', 'local_o365'), new \moodle_url('/local/o365/ucp.php?action=calendar'));
+
         if (empty($this->o365connected)) {
             throw new \moodle_exception('ucp_notconnected', 'local_o365');
         }
@@ -113,7 +116,7 @@ class ucp extends base {
         } else if ($fromform = $mform->get_data()) {
             \local_o365\feature\calsync\form\subscriptions::update_subscriptions($fromform, $primarycalid,
                     $customdata['cancreatesiteevents'], $customdata['cancreatecourseevents']);
-            redirect(new \moodle_url('/local/o365/ucp.php'));
+            redirect(new \moodle_url('/local/o365/ucp.php?action=calendar&saved=1'));
         } else {
             $PAGE->requires->jquery();
             $defaultdata = [];
