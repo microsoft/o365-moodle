@@ -23,7 +23,7 @@
 
 $string['pluginname'] = 'Microsoft Office 365 Integration';
 
-$string['acp_title'] = 'Microsoft Office 365 Integration Administration Control Panel';
+$string['acp_title'] = 'Microsoft Office 365 Integration Administrator Control Panel';
 $string['acp_healthcheck'] = 'Health Check';
 $string['acp_usermatch'] = 'User Matching';
 $string['acp_usermatch_desc'] = 'This tool allows you to match Moodle users to Office 365 users. You will upload a file containing Moodle users and associated Office 365 users, and a cron task will verify the data and set up the match.';

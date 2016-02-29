@@ -29,6 +29,24 @@ namespace local_o365\page;
 class acp extends base {
 
     /**
+     * Add base navbar for this page.
+     */
+    protected function add_navbar() {
+        global $PAGE;
+        $PAGE->navbar->add($this->title, new \moodle_url('/admin/settings.php?section=local_o365'));
+    }
+
+    /**
+     * Standard page header.
+     */
+    protected function standard_header() {
+        global $OUTPUT;
+        echo $OUTPUT->header();
+        $icon = $OUTPUT->pix_icon('o365color', '', 'local_o365', ['style' => 'display:inline-block;margin-right:0.5rem;height:1.5rem;width:1.5rem;vertical-align:bottom;']);
+        echo \html_writer::tag('h5', $icon.$this->title);
+    }
+
+    /**
      * Set the system API user.
      */
     public function mode_setsystemuser() {
@@ -54,9 +72,9 @@ class acp extends base {
 
             echo '<h5>'.$healthcheck->get_name().'</h5>';
             if ($result['result'] === true) {
-                echo '<div class="alert-success">'.$result['message'].'</div>';
+                echo '<div class="alert alert-success">'.$result['message'].'</div>';
             } else {
-                echo '<div class="alert-error">';
+                echo '<div class="alert alert-error">';
                 echo $result['message'];
                 if (isset($result['fixlink'])) {
                     echo '<br /><br />'.\html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));

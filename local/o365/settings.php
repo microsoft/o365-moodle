@@ -28,7 +28,7 @@ if (!$PAGE->requires->is_head_done()) {
 }
 
 if ($hassiteconfig) {
-    $settings = new \admin_settingpage('local_o365', get_string('pluginname', 'local_o365'));
+    $settings = new \admin_settingpage('local_o365', get_string('acp_title', 'local_o365'));
     $ADMIN->add('localplugins', $settings);
 
     $label = get_string('settings_header_tools', 'local_o365');
