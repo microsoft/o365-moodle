@@ -25,6 +25,8 @@ namespace local_o365\tests;
 
 /**
  * A mock HTTP client allowing set responses.
+ *
+ * @codeCoverageIgnore
  */
 class mockhttpclient extends \local_o365\httpclient {
     /** @var string The stored set response. */

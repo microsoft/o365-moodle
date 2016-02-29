@@ -23,6 +23,9 @@
 
 namespace local_o365\adminsetting;
 
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
+
 /**
  * Not a real setting - just a link to an admin tool.
  */

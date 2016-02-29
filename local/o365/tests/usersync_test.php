@@ -30,6 +30,7 @@ global $CFG;
  *
  * @group local_o365
  * @group office365
+ * @codeCoverageIgnore
  */
 class local_o365_usersync_testcase extends \advanced_testcase {
     /**
