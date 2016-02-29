@@ -24,6 +24,7 @@
 
 namespace local_o365;
 
+global $CFG;
 require_once($CFG->dirroot.'/lib/filelib.php');
 
 /**
