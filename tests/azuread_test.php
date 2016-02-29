@@ -25,6 +25,9 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
+/**
+ * @codeCoverageIgnore
+ */
 class azuread_mock extends \local_o365\rest\azuread {
     /**
      * Transform the full request URL.
@@ -42,6 +45,7 @@ class azuread_mock extends \local_o365\rest\azuread {
  *
  * @group local_o365
  * @group office365
+ * @codeCoverageIgnore
  */
 class local_o365_azuread_testcase extends \advanced_testcase {
     /**
