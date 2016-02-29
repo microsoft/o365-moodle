@@ -224,7 +224,7 @@ $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
 
 $string['task_calendarsyncin'] = 'Sync o365 events in to Moodle';
-$string['task_groupcreate'] = 'Create user groups in Office&nbsp;365';
+$string['task_groupcreate'] = 'Create user groups in Office 365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_syncusers'] = 'Sync users with Azure AD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
