@@ -23,6 +23,9 @@
 
 namespace local_o365\adminsetting;
 
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
+
 /**
  * Admin setting to control field mappings for users.
  */
