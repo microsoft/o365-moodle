@@ -23,6 +23,7 @@
 
 namespace local_o365\feature\calsync;
 
+global $CFG;
 require_once($CFG->dirroot.'/lib/filelib.php');
 
 class observers {
