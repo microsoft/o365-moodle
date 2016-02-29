@@ -23,6 +23,9 @@
 
 namespace local_o365\tests;
 
+/**
+ * @codeCoverageIgnore
+ */
 class mocksharepoint extends \local_o365\rest\sharepoint {
     /**
      * Create a course subsite.
