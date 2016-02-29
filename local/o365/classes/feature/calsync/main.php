@@ -69,8 +69,14 @@ class main {
      * @return \local_o365\oauth2\token|null Either a token for calendar syncing, or null if no token could be retrieved.
      */
     public function get_user_token($muserid) {
-        $outlookresource = \local_o365\rest\calendar::get_resource();
-        $usertoken = \local_o365\oauth2\token::instance($muserid, $outlookresource, $this->clientdata, $this->httpclient);
+        $unifiedconfigured = \local_o365\rest\unified::is_configured();
+        if ($unifiedconfigured === true) {
+            $resource = \local_o365\rest\unified::get_resource();
+        } else {
+            $resource = \local_o365\rest\calendar::get_resource();
+        }
+
+        $usertoken = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
         return (!empty($usertoken)) ? $usertoken : null;
     }
 
