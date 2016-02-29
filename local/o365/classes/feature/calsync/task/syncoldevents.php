@@ -305,108 +305,6 @@ class syncoldevents extends \core\task\adhoc_task {
     }
 
     /**
-     * Sync all user events for a given user with Outlook.
-     *
-     * @param int $userid The ID of the user to sync.
-     * @param int $timecreated The time the task was created.
-     */
-    protected function sync_userevents($userid, $timecreated) {
-        global $DB;
-        $timestart = time();
-        // Check the last time user events for this user were synced.
-        // Using a direct query here so we don't run into static cache issues.
-        $lastusersync = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'cal_user_lastsync']);
-        if (!empty($lastusersync)) {
-            $lastusersync = unserialize($lastusersync->value);
-            if (is_array($lastusersync) && isset($lastusersync[$userid]) && (int)$lastusersync[$userid] > $timecreated) {
-                // User events for this user have been synced since this event was created, so we don't have to do it again.
-                return true;
-            }
-        }
-
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-        $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
-
-        $usertoken = $calsync->get_user_token($userid);
-        if (empty($usertoken)) {
-            // No token, can't sync.
-            \local_o365\utils::debug('Could not get user token for calendar sync.');
-            return false;
-        }
-
-        $subscription = $DB->get_record('local_o365_calsub', ['user_id' => $userid, 'caltype' => 'user']);
-
-        $sql = 'SELECT ev.id AS eventid,
-                       ev.name AS eventname,
-                       ev.description AS eventdescription,
-                       ev.timestart AS eventtimestart,
-                       ev.timeduration AS eventtimeduration,
-                       idmap.outlookeventid,
-                       idmap.origin AS idmaporigin
-                  FROM {event} ev
-             LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
-                 WHERE ev.courseid = 0
-                       AND ev.groupid = 0
-                       AND ev.userid = ?';
-        $events = $DB->get_recordset_sql($sql, [$userid]);
-        foreach ($events as $event) {
-            mtrace('Syncing user event #'.$event->eventid);
-            if (!empty($subscription)) {
-                if (empty($event->outlookeventid)) {
-                    // Event not synced, if outward subscription exists sync to o365.
-                    if ($subscription->syncbehav === 'out' || $subscription->syncbehav === 'both') {
-                        mtrace('Creating event in Outlook.');
-                        $subject = $event->eventname;
-                        $body = $event->eventdescription;
-                        $evstart = $event->eventtimestart;
-                        $evend = $event->eventtimestart + $event->eventtimeduration;
-                        $calid = (!empty($subscription->o365calid)) ? $subscription->o365calid : null;
-                        if (isset($subscription->isprimary) && $subscription->isprimary == 1) {
-                            $calid = null;
-                        }
-                        $calsync->create_event_raw($userid, $event->eventid, $subject, $body, $evstart, $evend, [], [], $calid);
-                    } else {
-                        mtrace('Not creating event in Outlook. (Sync settings are inward-only.)');
-                    }
-                } else {
-                    // Event synced. If event was created in Moodle and subscription is inward-only, delete o365 event.
-                    if ($event->idmaporigin === 'moodle' && $subscription->syncbehav === 'in') {
-                        mtrace('Removing event from Outlook (Created in Moodle, sync settings are inward-only.)');
-                        $calsync->delete_event_raw($userid, $event->outlookeventid);
-                    } else {
-                        mtrace('Event already synced.');
-                    }
-                }
-            } else {
-                // No subscription exists. Delete relevant events.
-                if (!empty($event->outlookeventid)) {
-                    if ($event->idmaporigin === 'moodle') {
-                        mtrace('Removing event from Outlook.');
-                        // Event was created in Moodle, delete o365 event.
-                        $calsync->delete_event_raw($userid, $event->outlookeventid);
-                    } else {
-                        mtrace('Not removing event from Outlook (It was created there.)');
-                    }
-                } else {
-                    mtrace('Did not have an outlookeventid. Event not synced?');
-                }
-            }
-        }
-        $events->close();
-
-        if (!empty($lastusersync) && is_array($lastusersync)) {
-            $lastusersync[$userid] = $timestart;
-        } else {
-            $lastusersync = [$userid => $timestart];
-        }
-        $lastusersync = serialize($lastusersync);
-        set_config('cal_user_lastsync', $lastusersync, 'local_o365');
-
-        return true;
-    }
-
-    /**
      * Do the job.
      */
     public function execute() {
@@ -418,13 +316,20 @@ class syncoldevents extends \core\task\adhoc_task {
             return false;
         }
 
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $httpclient = new \local_o365\httpclient();
+        $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
+
         // Sync site events.
         if ($opdata->caltype === 'site') {
             $this->sync_siteevents($timecreated);
         } else if ($opdata->caltype === 'course') {
             $this->sync_courseevents($opdata->caltypeid, $timecreated);
         } else if ($opdata->caltype === 'user') {
-            $this->sync_userevents($opdata->userid, $timecreated);
+            $usercalendar = new \local_o365\feature\calsync\calendar\user($opdata->userid, $DB, $calsync, true);
+            if ($usercalendar->has_been_synced_since($timecreated) !== true) {
+                $usercalendar->sync($timecreated);
+            }
         }
     }
 }
