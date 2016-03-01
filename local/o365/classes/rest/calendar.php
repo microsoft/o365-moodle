@@ -63,7 +63,7 @@ class calendar extends \local_o365\rest\o365api {
      * @return [type]             [description]
      */
     public function get_events($calendarid = null, $since = null) {
-        \core_date::set_default_server_timezone();
+        \local_o365\utils::ensure_timezone_set();
         $endpoint = (!empty($calendarid)) ? '/calendars/'.$calendarid.'/events' : '/events';
         if (!empty($since)) {
             $since = urlencode(date(DATE_ATOM, $since));
