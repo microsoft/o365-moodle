@@ -56,7 +56,7 @@ class docsdotcom extends base {
      * @return string Filtered text.
      */
     public function filter($text) {
-        $search = '#<a\s[^>]*href="(https://(www\.)?docs\.com/(.*?)+/(.*?)+/(.*?)+(.*))"(.*?)>(.*?)</a>#is';
+        $search = '#<a\s[^>]*href="(https://(www\.)?docs\.com/(.+?)/(.+?)/(.*))"(.*?)>(.*?)</a>#is';
         return preg_replace_callback($search, [$this, 'get_replacement'], $text);
     }
 }
