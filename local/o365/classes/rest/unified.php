@@ -342,7 +342,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of events.
      */
     public function get_events($calendarid = null, $since = null) {
-        \core_date::set_default_server_timezone();
+        \local_o365\utils::ensure_timezone_set();
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
             $since = urlencode(date(DATE_ATOM, $since));
