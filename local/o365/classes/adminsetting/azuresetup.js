@@ -91,7 +91,7 @@ $.fn.azuresetup = function(options) {
      * @return object jQuery object representing rendered box.
      */
     this.rendererrorbox = function(content) {
-        var box = $('<div></div>').addClass('alert-error local_o365_statusmessage');
+        var box = $('<div></div>').addClass('alert-error alert local_o365_statusmessage');
         box.append(opts.iconerror);
         box.append('<span style="inline-block">'+content+'</span>');
         return box;
@@ -104,7 +104,7 @@ $.fn.azuresetup = function(options) {
      * @return object jQuery object representing rendered box.
      */
     this.renderinfobox = function(content) {
-        var box = $('<div></div>').addClass('alert-info local_o365_statusmessage');
+        var box = $('<div></div>').addClass('alert-info alert local_o365_statusmessage');
         box.append(opts.iconinfo);
         box.append('<span style="inline-block">'+content+'</span>');
         return box;
@@ -117,7 +117,7 @@ $.fn.azuresetup = function(options) {
      * @return object jQuery object representing rendered box.
      */
     this.rendersuccessbox = function(content) {
-        var box = $('<div></div>').addClass('alert-success local_o365_statusmessage');
+        var box = $('<div></div>').addClass('alert-success alert local_o365_statusmessage');
         box.append(opts.iconsuccess);
         box.append('<span style="inline-block">'+content+'</span>');
         return box;
