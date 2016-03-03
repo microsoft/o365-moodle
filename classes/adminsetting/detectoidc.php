@@ -96,13 +96,13 @@ class detectoidc extends \admin_setting {
             $message = \html_writer::tag('span', get_string('settings_detectoidc_credsvalid', 'local_o365'));
             $linkstr = get_string('settings_detectoidc_credsvalid_link', 'local_o365');
             $link = \html_writer::link($settingspage, $linkstr, ['style' => 'margin-left: 1rem']);
-            $html = \html_writer::tag('div', $icon.$message.$link, ['class' => 'alert-success local_o365_statusmessage']);
+            $html = \html_writer::tag('div', $icon.$message.$link, ['class' => 'alert-success alert local_o365_statusmessage']);
         } else {
             $icon = $OUTPUT->pix_icon('t/delete', 'success', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_detectoidc_credsinvalid', 'local_o365'));
             $linkstr = get_string('settings_detectoidc_credsinvalid_link', 'local_o365');
             $link = \html_writer::link($settingspage, $linkstr, ['style' => 'margin-left: 1rem']);
-            $html = \html_writer::tag('div', $icon.$message.$link, ['class' => 'alert-error local_o365_statusmessage']);
+            $html = \html_writer::tag('div', $icon.$message.$link, ['class' => 'alert-error alert local_o365_statusmessage']);
         }
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', null, $query);
     }

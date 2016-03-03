@@ -103,14 +103,14 @@ class systemapiuser extends \admin_setting {
             $message = \html_writer::tag('span', get_string('settings_systemapiuser_userset', 'local_o365', $setuser)).' ';
             $linkstr = get_string('settings_systemapiuser_change', 'local_o365');
             $message .= \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-left: 0.5rem']);
-            $messageattrs = ['class' => 'local_o365_statusmessage alert-success'];
+            $messageattrs = ['class' => 'local_o365_statusmessage alert alert-success'];
             $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         } else {
             $message = \html_writer::tag('span', get_string('settings_systemapiuser_usernotset', 'local_o365')).' ';
             $linkstr = get_string('settings_systemapiuser_setuser', 'local_o365');
             $message .= \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-left: 0.5rem']);
-            $messageattrs = ['class' => 'local_o365_statusmessage alert-info'];
+            $messageattrs = ['class' => 'local_o365_statusmessage alert alert-info'];
             $icon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         }
