@@ -42,6 +42,10 @@ class sharepointinit extends \core\task\adhoc_task {
     public function execute() {
         global $DB;
 
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
         // API Setup.
         try {
             $spresource = \local_o365\rest\sharepoint::get_resource();
