@@ -130,4 +130,26 @@ class utils {
             $event->trigger();
         }
     }
+
+    /**
+     * Ensure default timezone is set.
+     *
+     * Based on \core_date::set_default_server_timezone from M2.9+
+     */
+    public static function ensure_timezone_set() {
+        global $CFG;
+        if (empty($CFG->timezone) || $CFG->timezone == 99) {
+            date_default_timezone_set(date_default_timezone_get());
+        } else {
+            $current = date_default_timezone_get();
+            if ($current !== $CFG->timezone) {
+                $result = @timezone_open($CFG->timezone);
+                if ($result !== false) {
+                    date_default_timezone_set($result->getName());
+                } else {
+                    date_default_timezone_set($current);
+                }
+            }
+        }
+    }
 }
