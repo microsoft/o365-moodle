@@ -63,9 +63,10 @@ class calendar extends \local_o365\rest\o365api {
      * @return [type]             [description]
      */
     public function get_events($calendarid = null, $since = null) {
+        \local_o365\utils::ensure_timezone_set();
         $endpoint = (!empty($calendarid)) ? '/calendars/'.$calendarid.'/events' : '/events';
         if (!empty($since)) {
-            $since = date('c', $since);
+            $since = urlencode(date(DATE_ATOM, $since));
             $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);

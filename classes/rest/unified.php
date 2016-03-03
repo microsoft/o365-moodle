@@ -342,9 +342,10 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of events.
      */
     public function get_events($calendarid = null, $since = null) {
+        \local_o365\utils::ensure_timezone_set();
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
-            $since = date('c', $since);
+            $since = urlencode(date(DATE_ATOM, $since));
             $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
