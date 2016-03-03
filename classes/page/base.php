@@ -51,8 +51,16 @@ class base {
         $PAGE->set_url($this->url);
         $PAGE->set_context($this->context);
         $PAGE->set_pagelayout('standard');
-        $PAGE->navbar->add($this->title, $this->url);
+        $this->add_navbar();
         $PAGE->set_title($this->title);
+    }
+
+    /**
+     * Add base navbar for this page.
+     */
+    protected function add_navbar() {
+        global $PAGE;
+        $PAGE->navbar->add($this->title, $this->url);
     }
 
     /**
