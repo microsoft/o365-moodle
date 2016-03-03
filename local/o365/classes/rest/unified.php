@@ -157,7 +157,16 @@ class unified extends \local_o365\rest\o365api {
             $mailnickname = $name;
         }
 
-        $mailnickname = strtolower(preg_replace('/[^a-z0-9_]+/iu', '', $mailnickname));
+        if (!empty($mailnickname)) {
+            $mailnickname = \core_text::strtolower($mailnickname);
+            $mailnickname = preg_replace('/[^a-z0-9_]+/iu', '', $mailnickname);
+            $mailnickname = trim($mailnickname);
+        }
+
+        if (empty($mailnickname)) {
+            // Cannot generate a good mailnickname because there's nothing but non-alphanum chars to work with. So generate one.
+            $mailnickname = 'group'.uniqid();
+        }
 
         $groupdata = [
             'groupTypes' => ['Unified'],
@@ -192,6 +201,48 @@ class unified extends \local_o365\rest\o365api {
      */
     public function delete_group($objectid) {
         $response = $this->apicall('delete', '/groups/'.$objectid);
+        return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Get a list of group members.
+     *
+     * @param string $groupobjectid The object ID of the group.
+     * @return array Array of returned members.
+     */
+    public function get_group_members($groupobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/members';
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Add member to group.
+     *
+     * @param string $groupobjectid The object ID of the group to add to.
+     * @param string $memberobjectid The object ID of the item to add (can be group object id or user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function add_member_to_group($groupobjectid, $memberobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/members/$ref';
+        $data = [
+            '@odata.id' => $this->get_apiuri().'/v1.0/directoryObjects/'.$memberobjectid
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+        return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Remove member from group.
+     *
+     * @param string $groupobjectid The object ID of the group to remove from.
+     * @param string $memberobjectid The object ID of the item to remove (can be group object id or user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function remove_member_from_group($groupobjectid, $memberobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/members/'.$memberobjectid.'/$ref';
+        $response = $this->apicall('delete', $endpoint);
         return ($response === '') ? true : $response;
     }
 
