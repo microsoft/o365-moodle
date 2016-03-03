@@ -49,7 +49,21 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @param array $customdata Array of form custom data.
      */
     public function calendarconstruct($elementName = null, $elementLabel = null, $text = null, $attributes = null, $customdata = []) {
-        parent::MoodleQuickForm_advcheckbox($elementName, $elementLabel, $text, $attributes, null);
+        parent::__construct($elementName, $elementLabel, $text, $attributes, null);
+        $this->customdata = $customdata;
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param string $elementName The name of the element.
+     * @param string $elementLabel The label of the element.
+     * @param string $text Text that appears after the checkbox.
+     * @param array $attributes Array of checkbox attributes.
+     * @param array $customdata Array of form custom data.
+     */
+    public function __construct($elementName = null, $elementLabel = null, $text = null, $attributes = null, $customdata = []) {
+        parent::__construct($elementName, $elementLabel, $text, $attributes, null);
         $this->customdata = $customdata;
     }
 
