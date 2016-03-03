@@ -29,6 +29,14 @@ namespace local_o365\page;
 class acp extends base {
 
     /**
+     * Add base navbar for this page.
+     */
+    protected function add_navbar() {
+        global $PAGE;
+        $PAGE->navbar->add($this->title, new \moodle_url('/admin/settings.php?section=local_o365'));
+    }
+
+    /**
      * Set the system API user.
      */
     public function mode_setsystemuser() {
@@ -54,9 +62,9 @@ class acp extends base {
 
             echo '<h5>'.$healthcheck->get_name().'</h5>';
             if ($result['result'] === true) {
-                echo '<div class="alert-success">'.$result['message'].'</div>';
+                echo '<div class="alert alert-success">'.$result['message'].'</div>';
             } else {
-                echo '<div class="alert-error">';
+                echo '<div class="alert alert-error">';
                 echo $result['message'];
                 if (isset($result['fixlink'])) {
                     echo '<br /><br />'.\html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));
@@ -170,7 +178,7 @@ class acp extends base {
         echo \html_writer::empty_tag('br');
         if (!empty($SESSION->o365matcherrors)) {
             foreach ($SESSION->o365matcherrors as $error) {
-                echo \html_writer::div($error, 'alert-error local_o365_statusmessage');
+                echo \html_writer::div($error, 'alert-error alert local_o365_statusmessage');
             }
             $SESSION->o365matcherrors = [];
         }
@@ -273,7 +281,7 @@ class acp extends base {
             echo \html_writer::end_tag('table');
             $matchqueue->close();
         } else {
-            $msgclasses = 'alert-info local_o365_statusmessage';
+            $msgclasses = 'alert-info alert local_o365_statusmessage';
             echo \html_writer::div(get_string('acp_usermatch_matchqueue_empty', 'local_o365'), $msgclasses);
         }
         $this->standard_footer();

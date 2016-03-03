@@ -1,6 +1,7 @@
 .local_o365_statusmessage {
-    margin: 0.25rem 0;
-    padding: 0.5rem;
+    &.alert {
+        margin-bottom: 0.25rem;
+    }
     img {
         margin-right: 0.25rem;
     }

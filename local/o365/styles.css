@@ -1,10 +1,9 @@
-.local_o365_statusmessage {
-  margin: 0.25rem 0;
-  padding: 0.5rem; }
-  .local_o365_statusmessage img {
-    margin-right: 0.25rem; }
-  .local_o365_statusmessage span, .local_o365_statusmessage a {
-    vertical-align: middle; }
+.local_o365_statusmessage.alert {
+  margin-bottom: 0.25rem; }
+.local_o365_statusmessage img {
+  margin-right: 0.25rem; }
+.local_o365_statusmessage span, .local_o365_statusmessage a {
+  vertical-align: middle; }
 
 .adminsetting_sharepointlink_message, .adminsetting_sharepointlink_status {
   margin: 0 0 0.5rem 0;
