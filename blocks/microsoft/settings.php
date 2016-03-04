@@ -49,3 +49,13 @@ $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showp
 $label = get_string('settings_showo365connect', 'block_microsoft');
 $desc = get_string('settings_showo365connect_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showo365connect', $label, $desc, 1));
+
+// Settings to show Manage Office 365 Connection link in the block.
+$label = get_string('settings_showmanageo365conection', 'block_microsoft');
+$desc = get_string('settings_showmanageo365conection_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmanageo365conection', $label, $desc, 1));
+
+// Settings to show Course SharePoint site link in the block.
+$label = get_string('settings_showcoursespsite', 'block_microsoft');
+$desc = get_string('settings_showcoursespsite_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursespsite', $label, $desc, 1));
