@@ -146,7 +146,8 @@ class block_microsoft extends block_base {
 
         $items = [];
 
-        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID
+                && !empty(get_config('block_microsoft', 'settings_showcoursespsite'))) {
             if (!empty($o365config->sharepointlink)) {
                 $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
                 if (!empty($coursespsite)) {
@@ -171,7 +172,8 @@ class block_microsoft extends block_base {
             $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true
+                && !empty(get_config('block_microsoft', 'settings_showmanageo365conection'))) {
             $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
             $connectstr = get_string('linkconnection', 'block_microsoft');
             $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
