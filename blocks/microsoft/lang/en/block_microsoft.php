@@ -57,3 +57,7 @@ $string['settings_showpreferences'] = 'Show Preferences link';
 $string['settings_showpreferences_desc'] = 'Enable or disable the Preferences link in the block.';
 $string['settings_showo365connect'] = 'Show Office 365 Connect link';
 $string['settings_showo365connect_desc'] = 'Enable or disable the Office 365 Connect link in the block.';
+$string['settings_showmanageo365conection'] = 'Show Manage Office 365 Connection link';
+$string['settings_showmanageo365conection_desc'] = 'Enable or disable the Manage Office 365 Connection link in the block.';
+$string['settings_showcoursespsite'] = 'Show Course SharePoint site link';
+$string['settings_showcoursespsite_desc'] = 'Enable or disable the Course SharePoint site link in the block.';
