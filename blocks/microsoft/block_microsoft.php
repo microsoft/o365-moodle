@@ -197,10 +197,11 @@ class block_microsoft extends block_base {
     protected function get_content_notconnected() {
         global $DB, $USER, $OUTPUT;
         $html = '<h5>'.get_string('notconnected', 'block_microsoft').'</h5>';
-        $items = [];
         $connecturl = new \moodle_url('/local/o365/ucp.php');
         $connectstr = get_string('connecttoo365', 'block_microsoft');
 
+        $items = [];
+        
         if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true &&
             !empty(get_config('block_microsoft', 'settings_showo365connect'))) {
             $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
