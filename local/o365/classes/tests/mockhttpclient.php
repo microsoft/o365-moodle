@@ -25,6 +25,8 @@ namespace local_o365\tests;
 
 /**
  * A mock HTTP client allowing set responses.
+ *
+ * @codeCoverageIgnore
  */
 class mockhttpclient extends \local_o365\httpclient {
     /** @var string The stored set response. */
@@ -33,6 +35,9 @@ class mockhttpclient extends \local_o365\httpclient {
     /** @var int The index of the current response. */
     protected $curresponse = 0;
 
+    /** @var array Array of executed requests. */
+    protected $requests = [];
+
     /**
      * Set a response to return.
      *
@@ -40,6 +45,15 @@ class mockhttpclient extends \local_o365\httpclient {
      */
     public function set_response($response) {
         $this->set_responses([$response]);
+    }
+
+    /**
+     * Get executed requests.
+     *
+     * @return array Array of executed requests.
+     */
+    public function get_requests() {
+        return $this->requests;
     }
 
     /**
@@ -64,6 +78,10 @@ class mockhttpclient extends \local_o365\httpclient {
      * @return string The set response.
      */
     protected function request($url, $options = array()) {
+        $this->requests[] = [
+            'url' => $url,
+            'options' => $options,
+        ];
         if (isset($this->mockresponse[$this->curresponse])) {
             $response = $this->mockresponse[$this->curresponse];
             $this->curresponse++;

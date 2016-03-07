@@ -23,6 +23,9 @@
 
 namespace local_o365\adminsetting;
 
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
+
 /**
  * Admin setting to detect and set permissions in Azure AD.
  */
@@ -90,7 +93,7 @@ class azuresetup extends \admin_setting {
         } else {
             $icon = $OUTPUT->pix_icon('i/warning', 'prerequisite not complete', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_detectperms_nocreds', 'local_o365'));
-            $settinghtml .= \html_writer::tag('div', $icon.$message, ['class' => 'alert-info local_o365_statusmessage']);
+            $settinghtml .= \html_writer::tag('div', $icon.$message, ['class' => 'alert-info alert local_o365_statusmessage']);
         }
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.

@@ -71,6 +71,9 @@ class ucp extends base {
      */
     public function mode_calendar() {
         global $DB, $USER, $OUTPUT, $PAGE;
+
+        $PAGE->navbar->add(get_string('ucp_calsync_title', 'local_o365'), new \moodle_url('/local/o365/ucp.php?action=calendar'));
+
         if (empty($this->o365connected)) {
             throw new \moodle_exception('ucp_notconnected', 'local_o365');
         }
@@ -113,7 +116,7 @@ class ucp extends base {
         } else if ($fromform = $mform->get_data()) {
             \local_o365\feature\calsync\form\subscriptions::update_subscriptions($fromform, $primarycalid,
                     $customdata['cancreatesiteevents'], $customdata['cancreatecourseevents']);
-            redirect(new \moodle_url('/local/o365/ucp.php'));
+            redirect(new \moodle_url('/local/o365/ucp.php?action=calendar&saved=1'));
         } else {
             $PAGE->requires->jquery();
             $defaultdata = [];
@@ -185,6 +188,10 @@ class ucp extends base {
      * Connect to o365 without switching user's login method.
      */
     public function mode_connecttoken() {
+        global $USER;
+        if (\local_o365\utils::is_o365_connected($USER->id) !== true) {
+            require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+        }
         $this->doauthrequest(false);
     }
 
@@ -192,7 +199,8 @@ class ucp extends base {
      * Disconnect from o365.
      */
     public function mode_disconnecttoken() {
-        global $CFG;
+        global $CFG, $USER;
+        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
         require_once($CFG->dirroot.'/auth/oidc/auth.php');
         $auth = new \auth_plugin_oidc;
         $auth->set_httpclient(new \auth_oidc\httpclient());
@@ -274,18 +282,22 @@ class ucp extends base {
                     $disconnecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
                     $msg .= '<br /><br />';
                     $msg .= \html_writer::tag('b', get_string('ucp_index_connectionstatus_manage', 'local_o365')).'<br />';
-                    $msg .= $OUTPUT->pix_icon('t/delete', 'valid', 'moodle');
-                    $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
-                    $msg .= '<br />';
+                    if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+                        $msg .= $OUTPUT->pix_icon('t/delete', 'valid', 'moodle');
+                        $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                        $msg .= '<br />';
+                    }
                     $msg .= $OUTPUT->pix_icon('i/reload', 'valid', 'moodle');
                     $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
                 } else {
                     $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
                     $msg .= '<br /><br />';
                     $msg .= get_string('ucp_index_aadlogin_active', 'local_o365');
-                    $disconnecturl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-                    $msg .= '<br /><br />';
-                    $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                    if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+                        $disconnecturl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                        $msg .= '<br /><br />';
+                        $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                    }
                 }
                 break;
 
@@ -302,9 +314,11 @@ class ucp extends base {
                 $classes .= ' alert-error';
                 $icon = $OUTPUT->pix_icon('i/info', 'valid', 'moodle');
                 $msg = get_string('ucp_index_connectionstatus_notconnected', 'local_o365');
-                $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
-                $msg .= '<br /><br />';
-                $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_connect', 'local_o365'));
+                if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+                    $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                    $msg .= '<br /><br />';
+                    $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_connect', 'local_o365'));
+                }
                 break;
         }
 

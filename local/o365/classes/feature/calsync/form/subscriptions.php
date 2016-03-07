@@ -25,6 +25,7 @@ namespace local_o365\feature\calsync\form;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->dirroot.'/lib/formslib.php');
 \MoodleQuickForm::registerElementType('localo365calendar', "$CFG->dirroot/local/o365/classes/feature/calsync/form/element/calendar.php", '\local_o365\feature\calsync\form\element\calendar');
 
@@ -40,9 +41,16 @@ class subscriptions extends \moodleform {
 
         $mform =& $this->_form;
 
+        $saved = optional_param('saved', 0, PARAM_INT);
+
+        if (!empty($saved)) {
+            $mform->addElement('html', \html_writer::div(get_string('changessaved'), 'alert alert-success'));
+        }
+
         $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
         $mform->addElement('html', \html_writer::div(get_string('ucp_calsync_desc', 'local_o365')));
         $mform->addElement('html', '<br />');
+
         $mform->addElement('html', \html_writer::tag('b', get_string('ucp_calsync_availcal', 'local_o365')));
 
         $checkboxattrs = ['class' => 'calcheckbox', 'group' => '1'];

@@ -23,6 +23,9 @@
 
 namespace local_o365\adminsetting;
 
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
+
 /**
  * Admin setting to configure an o365 service.
  */
@@ -59,12 +62,12 @@ class serviceresource extends \admin_setting_configtext {
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
                 $strvalid = get_string('settings_serviceresourceabstract_valid', 'local_o365', $this->visiblename);
                 $statusmessage = \html_writer::tag('span', $strvalid, ['class' => 'statusmessage']);
-                $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-success local_o365_statusmessage');
+                $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-success alert local_o365_statusmessage');
             } else {
                 $icon = $OUTPUT->pix_icon('i/warning', 'valid', 'moodle');
                 $strnocreds = get_string('settings_serviceresourceabstract_empty', 'local_o365');
                 $statusmessage = \html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
-                $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-info local_o365_statusmessage');
+                $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
             }
 
             // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
@@ -102,7 +105,7 @@ class serviceresource extends \admin_setting_configtext {
             $icon = $OUTPUT->pix_icon('i/warning', 'valid', 'moodle');
             $strnocreds = get_string('settings_serviceresourceabstract_nocreds', 'local_o365');
             $statusmessage = \html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
-            $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-info local_o365_statusmessage');
+            $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
         }
 
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
