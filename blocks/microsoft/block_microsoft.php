@@ -146,7 +146,8 @@ class block_microsoft extends block_base {
 
         $items = [];
 
-        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID
+                && !empty(get_config('block_microsoft', 'settings_showcoursespsite'))) {
             if (!empty($o365config->sharepointlink)) {
                 $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
                 if (!empty($coursespsite)) {
@@ -162,10 +163,17 @@ class block_microsoft extends block_base {
         }
 
         $items[] = $this->render_onenote();
-        $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
-        $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
 
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+        if (!empty(get_config('block_microsoft', 'settings_showoutlooksync'))) {
+            $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
+        }
+
+        if (!empty(get_config('block_microsoft', 'settings_showpreferences'))) {
+            $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
+        }
+
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true
+                && !empty(get_config('block_microsoft', 'settings_showmanageo365conection'))) {
             $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
             $connectstr = get_string('linkconnection', 'block_microsoft');
             $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
@@ -189,13 +197,13 @@ class block_microsoft extends block_base {
     protected function get_content_notconnected() {
         global $DB, $USER, $OUTPUT;
         $html = '<h5>'.get_string('notconnected', 'block_microsoft').'</h5>';
-
         $connecturl = new \moodle_url('/local/o365/ucp.php');
         $connectstr = get_string('connecttoo365', 'block_microsoft');
 
         $items = [];
-
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+        
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true &&
+            !empty(get_config('block_microsoft', 'settings_showo365connect'))) {
             $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
         }
 
@@ -263,6 +271,12 @@ class block_microsoft extends block_base {
      */
     protected function render_onenote() {
         global $USER, $PAGE;
+
+        $onenotelinksenabled = get_config('block_microsoft', 'settings_showonenotenotebook');
+        if (empty($onenotelinksenabled)) {
+            return '';
+        }
+
         $action = optional_param('action', '', PARAM_TEXT);
         try {
             $onenoteapi = \local_onenote\api\base::getinstance();
