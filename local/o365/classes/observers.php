@@ -214,7 +214,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_created(\core\event\user_enrolment_created $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
 
@@ -227,17 +227,14 @@ class observers {
 
         try {
             // Add user from course usergroup.
-            $configsetting = get_config('local_o365', 'creategroups');
-            if (!empty($configsetting)) {
-                $httpclient = new \local_o365\httpclient();
-                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $aadresource = \local_o365\rest\azuread::get_resource();
-                $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
-                if (!empty($aadtoken)) {
-                    $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
-                    $aadclient->add_user_to_course_group($courseid, $userid);
-                    return true;
-                }
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $aadresource = \local_o365\rest\azuread::get_resource();
+            $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
+            if (!empty($aadtoken)) {
+                $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
+                $aadclient->add_user_to_course_group($courseid, $userid);
+                return true;
             }
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage());
@@ -257,7 +254,7 @@ class observers {
     public static function handle_user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
 
@@ -270,17 +267,14 @@ class observers {
 
         try {
             // Remove user from course usergroup.
-            $configsetting = get_config('local_o365', 'creategroups');
-            if (!empty($configsetting)) {
-                $httpclient = new \local_o365\httpclient();
-                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $aadresource = \local_o365\rest\azuread::get_resource();
-                $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
-                if (!empty($aadtoken)) {
-                    $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
-                    $aadclient->remove_user_from_course_group($courseid, $userid);
-                    return true;
-                }
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $aadresource = \local_o365\rest\azuread::get_resource();
+            $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
+            if (!empty($aadtoken)) {
+                $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
+                $aadclient->remove_user_from_course_group($courseid, $userid);
+                return true;
             }
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage());
@@ -321,7 +315,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_created(\core\event\course_created $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         $sharepoint = static::construct_sharepoint_api_with_system_user();
@@ -340,7 +334,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_updated(\core\event\course_updated $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         $courseid = $event->objectid;
@@ -364,7 +358,7 @@ class observers {
      */
     public static function handle_course_deleted(\core\event\course_deleted $event) {
         global $DB;
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         $courseid = $event->objectid;
@@ -468,7 +462,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_assigned(\core\event\role_assigned $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         return static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid, $event->contextid);
@@ -485,7 +479,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_unassigned(\core\event\role_unassigned $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         return static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid, $event->contextid);
@@ -503,7 +497,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_capabilities_updated(\core\event\role_capabilities_updated $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         $roleid = $event->objectid;
@@ -527,7 +521,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_deleted(\core\event\role_deleted $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
         }
         $roleid = $event->objectid;
