@@ -39,3 +39,4 @@ $string['lazyload'] = 'Delay Embed Loading (Lazyload)';
 $string['connection_error'] = 'Error while accessing the embedded media. Please try refreshing the page.';
 $string['o365video'] = 'Office 365 Video';
 $string['provider_docsdotcom'] = 'Docs.com';
+$string['provider_powerbi'] = 'Power BI';
