@@ -105,10 +105,8 @@ class usersynccreationrestriction extends \admin_setting {
         if (empty($data) || !is_array($data)) {
             $data = [];
         }
-        $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']]))
-            ? $data['remotefield'] : '';
+        $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']])) ? $data['remotefield'] : '';
         $value = (isset($data['value'])) ? $data['value'] : '';
-
 
         $html = \html_writer::start_tag('div');
 
