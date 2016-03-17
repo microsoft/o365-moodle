@@ -156,6 +156,7 @@ class main {
         $apiclient = $this->construct_outlook_api($muserid, true);
         $size = $apiclient->get_photo_metadata($user);
         $muser = $DB->get_record('user', array('id' => $muserid), 'id, picture', MUST_EXIST);
+        $context = \context_user::instance($muserid, MUST_EXIST);
         // If there is no meta data, there is no photo.
         if (empty($size)) {
             // Profile photo has been deleted.
@@ -182,7 +183,6 @@ class main {
                 }
                 fwrite($fp, $image);
                 fclose($fp);
-                $context = \context_user::instance($muserid, MUST_EXIST);
                 $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                 $photoid = $size['@odata.mediaEtag'];
                 if ($newpicture != $muser->picture) {
