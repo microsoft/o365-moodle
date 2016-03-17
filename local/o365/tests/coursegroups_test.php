@@ -187,7 +187,6 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         ];
         $httpclient->set_response(json_encode($memberresponse));
 
-
         $coursegroups = $this->constructcoursegroupsinstance($httpclient);
         list($toadd, $toremove) = $coursegroups->resync_group_membership($course->id, 'testgroupobjectid');
 
