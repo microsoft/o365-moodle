@@ -43,13 +43,13 @@ class utils {
 
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
-            \auth_oidc\utils::debug('Bad response received', $caller, $response);
+            self::debug('Bad response received', $caller, $response);
             throw new \moodle_exception('erroroidccall', 'auth_oidc');
         }
 
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
-            \auth_oidc\utils::debug($errmsg, $caller, $result);
+            self::debug($errmsg, $caller, $result);
             if (isset($result['error_description'])) {
                 throw new \moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
             } else {
@@ -60,15 +60,15 @@ class utils {
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "'.$key.'"';
-                \auth_oidc\utils::debug($errmsg, $caller, $result);
+                self::debug($errmsg, $caller, $result);
                 throw new \moodle_exception('erroroidccall', 'auth_oidc');
             }
 
             if ($val !== null && $result[$key] !== $val) {
-                $strreceivedval = \auth_oidc\utils::tostring($result[$key]);
-                $strval = \auth_oidc\utils::tostring($val);
+                $strreceivedval = self::tostring($result[$key]);
+                $strval = self::tostring($val);
                 $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
-                \auth_oidc\utils::debug($errmsg, $caller, $result);
+                self::debug($errmsg, $caller, $result);
                 throw new \moodle_exception('erroroidccall', 'auth_oidc');
             }
         }
