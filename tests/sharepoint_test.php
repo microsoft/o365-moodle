@@ -103,7 +103,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
             "Configuration":0,
             "Created":"2014-12-11T14:16:28",
             "CustomMasterUrl":"/moodle/'.$url.'/_catalogs/masterpage/seattle.master",
-            "Description":"'.addslashes($description).'",
+            "Description":'.json_encode($description).',
             "DocumentLibraryCalloutOfficeWebAppPreviewersDisabled":false,
             "EnableMinimalDownload":true,
             "Id":"000000000-1111-2222-3333-444455556666",
