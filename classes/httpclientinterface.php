@@ -35,7 +35,7 @@ interface httpclientinterface {
       * @param array $options
       * @return bool
       */
-     public function post($url, $params = '', $options = array());
+    public function post($url, $params = '', $options = array());
 
      /**
       * HTTP GET method
@@ -45,7 +45,7 @@ interface httpclientinterface {
       * @param array $options
       * @return bool
       */
-     public function get($url, $params = array(), $options = array());
+    public function get($url, $params = array(), $options = array());
 
      /**
       * HTTP PATCH method
@@ -55,7 +55,7 @@ interface httpclientinterface {
       * @param array $options
       * @return bool
       */
-     public function patch($url, $params = '', $options = array());
+    public function patch($url, $params = '', $options = array());
 
     /**
      * HTTP DELETE method
@@ -65,14 +65,14 @@ interface httpclientinterface {
      * @param array $options
      * @return bool
      */
-     public function delete($url, $param = array(), $options = array());
+    public function delete($url, $param = array(), $options = array());
 
     /**
      * Set HTTP Request Header
      *
      * @param array $header
      */
-     public function setHeader($header);
+    public function setHeader($header);
 
      /**
       * Resets the HTTP Request headers (to prepare for the new request)
