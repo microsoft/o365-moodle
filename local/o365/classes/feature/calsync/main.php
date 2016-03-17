@@ -32,7 +32,7 @@ class main {
         $this->httpclient = (!empty($httpclient)) ? $httpclient : new \local_o365\httpclient();
     }
 
-	/**
+    /**
      * Construct a calendar API client using the system API user.
      *
      * @param int $muserid The userid to get the outlook token for.
