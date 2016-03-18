@@ -22,7 +22,6 @@
  */
 
 namespace filter_oembed\provider;
-require_once($CFG->dirroot.'\filter\oembed\classes\rest\powerbi.php');
 /**
  * oEmbed provider implementation for Docs.com
  */
