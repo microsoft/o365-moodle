@@ -28,7 +28,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/filelib.php');
-require_once($CFG->dirroot.'\filter\oembed\classes\provider\powerbi.php');
 /**
  * Filter for processing HTML content containing links to media from services that support the OEmbed protocol.
  * The filter replaces the links with the embeddable content returned from the service via the Oembed protocol.
@@ -54,6 +53,10 @@ class filter_oembed extends moodle_text_filter {
                         array(array('courseid' => 0)));
                 $jsinitialised = true;
             }
+        }
+        if (get_config('filter_oembed', 'provider_powerbi_enabled')) {
+            global $PAGE;
+            $PAGE->requires->yui_module('moodle-filter_oembed-powerbiloader', 'M.filter_oembed.init_powerbiloader');
         }
     }
 
