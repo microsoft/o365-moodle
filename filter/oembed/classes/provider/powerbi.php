@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,7 +22,6 @@
  */
 
 namespace filter_oembed\provider;
-require_once($CFG->dirroot.'\filter\oembed\classes\rest\powerbi.php');
 /**
  * oEmbed provider implementation for Docs.com
  */
@@ -35,28 +33,19 @@ class powerbi extends base {
      * @return string The replacement text/HTML.
      */
     public function get_replacement($matched) {
-        
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $resource = \filter_oembed\rest\powerbi::get_resource();
         $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
-        
         if (!empty($token)) {
-            global $PAGE;
-            $powerbi = new \filter_oembed\rest\powerbi($token, $httpclient); 
-            $PAGE->requires->yui_module('moodle-filter_oembed-powerbiloader', 'M.filter_oembed.init_powerbiloader',
-                array('token'=> $token->get_token()));
-            if($matched[4] == 'reports'){
+            $powerbi = new \filter_oembed\rest\powerbi($token, $httpclient);
+            if ($matched[6] == 'reports') {
                 $reportsdata = $powerbi->apicall('get', 'reports');
-                $embedUrl = $powerbi->getreportoembedurl($matched[5], $reportsdata);
-                return $this->getembedhtml($embedUrl);
+                $embedurl = $powerbi->getreportoembedurl($matched[7], $reportsdata);
+                $embedhtml = $this->getembedhtml($embedurl);
+                $embedhtml .= '<input type="hidden" class="token" value="' . $token->get_token(). '">';
+                return $embedhtml;
             }
-            
-            if($matched[4] == 'dashboards'){
-                $tilesdata = $powerbi->apicall('get', 'Dashboards/'. $matched[5] . '/Tiles');
-//                return '<div class="filter_oembed_docsdotcom">'.$this->getembedhtml($matched[5], $tilesdata).'</div>';
-            }
-            
         }
         return $matched[0];
     }
@@ -68,11 +57,12 @@ class powerbi extends base {
      * @return string Filtered text.
      */
     public function filter($text) {
-        $search = '#<a\s[^>]*href="https:\/\/(app\.)?powerbi\.com\/(.+?)\/(.+?)\/(.+?)\/(.+?)\/(.+?)+"\>(.*?)</a>#is';
+        $search = '/<a\s[^>]*href="(https?:\/\/(app\.)?)(powerbi\.com)\/(.+?)\/(.+?)\/(.+?)\/(.+?)\/(.+?)"(.*?)>(.*?)<\/a>/is';
         return preg_replace_callback($search, [$this, 'get_replacement'], $text);
     }
-    
-    private function getembedhtml($embedUrl){
-        return '<iframe id="powerbi_iframe" src="'. $embedUrl . '" height="768px" width="99%" frameborder="0" seamless></iframe>';
+
+    private function getembedhtml($embedurl) {
+        return '<iframe class="powerbi_iframe" src="'. $embedurl . '" '
+                . 'height="768px" width="99%" frameborder="0" seamless></iframe>';
     }
 }

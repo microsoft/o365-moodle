@@ -27,7 +27,6 @@ namespace filter_oembed\rest;
  * API client for Power BI.
  */
 class powerbi extends \local_o365\rest\o365api {
-    
     /**
      * Get the base URI that API calls should be sent to.
      *
@@ -36,7 +35,6 @@ class powerbi extends \local_o365\rest\o365api {
     public function get_apiuri() {
         return "https://api.powerbi.com/beta/myorg/";
     }
-    
     /**
      * Get the API client's oauth2 resource.
      *
@@ -45,20 +43,12 @@ class powerbi extends \local_o365\rest\o365api {
     public static function get_resource() {
         return 'https://analysis.windows.net/powerbi/api';
     }
-    
     public function getreportoembedurl($reportid, $reportsdata) {
-        
         $reportsdata = $this->process_apicall_response($reportsdata);
-        
-        foreach ($reportsdata['value'] as $report){
-            if($report['id'] == $reportid){
+        foreach ($reportsdata['value'] as $report) {
+            if ($report['id'] == $reportid) {
                 return $report['embedUrl'];
             }
         }
-        
-    }
-    
-    public function gettilesoembedhtml($dashboardid) {
-        
     }
 }
