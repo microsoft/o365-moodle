@@ -252,6 +252,10 @@ class repository_office365 extends \repository {
                 // Path is in course files.
                 list($list, $breadcrumb) = $this->get_listing_course(substr($path, 8));
             }
+        } else if (strpos($path, '/trending/') === 0) {
+            
+            list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 8));
+            
         } else {
             if ($unifiedactive === true || $onedriveactive === true) {
                 $list[] = [
@@ -265,6 +269,14 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('courses', 'repository_office365'),
                     'path' => '/courses/',
+                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                    'children' => [],
+                ];
+            }
+            if ($unifiedactive === true) {
+                $list[] = [
+                    'title' => get_string('trendingaround', 'repository_office365'),
+                    'path' => '/trending/',
                     'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
                     'children' => [],
                 ];
@@ -598,6 +610,29 @@ class repository_office365 extends \repository {
             }
             $breadcrumb[] = ['name' => $pathname, 'path' => $curpath];
         }
+        return [$list, $breadcrumb];
+    }
+    
+    /**
+     * Get listing for a trending files folder using the unified api.
+     *
+     * @param string $path Folder path.
+     * @return array List of $list array and $path array.
+     */
+    protected function get_listing_trending_unified($path = '') {
+        $path = (empty($path)) ? '/' : $path;
+
+        $list = [];
+        $unified = $this->get_unified_apiclient();
+        $realpath = $path;
+        
+        $contents = $unified->get_trending_files($realpath);
+        $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
+        
+        // Generate path.
+        $strtrendingfiles = get_string('trendingaround', 'repository_office365');
+        $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strtrendingfiles, 'path' => '/trending/']];
+        
         return [$list, $breadcrumb];
     }
 
