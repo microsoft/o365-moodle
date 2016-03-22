@@ -382,8 +382,18 @@ function xmldb_local_o365_upgrade($oldversion) {
             $DB->delete_records('user_info_data', array('fieldid' => $field->id));
             $DB->delete_records('user_info_field', array('id' => $field->id));
         }
+        // Update old endpoints.
+        $config = get_config('local_o365');
+        if ($config->authendpoint == 'https://login.windows.net/common/oauth2/authorize') {
+            set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'local_o365');
+        }
+        
+        if ($config->tokenendpoint == 'https://login.windows.net/common/oauth2/token') {
+            set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'local_o365');
+        }
+        
         upgrade_plugin_savepoint($result, '2015111905', 'local', 'o365');
     }
-
+    
     return $result;
 }
