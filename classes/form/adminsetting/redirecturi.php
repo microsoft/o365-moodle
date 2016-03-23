@@ -76,9 +76,8 @@ class redirecturi extends \admin_setting {
      */
     public function output_html($data, $query = '') {
         global $CFG;
-
-        $wwwroot = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
-        $html = \html_writer::tag('h5', $wwwroot.'/auth/oidc/');
+        $redirecturl = \auth_oidc\utils::get_redirecturl();
+        $html = \html_writer::tag('h5', $redirecturl);
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', null, $query);
     }
 }
