@@ -74,6 +74,28 @@ class utils {
     }
 
     /**
+     * Get the UPN of the connected Office 365 account.
+     *
+     * @param int $userid The Moodle user id.
+     * @return string|null The UPN of the connected Office 365 account, or null if none found.
+     */
+    public static function get_o365_upn($userid) {
+        global $DB;
+        $sql = 'SELECT *
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u ON tok.username = u.username
+                 WHERE tok.resource = ? AND u.id = ? ORDER BY tok.id DESC';
+        $params = ['https://graph.windows.net', $userid];
+        $records = $DB->get_records_sql($sql, $params, 0, 1);
+        if (!empty($records)) {
+            $record = reset($records);
+           return (!empty($record) && !empty($record->oidcusername)) ? $record->oidcusername : null;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Determine if a user is connected to Office 365.
      *
      * @param int $userid The user's ID.
