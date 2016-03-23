@@ -670,6 +670,105 @@ class acp extends base {
         die();
     }
 
+    public function mode_maintenance_debugdata() {
+        global $CFG;
+
+        if (!empty($CFG->local_o365_disabledebugdata)) {
+            return false;
+        }
+
+        $pluginmanager = \core_plugin_manager::instance();
+
+        $plugins = [
+            'auth_oidc' => [
+                'authendpoint',
+                'tokenendpoint',
+                'oidcresource',
+                'autoappend',
+                'domainhint',
+                'loginflow',
+                'debugmode',
+            ],
+            'block_microsoft' => [
+                'showo365download',
+                'settings_showonenotenotebook',
+                'settings_showoutlooksync',
+                'settings_showpreferences',
+                'settings_showo365connect',
+                'settings_showmanageo365conection',
+                'settings_showcoursespsite',
+            ],
+            'filter_oembed' => [
+                'o365video',
+                'officemix',
+                'sway',
+                'provider_docsdotcom_enabled',
+            ],
+            'local_microsoftservices' => [],
+            'local_msaccount' => [],
+            'local_o365' => [
+                'aadsync',
+                'aadtenant',
+                'azuresetupresult',
+                'chineseapi',
+                'creategroups',
+                'debugmode',
+                'enableunifiedapi',
+                'fieldmap',
+                'odburl',
+                'photoexpire',
+                'usersynccreationrestriction',
+                'sharepoint_initialized',
+                'task_usersync_lastskiptoken',
+                'unifiedapiactive',
+            ],
+            'local_office365' => [],
+            'local_onenote' => [],
+            'assignsubmission_onenote' => [],
+            'assignfeedback_onenote' => [],
+            'repository_office365' => [],
+            'repository_onenote' => [],
+        ];
+
+        $configdata = [];
+
+        $configdata['moodlecfg'] = [
+            'dbtype' => $CFG->dbtype,
+            'debug' => $CFG->debug,
+            'debugdisplay' => $CFG->debugdisplay,
+            'debugdeveloper' => $CFG->debugdeveloper,
+            'auth' => $CFG->auth,
+            'timezone' => $CFG->timezone,
+            'forcetimezone' => $CFG->forcetimezone,
+            'authpreventaccountcreation' => $CFG->authpreventaccountcreation,
+            'alternateloginurl' => $CFG->alternateloginurl,
+            'release' => $CFG->release,
+            'version' => $CFG->version,
+        ];
+
+        $configdata['plugin_data'] = [];
+        foreach ($plugins as $plugin => $settings) {
+            $plugintype = substr($plugin, 0, strpos($plugin, '_'));
+            $pluginsubtype = substr($plugin, strpos($plugin, '_') + 1);
+
+            $plugindata = [];
+            $plugincfg = get_config($plugin);
+
+            $plugindata['version'] = (isset($plugincfg->version)) ? $plugincfg->version : 'null';
+
+            $enabled = $pluginmanager->get_enabled_plugins($plugintype);
+            $plugindata['enabled'] = (isset($enabled[$pluginsubtype])) ? 1 : 0;
+
+            foreach ($settings as $setting) {
+                $plugindata[$setting] = (isset($plugincfg->$setting)) ? $plugincfg->$setting : null;
+            }
+
+            $configdata['plugin_data'][$plugin] = $plugindata;
+        }
+
+        echo json_encode($configdata);
+    }
+
     /**
      * Endpoint to sync sharepoint subsite UI display with existing shareoint subsites.
      */
@@ -896,7 +995,7 @@ class acp extends base {
      * Maintenance tools.
      */
     public function mode_maintenance() {
-        global $DB, $OUTPUT, $PAGE, $SESSION;
+        global $DB, $OUTPUT, $PAGE, $SESSION, $CFG;
         $PAGE->navbar->add(get_string('acp_maintenance', 'local_o365'), new \moodle_url($this->url, ['mode' => 'maintenance']));
         $PAGE->requires->jquery();
         $this->standard_header();
@@ -916,6 +1015,14 @@ class acp extends base {
         echo \html_writer::empty_tag('br');
         echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
         echo \html_writer::div(get_string('acp_maintenance_coursegroupscheck_desc', 'local_o365'));
+
+        if (empty($CFG->local_o365_disabledebugdata)) {
+            $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_debugdata']);
+            $toolname = get_string('acp_maintenance_debugdata', 'local_o365');
+            echo \html_writer::empty_tag('br');
+            echo \html_writer::link($toolurl, $toolname);
+            echo \html_writer::div(get_string('acp_maintenance_debugdata_desc', 'local_o365'));
+        }
 
         $this->standard_footer();
     }
