@@ -110,4 +110,10 @@ class utils {
             $event->trigger();
         }
     }
+
+    public static function get_redirecturl() {
+        global $CFG;
+        $wwwroot = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
+        return $wwwroot.'/auth/oidc/';
+    }
 }
