@@ -215,6 +215,41 @@ class ajax extends base {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
         }
 
+        // App data.
+        $appdata = new \stdClass;
+        try {
+            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+            $appinfo = $aadapiclient->get_application_info();
+            $correctredirecturl = \auth_oidc\utils::get_redirecturl();
+
+            // Check reply url.
+            if (isset($appinfo['value'][0]['replyUrls'])) {
+                $redirecturls = (array)$appinfo['value'][0]['replyUrls'];
+                $appdata->replyurl = new \stdClass;
+                $appdata->replyurl->correct = false;
+                $appdata->replyurl->detected = implode(', ', $redirecturls);
+                $appdata->replyurl->intended = $correctredirecturl;
+                foreach ($redirecturls as $redirecturl) {
+                    if ($redirecturl === $correctredirecturl) {
+                        $appdata->replyurl->correct = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isset($appinfo['value'][0]['homepage'])) {
+                $appdata->signonurl = new \stdClass;
+                $appdata->signonurl->correct = ($appinfo['value'][0]['homepage'] === $correctredirecturl) ? true : false;
+                $appdata->signonurl->detected = $appinfo['value'][0]['homepage'];
+                $appdata->signonurl->intended = $correctredirecturl;
+            }
+
+        } catch (\Exception $e) {
+            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
+            $appdata->error = $e->getMessage();
+        }
+        $data->appdata = $appdata;
+
         // Legacy API.
         $legacyapi = new \stdClass;
         try {
