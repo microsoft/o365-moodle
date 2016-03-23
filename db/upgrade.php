@@ -147,5 +147,19 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015012722.01', 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2015012723.01) {
+        // Update old endpoints.
+        $config = get_config('auth_oidc');
+        if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
+            set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_oidc');
+        }
+
+        if ($config->tokenendpoint === 'https://login.windows.net/common/oauth2/token') {
+            set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
+        }
+
+        upgrade_plugin_savepoint($result, '2015012723.01', 'auth', 'oidc');
+    }
+
     return $result;
 }
