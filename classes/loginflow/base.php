@@ -141,7 +141,7 @@ class base {
      *
      * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
      */
-    public function disconnect($justremovetokens = false, \moodle_url $redirect = null) {
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null) {
         if ($redirect === null) {
             $redirect = new \moodle_url('/auth/oidc/ucp.php');
         }
@@ -187,9 +187,12 @@ class base {
             $customdata = [
                 'canchooseusername' => $ccun,
                 'prevmethod' => $prevauthmethod,
+                'donotremovetokens' => $donotremovetokens,
+                'redirect' => $redirect,
             ];
 
-            $mform = new \auth_oidc\form\disconnect('?action=disconnectlogin', $customdata);
+            $submiturl = new \moodle_url('/auth/oidc/ucp.php?action=disconnectlogin');
+            $mform = new \auth_oidc\form\disconnect($submiturl, $customdata);
 
             if ($mform->is_cancelled()) {
                 redirect($redirect);
@@ -245,14 +248,20 @@ class base {
                 }
 
                 // Delete token data.
-                $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
+                if (empty($fromform->donotremovetokens)) {
+                    $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
 
-                $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
-                $event = \auth_oidc\event\user_disconnected::create($eventdata);
-                $event->trigger();
+                    $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+                    $event = \auth_oidc\event\user_disconnected::create($eventdata);
+                    $event->trigger();
+                }
 
                 $USER = $DB->get_record('user', ['id' => $USER->id]);
-                redirect($redirect);
+                if (!empty($fromform->redirect)) {
+                    redirect($fromform->redirect);
+                } else {
+                    redirect($redirect);
+                }
             }
 
             echo $OUTPUT->header();
