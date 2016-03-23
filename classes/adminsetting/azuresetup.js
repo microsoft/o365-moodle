@@ -40,6 +40,17 @@ $.fn.azuresetup = function(options) {
         strerrorcheck: 'An error occurred trying to check Azure setup.',
         strnoinfo: 'We don\'t have any information about your Azure setup yet. Please click the Update button to check.',
 
+        strappdataheader: 'Azure Application',
+        strappdatadesc: 'Verifies the correct parameters are set up in Azure.',
+        strappdatareplyurlcorrect: 'Reply URL Correct',
+        strappdatareplyurlincorrect: 'Reply URL Incorrect',
+        strappdatareplyurlgeneralerror: 'Could not check reply url.',
+        strappdatasignonurlcorrect: 'Sign-on URL Correct.',
+        strappdatasignonurlincorrect: 'Sign-on URL Incorrect',
+        strappdatasignonurlgeneralerror: 'Could not check sign-on url.',
+        strdetectedval: 'Detected Value:',
+        strcorrectval: 'Correct Value:',
+
         showunified: false,
         strunifiedheader: 'Unified API',
         strunifieddesc: 'The unified API replaces the existing application-specific APIs. If available, you should add this to your Azure application.',
@@ -220,6 +231,45 @@ $.fn.azuresetup = function(options) {
         }
         if (typeof(results.success) != 'undefined') {
             if (results.success === true && typeof(results.data) != 'undefined') {
+
+                // Azure application check.
+                if (typeof(results.data.appdata) !== 'undefined') {
+                    var appdata = $('<section></section>');
+                    appdata.append('<h5>'+opts.strappdataheader+'</h5>');
+                    appdata.append('<span>'+opts.strappdatadesc+'</h5>');
+
+                    if (typeof(results.data.appdata.error) === 'undefined') {
+                        if (typeof(results.data.appdata.replyurl) !== 'undefined') {
+                            if (results.data.appdata.replyurl.correct === true) {
+                                appdata.append(main.rendersuccessbox(opts.strappdatareplyurlcorrect));
+                            } else {
+                                var errstr = strappdatareplyurlincorrect+' <br />';
+                                errstr += opts.strdetectedval+' <b>'+results.data.appdata.replyurl.detected+'</b><br />';
+                                errstr += opts.strcorrectval+' <b>'+results.data.appdata.replyurl.intended+'</b>';
+                                appdata.append(main.rendererrorbox(errstr));
+                            }
+                        } else {
+                            appdata.append(main.renderinfobox(opts.strappdatareplyurlgeneralerror));
+                        }
+
+                        if (typeof(results.data.appdata.signonurl) !== 'undefined') {
+                            if (results.data.appdata.signonurl.correct === true) {
+                                appdata.append(main.rendersuccessbox(opts.strappdatasignonurlcorrect));
+                            } else {
+                                var errstr = opts.strappdatasignonurlincorrect+' <br />';
+                                errstr += opts.strdetectedval+' <b>'+results.data.appdata.signonurl.detected+'</b><br />';
+                                errstr += opts.strcorrectval+' <b>'+results.data.appdata.signonurl.intended+'</b>';
+                                appdata.append(main.rendererrorbox(errstr));
+                            }
+                        } else {
+                            appdata.append(main.renderinfobox(opts.strappdatasignonurlgeneralerror));
+                        }
+                    } else {
+                        appdata.append(main.rendererrorbox(results.data.appdata.error));
+                    }
+                    content.append(appdata);
+                }
+
                 if (opts.showunified === true) {
                     // Unified API.
                     var unified = $('<section></section>');
