@@ -150,12 +150,17 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     if ($result && $oldversion < 2015111905) {
         // Update old endpoints.
         $config = get_config('auth_oidc');
-        if ($config->authendpoint == 'https://login.windows.net/common/oauth2/authorize') {
-            set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_oidc');
+        
+        $regex_authorize = '/(https:\/\/)(login\.windows\.net)(\/.+\/oauth2\/authorize)/i';
+        
+        if (preg_match($regex_authorize, $config->authendpoint, $matches)) {
+            set_config('authendpoint', $matches[1] . 'login.microsoftonline.com' . $matches[3], 'auth_oidc');
         }
         
-        if ($config->tokenendpoint == 'https://login.windows.net/common/oauth2/token') {
-            set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
+        $regex_token = '/(https:\/\/)(login\.windows\.net)(\/.+\/oauth2\/token)/i';
+        
+        if (preg_match($regex_token, $config->tokenendpoint, $matches)) {
+            set_config('tokenendpoint', $matches[1] . 'login.microsoftonline.com' . $matches[3], 'auth_oidc');
         }
         
         upgrade_plugin_savepoint($result, '2015111905', 'auth', 'oidc');
