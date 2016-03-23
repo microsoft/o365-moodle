@@ -110,8 +110,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
      *
      * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
      */
-    public function disconnect($justremovetokens = false, \moodle_url $redirect = null) {
-        return $this->loginflow->disconnect($justremovetokens, $redirect);
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null) {
+        return $this->loginflow->disconnect($justremovetokens, $donotremovetokens, $redirect);
     }
 
     /**
