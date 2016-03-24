@@ -40,6 +40,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_authed(\auth_oidc\event\user_authed $event) {
+        require_login();
+        require_capability('moodle/site:config', \context_system::instance());
+
         $eventdata = $event->get_data();
 
         $tokendata = [
