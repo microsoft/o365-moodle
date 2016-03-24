@@ -36,7 +36,7 @@ $string['healthcheck_systemtoken_result_noclientcreds'] = 'OpenID Connectプラ�
 $string['healthcheck_systemtoken_result_badtoken'] = 'Office&nbsp;365にシステムAPIユーザとして通信できませんでした。これは通常、システムAPIユーザをリセットすることで解決します。';
 $string['healthcheck_systemtoken_result_passed'] = 'MoodleはOffice&nbsp;365にシステムAPIユーザとして通信できます。';
 $string['settings_aadsync'] = 'ユーザをAzure ADと同期する';
-$string['settings_aadsync_details'] = 'この機能を有効にすると、 MoodleとAzure ADのユーザは上記のオプションに従って同期されます。<br /><br /><b>注 : </b>同期ジョブはMoodle cronで実行し、一度に1000ユーザを同期します。デフォルトでは、毎日、サーバのあるタイムゾーンの午前1:00に実行されます。 大きなユーザセットを短時間で同期するには、[<b>ユーザをAzure ADと同期する</b>] のタスクの頻度を増やします (<a href="{$a}">スケジュールタスクの管理ページを使用)。</a><br /><br />詳細な手順は、<a href="https://docs.moodle.org/27/en/Office365#User_sync">ユーザ同期ドキュメント</a>をご覧ください。<br /><br />';
+$string['settings_aadsync_details'] = 'この機能を有効にすると、 MoodleとAzure ADのユーザは上記のオプションに従って同期されます。<br /><br /><b>注 : </b>同期ジョブはMoodle cronで実行し、一度に1000ユーザを同期します。デフォルトでは、毎日、サーバのあるタイムゾーンの午前1:00に実行されます。 大きなユーザセットを短時間で同期するには、[<b>ユーザをAzure ADと同期する</b>] のタスクの頻度を増やします (<a href="{$a}">スケジュールタスクの管理ページを使用)。</a><br /><br />詳細な手順は、<a href="https://docs.moodle.org/28/en/Office365#User_sync">ユーザ同期ドキュメント</a>をご覧ください。<br /><br />';
 $string['settings_aadsync_create'] = 'Azure ADのユーザ向けにMoodleにアカウントを作成する';
 $string['settings_aadsync_delete'] = 'Azure ADからアカウントが削除された場合、以前同期したMoodleのアカウントを削除する';
 $string['settings_aadsync_match'] = '既存のMoodleユーザとAzure ADの同名のアカウントを一致させる<br /><small>これは、Office 365のユーザ名とMoodleのユーザ名を検索し、一致を見つけようとします。一致では、大文字と小文字を区別せず、Office 365テナントを無視します。例えば、MoodleのBoB.SmiThはbob.smith@example.onmicrosoft.comと一致します。一致するユーザは、MoodleアカウントとOfficeアカウントが連結され、すべてのOffice 365/Moodle統合機能を使用できるようになります。ユーザの認証方法は、以下の設定が有効にならない限り、変更されません。</small>';
@@ -59,7 +59,7 @@ $string['settings_azuresetup_legacyheader'] = 'Office&nbsp;365 API';
 $string['settings_azuresetup_legacydesc'] = 'Office&nbsp;365 APIはアプリケーション固有のAPIで構成されています。';
 $string['settings_azuresetup_legacyerror'] = 'Office&nbsp;365 API設定の確認中にエラーが発生しました。';
 $string['settings_creategroups'] = 'ユーザグループを作成する';
-$string['settings_creategroups_details'] = 'この機能を有効にした場合、サイト上のコースごとに、Office&nbsp;365で教師と学生のグループを作成して維持管理します。これにより、cronの実行ごとに必要なグループが作成され、現在のすべてのメンバーが追加されます。その後、グループのメンバーシップは、ユーザのMoodleコースへの登録/登録解除に従って維持管理されます。<br /><b>注 : </b>この機能を利用するには、Azureに追加されたアプリケーションにOffice&nbsp;365統合APIが追加されている必要があります。<a href="https://docs.moodle.org/27/en/Office365#User_groups">設定手順とドキュメント。</a>';
+$string['settings_creategroups_details'] = 'この機能を有効にした場合、サイト上のコースごとに、Office&nbsp;365で教師と学生のグループを作成して維持管理します。これにより、cronの実行ごとに必要なグループが作成され、現在のすべてのメンバーが追加されます。その後、グループのメンバーシップは、ユーザのMoodleコースへの登録/登録解除に従って維持管理されます。<br /><b>注 : </b>この機能を利用するには、Azureに追加されたアプリケーションにOffice&nbsp;365統合APIが追加されている必要があります。<a href="https://docs.moodle.org/28/en/Office365#User_groups">設定手順とドキュメント。</a>';
 $string['settings_o365china'] = '中国向けOffice&nbsp;365';
 $string['settings_o365china_details'] = '中国向けOffice&nbsp;365を使用している場合は、ここをチェックします。';
 $string['settings_debugmode'] = 'デバッグメッセージを記録する';
@@ -101,7 +101,7 @@ $string['settings_sharepointlink_connected'] = 'MoodleはこのSharePointサイ�
 $string['settings_sharepointlink_changelink'] = 'サイトを変更する';
 $string['settings_sharepointlink_initializing'] = 'MoodleはこのSharePointサイトを設定しています。これはMoodle cronの次回実行時に発生します。';
 $string['settings_sharepointlink_enterurl'] = '上にURLを入力します。';
-$string['settings_sharepointlink_details'] = 'MoodleとSharePointを接続するには、Moodleが接続するSharePointサイトの完全URLを入力します。サイトが存在しない場合、Moodleはその作成を試みます。<br /><a href="https://docs.moodle.org/27/en/Office365/SharePoint"> MoodleとSharePointの接続についての詳細をご覧ください。</a>';
+$string['settings_sharepointlink_details'] = 'MoodleとSharePointを接続するには、Moodleが接続するSharePointサイトの完全URLを入力します。サイトが存在しない場合、Moodleはその作成を試みます。<br /><a href="https://docs.moodle.org/28/en/Office365/SharePoint"> MoodleとSharePointの接続についての詳細をご覧ください。</a>';
 $string['settings_sharepointlink_status_invalid'] = 'これは使用できるSharePointサイトではありません。';
 $string['settings_sharepointlink_status_notempty'] = 'このサイトは使用できますが、既に存在しています。Moodleが既存のコンテンツと競合する可能性があります。存在しないSharePointサイトを入力して、Moodleに作成させることをお勧めします。';
 $string['settings_sharepointlink_status_valid'] = 'このSharePointサイトはMoodleによって作成され、Moodleコンテンツのために使用されます。';

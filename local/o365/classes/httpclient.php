@@ -19,7 +19,7 @@
  * @author Dongsheng Cai <dongsheng@moodle.com>
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright Dongsheng Cai <dongsheng@moodle.com>; modified 2015 by Microsoft Open Technologies, Inc.
+ * @copyright Dongsheng Cai <dongsheng@moodle.com>; modified 2015 by Microsoft, Inc.
  */
 
 namespace local_o365;
