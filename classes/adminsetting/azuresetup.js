@@ -243,7 +243,7 @@ $.fn.azuresetup = function(options) {
                             if (results.data.appdata.replyurl.correct === true) {
                                 appdata.append(main.rendersuccessbox(opts.strappdatareplyurlcorrect));
                             } else {
-                                var errstr = strappdatareplyurlincorrect+' <br />';
+                                var errstr = opts.strappdatareplyurlincorrect+' <br />';
                                 errstr += opts.strdetectedval+' <b>'+results.data.appdata.replyurl.detected+'</b><br />';
                                 errstr += opts.strcorrectval+' <b>'+results.data.appdata.replyurl.intended+'</b>';
                                 appdata.append(main.rendererrorbox(errstr));
