@@ -205,7 +205,8 @@ class ucp extends base {
         $auth = new \auth_plugin_oidc;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $redirect = new \moodle_url('/local/o365/ucp.php');
-        $auth->disconnect(true, false, $redirect);
+        $selfurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+        $auth->disconnect(true, false, $redirect, $selfurl);
     }
 
     /**
@@ -218,7 +219,8 @@ class ucp extends base {
         $auth = new \auth_plugin_oidc;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $redirect = new \moodle_url('/local/o365/ucp.php');
-        $auth->disconnect(false, false, $redirect);
+        $selfurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnectlogin']);
+        $auth->disconnect(false, false, $redirect, $selfurl);
     }
 
     /**
@@ -231,7 +233,8 @@ class ucp extends base {
         $auth = new \auth_plugin_oidc;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $redirect = new \moodle_url('/local/o365/ucp.php');
-        $auth->disconnect(false, true, $redirect);
+        $selfurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'migratetolinked']);
+        $auth->disconnect(false, true, $redirect, $selfurl);
     }
 
     /**
