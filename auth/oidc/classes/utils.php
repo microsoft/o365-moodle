@@ -111,6 +111,11 @@ class utils {
         }
     }
 
+    /**
+     * Get the redirect URL that should be set in the identity provider
+     *
+     * @return string The redirect URL.
+     */
     public static function get_redirecturl() {
         global $CFG;
         $wwwroot = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
