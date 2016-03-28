@@ -79,7 +79,7 @@ class observers {
                 $token = \local_o365\oauth2\token::instance($eventdata['userid'], $azureresource, $clientdata, $httpclient);
                 return true;
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage());
+                \local_o365\utils::debug($e->getMessage(), 'handle_oidc_user_connected', $e);
                 return false;
             }
         }
@@ -202,7 +202,7 @@ class observers {
             }
             return true;
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage());
+            \local_o365\utils::debug($e->getMessage(), 'get_additional_user_info', $e);
         }
         return false;
     }
@@ -237,7 +237,7 @@ class observers {
                 return true;
             }
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage());
+            \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_created', $e);
         }
         return false;
     }
@@ -277,7 +277,7 @@ class observers {
                 return true;
             }
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage());
+            \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
         }
         return false;
     }
@@ -300,7 +300,7 @@ class observers {
                 }
             }
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), get_called_class());
+            \local_o365\utils::debug($e->getMessage(), get_called_class(), $e);
         }
         return false;
     }
