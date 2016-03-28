@@ -371,10 +371,10 @@ function filter_oembed_swaycallback($link) {
 /**
  * Makes the OEmbed request to the service that supports the protocol.
  *
- * @param $www URL for the Oembed request
+ * @param $url URL for the Oembed request
  * @return mixed|null|string The HTTP response object from the OEmbed request.
  */
-function filter_oembed_curlcall($www) {
+function filter_oembed_curlcall($url) {
     $curl = new \curl();
     $ret = $curl->get($url);
 
