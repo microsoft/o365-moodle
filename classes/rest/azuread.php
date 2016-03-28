@@ -457,7 +457,7 @@ class azuread extends \local_o365\rest\o365api {
             try {
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage());
+                \local_o365\utils::debug($e->getMessage(), 'rest\azuread\get_muser_upn', $e);
                 return false;
             }
             $resource = static::get_resource();
