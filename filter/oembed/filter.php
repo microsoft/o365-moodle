@@ -323,7 +323,7 @@ function filter_oembed_o365videocallback($link) {
             }
         }
     } catch (\Exception $e) {
-        \local_o365\utils::debug('filter_oembed share point execption: '.$e->getMessage(), 'filter_oembed_o365videocallback');
+        \local_o365\utils::debug('filter_oembed share point execption: '.$e->getMessage(), 'filter_oembed_o365videocallback', $e);
     }
     return $link[0];
 }
