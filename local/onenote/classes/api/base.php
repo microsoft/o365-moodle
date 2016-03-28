@@ -948,6 +948,7 @@ abstract class base {
 
     /**
      * Create a OneNote page inside the given section using the postdata containing the content of the page.
+     *
      * @param string $sectionid Id of OneNote section which the page will be created in.
      * @param string $postdata String containing the postdata containing the contents of the page.
      * @param string $boundary Boundary string to be used during the POST request.
@@ -961,34 +962,27 @@ abstract class base {
                 \local_o365\utils::debug('Could not get user token', 'create_page_from_postdata');
                 return null;
             }
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_HEADER, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $curl = new \curl();
+
             $headers = [
                 'Content-Type: multipart/form-data; boundary='.$boundary,
-                'Authorization: Bearer '.rawurlencode($token)
+                'Authorization: Bearer '.rawurlencode($token),
             ];
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-
-            $rawresponse = curl_exec($ch);
-
-            // Check if curl call fails.
-            if ($rawresponse === false) {
-                $errorno = curl_errno($ch);
-                curl_close($ch);
-
-                // If curl call fails and reason is net connectivity return it or return null.
-                return (in_array($errorno, ['6', '7', '28'])) ? 'connection_error' : null;
+            foreach ($headers as $header) {
+                $curl->setHeader($header);
             }
 
-            $info = curl_getinfo($ch);
-            curl_close($ch);
+            $rawresponse = $curl->post($url, $postdata, ['CURLOPT_HEADER' => 1]);
 
-            if ($info['http_code'] == 201) {
-                $responsewithoutheader = substr($rawresponse, $info['header_size']);
+            // Check if curl call fails.
+            if ($curl->errno != CURLE_OK) {
+                // If curl call fails and reason is net connectivity return it or return null.
+                return (in_array($curl->errno, ['6', '7', '28'])) ? 'connection_error' : null;
+            }
+
+            if ($curl->info['http_code'] == 201) {
+                $responsewithoutheader = substr($rawresponse, $curl->info['header_size']);
                 $response = json_decode($responsewithoutheader);
                 return $response;
             }

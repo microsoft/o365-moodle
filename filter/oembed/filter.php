@@ -375,42 +375,26 @@ function filter_oembed_swaycallback($link) {
  * @return mixed|null|string The HTTP response object from the OEmbed request.
  */
 function filter_oembed_curlcall($www) {
-    $crl = curl_init();
-    $timeout = 15;
-    curl_setopt ($crl, CURLOPT_URL, $www);
-    curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
-    $ret = curl_exec($crl);
+    $curl = new \curl();
+    $ret = $curl->get($url);
 
     // Check if curl call fails.
-    if ($ret === false) {
+    if ($curl->errno != CURLE_OK) {
         // Check if error is due to network connection.
-        if (in_array(curl_errno($crl), array('6', '7', '28'))) {
-
-            // Try curl call for 3 times pausing 0.5 sec.
-            for ($i = 0; $i < 3; $i++) {
-                $ret = curl_exec($crl);
-
-                // If we get proper response, break the loop.
-                if ($ret !== false) {
-                    break;
-                }
-
-                usleep(500000);
-            }
-
-            // If still curl call failing, return null.
-            if ($ret === false) {
+        if (in_array($curl->errno, [6, 7, 28])) {
+            // Try curl call up to 3 times.
+            usleep(50000);
+            $retryno = (!is_int($retryno)) ? 0 : $retryno+1;
+            if ($retryno < 3) {
+                return $this->getoembeddata($url, $retryno);
+            } else {
                 return null;
             }
-
         } else {
             return null;
         }
     }
 
-    curl_close($crl);
     $result = json_decode($ret, true);
     return $result;
 }
