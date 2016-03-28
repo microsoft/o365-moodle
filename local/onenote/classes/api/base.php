@@ -685,7 +685,7 @@ abstract class base {
                 if (!empty($response) && $response != 'connection_error') {
                     break;
                 }
-                usleep(500000);
+                usleep(50000);
             }
         }
 

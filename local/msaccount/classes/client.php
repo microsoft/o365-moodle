@@ -278,7 +278,7 @@ class client extends \oauth2_client {
                     break;
                 }
 
-                usleep(500000);
+                usleep(50000);
             }
         }
 
@@ -312,7 +312,7 @@ class client extends \oauth2_client {
                     break;
                 }
 
-                usleep(500000);
+                usleep(50000);
             }
         }
 
