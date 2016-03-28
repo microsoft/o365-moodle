@@ -54,7 +54,7 @@ class acp extends base {
         echo \html_writer::tag('h2', get_string('acp_healthcheck', 'local_o365'));
         echo '<br />';
 
-        $healthchecks = ['systemapiuser'];
+        $healthchecks = ['systemapiuser', 'ratelimit'];
         foreach ($healthchecks as $healthcheck) {
             $healthcheckclass = '\local_o365\healthcheck\\'.$healthcheck;
             $healthcheck = new $healthcheckclass();
@@ -62,14 +62,23 @@ class acp extends base {
 
             echo '<h5>'.$healthcheck->get_name().'</h5>';
             if ($result['result'] === true) {
-                echo '<div class="alert alert-success">'.$result['message'].'</div>';
+                echo '<div class="alert alert-success">'.$result['message'].'</div><br />';
             } else {
-                echo '<div class="alert alert-error">';
+                switch ($result['severity']) {
+                    case \local_o365\healthcheck\healthcheckinterface::SEVERITY_TRIVIAL:
+                        $severityclass = 'alert-info';
+                        break;
+
+                    default:
+                        $severityclass = 'alert-error';
+                }
+
+                echo '<div class="alert '.$severityclass.'">';
                 echo $result['message'];
                 if (isset($result['fixlink'])) {
                     echo '<br /><br />'.\html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));
                 }
-                echo '</div>';
+                echo '</div><br />';
             }
         }
 
