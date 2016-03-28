@@ -33,9 +33,6 @@ abstract class o365api {
     /** @var \local_o365\httpclientinterface An HTTP client to use for communication. */
     protected $httpclient;
 
-    /** @var bool Disable rate limit protection. */
-    protected $disableratelimit = false;
-
     /**
      * Constructor.
      *
@@ -135,6 +132,14 @@ abstract class o365api {
      * @return string The result of the API call.
      */
     public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
+        // Used if we have to retry due to rate limiting.
+        $origparam = [
+            'httpmethod' => $httpmethod,
+            'apimethod' => $apimethod,
+            'params' => $params,
+            'options' => $options,
+        ];
+
         $tokenvalid = $this->checktoken();
         if ($tokenvalid !== true) {
             throw new \moodle_exception('erroro365apiinvalidtoken', 'local_o365');
@@ -168,14 +173,42 @@ abstract class o365api {
         $this->httpclient->resetHeader();
         $this->httpclient->setHeader($header);
 
-        // Sleep to avoid rate limiting.
-        if (empty($this->disableratelimit)) {
-            usleep(1050000);
-        } else {
-            usleep(250000);
+        // Check if we were rate limited in the last 10 minutes.
+        $ratelimitlevel = 0;
+        $ratelimittime = 0;
+        $ratelimit = get_config('local_o365', 'ratelimit');
+        $ratelimitdisabled = get_config('local_o365', 'ratelimitdisabled');
+        if (empty($ratelimitdisabled)) {
+            if (!empty($ratelimit)) {
+                $ratelimit = explode(':', $ratelimit, 2);
+                if ($ratelimit[1] > (time() - (10 * MINSECS))) {
+                    // Rate limiting enabled.
+                    $ratelimittime = $ratelimit[1];
+                    $ratelimitlevel = $ratelimit[0];
+                    if ($ratelimitlevel >= 4) {
+                        $ratelimitlevel = 4;
+                    }
+                }
+            }
         }
 
-        return $this->httpclient->$httpmethod($requesturi, $params, $options);
+        // Throttle if enabled.
+        if (!empty($ratelimitlevel)) {
+            usleep((260000 * $ratelimitlevel));
+        } else {
+            // Small sleep to help prevent throttling in the first place.
+            usleep(100000);
+        }
+
+        $result = $this->httpclient->$httpmethod($requesturi, $params, $options);
+        if ($this->httpclient->info['http_code'] == 429) {
+            // We are being throttled.
+            $ratelimitlevel++;
+            set_config('ratelimit', $ratelimitlevel.':'.time(), 'local_o365');
+            return $this->apicall($origparam['httpmethod'], $origparam['apimethod'], $origparam['params'], $origparam['options']);
+        } else {
+            return $result;
+        }
     }
 
     /**
