@@ -316,8 +316,7 @@ class block_microsoft extends block_base {
             return $output;
         } catch (\Exception $e) {
             if (class_exists('\local_o365\utils')) {
-                $debuginfo = (!empty($e->debuginfo)) ? $e->debuginfo : null;
-                \local_o365\utils::debug($e->getMessage(), 'block_microsoft', $debuginfo);
+                \local_o365\utils::debug($e->getMessage(), 'block_microsoft', $e);
             }
             return '<span class="block_microsoft_onenote servicelink">'.get_string('linkonenote_unavailable', 'block_microsoft')
                     .'<br /><small>'.get_string('contactadmin', 'block_microsoft').'</small></span>';

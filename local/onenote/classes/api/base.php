@@ -987,7 +987,7 @@ abstract class base {
                 return $response;
             }
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage());
+            \local_o365\utils::debug($e->getMessage(), 'create_page_from_postdata', $e);
         }
 
         return null;
