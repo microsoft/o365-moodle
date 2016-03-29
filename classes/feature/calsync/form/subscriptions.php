@@ -123,12 +123,9 @@ class subscriptions extends \moodleform {
         // Handle changes to site and user calendar subscriptions.
         foreach (['site', 'user'] as $caltype) {
             $formkey = $caltype.'cal';
-            $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked']))
-                    ? true : false;
-            $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith']))
-                    ? $fromform->{$formkey}['syncwith'] : '';
-            $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav']))
-                    ? $fromform->{$formkey}['syncbehav'] : 'out';
+            $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) ? true : false;
+            $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith'])) ? $fromform->{$formkey}['syncwith'] : '';
+            $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav'])) ? $fromform->{$formkey}['syncbehav'] : 'out';
             if ($caltype === 'site' && empty($cancreatesiteevents)) {
                 $syncbehav = 'out';
             }
@@ -214,10 +211,8 @@ class subscriptions extends \moodleform {
             $event->trigger();
         }
         foreach ($newcoursesubs as $courseid => $coursecaldata) {
-            $syncwith = (!empty($coursecaldata['syncwith']))
-                    ? $coursecaldata['syncwith'] : '';
-            $syncbehav = (!empty($coursecaldata['syncbehav']))
-                    ? $coursecaldata['syncbehav'] : 'out';
+            $syncwith = (!empty($coursecaldata['syncwith'])) ? $coursecaldata['syncwith'] : '';
+            $syncbehav = (!empty($coursecaldata['syncbehav'])) ? $coursecaldata['syncbehav'] : 'out';
             if (empty($cancreatecourseevents[$courseid])) {
                 $syncbehav = 'out';
             }
