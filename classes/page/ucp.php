@@ -171,7 +171,6 @@ class ucp extends base {
         $auth = new \auth_oidc\loginflow\authcode;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         if ($uselogin !== true) {
-            $SESSION->auth_oidc_connectiononly = true;
             $stateparams['connectiononly'] = true;
         }
         $auth->initiateauthrequest($promptlogin, $stateparams, $extraparams);
