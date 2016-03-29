@@ -791,7 +791,7 @@ abstract class base {
             if (!empty($response) && $response != 'connection_error') {
                 break;
             }
-            usleep(500000);
+            usleep(50000);
         }
 
         // If still there is connection error, return it.
@@ -1039,6 +1039,7 @@ abstract class base {
 
     /**
      * Create a OneNote page inside the given section using the postdata containing the content of the page.
+     *
      * @param string $sectionid Id of OneNote section which the page will be created in.
      * @param string $postdata String containing the postdata containing the contents of the page.
      * @param string $boundary Boundary string to be used during the POST request.
@@ -1052,36 +1053,29 @@ abstract class base {
                 \local_onenote\utils::debug('Could not get user token', 'create_page_from_postdata');
                 return null;
             }
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_HEADER, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $curl = new \curl();
+
             $headers = [
                 'Content-Type: multipart/form-data; boundary='.$boundary,
-                'Authorization: Bearer '.rawurlencode($token)
+                'Authorization: Bearer '.rawurlencode($token),
             ];
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-
-            $rawresponse = curl_exec($ch);
-
-            // Check if curl call fails.
-            if ($rawresponse === false) {
-                $errorno = curl_errno($ch);
-                $errorstr = 'curl error '.$errorno.': '.curl_error($ch);
-                curl_close($ch);
-                \local_onenote\utils::debug('curl connection error', 'onenote\api\create_page_from_postdata', $errorstr);
-
-                // If curl call fails and reason is net connectivity return it or return null.
-                return (in_array($errorno, ['6', '7', '28'])) ? 'connection_error' : null;
+            foreach ($headers as $header) {
+                $curl->setHeader($header);
             }
 
-            $info = curl_getinfo($ch);
-            curl_close($ch);
+            $rawresponse = $curl->post($url, $postdata, ['CURLOPT_HEADER' => 1]);
 
-            if ($info['http_code'] == 201) {
-                $responsewithoutheader = substr($rawresponse, $info['header_size']);
+            // Check if curl call fails.
+            if ($curl->errno != CURLE_OK) {
+                $errorstr = 'curl error '.$curl->errno.': '.$curl->error;
+                \local_onenote\utils::debug('curl connection error', 'onenote\api\create_page_from_postdata', $errorstr);
+                // If curl call fails and reason is net connectivity return it or return null.
+                return (in_array($curl->errno, ['6', '7', '28'])) ? 'connection_error' : null;
+            }
+
+            if ($curl->info['http_code'] == 201) {
+                $responsewithoutheader = substr($rawresponse, $curl->info['header_size']);
                 $response = json_decode($responsewithoutheader);
                 return $response;
             } else {
@@ -1089,7 +1083,7 @@ abstract class base {
                 \local_onenote\utils::debug('problem creating page', 'onenote\api\create_page_from_postdata', $debugdata);
             }
         } catch (\Exception $e) {
-            \local_onenote\utils::debug($e->getMessage());
+            \local_onenote\utils::debug($e->getMessage(), 'create_page_from_postdata', $e);
         }
 
         return null;

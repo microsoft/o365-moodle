@@ -182,7 +182,6 @@ class client extends \oauth2_client {
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $callbackurl = self::callback_url();
 
@@ -279,7 +278,7 @@ class client extends \oauth2_client {
                     break;
                 }
 
-                usleep(500000);
+                usleep(50000);
             }
         }
 
@@ -313,7 +312,7 @@ class client extends \oauth2_client {
                     break;
                 }
 
-                usleep(500000);
+                usleep(50000);
             }
         }
 
