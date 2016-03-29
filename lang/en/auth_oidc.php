@@ -100,6 +100,7 @@ $string['errorjwtempty'] = 'Empty or non-string JWT received.';
 $string['errorjwtinvalidheader'] = 'Invalid JWT header';
 $string['errorjwtmalformed'] = 'Malformed JWT received.';
 $string['errorjwtunsupportedalg'] = 'JWS Alg or JWE not supported';
+$string['errorlogintoconnectedaccount'] = 'This Office 365 user is connected to a Moodle account, but OpenID Connect login is not enabled for this Moodle account. Please log in to the Moodle account using the account\'s defined authentication method to use Office 365 features';
 $string['erroroidcnotenabled'] = 'The OpenID Connect authentication plugin is not enabled.';
 $string['errornodisconnectionauthmethod'] = 'Cannot disconnect because there is no enabled authentication plugin to fall back to. (either user\'s previous login method or the manual login method).';
 $string['erroroidcclientinvalidendpoint'] = 'Invalid Endpoint URI received.';
