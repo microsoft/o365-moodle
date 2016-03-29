@@ -23,12 +23,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015080410;
+$plugin->version = 2015080411;
 $plugin->requires = 2014111000;
 $plugin->component = 'block_microsoft';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.10';
+$plugin->release = '28.0.0.11';
 $plugin->dependencies = [
-    'local_onenote' => 2015012709,
-    'local_o365' => 2015012741,
+    'local_onenote' => 2015012710,
+    'local_o365' => 2015012742,
 ];
