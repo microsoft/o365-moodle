@@ -495,7 +495,7 @@ class main {
                         $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
-                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire*3600) < time())) {
+                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire * 3600) < time())) {
                     try {
                         if (!PHPUNIT_TEST) {
                             $this->assign_photo($existinguser->muserid, $user['upnlower']);
