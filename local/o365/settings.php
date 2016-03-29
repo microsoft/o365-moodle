@@ -104,7 +104,8 @@ if ($hassiteconfig) {
     $settings->add(new \admin_setting_configcheckbox('local_o365/creategroups', $label, $desc, '0'));
 
     $label = get_string('settings_debugmode', 'local_o365');
-    $desc = get_string('settings_debugmode_details', 'local_o365');
+    $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
+    $desc = get_string('settings_debugmode_details', 'local_o365', $logurl->out());
     $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
 
     $label = get_string('settings_photoexpire', 'local_o365');
