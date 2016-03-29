@@ -257,7 +257,7 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
-                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                    'thumbnail' => $OUTPUT->pix_url('onedrive', 'repository_office365')->out(false),
                     'children' => [],
                 ];
             }
@@ -265,7 +265,7 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('courses', 'repository_office365'),
                     'path' => '/courses/',
-                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                    'thumbnail' => $OUTPUT->pix_url('sharepoint', 'repository_office365')->out(false),
                     'children' => [],
                 ];
             }
