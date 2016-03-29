@@ -325,7 +325,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $usertoken = $calsync->get_user_token($userid);
         if (empty($usertoken)) {
             // No token, can't sync.
-            \local_o365\utils::debug('Could not get user token for calendar sync.');
+            \local_o365\utils::debug('Could not get user token for calendar sync.', 'sync_userevents');
             return false;
         }
 
