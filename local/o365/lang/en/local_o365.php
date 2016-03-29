@@ -107,7 +107,17 @@ $string['settings_aadtenant_details'] = 'Used to Identify your organization with
 $string['settings_aadtenant_error'] = 'We could not detect your AzureAD tenant.<br />Please ensure "Windows Azure Active Directory" has been added to your registered Azure application, and that the "Read directory data" permission is enabled.';
 
 $string['settings_azuresetup'] = 'Azure Setup';
+$string['settings_azuresetup_appdataheader'] = 'Azure Application';
+$string['settings_azuresetup_appdatadesc'] = 'Verifies the correct parameters are set up in Azure.';
+$string['settings_azuresetup_appdatareplyurlcorrect'] = 'Reply URL Correct';
+$string['settings_azuresetup_appdatareplyurlincorrect'] = 'Reply URL Incorrect';
+$string['settings_azuresetup_appdatareplyurlgeneralerror'] = 'Could not check reply url.';
+$string['settings_azuresetup_appdatasignonurlcorrect'] = 'Sign-on URL Correct.';
+$string['settings_azuresetup_appdatasignonurlincorrect'] = 'Sign-on URL Incorrect';
+$string['settings_azuresetup_appdatasignonurlgeneralerror'] = 'Could not check sign-on url.';
 $string['settings_azuresetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure can take a moment to appear here. If you have made a change in Azure and do not see it reflected here, wait a moment and try again.';
+$string['settings_azuresetup_correctval'] = 'Correct Value:';
+$string['settings_azuresetup_detectedval'] = 'Detected Value:';
 $string['settings_azuresetup_update'] = 'Update';
 $string['settings_azuresetup_checking'] = 'Checking...';
 $string['settings_azuresetup_missingperms'] = 'Missing Permissions:';
