@@ -163,7 +163,7 @@ class ajax extends base {
                     die();
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'detect aadtenant');
+                \local_o365\utils::debug($e->getMessage(), 'detect aadtenant', $e);
                 echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
                 die();
             }
@@ -179,7 +179,7 @@ class ajax extends base {
                     die();
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'detect odburl');
+                \local_o365\utils::debug($e->getMessage(), 'detect odburl', $e);
                 echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
                 die();
             }
@@ -258,7 +258,7 @@ class ajax extends base {
             $legacyapi->missingperms = $missingperms;
             $legacyapi->haswrite = $haswrite;
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy');
+            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
             $legacyapi->error = $e->getMessage();
         }
         $data->legacyapi = $legacyapi;
@@ -284,7 +284,7 @@ class ajax extends base {
                 }
             } catch (\Exception $e) {
                 $unifiedapi->active = false;
-                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified');
+                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified', $e);
                 $unifiedapi->error = $e->getMessage();
             }
         }
