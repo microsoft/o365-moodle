@@ -90,6 +90,18 @@ class utils {
             }
         } else if (is_null($val)) {
             return '(null)';
+        } else if ($val instanceof \Exception) {
+            $valinfo = [
+                'file' => $val->getFile(),
+                'line' => $val->getLine(),
+                'message' => $val->getMessage(),
+            ];
+            if ($val instanceof \moodle_exception) {
+                $valinfo['debuginfo'] = $val->debuginfo;
+                $valinfo['errorcode'] = $val->errorcode;
+                $valinfo['module'] = $val->module;
+            }
+            return print_r($valinfo, true);
         } else {
             return print_r($val, true);
         }
