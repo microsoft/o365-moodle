@@ -20,7 +20,7 @@
  * @package assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com) Sushant Gawali (sushant@introp.net)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 require_once($CFG->libdir.'/eventslib.php');
