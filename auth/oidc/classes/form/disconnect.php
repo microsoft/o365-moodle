@@ -44,6 +44,10 @@ class disconnect extends \moodleform {
         $mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_oidc', $opname)));
         $mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_oidc', $opname)));
         $mform->addElement('html', '<br />');
+        $mform->addElement('hidden', 'redirect', $this->_customdata['redirect']);
+        $mform->setType('redirect', PARAM_URL);
+        $mform->addElement('hidden', 'donotremovetokens', $this->_customdata['donotremovetokens']);
+        $mform->setType('donotremovetokens', PARAM_BOOL);
 
         $mform->addElement('header', 'userdetails', get_string('userdetails'));
 
