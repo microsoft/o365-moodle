@@ -20,9 +20,9 @@
  * @package   filter_oembed
  * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft Open Technologies, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters... 
+ * code based on the following filters...
  * Screencast (Mark Schall)
- * Soundcloud (Troy Williams) 
+ * Soundcloud (Troy Williams)
  */
 
 /**

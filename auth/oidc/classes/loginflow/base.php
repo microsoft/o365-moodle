@@ -167,8 +167,7 @@ class base {
 
             // Check if we have recorded the user's previous login method.
             $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $USER->id]);
-            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true)
-                    ? $prevmethodrec->method : null;
+            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) ? $prevmethodrec->method : null;
             // Manual is always available, we don't need it twice.
             if ($prevauthmethod === 'manual') {
                 $prevauthmethod = null;
@@ -226,7 +225,7 @@ class base {
                     $updateduser->password = $fromform->password;
                 } else if ($fromform->newmethod === $prevauthmethod) {
                     $updateduser->auth = $prevauthmethod;
-                    //  We can't use user_update_user as it will rehash the value.
+                    // We can't use user_update_user as it will rehash the value.
                     if (!empty($prevmethodrec->password)) {
                         $manualuserupdate = new \stdClass;
                         $manualuserupdate->id = $USER->id;
