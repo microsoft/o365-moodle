@@ -19,7 +19,7 @@
  *
  * @package    local_onenote
  * @category   test
- * @copyright  Microsoft Open Technologies, Inc.
+ * @copyright  Microsoft, Inc.
  */
 
 class repository_onenote_generator extends testing_repository_generator {
