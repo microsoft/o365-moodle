@@ -32,20 +32,18 @@ The master branch of this repository contains the most up-to-date code. As issue
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
 3. Follow the on-screen instuctions to install each plugin.
 
-For more documentation, including details on how to configure the plugins, visit https://docs.moodle.org/29/en/Office365
-
 # Documentation
 
-The documentation for installing, configuring, and using these plugins is available here: http://msopentech.com/wp-content/uploads/Office-365-plugins-for-Moodle-documentation.pdf.
+The documentation for installing, configuring, and using these plugins is available here: https://docs.moodle.org/29/en/Office365.
 
 # Contributing
 
-Before we can accept your pull request, you'll need to electronically complete Microsoft Open Tech's [Contributor License Agreement](https://cla2.msopentech.com/). If you've done this for other Microsoft Open Tech projects, then you're already covered.
+Before we can accept your pull request, you'll need to electronically complete Microsoft's [Contributor License Agreement](https://cla.microsoft.com/). If you've done this for other Microsoft projects, then you're already covered.
 
 [Why a CLA?](https://www.gnu.org/licenses/why-assign.html) (from the FSF)
 
 # Copyright
 
-&copy; Microsoft Open Technologies, Inc.  Code for this plugin is licensed under the GPLv3 license.
+&copy; Microsoft, Inc.  Code for this plugin is licensed under the GPLv3 license.
 
 Any Microsoft trademarks and logos included in these plugins are property of Microsoft and should not be reused, redistributed, modified, repurposed, or otherwise altered or used outside of this plugin.

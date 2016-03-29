@@ -19,7 +19,7 @@
  * @author Matthew Cannings
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft Open Technologies, Inc.
+ * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft, Inc.
  */
 
 namespace filter_oembed\provider;
