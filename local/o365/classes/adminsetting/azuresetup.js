@@ -95,11 +95,11 @@ $(function() {
         }
 
         /**
-     * Render an error box.
-     *
-     * @param string content HTML to use as box body.
-     * @return object jQuery object representing rendered box.
-     */
+         * Render an error box.
+         *
+         * @param string content HTML to use as box body.
+         * @return object jQuery object representing rendered box.
+         */
         this.rendererrorbox = function(content) {
             var box = $('<div></div>').addClass('alert-error alert local_o365_statusmessage');
             box.append(opts.iconerror);
@@ -108,11 +108,11 @@ $(function() {
         }
 
         /**
-     * Render an info box.
-     *
-     * @param string content HTML to use as box body.
-     * @return object jQuery object representing rendered box.
-     */
+         * Render an info box.
+         *
+         * @param string content HTML to use as box body.
+         * @return object jQuery object representing rendered box.
+         */
         this.renderinfobox = function(content) {
             var box = $('<div></div>').addClass('alert-info alert local_o365_statusmessage');
             box.append(opts.iconinfo);
@@ -121,11 +121,11 @@ $(function() {
         }
 
         /**
-     * Render an success box.
-     *
-     * @param string content HTML to use as box body.
-     * @return object jQuery object representing rendered box.
-     */
+         * Render an success box.
+         *
+         * @param string content HTML to use as box body.
+         * @return object jQuery object representing rendered box.
+         */
         this.rendersuccessbox = function(content) {
             var box = $('<div></div>').addClass('alert-success alert local_o365_statusmessage');
             box.append(opts.iconsuccess);
@@ -134,20 +134,20 @@ $(function() {
         }
 
         /**
-     * Update tool display.
-     *
-     * @param string|object content HTML or jQuery object to display.
-     */
+         * Update tool display.
+         *
+         * @param string|object content HTML or jQuery object to display.
+         */
         this.updatedisplay = function(content) {
             main.find('.results').html(content);
         }
 
         /**
-     * Render unified API setup results.
-     *
-     * @param object data Data returned from ajax call.
-     * @return object jQuery object for rendered results section.
-     */
+         * Render unified API setup results.
+         *
+         * @param object data Data returned from ajax call.
+         * @return object jQuery object for rendered results section.
+         */
         this.rendersection_unifiedapi = function(data) {
             if (typeof(data.error) !== 'undefined') {
                 return main.rendererrorbox(data.error);
@@ -178,11 +178,11 @@ $(function() {
         }
 
         /**
-     * Render legacy API setup results.
-     *
-     * @param object data Data returned from ajax call.
-     * @return object jQuery object for rendered results section.
-     */
+         * Render legacy API setup results.
+         *
+         * @param object data Data returned from ajax call.
+         * @return object jQuery object for rendered results section.
+         */
         this.rendersection_legacyapi = function(data) {
             if (typeof(data.error) !== 'undefined') {
                 return main.rendererrorbox(data.error);
@@ -216,11 +216,11 @@ $(function() {
             }
         }
 
-    /**
-     * Render all results.
-     *
-     * @param object results Results object.
-     */
+        /**
+         * Render all results.
+         *
+         * @param object results Results object.
+         */
         this.renderresults = function(results) {
             var content = $('<div class="adminsetting_azuresetup_results"></div>');
             if (results === false) {
