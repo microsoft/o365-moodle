@@ -26,6 +26,6 @@
  */
 function microsoft_update_profile(Y, url) {
     $.ajax({
-        url: url+"/blocks/microsoft/update.php",
+        url: url + "/blocks/microsoft/update.php",
     });
 }

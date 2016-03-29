@@ -35,5 +35,5 @@ interface httpclientinterface {
      * @param array $options
      * @return bool
      */
-     public function post($url, $params = '', $options = array());
+    public function post($url, $params = '', $options = array());
 }
