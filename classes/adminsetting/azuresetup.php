@@ -131,6 +131,17 @@ class azuresetup extends \admin_setting {
                                     strerrorcheck: "'.addslashes(get_string('settings_azuresetup_errorcheck', 'local_o365')).'",
                                     strnoinfo: "'.addslashes(get_string('settings_azuresetup_noinfo', 'local_o365')).'",
 
+                                    strappdataheader: "'.addslashes(get_string('settings_azuresetup_appdataheader', 'local_o365')).'",
+                                    strappdatadesc: "'.addslashes(get_string('settings_azuresetup_appdatadesc', 'local_o365')).'",
+                                    strappdatareplyurlcorrect: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlcorrect', 'local_o365')).'",
+                                    strappdatareplyurlincorrect: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlincorrect', 'local_o365')).'",
+                                    strappdatareplyurlgeneralerror: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlgeneralerror', 'local_o365')).'",
+                                    strappdatasignonurlcorrect: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlcorrect', 'local_o365')).'",
+                                    strappdatasignonurlincorrect: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlincorrect', 'local_o365')).'",
+                                    strappdatasignonurlgeneralerror: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlgeneralerror', 'local_o365')).'",
+                                    strdetectedval: "'.addslashes(get_string('settings_azuresetup_detectedval', 'local_o365')).'",
+                                    strcorrectval: "'.addslashes(get_string('settings_azuresetup_correctval', 'local_o365')).'",
+
                                     showunified: '.$unifiedenabled.',
                                     strunifiedheader: "'.addslashes(get_string('settings_azuresetup_unifiedheader', 'local_o365')).'",
                                     strunifieddesc: "'.addslashes(get_string('settings_azuresetup_unifieddesc', 'local_o365')).'",
