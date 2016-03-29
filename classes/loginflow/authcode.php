@@ -349,13 +349,17 @@ class authcode extends \auth_oidc\loginflow\base {
                 $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
                 $event = \core\event\user_login_failed::create($eventdata);
                 $event->trigger();
-                throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc');
+                throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
             }
         }
 
         $user = authenticate_user_login($username, null, true);
         if (empty($user)) {
-            throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc');
+            if (!empty($tokenrec)) {
+                throw new \moodle_exception('errorlogintoconnectedaccount', 'auth_oidc', null, null, '2');
+            } else {
+                throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '2');
+            }
         }
 
         complete_user_login($user);
