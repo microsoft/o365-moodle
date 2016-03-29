@@ -854,6 +854,7 @@ class repository_office365 extends \repository {
                     'source' => $filesource,
                     'id' => $fileid,
                     'message' => $e->getMessage(),
+                    'e' => $e,
                 ];
                 \local_o365\utils::debug($errmsg, $caller, $debugdata);
             }

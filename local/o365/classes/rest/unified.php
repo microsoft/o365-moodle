@@ -685,11 +685,9 @@ class unified extends \local_o365\rest\o365api {
      */
     public function check_permissions() {
         $this->token->refresh();
-        $this->disableratelimit = true;
         $currentperms = $this->get_unified_api_permissions();
         $neededperms = $this->get_required_permissions();
         $availableperms = $this->get_available_permissions();
-        $this->disableratelimit = false;
 
         if ($currentperms === null || $availableperms === null) {
             return null;
