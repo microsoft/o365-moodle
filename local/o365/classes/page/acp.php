@@ -40,9 +40,7 @@ class acp extends base {
      * Set the system API user.
      */
     public function mode_setsystemuser() {
-        global $SESSION;
-        $SESSION->auth_oidc_justevent = true;
-        redirect(new \moodle_url('/auth/oidc/index.php', ['promptaconsent' => 1]));
+        redirect(new \moodle_url('/auth/oidc/index.php', ['promptaconsent' => 1, 'justauth' => 1]));
     }
 
     /**
