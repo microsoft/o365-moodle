@@ -15,8 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'feedback_onenote', language 'en'
- * @package   assignfeedback_onenote
+ * Language strings for component 'assignfeedback_onenote'
+ *
+ * @package assignfeedback_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft Open Technologies, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})

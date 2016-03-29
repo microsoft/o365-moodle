@@ -72,11 +72,11 @@ class filter_oembed extends moodle_text_filter {
             // Non string data can not be filtered anyway.
             return $text;
         }
-//        if (get_user_device_type() !== 'default'){
+        // if (get_user_device_type() !== 'default'){
             // no lazy video on mobile
             // return $text;
 
-//        }
+        // }
         if (stripos($text, '</a>') === false) {
             // Performance shortcut - all regexes below end with the </a> tag.
             // If not present nothing can match.
