@@ -174,7 +174,7 @@ class block_microsoft extends block_base {
 
         if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true
                 && !empty(get_config('block_microsoft', 'settings_showmanageo365conection'))) {
-            $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
+            $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
             $connectstr = get_string('linkconnection', 'block_microsoft');
             $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
         }
