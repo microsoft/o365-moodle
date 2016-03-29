@@ -90,6 +90,11 @@ $string['healthcheck_systemtoken_result_notoken'] = 'Moodle does not have a toke
 $string['healthcheck_systemtoken_result_noclientcreds'] = 'There are not application credentials present in the OpenID Connect plugin. Without these credentials, Moodle cannot perform any communication with Office&nbsp;365. Click here to visit the settings page and enter your credentials.';
 $string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Office&nbsp;365 as the system API user. This can usually be resolved by resetting the system API user.';
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office&nbsp;365 as the system API user.';
+$string['healthcheck_ratelimit_title'] = 'API Throttling';
+$string['healthcheck_ratelimit_result_notice'] = 'Slight throttling has been enabled to handle increased Moodle site load. <br /><br />All Office 365 features are functional, this just spaces out requests slightly to prevent interruption of Office 365 services. Once Moodle activity decreases, everything will return to normal. <br />(Level {$a->level} / started {$a->timestart})';
+$string['healthcheck_ratelimit_result_warning'] = 'Increased throttling has been enabled to handle significant Moodle site load. <br /><br />All Office 365 features are still functional, but Office 365 requests may take longer to complete. Once Moodle site activity has decreased, everything will return to normal. <br />(Level {$a->level} / started {$a->timestart})';
+$string['healthcheck_ratelimit_result_disabled'] = 'Rate limiting features have been disabled.';
+$string['healthcheck_ratelimit_result_passed'] = 'Office 365 API calls are executing at full speed.';
 
 $string['settings_aadsync'] = 'Sync users with Azure AD';
 $string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/28/en/Office365#User_sync">user sync documentation</a>.<br /><br />';
@@ -140,7 +145,7 @@ $string['settings_creategroups_details'] = 'If enabled, this will create and mai
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
-$string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems.';
+$string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_detectoidc'] = 'Application Credentials';
 $string['settings_detectoidc_details'] = 'To communicate with Office&nbsp;365, Moodle needs credentials to identify itself. These are set in the "OpenID Connect" authentication plugin.';
 $string['settings_detectoidc_credsvalid'] = 'Credentials have been set.';

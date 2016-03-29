@@ -120,7 +120,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                     mtrace($errmsg);
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug('Error syncing events', 'importfromoutlook', $e->getMessage());
+                \local_o365\utils::debug('Error syncing events: '.$e->getMessage(), 'importfromoutlook', $e);
                 mtrace('Error: '.$e->getMessage());
             }
         }
