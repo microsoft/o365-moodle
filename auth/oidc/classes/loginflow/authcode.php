@@ -73,6 +73,7 @@ class authcode extends \auth_oidc\loginflow\base {
         $state = optional_param('state', '', PARAM_RAW);
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
         $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
+        $justauth = (bool)optional_param('justauth', 0, PARAM_BOOL);
         if (!empty($state)) {
             // Response from OP.
             $this->handleauthresponse($_REQUEST);
@@ -82,6 +83,9 @@ class authcode extends \auth_oidc\loginflow\base {
             $extraparams = [];
             if ($promptaconsent === true) {
                 $extraparams = ['prompt' => 'admin_consent'];
+            }
+            if ($justauth === true) {
+                $stateparams['justauth'] = true;
             }
             $this->initiateauthrequest($promptlogin, $stateparams, $extraparams);
         }
@@ -126,7 +130,7 @@ class authcode extends \auth_oidc\loginflow\base {
      * @param array $authparams Received parameters.
      */
     protected function handleauthresponse(array $authparams) {
-        global $DB, $CFG, $SESSION, $STATEADDITIONALDATA, $USER;
+        global $DB, $CFG, $STATEADDITIONALDATA, $USER;
 
         if (!isset($authparams['code'])) {
             \auth_oidc\utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
@@ -173,8 +177,7 @@ class authcode extends \auth_oidc\loginflow\base {
         }
 
         // This is for setting the system API user.
-        if (isset($SESSION->auth_oidc_justevent)) {
-            unset($SESSION->auth_oidc_justevent);
+        if (isset($additionaldata['justauth']) && $additionaldata['justauth'] === true) {
             $eventdata = ['other' => ['authparams' => $authparams, 'tokenparams' => $tokenparams]];
             $event = \auth_oidc\event\user_authed::create($eventdata);
             $event->trigger();
@@ -186,11 +189,7 @@ class authcode extends \auth_oidc\loginflow\base {
         if (isloggedin() === true && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
             // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
             $connectiononly = false;
-            if (isset($SESSION->auth_oidc_connectiononly)) {
-                $connectiononly = true;
-                unset($SESSION->auth_oidc_connectiononly);
-            }
-            if (isset($STATEADDITIONALDATA['connectiononly']) && $STATEADDITIONALDATA['connectiononly'] === true) {
+            if (isset($additionaldata['connectiononly']) && $additionaldata['connectiononly'] === true) {
                 $connectiononly = true;
             }
             $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
