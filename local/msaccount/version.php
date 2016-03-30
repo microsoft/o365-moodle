@@ -19,13 +19,13 @@
  * @package    local_msaccount
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc.
+ * @copyright  Microsoft, Inc.
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111902;
+$plugin->version = 2015111903;
 $plugin->requires = 2015111600;
 $plugin->component = 'local_msaccount';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.2';
+$plugin->release = '30.0.0.3';

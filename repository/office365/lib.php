@@ -18,7 +18,7 @@
  * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 /**
@@ -261,7 +261,7 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
-                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                    'thumbnail' => $OUTPUT->pix_url('onedrive', 'repository_office365')->out(false),
                     'children' => [],
                 ];
             }
@@ -269,7 +269,7 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('courses', 'repository_office365'),
                     'path' => '/courses/',
-                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                    'thumbnail' => $OUTPUT->pix_url('sharepoint', 'repository_office365')->out(false),
                     'children' => [],
                 ];
             }
@@ -889,6 +889,7 @@ class repository_office365 extends \repository {
                     'source' => $filesource,
                     'id' => $fileid,
                     'message' => $e->getMessage(),
+                    'e' => $e,
                 ];
                 \local_o365\utils::debug($errmsg, $caller, $debugdata);
             }

@@ -18,13 +18,18 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $string['pluginname'] = 'Microsoft Office 365 Integration';
 
 $string['acp_title'] = 'Microsoft Office 365 Integration Administration Control Panel';
 $string['acp_healthcheck'] = 'Health Check';
+$string['acp_maintenance'] = 'Maintenance Tools';
+$string['acp_maintenance_desc'] = 'These tools can help you resolve some common issues.';
+$string['acp_maintenance_warning'] = 'Warning: These are advanced tools. Please use them only if you understand what you are doing.';
+$string['acp_maintenance_coursegroupusers'] = 'Resync users in groups for courses.';
+$string['acp_maintenance_coursegroupusers_desc'] = 'This will resync the user membership for all Office 365 groups created for all Moodle courses. This will ensure all, and only, users enrolled in the Moodle course are in the Office 365 group. <br /><b>Note:</b> If you have added any additional users to a course group that are not enrolled in the associated Moodle course, they will be removed.';
 $string['acp_usermatch'] = 'User Matching';
 $string['acp_usermatch_desc'] = 'This tool allows you to match Moodle users to Office 365 users. You will upload a file containing Moodle users and associated Office 365 users, and a cron task will verify the data and set up the match.';
 $string['acp_usermatch_matchqueue'] = 'Step 2: Match Queue';
@@ -85,9 +90,14 @@ $string['healthcheck_systemtoken_result_notoken'] = 'Moodle does not have a toke
 $string['healthcheck_systemtoken_result_noclientcreds'] = 'There are not application credentials present in the OpenID Connect plugin. Without these credentials, Moodle cannot perform any communication with Office&nbsp;365. Click here to visit the settings page and enter your credentials.';
 $string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Office&nbsp;365 as the system API user. This can usually be resolved by resetting the system API user.';
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Office&nbsp;365 as the system API user.';
+$string['healthcheck_ratelimit_title'] = 'API Throttling';
+$string['healthcheck_ratelimit_result_notice'] = 'Slight throttling has been enabled to handle increased Moodle site load. <br /><br />All Office 365 features are functional, this just spaces out requests slightly to prevent interruption of Office 365 services. Once Moodle activity decreases, everything will return to normal. <br />(Level {$a->level} / started {$a->timestart})';
+$string['healthcheck_ratelimit_result_warning'] = 'Increased throttling has been enabled to handle significant Moodle site load. <br /><br />All Office 365 features are still functional, but Office 365 requests may take longer to complete. Once Moodle site activity has decreased, everything will return to normal. <br />(Level {$a->level} / started {$a->timestart})';
+$string['healthcheck_ratelimit_result_disabled'] = 'Rate limiting features have been disabled.';
+$string['healthcheck_ratelimit_result_passed'] = 'Office 365 API calls are executing at full speed.';
 
 $string['settings_aadsync'] = 'Sync users with Azure AD';
-$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a>.<br /><br />';
+$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/30/en/Office365#User_sync">user sync documentation</a>.<br /><br />';
 $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
 $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
@@ -102,7 +112,17 @@ $string['settings_aadtenant_details'] = 'Used to Identify your organization with
 $string['settings_aadtenant_error'] = 'We could not detect your AzureAD tenant.<br />Please ensure "Windows Azure Active Directory" has been added to your registered Azure application, and that the "Read directory data" permission is enabled.';
 
 $string['settings_azuresetup'] = 'Azure Setup';
+$string['settings_azuresetup_appdataheader'] = 'Azure Application';
+$string['settings_azuresetup_appdatadesc'] = 'Verifies the correct parameters are set up in Azure.';
+$string['settings_azuresetup_appdatareplyurlcorrect'] = 'Reply URL Correct';
+$string['settings_azuresetup_appdatareplyurlincorrect'] = 'Reply URL Incorrect';
+$string['settings_azuresetup_appdatareplyurlgeneralerror'] = 'Could not check reply url.';
+$string['settings_azuresetup_appdatasignonurlcorrect'] = 'Sign-on URL Correct.';
+$string['settings_azuresetup_appdatasignonurlincorrect'] = 'Sign-on URL Incorrect';
+$string['settings_azuresetup_appdatasignonurlgeneralerror'] = 'Could not check sign-on url.';
 $string['settings_azuresetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure can take a moment to appear here. If you have made a change in Azure and do not see it reflected here, wait a moment and try again.';
+$string['settings_azuresetup_correctval'] = 'Correct Value:';
+$string['settings_azuresetup_detectedval'] = 'Detected Value:';
 $string['settings_azuresetup_update'] = 'Update';
 $string['settings_azuresetup_checking'] = 'Checking...';
 $string['settings_azuresetup_missingperms'] = 'Missing Permissions:';
@@ -121,11 +141,11 @@ $string['settings_azuresetup_legacydesc'] = 'The Office&nbsp;365 API is made up 
 $string['settings_azuresetup_legacyerror'] = 'There was an error checking Office&nbsp;365 API settings.';
 
 $string['settings_creategroups'] = 'Create User Groups';
-$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office&nbsp;365 unified API to be enabled (see above), and added to the application added in Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup instructions and documentation.</a>';
+$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office&nbsp;365 unified API to be enabled (see above), and added to the application added in Azure. <a href="https://docs.moodle.org/30/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
-$string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems.';
+$string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_detectoidc'] = 'Application Credentials';
 $string['settings_detectoidc_details'] = 'To communicate with Office&nbsp;365, Moodle needs credentials to identify itself. These are set in the "OpenID Connect" authentication plugin.';
 $string['settings_detectoidc_credsvalid'] = 'Credentials have been set.';
@@ -179,6 +199,9 @@ $string['settings_header_tools'] = 'Tools';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
+$string['settings_maintenance'] = 'Maintenance';
+$string['settings_maintenance_details'] = 'Various maintenance tasks are available to resolve some common issues.';
+$string['settings_maintenance_linktext'] = 'View maintenance tools';
 $string['settings_odburl'] = 'OneDrive for Business URL';
 $string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your Azure AD tenant. For example, if your Azure AD tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
 $string['settings_odburl_error'] = 'We could not determine your OneDrive for Business URL.<br />Please make sure "Office 365 SharePoint Online" has been added to your registered application in Azure.';
@@ -196,7 +219,7 @@ $string['settings_sharepointlink_connected'] = 'Moodle is connected to this Shar
 $string['settings_sharepointlink_changelink'] = 'Change Site';
 $string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
 $string['settings_sharepointlink_enterurl'] = 'Enter a URL above.';
-$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365#SharePoint_Connection">Read more about connecting Moodle and SharePoint</a>.';
+$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/30/en/Office365#SharePoint_Connection">Read more about connecting Moodle and SharePoint</a>.';
 $string['settings_sharepointlink_status_invalid'] = 'This is not a usable SharePoint site.';
 $string['settings_sharepointlink_status_notempty'] = 'This site is usable, but already exists. Moodle may conflict with existing content. For best results, enter a SharePoint site that doesn\'t exist and Moodle will create it.';
 $string['settings_sharepointlink_status_valid'] = 'This SharePoint site will be created by Moodle and used for Moodle content.';
@@ -216,7 +239,7 @@ $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
 
 $string['task_calendarsyncin'] = 'Sync o365 events in to Moodle';
-$string['task_groupcreate'] = 'Create user groups in Office&nbsp;365';
+$string['task_groupcreate'] = 'Create user groups in Office 365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_syncusers'] = 'Sync users with Azure AD.';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
@@ -235,6 +258,21 @@ $string['ucp_calsync_desc'] = 'Checked calendars will be synced from Moodle to y
 $string['ucp_connection_status'] = 'Office&nbsp;365 connection is:';
 $string['ucp_connection_start'] = 'Connect to Office&nbsp;365';
 $string['ucp_connection_stop'] = 'Disconnect from Office&nbsp;365';
+$string['ucp_connection_options'] = 'Connection Options:';
+$string['ucp_connection_desc'] = 'Here you can configure how you connect to Office&nbsp;365. To use Office 365 features, you must be connected to an Office 365 account. This can be done one of two ways, outlined below.';
+$string['ucp_connection_aadlogin'] = 'Use your Office&nbsp;365 credentials to log in to Moodle<br />';
+$string['ucp_connection_aadlogin_desc_rocreds'] = 'Instead of your Moodle username and password, you will enter your Office 365 username and password on the Moodle login page.';
+$string['ucp_connection_aadlogin_desc_authcode'] = 'Instead of entering a username and password on the Moodle login page, you will see a section that says "Login using your account on {$a}" on the login page. You will click the link and be redirected to Office 365 to log in. After you have logged in to Office 365 successfully, you will be returned to Moodle and logged in to your account.';
+$string['ucp_connection_aadlogin_start'] = 'Start using Office 365 to log in to Moodle.';
+$string['ucp_connection_aadlogin_stop'] = 'Stop using Office 365 to log in to Moodle.';
+$string['ucp_connection_aadlogin_active'] = 'You are using the Office 365 account "{$a}" to log in to Moodle.';
+$string['ucp_connection_linked'] = 'Link your Moodle and Office 365 accounts';
+$string['ucp_connection_linked_desc'] = 'Linking your Moodle and Office 365 accounts allows you to use Office 365 Moodle features without changing how you log in to Moodle. <br />Clicking the link below will send you to Office 365 to perform a one-time login, after which you will be returned here. You will be able to use all the Office 365 features without making any other changes to your Moodle account - you will log in to Moodle as you always have.';
+$string['ucp_connection_linked_active'] = 'You are linked to Office 365 account "{$a}".';
+$string['ucp_connection_linked_start'] = 'Link your Moodle account to an Office 365 account.';
+$string['ucp_connection_linked_migrate'] = 'Switch to linked account.';
+$string['ucp_connection_linked_stop'] = 'Unlink your Moodle account from the Office 365 account.';
+$string['ucp_connection_disconnected'] = 'You are not connected to Office 365.';
 $string['ucp_features'] = 'Office&nbsp;365 Features';
 $string['ucp_features_intro'] = 'Below is a list of the features you can use to enhance Moodle with Office&nbsp;365.';
 $string['ucp_features_intro_notconnected'] = 'Some of these may not be available until you are connected to Office&nbsp;365.';
@@ -245,12 +283,16 @@ $string['ucp_index_aadlogin_active'] = 'You are currently using Office 365 to lo
 $string['ucp_index_aadlogin_inactive'] = 'You are not currently using Office 365 to log in to Moodle';
 $string['ucp_index_calendar_title'] = 'Outlook Calendar Sync';
 $string['ucp_index_calendar_desc'] = 'Here you can set up syncing between your Moodle and Outlook calendars. You can export Moodle calendar events to Outlook, and bring Outlook events into Moodle.';
+$string['ucp_index_connection_title'] = 'Office&nbsp;365 Connection';
+$string['ucp_index_connection_desc'] = 'Configure how you connect to Office&nbsp;365.';
 $string['ucp_index_connectionstatus_title'] = 'Connection Status';
 $string['ucp_index_connectionstatus_login'] = 'Click here to log in.';
+$string['ucp_index_connectionstatus_usinglogin'] = 'You are currently using Office 365 to log in to Moodle.';
+$string['ucp_index_connectionstatus_usinglinked'] = 'You are linked to an Office 365 account.';
 $string['ucp_index_connectionstatus_connect'] = 'Click here to connect.';
 $string['ucp_index_connectionstatus_manage'] = 'Manage Connection';
 $string['ucp_index_connectionstatus_disconnect'] = 'Disconnect';
-$string['ucp_index_connectionstatus_reconnect'] = 'Reconnect';
+$string['ucp_index_connectionstatus_reconnect'] = 'Refresh Connection';
 $string['ucp_index_connectionstatus_connected'] = 'You are currently connected to Office&nbsp;365';
 $string['ucp_index_connectionstatus_matched'] = 'You have been matched with Office&nbsp;365 user <small>"{$a}"</small>. To complete this connection, please click the link below and log in to Office&nbsp;365.';
 $string['ucp_index_connectionstatus_notconnected'] = 'You are not currently connected to Office&nbsp;365';

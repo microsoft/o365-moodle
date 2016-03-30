@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\rest;
@@ -53,7 +53,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-        return 'https://graph.microsoft.com';
+        return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
     }
 
     /**
@@ -62,7 +62,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        return 'https://graph.microsoft.com';
+        return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
     }
 
     /**
@@ -162,7 +162,16 @@ class unified extends \local_o365\rest\o365api {
             $mailnickname = $name;
         }
 
-        $mailnickname = strtolower(preg_replace('/[^a-z0-9_]+/iu', '', $mailnickname));
+        if (!empty($mailnickname)) {
+            $mailnickname = \core_text::strtolower($mailnickname);
+            $mailnickname = preg_replace('/[^a-z0-9_]+/iu', '', $mailnickname);
+            $mailnickname = trim($mailnickname);
+        }
+
+        if (empty($mailnickname)) {
+            // Cannot generate a good mailnickname because there's nothing but non-alphanum chars to work with. So generate one.
+            $mailnickname = 'group'.uniqid();
+        }
 
         $groupdata = [
             'groupTypes' => ['Unified'],
@@ -197,6 +206,48 @@ class unified extends \local_o365\rest\o365api {
      */
     public function delete_group($objectid) {
         $response = $this->apicall('delete', '/groups/'.$objectid);
+        return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Get a list of group members.
+     *
+     * @param string $groupobjectid The object ID of the group.
+     * @return array Array of returned members.
+     */
+    public function get_group_members($groupobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/members';
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Add member to group.
+     *
+     * @param string $groupobjectid The object ID of the group to add to.
+     * @param string $memberobjectid The object ID of the item to add (can be group object id or user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function add_member_to_group($groupobjectid, $memberobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/members/$ref';
+        $data = [
+            '@odata.id' => $this->get_apiuri().'/v1.0/directoryObjects/'.$memberobjectid
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+        return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Remove member from group.
+     *
+     * @param string $groupobjectid The object ID of the group to remove from.
+     * @param string $memberobjectid The object ID of the item to remove (can be group object id or user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function remove_member_from_group($groupobjectid, $memberobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/members/'.$memberobjectid.'/$ref';
+        $response = $this->apicall('delete', $endpoint);
         return ($response === '') ? true : $response;
     }
 
@@ -347,9 +398,10 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of events.
      */
     public function get_events($calendarid = null, $since = null) {
+        \core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
-            $since = date('c', $since);
+            $since = urlencode(date(DATE_ATOM, $since));
             $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
@@ -650,11 +702,9 @@ class unified extends \local_o365\rest\o365api {
      */
     public function check_permissions() {
         $this->token->refresh();
-        $this->disableratelimit = true;
         $currentperms = $this->get_unified_api_permissions();
         $neededperms = $this->get_required_permissions();
         $availableperms = $this->get_available_permissions();
-        $this->disableratelimit = false;
 
         if ($currentperms === null || $availableperms === null) {
             return null;

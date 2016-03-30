@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 /**
@@ -145,6 +145,20 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             }
         }
         upgrade_plugin_savepoint($result, '2015111904.01', 'auth', 'oidc');
+    }
+
+    if ($result && $oldversion < 2015111905.01) {
+        // Update old endpoints.
+        $config = get_config('auth_oidc');
+        if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
+            set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_oidc');
+        }
+
+        if ($config->tokenendpoint === 'https://login.windows.net/common/oauth2/token') {
+            set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
+        }
+
+        upgrade_plugin_savepoint($result, '2015111905.01', 'auth', 'oidc');
     }
 
     return $result;

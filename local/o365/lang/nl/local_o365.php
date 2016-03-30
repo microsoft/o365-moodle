@@ -1,4 +1,24 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_o365
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $string['pluginname'] = 'Integratie met Microsoft Office 365';
 $string['acp_title'] = 'Configuratiescherm voor Office&nbsp;365-beheer';
 $string['acp_healthcheck'] = 'Statuscontrole';
@@ -36,7 +56,7 @@ $string['healthcheck_systemtoken_result_noclientcreds'] = 'Er zijn geen toepassi
 $string['healthcheck_systemtoken_result_badtoken'] = 'Er was een probleem om als systeem-API-gebruiker met Office&nbsp;365 te communiceren. Dit probleem kan doorgaans worden opgelost door de systeem-API-gebruiker te resetten.';
 $string['healthcheck_systemtoken_result_passed'] = 'Moodle kan als de systeem-API-gebruiker met Office&nbsp;365 communiceren.';
 $string['settings_aadsync'] = 'Gebruikers synchroniseren met Azure AD';
-$string['settings_aadsync_details'] = 'Als deze optie is ingeschakeld, worden gebruikers van Moodle en Azure AD gesynchroniseerd volgens bovenstaande opties.<br /><br /><b>Opmerking: </b>de synchronisatietaak wordt uitgevoerd in de Moodle-cron en synchroniseert 1000 gebruikers tegelijk. Standaard wordt deze taak eenmaal per dag uitgevoerd om 1:00 AM in de lokale tijdzone van je server. Als je grote sets gebruikers sneller wilt synchroniseren, kun je de frequentie van de taak <b>Gebruikers synchroniseren met Azure AD</b> verhogen op de <a href="{$a}">beheerpagina Geplande taken.</a><br /><br />Raadpleeg voor gedetailleerdere instructies de <a href="https://docs.moodle.org/27/en/Office365#User_sync">documentatie voor gebruikerssynchronisatie</a><br /><br />';
+$string['settings_aadsync_details'] = 'Als deze optie is ingeschakeld, worden gebruikers van Moodle en Azure AD gesynchroniseerd volgens bovenstaande opties.<br /><br /><b>Opmerking: </b>de synchronisatietaak wordt uitgevoerd in de Moodle-cron en synchroniseert 1000 gebruikers tegelijk. Standaard wordt deze taak eenmaal per dag uitgevoerd om 1:00 AM in de lokale tijdzone van je server. Als je grote sets gebruikers sneller wilt synchroniseren, kun je de frequentie van de taak <b>Gebruikers synchroniseren met Azure AD</b> verhogen op de <a href="{$a}">beheerpagina Geplande taken.</a><br /><br />Raadpleeg voor gedetailleerdere instructies de <a href="https://docs.moodle.org/30/en/Office365#User_sync">documentatie voor gebruikerssynchronisatie</a><br /><br />';
 $string['settings_aadsync_create'] = 'Accounts in Moodle maken voor gebruikers in Azure AD';
 $string['settings_aadsync_delete'] = 'Eerder gesynchroniseerde accounts in Moodle verwijderen wanneer ze worden verwijderd uit Azure AD';
 $string['settings_aadsync_match'] = 'Vooraf bestaande Moodle-gebruikers koppelen aan gelijknamige accounts in Azure AD<br /><small>Hierbij wordt gekeken naar de gebruikersnaam in Office 365 en de gebruikersnaam in Moodle en geprobeerd om overeenkomsten te vinden. Overeenkomsten zijn niet hoofdlettergevoelig en negeren de Office 365-tenant. BoB.SmiTh in Moodle zou bijvoorbeeld overeenstemmen met bob.smith@example.onmicrosoft.com. Bij overeenstemmende gebruikers worden de Moodle- en Office-accounts verbonden. Deze gebruikers kunnen alle Office 365/Moodle-integratiefuncties gebruiken. De authenticatiemethode van de gebruiker wijzigt niet, tenzij de onderstaande instelling wordt ingeschakeld.</small>';
@@ -59,7 +79,7 @@ $string['settings_azuresetup_legacyheader'] = 'Office&nbsp;365 API';
 $string['settings_azuresetup_legacydesc'] = 'De Office&nbsp;365-API bestaat uit toepassingspecifieke API\'s.';
 $string['settings_azuresetup_legacyerror'] = 'Er is een fout opgetreden tijdens het controleren van de API-instellingen van Office&nbsp;365.';
 $string['settings_creategroups'] = 'Gebruikersgroepen maken';
-$string['settings_creategroups_details'] = 'Als deze optie is ingeschakeld, wordt er in Office&nbsp;365 een leraar- en studentengroep gemaakt en onderhouden voor elke cursus op de site. Hiermee worden alle noodzakelijke groepen gemaakt die elke cron uitvoert (en worden alle huidige leden toegevoegd). Daarna wordt het groepslidmaatschap beheerd naarmate gebruikers zich in- of uitschrijven voor Moodle-cursussen.<br /><b>Opmerking: </b>voor deze functie moet de Unified API van Office&nbsp;365 zijn toegevoegd aan de toepassing die in Azure is toegevoegd. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Setup-instructies en -documentatie.</a>';
+$string['settings_creategroups_details'] = 'Als deze optie is ingeschakeld, wordt er in Office&nbsp;365 een leraar- en studentengroep gemaakt en onderhouden voor elke cursus op de site. Hiermee worden alle noodzakelijke groepen gemaakt die elke cron uitvoert (en worden alle huidige leden toegevoegd). Daarna wordt het groepslidmaatschap beheerd naarmate gebruikers zich in- of uitschrijven voor Moodle-cursussen.<br /><b>Opmerking: </b>voor deze functie moet de Unified API van Office&nbsp;365 zijn toegevoegd aan de toepassing die in Azure is toegevoegd. <a href="https://docs.moodle.org/30/en/Office365#User_groups">Setup-instructies en -documentatie.</a>';
 $string['settings_o365china'] = 'Office&nbsp;365 voor China';
 $string['settings_o365china_details'] = 'Controleer dit als je gebruikmaakt van Office&nbsp;365 voor China.';
 $string['settings_debugmode'] = 'Foutopsporingsberichten registreren';
@@ -101,7 +121,7 @@ $string['settings_sharepointlink_connected'] = 'Moodle is verbonden met deze Sha
 $string['settings_sharepointlink_changelink'] = 'Site wijzigen';
 $string['settings_sharepointlink_initializing'] = 'Deze SharePoint-site wordt in Moodle geconfigureerd. Dit gebeurt wanneer de Moodle-cron een volgende keer wordt uitgevoerd.';
 $string['settings_sharepointlink_enterurl'] = 'Voer hierboven een URL in.';
-$string['settings_sharepointlink_details'] = 'Als je Moodle en SharePoint wilt verbinden, voer je de volledige URL in van een SharePoint-site waarmee Moodle verbinding moet maken. Als de site niet bestaat, zal Moodle proberen deze te maken.<br /><a href="https://docs.moodle.org/27/en/Office365/SharePoint">Meer informatie over het verbinden van Moodle en SharePoint</a>';
+$string['settings_sharepointlink_details'] = 'Als je Moodle en SharePoint wilt verbinden, voer je de volledige URL in van een SharePoint-site waarmee Moodle verbinding moet maken. Als de site niet bestaat, zal Moodle proberen deze te maken.<br /><a href="https://docs.moodle.org/30/en/Office365/SharePoint">Meer informatie over het verbinden van Moodle en SharePoint</a>';
 $string['settings_sharepointlink_status_invalid'] = 'Dit is geen bruikbare SharePoint-site.';
 $string['settings_sharepointlink_status_notempty'] = 'Deze site is bruikbaar maar bestaat al. Misschien ontstaan er in Moodle conflicten met bestaande inhoud. Voor de beste resultaten voer je een SharePoint-site in die niet bestaat, waarna deze in Moodle wordt gemaakt.';
 $string['settings_sharepointlink_status_valid'] = 'Deze SharePoint-site wordt door Moodle gemaakt en wordt gebruikt voor Moodle-inhoud.';

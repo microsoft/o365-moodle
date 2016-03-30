@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365;
@@ -35,7 +35,7 @@ interface httpclientinterface {
       * @param array $options
       * @return bool
       */
-     public function post($url, $params = '', $options = array());
+    public function post($url, $params = '', $options = array());
 
      /**
       * HTTP GET method
@@ -45,7 +45,7 @@ interface httpclientinterface {
       * @param array $options
       * @return bool
       */
-     public function get($url, $params = array(), $options = array());
+    public function get($url, $params = array(), $options = array());
 
      /**
       * HTTP PATCH method
@@ -55,7 +55,7 @@ interface httpclientinterface {
       * @param array $options
       * @return bool
       */
-     public function patch($url, $params = '', $options = array());
+    public function patch($url, $params = '', $options = array());
 
     /**
      * HTTP DELETE method
@@ -65,14 +65,14 @@ interface httpclientinterface {
      * @param array $options
      * @return bool
      */
-     public function delete($url, $param = array(), $options = array());
+    public function delete($url, $param = array(), $options = array());
 
     /**
      * Set HTTP Request Header
      *
      * @param array $header
      */
-     public function setHeader($header);
+    public function setHeader($header);
 
      /**
       * Resets the HTTP Request headers (to prepare for the new request)

@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\page;
@@ -29,12 +29,18 @@ namespace local_o365\page;
 class acp extends base {
 
     /**
+     * Add base navbar for this page.
+     */
+    protected function add_navbar() {
+        global $PAGE;
+        $PAGE->navbar->add($this->title, new \moodle_url('/admin/settings.php?section=local_o365'));
+    }
+
+    /**
      * Set the system API user.
      */
     public function mode_setsystemuser() {
-        global $SESSION;
-        $SESSION->auth_oidc_justevent = true;
-        redirect(new \moodle_url('/auth/oidc/index.php', ['promptaconsent' => 1]));
+        redirect(new \moodle_url('/auth/oidc/index.php', ['promptaconsent' => 1, 'justauth' => 1]));
     }
 
     /**
@@ -46,7 +52,7 @@ class acp extends base {
         echo \html_writer::tag('h2', get_string('acp_healthcheck', 'local_o365'));
         echo '<br />';
 
-        $healthchecks = ['systemapiuser'];
+        $healthchecks = ['systemapiuser', 'ratelimit'];
         foreach ($healthchecks as $healthcheck) {
             $healthcheckclass = '\local_o365\healthcheck\\'.$healthcheck;
             $healthcheck = new $healthcheckclass();
@@ -54,14 +60,23 @@ class acp extends base {
 
             echo '<h5>'.$healthcheck->get_name().'</h5>';
             if ($result['result'] === true) {
-                echo '<div class="alert-success">'.$result['message'].'</div>';
+                echo '<div class="alert alert-success">'.$result['message'].'</div><br />';
             } else {
-                echo '<div class="alert-error">';
+                switch ($result['severity']) {
+                    case \local_o365\healthcheck\healthcheckinterface::SEVERITY_TRIVIAL:
+                        $severityclass = 'alert-info';
+                        break;
+
+                    default:
+                        $severityclass = 'alert-error';
+                }
+
+                echo '<div class="alert '.$severityclass.'">';
                 echo $result['message'];
                 if (isset($result['fixlink'])) {
                     echo '<br /><br />'.\html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));
                 }
-                echo '</div>';
+                echo '</div><br />';
             }
         }
 
@@ -170,7 +185,7 @@ class acp extends base {
         echo \html_writer::empty_tag('br');
         if (!empty($SESSION->o365matcherrors)) {
             foreach ($SESSION->o365matcherrors as $error) {
-                echo \html_writer::div($error, 'alert-error local_o365_statusmessage');
+                echo \html_writer::div($error, 'alert-error alert local_o365_statusmessage');
             }
             $SESSION->o365matcherrors = [];
         }
@@ -273,9 +288,78 @@ class acp extends base {
             echo \html_writer::end_tag('table');
             $matchqueue->close();
         } else {
-            $msgclasses = 'alert-info local_o365_statusmessage';
+            $msgclasses = 'alert-info alert local_o365_statusmessage';
             echo \html_writer::div(get_string('acp_usermatch_matchqueue_empty', 'local_o365'), $msgclasses);
         }
+        $this->standard_footer();
+    }
+
+    /**
+     * Resync course usergroup membership.
+     */
+    public function mode_maintenance_coursegroupusers() {
+        global $DB;
+        $courseid = optional_param('courseid', 0, PARAM_INT);
+        \core_php_time_limit::raise(0);
+        raise_memory_limit(MEMORY_EXTRA);
+        disable_output_buffering();
+
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $graphresource = \local_o365\rest\unified::get_resource();
+        $graphtoken = \local_o365\oauth2\systemtoken::instance(null, $graphresource, $clientdata, $httpclient);
+        if (empty($graphtoken)) {
+            mtrace('Could not get unified API token.');
+            return true;
+        }
+        $graphclient = new \local_o365\rest\unified($graphtoken, $httpclient);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
+
+        $sql = 'SELECT crs.id,
+                       obj.objectid as groupobjectid
+                  FROM {course} crs
+                  JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
+                 WHERE crs.id != ?';
+        $params = ['group', 'course', SITEID];
+        if (!empty($courseid)) {
+            $sql .= ' AND crs.id = ?';
+            $params[] = $courseid;
+        }
+        $courses = $DB->get_recordset_sql($sql, $params);
+        foreach ($courses as $course) {
+            try {
+                echo '<pre>';
+                $coursegroups->resync_group_membership($course->id, $course->groupobjectid);
+                echo '</pre>';
+                mtrace(PHP_EOL);
+            } catch (\Exception $e) {
+                mtrace('Could not sync course '.$course->id.'. Reason: '.$e->getMessage());
+            }
+        }
+        $courses->close();
+
+        die();
+    }
+
+    /**
+     * Maintenance tools.
+     */
+    public function mode_maintenance() {
+        global $DB, $OUTPUT, $PAGE, $SESSION;
+        $PAGE->navbar->add(get_string('acp_maintenance', 'local_o365'), new \moodle_url($this->url, ['mode' => 'maintenance']));
+        $PAGE->requires->jquery();
+        $this->standard_header();
+
+        echo \html_writer::tag('h2', get_string('acp_maintenance', 'local_o365'));
+        echo \html_writer::div(get_string('acp_maintenance_desc', 'local_o365'));
+        echo \html_writer::empty_tag('br');
+        echo \html_writer::div(get_string('acp_maintenance_warning', 'local_o365'), 'alert alert-info');
+
+        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_coursegroupusers']);
+        $toolname = get_string('acp_maintenance_coursegroupusers', 'local_o365');
+        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo \html_writer::div(get_string('acp_maintenance_coursegroupusers_desc', 'local_o365'));
+
         $this->standard_footer();
     }
 }

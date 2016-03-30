@@ -1,10 +1,9 @@
-.local_o365_statusmessage {
-  margin: 0.25rem 0;
-  padding: 0.5rem; }
-  .local_o365_statusmessage img {
-    margin-right: 0.25rem; }
-  .local_o365_statusmessage span, .local_o365_statusmessage a {
-    vertical-align: middle; }
+.local_o365_statusmessage.alert {
+  margin-bottom: 0.25rem; }
+.local_o365_statusmessage img {
+  margin-right: 0.25rem; }
+.local_o365_statusmessage span, .local_o365_statusmessage a {
+  vertical-align: middle; }
 
 .adminsetting_sharepointlink_message, .adminsetting_sharepointlink_status {
   margin: 0 0 0.5rem 0;
@@ -61,7 +60,7 @@
       background-color: transparent;
       display: inline-block;
       padding: 4px 4px 4px 40px; }
-  .o365_ucp_index .features .feature_aadlogin a, .o365_ucp_index .features .feature_aadlogin b {
+  .o365_ucp_index .features .feature_connection a, .o365_ucp_index .features .feature_connection b {
     background-image: url([[pix:local_o365|o365color]]); }
   .o365_ucp_index .features .feature_calendar a, .o365_ucp_index .features .feature_calendar b {
     background-image: url([[pix:local_o365|outlookcolor]]); }
@@ -74,12 +73,19 @@
   background-repeat: no-repeat;
   background-color: transparent;
   padding: 4px 4px 4px 35px; }
-  .o365_ucp_featurepage h3.featureheader.feature_aadlogin {
-    background-image: url([[pix:local_o365|o365color]]); }
   .o365_ucp_featurepage h3.featureheader.feature_calendar {
     background-image: url([[pix:local_o365|outlookcolor]]); }
   .o365_ucp_featurepage h3.featureheader.feature_onenote {
     background-image: url([[pix:local_o365|onenotecolor]]); }
+.o365_ucp_featurepage.feature_connection h3.featureheader {
+  background-image: url([[pix:local_o365|o365color]]); }
+.o365_ucp_featurepage.feature_connection div.connectionstatus {
+  margin: 2rem 0; }
+.o365_ucp_featurepage.feature_connection div.connectionoption {
+  margin: 0 0 1rem;
+  padding: 1rem; }
+  .o365_ucp_featurepage.feature_connection div.connectionoption h4 {
+    margin-top: 0; }
 
 .o365toollink {
   margin-bottom: 1rem; }
