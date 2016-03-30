@@ -34,9 +34,9 @@ class docsdotcom extends base {
      * @return string The replacement text/HTML.
      */
     public function get_replacement($matched) {
-        if (!empty($matched[1])) {
+        if (!empty($matched[0])) {
             $params = [
-                'url' => $matched[1],
+                'url' => $matched[1]. $matched[3] . '/' . $matched[4] . '/' . $matched[5] . '/' . $matched[6],
                 'format' => 'json',
                 'maxwidth' => '600',
                 'maxheight' => '400',
@@ -56,7 +56,7 @@ class docsdotcom extends base {
      * @return string Filtered text.
      */
     public function filter($text) {
-        $search = '#<a\s[^>]*href="(https://(www\.)?docs\.com/(.+?)/(.+?)/(.*))"(.*?)>(.*?)</a>#is';
+        $search = '/<a\s[^>]*href="(https?:\/\/(www\.)?)(docs\.com)\/(.+?)\/(.+?)\/(.+?)"(.*?)>(.*?)<\/a>/is';
         return preg_replace_callback($search, [$this, 'get_replacement'], $text);
     }
 }
