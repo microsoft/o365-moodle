@@ -137,8 +137,10 @@ class filter_oembed extends moodle_text_filter {
             $enabledkey = 'provider_'.$provider.'_enabled';
             if (!empty($filterconfig->$enabledkey)) {
                 $providerclass = '\filter_oembed\provider\\'.$provider;
-                $provider = new $providerclass();
-                $newtext = $provider->filter($newtext);
+                if (class_exists($providerclass)) {
+                    $provider = new $providerclass();
+                    $newtext = $provider->filter($newtext);
+                }
             }
         }
 
