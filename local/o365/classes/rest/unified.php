@@ -113,12 +113,6 @@ class unified extends \local_o365\rest\o365api {
         if ($apimethod[0] !== '/') {
             $apimethod = '/'.$apimethod;
         }
-        
-        // Check api version
-        if (strpos($apimethod, '/beta/') !== 0) {
-            $apimethod = '/v1.0'.$apimethod;
-        }
-        
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 
@@ -491,7 +485,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null Returned response, or null if error.
      */
     public function get_trending_files($parentid = '') {
-        $response = $this->apicall('get', '/beta/me/trendingAround');
+        $response = $this->betaapicall('get', '/me/trendingAround');
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
