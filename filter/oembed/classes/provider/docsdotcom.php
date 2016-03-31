@@ -18,7 +18,7 @@
  * @package filter_oembed
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2016 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace filter_oembed\provider;

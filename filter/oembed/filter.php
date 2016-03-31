@@ -18,7 +18,7 @@
  * Filter for component 'filter_oembed'
  *
  * @package   filter_oembed
- * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft Open Technologies, Inc.
+ * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * code based on the following filters...
  * Screencast (Mark Schall)
@@ -72,11 +72,11 @@ class filter_oembed extends moodle_text_filter {
             // Non string data can not be filtered anyway.
             return $text;
         }
-//        if (get_user_device_type() !== 'default'){
+        // if (get_user_device_type() !== 'default'){
             // no lazy video on mobile
             // return $text;
 
-//        }
+        // }
         if (stripos($text, '</a>') === false) {
             // Performance shortcut - all regexes below end with the </a> tag.
             // If not present nothing can match.
@@ -119,6 +119,8 @@ class filter_oembed extends moodle_text_filter {
         }
         $odburl = get_config('local_o365', 'odburl');
         if (get_config('filter_oembed', 'o365video') && !empty($odburl)) {
+            $odburl = preg_replace('/^https?:\/\//', '', $odburl);
+            $odburl = preg_replace('/\/.*/', '', $odburl);
             $trimedurl = preg_replace("/-my/", "", $odburl);
             $search = '/<a\s[^>]*href="(https?:\/\/)('.$odburl.'|'.$trimedurl.')\/(.*?)"(.*?)>(.*?)<\/a>/is';
             $newtext = preg_replace_callback($search, 'filter_oembed_o365videocallback', $newtext);
@@ -321,7 +323,7 @@ function filter_oembed_o365videocallback($link) {
             }
         }
     } catch (\Exception $e) {
-        \local_o365\utils::debug('filter_oembed share point execption: '.$e->getMessage(), 'filter_oembed_o365videocallback');
+        \local_o365\utils::debug('filter_oembed share point execption: '.$e->getMessage(), 'filter_oembed_o365videocallback', $e);
     }
     return $link[0];
 }
@@ -369,46 +371,30 @@ function filter_oembed_swaycallback($link) {
 /**
  * Makes the OEmbed request to the service that supports the protocol.
  *
- * @param $www URL for the Oembed request
+ * @param $url URL for the Oembed request
  * @return mixed|null|string The HTTP response object from the OEmbed request.
  */
-function filter_oembed_curlcall($www) {
-    $crl = curl_init();
-    $timeout = 15;
-    curl_setopt ($crl, CURLOPT_URL, $www);
-    curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
-    $ret = curl_exec($crl);
+function filter_oembed_curlcall($url) {
+    $curl = new \curl();
+    $ret = $curl->get($url);
 
     // Check if curl call fails.
-    if ($ret === false) {
+    if ($curl->errno != CURLE_OK) {
         // Check if error is due to network connection.
-        if (in_array(curl_errno($crl), array('6', '7', '28'))) {
-
-            // Try curl call for 3 times pausing 0.5 sec.
-            for ($i = 0; $i < 3; $i++) {
-                $ret = curl_exec($crl);
-
-                // If we get proper response, break the loop.
-                if ($ret !== false) {
-                    break;
-                }
-
-                usleep(500000);
-            }
-
-            // If still curl call failing, return null.
-            if ($ret === false) {
+        if (in_array($curl->errno, [6, 7, 28])) {
+            // Try curl call up to 3 times.
+            usleep(50000);
+            $retryno = (!is_int($retryno)) ? 0 : $retryno+1;
+            if ($retryno < 3) {
+                return $this->getoembeddata($url, $retryno);
+            } else {
                 return null;
             }
-
         } else {
             return null;
         }
     }
 
-    curl_close($crl);
     $result = json_decode($ret, true);
     return $result;
 }

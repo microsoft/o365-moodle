@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\page;
@@ -51,8 +51,16 @@ class base {
         $PAGE->set_url($this->url);
         $PAGE->set_context($this->context);
         $PAGE->set_pagelayout('standard');
-        $PAGE->navbar->add($this->title, $this->url);
+        $this->add_navbar();
         $PAGE->set_title($this->title);
+    }
+
+    /**
+     * Add base navbar for this page.
+     */
+    protected function add_navbar() {
+        global $PAGE;
+        $PAGE->navbar->add($this->title, $this->url);
     }
 
     /**

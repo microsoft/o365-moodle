@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc\loginflow;
@@ -140,10 +140,18 @@ class base {
      * Handle OIDC disconnection from Moodle account.
      *
      * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
+     * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account to a
+     *                                "linked" account.
+     * @param \moodle_url $redirect Where to redirect if successful.
+     * @param \moodle_url $selfurl The page this is accessed from. Used for some redirects.
      */
-    public function disconnect($justremovetokens = false, \moodle_url $redirect = null) {
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
+                               \moodle_url $selfurl = null) {
         if ($redirect === null) {
             $redirect = new \moodle_url('/auth/oidc/ucp.php');
+        }
+        if ($selfurl === null) {
+            $selfurl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
         }
         if ($justremovetokens === true) {
             global $USER, $DB, $CFG;
@@ -156,7 +164,7 @@ class base {
         } else {
             global $OUTPUT, $PAGE, $USER, $DB, $CFG;
             require_once($CFG->dirroot.'/user/lib.php');
-            $PAGE->set_url('/auth/oidc/ucp.php');
+            $PAGE->set_url($selfurl->out());
             $PAGE->set_context(\context_system::instance());
             $PAGE->set_pagelayout('standard');
             $USER->editing = false;
@@ -167,8 +175,7 @@ class base {
 
             // Check if we have recorded the user's previous login method.
             $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $USER->id]);
-            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true)
-                    ? $prevmethodrec->method : null;
+            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) ? $prevmethodrec->method : null;
             // Manual is always available, we don't need it twice.
             if ($prevauthmethod === 'manual') {
                 $prevauthmethod = null;
@@ -187,9 +194,11 @@ class base {
             $customdata = [
                 'canchooseusername' => $ccun,
                 'prevmethod' => $prevauthmethod,
+                'donotremovetokens' => $donotremovetokens,
+                'redirect' => $redirect,
             ];
 
-            $mform = new \auth_oidc\form\disconnect('?action=disconnectlogin', $customdata);
+            $mform = new \auth_oidc\form\disconnect($selfurl, $customdata);
 
             if ($mform->is_cancelled()) {
                 redirect($redirect);
@@ -226,7 +235,7 @@ class base {
                     $updateduser->password = $fromform->password;
                 } else if ($fromform->newmethod === $prevauthmethod) {
                     $updateduser->auth = $prevauthmethod;
-                    //  We can't use user_update_user as it will rehash the value.
+                    // We can't use user_update_user as it will rehash the value.
                     if (!empty($prevmethodrec->password)) {
                         $manualuserupdate = new \stdClass;
                         $manualuserupdate->id = $USER->id;
@@ -240,19 +249,24 @@ class base {
                 try {
                     user_update_user($updateduser);
                 } catch (\Exception $e) {
-                    $continueurl = new \moodle_url('/auth/oidc/ucp.php?action=disconnectlogin');
-                    throw new \moodle_exception($e->errorcode, '', $continueurl);
+                    throw new \moodle_exception($e->errorcode, '', $selfurl);
                 }
 
                 // Delete token data.
-                $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
+                if (empty($fromform->donotremovetokens)) {
+                    $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
 
-                $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
-                $event = \auth_oidc\event\user_disconnected::create($eventdata);
-                $event->trigger();
+                    $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+                    $event = \auth_oidc\event\user_disconnected::create($eventdata);
+                    $event->trigger();
+                }
 
                 $USER = $DB->get_record('user', ['id' => $USER->id]);
-                redirect($redirect);
+                if (!empty($fromform->redirect)) {
+                    redirect($fromform->redirect);
+                } else {
+                    redirect($redirect);
+                }
             }
 
             echo $OUTPUT->header();

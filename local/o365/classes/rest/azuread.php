@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\rest;
@@ -166,9 +166,10 @@ class azuread extends \local_o365\rest\o365api {
 
         // Determine whether we have write permissions.
         $writeappid = $allappdata['Microsoft.Azure.ActiveDirectory']['appId'];
-        $writepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'];
+        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'])
+            ? $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'] : null;
         $impersonatepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['user_impersonation']['id'];
-        $haswrite = (!empty($currentperms[$writeappid][$writepermid])) ? true : false;
+        $haswrite = (!empty($writepermid) && !empty($currentperms[$writeappid][$writepermid])) ? true : false;
         $hasimpersonate = (!empty($currentperms[$writeappid][$impersonatepermid])) ? true : false;
         $canfix = ($hasimpersonate === true) ? true : false;
 
@@ -457,7 +458,7 @@ class azuread extends \local_o365\rest\o365api {
             try {
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage());
+                \local_o365\utils::debug($e->getMessage(), 'rest\azuread\get_muser_upn', $e);
                 return false;
             }
             $resource = static::get_resource();

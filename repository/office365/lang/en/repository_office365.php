@@ -18,12 +18,12 @@
  * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $string['cachedef_unifiedfolderids'] = 'OneDrive for Business - Unified folder IDs';
 $string['configplugin'] = 'Configure OneDrive for Business Repository';
-$string['courses'] = 'Courses';
+$string['courses'] = 'SharePoint (Courses)';
 
 $string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the OneDrive for Business repository.';
@@ -34,9 +34,9 @@ $string['errorwhiledownload'] = 'An error occurred while downloading the file';
 $string['erroro365required'] = 'This file is currently only available to Office 365 users.';
 
 $string['file'] = 'File';
-$string['myfiles'] = 'My Files';
+$string['myfiles'] = 'OneDrive';
 $string['office365:view'] = 'View OneDrive for Business repository';
-$string['pluginname'] = 'OneDrive for Business';
+$string['pluginname'] = 'Office 365';
 $string['pluginname_help'] = 'A OneDrive for Business Repository';
 $string['upload'] = 'Upload New File';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Office 365 plugins</a></p>';

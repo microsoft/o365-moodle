@@ -18,7 +18,7 @@
  * @package    local_msaccount
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc.
+ * @copyright  Microsoft, Inc.
  */
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');

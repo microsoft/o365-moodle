@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\task;
@@ -41,6 +41,10 @@ class sharepointinit extends \core\task\adhoc_task {
      */
     public function execute() {
         global $DB;
+
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
 
         // API Setup.
         try {

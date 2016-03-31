@@ -17,35 +17,34 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $(function() {
 
+    $.fn.fieldmap = function(options) {
+        var defaultopts = {};
+        var opts = $.extend({}, defaultopts, options);
+        var main = this;
+        console.log(main);
 
-$.fn.fieldmap = function(options) {
-    var defaultopts = {};
-    var opts = $.extend({}, defaultopts, options);
-    var main = this;
-    console.log(main);
+        this.addrow = function() {
+            var row = main.find('textarea.maptpl').val();
+            main.find('table.fieldlist').append(row);
+        }
 
-    this.addrow = function() {
-        var row = main.find('textarea.maptpl').val();
-        main.find('table.fieldlist').append(row);
+        this.init = function() {
+            main.find('button.addmapping').click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                main.addrow();
+            });
+            main.find('table.fieldlist').on('click', 'button.removerow', function(e) {
+                $(this).parents('tr').remove();
+            });
+        }
+
+        this.init();
     }
-
-    this.init = function() {
-        main.find('button.addmapping').click(function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            main.addrow();
-        });
-        main.find('table.fieldlist').on('click', 'button.removerow', function(e) {
-            $(this).parents('tr').remove();
-        });
-    }
-
-    this.init();
-}
 
 });

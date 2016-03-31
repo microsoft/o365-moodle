@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\calsync\form\element;
@@ -49,7 +49,21 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @param array $customdata Array of form custom data.
      */
     public function calendarconstruct($elementName = null, $elementLabel = null, $text = null, $attributes = null, $customdata = []) {
-        parent::MoodleQuickForm_advcheckbox($elementName, $elementLabel, $text, $attributes, null);
+        parent::__construct($elementName, $elementLabel, $text, $attributes, null);
+        $this->customdata = $customdata;
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param string $elementName The name of the element.
+     * @param string $elementLabel The label of the element.
+     * @param string $text Text that appears after the checkbox.
+     * @param array $attributes Array of checkbox attributes.
+     * @param array $customdata Array of form custom data.
+     */
+    public function __construct($elementName = null, $elementLabel = null, $text = null, $attributes = null, $customdata = []) {
+        parent::__construct($elementName, $elementLabel, $text, $attributes, null);
         $this->customdata = $customdata;
     }
 

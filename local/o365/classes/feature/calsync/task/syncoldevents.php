@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\calsync\task;
@@ -117,11 +117,9 @@ class syncoldevents extends \core\task\adhoc_task {
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid))
-                                    ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
+                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid)) ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
                             } else if (isset($subscribersnotprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid))
-                                    ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
+                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid)) ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
                             }
                             $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
                                     $subscribersprimary, [], $calid);
@@ -231,9 +229,7 @@ class syncoldevents extends \core\task\adhoc_task {
                     mtrace('Syncing primary calendar users.');
                     try {
                         // Determine attendees - if this is a group event, limit to group members.
-                        $eventattendees = ($grouplimit !== null && is_array($grouplimit))
-                            ? array_intersect_key($subscribersprimary, $grouplimit)
-                            : $subscribersprimary;
+                        $eventattendees = ($grouplimit !== null && is_array($grouplimit)) ? array_intersect_key($subscribersprimary, $grouplimit) : $subscribersprimary;
 
                         // If there's a stored outlookeventid the event exists in o365, so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
@@ -241,11 +237,9 @@ class syncoldevents extends \core\task\adhoc_task {
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid))
-                                    ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
+                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid)) ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
                             } else if (isset($subscribersnotprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid))
-                                    ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
+                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid)) ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
                             }
                             $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
                                     $eventattendees, [], $calid);
@@ -331,7 +325,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $usertoken = $calsync->get_user_token($userid);
         if (empty($usertoken)) {
             // No token, can't sync.
-            \local_o365\utils::debug('Could not get user token for calendar sync.');
+            \local_o365\utils::debug('Could not get user token for calendar sync.', 'sync_userevents');
             return false;
         }
 

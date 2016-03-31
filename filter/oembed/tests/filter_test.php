@@ -20,7 +20,7 @@
  * @package    filter_oembed
  * @author Sushant Gawali (sushant@introp.net)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright Microsoft Open Technologies, Inc.
+ * @copyright Microsoft, Inc.
  */
 
 defined('MOODLE_INTERNAL') || die();
