@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\page;
@@ -163,7 +163,7 @@ class ajax extends base {
                     die();
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'detect aadtenant');
+                \local_o365\utils::debug($e->getMessage(), 'detect aadtenant', $e);
                 echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
                 die();
             }
@@ -179,7 +179,7 @@ class ajax extends base {
                     die();
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'detect odburl');
+                \local_o365\utils::debug($e->getMessage(), 'detect odburl', $e);
                 echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
                 die();
             }
@@ -215,6 +215,41 @@ class ajax extends base {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
         }
 
+        // App data.
+        $appdata = new \stdClass;
+        try {
+            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+            $appinfo = $aadapiclient->get_application_info();
+            $correctredirecturl = \auth_oidc\utils::get_redirecturl();
+
+            // Check reply url.
+            if (isset($appinfo['value'][0]['replyUrls'])) {
+                $redirecturls = (array)$appinfo['value'][0]['replyUrls'];
+                $appdata->replyurl = new \stdClass;
+                $appdata->replyurl->correct = false;
+                $appdata->replyurl->detected = implode(', ', $redirecturls);
+                $appdata->replyurl->intended = $correctredirecturl;
+                foreach ($redirecturls as $redirecturl) {
+                    if ($redirecturl === $correctredirecturl) {
+                        $appdata->replyurl->correct = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isset($appinfo['value'][0]['homepage'])) {
+                $appdata->signonurl = new \stdClass;
+                $appdata->signonurl->correct = ($appinfo['value'][0]['homepage'] === $correctredirecturl) ? true : false;
+                $appdata->signonurl->detected = $appinfo['value'][0]['homepage'];
+                $appdata->signonurl->intended = $correctredirecturl;
+            }
+
+        } catch (\Exception $e) {
+            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
+            $appdata->error = $e->getMessage();
+        }
+        $data->appdata = $appdata;
+
         // Legacy API.
         $legacyapi = new \stdClass;
         try {
@@ -223,7 +258,7 @@ class ajax extends base {
             $legacyapi->missingperms = $missingperms;
             $legacyapi->haswrite = $haswrite;
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy');
+            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
             $legacyapi->error = $e->getMessage();
         }
         $data->legacyapi = $legacyapi;
@@ -249,7 +284,7 @@ class ajax extends base {
                 }
             } catch (\Exception $e) {
                 $unifiedapi->active = false;
-                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified');
+                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified', $e);
                 $unifiedapi->error = $e->getMessage();
             }
         }

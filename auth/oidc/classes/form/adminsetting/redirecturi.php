@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc\form\adminsetting;
@@ -76,9 +76,8 @@ class redirecturi extends \admin_setting {
      */
     public function output_html($data, $query = '') {
         global $CFG;
-
-        $wwwroot = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
-        $html = \html_writer::tag('h5', $wwwroot.'/auth/oidc/');
+        $redirecturl = \auth_oidc\utils::get_redirecturl();
+        $html = \html_writer::tag('h5', $redirecturl);
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', null, $query);
     }
 }

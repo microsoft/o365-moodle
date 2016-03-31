@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\page;
@@ -71,6 +71,9 @@ class ucp extends base {
      */
     public function mode_calendar() {
         global $DB, $USER, $OUTPUT, $PAGE;
+
+        $PAGE->navbar->add(get_string('ucp_calsync_title', 'local_o365'), new \moodle_url('/local/o365/ucp.php?action=calendar'));
+
         if (empty($this->o365connected)) {
             throw new \moodle_exception('ucp_notconnected', 'local_o365');
         }
@@ -113,7 +116,7 @@ class ucp extends base {
         } else if ($fromform = $mform->get_data()) {
             \local_o365\feature\calsync\form\subscriptions::update_subscriptions($fromform, $primarycalid,
                     $customdata['cancreatesiteevents'], $customdata['cancreatecourseevents']);
-            redirect(new \moodle_url('/local/o365/ucp.php'));
+            redirect(new \moodle_url('/local/o365/ucp.php?action=calendar&saved=1'));
         } else {
             $PAGE->requires->jquery();
             $defaultdata = [];
@@ -168,7 +171,6 @@ class ucp extends base {
         $auth = new \auth_oidc\loginflow\authcode;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         if ($uselogin !== true) {
-            $SESSION->auth_oidc_connectiononly = true;
             $stateparams['connectiononly'] = true;
         }
         $auth->initiateauthrequest($promptlogin, $stateparams, $extraparams);
@@ -185,6 +187,10 @@ class ucp extends base {
      * Connect to o365 without switching user's login method.
      */
     public function mode_connecttoken() {
+        global $USER;
+        if (\local_o365\utils::is_o365_connected($USER->id) !== true) {
+            require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+        }
         $this->doauthrequest(false);
     }
 
@@ -192,47 +198,148 @@ class ucp extends base {
      * Disconnect from o365.
      */
     public function mode_disconnecttoken() {
-        global $CFG;
+        global $CFG, $USER;
+        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
         require_once($CFG->dirroot.'/auth/oidc/auth.php');
         $auth = new \auth_plugin_oidc;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $redirect = new \moodle_url('/local/o365/ucp.php');
-        $auth->disconnect(true, $redirect);
+        $selfurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+        $auth->disconnect(true, false, $redirect, $selfurl);
+    }
+
+    /**
+     * Disconnect from o365.
+     */
+    public function mode_disconnectlogin() {
+        global $CFG, $USER;
+        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $auth = new \auth_plugin_oidc;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $redirect = new \moodle_url('/local/o365/ucp.php');
+        $selfurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnectlogin']);
+        $auth->disconnect(false, false, $redirect, $selfurl);
+    }
+
+    /**
+     * Disconnect from o365.
+     */
+    public function mode_migratetolinked() {
+        global $CFG, $USER;
+        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $auth = new \auth_plugin_oidc;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $redirect = new \moodle_url('/local/o365/ucp.php');
+        $selfurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'migratetolinked']);
+        $auth->disconnect(false, true, $redirect, $selfurl);
+    }
+
+    /**
+     * Office 365 connection management page.
+     */
+    public function mode_connection() {
+        global $OUTPUT, $USER, $PAGE;
+        $strtitle = get_string('ucp_index_connection_title', 'local_o365');
+        $PAGE->navbar->add($strtitle, new \moodle_url('/local/o365/ucp.php?action=connection'));
+        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
+        //$opname = 'Office 365';
+        $connectiontype = $this->get_connection_type();
+        $opname = get_config('auth_oidc', 'opname');
+        echo $OUTPUT->header();
+        echo \html_writer::start_div('o365_ucp_featurepage feature_connection');
+
+        echo \html_writer::tag('h3', $strtitle, ['class' => 'featureheader feature_connection']);
+        echo \html_writer::div(get_string('ucp_connection_desc', 'local_o365'));
+
+        $statusstring = get_string('ucp_connection_disconnected', 'local_o365');
+        $statusclasses = 'alert alert-info';
+        switch ($connectiontype) {
+            case 'aadlogin':
+                $statusclasses = 'alert alert-success';
+                $o365upn = \local_o365\utils::get_o365_upn($USER->id);
+                $statusstring = get_string('ucp_connection_aadlogin_active', 'local_o365', $o365upn);
+                break;
+
+            case 'linked':
+                $statusclasses = 'alert alert-success';
+                $o365upn = \local_o365\utils::get_o365_upn($USER->id);
+                $statusstring = get_string('ucp_connection_linked_active', 'local_o365', $o365upn);
+                break;
+        }
+        echo \html_writer::start_div('connectionstatus '.$statusclasses);
+        echo \html_writer::tag('h5', $statusstring);
+        echo \html_writer::end_div();
+
+        echo \html_writer::tag('h5', get_string('ucp_connection_options', 'local_o365'));
+
+        // AAD Login.
+        echo \html_writer::start_div('connectionoption');
+        echo \html_writer::tag('h4', get_string('ucp_connection_aadlogin', 'local_o365'));
+        $loginflow = get_config('auth_oidc', 'loginflow');
+        switch ($loginflow) {
+            case 'authcode':
+            case 'rocreds':
+                echo get_string('ucp_connection_aadlogin_desc_'.$loginflow, 'local_o365', $opname);
+                break;
+        }
+        switch ($connectiontype) {
+            case 'aadlogin';
+                if (is_enabled_auth('manual') === true) {
+                    $disconnectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnectlogin']);
+                    $strdisconnect = get_string('ucp_connection_aadlogin_stop', 'local_o365', $opname);
+                    $linkhtml = \html_writer::link($disconnectlinkurl, $strdisconnect);
+                    echo \html_writer::tag('h5', $linkhtml);
+                }
+                break;
+
+            default:
+                $connectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
+                $linkhtml = \html_writer::link($connectlinkurl, get_string('ucp_connection_aadlogin_start', 'local_o365', $opname));
+                echo \html_writer::tag('h5', $linkhtml);
+        }
+        echo \html_writer::end_div();
+
+        // Connected account.
+        echo \html_writer::start_div('connectionoption');
+        echo \html_writer::tag('h4', get_string('ucp_connection_linked', 'local_o365'));
+        echo \html_writer::div(get_string('ucp_connection_linked_desc', 'local_o365'));
+        switch ($connectiontype) {
+            case 'linked':
+                $disconnecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
+                $linkhtml = \html_writer::link($disconnecttokenurl, get_string('ucp_connection_linked_stop', 'local_o365', $opname));
+                break;
+
+            case 'aadlogin':
+                $connecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'migratetolinked']);
+                $linkhtml = \html_writer::link($connecttokenurl, get_string('ucp_connection_linked_migrate', 'local_o365', $opname));
+                break;
+
+            default:
+                $connecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                $linkhtml = \html_writer::link($connecttokenurl, get_string('ucp_connection_linked_start', 'local_o365', $opname));
+        }
+
+        echo \html_writer::tag('h5', $linkhtml);
+
+        echo \html_writer::end_div();
+
+        echo \html_writer::end_div();
+        echo $OUTPUT->footer();
     }
 
     /**
      * Azure AD Login status page.
      */
     public function mode_aadlogin() {
-        global $OUTPUT, $USER;
-        require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
-        $opname = 'Office 365';
-        echo $OUTPUT->header();
-        echo \html_writer::start_div('o365_ucp_featurepage');
-        $strtitle = get_string('ucp_index_aadlogin_title', 'local_o365');
-        echo \html_writer::tag('h3', $strtitle, ['class' => 'featureheader feature_aadlogin']);
-        if ($this->o365connected === true && isset($USER->auth) && $USER->auth === 'oidc') {
-            echo get_string('ucp_index_aadlogin_active', 'local_o365');
-            if (is_enabled_auth('manual') === true) {
-                $disconnectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-                $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
-                $linkhtml = \html_writer::link($disconnectlinkuri, $strdisconnect);
-                echo \html_writer::tag('h5', $linkhtml);
-            }
-        } else {
-            echo get_string('ucp_index_aadlogin_inactive', 'local_o365');
-            $connectlinkuri = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
-            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
-            echo \html_writer::tag('h5', $linkhtml);
-        }
-        echo \html_writer::end_div();
-        echo $OUTPUT->footer();
+        redirect(new \moodle_url('/local/o365/ucp.php?action=connection'));
     }
 
     /**
      * Print a feature on the index page.
      *
-     * @param string $id The feature identifier: "aadlogin", "calendar", "onenote".
+     * @param string $id The feature identifier: "connection", "calendar", "onenote".
      * @param bool $enabled Whether the feature is accessible or not.
      * @return string HTML for the feature entry.
      */
@@ -253,6 +360,16 @@ class ucp extends base {
         return $html;
     }
 
+    protected function get_connection_type() {
+        global $USER;
+
+        if ($this->o365connected === true) {
+            return (isset($USER->auth) && $USER->auth === 'oidc') ? 'aadlogin' : 'linked';
+        } else {
+            return 'notconnected';
+        }
+    }
+
     /**
      * Get HTML for the connection status indicator box.
      *
@@ -264,28 +381,40 @@ class ucp extends base {
         $classes = 'connectionstatus';
         $icon = '';
         $msg = '';
+        $manageconnectionurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
+        $canmanage = (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true)
+            ? true : false;
         switch ($status) {
             case 'connected':
                 $classes .= ' alert-success';
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
-                if (isset($USER->auth) && $USER->auth !== 'oidc') {
-                    $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
-                    $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
-                    $disconnecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
-                    $msg .= '<br /><br />';
-                    $msg .= \html_writer::tag('b', get_string('ucp_index_connectionstatus_manage', 'local_o365')).'<br />';
-                    $msg .= $OUTPUT->pix_icon('t/delete', 'valid', 'moodle');
-                    $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
-                    $msg .= '<br />';
-                    $msg .= $OUTPUT->pix_icon('i/reload', 'valid', 'moodle');
-                    $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
-                } else {
-                    $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
-                    $msg .= '<br /><br />';
-                    $msg .= get_string('ucp_index_aadlogin_active', 'local_o365');
-                    $disconnecturl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-                    $msg .= '<br /><br />';
-                    $msg .= \html_writer::link($disconnecturl, get_string('ucp_index_connectionstatus_disconnect', 'local_o365'));
+                $connectiontype = $this->get_connection_type();
+                switch($connectiontype) {
+                    case 'linked':
+                        $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
+                        $msg .= '<br /><br />';
+                        $msg .= get_string('ucp_index_connectionstatus_usinglinked', 'local_o365');
+                        if ($canmanage === true) {
+                            $msg .= '<br /><br />';
+                            $msg .= $OUTPUT->pix_icon('t/edit', 'valid', 'moodle');
+                            $msg .= \html_writer::link($manageconnectionurl, get_string('ucp_index_connectionstatus_manage', 'local_o365'));
+                            $msg .= '<br />';
+                        }
+                        $msg .= $OUTPUT->pix_icon('i/reload', 'valid', 'moodle');
+                        $refreshurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                        $msg .= \html_writer::link($refreshurl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
+                        break;
+
+                    case 'aadlogin':
+                        $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
+                        $msg .= '<br /><br />';
+                        $msg .= get_string('ucp_index_connectionstatus_usinglogin', 'local_o365');
+                        if ($canmanage === true) {
+                            $msg .= '<br /><br />';
+                            $msg .= $OUTPUT->pix_icon('t/edit', 'valid', 'moodle');
+                            $msg .= \html_writer::link($manageconnectionurl, get_string('ucp_index_connectionstatus_manage', 'local_o365'));
+                        }
+                        break;
                 }
                 break;
 
@@ -302,9 +431,11 @@ class ucp extends base {
                 $classes .= ' alert-error';
                 $icon = $OUTPUT->pix_icon('i/info', 'valid', 'moodle');
                 $msg = get_string('ucp_index_connectionstatus_notconnected', 'local_o365');
-                $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
-                $msg .= '<br /><br />';
-                $msg .= \html_writer::link($connecturl, get_string('ucp_index_connectionstatus_connect', 'local_o365'));
+                if ($canmanage === true) {
+                    $msg .= '<br /><br />';
+                    $msg .= $OUTPUT->pix_icon('t/edit', 'valid', 'moodle');
+                    $msg .= \html_writer::link($manageconnectionurl, get_string('ucp_index_connectionstatus_manage', 'local_o365'));
+                }
                 break;
         }
 
@@ -322,7 +453,6 @@ class ucp extends base {
     public function mode_default() {
         global $OUTPUT, $DB, $USER;
 
-        $opname = 'Office 365';
         echo $OUTPUT->header();
         echo \html_writer::start_div('o365_ucp_index');
         echo \html_writer::tag('h2', $this->title);
@@ -349,7 +479,7 @@ class ucp extends base {
         echo \html_writer::tag('p', $introstr);
 
         if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
-            echo $this->print_index_feature('aadlogin', true);
+            echo $this->print_index_feature('connection', true);
         }
         echo $this->print_index_feature('calendar', $this->o365connected);
         echo $this->print_index_feature('onenote', $this->o365connected);

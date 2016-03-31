@@ -18,7 +18,7 @@
  * Filter for component 'filter_oembed'
  *
  * @package   filter_oembed
- * @copyright 2012 Matthew Cannings, Sandwell College; modified 2015 by Microsoft Open Technologies, Inc.
+ * @copyright 2012 Matthew Cannings, Sandwell College; modified 2015 by Microsoft, Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * code based on the following filters...
  * Screencast (Mark Schall)
@@ -26,6 +26,8 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
+
+require_once(__DIR__.'/filter.php');
 
 if ($ADMIN->fulltree) {
     $torf = array('1' => get_string('yes'), '0' => get_string('no'));

@@ -18,7 +18,7 @@
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $string['pluginname'] = 'Microsoft block';
@@ -49,3 +49,15 @@ $string['connecttoo365'] = 'Connect to Office 365';
 $string['geto365'] = 'Get Office 365';
 $string['settings_showo365download'] = 'Show Office 365 download links';
 $string['settings_showo365download_desc'] = 'Enable or disable the Office 365 download links in the block.';
+$string['settings_showonenotenotebook'] = 'Show OneNote notebook link';
+$string['settings_showonenotenotebook_desc'] = 'Enable or disable the OneNote notebook link in the block.';
+$string['settings_showoutlooksync'] = 'Show Configure Outlook sync link';
+$string['settings_showoutlooksync_desc'] = 'Enable or disable the Configure Outlook sync link in the block.';
+$string['settings_showpreferences'] = 'Show Preferences link';
+$string['settings_showpreferences_desc'] = 'Enable or disable the Preferences link in the block.';
+$string['settings_showo365connect'] = 'Show Office 365 Connect link';
+$string['settings_showo365connect_desc'] = 'Enable or disable the Office 365 Connect link in the block.';
+$string['settings_showmanageo365conection'] = 'Show Manage Office 365 Connection link';
+$string['settings_showmanageo365conection_desc'] = 'Enable or disable the Manage Office 365 Connection link in the block.';
+$string['settings_showcoursespsite'] = 'Show Course SharePoint site link';
+$string['settings_showcoursespsite_desc'] = 'Enable or disable the Course SharePoint site link in the block.';

@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 defined('MOODLE_INTERNAL') || die;
@@ -46,6 +46,12 @@ if ($hassiteconfig) {
     $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatch']);
     $desc = get_string('settings_usermatch_details', 'local_o365');
     $settings->add(new \local_o365\adminsetting\toollink('local_o365/usermatch', $label, $linktext, $linkurl, $desc));
+
+    $label = get_string('settings_maintenance', 'local_o365');
+    $linktext = get_string('settings_maintenance_linktext', 'local_o365');
+    $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'maintenance']);
+    $desc = get_string('settings_maintenance_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\toollink('local_o365/maintenance', $label, $linktext, $linkurl, $desc));
 
     $label = get_string('settings_header_options', 'local_o365');
     $desc = '';
@@ -98,7 +104,8 @@ if ($hassiteconfig) {
     $settings->add(new \admin_setting_configcheckbox('local_o365/creategroups', $label, $desc, '0'));
 
     $label = get_string('settings_debugmode', 'local_o365');
-    $desc = get_string('settings_debugmode_details', 'local_o365');
+    $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
+    $desc = get_string('settings_debugmode_details', 'local_o365', $logurl->out());
     $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
 
     $label = get_string('settings_photoexpire', 'local_o365');

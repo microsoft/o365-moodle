@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\usersync;
@@ -156,6 +156,7 @@ class main {
         $apiclient = $this->construct_outlook_api($muserid, true);
         $size = $apiclient->get_photo_metadata($user);
         $muser = $DB->get_record('user', array('id' => $muserid), 'id, picture', MUST_EXIST);
+        $context = \context_user::instance($muserid, MUST_EXIST);
         // If there is no meta data, there is no photo.
         if (empty($size)) {
             // Profile photo has been deleted.
@@ -182,7 +183,6 @@ class main {
                 }
                 fwrite($fp, $image);
                 fclose($fp);
-                $context = \context_user::instance($muserid, MUST_EXIST);
                 $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                 $photoid = $size['@odata.mediaEtag'];
                 if ($newpicture != $muser->picture) {
@@ -495,7 +495,7 @@ class main {
                         $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
-                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire*3600) < time())) {
+                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire * 3600) < time())) {
                     try {
                         if (!PHPUNIT_TEST) {
                             $this->assign_photo($existinguser->muserid, $user['upnlower']);

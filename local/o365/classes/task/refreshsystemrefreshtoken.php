@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\task;
@@ -37,18 +37,17 @@ class refreshsystemrefreshtoken extends \core\task\scheduled_task {
     }
 
     /**
-     * Do the job.
+     * Attempt token refresh.
      */
     public function execute() {
-        // Attempt token refresh.
-        $oidcconfig = get_config('auth_oidc');
-        if (!empty($oidcconfig)) {
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-                    $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-            $graphresource = 'https://graph.windows.net';
-            $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource(null, $graphresource, $clientdata, $httpclient);
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
         }
+
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $graphresource = \local_o365\rest\azuread::get_resource();
+        $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource(null, $graphresource, $clientdata, $httpclient);
         return true;
     }
 }

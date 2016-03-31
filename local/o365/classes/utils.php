@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365;
@@ -74,6 +74,28 @@ class utils {
     }
 
     /**
+     * Get the UPN of the connected Office 365 account.
+     *
+     * @param int $userid The Moodle user id.
+     * @return string|null The UPN of the connected Office 365 account, or null if none found.
+     */
+    public static function get_o365_upn($userid) {
+        global $DB;
+        $sql = 'SELECT *
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u ON tok.username = u.username
+                 WHERE tok.resource = ? AND u.id = ? ORDER BY tok.id DESC';
+        $params = ['https://graph.windows.net', $userid];
+        $records = $DB->get_records_sql($sql, $params, 0, 1);
+        if (!empty($records)) {
+            $record = reset($records);
+           return (!empty($record) && !empty($record->oidcusername)) ? $record->oidcusername : null;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Determine if a user is connected to Office 365.
      *
      * @param int $userid The user's ID.
@@ -101,6 +123,12 @@ class utils {
         }
     }
 
+    /**
+     * Convert any value into a debuggable string.
+     *
+     * @param mixed $val The variable to convert.
+     * @return string A string representation.
+     */
     public static function tostring($val) {
         if (is_scalar($val)) {
             if (is_bool($val)) {
@@ -110,6 +138,18 @@ class utils {
             }
         } else if (is_null($val)) {
             return '(null)';
+        } else if ($val instanceof \Exception) {
+            $valinfo = [
+                'file' => $val->getFile(),
+                'line' => $val->getLine(),
+                'message' => $val->getMessage(),
+            ];
+            if ($val instanceof \moodle_exception) {
+                $valinfo['debuginfo'] = $val->debuginfo;
+                $valinfo['errorcode'] = $val->errorcode;
+                $valinfo['module'] = $val->module;
+            }
+            return print_r($valinfo, true);
         } else {
             return print_r($val, true);
         }

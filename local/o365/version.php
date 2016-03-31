@@ -18,16 +18,16 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111908;
+$plugin->version = 2015111911;
 $plugin->requires = 2015111600;
 $plugin->component = 'local_o365';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.6';
+$plugin->release = '30.0.0.9';
 $plugin->dependencies = [
-    'auth_oidc' => 2015111905
+    'auth_oidc' => 2015111906
 ];
