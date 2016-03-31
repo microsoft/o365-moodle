@@ -113,6 +113,7 @@ class unified extends \local_o365\rest\o365api {
         if ($apimethod[0] !== '/') {
             $apimethod = '/'.$apimethod;
         }
+        $apimethod = '/v1.0'.$apimethod;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 
