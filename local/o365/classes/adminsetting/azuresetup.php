@@ -18,10 +18,13 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\adminsetting;
+
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
  * Admin setting to detect and set permissions in Azure AD.
@@ -90,7 +93,7 @@ class azuresetup extends \admin_setting {
         } else {
             $icon = $OUTPUT->pix_icon('i/warning', 'prerequisite not complete', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_detectperms_nocreds', 'local_o365'));
-            $settinghtml .= \html_writer::tag('div', $icon.$message, ['class' => 'alert-info local_o365_statusmessage']);
+            $settinghtml .= \html_writer::tag('div', $icon.$message, ['class' => 'alert-info alert local_o365_statusmessage']);
         }
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
@@ -127,6 +130,17 @@ class azuresetup extends \admin_setting {
                                     strerrorfix: "'.addslashes(get_string('settings_detectperms_errorfix', 'local_o365')).'",
                                     strerrorcheck: "'.addslashes(get_string('settings_azuresetup_errorcheck', 'local_o365')).'",
                                     strnoinfo: "'.addslashes(get_string('settings_azuresetup_noinfo', 'local_o365')).'",
+
+                                    strappdataheader: "'.addslashes(get_string('settings_azuresetup_appdataheader', 'local_o365')).'",
+                                    strappdatadesc: "'.addslashes(get_string('settings_azuresetup_appdatadesc', 'local_o365')).'",
+                                    strappdatareplyurlcorrect: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlcorrect', 'local_o365')).'",
+                                    strappdatareplyurlincorrect: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlincorrect', 'local_o365')).'",
+                                    strappdatareplyurlgeneralerror: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlgeneralerror', 'local_o365')).'",
+                                    strappdatasignonurlcorrect: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlcorrect', 'local_o365')).'",
+                                    strappdatasignonurlincorrect: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlincorrect', 'local_o365')).'",
+                                    strappdatasignonurlgeneralerror: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlgeneralerror', 'local_o365')).'",
+                                    strdetectedval: "'.addslashes(get_string('settings_azuresetup_detectedval', 'local_o365')).'",
+                                    strcorrectval: "'.addslashes(get_string('settings_azuresetup_correctval', 'local_o365')).'",
 
                                     showunified: '.$unifiedenabled.',
                                     strunifiedheader: "'.addslashes(get_string('settings_azuresetup_unifiedheader', 'local_o365')).'",

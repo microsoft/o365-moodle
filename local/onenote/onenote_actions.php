@@ -18,7 +18,7 @@
  * @package    local_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc.
+ * @copyright  Microsoft, Inc.
  */
 
 require_once(__DIR__.'/../../config.php');
@@ -28,12 +28,12 @@ $PAGE->set_url('/local/onenote/onenote_actions.php');
 $PAGE->set_context(\context_system::instance());
 
 $action = required_param('action', PARAM_TEXT);
-$cmid = required_param('cmid', PARAM_INT);
-$wantfeedbackpage = optional_param('wantfeedback', false, PARAM_BOOL);
-$isteacher = optional_param('isteacher', false, PARAM_BOOL);
-$subuserid = optional_param('submissionuserid', null, PARAM_INT);
-$sub = optional_param('submissionid', null, PARAM_INT);
-$gradeid = optional_param('gradeid', null, PARAM_INT);
+$cmid = (int)required_param('cmid', PARAM_INT);
+$wantfeedbackpage = (bool)optional_param('wantfeedback', false, PARAM_BOOL);
+$isteacher = (bool)optional_param('isteacher', false, PARAM_BOOL);
+$subuserid = (int)optional_param('submissionuserid', null, PARAM_INT);
+$sub = (int)optional_param('submissionid', null, PARAM_INT);
+$gradeid = (int)optional_param('gradeid', null, PARAM_INT);
 
 $onenoteapi = \local_onenote\api\base::getinstance();
 $url = $onenoteapi->get_page($cmid, $wantfeedbackpage, $isteacher, $subuserid, $sub, $gradeid);

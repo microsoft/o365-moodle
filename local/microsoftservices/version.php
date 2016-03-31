@@ -18,22 +18,22 @@
  * @package local_microsoftservices
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111902;
+$plugin->version = 2015111904;
 $plugin->requires = 2015111600;
 $plugin->component = 'local_microsoftservices';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.2';
+$plugin->release = '30.0.0.4';
 $plugin->dependencies = [
-    'block_microsoft' => 2015111904,
-    'local_msaccount' => 2015111902,
-    'local_onenote' => 2015111902,
-    'assignfeedback_onenote' => 2015111902,
-    'assignsubmission_onenote' => 2015111902,
-    'repository_onenote' => 2015111902,
-    'filter_oembed' => 2015111903,
+    'block_microsoft' => 2015111907,
+    'local_msaccount' => 2015111903,
+    'local_onenote' => 2015111904,
+    'assignfeedback_onenote' => 2015111903,
+    'assignsubmission_onenote' => 2015111903,
+    'repository_onenote' => 2015111903,
+    'filter_oembed' => 2015111906,
 ];

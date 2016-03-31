@@ -18,10 +18,13 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\adminsetting;
+
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
  * Admin setting to set the system API user.
@@ -100,14 +103,14 @@ class systemapiuser extends \admin_setting {
             $message = \html_writer::tag('span', get_string('settings_systemapiuser_userset', 'local_o365', $setuser)).' ';
             $linkstr = get_string('settings_systemapiuser_change', 'local_o365');
             $message .= \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-left: 0.5rem']);
-            $messageattrs = ['class' => 'local_o365_statusmessage alert-success'];
+            $messageattrs = ['class' => 'local_o365_statusmessage alert alert-success'];
             $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         } else {
             $message = \html_writer::tag('span', get_string('settings_systemapiuser_usernotset', 'local_o365')).' ';
             $linkstr = get_string('settings_systemapiuser_setuser', 'local_o365');
             $message .= \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-left: 0.5rem']);
-            $messageattrs = ['class' => 'local_o365_statusmessage alert-info'];
+            $messageattrs = ['class' => 'local_o365_statusmessage alert alert-info'];
             $icon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         }

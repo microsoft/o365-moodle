@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc;
@@ -43,13 +43,13 @@ class utils {
 
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
-            \auth_oidc\utils::debug('Bad response received', $caller, $response);
+            self::debug('Bad response received', $caller, $response);
             throw new \moodle_exception('erroroidccall', 'auth_oidc');
         }
 
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
-            \auth_oidc\utils::debug($errmsg, $caller, $result);
+            self::debug($errmsg, $caller, $result);
             if (isset($result['error_description'])) {
                 throw new \moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
             } else {
@@ -60,15 +60,15 @@ class utils {
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "'.$key.'"';
-                \auth_oidc\utils::debug($errmsg, $caller, $result);
+                self::debug($errmsg, $caller, $result);
                 throw new \moodle_exception('erroroidccall', 'auth_oidc');
             }
 
             if ($val !== null && $result[$key] !== $val) {
-                $strreceivedval = \auth_oidc\utils::tostring($result[$key]);
-                $strval = \auth_oidc\utils::tostring($val);
+                $strreceivedval = self::tostring($result[$key]);
+                $strval = self::tostring($val);
                 $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
-                \auth_oidc\utils::debug($errmsg, $caller, $result);
+                self::debug($errmsg, $caller, $result);
                 throw new \moodle_exception('erroroidccall', 'auth_oidc');
             }
         }
@@ -90,6 +90,18 @@ class utils {
             }
         } else if (is_null($val)) {
             return '(null)';
+        } else if ($val instanceof \Exception) {
+            $valinfo = [
+                'file' => $val->getFile(),
+                'line' => $val->getLine(),
+                'message' => $val->getMessage(),
+            ];
+            if ($val instanceof \moodle_exception) {
+                $valinfo['debuginfo'] = $val->debuginfo;
+                $valinfo['errorcode'] = $val->errorcode;
+                $valinfo['module'] = $val->module;
+            }
+            return print_r($valinfo, true);
         } else {
             return print_r($val, true);
         }
@@ -109,5 +121,16 @@ class utils {
             $event = \auth_oidc\event\action_failed::create(['other' => $fullmessage]);
             $event->trigger();
         }
+    }
+
+    /**
+     * Get the redirect URL that should be set in the identity provider
+     *
+     * @return string The redirect URL.
+     */
+    public static function get_redirecturl() {
+        global $CFG;
+        $wwwroot = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
+        return $wwwroot.'/auth/oidc/';
     }
 }

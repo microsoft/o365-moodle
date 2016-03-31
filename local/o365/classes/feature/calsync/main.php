@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\calsync;
@@ -32,7 +32,7 @@ class main {
         $this->httpclient = (!empty($httpclient)) ? $httpclient : new \local_o365\httpclient();
     }
 
-	/**
+    /**
      * Construct a calendar API client using the system API user.
      *
      * @param int $muserid The userid to get the outlook token for.

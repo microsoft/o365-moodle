@@ -18,13 +18,14 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\calsync\form;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->dirroot.'/lib/formslib.php');
 \MoodleQuickForm::registerElementType('localo365calendar', "$CFG->dirroot/local/o365/classes/feature/calsync/form/element/calendar.php", '\local_o365\feature\calsync\form\element\calendar');
 
@@ -40,9 +41,16 @@ class subscriptions extends \moodleform {
 
         $mform =& $this->_form;
 
+        $saved = optional_param('saved', 0, PARAM_INT);
+
+        if (!empty($saved)) {
+            $mform->addElement('html', \html_writer::div(get_string('changessaved'), 'alert alert-success'));
+        }
+
         $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
         $mform->addElement('html', \html_writer::div(get_string('ucp_calsync_desc', 'local_o365')));
         $mform->addElement('html', '<br />');
+
         $mform->addElement('html', \html_writer::tag('b', get_string('ucp_calsync_availcal', 'local_o365')));
 
         $checkboxattrs = ['class' => 'calcheckbox', 'group' => '1'];
@@ -115,12 +123,9 @@ class subscriptions extends \moodleform {
         // Handle changes to site and user calendar subscriptions.
         foreach (['site', 'user'] as $caltype) {
             $formkey = $caltype.'cal';
-            $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked']))
-                    ? true : false;
-            $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith']))
-                    ? $fromform->{$formkey}['syncwith'] : '';
-            $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav']))
-                    ? $fromform->{$formkey}['syncbehav'] : 'out';
+            $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) ? true : false;
+            $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith'])) ? $fromform->{$formkey}['syncwith'] : '';
+            $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav'])) ? $fromform->{$formkey}['syncbehav'] : 'out';
             if ($caltype === 'site' && empty($cancreatesiteevents)) {
                 $syncbehav = 'out';
             }
@@ -206,10 +211,8 @@ class subscriptions extends \moodleform {
             $event->trigger();
         }
         foreach ($newcoursesubs as $courseid => $coursecaldata) {
-            $syncwith = (!empty($coursecaldata['syncwith']))
-                    ? $coursecaldata['syncwith'] : '';
-            $syncbehav = (!empty($coursecaldata['syncbehav']))
-                    ? $coursecaldata['syncbehav'] : 'out';
+            $syncwith = (!empty($coursecaldata['syncwith'])) ? $coursecaldata['syncwith'] : '';
+            $syncbehav = (!empty($coursecaldata['syncbehav'])) ? $coursecaldata['syncbehav'] : 'out';
             if (empty($cancreatecourseevents[$courseid])) {
                 $syncbehav = 'out';
             }

@@ -19,7 +19,7 @@
  * @package    repository_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc. (based on files by 2012 Lancaster University Network Services Ltd)
+ * @copyright  Microsoft, Inc. (based on files by 2012 Lancaster University Network Services Ltd)
  */
 
 $string['cachedef_foldername'] = 'Folder name cache';

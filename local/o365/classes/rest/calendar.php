@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\rest;
@@ -63,9 +63,10 @@ class calendar extends \local_o365\rest\o365api {
      * @return [type]             [description]
      */
     public function get_events($calendarid = null, $since = null) {
+        \core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/calendars/'.$calendarid.'/events' : '/events';
         if (!empty($since)) {
-            $since = date('c', $since);
+            $since = urlencode(date(DATE_ATOM, $since));
             $endpoint .= '?$filter=DateTimeCreated%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);

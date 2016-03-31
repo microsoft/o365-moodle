@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc;
@@ -35,5 +35,5 @@ interface httpclientinterface {
      * @param array $options
      * @return bool
      */
-     public function post($url, $params = '', $options = array());
+    public function post($url, $params = '', $options = array());
 }

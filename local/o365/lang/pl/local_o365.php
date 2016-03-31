@@ -1,4 +1,24 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_o365
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $string['pluginname'] = 'Integracja pakietu Microsoft Office 365';
 $string['acp_title'] = 'Panel sterowania administratora pakietu Office&nbsp;365';
 $string['acp_healthcheck'] = 'Sprawdzanie kondycji';
@@ -36,7 +56,7 @@ $string['healthcheck_systemtoken_result_noclientcreds'] = 'Brak danych logowania
 $string['healthcheck_systemtoken_result_badtoken'] = 'Wystąpił problem podczas komunikacji z pakietem Office&nbsp;365 jako użytkownik interfejsu API systemu. Ten problem można zazwyczaj rozwiązać przez zresetowanie użytkownika interfejsu API systemu.';
 $string['healthcheck_systemtoken_result_passed'] = 'Platforma Moodle może komunikować się z pakietem Office&nbsp;365 jako użytkownik interfejsu API systemu.';
 $string['settings_aadsync'] = 'Synchronizuj użytkowników z usługą Azure AD';
-$string['settings_aadsync_details'] = 'Gdy ta opcja jest włączona, dane użytkowników platformy Moodle i usługi Azure AD są synchronizowane zgodnie z powyższymi opcjami.<br /><br /><b>Uwaga: </b>Proces synchronizacji przebiega w skrypcie cron platformy Moodle i synchronizuje 1000 użytkowników na raz. Domyślnie proces jest uruchamiany raz dziennie o godz. 1:00 w strefie czasowej serwera. Aby szybciej zsynchronizować większe zestawy użytkowników, można zwiększyć częstotliwość wykonywania zadania <b>Synchronizuj użytkowników z usługą Azure AD</b> za pomocą strony <a href="{$a}">Zarządzanie zaplanowanymi zadaniami.</a><br /><br />Szczegółowe informacje zawiera <a href="https://docs.moodle.org/27/en/Office365#User_sync">dokumentacja funkcji synchronizacji użytkowników</a><br /><br />';
+$string['settings_aadsync_details'] = 'Gdy ta opcja jest włączona, dane użytkowników platformy Moodle i usługi Azure AD są synchronizowane zgodnie z powyższymi opcjami.<br /><br /><b>Uwaga: </b>Proces synchronizacji przebiega w skrypcie cron platformy Moodle i synchronizuje 1000 użytkowników na raz. Domyślnie proces jest uruchamiany raz dziennie o godz. 1:00 w strefie czasowej serwera. Aby szybciej zsynchronizować większe zestawy użytkowników, można zwiększyć częstotliwość wykonywania zadania <b>Synchronizuj użytkowników z usługą Azure AD</b> za pomocą strony <a href="{$a}">Zarządzanie zaplanowanymi zadaniami.</a><br /><br />Szczegółowe informacje zawiera <a href="https://docs.moodle.org/30/en/Office365#User_sync">dokumentacja funkcji synchronizacji użytkowników</a><br /><br />';
 $string['settings_aadsync_create'] = 'Utwórz konta na platformie Moodle dla użytkowników w usłudze Azure AD';
 $string['settings_aadsync_delete'] = 'Usuwaj poprzednio zsynchronizowane konta na platformie Moodle, gdy zostaną usunięte z usługi Azure AD';
 $string['settings_aadsync_match'] = 'Dopasuj wcześniej istniejących użytkowników platformy Moodle do kont o tej samej nazwie w usłudze Azure AD<br /><small>Porównywane będą nazwy użytkownika w pakiecie Office 365 z nazwami użytkownika na platformie Moodle w celu odnalezienia zgodnych. W dopasowaniach wielkość liter nie jest rozróżniana i ignorowany jest element nazwy odpowiadający klientowi pakietu Office 365. Na przykład nazwa BoB.SmiTh na platformie Moodle byłaby zgodna z nazwą bob.smith@example.onmicrosoft.com. Konta Moodle i Office użytkowników, dla których znaleziono zgodność, zostaną połączone i będą oni mogli korzystać z funkcji integracji Office 365/Moodle. Metoda uwierzytelniania użytkownika nie zmieni się, o ile nie zostanie włączone poniższe ustawienie.</small>';
@@ -59,7 +79,7 @@ $string['settings_azuresetup_legacyheader'] = 'Interfejs API pakietu Office&nbsp
 $string['settings_azuresetup_legacydesc'] = 'Interfejs API pakietu Office&nbsp;365 składa się z interfejsów API poszczególnych aplikacji.';
 $string['settings_azuresetup_legacyerror'] = 'Wystąpił błąd podczas sprawdzania ustawień interfejsu API pakietu Office&nbsp;365.';
 $string['settings_creategroups'] = 'Utwórz grupy użytkowników';
-$string['settings_creategroups_details'] = 'Jeśli ta opcja jest włączona, zostanie utworzona i będzie utrzymywana grupa nauczycieli i studentów w pakiecie Office 365 dla każdego kursu na stronie. Wymagane grupy będą tworzone po każdym uruchomieniu skryptu cron (a wszyscy bieżący użytkownicy będą dodawani). Członkostwo w grupie będzie utrzymywane, gdy użytkownicy będą się rejestrować na kursy na platformie Moodle lub gdy będą się z nich wyrejestrowywać.<br /><b>Uwaga: </b>Ta funkcja wymaga dodania ujednoliconego interfejsu API pakietu Office&nbsp;365 do aplikacji dodanej w usłudze Azure. <a href="https://docs.moodle.org/27/en/Office365#User_groups">Instrukcje i dokumentacja konfiguracji.</a>';
+$string['settings_creategroups_details'] = 'Jeśli ta opcja jest włączona, zostanie utworzona i będzie utrzymywana grupa nauczycieli i studentów w pakiecie Office 365 dla każdego kursu na stronie. Wymagane grupy będą tworzone po każdym uruchomieniu skryptu cron (a wszyscy bieżący użytkownicy będą dodawani). Członkostwo w grupie będzie utrzymywane, gdy użytkownicy będą się rejestrować na kursy na platformie Moodle lub gdy będą się z nich wyrejestrowywać.<br /><b>Uwaga: </b>Ta funkcja wymaga dodania ujednoliconego interfejsu API pakietu Office&nbsp;365 do aplikacji dodanej w usłudze Azure. <a href="https://docs.moodle.org/30/en/Office365#User_groups">Instrukcje i dokumentacja konfiguracji.</a>';
 $string['settings_o365china'] = 'Pakiet Office&nbsp;365 dla Chin';
 $string['settings_o365china_details'] = 'Zaznacz to pole, jeżeli korzystasz z pakietu Office&nbsp;365 dla Chin.';
 $string['settings_debugmode'] = 'Rejestruj komunikaty debugowania';
@@ -101,7 +121,7 @@ $string['settings_sharepointlink_connected'] = 'Platforma Moodle jest połączon
 $string['settings_sharepointlink_changelink'] = 'Zmień witrynę';
 $string['settings_sharepointlink_initializing'] = 'Platforma Moodle zakłada tę witrynę programu SharePoint. Zostanie ona wyświetlona przy kolejnym uruchomieniu skryptu cron platformy Moodle.';
 $string['settings_sharepointlink_enterurl'] = 'Wprowadź adres URL powyżej.';
-$string['settings_sharepointlink_details'] = 'Aby połączyć platformę Moodle z programem SharePoint, wprowadź pełny adres URL witryny programu SharePoint, z którą platforma Moodle ma się połączyć. Jeżeli witryna nie istnieje, platforma Moodle podejmie próbę jej utworzenia.<br /><a href="https://docs.moodle.org/27/en/Office365/SharePoint">Więcej informacji o łączeniu platformy Moodle z programem SharePoint</a>';
+$string['settings_sharepointlink_details'] = 'Aby połączyć platformę Moodle z programem SharePoint, wprowadź pełny adres URL witryny programu SharePoint, z którą platforma Moodle ma się połączyć. Jeżeli witryna nie istnieje, platforma Moodle podejmie próbę jej utworzenia.<br /><a href="https://docs.moodle.org/30/en/Office365/SharePoint">Więcej informacji o łączeniu platformy Moodle z programem SharePoint</a>';
 $string['settings_sharepointlink_status_invalid'] = 'Nie można użyć tej witryny programu SharePoint.';
 $string['settings_sharepointlink_status_notempty'] = 'Można użyć tej witryny, ale taka witryna już istnieje. Platforma Moodle może wchodzić w konflikt z istniejącą treścią. Należy wprowadzić adres nieistniejącej witryny programu SharePoint, aby platforma Moodle ją utworzyła.';
 $string['settings_sharepointlink_status_valid'] = 'Ta witryna programu SharePoint zostanie utworzona przez platformę Moodle i będzie zawierać treść platformy Moodle.';
