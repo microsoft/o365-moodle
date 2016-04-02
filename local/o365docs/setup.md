@@ -99,26 +99,22 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 8.  Click **Add application** click the plus sign to the right of **Office 365 Exchange Online**, **Office 365 SharePoint Online**, and **OneNote**. Note, the plus will appear when you hover over each of the items.
 9.  Click the check mark at the bottom right of the dialog.
 10. In the Delegated Permissions dropdown for Office 365 Exchange Online select the following permissions:
-    1.  Read users’ calendars
     2.  Read and write users' calendars
-
+    1.  Read users’ calendars
 11. In the Delegated Permissions dropdown for Office 365 SharePoint Online select the following permissions:
-    1.  Read items in all site collections
-    2.  Read and write items in all site collections
-    3.  Create or delete items and lists in all site collections
-    4.  Have full control of all site collections
-    5.  Read user files
-    6.  Read and write user files
-
-12. In the Application Permissions dropdown for Windows Azure Active Directory select the following permissions:
-    1.  Read directory data
-
-13. In the Delegated Permissions dropdown for Windows Azure Active Directory select the following permissions:
-    1.  Read directory data
-    2.  Read all users' full profiles
-    3.  Sign in and read user profile.
-
-14. In the Delegated Permissions dropdown for OneNote select the following permissions:
+    1.  Read and write user files
+    2.  Read user files
+    3.  Have full control of all site collections
+    4.  Create or delete items and lists in all site collections
+    5.  Read and write items in all site collections
+    6.  Read items in all site collections
+12. In the Delegated Permissions dropdown for Windows Azure Active Directory select the following permissions:
+    1.  Read and write directory data.
+    2.  Access the directory as the signed-in user.
+    3.  Read directory data.
+    4.  Read all users' full profiles
+    5.  Sign in and read user profile.
+13. In the Delegated Permissions dropdown for OneNote select the following permissions:
     1.  Create pages in OneNote notebooks
     2.  View OneNote notebooks.
     3.  View and modify OneNote notebooks.
@@ -199,8 +195,8 @@ With this method, the user will log in to Moodle using their Office 365 account 
   7. Click the "Start using Office 365 to log in to Moodle." link.
   8. You will be redirected to Office 365 to log in. Log in to the Office 365 account you'd like to link the Moodle user to.
     1.  **NOTE:** If you are already logged in to Office 365, you will not have to enter your credentials on the Office 365 login page - the account you are logged in to will be linked to the Moodle account. Ensure you are logged in to the correct account, use a private browser window, or log out of Office 365 first to show the Office 365 login screen.
-  9. You will be redirected back to Moodle to the Office 365 / Moodle control panel. The **Connection status** box on the side of the page should indicate that you are connected to Office 365 and that you are using Office 365 to log in to Moodle. 
-  10. The Moodle account will now use Office 365 to log in. **The previous Moodle login method will not work.**. 
+  9. You will be redirected back to Moodle to the Office 365 / Moodle control panel. The **Connection status** box on the side of the page should indicate that you are connected to Office 365 and that you are using Office 365 to log in to Moodle.
+  10. The Moodle account will now use Office 365 to log in. **The previous Moodle login method will not work.**.
   11. The Moodle user can now use any of the Office 365 features in Moodle.
 
 ### Link a Moodle user to an Office 365 user.
