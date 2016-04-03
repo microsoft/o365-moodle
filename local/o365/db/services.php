@@ -50,6 +50,20 @@ $functions = [
         'description' => 'Delete an assignment',
         'type' => 'write',
     ],
+    'local_o365_get_teachercourses' => [
+        'classname' => '\local_o365\webservices\read_teachercourses',
+        'methodname' => 'teachercourses_read',
+        'classpath' => 'local/o365/classes/webservices/read_teachercourses.php',
+        'description' => 'Get a list of courses that the current user is a teacher in.',
+        'type' => 'read',
+    ],
+    'local_o365_get_course_users' => [
+        'classname' => '\local_o365\webservices\read_courseusers',
+        'methodname' => 'courseusers_read',
+        'classpath' => 'local/o365/classes/webservices/read_courseusers.php',
+        'description' => 'Get a list of students in a course.',
+        'type' => 'read',
+    ],
 ];
 
 // Pre-built service.
@@ -60,6 +74,11 @@ $services = [
             'local_o365_get_onenoteassignment',
             'local_o365_update_onenoteassignment',
             'local_o365_delete_onenoteassignment',
+            'local_o365_get_teachercourses',
+            'local_o365_get_course_users',
+            'mod_assign_get_assignments',
+            'mod_assign_get_grades',
+            'mod_assign_save_grade',
         ],
         'restrictedusers' => 0,
         'enabled' => 0,
