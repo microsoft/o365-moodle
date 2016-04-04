@@ -601,3 +601,35 @@ OneNote
 =======
 
 OneNote is now available through Office 365. If you have installed all the plugins (for example, by installing [1](https://moodle.org/plugins/view/local_office365)) then you already have the OneNote plugins installed. To access OneNote using your Office 365 subscription, add OneNote to the list of applications in your Azure application. This is done the same way you configured Azure permissions, above. Note that OneNote is still in preview, and may not be available to everyone yet. If you don't see OneNote in the list of applications to add to your Azure application, you can try logging in to a desktop OneNote application using an administrator account in your Office 365 tenant. This sometimes expedites to the process of adding the OneNote preview to your tenant. For more information on OneNote, see [MicrosoftServices\#Configuring\_OneNote](MicrosoftServices#Configuring_OneNote "wikilink")
+
+oEmbed Filter
+=============
+
+This filter allows users to embed documents from various online sources to be embedded into Moodle content. The user only has to enter the URL to the document and the filter takes care of converting the URL into an embeddable IFRAME. This filter has a white list of services it supports. The list of supported services can be seen and selectively enabled or disabled in the settings page for this filter.
+
+The following sections provide specific instructions for embedding documents from certain services where it may not be obvious how to do that.
+
+Embedding Power BI Reports
+--------------------------
+
+This filter allows users to embed Power BI repository allows users to embed Office documents from OneDrive into a course and have the live version viewable using Office web apps.
+
+1. If you have upgraded filter plugin recently, clear the Moodle cache first then go to filter plugin settings and esure that the PowerBI filter is enabled.
+
+2. In Azure Portal (https://manage.windowsazure.com) go to your AD application, then inside 'Permissions to other applications' click Add Application.
+
+3. Select Power BI Service, save, then set Delegated permissions as follows:
+    a. View all reports(preview)
+    b. Read and Write all Datasets
+    c. View all Datasets
+    d. View all Datasets(preview)
+
+4. Click on Save
+
+5. Login to Office 365 and go to the Power BI app in it.
+
+6. The menu on the left hand side contains the Reports section. Select the report you want to embed. (Note that the filter only works for Reports, not for Tiles.)
+
+7. Copy the URL & paste it into Moodle content where you would like to embed the report.
+
+8. Save the Moodle content and view it. You should see the URL you entered get converted into an IFRAME with the report showing inside it.
