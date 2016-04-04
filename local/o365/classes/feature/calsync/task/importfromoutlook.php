@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\calsync\task;
@@ -120,7 +120,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                     mtrace($errmsg);
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug('Error syncing events', 'importfromoutlook', $e->getMessage());
+                \local_o365\utils::debug('Error syncing events: '.$e->getMessage(), 'importfromoutlook', $e);
                 mtrace('Error: '.$e->getMessage());
             }
         }

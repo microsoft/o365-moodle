@@ -18,7 +18,7 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\feature\usergroups;
@@ -96,7 +96,7 @@ class observers {
     public static function handle_group_created(\core\event\group_created $event) {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
 
@@ -152,7 +152,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_group_updated(\core\event\group_updated $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
         $apiclient = static::get_unified_api('handle_group_updated');
@@ -170,7 +170,7 @@ class observers {
     public static function handle_group_deleted(\core\event\group_deleted $event) {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
 
@@ -213,7 +213,7 @@ class observers {
     public static function handle_group_member_added(\core\event\group_member_added $event) {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
 
@@ -264,7 +264,7 @@ class observers {
     public static function handle_group_member_removed(\core\event\group_member_removed $event) {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
 

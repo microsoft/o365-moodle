@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -109,9 +109,14 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Handle OIDC disconnection from Moodle account.
      *
      * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
+     * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account to a
+     *                                "linked" account.
+     * @param \moodle_url $redirect Where to redirect if successful.
+     * @param \moodle_url $selfurl The page this is accessed from. Used for some redirects.
      */
-    public function disconnect($justremovetokens = false, \moodle_url $redirect = null) {
-        return $this->loginflow->disconnect($justremovetokens, $redirect);
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
+                               \moodle_url $selfurl = null) {
+        return $this->loginflow->disconnect($justremovetokens, $donotremovetokens, $redirect, $selfurl);
     }
 
     /**

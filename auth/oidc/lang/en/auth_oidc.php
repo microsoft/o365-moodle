@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $string['pluginname'] = 'OpenID Connect';
@@ -63,7 +63,7 @@ $string['cfg_loginflow_key'] = 'Login Flow';
 $string['cfg_loginflow_authcode'] = 'Authorization Request';
 $string['cfg_loginflow_authcode_desc'] = 'Using this flow, the user clicks the name of the identity provider (See "Provider Name" above) on the Moodle login page and is redirected to the provider to log in. Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently. This is the most standardized, secure way for the user log in.';
 $string['cfg_loginflow_rocreds'] = 'Username/Password Authentication';
-$string['cfg_loginflow_rocreds_desc'] = 'Using this flow, the user enters their username and password into the Moodle login form like they would with a manual login. Their credentials are then passed to the identity provider in the background to obtain authentication. This flow is the most transparent to the user as they have no direct interaction with the identity provider. Note that not all identity providers support this flow.';
+$string['cfg_loginflow_rocreds_desc'] = 'Using this flow, the user enters their username and password into the Moodle login form like they would with a manual login. This will authorize the user with the identity provider, but will not create a session on the identity provider\'s site. For example, if using Office 365 with OpenID Connect, the user will be logged in to Moodle but not the Office 365 web applications. Using the authorization request is recommended if you want users to be logged in to both Moodle and the identity provider.  Note that not all identity providers support this flow.';
 $string['cfg_oidcresource_key'] = 'Resource';
 $string['cfg_oidcresource_desc'] = 'The OpenID Connect resource for which to send the request.';
 $string['cfg_opname_key'] = 'Provider Name';
@@ -84,7 +84,7 @@ $string['errorauthdisconnectinvalidmethod'] = 'Invalid login method received.';
 $string['errorauthdisconnectifmanual'] = 'If using the manual login method, enter credentials below.';
 $string['errorauthdisconnectinvalidmethod'] = 'Invalid login method received.';
 $string['errorauthinvalididtoken'] = 'Invalid id_token received.';
-$string['errorauthloginfailednouser'] = 'Invalid login: User not found in Moodle.';
+$string['errorauthloginfailednouser'] = 'Invalid login: User not found in Moodle. If this site has the "authpreventaccountcreation" setting enabled, this may mean you need an administrator to create an account for you first.';
 $string['errorauthnoauthcode'] = 'Auth code not received.';
 $string['errorauthnocreds'] = 'Please configure OpenID Connect client credentials.';
 $string['errorauthnoendpoints'] = 'Please configure OpenID Connect server endpoints.';
@@ -100,6 +100,7 @@ $string['errorjwtempty'] = 'Empty or non-string JWT received.';
 $string['errorjwtinvalidheader'] = 'Invalid JWT header';
 $string['errorjwtmalformed'] = 'Malformed JWT received.';
 $string['errorjwtunsupportedalg'] = 'JWS Alg or JWE not supported';
+$string['errorlogintoconnectedaccount'] = 'This Office 365 user is connected to a Moodle account, but OpenID Connect login is not enabled for this Moodle account. Please log in to the Moodle account using the account\'s defined authentication method to use Office 365 features';
 $string['erroroidcnotenabled'] = 'The OpenID Connect authentication plugin is not enabled.';
 $string['errornodisconnectionauthmethod'] = 'Cannot disconnect because there is no enabled authentication plugin to fall back to. (either user\'s previous login method or the manual login method).';
 $string['erroroidcclientinvalidendpoint'] = 'Invalid Endpoint URI received.';

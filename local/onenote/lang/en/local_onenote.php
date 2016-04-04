@@ -19,7 +19,7 @@
  * @package    local_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc.
+ * @copyright  Microsoft, Inc.
  */
 
 $string['pluginname'] = 'Microsoft OneNote';
@@ -28,3 +28,10 @@ $string['feedbacktitle'] = 'Feedback: {$a->assign_name} [{$a->student_firstname}
 $string['connction_error'] = 'Cannot connect to OneNote. Please wait a few moments and retry.';
 $string['onenote_page_error'] = 'Could not open the OneNote page for this submission or feedback.';
 $string['error_noapiavailable'] = 'No OneNote API is available. If using the Office 365 plugin set, we were not able to contact OneNote. Otherwise, please install local_msaccount.';
+$string['notebookname'] = 'Moodle Notebook';
+$string['erroronenoteapibadcall'] = 'Error in API call.';
+$string['erroronenoteapibadcall_message'] = 'Error in API call: {$a}';
+$string['errornosection'] = 'Could not get or create a section in your OneNote Notebook';
+$string['errornopostdata'] = 'Could not create page data to send to OneNote.';
+$string['errorsubmissioninteachercontext'] = 'Attempted to create a submission from teacher grading context.';
+$string['errorfeedbackinstudentcontext'] = 'Attempted to create feedback in student submission context.';

@@ -18,7 +18,7 @@
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -146,7 +146,8 @@ class block_microsoft extends block_base {
 
         $items = [];
 
-        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID
+                && !empty(get_config('block_microsoft', 'settings_showcoursespsite'))) {
             if (!empty($o365config->sharepointlink)) {
                 $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
                 if (!empty($coursespsite)) {
@@ -162,11 +163,18 @@ class block_microsoft extends block_base {
         }
 
         $items[] = $this->render_onenote();
-        $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
-        $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
 
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
-            $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'aadlogin']);
+        if (!empty(get_config('block_microsoft', 'settings_showoutlooksync'))) {
+            $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
+        }
+
+        if (!empty(get_config('block_microsoft', 'settings_showpreferences'))) {
+            $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
+        }
+
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true
+                && !empty(get_config('block_microsoft', 'settings_showmanageo365conection'))) {
+            $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
             $connectstr = get_string('linkconnection', 'block_microsoft');
             $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
         }
@@ -193,10 +201,14 @@ class block_microsoft extends block_base {
         $connecturl = new \moodle_url('/local/o365/ucp.php');
         $connectstr = get_string('connecttoo365', 'block_microsoft');
 
-        $items = [
-            \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']),
-            $this->render_onenote()
-        ];
+        $items = [];
+
+        $showo365connect = get_config('block_microsoft', 'settings_showo365connect');
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true && !empty($showo365connect)) {
+            $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+        }
+
+        $items[] = $this->render_onenote();
 
         $downloadlinks = $this->get_content_o365download();
         foreach ($downloadlinks as $link) {
@@ -260,6 +272,12 @@ class block_microsoft extends block_base {
      */
     protected function render_onenote() {
         global $USER, $PAGE;
+
+        $onenotelinksenabled = get_config('block_microsoft', 'settings_showonenotenotebook');
+        if (empty($onenotelinksenabled)) {
+            return '';
+        }
+
         $action = optional_param('action', '', PARAM_TEXT);
         try {
             $onenoteapi = \local_onenote\api\base::getinstance();
@@ -298,8 +316,7 @@ class block_microsoft extends block_base {
             return $output;
         } catch (\Exception $e) {
             if (class_exists('\local_o365\utils')) {
-                $debuginfo = (!empty($e->debuginfo)) ? $e->debuginfo : null;
-                \local_o365\utils::debug($e->getMessage(), 'block_microsoft', $debuginfo);
+                \local_o365\utils::debug($e->getMessage(), 'block_microsoft', $e);
             }
             return '<span class="block_microsoft_onenote servicelink">'.get_string('linkonenote_unavailable', 'block_microsoft')
                     .'<br /><small>'.get_string('contactadmin', 'block_microsoft').'</small></span>';

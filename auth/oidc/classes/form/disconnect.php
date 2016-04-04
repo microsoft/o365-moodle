@@ -18,7 +18,7 @@
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc\form;
@@ -44,6 +44,10 @@ class disconnect extends \moodleform {
         $mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_oidc', $opname)));
         $mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_oidc', $opname)));
         $mform->addElement('html', '<br />');
+        $mform->addElement('hidden', 'redirect', $this->_customdata['redirect']);
+        $mform->setType('redirect', PARAM_URL);
+        $mform->addElement('hidden', 'donotremovetokens', $this->_customdata['donotremovetokens']);
+        $mform->setType('donotremovetokens', PARAM_BOOL);
 
         $mform->addElement('header', 'userdetails', get_string('userdetails'));
 

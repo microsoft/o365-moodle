@@ -18,7 +18,7 @@
  * @package filter_oembed
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2016 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace filter_oembed\provider;
@@ -56,7 +56,7 @@ class docsdotcom extends base {
      * @return string Filtered text.
      */
     public function filter($text) {
-        $search = '#<a\s[^>]*href="(https://(www\.)?docs\.com/[a-zA-Z0-9]+/[a-zA-Z0-9]+/[a-zA-Z0-9]+(.*))"(.*?)>(.*?)</a>#is';
+        $search = '#<a\s[^>]*href="(https://(www\.)?docs\.com/(.+?)/(.+?)/(.*))"(.*?)>(.*?)</a>#is';
         return preg_replace_callback($search, [$this, 'get_replacement'], $text);
     }
 }

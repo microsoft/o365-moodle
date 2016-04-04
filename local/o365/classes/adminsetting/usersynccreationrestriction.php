@@ -18,10 +18,13 @@
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\adminsetting;
+
+global $CFG;
+require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
  * Admin setting to control field mappings for users.
@@ -102,10 +105,8 @@ class usersynccreationrestriction extends \admin_setting {
         if (empty($data) || !is_array($data)) {
             $data = [];
         }
-        $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']]))
-            ? $data['remotefield'] : '';
+        $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']])) ? $data['remotefield'] : '';
         $value = (isset($data['value'])) ? $data['value'] : '';
-
 
         $html = \html_writer::start_tag('div');
 

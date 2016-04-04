@@ -19,16 +19,16 @@
  * @package    repository_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft Open Technologies, Inc. (based on files by 2012 Lancaster University Network Services Ltd)
+ * @copyright  Microsoft, Inc. (based on files by 2012 Lancaster University Network Services Ltd)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111902;
+$plugin->version = 2015111903;
 $plugin->requires = 2015111600;
 $plugin->component = 'repository_onenote';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.2';
+$plugin->release = '30.0.0.3';
 $plugin->dependencies = [
-	'local_onenote' => 2015111902
+    'local_onenote' => 2015111904
 ];
