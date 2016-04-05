@@ -1,4 +1,4 @@
-<?php
+---------<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -392,7 +392,7 @@ function xmldb_local_o365_upgrade($oldversion) {
             $field->setNotNull(FALSE);
             $dbman->change_field_default($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015111911', 'local', 'o365');
+        upgrade_plugin_savepoint($result, '2015111911.01', 'local', 'o365');
     }
 
     return $result;
