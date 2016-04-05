@@ -277,7 +277,7 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('trendingaround', 'repository_office365'),
                     'path' => '/trending/',
-                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                    'thumbnail' => $OUTPUT->pix_url('trendingaroundcolor', 'local_o365')->out(false),
                     'children' => [],
                 ];
             }
