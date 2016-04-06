@@ -263,7 +263,11 @@ class authcode extends \auth_oidc\loginflow\base {
         $eventdata = [
             'objectid' => $USER->id,
             'userid' => $USER->id,
-            'other' => ['username' => $USER->username, 'userid' => $USER->id]
+            'other' => [
+                'username' => $USER->username,
+                'userid' => $USER->id,
+                'oidcuniqid' => $oidcuniqid,
+            ],
         ];
         $event = \auth_oidc\event\user_connected::create($eventdata);
         $event->trigger();
