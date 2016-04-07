@@ -53,7 +53,7 @@ class create_onenoteassignment extends \external_api {
      * @return array An array of parameters, if successful.
      */
     public static function assignment_create($data) {
-        global $DB;
+        global $DB, $CFG;
 
         $params = self::validate_parameters(self::assignment_create_parameters(), ['data' => $data]);
         $params = $params['data'];
@@ -73,6 +73,7 @@ class create_onenoteassignment extends \external_api {
             'blindmarking' => 0,
             'markingworkflow' => 0,
             'markingallocation' => 0,
+            'grade' => (isset($CFG->gradepointdefault)) ? $CFG->gradepointdefault : 100,
         ];
 
         $course = get_course($params['course']);
