@@ -245,7 +245,18 @@ class main {
                 continue;
             }
             if (isset($aaddata[$remotefield])) {
-                $user->$localfield = $aaddata[$remotefield];
+                if ($localfield !== "country") {
+                    $user->$localfield = $aaddata[$remotefield];
+                }
+                else {
+                    // Update country with two letter country code
+                    if (array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries())) {
+                        $user->$localfield = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                    }
+                    else {
+                        $user->$localfield = "";
+                    }
+                }
             }
         }
 
