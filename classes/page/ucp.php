@@ -248,9 +248,9 @@ class ucp extends base {
         $connectiontype = $this->get_connection_type();
         $opname = get_config('auth_oidc', 'opname');
         echo $OUTPUT->header();
-        echo \html_writer::start_div('o365_ucp_featurepage feature_connection');
+        echo \html_writer::start_div('local_o365_ucp_featurepage local_o365_feature_connection');
 
-        echo \html_writer::tag('h3', $strtitle, ['class' => 'featureheader feature_connection']);
+        echo \html_writer::tag('h3', $strtitle, ['class' => 'local_o365_featureheader local_o365_feature_connection']);
         echo \html_writer::div(get_string('ucp_connection_desc', 'local_o365'));
 
         $statusstring = get_string('ucp_connection_disconnected', 'local_o365');
@@ -275,7 +275,7 @@ class ucp extends base {
         echo \html_writer::tag('h5', get_string('ucp_connection_options', 'local_o365'));
 
         // AAD Login.
-        echo \html_writer::start_div('connectionoption');
+        echo \html_writer::start_div('local_o365_connectionoption');
         echo \html_writer::tag('h4', get_string('ucp_connection_aadlogin', 'local_o365'));
         $loginflow = get_config('auth_oidc', 'loginflow');
         switch ($loginflow) {
@@ -302,7 +302,7 @@ class ucp extends base {
         echo \html_writer::end_div();
 
         // Connected account.
-        echo \html_writer::start_div('connectionoption');
+        echo \html_writer::start_div('local_o365_connectionoption');
         echo \html_writer::tag('h4', get_string('ucp_connection_linked', 'local_o365'));
         echo \html_writer::div(get_string('ucp_connection_linked_desc', 'local_o365'));
         switch ($connectiontype) {
@@ -454,7 +454,7 @@ class ucp extends base {
         global $OUTPUT, $DB, $USER;
 
         echo $OUTPUT->header();
-        echo \html_writer::start_div('o365_ucp_index');
+        echo \html_writer::start_div('local_o365_ucp_index');
         echo \html_writer::tag('h2', $this->title);
         echo get_string('ucp_general_intro', 'local_o365');
 
@@ -469,7 +469,7 @@ class ucp extends base {
             }
         }
 
-        echo \html_writer::start_div('features');
+        echo \html_writer::start_div('local_o365_features');
         echo '<br />';
         echo \html_writer::tag('h5', get_string('ucp_features', 'local_o365'));
         $introstr = get_string('ucp_features_intro', 'local_o365');
