@@ -102,10 +102,10 @@ class sharepointlink extends \admin_setting {
 
         if (empty($data)) {
             $seturlattrs = ['class' => 'sharepointlink_seturl'];
-            $viewstatusattrs = ['class' => 'sharepointlink_viewstatus', 'style' => 'display: none'];
+            $viewstatusattrs = ['class' => 'local_o365_sharepointlink_viewstatus', 'style' => 'display: none'];
         } else {
             $seturlattrs = ['class' => 'sharepointlink_seturl', 'style' => 'display: none'];
-            $viewstatusattrs = ['class' => 'sharepointlink_viewstatus'];
+            $viewstatusattrs = ['class' => 'local_o365_sharepointlink_viewstatus'];
             $inputattrs['style'] = 'display: none';
         }
 
@@ -114,23 +114,23 @@ class sharepointlink extends \admin_setting {
         // UI when setting the site URL.
         $settinghtml .= \html_writer::start_tag('div', $seturlattrs);
         $message = \html_writer::tag('span', get_string('settings_sharepointlink_enterurl', 'local_o365'));
-        $messageattrs = ['class' => 'adminsetting_sharepointlink_status empty'];
+        $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_status empty'];
         $settinghtml .= \html_writer::tag('div', $message, $messageattrs);
         $icon = $OUTPUT->pix_icon('i/ajaxloader', 'loading', 'moodle');
         $message = \html_writer::tag('span', get_string('settings_sharepointlink_status_checking', 'local_o365'));
-        $messageattrs = ['class' => 'adminsetting_sharepointlink_status checkingsite'];
+        $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_status checkingsite'];
         $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         $icon = $OUTPUT->pix_icon('t/delete', 'problem', 'moodle');
         $message = \html_writer::tag('span', get_string('settings_sharepointlink_status_invalid', 'local_o365'));
-        $messageattrs = ['class' => 'adminsetting_sharepointlink_status siteinvalid alert alert-error'];
+        $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_status siteinvalid alert alert-error'];
         $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         $icon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
         $message = \html_writer::tag('span', get_string('settings_sharepointlink_status_notempty', 'local_o365'));
-        $messageattrs = ['class' => 'adminsetting_sharepointlink_status sitenotempty alert alert-info'];
+        $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_status sitenotempty alert alert-info'];
         $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
         $message = \html_writer::tag('span', get_string('settings_sharepointlink_status_valid', 'local_o365'));
-        $messageattrs = ['class' => 'adminsetting_sharepointlink_status sitevalid alert alert-success'];
+        $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_status sitevalid alert alert-success'];
         $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         $settinghtml .= \html_writer::end_tag('div', []);
 
@@ -143,18 +143,18 @@ class sharepointlink extends \admin_setting {
         if ($sitesinitialized === '0') {
             $icon = $OUTPUT->pix_icon('i/ajaxloader', 'loading', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_sharepointlink_initializing', 'local_o365'));
-            $messageattrs = ['class' => 'adminsetting_sharepointlink_message loading'];
+            $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_message loading'];
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         } else if ($sitesinitialized === '1') {
             $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_sharepointlink_connected', 'local_o365'));
-            $messageattrs = ['class' => 'adminsetting_sharepointlink_message alert alert-success'];
+            $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_message alert alert-success'];
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         } else {
             // Error reported.
             $icon = $OUTPUT->pix_icon('i/warning', 'error', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_sharepointlink_error', 'local_o365'));
-            $messageattrs = ['class' => 'adminsetting_sharepointlink_message alert alert-error'];
+            $messageattrs = ['class' => 'local_o365_adminsetting_sharepointlink_message alert alert-error'];
             $settinghtml .= \html_writer::tag('div', $icon.$message, $messageattrs);
         }
         $settinghtml .= \html_writer::end_tag('div', []);
