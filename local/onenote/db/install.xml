@@ -24,6 +24,8 @@
         <FIELD NAME="feedback_student_page_id" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for student's copy of teacher's feedback"/>
         <FIELD NAME="submission_teacher_page_id" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's copy of student's submission"/>
         <FIELD NAME="feedback_teacher_page_id" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="OneNote page id for teacher's copy of teacher's feedback"/>
+        <FIELD NAME="teacher_lastviewed" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Time stamp of the last time a teacher viewed the OneNote submission."/>
+        <FIELD NAME="student_lastmodified" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="A hash of the student OneNote copy."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
