@@ -10,7 +10,7 @@
     }
 }
 
-.adminsetting_sharepointlink_message, .adminsetting_sharepointlink_status {
+.local_o365_adminsetting_sharepointlink_message, .local_o365_adminsetting_sharepointlink_status {
     margin: 0 0 0.5rem 0;
     padding: 0.5rem;
     img {
@@ -21,7 +21,7 @@
     }
 }
 
-.adminsetting_sharepointlink_status {
+.local_o365_adminsetting_sharepointlink_status {
     display: none;
     &.empty {
         display: block;
@@ -29,24 +29,24 @@
     }
 }
 
-.adminsetting_sharepointlink_message.loading {
+.local_o365_adminsetting_sharepointlink_message.loading {
     display: block;
     padding: 0;
     margin: 0.25rem 0 0.5rem 0;
 }
 
-.sharepointlink_viewstatus .changesitelink {
+.local_o365_sharepointlink_viewstatus .changesitelink {
     display: inline-block;
     margin-left: 1.5rem;
 }
 
-#admin-azuresetup {
+#local_o365_admin-azuresetup {
     button.refreshperms {
         margin: 0 0 0.75rem;
     }
 }
 
-.adminsetting_azuresetup_results {
+.local_o365_adminsetting_azuresetup_results {
     section {
         margin-bottom: 1rem;
         h5 {
@@ -55,7 +55,7 @@
     }
 }
 
-.o365_ucp_index {
+.local_o365_ucp_index {
     .connectionstatus {
         float: right;
         width: 14rem;
@@ -73,7 +73,7 @@
             height: 12px;
         }
     }
-    .features {
+    .local_o365_features {
         margin-right: 16rem;
         > div {
             margin-bottom: 1rem;
@@ -86,42 +86,42 @@
                 padding: 4px 4px 4px 40px;
             }
         }
-        .feature_connection {
+        .local_o365_feature_connection {
             a, b {
                 background-image: url([[pix:local_o365|o365color]]);
             }
         }
-        .feature_calendar a, .feature_calendar b {
+        .local_o365_feature_calendar a, .local_o365_feature_calendar b {
             background-image: url([[pix:local_o365|outlookcolor]]);
         }
-        .feature_onenote a, .feature_onenote b {
+        .local_o365_feature_onenote a, .local_o365_feature_onenote b {
             background-image: url([[pix:local_o365|onenotecolor]]);
         }
     }
 }
 
-.o365_ucp_featurepage {
-    h3.featureheader {
+.local_o365_ucp_featurepage {
+    h3.local_o365_featureheader {
         background-position: center left;
         background-size: 28px;
         background-repeat: no-repeat;
         background-color: transparent;
         padding: 4px 4px 4px 35px;
-        &.feature_calendar {
+        &.local_o365_feature_calendar {
             background-image: url([[pix:local_o365|outlookcolor]]);
         }
-        &.feature_onenote {
+        &.local_o365_feature_onenote {
             background-image: url([[pix:local_o365|onenotecolor]]);
         }
     }
-    &.feature_connection {
-        h3.featureheader {
+    &.local_o365_feature_connection {
+        h3.local_o365_featureheader {
             background-image: url([[pix:local_o365|o365color]]);
         }
         div.connectionstatus {
             margin: 2rem 0;
         }
-        div.connectionoption {
+        div.local_o365_connectionoption {
             margin: 0 0 1rem;
             padding: 1rem;
             h4 {
@@ -131,15 +131,15 @@
     }
 }
 
-.o365toollink {
+.local_o365_o365toollink {
     margin-bottom: 1rem;
 }
 
-.matchqueuetoolbar {
+.local_o365_matchqueuetoolbar {
     margin: 0.75rem 0 0.5rem 0;
 }
 
-table.matchqueue {
+table.local_o365_matchqueue {
     width: 100%;
     td, th {
         padding: 0.25rem 0.5rem;
