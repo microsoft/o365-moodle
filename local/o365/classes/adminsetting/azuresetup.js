@@ -222,7 +222,7 @@ $(function() {
          * @param object results Results object.
          */
         this.renderresults = function(results) {
-            var content = $('<div class="adminsetting_azuresetup_results"></div>');
+            var content = $('<div class="local_o365_adminsetting_azuresetup_results"></div>');
             if (results === false) {
                 content.append(main.renderinfobox(opts.strnoinfo));
                 main.updatedisplay(content);
