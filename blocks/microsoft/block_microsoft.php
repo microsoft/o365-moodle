@@ -32,6 +32,7 @@ class block_microsoft extends block_base {
      */
     public function init() {
         $this->title = get_string('microsoft', 'block_microsoft');
+        $this->globalconfig = get_config('block_microsoft');
     }
 
     /**
@@ -146,9 +147,8 @@ class block_microsoft extends block_base {
 
         $items = [];
 
-        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID
-                && !empty(get_config('block_microsoft', 'settings_showcoursespsite'))) {
-            if (!empty($o365config->sharepointlink)) {
+        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+            if (!empty($this->globalconfig->settings_showcoursespsite) && !empty($o365config->sharepointlink)) {
                 $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
                 if (!empty($coursespsite)) {
                     $spsite = \local_o365\rest\sharepoint::get_resource();
@@ -164,19 +164,20 @@ class block_microsoft extends block_base {
 
         $items[] = $this->render_onenote();
 
-        if (!empty(get_config('block_microsoft', 'settings_showoutlooksync'))) {
+        if (!empty($this->globalconfig->settings_showoutlooksync)) {
             $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
         }
 
-        if (!empty(get_config('block_microsoft', 'settings_showpreferences'))) {
+        if (!empty($this->globalconfig->settings_showpreferences)) {
             $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true
-                && !empty(get_config('block_microsoft', 'settings_showmanageo365conection'))) {
-            $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
-            $connectstr = get_string('linkconnection', 'block_microsoft');
-            $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+            if (!empty($this->globalconfig->settings_showmanageo365conection)) {
+                $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
+                $connectstr = get_string('linkconnection', 'block_microsoft');
+                $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+            }
         }
 
         $downloadlinks = $this->get_content_o365download();
@@ -203,9 +204,10 @@ class block_microsoft extends block_base {
 
         $items = [];
 
-        $showo365connect = get_config('block_microsoft', 'settings_showo365connect');
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true && !empty($showo365connect)) {
-            $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+            if (!empty($this->globalconfig->settings_showo365connect)) {
+                $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
+            }
         }
 
         $items[] = $this->render_onenote();
@@ -225,8 +227,7 @@ class block_microsoft extends block_base {
      * @return array Array of download link HTML, or empty array if download links disabled.
      */
     protected function get_content_o365download() {
-        $linksenabled = get_config('block_microsoft', 'showo365download');
-        if (empty($linksenabled)) {
+        if (empty($this->globalconfig->showo365download)) {
             return [];
         }
 
@@ -273,8 +274,7 @@ class block_microsoft extends block_base {
     protected function render_onenote() {
         global $USER, $PAGE;
 
-        $onenotelinksenabled = get_config('block_microsoft', 'settings_showonenotenotebook');
-        if (empty($onenotelinksenabled)) {
+        if (empty($this->globalconfig->settings_showonenotenotebook)) {
             return '';
         }
 
