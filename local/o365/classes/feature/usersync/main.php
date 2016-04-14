@@ -250,7 +250,12 @@ class main {
                 }
                 else {
                     // Update country with two letter country code
-                    $user->$localfield = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                    if (array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries())) {
+                        $user->$localfield = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                    }
+                    else {
+                        $user->$localfield = "";
+                    }
                 }
             }
         }
