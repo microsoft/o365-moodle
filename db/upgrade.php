@@ -385,5 +385,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011641', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011647.01) {
+        $table = new xmldb_table('local_o365_appassign');
+        $field = new xmldb_field('photoupdated', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'photoid');
+        if ($dbman->field_exists($table, $field)) {
+            $field->setNotNull(FALSE);
+            $dbman->change_field_notnull($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2015011647.01', 'local', 'o365');
+    }
+
     return $result;
 }
