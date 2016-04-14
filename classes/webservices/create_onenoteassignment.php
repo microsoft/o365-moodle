@@ -84,6 +84,7 @@ class create_onenoteassignment extends \external_api {
             'section' => $params['section'],
             'visible' => (int)$params['visible'],
             'name' => $params['name'],
+            'cmidnumber' => '',
             'introeditor' => ['text' => $params['intro'], 'format' => FORMAT_HTML, 'itemid' => null],
             'assignsubmission_onenote_enabled' => 1,
             'assignsubmission_onenote_maxfiles' => 1,
