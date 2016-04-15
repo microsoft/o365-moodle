@@ -659,53 +659,34 @@ class repository_office365 extends \repository {
             $uploadpathprefix = $pathprefix;
         }
 
-        $list[] = [
-            'title' => get_string('upload', 'repository_office365'),
-            'path' => $uploadpathprefix.'/upload/',
-            'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
-            'children' => [],
-        ];
+        if (($clienttype === 'onedrive') || ($clienttype === 'sharepoint')) {
+            $list[] = [
+                'title' => get_string('upload', 'repository_office365'),
+                'path' => $uploadpathprefix.'/upload/',
+                'thumbnail' => $OUTPUT->pix_url('a/add_file')->out(false),
+                'children' => [],
+            ];
+        }
 
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
                 if ($clienttype === 'unified') {
-                    $itempath = $pathprefix.'/'.$content['id'];
-                    if (isset($content['folder'])) {
-                        $list[] = [
-                            'title' => $content['name'],
-                            'path' => $itempath,
-                            'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                            'date' => strtotime($content['createdDateTime']),
-                            'datemodified' => strtotime($content['lastModifiedDateTime']),
-                            'datecreated' => strtotime($content['createdDateTime']),
-                            'children' => [],
-                        ];
-                    } else if (isset($content['file'])) {
-                        $url = $content['webUrl'].'?web=1';
-                        $source = [
-                            'id' => $content['id'],
-                            'source' => 'onedrive',
-                        ];
+                    $itempath = $pathprefix.'/'.$content['name'];
+                    $url = $content['webUrl'].'?web=1';
+                    $source = [
+                        'id' => $content['id'],
+                        'source' => 'onedrive',
+                    ];
 
-                        $author = '';
-                        if (!empty($content['createdBy']['user']['displayName'])) {
-                            $author = $content['createdBy']['user']['displayName'];
-                            $author = explode(',', $author);
-                            $author = $author[0];
-                        }
-
-                        $list[] = [
-                            'title' => $content['name'],
-                            'date' => strtotime($content['createdDateTime']),
-                            'datemodified' => strtotime($content['lastModifiedDateTime']),
-                            'datecreated' => strtotime($content['createdDateTime']),
-                            'size' => $content['size'],
-                            'url' => $url,
-                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
-                            'author' => $author,
-                            'source' => $this->pack_reference($source),
-                        ];
-                    }
+                    $list[] = [
+                        'title' => $content['name'],
+                        'date' => strtotime($content['DateTimeCreated']),
+                        'datemodified' => strtotime($content['DateTimeLastModified']),
+                        'datecreated' => strtotime($content['DateTimeCreated']),
+                        'url' => $url,
+                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
+                        'source' => $this->pack_reference($source),
+                    ];
                 } else {
                     $itempath = $pathprefix.'/'.$content['name'];
                     if ($content['type'] === 'Folder') {
