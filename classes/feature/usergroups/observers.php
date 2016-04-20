@@ -107,42 +107,18 @@ class observers {
 
         $usergroupid = $event->objectid;
 
-        $grouprec = $DB->get_record('groups', ['id' => $usergroupid]);
-        if (empty($grouprec)) {
-            $caller = 'feature\usergroups\observers::handle_group_created';
-            \local_o365\utils::debug('Could not find group with id "'.$usergroupid.'"', $caller);
-            return false;
-        }
-
-        $courserec = $DB->get_record('course', ['id' => $grouprec->courseid]);
-        if (empty($courserec)) {
-            $msg = 'Could not find course with id "'.$grouprec->courseid.'" for group with id "'.$usergroupid.'"';
-            $caller = 'feature\usergroups\observers::handle_group_created';
-            \local_o365\utils::debug($msg, $caller);
-            return false;
-        }
-
-        $o365groupname = $courserec->shortname.': '.$grouprec->name;
-
-        // Create o365 group.
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
         try {
-            $o365group = $apiclient->create_group($o365groupname);
+            $object = $coursegroups->create_study_group($usergroupid);
+            if (empty($object->objectid)) {
+                $caller = '\local_o365\feature\usergroups\observers::handle_group_created';
+                \local_o365\utils::debug('Couldn\'t create group '.$usergroupid, $caller, $object);
+            }
         } catch (\Exception $e) {
+            $caller = '\local_o365\feature\usergroups\observers::handle_group_created';
+            \local_o365\utils::debug('Couldn\'t create group '.$usergroupid.':'.$e->getMessage(), $caller, $result);
             return false;
         }
-
-        // Store group in database.
-        $now = time();
-        $rec = [
-            'type' => 'group',
-            'subtype' => 'usergroup',
-            'moodleid' => $usergroupid,
-            'objectid' => $o365group['id'],
-            'o365name' => '',
-            'timecreated' => $now,
-            'timemodified' => $now,
-        ];
-        $DB->insert_record('local_o365_objects', $rec);
     }
 
     /**
@@ -152,6 +128,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_group_updated(\core\event\group_updated $event) {
+        global $DB;
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
@@ -159,6 +136,10 @@ class observers {
         if (empty($apiclient)) {
             return false;
         }
+
+        $usergroupid = $event->objectid;
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
+        $coursegroups->update_study_group($usergroupid);
     }
 
     /**
@@ -199,6 +180,8 @@ class observers {
             \local_o365\utils::debug('Couldn\'t delete group', $caller, $result);
             return false;
         } else {
+            // Clean up course group data.
+            $DB->delete_records('local_o365_coursegroupdata', ['groupid' => $groupobjectrec->id]);
             $DB->delete_records('local_o365_objects', ['id' => $groupobjectrec->id]);
         }
         return true;
@@ -212,18 +195,24 @@ class observers {
      */
     public static function handle_group_member_added(\core\event\group_member_added $event) {
         global $DB;
+        $msg = 'handle_group_member_added: '.print_r($event, true);
+            $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
+            \local_o365\utils::debug($msg, $caller);
 
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
+            \local_o365\utils::debug('\local_o365\feature\usergroups\ not configured', $caller);
             return false;
         }
 
         $unifiedapiclient = static::get_unified_api('handle_group_member_added');
         if (empty($unifiedapiclient)) {
+            \local_o365\utils::debug('unified api connection failed', $caller);
             return false;
         }
 
         $azureadapiclient = static::get_azuread_api('handle_group_member_added');
         if (empty($azureadapiclient)) {
+            \local_o365\utils::debug('azuread api connection failed', $caller);
             return false;
         }
 
@@ -233,6 +222,7 @@ class observers {
         // Look up group.
         $groupobjectrec = static::get_stored_groupdata($usergroupid, 'handle_group_member_added');
         if (empty($groupobjectrec)) {
+            \local_o365\utils::debug('No o365 object for group:'.$usergroupid, $caller);
             return false;
         }
 
