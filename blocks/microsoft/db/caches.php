@@ -24,5 +24,8 @@
 $definitions = [
     'onenotenotebook' => [
         'mode' => cache_store::MODE_SESSION
-    ]
+    ],
+    'groups' => [
+        'mode' => cache_store::MODE_SESSION
+    ],
 ];
