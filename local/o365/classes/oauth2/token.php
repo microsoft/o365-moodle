@@ -144,8 +144,13 @@ class token {
             return $token;
         } else {
             if ($resource === 'https://graph.windows.net') {
+                $backtrace = debug_backtrace(0);
+                $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
+                $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
+                $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
+                $caller = $callingclass.'::'.$callingfunc.':'.$callingline;
                 // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
-                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', 'local_o365\oauth2\token::instance');
+                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', 'local_o365\oauth2\token::instance '.$caller);
                 return null;
             } else {
                 $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
