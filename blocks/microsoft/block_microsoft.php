@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/blocks/microsoft/lib.php');
+
 /**
  * Microsoft Block.
  */
@@ -113,6 +115,67 @@ class block_microsoft extends block_base {
     }
 
     /**
+     * Get links to study groups.
+     *
+     * @return string Returns string containing links to study groups.
+     */
+    protected function get_study_groups() {
+        global $PAGE, $DB, $USER;
+        $html = '';
+        $groupsenabled = \local_o365\feature\usergroups\utils::is_enabled();
+        $iscoursecontext = $PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID;
+        $config = (array)get_config('block_microsoft');
+        // If no links are enabled don't show links to study groups.
+        $haslinks = false;
+        foreach ($config as $name => $value) {
+            if (preg_match('/^settings_cp/', $name) && $value) {
+                $haslinks = true;
+            }
+        }
+        if ($iscoursecontext && $groupsenabled && $haslinks) {
+            if (has_capability('block/microsoft:managegroups', $PAGE->context)) {
+                if (!empty($config['settings_showcoursegroup'])) {
+                    $html .= \html_writer::tag('h5', get_string('coursesettings', 'block_microsoft'));
+                    $cpcoursegroupstr = get_string('linkcpcoursegroup', 'block_microsoft');
+                    $cpcoursegroupurl =  new \moodle_url('/blocks/microsoft/groups/gcp.php', ['courseid' => $PAGE->context->instanceid]);
+                    $html .= \html_writer::link($cpcoursegroupurl ,$cpcoursegroupstr, ['class' => 'servicelink block_microsoft_cpcoursegroup']);
+                    $html .= \html_writer::tag('br', '');
+                    // Has capability to edit course group name.
+                    $managecoursegroupstr = get_string('linkmanagecoursegroup', 'block_microsoft');
+                    $coursegroupurl =  new \moodle_url('/blocks/microsoft/groups/group.php', ['courseid' => $PAGE->context->instanceid]);
+                    $html .= \html_writer::link($coursegroupurl ,$managecoursegroupstr, ['class' => 'servicelink block_microsoft_coursegroup']);
+                    $html .= \html_writer::tag('br', '');
+                }
+                if (!empty($config['settings_showstudygroups'])) {
+                    // Retrieve study groups user can manage.
+                    $managegroups = block_microsoft_study_groups_list($USER->id, ['courseid' => $PAGE->context->instanceid], true, 0, 5);
+                    if (!empty($managegroups)) {
+                        $html .= \html_writer::tag('h5', get_string('managestudygroups', 'block_microsoft'));
+                        $html .= \html_writer::alist($managegroups);
+                    }
+                }
+            } else if (is_enrolled($PAGE->context) && has_capability('block/microsoft:viewgroups', $PAGE->context)) {
+                // Retrieve groups user is a student in, showing link to control panel.
+                if (!empty($config['settings_showstudygroups'])) {
+                    $studygroups = block_microsoft_study_groups_list($USER->id, ['courseid' => $PAGE->context->instanceid], false, 0, 5);
+                } else {
+                    $studygroups = [];
+                }
+                if (!empty($config['settings_showcoursegroup'])) {
+                    $coursegroupurl =  new \moodle_url('/blocks/microsoft/groups/gcp.php', ['courseid' => $PAGE->context->instanceid]);
+                    $managecoursegroupstr = get_string('linkcpcoursegroup', 'block_microsoft');
+                    array_unshift($studygroups, \html_writer::link($coursegroupurl, $managecoursegroupstr, ['class' => 'servicelink block_microsoft_coursegroup']));
+                }
+                if (!empty($studygroups)) {
+                    $html .= \html_writer::tag('h5', get_string('studygroups', 'block_microsoft'));
+                    $html .= \html_writer::alist($studygroups);
+                }
+            }
+        }
+        return $html;
+    }
+
+    /**
      * Get content for a connected user.
      *
      * @return string Block content.
@@ -139,6 +202,9 @@ class block_microsoft extends block_base {
             $html .= $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
             $html .= '</div>';
         }
+
+        $html .= $this->get_study_groups();
+
         $outlookurl = new \moodle_url('/local/o365/ucp.php?action=calendar');
         $outlookstr = get_string('linkoutlook', 'block_microsoft');
         $sharepointstr = get_string('linksharepoint', 'block_microsoft');
@@ -201,6 +267,8 @@ class block_microsoft extends block_base {
 
         $connecturl = new \moodle_url('/local/o365/ucp.php');
         $connectstr = get_string('connecttoo365', 'block_microsoft');
+
+        $html .= $this->get_study_groups();
 
         $items = [];
 

@@ -34,3 +34,45 @@
   display: block;
   margin-left: auto;
   margin-right: auto; }
+
+.block_microsoft_icon, .block_microsoft_icon_onedrive, .block_microsoft_icon_calendar, .block_microsoft_icon_conversations, .block_microsoft_icon_notebook, .block_microsoft_managegroups grouppicture {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0; }
+
+.block_microsoft_cpicons {
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  padding: 0; }
+
+.block_microsoft_icon_onedrive {
+  background-image: url([[pix:block_microsoft|onedrive]]); }
+
+.block_microsoft_icon_calendar {
+  background-image: url([[pix:block_microsoft|calendar]]); }
+
+.block_microsoft_icon_conversations {
+  background-image: url([[pix:block_microsoft|conversations]]); }
+
+.block_microsoft_icon_notebook {
+  background-image: url([[pix:block_microsoft|notebook]]); }
+
+.block_microsoft_managegroups td {
+  padding: 4px; }
+
+.block_microsoft_cpicon, .block_microsoft_cponedrive, .block_microsoft_cpnotebook, .block_microsoft_cpconversations, .block_microsoft_cpcalendar, .block_microsoft_cpeditgroupsettings {
+  height: 150px;
+  width: 150px;
+  margin: 15px;
+  float: left; }
+
+.block_microsoft_cponedrive {
+  clear: both; }
+
+.block_microsoft_cpconversations {
+  clear: both; }
+
+.block_microsoft_cpeditgroupsettings {
+  clear: both; }
