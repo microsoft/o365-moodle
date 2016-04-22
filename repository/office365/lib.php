@@ -254,7 +254,7 @@ class repository_office365 extends \repository {
             }
         } else if (strpos($path, '/trending/') === 0) {
             
-            list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 8));
+            list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
             
         } else {
             if ($unifiedactive === true || $onedriveactive === true) {
@@ -612,7 +612,7 @@ class repository_office365 extends \repository {
         }
         return [$list, $breadcrumb];
     }
-    
+
     /**
      * Get listing for a trending files folder using the unified api.
      *
@@ -621,18 +621,36 @@ class repository_office365 extends \repository {
      */
     protected function get_listing_trending_unified($path = '') {
         $path = (empty($path)) ? '/' : $path;
-
+        global $OUTPUT;
         $list = [];
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
-        
         $contents = $unified->get_trending_files($realpath);
-        $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
-        
+        $pathprefix = '/my';
+
+        if (isset($contents['value'])) {
+            foreach ($contents['value'] as $content) {
+                $itempath = $pathprefix.'/'.$content['name'];
+                $url = $content['webUrl'];
+                $source = [
+                    'id' => $content['id'],
+                    'source' => 'trendingaround',
+                ];
+
+                $list[] = [
+                    'title' => $content['name'],
+                    'date' => strtotime($content['DateTimeCreated']),
+                    'datemodified' => strtotime($content['DateTimeLastModified']),
+                    'datecreated' => strtotime($content['DateTimeCreated']),
+                    'url' => $url,
+                    'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
+                    'source' => $this->pack_reference($source),
+                ];
+            }
+        }
         // Generate path.
         $strtrendingfiles = get_string('trendingaround', 'repository_office365');
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strtrendingfiles, 'path' => '/trending/']];
-        
         return [$list, $breadcrumb];
     }
 
@@ -760,7 +778,7 @@ class repository_office365 extends \repository {
         $caller = '\repository_office365::get_file';
         $reference = $this->unpack_reference($reference);
 
-        if ($reference['source'] === 'onedrive') {
+        if ($reference['source'] === 'onedrive' || $reference['source'] === 'trendingaround') {
             if ($this->unifiedconfigured === true) {
                 $sourceclient = $this->get_unified_apiclient();
             } else {
@@ -783,8 +801,19 @@ class repository_office365 extends \repository {
             }
             $sourceclient->set_site($parentsiteuri);
         }
-        $file = $sourceclient->get_file_by_id($reference['id']);
-
+        if ($reference['source'] === 'trendingaround') {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $reference['url']);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_HEADER, 0);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; '
+                      . '.NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+            $file = curl_exec($ch);
+            curl_close($ch);
+        } else {
+            $file = $sourceclient->get_file_by_id($reference['id']);
+        }
         if (!empty($file)) {
             $path = $this->prepare_file($filename);
             if (!empty($path)) {
@@ -843,7 +872,7 @@ class repository_office365 extends \repository {
             ];
 
             try {
-                if ($filesource === 'onedrive') {
+                if ($filesource === 'onedrive' || $filesource === 'trendingaround') {
                     if ($this->unifiedconfigured === true) {
                         $sourceclient = $this->get_unified_apiclient();
                     } else {
@@ -860,9 +889,22 @@ class repository_office365 extends \repository {
                     $reference['parentsiteuri'] = $parentsiteuri;
                 }
 
-                $filemetadata = $sourceclient->get_file_metadata($fileid);
-                if (isset($filemetadata['webUrl'])) {
-                    $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                if ($filesource === 'trendingaround') {
+                    $trendingfiles = $sourceclient->get_trending_files();
+                    foreach ($trendingfiles['value'] as $file) {
+                        if ($file['id'] == $fileid) {
+                            $filedata = $sourceclient->get_file_data($file['@odata.id']);
+                            if (isset($filedata['@microsoft.graph.downloadUrl'])) {
+                                $reference['url'] = $filedata['@microsoft.graph.downloadUrl'];
+                            }
+                            break;
+                        }
+                    }
+                } else {
+                    $filemetadata = $sourceclient->get_file_metadata($fileid);
+                    if (isset($filemetadata['webUrl'])) {
+                        $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                    }
                 }
             } catch (\Exception $e) {
                 $errmsg = 'There was a problem making the API call.';

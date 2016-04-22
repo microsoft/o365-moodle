@@ -544,6 +544,18 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a file's data by it's file information.
+     *
+     * @param string $fileinfo The file's drive id and file id.
+     * @return string The file's content.
+     */
+    public function get_file_data($fileinfo) {
+        $response = $this->apicall('get', "/{$fileinfo}");
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
      * Get a file's metadata by it's file id.
      *
      * @param string $fileid The file's ID.
