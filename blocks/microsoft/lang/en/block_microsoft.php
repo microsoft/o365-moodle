@@ -110,3 +110,4 @@ $string['columnconversations'] = 'Conversations';
 $string['managegroups'] = 'Manage groups';
 $string['defaultprofile'] = 'Profile image';
 $string['totalgroups'] = 'Total groups: {$a}';
+$string['groupsnotenabledforcourse'] = 'Office Groups are not enabled for this course.';
