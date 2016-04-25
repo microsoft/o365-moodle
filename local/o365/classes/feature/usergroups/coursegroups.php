@@ -59,14 +59,32 @@ class coursegroups {
         $siterec = $this->DB->get_record('course', ['id' => SITEID]);
         $groupprefix = (!empty($siterec)) ? $siterec->shortname : '';
 
+        $creategroups = get_config('local_o365', 'creategroups');
+        if ($creategroups === 'onall' || $creategroups === 'oncustom') {
+            $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
+            if (empty($coursesenabled)) {
+                $this->mtrace('Custom group creation is enabled, but no courses are enabled.');
+                return false;
+            }
+        } else {
+            $this->mtrace('Group creation is disabled.');
+            return false;
+        }
+
         $sql = 'SELECT crs.*
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
                  WHERE obj.id IS NULL AND crs.id != ?';
         $params = ['group', 'course', SITEID];
+        if (is_array($coursesenabled)) {
+            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($coursesenabled);
+            $sql .= ' AND crs.id '.$coursesinsql;
+            $params = array_merge($params, $coursesparams);
+        }
         $courses = $this->DB->get_recordset_sql($sql, $params, 0, 5);
         $coursesprocessed = 0;
         foreach ($courses as $course) {
+
             $coursesprocessed++;
             try {
                 $objectrec = $this->create_group($course, $groupprefix);
