@@ -276,12 +276,48 @@ class main {
             return true;
         }
 
-        if (!isset($aaddata[$restriction['remotefield']])) {
-            return false;
-        }
+        if ($restriction['remotefield'] === 'o365group') {
+            if (\local_o365\rest\unified::is_configured() !== true) {
+                \local_o365\utils::debug('graph api is not configured.', 'check_usercreationrestriction');
+                return false;
+            }
 
-        if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
-            return true;
+            try {
+                $httpclient = new \local_o365\httpclient();
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+                $resource = \local_o365\rest\unified::get_resource();
+                $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+                $apiclient = new \local_o365\rest\unified($token, $httpclient);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Could not construct graph api', 'check_usercreationrestriction', $e);
+                return false;
+            }
+
+            try {
+                $group = $apiclient->get_group_by_name($restriction['value']);
+                if (empty($group) || !isset($group['id'])) {
+                    \local_o365\utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
+                    return false;
+                }
+                $members = $apiclient->get_group_members($group['id']);
+                foreach ($members['value'] as $member) {
+                    if ($member['id'] === $aaddata['id']) {
+                        return true;
+                    }
+                }
+                return false;
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Could not find group (2)', 'check_usercreationrestriction', $e);
+                return false;
+            }
+        } else {
+            if (!isset($aaddata[$restriction['remotefield']])) {
+                return false;
+            }
+
+            if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
+                return true;
+            }
         }
         return false;
     }
