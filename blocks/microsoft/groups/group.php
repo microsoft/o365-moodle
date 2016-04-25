@@ -45,10 +45,18 @@ if ($id) {
     if (!$course = $DB->get_record('course', array('id' => $courseid))) {
         print_error('invalidcourseid');
     }
+    if (\local_o365\feature\usergroups\utils::course_is_group_enabled($course->id) !== true) {
+        print_error('groupsnotenabledforcourse', 'block_microsoft');
+    }
+
 } else {
     if ((!$course = $DB->get_record('course', array('id' => $courseid))) || $courseid == SITEID) {
         print_error('invalidcourseid');
     }
+    if (\local_o365\feature\usergroups\utils::course_is_group_enabled($course->id) !== true) {
+        print_error('groupsnotenabledforcourse', 'block_microsoft');
+    }
+
 
     $filter = [
         'courseid' => $course->id,

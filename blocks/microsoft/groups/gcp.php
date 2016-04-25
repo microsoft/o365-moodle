@@ -34,6 +34,10 @@ if (empty($courseid) || empty($course) || $courseid == SITEID) {
 
 require_login($course);
 
+if (\local_o365\feature\usergroups\utils::course_is_group_enabled($course->id) !== true) {
+    print_error('groupsnotenabledforcourse', 'block_microsoft');
+}
+
 if (!$group = $DB->get_record('local_o365_coursegroupdata', ['courseid' => $courseid, 'groupid' => $groupid])) {
     // For older installs a record will not always exist in local_o365_coursegroupdata.
     if (!empty($groupid) && !$DB->record_exists('groups', ['id' => $groupid])) {
