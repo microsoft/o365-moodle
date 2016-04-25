@@ -88,6 +88,21 @@ class observers {
     }
 
     /**
+     * Get the record for the course associated with a particular group id.
+     *
+     * @param int $groupid Group ID
+     * @return \stdClass The associated course record.
+     */
+    public static function get_group_course($groupid) {
+        global $DB;
+        $sql = 'SELECT c.*
+                  FROM {course} c
+                  JOIN {groups} g ON c.id = g.courseid
+                 WHERE g.id = ?';
+        return $DB->get_record_sql($sql, [$groupid]);
+    }
+
+    /**
      * Handle group_created event to create o365 groups.
      *
      * @param \core\event\group_created $event The triggered event.
@@ -106,6 +121,12 @@ class observers {
         }
 
         $usergroupid = $event->objectid;
+
+        // Check if course is enabled.
+        $courserec = static::get_group_course($usergroupid);
+        if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+            return false;
+        }
 
         $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
         try {
@@ -168,6 +189,12 @@ class observers {
             return false;
         }
 
+        // Check if course is enabled.
+        $courserec = static::get_group_course($usergroupid);
+        if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+            return false;
+        }
+
         // Delete o365 group.
         try {
             $result = $apiclient->delete_group($groupobjectrec->objectid);
@@ -218,6 +245,12 @@ class observers {
 
         $newmemberid = $event->relateduserid;
         $usergroupid = $event->objectid;
+
+        // Check if course is enabled.
+        $courserec = static::get_group_course($usergroupid);
+        if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+            return false;
+        }
 
         // Look up group.
         $groupobjectrec = static::get_stored_groupdata($usergroupid, 'handle_group_member_added');
@@ -270,6 +303,12 @@ class observers {
 
         $newmemberid = $event->relateduserid;
         $usergroupid = $event->objectid;
+
+        // Check if course is enabled.
+        $courserec = static::get_group_course($usergroupid);
+        if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+            return false;
+        }
 
         // Look up group.
         $groupobjectrec = static::get_stored_groupdata($usergroupid, 'handle_group_member_removed');
