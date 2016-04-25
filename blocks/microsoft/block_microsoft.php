@@ -124,6 +124,7 @@ class block_microsoft extends block_base {
         $html = '';
         $groupsenabled = \local_o365\feature\usergroups\utils::is_enabled();
         $iscoursecontext = $PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID;
+        $courseisgroupenabled = \local_o365\feature\usergroups\utils::course_is_group_enabled($PAGE->context->instanceid);
         $config = (array)get_config('block_microsoft');
         // If no links are enabled don't show links to study groups.
         $haslinks = false;
@@ -132,7 +133,7 @@ class block_microsoft extends block_base {
                 $haslinks = true;
             }
         }
-        if ($iscoursecontext && $groupsenabled && $haslinks) {
+        if ($iscoursecontext && $groupsenabled && $courseisgroupenabled && $haslinks) {
             if (has_capability('block/microsoft:managegroups', $PAGE->context)) {
                 if (!empty($config['settings_showcoursegroup'])) {
                     $html .= \html_writer::tag('h5', get_string('coursesettings', 'block_microsoft'));
