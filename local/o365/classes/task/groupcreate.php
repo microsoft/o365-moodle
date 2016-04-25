@@ -57,7 +57,7 @@ class groupcreate extends \core\task\scheduled_task {
         $unifiedresource = \local_o365\rest\unified::get_resource();
         $unifiedtoken = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
         if (empty($unifiedtoken)) {
-            mtrace('Could not get unified API token.');
+            mtrace('Could not get graph API token.');
             return true;
         }
         $graphclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
