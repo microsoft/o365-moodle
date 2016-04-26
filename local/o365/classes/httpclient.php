@@ -169,4 +169,21 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
         fclose($fp);
         return $ret;
     }
+    
+    /**
+     * HTTP download file method
+     *
+     * @param string $url
+     * @param array $options
+     * @return bool
+     */
+    public function download_file($url, $options = array()) {
+        $options['CURLOPT_URL'] = $url;
+        $options['CURLOPT_FOLLOWLOCATION'] = 1;
+        $options['CURLOPT_HEADER'] = 0;
+        $options['CURLOPT_RETURNTRANSFER'] = 1;
+        $options['CURLOPT_USERAGENT'] = 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; '
+                      . '.NET CLR 1.0.3705; .NET CLR 1.1.4322)';
+        return $this->request($url, $options);
+    }
 }

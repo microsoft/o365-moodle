@@ -621,33 +621,12 @@ class repository_office365 extends \repository {
      */
     protected function get_listing_trending_unified($path = '') {
         $path = (empty($path)) ? '/' : $path;
-        global $OUTPUT;
         $list = [];
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
         $contents = $unified->get_trending_files($realpath);
-        $pathprefix = '/my';
+        $list = $this->contents_api_response_to_list($contents, $realpath, 'trendingaround');
 
-        if (isset($contents['value'])) {
-            foreach ($contents['value'] as $content) {
-                $itempath = $pathprefix.'/'.$content['name'];
-                $url = $content['webUrl'];
-                $source = [
-                    'id' => $content['id'],
-                    'source' => 'trendingaround',
-                ];
-
-                $list[] = [
-                    'title' => $content['name'],
-                    'date' => strtotime($content['DateTimeCreated']),
-                    'datemodified' => strtotime($content['DateTimeLastModified']),
-                    'datecreated' => strtotime($content['DateTimeCreated']),
-                    'url' => $url,
-                    'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
-                    'source' => $this->pack_reference($source),
-                ];
-            }
-        }
         // Generate path.
         $strtrendingfiles = get_string('trendingaround', 'repository_office365');
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strtrendingfiles, 'path' => '/trending/']];
@@ -669,7 +648,7 @@ class repository_office365 extends \repository {
         if ($clienttype === 'onedrive') {
             $pathprefix = '/my'.$path;
             $uploadpathprefix = $pathprefix;
-        } else if ($clienttype === 'unified') {
+        } else if ($clienttype === 'unified' || $clienttype === 'trendingaround') {
             $pathprefix = '/my';
             $uploadpathprefix = $pathprefix.$path;
         } else if ($clienttype === 'sharepoint') {
@@ -688,12 +667,12 @@ class repository_office365 extends \repository {
 
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
-                if ($clienttype === 'unified') {
+                if ($clienttype === 'unified' || $clienttype === 'trendingaround') {
                     $itempath = $pathprefix.'/'.$content['name'];
                     $url = $content['webUrl'].'?web=1';
                     $source = [
-                        'id' => $content['id'],
-                        'source' => 'onedrive',
+                        'id' => ($clienttype === 'unified') ? $content['id'] : $content['@odata.id'],
+                        'source' => ($clienttype === 'unified') ? 'onedrive' : 'trendingaround',
                     ];
 
                     $list[] = [
@@ -802,15 +781,7 @@ class repository_office365 extends \repository {
             $sourceclient->set_site($parentsiteuri);
         }
         if ($reference['source'] === 'trendingaround') {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $reference['url']);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-            curl_setopt($ch, CURLOPT_HEADER, 0);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; '
-                      . '.NET CLR 1.0.3705; .NET CLR 1.1.4322)');
-            $file = curl_exec($ch);
-            curl_close($ch);
+            $file = $sourceclient->downloaded_trending_file($reference['url']);
         } else {
             $file = $sourceclient->get_file_by_id($reference['id']);
         }
@@ -890,15 +861,9 @@ class repository_office365 extends \repository {
                 }
 
                 if ($filesource === 'trendingaround') {
-                    $trendingfiles = $sourceclient->get_trending_files();
-                    foreach ($trendingfiles['value'] as $file) {
-                        if ($file['id'] == $fileid) {
-                            $filedata = $sourceclient->get_file_data($file['@odata.id']);
-                            if (isset($filedata['@microsoft.graph.downloadUrl'])) {
-                                $reference['url'] = $filedata['@microsoft.graph.downloadUrl'];
-                            }
-                            break;
-                        }
+                    $filedata = $sourceclient->get_file_data($fileid);
+                    if (isset($filedata['@microsoft.graph.downloadUrl'])) {
+                        $reference['url'] = $filedata['@microsoft.graph.downloadUrl'];
                     }
                 } else {
                     $filemetadata = $sourceclient->get_file_metadata($fileid);
