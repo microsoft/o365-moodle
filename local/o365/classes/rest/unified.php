@@ -317,6 +317,45 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a file by it's file id.
+     *
+     * @param string $parentid The parent id to use.
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_group_files($groupid, $parentid = '') {
+        if (!empty($parentid) && $parentid !== '/') {
+            $endpoint = "/groups/{$groupid}/drive/items/{$parentid}/children";
+        } else {
+            $endpoint = "/groups/{$groupid}/drive/root/children";
+        }
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file's metadata by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_group_file_metadata($groupid, $fileid) {
+        $response = $this->apicall('get', "/groups/{$groupid}/drive/items/{$fileid}");
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file's content by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_group_file_by_id($groupid, $fileid) {
+        return $this->apicall('get', "/groups/{$groupid}/drive/items/{$fileid}/content");
+    }
+
+    /**
      * Add member to group.
      *
      * @param string $groupobjectid The object ID of the group to add to.
