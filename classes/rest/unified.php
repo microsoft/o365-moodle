@@ -550,6 +550,56 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Create a new event in the course group's o365 calendar.
+     *
+     * @param string $subject The event's title/subject.
+     * @param string $body The event's body/description.
+     * @param int $starttime The timestamp when the event starts.
+     * @param int $endtime The timestamp when the event ends.
+     * @param array $attendees Array of moodle user objects that are attending the event.
+     * @param array $other Other parameters to include.
+     * @param string $calendarid The o365 ID of the calendar to create the event in.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
+        $eventdata = [
+            'subject' => $subject,
+            'body' => [
+                'contentType' => 'HTML',
+                'content' => $body,
+            ],
+            'start' => [
+                'dateTime' => date('c', $starttime),
+                'timeZone' => date('T', $starttime),
+            ],
+            'end' => [
+                'dateTime' => date('c', $endtime),
+                'timeZone' => date('T', $endtime),
+            ],
+            'attendees' => [],
+        ];
+        foreach ($attendees as $attendee) {
+            $eventdata['attendees'][] = [
+                'EmailAddress' => [
+                    'Address' => $attendee->email,
+                    'Name' => $attendee->firstname.' '.$attendee->lastname,
+                ],
+                'type' => 'Resource'
+            ];
+        }
+        $eventdata = array_merge($eventdata, $other);
+        $eventdata = json_encode($eventdata);
+        $endpoint =  "/groups/{$calendarid}/calendar/events";
+        $response = $this->apicall('post', $endpoint, $eventdata);
+        $expectedparams = ['id' => null];
+        $return = $this->process_apicall_response($response, $expectedparams);
+        if (!isset($return['Id']) && isset($return['id'])) {
+            $return['Id'] = $return['id'];
+        }
+        return $return;
+    }
+
+    /**
      * Get a list of events.
      *
      * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
