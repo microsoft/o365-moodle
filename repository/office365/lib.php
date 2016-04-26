@@ -253,9 +253,8 @@ class repository_office365 extends \repository {
                 list($list, $breadcrumb) = $this->get_listing_course(substr($path, 8));
             }
         } else if (strpos($path, '/trending/') === 0) {
-            
+            // Path is in trending files.
             list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
-            
         } else {
             if ($unifiedactive === true || $onedriveactive === true) {
                 $list[] = [
