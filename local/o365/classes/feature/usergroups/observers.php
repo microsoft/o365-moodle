@@ -191,7 +191,7 @@ class observers {
 
         // Check if course is enabled.
         $courserec = static::get_group_course($usergroupid);
-        if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+        if (empty($courserec) || \local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
             return false;
         }
 
@@ -222,9 +222,7 @@ class observers {
      */
     public static function handle_group_member_added(\core\event\group_member_added $event) {
         global $DB;
-        $msg = 'handle_group_member_added: '.print_r($event, true);
-            $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
-            \local_o365\utils::debug($msg, $caller);
+        $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
 
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             \local_o365\utils::debug('\local_o365\feature\usergroups\ not configured', $caller);
@@ -248,7 +246,8 @@ class observers {
 
         // Check if course is enabled.
         $courserec = static::get_group_course($usergroupid);
-        if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+        if (empty($courserec) || \local_o365\feature\usergroups\utils::course_is_group_enabled($courserec->id) !== true) {
+            \local_o365\utils::debug('Course is not o365 group enabled.', $caller, $courserec);
             return false;
         }
 
@@ -275,6 +274,7 @@ class observers {
             \local_o365\utils::debug($msg, $caller, $result);
             return false;
         }
+        \local_o365\utils::debug('Added successfully', $caller, $result);
         return true;
     }
 
