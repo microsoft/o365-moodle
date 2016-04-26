@@ -246,8 +246,8 @@ class azuread extends \local_o365\rest\o365api {
         return [
             'Microsoft.Azure.ActiveDirectory' => [
                 'Directory.ReadWrite.All' => 'Scope',
-                'user_impersonation' => 'Scope',
-                'Directory.Read' => 'Scope',
+                'Directory.AccessAsUser.All' => 'Scope',
+                'Directory.Read.All' => 'Scope',
                 'User.Read.All' => 'Scope',
             ],
             'Microsoft.SharePoint' => [
