@@ -401,5 +401,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint($result, '2015011649', 'local', 'o365');
     }
+
+    if ($result && $oldversion < 2015011649.02) {
+        $config = get_config('local_o365');
+        if (!empty($config->creategroups)) {
+            set_config('creategroups', 'onall', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015011649.02', 'local', 'o365');
+    }
     return $result;
 }
