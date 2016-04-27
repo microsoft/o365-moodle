@@ -667,8 +667,8 @@ class repository_office365 extends \repository {
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
                 if ($clienttype === 'unified' || $clienttype === 'trendingaround') {
-                    $itempath = $pathprefix.'/'.$content['name'];
                     if (isset($content['folder'])) {
+                        $itempath = $pathprefix.'/'.$content['id'];
                         $list[] = [
                             'title' => $content['name'],
                             'path' => $itempath,
@@ -679,6 +679,7 @@ class repository_office365 extends \repository {
                             'children' => [],
                         ];
                     } else if (isset($content['file'])) {
+                        $itempath = $pathprefix.'/'.$content['name'];
                         $url = $content['webUrl'].'?web=1';
                         $source = [
                             'id' => ($clienttype === 'unified') ? $content['id'] : $content['@odata.id'],
