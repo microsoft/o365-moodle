@@ -556,12 +556,12 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get a file downloaded by it's file URL.
+     * Get a file's content by it's file URL.
      *
      * @param string $url The file's URL.
      * @return string The file's content.
      */
-    public function downloaded_trending_file($url) {
+    public function get_file_by_url($url) {
         return $this->httpclient->download_file($url);
     }
 
