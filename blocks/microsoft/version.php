@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111908;
+$plugin->version = 2015111909;
 $plugin->requires = 2015111600;
 $plugin->component = 'block_microsoft';
 $plugin->maturity = MATURITY_STABLE;
