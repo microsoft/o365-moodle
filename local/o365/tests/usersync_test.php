@@ -100,7 +100,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
             'userPrincipalName' => 'testuser'.$i.'@example.onmicrosoft.com',
             'mail' => 'testuser'.$i.'@example.onmicrosoft.com',
             'surname' => 'User'.$i,
-            'preferredLanguage' => ($i == 3) ? 'de-DE' : 'en-US',
+            'preferredLanguage' => ($i == 3) ? 'sa-IN' : 'en-US',
         ];
     }
 
