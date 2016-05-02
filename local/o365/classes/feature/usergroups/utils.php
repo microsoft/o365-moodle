@@ -31,6 +31,45 @@ class utils {
      */
     public static function is_enabled() {
         $creategroups = get_config('local_o365', 'creategroups');
-        return (!empty($creategroups)) ? true : false;
+        return ($creategroups === 'oncustom' || $creategroups === 'onall') ? true : false;
+    }
+
+    /**
+     * Get an array of enabled courses.
+     *
+     * @return array Array of course IDs, or TRUE if all courses enabled.
+     */
+    public static function get_enabled_courses() {
+        $creategroups = get_config('local_o365', 'creategroups');
+        if ($creategroups === 'onall') {
+            return true;
+        } else if ($creategroups === 'oncustom') {
+            $coursesenabled = get_config('local_o365', 'usergroupcustom');
+            $coursesenabled = @json_decode($coursesenabled, true);
+            if (!empty($coursesenabled) && is_array($coursesenabled)) {
+                return array_keys($coursesenabled);
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Determine whether a course is group-enabled.
+     *
+     * @param int $courseid The Moodle course ID to check.
+     * @return bool Whether the course is group enabled or not.
+     */
+    public static function course_is_group_enabled($courseid) {
+        $creategroups = get_config('local_o365', 'creategroups');
+        if ($creategroups === 'onall') {
+            return true;
+        } else if ($creategroups === 'oncustom') {
+            $coursesenabled = get_config('local_o365', 'usergroupcustom');
+            $coursesenabled = @json_decode($coursesenabled, true);
+            if (!empty($coursesenabled) && is_array($coursesenabled) && isset($coursesenabled[$courseid])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

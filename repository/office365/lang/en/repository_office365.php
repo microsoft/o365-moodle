@@ -24,6 +24,7 @@
 $string['cachedef_unifiedfolderids'] = 'OneDrive for Business - Unified folder IDs';
 $string['configplugin'] = 'Configure OneDrive for Business Repository';
 $string['courses'] = 'SharePoint (Courses)';
+$string['groups'] = 'Groups';
 
 $string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the OneDrive for Business repository.';

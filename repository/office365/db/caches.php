@@ -24,5 +24,8 @@
 $definitions = [
     'unifiedfolderids' => [
         'mode' => cache_store::MODE_SESSION
-    ]
+    ],
+    'unifiedgroupfolderids' => [
+        'mode' => cache_store::MODE_SESSION
+    ],
 ];
