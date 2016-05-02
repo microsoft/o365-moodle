@@ -150,9 +150,11 @@ class unified extends \local_o365\rest\o365api {
      * Create a group.
      *
      * @param string $name The name of the group.
+     * @param string $mailnickname The mailnickname.
+     * @param array $extra Extra options for creation, ie description for Description of the group.
      * @return array Array of returned o365 group data.
      */
-    public function create_group($name, $mailnickname = null) {
+    public function create_group($name, $mailnickname = null, $extra = null) {
         if (empty($mailnickname)) {
             $mailnickname = $name;
         }
@@ -175,9 +177,51 @@ class unified extends \local_o365\rest\o365api {
             'securityEnabled' => false,
             'mailNickname' => $mailnickname,
         ];
+
+        if (!empty($extra) && is_array($extra)) {
+            // Set extra parameters.
+            foreach ($extra as $name => $value) {
+                $groupdata[$name] = $value;
+            }
+        }
+
+        // Description cannot be set and empty.
+        if (empty($groupdata['description'])) {
+            unset($groupdata['description']);
+        }
+
         $response = $this->apicall('post', '/groups', json_encode($groupdata));
         $expectedparams = ['id' => null];
         $response = $this->process_apicall_response($response, $expectedparams);
+        return $response;
+    }
+
+    /**
+     * Update a group.
+     *
+     * @param array $groupdata Array containing paramters for update.
+     * @return string Null string on success, json string on failure.
+     */
+    public function update_group($groupdata) {
+        // Check for required parameters.
+        if (!is_array($groupdata) || empty($groupdata['id'])) {
+            throw new \moodle_exception('invalidgroupdata', 'local_o365');
+        }
+        if (!isset($groupdata['mailEnabled'])) {
+            $groupdata['mailEnabled'] = false;
+        }
+        if (!isset($groupdata['securityEnabled'])) {
+            $groupdata['securityEnabled'] = false;
+        }
+        if (!isset($groupdata['groupTypes'])) {
+            $groupdata['groupTypes'] = ['Unified'];
+        }
+
+        // Description cannot be empty.
+        if (empty($groupdata['description'])) {
+            unset($groupdata['description']);
+        }
+        $response = $this->apicall('patch', '/groups/'.$groupdata['id'], json_encode($groupdata));
         return $response;
     }
 
@@ -191,6 +235,61 @@ class unified extends \local_o365\rest\o365api {
         $response = $this->apicall('get', '/groups/'.$objectid);
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
+    }
+
+
+    /**
+     * Get group urls.
+     *
+     * @param string $objectid The object ID of the group.
+     * @return array|object Array of returned o365 group urls, null on no group data found.
+     */
+    public function get_group_urls($objectid) {
+        $group = $this->get_group($objectid);
+        if (empty($group['mailNickname'])) {
+            return null;
+        }
+        $config = get_config('local_o365');
+        $url = preg_replace("/-my.sharepoint.com/", ".sharepoint.com", $config->odburl);
+        $o365urls = [
+            // First time visiting the onedrive or notebook urls will result in a please wait while we provision onedrive message.
+            'onedrive' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=documents',
+            'notebook' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=notebook',
+            'conversations' => 'https://outlook.office.com/owa/?path=/group/'.$group['mail'].'/mail',
+            'calendar' => 'https://outlook.office365.com/owa/?path=/group/'.$group['mail'].'/calendar',
+        ];
+        return $o365urls;
+    }
+
+    /**
+     * Get group photo meta data or photo.
+     *
+     * @param string $objectid The object ID of the group.
+     * @return array Array of returned o365 group data.
+     */
+    public function get_group_photo($objectid, $metadata = true) {
+        if ($metadata) {
+            $response = $this->apicall('get', '/groups/'.$objectid.'/photo');
+            $expectedparams = ['id' => null];
+            return $this->process_apicall_response($response, $expectedparams);
+        }
+        return $this->apicall('get', '/groups/'.$objectid.'/photo/$value');
+    }
+
+    /**
+     * Upload group photo meta data or photo.
+     *
+     * @param string $objectid The object ID of the group.
+     * @param string $photo Binary string containing image.
+     * @return array Array of returned o365 group data.
+     */
+    public function upload_group_photo($objectid, $photo) {
+        global $CFG;
+        if (empty($photo)) {
+            // Deleting photo, currently delete call is not supported, uploading default profile.
+            $photo = file_get_contents($CFG->dirroot.'/local/o365/pix/defaultprofile.png');
+        }
+        return $this->apicall('patch', '/groups/'.$objectid.'/photo/$value', $photo);
     }
 
     /**
@@ -215,6 +314,45 @@ class unified extends \local_o365\rest\o365api {
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file by it's file id.
+     *
+     * @param string $parentid The parent id to use.
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_group_files($groupid, $parentid = '') {
+        if (!empty($parentid) && $parentid !== '/') {
+            $endpoint = "/groups/{$groupid}/drive/items/{$parentid}/children";
+        } else {
+            $endpoint = "/groups/{$groupid}/drive/root/children";
+        }
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file's metadata by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_group_file_metadata($groupid, $fileid) {
+        $response = $this->apicall('get', "/groups/{$groupid}/drive/items/{$fileid}");
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file's content by it's file id.
+     *
+     * @param string $fileid The file's ID.
+     * @return string The file's content.
+     */
+    public function get_group_file_by_id($groupid, $fileid) {
+        return $this->apicall('get', "/groups/{$groupid}/drive/items/{$fileid}/content");
     }
 
     /**
