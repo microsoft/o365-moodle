@@ -217,7 +217,10 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_created(\core\event\user_enrolment_created $event) {
+        global $DB;
+        $caller = 'local_o365\observer::handle_user_enrolment_created';
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
+            \local_o365\utils::debug("Not configured", $caller);
             return false;
         }
 
@@ -225,6 +228,7 @@ class observers {
         $courseid = $event->courseid;
 
         if (empty($userid) || empty($courseid)) {
+            \local_o365\utils::debug("handle_user_enrolment_created no userid $userid or course $courseid", $caller);
             return true;
         }
 
@@ -236,11 +240,13 @@ class observers {
             $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
             if (!empty($aadtoken)) {
                 $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
-                $aadclient->add_user_to_course_group($courseid, $userid);
+                $response = $aadclient->add_user_to_course_group($courseid, $userid);
                 return true;
+            } else {
+                \local_o365\utils::debug("no aadtoken", $caller);
             }
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_created', $e);
+            \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
         }
         return false;
     }

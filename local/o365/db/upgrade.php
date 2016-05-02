@@ -395,5 +395,19 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011647.01', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011649) {
+        if (!$dbman->table_exists('local_o365_coursegroupdata')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_coursegroupdata');
+        }
+        upgrade_plugin_savepoint($result, '2015011649', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015011649.02) {
+        $config = get_config('local_o365');
+        if (!empty($config->creategroups)) {
+            set_config('creategroups', 'onall', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015011649.02', 'local', 'o365');
+    }
     return $result;
 }

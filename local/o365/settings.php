@@ -99,9 +99,9 @@ if ($hassiteconfig) {
     $desc = get_string('settings_enableunifiedapi_details', 'local_o365');
     $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '0'));
 
-    $label = get_string('settings_creategroups', 'local_o365');
-    $desc = get_string('settings_creategroups_details', 'local_o365');
-    $settings->add(new \admin_setting_configcheckbox('local_o365/creategroups', $label, $desc, '0'));
+    $label = get_string('settings_usergroups', 'local_o365');
+    $desc = get_string('settings_usergroups_details', 'local_o365');
+    $settings->add(new \local_o365\adminsetting\usergroups('local_o365/creategroups', $label, $desc, 'off'));
 
     $label = get_string('settings_debugmode', 'local_o365');
     $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
