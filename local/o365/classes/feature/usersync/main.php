@@ -293,7 +293,7 @@ class main {
      * @return \stdClass An object representing the created Moodle user.
      */
     public function create_user_from_aaddata($aaddata) {
-        global $CFG;
+        global $CFG, $DB;
 
         require_once($CFG->dirroot.'/user/profile/lib.php');
         require_once($CFG->dirroot.'/user/lib.php');
@@ -354,6 +354,24 @@ class main {
         }
         // Set the password.
         update_internal_user_password($user, $password);
+
+        // Add o365 object.
+        if (\local_o365\rest\unified::is_configured()) {
+            $userobjectid = $aaddata['id'];
+        } else {
+            $userobjectid = $aaddata['objectId'];
+        }
+        $now = time();
+        $userobjectdata = (object)[
+            'type' => 'user',
+            'subtype' => '',
+            'objectid' => $userobjectid,
+            'o365name' => $aaddata['userPrincipalName'],
+            'moodleid' => $newuser->id,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
 
         // Trigger event.
         \core\event\user_created::create_from_userid($newuser->id)->trigger();
@@ -421,11 +439,13 @@ class main {
                        conn.id as existingconnectionid,
                        assign.assigned assigned,
                        assign.photoid photoid,
-                       assign.photoupdated photoupdated
+                       assign.photoupdated photoupdated,
+                       obj.id AS objrecid
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
+             LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
                  WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
         $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
@@ -505,7 +525,7 @@ class main {
                     }
                 }
 
-                if ($existinguser->auth !== 'oidc' && empty($existinguser->tok)) {
+                if ($existinguser->auth !== 'oidc' && empty($existinguser->tokid)) {
                     $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
                     $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
 
@@ -528,6 +548,21 @@ class main {
                     $DB->insert_record('local_o365_connections', $matchrec);
                     $this->mtrace('Matched user.');
                 } else {
+                    // Create userobject if it does not exist.
+                    if (empty($existinguser->objrecid)) {
+                        mtrace('Adding o365 object record for user.');
+                        $now = time();
+                        $userobjectdata = (object)[
+                            'type' => 'user',
+                            'subtype' => '',
+                            'objectid' => $userobjectid,
+                            'o365name' => $user['userPrincipalName'],
+                            'moodleid' => $existinguser->muserid,
+                            'timecreated' => $now,
+                            'timemodified' => $now,
+                        ];
+                        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+                    }
                     // User already connected.
                     $this->mtrace('User is already synced.');
                 }
