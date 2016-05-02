@@ -197,35 +197,35 @@ class acp extends base {
         $matchqueuelength = $DB->count_records('local_o365_matchqueue');
         if ($matchqueuelength > 0) {
 
-            echo \html_writer::start_tag('div', ['class' => 'matchqueuetoolbar']);
+            echo \html_writer::start_tag('div', ['class' => 'local_o365_matchqueuetoolbar']);
 
             $clearurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatchclear']);
             $clearurl = $clearurl->out();
 
             // Clear successful button.
             $checkicon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr.success\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.success\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'success\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearsuccess', 'local_o365');
             echo \html_writer::tag('button', $checkicon.' '.$buttontext, $attrs);
 
             // Clear error button.
             $warningicon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr.error\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.error\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'error\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearerrors', 'local_o365');
             echo \html_writer::tag('button', $warningicon.' '.$buttontext, $attrs);
 
             // Clear warning button.
             $queuedicon = $OUTPUT->pix_icon('i/scheduled', 'warning', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr.queued\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.queued\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'queued\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearqueued', 'local_o365');
             echo \html_writer::tag('button', $queuedicon.' '.$buttontext, $attrs);
 
             // Clear all button.
             $removeicon = $OUTPUT->pix_icon('t/delete', 'warning', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr:not(:first-child)\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr:not(:first-child)\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'all\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearall', 'local_o365');
             echo \html_writer::tag('button', $removeicon.' '.$buttontext, $attrs);
@@ -234,7 +234,7 @@ class acp extends base {
 
             $matchqueue = $DB->get_recordset('local_o365_matchqueue', null, 'id ASC');
             // Constructing table manually instead of \html_table for memory reasons.
-            echo \html_writer::start_tag('table', ['class' => 'matchqueue']);
+            echo \html_writer::start_tag('table', ['class' => 'local_o365_matchqueue']);
             echo \html_writer::start_tag('tr');
             echo \html_writer::tag('th', '');
             echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_muser', 'local_o365'));
