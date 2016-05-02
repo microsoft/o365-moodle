@@ -30,16 +30,16 @@ $(function() {
         var main = this;
         var checktimeout = null;
         this.inputelement = this.find('input.maininput');
-        this.checkstatusempty = this.find('.adminsetting_sharepointlink_status.empty');
-        this.checkstatusinvalid = this.find('.adminsetting_sharepointlink_status.siteinvalid');
-        this.checkstatusnotempty = this.find('.adminsetting_sharepointlink_status.sitenotempty');
-        this.checkstatusvalid = this.find('.adminsetting_sharepointlink_status.sitevalid');
-        this.checkstatuschecking = this.find('.adminsetting_sharepointlink_status.checkingsite');
+        this.checkstatusempty = this.find('.local_o365_adminsetting_sharepointlink_status.empty');
+        this.checkstatusinvalid = this.find('.local_o365_adminsetting_sharepointlink_status.siteinvalid');
+        this.checkstatusnotempty = this.find('.local_o365_adminsetting_sharepointlink_status.sitenotempty');
+        this.checkstatusvalid = this.find('.local_o365_adminsetting_sharepointlink_status.sitevalid');
+        this.checkstatuschecking = this.find('.local_o365_adminsetting_sharepointlink_status.checkingsite');
         this.seturlui = this.find('.sharepointlink_seturl');
-        this.viewstatusui = this.find('.sharepointlink_viewstatus');
+        this.viewstatusui = this.find('.local_o365_sharepointlink_viewstatus');
 
         this.setstatus = function(status) {
-            main.find('.adminsetting_sharepointlink_status').hide();
+            main.find('.local_o365_adminsetting_sharepointlink_status').hide();
             if (status === 'empty') {
                 main.checkstatusempty.show();
             } else if (status === 'checking') {
