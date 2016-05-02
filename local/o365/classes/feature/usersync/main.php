@@ -249,7 +249,13 @@ class main {
                     $user->$localfield = $aaddata[$remotefield];
                 } else {
                     // Update country with two letter country code.
-                    $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                    $incoming = strtoupper($aaddata[$remotefield]);
+                    $countrymap = get_string_manager()->get_list_of_countries();
+                    if (isset($countrymap[$incoming])) {
+                        $countrycode = $incoming;
+                    } else {
+                        $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                    }
                     $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
                 }
             }
@@ -592,7 +598,7 @@ class main {
                 } else {
                     // Create userobject if it does not exist.
                     if (empty($existinguser->objrecid)) {
-                        mtrace('Adding o365 object record for user.');
+                        $this->mtrace('Adding o365 object record for user.');
                         $now = time();
                         $userobjectdata = (object)[
                             'type' => 'user',
