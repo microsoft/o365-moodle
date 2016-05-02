@@ -132,6 +132,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                         'mailEnabled' => false,
                         'securityEnabled' => false,
                         'mailNickname' => 'prefix1_tc_1',
+                        'description' => $course->summary,
                     ]),
                 ],
             ],
