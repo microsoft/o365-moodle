@@ -94,7 +94,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
             'objectType' => 'User',
             'objectId' => '00000000-0000-0000-0000-00000000000'.$i,
             'city' => 'Toronto',
-            'country' => 'CA',
+            'country' => ($i == 3) ? 'Canada' : 'CA',
             'department' => 'Dev',
             'givenName' => 'Test',
             'userPrincipalName' => 'testuser'.$i.'@example.onmicrosoft.com',
