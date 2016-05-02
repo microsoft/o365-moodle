@@ -293,6 +293,19 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a group by it's displayName
+     *
+     * @param string $name The group name,
+     * @return array Array of group information, or null if group not found.
+     */
+    public function get_group_by_name($name) {
+        $response = $this->apicall('get', '/groups?$filter=displayName'.rawurlencode(' eq \''.$name.'\''));
+        $expectedparams = ['value' => null];
+        $groups = $this->process_apicall_response($response, $expectedparams);
+        return (isset($groups['value'][0])) ? $groups['value'][0] : null;
+    }
+
+    /**
      * Delete a group.
      *
      * @param string $objectid The object ID of the group.
