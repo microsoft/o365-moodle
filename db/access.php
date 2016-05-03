@@ -32,4 +32,16 @@ $capabilities = [
         'contextlevel' => CONTEXT_USER,
         'archetypes' => []
     ],
+    'auth/oidc:manageconnectionconnect' => [
+        'riskbitmask' => RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_USER,
+        'archetypes' => []
+    ],
+    'auth/oidc:manageconnectiondisconnect' => [
+        'riskbitmask' => RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_USER,
+        'archetypes' => []
+    ],
 ];

@@ -23,10 +23,9 @@
 
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
+require_once(__DIR__.'/lib.php');
 
 require_login();
-
-require_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id);
 
 $action = optional_param('action', null, PARAM_TEXT);
 
@@ -41,11 +40,13 @@ if (!empty($action)) {
         if (!is_enabled_auth('oidc')) {
             throw new \moodle_exception('erroroidcnotenabled', 'auth_oidc');
         }
+        auth_oidc_connectioncapability($USER->id, 'connect', true);
         $auth = new \auth_oidc\loginflow\authcode;
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnectlogin' && $oidcloginconnected === true) {
         if (is_enabled_auth('manual') === true) {
+            auth_oidc_connectioncapability($USER->id, 'disconnect', true);
             $auth = new \auth_plugin_oidc;
             $auth->set_httpclient(new \auth_oidc\httpclient());
             $auth->disconnect();
@@ -77,18 +78,22 @@ if (!empty($action)) {
     if ($oidcloginconnected === true) {
         echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
         if (is_enabled_auth('manual') === true) {
-            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-            $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
-            $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
-            echo \html_writer::tag('h5', $linkhtml);
-            echo \html_writer::span(get_string('ucp_login_stop_desc', 'auth_oidc', $opname));
+            if (auth_oidc_connectioncapability($USER->id, 'disconnect')) {
+                $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
+                $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
+                echo \html_writer::tag('h5', $linkhtml);
+                echo \html_writer::span(get_string('ucp_login_stop_desc', 'auth_oidc', $opname));
+            }
         }
     } else {
         echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
-        $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
-        $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
-        echo \html_writer::tag('h5', $linkhtml);
-        echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_oidc', $opname));
+        if (auth_oidc_connectioncapability($USER->id, 'connect')) {
+            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
+            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
+            echo \html_writer::tag('h5', $linkhtml);
+            echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_oidc', $opname));
+        }
     }
     echo \html_writer::end_div();
 
