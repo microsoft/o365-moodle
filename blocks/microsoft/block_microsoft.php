@@ -24,6 +24,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/blocks/microsoft/lib.php');
+require_once($CFG->dirroot.'/auth/oidc/lib.php');
 
 /**
  * Microsoft Block.
@@ -72,7 +73,7 @@ class block_microsoft extends block_base {
                 $this->content->text .= $this->get_content_connected();
             } else {
                 $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
-                if (!empty($connection)) {
+                if (!empty($connection) && auth_oidc_connectioncapability($USER->id, 'connect')) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
                     $this->content->text .= $this->get_content_matched($connection->aadupn, $uselogin);
                 } else {
@@ -239,7 +240,7 @@ class block_microsoft extends block_base {
             $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+        if (auth_oidc_connectioncapability($USER->id, 'disconnect') === true) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
                 $connectstr = get_string('linkconnection', 'block_microsoft');
@@ -273,7 +274,7 @@ class block_microsoft extends block_base {
 
         $items = [];
 
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
+        if (auth_oidc_connectioncapability($USER->id, 'connect') === true) {
             if (!empty($this->globalconfig->settings_showo365connect)) {
                 $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
             }
@@ -380,7 +381,9 @@ class block_microsoft extends block_base {
                     $output .= get_string('error_nomoodlenotebook', 'block_microsoft');
                 }
             } else {
-                $output .= $this->render_signin_widget($onenoteapi->get_login_url());
+                if (\local_o365\utils::is_configured_msaccount()) {
+                    $output .= $this->render_signin_widget($onenoteapi->get_login_url());
+                }
             }
             return $output;
         } catch (\Exception $e) {
