@@ -452,11 +452,13 @@ class main {
         $aadsync = array_flip(explode(',', $aadsync));
 
         $usernames = [];
+        $upns = [];
         foreach ($aadusers as $i => $user) {
             $upnlower = \core_text::strtolower($user['userPrincipalName']);
             $aadusers[$i]['upnlower'] = $upnlower;
 
             $usernames[] = $upnlower;
+            $upns[] = $upnlower;
 
             $upnsplit = explode('@', $upnlower);
             if (!empty($upnsplit[0])) {
@@ -498,9 +500,33 @@ class main {
         $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
+        // Fetch linked AAD user accounts.
+        list($upnsql, $upnparams) = $DB->get_in_or_equal($upns);
+        list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
+        $sql = 'SELECT tok.oidcusername,
+                       u.id as muserid,
+                       u.auth,
+                       tok.id as tokid,
+                       conn.id as existingconnectionid,
+                       assign.assigned assigned,
+                       assign.photoid photoid,
+                       assign.photoupdated photoupdated,
+                       obj.id AS objrecid
+                  FROM {user} u
+             LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
+             LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
+             LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
+             LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
+                 WHERE tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
+        $params = array_merge($upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
+        $linkedexistingusers = $DB->get_records_sql($sql, $params);
+
+        $existingusers = array_merge($existingusers, $linkedexistingusers);
+
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
             $this->mtrace('Syncing user '.$user['upnlower']);
+
             if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
                 $this->mtrace('User is deleted. Skipping.');
                 continue;
@@ -510,6 +536,7 @@ class main {
             } else {
                 $userobjectid = $user['objectId'];
             }
+
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
                 $this->mtrace('User doesn\'t exist in Moodle');
                 if (!isset($aadsync['create'])) {
