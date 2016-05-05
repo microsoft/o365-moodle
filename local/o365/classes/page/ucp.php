@@ -344,7 +344,7 @@ class ucp extends base {
      * @return string HTML for the feature entry.
      */
     protected function print_index_feature($id, $enabled) {
-        $html = \html_writer::start_div('feature_'.$id);
+        $html = \html_writer::start_div('local_o365_feature_'.$id);
         $featureuri = new \moodle_url('/local/o365/ucp.php?action='.$id);
         $strtitle = get_string('ucp_index_'.$id.'_title', 'local_o365');
 
