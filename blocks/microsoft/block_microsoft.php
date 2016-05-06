@@ -300,7 +300,7 @@ class block_microsoft extends block_base {
             return [];
         }
 
-        $url = 'http://office.com/getoffice365';
+        $url = get_config('block_microsoft', 'settings_geto365link');
         $str = get_string('geto365', 'block_microsoft');
         return [
             \html_writer::link($url, $str, ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']),
