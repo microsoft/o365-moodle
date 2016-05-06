@@ -514,7 +514,7 @@ class main {
                 $userobjectid = $user['objectId'];
             }
 
-            $checkuser = $DB->get_record_sql('SELECT * from {user} WHERE email = ?', array($user['upnlower']));
+            $checkuser = $DB->get_record_sql('SELECT * from {local_o365_objects} WHERE o365name = ?', array($user['upnlower']));
             if($checkuser){
                 $linkeduser = true;
             }
