@@ -111,3 +111,6 @@ $string['managegroups'] = 'Manage groups';
 $string['defaultprofile'] = 'Profile image';
 $string['totalgroups'] = 'Total groups: {$a}';
 $string['groupsnotenabledforcourse'] = 'Office Groups are not enabled for this course.';
+$string['settings_geto365link'] = 'Get Office 365 Link';
+$string['settings_geto365link_desc'] = 'Link to download Office 365.';
+$string['settings_geto365link_default'] = 'http://office.com/getoffice365';

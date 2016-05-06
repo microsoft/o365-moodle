@@ -60,6 +60,12 @@ $label = get_string('settings_showcoursespsite', 'block_microsoft');
 $desc = get_string('settings_showcoursespsite_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursespsite', $label, $desc, 1));
 
+// Settings to customize "Get Office 365" URL.
+$label = get_string('settings_geto365link', 'block_microsoft');
+$desc = get_string('settings_geto365link_desc', 'block_microsoft');
+$default = get_string('settings_geto365link_default', 'block_microsoft');
+$settings->add(new admin_setting_configtext('block_microsoft/settings_geto365link', $label, $desc, $default, PARAM_TEXT));
+
 $title = get_string('settings_cpmanageurlsheader', 'block_microsoft');
 $desc = get_string('settings_cpmanageurlsheader_desc', 'block_microsoft');
 $settings->add(new admin_setting_heading('settings_cpmanageurlsheader', $title, $desc));
