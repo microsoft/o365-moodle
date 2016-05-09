@@ -514,7 +514,9 @@ class main {
                 $userobjectid = $user['objectId'];
             }
 
-            $checkuser = $DB->get_record_sql('SELECT * from {local_o365_objects} WHERE o365name = ?', array($user['upnlower']));
+            // Check if token is already present for AAD user.
+            $checkuser = $DB->get_record_sql('SELECT * from {auth_oidc_token} WHERE oidcusername = ?', array($user['upnlower']));
+
             if($checkuser){
                 $linkeduser = true;
             }
