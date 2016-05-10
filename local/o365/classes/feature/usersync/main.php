@@ -452,11 +452,13 @@ class main {
         $aadsync = array_flip(explode(',', $aadsync));
 
         $usernames = [];
+        $upns = [];
         foreach ($aadusers as $i => $user) {
             $upnlower = \core_text::strtolower($user['userPrincipalName']);
             $aadusers[$i]['upnlower'] = $upnlower;
 
             $usernames[] = $upnlower;
+            $upns[] = $upnlower;
 
             $upnsplit = explode('@', $upnlower);
             if (!empty($upnsplit[0])) {
@@ -498,11 +500,31 @@ class main {
         $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
+        // Fetch linked AAD user accounts.
+        list($upnsql, $upnparams) = $DB->get_in_or_equal($upns);
+        $sql = 'SELECT tok.oidcusername,
+                       u.id as muserid,
+                       u.auth,
+                       tok.id as tokid,
+                       conn.id as existingconnectionid,
+                       assign.assigned assigned,
+                       assign.photoid photoid,
+                       assign.photoupdated photoupdated,
+                       obj.id AS objrecid
+                  FROM {user} u
+             LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
+             LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
+             LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
+             LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
+                 WHERE tok.oidcusername '.$upnsql.' AND u.mnethostid = ? AND u.deleted = ? ';
+        $params = array_merge($upnparams, [$CFG->mnet_localhost_id, '0']);
+        $linkedaadusers = $DB->get_records_sql($sql, $params);
+
+        $existingusers = array_merge($existingusers, $linkedaadusers);
+
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
             $this->mtrace('Syncing user '.$user['upnlower']);
-            // Flag to check weather current AAD user is already connected with any moodle user.
-            $linkeduser = false;
 
             if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
                 $this->mtrace('User is deleted. Skipping.');
@@ -514,14 +536,7 @@ class main {
                 $userobjectid = $user['objectId'];
             }
 
-            // Check if token is already present for AAD user.
-            $checkuser = $DB->get_record_sql('SELECT * from {auth_oidc_token} WHERE oidcusername = ?', array($user['upnlower']));
-
-            if($checkuser){
-                $linkeduser = true;
-            }
-
-            if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']]) && !$linkeduser) {
+            if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
                 $this->mtrace('User doesn\'t exist in Moodle');
                 if (!isset($aadsync['create'])) {
                     $this->mtrace('Not creating a Moodle user because that sync option is disabled.');
@@ -563,7 +578,7 @@ class main {
                     $existinguser = $existingusers[$user['upnsplit0']];
                 }
                 // Assign user to app if not already assigned.
-                if (empty($existinguser->assigned) && !$linkeduser) {
+                if (empty($existinguser->assigned)) {
                     try {
                         if (!PHPUNIT_TEST) {
                             if (!empty($existinguser->muserid) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
@@ -574,7 +589,7 @@ class main {
                         $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
-                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire * 3600) < time()) && !$linkeduser) {
+                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire * 3600) < time())) {
                     try {
                         if (!PHPUNIT_TEST) {
                             $this->assign_photo($existinguser->muserid, $user['upnlower']);
@@ -584,7 +599,7 @@ class main {
                     }
                 }
 
-                if ($existinguser->auth !== 'oidc' && empty($existinguser->tokid) && !$linkeduser) {
+                if ($existinguser->auth !== 'oidc' && empty($existinguser->tokid)) {
                     $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
                     $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
 
@@ -608,7 +623,7 @@ class main {
                     $this->mtrace('Matched user.');
                 } else {
                     // Create userobject if it does not exist.
-                    if (empty($existinguser->objrecid) && !$linkeduser) {
+                    if (empty($existinguser->objrecid)) {
                         $this->mtrace('Adding o365 object record for user.');
                         $now = time();
                         $userobjectdata = (object)[
