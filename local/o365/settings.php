@@ -70,7 +70,7 @@ if ($hassiteconfig) {
         'photosynconlogin' => get_string('settings_aadsync_photosynconlogin', 'local_o365'),
     ];
     $default = [];
-    $settings->add(new \admin_setting_configmulticheckbox('local_o365/aadsync', $label, $desc, $default, $choices));
+    $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));
 
     $key = 'local_o365/usersynccreationrestriction';
     $label = get_string('settings_usersynccreationrestriction', 'local_o365');
