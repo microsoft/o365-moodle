@@ -113,4 +113,4 @@ $string['totalgroups'] = 'Total groups: {$a}';
 $string['groupsnotenabledforcourse'] = 'Office Groups are not enabled for this course.';
 $string['settings_geto365link'] = 'Office 365 download link';
 $string['settings_geto365link_desc'] = 'Where to download Office 365 from.';
-$string['settings_geto365link_default'] = 'http://office.com/getoffice365';
+$string['settings_geto365link_default'] = 'https://portal.office.com/OLS/MySoftware.aspx';
