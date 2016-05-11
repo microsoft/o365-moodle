@@ -253,8 +253,14 @@ class ucp extends base {
         echo \html_writer::tag('h3', $strtitle, ['class' => 'local_o365_featureheader local_o365_feature_connection']);
         echo \html_writer::div(get_string('ucp_connection_desc', 'local_o365'));
 
-        $statusstring = get_string('ucp_connection_disconnected', 'local_o365');
-        $statusclasses = 'alert alert-info';
+        if (optional_param('o365accountexist', null, PARAM_TEXT) == 'true') {
+            $statusstring = get_string('o365_account_exist', 'local_o365');
+            $statusclasses = 'alert alert-error';
+        } else {
+            $statusstring = get_string('ucp_connection_disconnected', 'local_o365');
+            $statusclasses = 'alert alert-info';
+        }
+
         switch ($connectiontype) {
             case 'aadlogin':
                 $statusclasses = 'alert alert-success';

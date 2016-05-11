@@ -322,3 +322,4 @@ $string['webservices_error_assignnotfound'] = 'The received module\'s assignment
 $string['webservices_error_invalidassignment'] = 'The received assignment ID cannot be used with this webservices function.';
 $string['webservices_error_modulenotfound'] = 'The received module ID could not be found.';
 $string['webservices_error_sectionnotfound'] = 'The course section could not be found.';
+$string['o365_account_exist'] = 'The Office 365 account you are trying to use already exist.';

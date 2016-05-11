@@ -134,3 +134,4 @@ $string['ucp_status_disabled'] = 'Disabled';
 $string['ucp_disconnect_title'] = '{$a} Disconnection';
 $string['ucp_disconnect_details'] = 'This will disconnect your Moodle account from {$a}. You\'ll need to create a username and password to log in to Moodle.';
 $string['ucp_title'] = '{$a} Management';
+$string['ucp_o365accountexist'] = 'The Office 365 account you are trying to use already exist.';
