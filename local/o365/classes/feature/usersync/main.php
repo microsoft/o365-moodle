@@ -502,6 +502,7 @@ class main {
 
         // Fetch linked AAD user accounts.
         list($upnsql, $upnparams) = $DB->get_in_or_equal($upns);
+        list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
         $sql = 'SELECT tok.oidcusername,
                        u.id as muserid,
                        u.auth,
@@ -516,11 +517,11 @@ class main {
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
-                 WHERE tok.oidcusername '.$upnsql.' AND u.mnethostid = ? AND u.deleted = ? ';
-        $params = array_merge($upnparams, [$CFG->mnet_localhost_id, '0']);
-        $linkedaadusers = $DB->get_records_sql($sql, $params);
+                 WHERE tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
+        $params = array_merge($upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
+        $linkedexistingusers = $DB->get_records_sql($sql, $params);
 
-        $existingusers = array_merge($existingusers, $linkedaadusers);
+        $existingusers = array_merge($existingusers, $linkedexistingusers);
 
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
