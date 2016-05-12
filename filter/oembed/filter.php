@@ -380,7 +380,7 @@ function filter_oembed_swaycallback($link) {
  * @return mixed|null|string The HTTP response object from the OEmbed request.
  */
 function filter_oembed_curlcall($url) {
-    static $cache;
+   static $cache;
 
     if (!isset($cache)) {
         $cache = cache::make('filter_oembed', 'embeddata');
