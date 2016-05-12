@@ -52,7 +52,7 @@ class user_created extends \core\event\base {
      */
     protected function init() {
         $this->context = \context_system::instance();
-        $this->data['crud'] = 'r';
+        $this->data['crud'] = 'c';
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'user';
     }
