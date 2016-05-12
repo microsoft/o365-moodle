@@ -71,9 +71,9 @@ if (!empty($action)) {
     echo get_string('ucp_general_intro', 'auth_oidc', $opname);
     echo '<br /><br />';
 
-    if (optional_param('o365accountexist', null, PARAM_TEXT) == 'true') {
+    if (optional_param('o365accountconnected', null, PARAM_TEXT) == 'true') {
         echo \html_writer::start_div('connectionstatus alert alert-error');
-        echo \html_writer::tag('h5', get_string('ucp_o365accountexist', 'auth_oidc'));
+        echo \html_writer::tag('h5', get_string('ucp_o365accountconnected', 'auth_oidc'));
         echo \html_writer::end_div();
     }
 

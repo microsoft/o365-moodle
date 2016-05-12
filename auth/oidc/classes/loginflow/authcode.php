@@ -194,9 +194,11 @@ class authcode extends \auth_oidc\loginflow\base {
 
             if (!empty($userrec)) {
                 if (empty($additionaldata['redirect'])) {
-                    $redirect = '/auth/oidc/ucp.php?o365accountexist=true';
+                    $redirect = '/auth/oidc/ucp.php?o365accountconnected=true';
                 } else if ($additionaldata['redirect'] == '/local/o365/ucp.php') {
-                    $redirect = $additionaldata['redirect'].'?action=connection&o365accountexist=true';
+                    $redirect = $additionaldata['redirect'].'?action=connection&o365accountconnected=true';
+                } else {
+                    throw new \moodle_exception('errorinvalidredirect_message', 'auth_oidc');
                 }
                 redirect(new \moodle_url($redirect));
             }
