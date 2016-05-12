@@ -35,6 +35,12 @@ require_once($CFG->dirroot.'/lib/externallib.php');
  */
 class local_o365_webservices_onenoteassignment_testcase extends \advanced_testcase {
 
+    // Data structure elements of the array based on old Data Provider
+    const DBSTATE = 0;
+    const PARAMS = 1;
+    const EXPECTEDRETURN = 2;
+    const EXPECTEDEXCEPTION = 3;
+
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
@@ -144,147 +150,88 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      * @return [type] [description]
      */
     public function get_general_assignment_data_tests() {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $assign = $this->getDataGenerator()->create_module('assign', array('course' => $course->id,
+                                                           'section' => 1,
+                                                           'name' => 'OneNote Assignment',
+                                                           'intro' => 'This is a test assignment'));
+
+        // Enable OneNote submission for this assignment
+        $assignpluginconfig = $DB->get_record('assign_plugin_config', array('assignment' => $assign->id,
+                                                                            'plugin' => 'onenote',
+                                                                            'subtype' => 'assignsubmission'));
+        $assignpluginconfig->value = 1;
+        $DB->update_record('assign_plugin_config', $assignpluginconfig);
+
+        // get assignment config
+        $module = $DB->get_field('modules', 'id', array('name' => 'assign'));
+        $fakecourseid = $course->id + 1;
+        $fakecmid = $assign->cmid + 1;
+
         return [
             'Course not found (no course)' => [
                 'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 60,
-                    'course' => 2,
+                    'coursemodule' => $assign->cmid,
+                    'course' => -1,
                 ],
                 'expectedexception' => ['dml_missing_record_exception', 'Can not find data record in database table course'],
             ],
             'Course not found (different id)' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 60,
-                    'course' => 3,
+                    'coursemodule' => $assign->cmid,
+                    'course' => $fakecourseid,
                 ],
                 'expectedexception' => ['dml_missing_record_exception', 'Can not find data record in database table course'],
             ],
             'Module not found (no record)' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 60,
-                    'course' => 2,
+                    'coursemodule' => -1,
+                    'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\modulenotfound'],
             ],
             'Module not found (different id)' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                    'course_modules' => [
-                        ['id', 'course', 'module'],
-                        ['10', '2', '1'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 60,
-                    'course' => 2,
+                    'coursemodule' => $fakecmid,
+                    'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\modulenotfound'],
             ],
             'Assignment record not found (no record)' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                    'course_modules' => [
-                        ['id', 'course', 'module'],
-                        ['60', '2', '1'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 60,
-                    'course' => 2,
+                    'coursemodule' => $assign->cmid,
+                    'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\assignnotfound'],
             ],
             'Assignment record not found (no record for that course_module record)' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                    'course_modules' => [
-                        ['id', 'course', 'module', 'instance'],
-                        ['59', '2', '1', '70'],
-                        ['61', '2', '1', '71'],
-                    ],
-                    'assign' => [
-                        ['id', 'course', 'name', 'intro'],
-                        ['70', '2', 'OneNote Assignment', 'This is a test assignment'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 61,
-                    'course' => 2,
+                    'coursemodule' => $fakecmid,
+                    'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\assignnotfound'],
             ],
             'All data correct, assignment not a OneNote assignment' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                    'course_modules' => [
-                        ['id', 'course', 'module', 'instance'],
-                        ['59', '2', '1', '70'],
-                        ['61', '2', '1', '71'],
-                    ],
-                    'assign' => [
-                        ['id', 'course', 'name', 'intro'],
-                        ['70', '2', 'OneNote Assignment', 'This is a test assignment'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 59,
-                    'course' => 2,
+                    'coursemodule' => $assign->cmid,
+                    'course' => $course->id,
                 ],
                 'expectedexception' => ['local_o365\webservices\exception\invalidassignment'],
             ],
             'All data correct, assignment is a OneNote assignment' => [
-                'dbstate' => [
-                    'course' => [
-                        ['id'],
-                        ['2'],
-                    ],
-                    'course_modules' => [
-                        ['id', 'course', 'module', 'instance', 'section'],
-                        ['59', '2', '1', '70', '40'],
-                        ['61', '2', '1', '71', '40'],
-                    ],
-                    'course_sections' => [
-                        ['id', 'course', 'section', 'sequence'],
-                        ['40', '2', '5', '59'],
-                        ['41', '2', '6', ''],
-                    ],
-                    'assign' => [
-                        ['id', 'course', 'name', 'intro'],
-                        ['70', '2', 'OneNote Assignment', 'This is a test assignment'],
-                    ],
-                    'assign_plugin_config' => [
-                        ['id', 'assignment', 'plugin', 'subtype', 'name', 'value'],
-                        ['100', '70', 'onenote', 'assignsubmission', 'enabled', '1'],
-                    ],
-                ],
+                'dbstate' => [],
                 'params' => [
-                    'coursemodule' => 59,
-                    'course' => 2,
+                    'coursemodule' => $assign->cmid,
+                    'course' => $course->id,
                 ],
                 'expectedexception' => null,
             ],
@@ -297,6 +244,8 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      * @return array Array of test parameters.
      */
     public function dataprovider_assignment_read() {
+        global $DB;
+
         $generaltests = $this->get_general_assignment_data_tests();
         $return = [];
 
@@ -308,13 +257,14 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     [
                         'data' => [
                             [
-                                'course' => '2',
-                                'coursemodule' => '59',
+                                'course' => $parameters['params']['course'],
+                                'coursemodule' => (string)$parameters['params']['coursemodule'],
                                 'name' => 'OneNote Assignment',
                                 'intro' => 'This is a test assignment',
-                                'section' => '40',
+                                'section' => $DB->get_field('course_sections', 'id',
+                                                        array('course' => $parameters['params']['course'],
+                                                              'section' => 1)),
                                 'visible' => '1',
-                                'instance' => '70',
                             ],
                         ],
                     ],
@@ -330,80 +280,36 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
             }
         }
 
-        // Additional success test with slightly different parameters.
-        $return['All data correct, assignment is a OneNote assignment 2'] = [
-            [
-                'course' => [
-                    ['id'],
-                    ['2'],
-                ],
-                'course_modules' => [
-                    ['id', 'course', 'module', 'instance', 'section', 'visible'],
-                    ['59', '2', '1', '70', '2', '1'],
-                    ['61', '2', '1', '71', '2', '1'],
-                ],
-                'assign' => [
-                    ['id', 'course', 'name', 'intro'],
-                    ['71', '2', 'OneNote Assignment', 'This is a test assignment'],
-                ],
-                'assign_plugin_config' => [
-                    ['id', 'assignment', 'plugin', 'subtype', 'name', 'value'],
-                    ['100', '71', 'onenote', 'assignsubmission', 'enabled', '1'],
-                ],
-            ],
-            [
-                'coursemodule' => 61,
-                'course' => 2,
-            ],
-            [
-                'data' => [
-                    [
-                        'course' => '2',
-                        'coursemodule' => '61',
-                        'name' => 'OneNote Assignment',
-                        'intro' => 'This is a test assignment',
-                        'section' => '2',
-                        'visible' => '1',
-                        'instance' => '71',
-                    ],
-                ],
-            ],
-            null,
-        ];
         return $return;
     }
 
     /**
      * Test \local_o365\webservices\read_onenoteassignment::assignment_read().
-     *
-     * @dataProvider dataprovider_assignment_read
-     * @param array $dbstate Array of tables and records to create before test.
-     * @param array $params Webservices parameters.
-     * @param array $expectedreturn The expected service return.
-     * @param array|null $expectedexception If an exception is expected, the expected exception, otherwise null.
-     *                                 Index 0 is class name.
-     *                                 Index 1 is the exception message.
      */
-    public function test_assignment_read($dbstate, $params, $expectedreturn, $expectedexception) {
+    public function test_assignment_read() {
         global $DB;
 
-        if (!empty($dbstate)) {
-            $dataset = $this->createArrayDataSet($dbstate);
-            $this->loadDataSet($dataset);
-        }
-
-        if (!empty($expectedexception)) {
-            if (isset($expectedexception[1])) {
-                $this->setExpectedException($expectedexception[0], $expectedexception[1]);
-            } else {
-                $this->setExpectedException($expectedexception[0]);
+        $dataarr = $this->dataprovider_assignment_read();
+        foreach ($dataarr as $data) {
+            if (!empty($data[self::DBSTATE])) {
+                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
+                $this->loadDataSet($dataset);
             }
+
+            if (!empty($data[self::EXPECTEDEXCEPTION])) {
+                if (isset($data[self::EXPECTEDEXCEPTION][1])) {
+                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0], $data[self::EXPECTEDEXCEPTION][1]);
+                } else {
+                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0]);
+                }
+            }
+
+            $this->setAdminUser();
+
+            $actualreturn = \local_o365\webservices\read_onenoteassignment::assignment_read($data[self::PARAMS]);
+
+            $this->assertEquals($data[self::EXPECTEDRETURN], $actualreturn);
         }
-
-        $this->setAdminUser();
-
-        $actualreturn = \local_o365\webservices\read_onenoteassignment::assignment_read($params);
-        $this->assertEquals($expectedreturn, $actualreturn);
     }
 
     /**
@@ -430,29 +336,25 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      * @return array Array of test parameters.
      */
     public function dataprovider_assignment_update() {
+        global $DB;
         $generaltests = $this->get_general_assignment_data_tests();
         $return = [];
 
         foreach ($generaltests as $testkey => $parameters) {
             if ($testkey === 'All data correct, assignment is a OneNote assignment') {
-                $return[$testkey] = [
-                    $parameters['dbstate'],
-                    $parameters['params'],
-                    [
-                        'data' => [
-                            [
-                                'course' => '2',
-                                'coursemodule' => '59',
-                                'name' => 'OneNote Assignment',
-                                'intro' => 'This is a test assignment',
-                                'section' => '40',
-                                'visible' => '1',
-                                'instance' => '70',
-                            ],
-                        ],
-                    ],
-                    $parameters['expectedexception'],
-                ];
+                $data = array(
+                            'name' => 'New OneNote Assignment',
+                            'intro' => 'This is a test assignment',
+                            'newintro' => 'This is a new test assignment',
+                            'section' => $DB->get_field('course_sections', 'id',
+                                                        array('course' => $parameters['params']['course'],
+                                                              'section' => 1)),
+                            'newsection' => $DB->get_field('course_sections', 'id',
+                                                        array('course' => $parameters['params']['course'],
+                                                              'section' => 0)),
+                            'visible' => 1,
+                            'newvisible' => 0,
+                            );
 
                 $return['Update name'] = [
                     $parameters['dbstate'],
@@ -460,13 +362,12 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     [
                         'data' => [
                             [
-                                'course' => '2',
-                                'coursemodule' => '59',
-                                'name' => 'New OneNote Assignment',
-                                'intro' => 'This is a test assignment',
-                                'section' => '40',
-                                'visible' => '1',
-                                'instance' => '70',
+                                'course' => $parameters['params']['course'],
+                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'name' => $data['name'],
+                                'intro' => $data['intro'],
+                                'section' => $data['section'],
+                                'visible' => $data['visible'],
                             ],
                         ],
                     ],
@@ -479,13 +380,12 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     [
                         'data' => [
                             [
-                                'course' => '2',
-                                'coursemodule' => '59',
-                                'name' => 'OneNote Assignment',
-                                'intro' => 'This is a new test assignment',
-                                'section' => '40',
-                                'visible' => '1',
-                                'instance' => '70',
+                                'course' => $parameters['params']['course'],
+                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'name' => $data['name'],
+                                'intro' => $data['newintro'],
+                                'section' => $data['section'],
+                                'visible' => $data['visible'],
                             ],
                         ],
                     ],
@@ -494,17 +394,16 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
                 $return['Update section to nonexistent section'] = [
                     $parameters['dbstate'],
-                    array_merge($parameters['params'], ['section' => 48]),
+                    array_merge($parameters['params'], ['section' => '-1']),
                     [
                         'data' => [
                             [
-                                'course' => '2',
-                                'coursemodule' => '59',
-                                'name' => 'OneNote Assignment',
-                                'intro' => 'This is a test assignment',
-                                'section' => '41',
-                                'visible' => '1',
-                                'instance' => '70',
+                                'course' => $parameters['params']['course'],
+                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'name' => $data['name'],
+                                'intro' => $data['newintro'],
+                                'section' => $data['section'],
+                                'visible' => $data['visible'],
                             ],
                         ],
                     ],
@@ -513,17 +412,16 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
                 $return['Update section'] = [
                     $parameters['dbstate'],
-                    array_merge($parameters['params'], ['section' => 41]),
+                    array_merge($parameters['params'], ['section' => $data['newsection']]),
                     [
                         'data' => [
                             [
-                                'course' => '2',
-                                'coursemodule' => '59',
-                                'name' => 'OneNote Assignment',
-                                'intro' => 'This is a test assignment',
-                                'section' => '41',
-                                'visible' => '1',
-                                'instance' => '70',
+                                'course' => $parameters['params']['course'],
+                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'name' => $data['name'],
+                                'intro' => $data['newintro'],
+                                'section' => $data['newsection'],
+                                'visible' => $data['visible'],
                             ],
                         ],
                     ],
@@ -532,27 +430,19 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
                 $return['Update visible'] = [
                     $parameters['dbstate'],
-                    array_merge($parameters['params'], ['visible' => 0]),
+                    array_merge($parameters['params'], ['visible' => $data['newvisible']]),
                     [
                         'data' => [
                             [
-                                'course' => '2',
-                                'coursemodule' => '59',
-                                'name' => 'OneNote Assignment',
-                                'intro' => 'This is a test assignment',
-                                'section' => '40',
-                                'visible' => '0',
-                                'instance' => '70',
+                                'course' => $parameters['params']['course'],
+                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'name' => $data['name'],
+                                'intro' => $data['newintro'],
+                                'section' => $data['newsection'],
+                                'visible' => $data['newvisible'],
                             ],
                         ],
                     ],
-                    $parameters['expectedexception'],
-                ];
-            } else {
-                $return[$testkey] = [
-                    $parameters['dbstate'],
-                    $parameters['params'],
-                    [],
                     $parameters['expectedexception'],
                 ];
             }
@@ -563,34 +453,32 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test \local_o365\webservices\update_onenoteassignment::assignment_update().
-     *
-     * @dataProvider dataprovider_assignment_update
-     * @param array $dbstate Array of tables and records to create before test.
-     * @param array $params Webservices parameters.
-     * @param array $expectedreturn The expected service return.
-     * @param array|null $expectedexception If an exception is expected, the expected exception, otherwise null.
-     *                                 Index 0 is class name.
-     *                                 Index 1 is the exception message.
      */
-    public function test_assignment_update($dbstate, $params, $expectedreturn, $expectedexception) {
-        if (!empty($dbstate)) {
-            $dataset = $this->createArrayDataSet($dbstate);
-            $this->loadDataSet($dataset);
-        }
-
-        if (!empty($expectedexception)) {
-            if (isset($expectedexception[1])) {
-                $this->setExpectedException($expectedexception[0], $expectedexception[1]);
-            } else {
-                $this->setExpectedException($expectedexception[0]);
+    public function test_assignment_update() {
+        $dataarr = $this->dataprovider_assignment_update();
+        foreach ($dataarr as $data) {
+            if (!empty($data[self::DBSTATE])) {
+                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
+                $this->loadDataSet($dataset);
             }
+
+            if (!empty($data[self::EXPECTEDEXCEPTION])) {
+                if (isset($data[self::EXPECTEDEXCEPTION][1])) {
+                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0], $data[self::EXPECTEDEXCEPTION][1]);
+                } else {
+                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0]);
+                }
+            }
+
+            $this->setAdminUser();
+
+            $actualreturn = \local_o365\webservices\update_onenoteassignment::assignment_update($data[self::PARAMS]);
+
+            $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['name'], $actualreturn['data'][0]['name']);
+            $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['intro'], $actualreturn['data'][0]['intro']);
+            $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['visible'], $actualreturn['data'][0]['visible']);
+            $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['section'], $actualreturn['data'][0]['section']);
         }
-
-        $this->setAdminUser();
-
-        $actualreturn = \local_o365\webservices\update_onenoteassignment::assignment_update($params);
-
-        $this->assertEquals($expectedreturn, $actualreturn);
     }
 
     /**
@@ -621,18 +509,12 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
         $return = [];
 
         foreach ($generaltests as $testkey => $parameters) {
+            // Test only deleting the OneNote assigmment
             if ($testkey === 'All data correct, assignment is a OneNote assignment') {
                 $return[$testkey] = [
                     $parameters['dbstate'],
                     $parameters['params'],
                     ['result' => true],
-                    $parameters['expectedexception'],
-                ];
-            } else {
-                $return[$testkey] = [
-                    $parameters['dbstate'],
-                    $parameters['params'],
-                    [],
                     $parameters['expectedexception'],
                 ];
             }
@@ -643,34 +525,29 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test \local_o365\webservices\delete_onenoteassignment::assignment_delete().
-     *
-     * @dataProvider dataprovider_assignment_delete
-     * @param array $dbstate Array of tables and records to create before test.
-     * @param array $params Webservices parameters.
-     * @param array $expectedreturn The expected service return.
-     * @param array|null $expectedexception If an exception is expected, the expected exception, otherwise null.
-     *                                 Index 0 is class name.
-     *                                 Index 1 is the exception message.
      */
-    public function test_assignment_delete($dbstate, $params, $expectedreturn, $expectedexception) {
-        if (!empty($dbstate)) {
-            $dataset = $this->createArrayDataSet($dbstate);
-            $this->loadDataSet($dataset);
-        }
-
-        if (!empty($expectedexception)) {
-            if (isset($expectedexception[1])) {
-                $this->setExpectedException($expectedexception[0], $expectedexception[1]);
-            } else {
-                $this->setExpectedException($expectedexception[0]);
+    public function test_assignment_delete() {
+        $dataarr = $this->dataprovider_assignment_delete();
+        foreach ($dataarr as $data) {
+            if (!empty($data[self::DBSTATE])) {
+                $dataset = $this->createArrayDataSet($data[self::DBSTATE]);
+                $this->loadDataSet($dataset);
             }
+
+            if (!empty($data[self::EXPECTEDEXCEPTION])) {
+                if (isset($data[self::EXPECTEDEXCEPTION][1])) {
+                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0], $data[self::EXPECTEDEXCEPTION][1]);
+                } else {
+                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0]);
+                }
+            }
+
+            $this->setAdminUser();
+
+            $actualreturn = \local_o365\webservices\delete_onenoteassignment::assignment_delete($data[self::PARAMS]);
+
+            $this->assertEquals($data[self::EXPECTEDRETURN], $actualreturn);
         }
-
-        $this->setAdminUser();
-
-        $actualreturn = \local_o365\webservices\delete_onenoteassignment::assignment_delete($params);
-
-        $this->assertEquals($expectedreturn, $actualreturn);
     }
 
     /**
