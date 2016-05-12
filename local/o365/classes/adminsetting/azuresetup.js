@@ -323,8 +323,6 @@ $(function() {
                 type: 'GET',
                 data: {
                     mode: 'checksetup',
-                    chineseapi: $('#id_s_local_o365_chineseapi').prop('checked') ? 1 : 0,
-                    enableunifiedapi: $('#id_s_local_o365_enableunifiedapi').prop('checked') ? 1 : 0,
                     aadtenant: $('#id_s_local_o365_aadtenant').val(),
                     odburl: $('#id_s_local_o365_odburl').val(),
                 },
