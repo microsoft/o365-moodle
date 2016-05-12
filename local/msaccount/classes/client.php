@@ -175,32 +175,26 @@ class client extends \oauth2_client {
         if (!$record || !$record->refresh_token) {
             return false;
         }
-        $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_URL, $this->token_url());
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $curl = new \curl();
+
+        $curl->setHeader('Content-Type: application/x-www-form-urlencoded');
 
         $callbackurl = self::callback_url();
 
-        curl_setopt($ch, CURLOPT_POSTFIELDS,
-            'client_id=' . $this->get_clientid() .
+        $postdata = 'client_id=' . $this->get_clientid() .
             '&client_secret=' . $this->get_clientsecret() .
             '&grant_type=refresh_token' .
             '&refresh_token=' . $record->refresh_token .
-            '&redirect_url=' . $callbackurl->out(false));
+            '&redirect_url=' . $callbackurl->out(false);
 
-        $rawresponse = curl_exec($ch);
-        $info = curl_getinfo($ch);
-        curl_close($ch);
+        $rawresponse = $curl->post($this->token_url(), $postdata, ['CURLOPT_HEADER' => 1]);
 
-        if (!$info['http_code'] === 200) {
+        if ($curl->errno != CURLE_OK) {
             return false;
         }
 
-        $responsewithoutheader = substr($rawresponse, $info['header_size']);
+        $responsewithoutheader = substr($rawresponse, $curl->info['header_size']);
         $r = json_decode($responsewithoutheader);
 
         if (!isset($r->access_token)) {
