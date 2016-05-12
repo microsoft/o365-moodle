@@ -63,9 +63,9 @@ if ($ADMIN->fulltree) {
 
     $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);
     $settings->add($item);
-    $retrylist = array('0' => get_string('none'), '1' => get_string('once', 'filter_oembed'),
-                                                  '2' => get_string('times', 'filter_oembed', '2'),
-                                                  '3' => get_string('times', 'filter_oembed', '3'));
+    $retrylist = array('0' => new lang_string('none'), '1' => new lang_string('once', 'filter_oembed'),
+                                                  '2' => new lang_string('times', 'filter_oembed', '2'),
+                                                  '3' => new lang_string('times', 'filter_oembed', '3'));
     $item = new admin_setting_configselect('filter_oembed/retrylimit', new lang_string('retrylimit', 'filter_oembed'), '', '1', $retrylist);
     $settings->add($item);
 }

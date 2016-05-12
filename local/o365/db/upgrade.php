@@ -409,5 +409,23 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint($result, '2015012744.02', 'local', 'o365');
     }
+
+    if ($result && $oldversion < 2015012746) {
+        // Drop index.
+        $table = new xmldb_table('local_o365_token');
+        $index = new xmldb_index('user', XMLDB_INDEX_NOTUNIQUE, ['user_id']);
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        $table = new xmldb_table('local_o365_calsub');
+        $index = new xmldb_index('user', XMLDB_INDEX_NOTUNIQUE, ['user_id']);
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint($result, '2015012746', 'local', 'o365');
+    }
+
     return $result;
 }
