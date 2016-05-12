@@ -30,37 +30,42 @@ defined('MOODLE_INTERNAL') || die;
 require_once(__DIR__.'/filter.php');
 
 if ($ADMIN->fulltree) {
-    $torf = array('1' => get_string('yes'), '0' => get_string('no'));
-    $item = new admin_setting_configselect('filter_oembed/youtube', get_string('youtube', 'filter_oembed'), '', 1, $torf);
+    $torf = array('1' => new lang_string('yes'), '0' => new lang_string('no'));
+    $item = new admin_setting_configselect('filter_oembed/youtube', new lang_string('youtube', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/vimeo', get_string('vimeo', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/vimeo', new lang_string('vimeo', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/ted', get_string('ted', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/ted', new lang_string('ted', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/slideshare', get_string('slideshare', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/slideshare', new lang_string('slideshare', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/officemix', get_string('officemix', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/officemix', new lang_string('officemix', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/issuu', get_string('issuu', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/issuu', new lang_string('issuu', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/soundcloud', get_string('soundcloud', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/soundcloud', new lang_string('soundcloud', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/pollev', get_string('pollev', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/pollev', new lang_string('pollev', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/o365video', get_string('o365video', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/o365video', new lang_string('o365video', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
-    $item = new admin_setting_configselect('filter_oembed/sway', get_string('sway', 'filter_oembed'), '', 1, $torf);
+    $item = new admin_setting_configselect('filter_oembed/sway', new lang_string('sway', 'filter_oembed'), '', 1, $torf);
     $settings->add($item);
 
     // New provider method.
     $providers = \filter_oembed::get_supported_providers();
     foreach ($providers as $provider) {
         $enabledkey = 'provider_'.$provider.'_enabled';
-        $name = get_string('provider_'.$provider, 'filter_oembed');
+        $name = new lang_string('provider_'.$provider, 'filter_oembed');
         $item = new \admin_setting_configselect('filter_oembed/'.$enabledkey, $name, '', 1, $torf);
         $settings->add($item);
     }
 
     $item = new admin_setting_configcheckbox('filter_oembed/lazyload', new lang_string('lazyload', 'filter_oembed'), '', 0);
+    $settings->add($item);
+    $retrylist = array('0' => get_string('none'), '1' => get_string('once', 'filter_oembed'),
+                                                  '2' => get_string('times', 'filter_oembed', '2'),
+                                                  '3' => get_string('times', 'filter_oembed', '3'));
+    $item = new admin_setting_configselect('filter_oembed/retrylimit', new lang_string('retrylimit', 'filter_oembed'), '', '1', $retrylist);
     $settings->add($item);
 }

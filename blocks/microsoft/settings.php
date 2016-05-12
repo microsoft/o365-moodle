@@ -26,70 +26,70 @@
 defined('MOODLE_INTERNAL') || die;
 
 // Settings to show Office 365 download links in block.
-$label = get_string('settings_showo365download', 'block_microsoft');
-$desc = get_string('settings_showo365download_desc', 'block_microsoft');
+$label = new lang_string('settings_showo365download', 'block_microsoft');
+$desc = new lang_string('settings_showo365download_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/showo365download', $label, $desc, 1));
 
 // Settings to show OneNote notebook link in the block.
-$label = get_string('settings_showonenotenotebook', 'block_microsoft');
-$desc = get_string('settings_showonenotenotebook_desc', 'block_microsoft');
+$label = new lang_string('settings_showonenotenotebook', 'block_microsoft');
+$desc = new lang_string('settings_showonenotenotebook_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showonenotenotebook', $label, $desc, 1));
 
 // Settings to show Configure Outlook sync link in the block.
-$label = get_string('settings_showoutlooksync', 'block_microsoft');
-$desc = get_string('settings_showoutlooksync_desc', 'block_microsoft');
+$label = new lang_string('settings_showoutlooksync', 'block_microsoft');
+$desc = new lang_string('settings_showoutlooksync_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showoutlooksync', $label, $desc, 1));
 
 // Settings to show Preferences link in the block.
-$label = get_string('settings_showpreferences', 'block_microsoft');
-$desc = get_string('settings_showpreferences_desc', 'block_microsoft');
+$label = new lang_string('settings_showpreferences', 'block_microsoft');
+$desc = new lang_string('settings_showpreferences_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showpreferences', $label, $desc, 1));
 
 // Settings to show Office 365 Connect link in the block.
-$label = get_string('settings_showo365connect', 'block_microsoft');
-$desc = get_string('settings_showo365connect_desc', 'block_microsoft');
+$label = new lang_string('settings_showo365connect', 'block_microsoft');
+$desc = new lang_string('settings_showo365connect_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showo365connect', $label, $desc, 1));
 
 // Settings to show Manage Office 365 Connection link in the block.
-$label = get_string('settings_showmanageo365conection', 'block_microsoft');
-$desc = get_string('settings_showmanageo365conection_desc', 'block_microsoft');
+$label = new lang_string('settings_showmanageo365conection', 'block_microsoft');
+$desc = new lang_string('settings_showmanageo365conection_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmanageo365conection', $label, $desc, 1));
 
 // Settings to show Course SharePoint site link in the block.
-$label = get_string('settings_showcoursespsite', 'block_microsoft');
-$desc = get_string('settings_showcoursespsite_desc', 'block_microsoft');
+$label = new lang_string('settings_showcoursespsite', 'block_microsoft');
+$desc = new lang_string('settings_showcoursespsite_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursespsite', $label, $desc, 1));
 
-$title = get_string('settings_cpmanageurlsheader', 'block_microsoft');
-$desc = get_string('settings_cpmanageurlsheader_desc', 'block_microsoft');
+$title = new lang_string('settings_cpmanageurlsheader', 'block_microsoft');
+$desc = new lang_string('settings_cpmanageurlsheader_desc', 'block_microsoft');
 $settings->add(new admin_setting_heading('settings_cpmanageurlsheader', $title, $desc));
 
 // Settings to show course group link in the block.
-$label = get_string('settings_showcoursegroup', 'block_microsoft');
-$desc = get_string('settings_showcoursegroup_desc', 'block_microsoft');
+$label = new lang_string('settings_showcoursegroup', 'block_microsoft');
+$desc = new lang_string('settings_showcoursegroup_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursegroup', $label, $desc, 1));
 
 // Settings to show study groups link in the block.
-$label = get_string('settings_showstudygroups', 'block_microsoft');
-$desc = get_string('settings_showstudygroups_desc', 'block_microsoft');
+$label = new lang_string('settings_showstudygroups', 'block_microsoft');
+$desc = new lang_string('settings_showstudygroups_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showstudygroups', $label, $desc, 1));
 
 // Settings to show OneDrive link in the group control panel.
-$label = get_string('settings_cpshowonedrive', 'block_microsoft');
-$desc = get_string('settings_cpshowonedrive_desc', 'block_microsoft');
+$label = new lang_string('settings_cpshowonedrive', 'block_microsoft');
+$desc = new lang_string('settings_cpshowonedrive_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshowonedrive', $label, $desc, 1));
 
 // Settings to show group notebook link in the block.
-$label = get_string('settings_cpshownotebook', 'block_microsoft');
-$desc = get_string('settings_cpshownotebook_desc', 'block_microsoft');
+$label = new lang_string('settings_cpshownotebook', 'block_microsoft');
+$desc = new lang_string('settings_cpshownotebook_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshownotebook', $label, $desc, 1));
 
 // Settings to show group calendar link in the block.
-$label = get_string('settings_cpshowcalendar', 'block_microsoft');
-$desc = get_string('settings_cpshowcalendar_desc', 'block_microsoft');
+$label = new lang_string('settings_cpshowcalendar', 'block_microsoft');
+$desc = new lang_string('settings_cpshowcalendar_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshowcalendar', $label, $desc, 1));
 
 // Settings to show group conversations link in the block.
-$label = get_string('settings_cpshowconversations', 'block_microsoft');
-$desc = get_string('settings_cpshowconversations_desc', 'block_microsoft');
+$label = new lang_string('settings_cpshowconversations', 'block_microsoft');
+$desc = new lang_string('settings_cpshowconversations_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshowconversations', $label, $desc, 1));
