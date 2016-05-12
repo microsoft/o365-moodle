@@ -112,7 +112,7 @@ $string['errorrestricted'] = 'This site has restrictions in place on the users t
 $string['errorucpinvalidaction'] = 'Invalid action received.';
 $string['erroroidccall'] = 'Error in OpenID Connect. Please check logs for more information.';
 $string['erroroidccall_message'] = 'Error in OpenID Connect: {$a}';
-$string['errorinvalidredirect_message'] = 'The URL you are trying to redirect does not exist.';
+$string['errorinvalidredirect_message'] = 'The URL you are trying to redirect to does not exist.';
 
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';
 $string['eventusercreated'] = 'User created with OpenID Connect';
@@ -135,4 +135,4 @@ $string['ucp_status_disabled'] = 'Disabled';
 $string['ucp_disconnect_title'] = '{$a} Disconnection';
 $string['ucp_disconnect_details'] = 'This will disconnect your Moodle account from {$a}. You\'ll need to create a username and password to log in to Moodle.';
 $string['ucp_title'] = '{$a} Management';
-$string['ucp_o365accountconnected'] = 'This Office 365 account is already connected with moodle.';
+$string['ucp_o365accountconnected'] = 'This Office 365 account is already connected with another Moodle account.';
