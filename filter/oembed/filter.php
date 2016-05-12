@@ -380,6 +380,16 @@ function filter_oembed_swaycallback($link) {
  * @return mixed|null|string The HTTP response object from the OEmbed request.
  */
 function filter_oembed_curlcall($url) {
+    static $cache;
+
+    if (!isset($cache)) {
+        $cache = cache::make('filter_oembed', 'embeddata');
+    }
+
+    if ($ret = $cache->get(md5($url))) {
+        return json_decode($ret, true);
+    }
+
     $curl = new \curl();
     $ret = $curl->get($url);
 
@@ -400,6 +410,7 @@ function filter_oembed_curlcall($url) {
         }
     }
 
+    $cache->set(md5($url), $ret);
     $result = json_decode($ret, true);
     return $result;
 }
