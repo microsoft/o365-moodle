@@ -91,6 +91,7 @@ class update_onenoteassignment extends \external_api {
             ];
             $assigninfo = [
                 'coursemodule' => $module->id,
+                'cmidnumber' => $module->idnumber,
                 'introeditor' => ['text' => (string)$assign->intro, 'format' => FORMAT_HTML, 'itemid' => null],
                 'assignsubmission_onenote_enabled' => 1,
                 'assignsubmission_onenote_maxfiles' => 1,
