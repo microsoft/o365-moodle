@@ -17,6 +17,22 @@ There are a number of options you can use to customize how the plugin behaves. T
 
 The name entered here will be used through the OpenID Connect plugin and the Office 365 plugins to refer to the system used to log users in. For example, if your users are used to calling their Azure AD account their "School" account, you enter "School account" here, and all references to authentication will be "Log in with your School account".
 
+#### Client ID:
+
+Enter the Client ID obtained from Azure when you created the application for your Moodle installation.
+
+### Client Secret:
+
+Enter the Key obtained from Azure when you created the application for your Moodle installation.
+      
+### Authorization Endpoint and Token Endpoint: 
+
+You can use the default values for these.
+
+### Resource:
+
+You can use the default value for this.
+
 #### Auto-Append
 
 When using the "Username/Password" login flow, this setting with automatically append a given string to an entered username. This is useful in Azure AD usernames, where a single domain name is often used for every user - i.e. [user]@contoso.onmicrosoft.com. Users would normally have to enter this entire username to successfully log in to Moodle, but in this example, entering "@contoso.onmicrosoft.com" here means users would only have to enter their unique username, i.e. "bob.smith", instead of "bob.smith@contoso.onmicrosoft.com".
