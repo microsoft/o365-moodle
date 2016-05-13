@@ -123,7 +123,18 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
     2.  View OneNote notebooks.
     3.  View and modify OneNote notebooks.
 
-15. Click save at the bottom of the screen.
+15. In the Delegated Permissions dropdown for Microsoft Graph select the following permissions:
+    1. Have full access to user calendars.
+    2. Access directory as the signed in user.
+    3. Read and write directory data.
+    4. Have full access to user files. 
+    5. Read and write all groups.
+    6. Read and write notebooks that the user can access (preview).
+    7. Read items in all site collections.
+    8. Read and write all users full profiles.
+    9. Sign users in.
+
+16. Click save at the bottom of the screen.
 
 ### Add a user to the app
 
