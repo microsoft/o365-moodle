@@ -20,6 +20,15 @@
             }
         }
     }
+    .block_microsoft_onedrive {
+        background-image: url([[pix:block_microsoft|onedriveicon]]);
+    }
+    .block_microsoft_sway {
+        background-image: url([[pix:block_microsoft|sway]]);
+    }
+    .block_microsoft_docsdotcom {
+        background-image: url([[pix:block_microsoft|docsdotcom]]);
+    }
     .block_microsoft_onenote {
         background-image: url([[pix:block_microsoft|onenotecolor]]);
     }
@@ -39,13 +48,21 @@
         background-image: url([[pix:block_microsoft|msftcolor]]);
     }
     .block_microsoft_downloado365 {
-        background-image: url([[pix:block_microsoft|o365color]]);
+        background-image: url([[pix:moodle|i/down]]);
+    }
+    .block_microsoft_coursegroup {
+        background-image: url([[pix:moodle|i/cohort]]);
+    }
+    .block_microsoft_studygroup {
+        background-image: url([[pix:moodle|i/group]]);
     }
     .block_microsoft_profile {
         border-radius: 50%;
         display: block;
-        margin-left: auto;
-        margin-right: auto;
+        margin: 1rem auto 2rem;
+    }
+    hr {
+        margin: 1rem 0 !important;
     }
 }
 .block_microsoft_icon {
@@ -53,60 +70,4 @@
     height: 32px;
     margin: 0;
     padding: 0;
-}
-.block_microsoft_cpicons {
-    width: 64px;
-    height: 64px;
-    margin: 0;
-    padding: 0;
-}
-.block_microsoft_icon_onedrive {
-    @extend .block_microsoft_icon;
-    background-image: url([[pix:block_microsoft|onedrive]]);
-}
-
-.block_microsoft_icon_calendar {
-    @extend .block_microsoft_icon;
-    background-image: url([[pix:block_microsoft|calendar]]);
-}
-
-.block_microsoft_icon_conversations {
-    @extend .block_microsoft_icon;
-    background-image: url([[pix:block_microsoft|conversations]]);
-}
-.block_microsoft_icon_notebook {
-    @extend .block_microsoft_icon;
-    background-image: url([[pix:block_microsoft|notebook]]);
-}
-.block_microsoft_managegroups td {
-    padding: 4px;
-}
-.block_microsoft_managegroups grouppicture {
-    @extend .block_microsoft_icon;
-}
-.block_microsoft_cpicon {
-    height: 150px;
-    width: 150px;
-    margin: 15px;
-    float: left;
-}
-.block_microsoft_cponedrive {
-    @extend .block_microsoft_cpicon;
-    clear: both;
-}
-.block_microsoft_cpnotebook {
-    @extend .block_microsoft_cpicon;
-}
-.block_microsoft_cpconversations {
-    @extend .block_microsoft_cpicon;
-    clear: both;
-}
-.block_microsoft_cpcalendar {
-    @extend .block_microsoft_cpicon;
-}
-.block_microsoft_cpeditgroupsettings {
-    @extend .block_microsoft_cpicon;
-    clear: both;
-}
-.block_microsoft_managegroups_header {
 }
