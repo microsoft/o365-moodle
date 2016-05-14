@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_o365\form;
 
 /**
  * A form for editing of groups office 365 groups.
@@ -34,25 +35,25 @@ require_once($CFG->dirroot.'/lib/formslib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @package   core_group
  */
-class block_microsoft_group_form extends moodleform {
+class groupedit extends \moodleform {
 
     /**
      * Definition of the form.
      */
     public function definition() {
         global $USER, $CFG, $COURSE;
-        $coursecontext = context_course::instance($COURSE->id);
+        $coursecontext = \context_course::instance($COURSE->id);
 
         $mform =& $this->_form;
         $editoroptions = $this->_customdata['editoroptions'];
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        $mform->addElement('text','displayname', get_string('displayname', 'block_microsoft'),'maxlength="254" size="50"');
+        $mform->addElement('text','displayname', get_string('groups_edit_name', 'local_o365'),'maxlength="254" size="50"');
         $mform->addRule('displayname', get_string('required'), 'required', null, 'client');
         $mform->setType('displayname', PARAM_TEXT);
 
-        $mform->addElement('editor', 'description_editor', get_string('description', 'block_microsoft'), null, $editoroptions);
+        $mform->addElement('editor', 'description_editor', get_string('groups_edit_description', 'local_o365'), null, $editoroptions);
         $mform->setType('description_editor', PARAM_RAW);
 
         $mform->addElement('static', 'currentpicture', get_string('currentpicture'));
@@ -60,8 +61,8 @@ class block_microsoft_group_form extends moodleform {
         $mform->addElement('checkbox', 'deletepicture', get_string('delete'));
         $mform->setDefault('deletepicture', 0);
 
-        $mform->addElement('filepicker', 'imagefile', get_string('newpicture', 'block_microsoft'));
-        $mform->addHelpButton('imagefile', 'newpicture', 'block_microsoft');
+        $mform->addElement('filepicker', 'imagefile', get_string('groups_edit_newpicture', 'local_o365'));
+        $mform->addHelpButton('imagefile', 'groups_edit_newpicture', 'local_o365');
 
         $mform->addElement('hidden','id');
         $mform->setType('id', PARAM_INT);
@@ -84,10 +85,10 @@ class block_microsoft_group_form extends moodleform {
         $mform = $this->_form;
         $groupid = $mform->getElementValue('id');
 
-        if ($o365group = $DB->get_record('local_o365_coursegroupdata', array('id' => $groupid))) {
+        if ($o365group = $DB->get_record('local_o365_coursegroupdata', ['id' => $groupid])) {
             // Check permissions for security.
-            $context = context_course::instance($o365group->courseid);
-            require_capability('block/microsoft:managegroups', $context);
+            $context = \context_course::instance($o365group->courseid);
+            require_capability('local/o365:managegroups', $context);
             if (!empty($o365group->groupid)) {
                 // If managing a Moodle course group require access to groups.
                 require_capability('moodle/course:managegroups', $context);
@@ -95,7 +96,7 @@ class block_microsoft_group_form extends moodleform {
             $haspic = false;
             $pic = '';
             if ($o365group->picture) {
-                if ($pic = block_microsoft_print_group_picture($o365group)) {
+                if ($pic = \local_o365\feature\usergroups\utils::print_group_picture($o365group)) {
                     $haspic = true;
                 }
             }
@@ -132,14 +133,14 @@ class block_microsoft_group_form extends moodleform {
 
         // Ensure display name is unique.
         $displayname = trim($data['displayname']);
-        if ($data['id'] and $o365group = $DB->get_record('local_o365_coursegroupdata', array('id' => $data['id']))) {
-            if (core_text::strtolower($o365group->displayname) != core_text::strtolower($displayname)) {
-                if ($DB->get_record('local_o365_coursegroupdata', array('displayname' => $displayname))) {
-                    $errors['displayname'] = get_string('displaynameexists', 'block_microsoft', $displayname);
+        if ($data['id'] and $o365group = $DB->get_record('local_o365_coursegroupdata', ['id' => $data['id']])) {
+            if (\core_text::strtolower($o365group->displayname) != \core_text::strtolower($displayname)) {
+                if ($DB->get_record('local_o365_coursegroupdata', ['displayname' => $displayname])) {
+                    $errors['displayname'] = get_string('groups_edit_nameexists', 'local_o365', $displayname);
                 }
             }
-        } else if ($DB->get_record('local_o365_coursegroupdata', array('displayname' => $displayname))) {
-            $errors['displayname'] = get_string('displaynameexists', 'block_microsoft', $displayname);
+        } else if ($DB->get_record('local_o365_coursegroupdata', ['displayname' => $displayname])) {
+            $errors['displayname'] = get_string('groups_edit_nameexists', 'local_o365', $displayname);
         }
         return $errors;
     }
