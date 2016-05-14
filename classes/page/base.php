@@ -45,14 +45,14 @@ class base {
      */
     public function __construct($url, $title, $context = null) {
         global $PAGE;
-        $this->url = $url;
-        $this->title = $title;
-        $this->context = (!empty($context)) ? $context : \context_system::instance();
-        $PAGE->set_url($this->url);
-        $PAGE->set_context($this->context);
+        if (empty($context)) {
+            $context = \context_system::instance();
+        }
+        $this->set_context($context);
+        $this->set_title($title);
+        $this->set_url($url);
         $PAGE->set_pagelayout('standard');
         $this->add_navbar();
-        $PAGE->set_title($this->title);
     }
 
     /**
@@ -70,6 +70,40 @@ class base {
      */
     public function header() {
         return true;
+    }
+
+    /**
+     * Set the title of the page.
+     *
+     * @param string $title The title of the page.
+     */
+    public function set_title($title) {
+        global $PAGE;
+        $this->title = $title;
+        $PAGE->set_title($this->title);
+        $PAGE->set_heading($this->title);
+    }
+
+    /**
+     * Set the URL of the page.
+     *
+     * @param string|moodle_url $url The new page URL.
+     */
+    public function set_url($url) {
+        global $PAGE;
+        $this->url = (string)$url;
+        $PAGE->set_url($this->url);
+    }
+
+    /**
+     * Set the context of the page.
+     *
+     * @param \context $context The new page context.
+     */
+    public function set_context(\context $context) {
+        global $PAGE;
+        $this->context = $context;
+        $PAGE->set_context($this->context);
     }
 
     /**
