@@ -120,60 +120,31 @@ class block_microsoft extends block_base {
      * @return string Returns string containing links to study groups.
      */
     protected function get_study_groups() {
-        global $PAGE, $DB, $USER;
-        $html = '';
+        global $PAGE, $USER;
         $groupsenabled = \local_o365\feature\usergroups\utils::is_enabled();
         $iscoursecontext = $PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID;
         $courseisgroupenabled = \local_o365\feature\usergroups\utils::course_is_group_enabled($PAGE->context->instanceid);
         $config = (array)get_config('block_microsoft');
-        // If no links are enabled don't show links to study groups.
-        $haslinks = false;
-        foreach ($config as $name => $value) {
-            if (preg_match('/^settings_cp/', $name) && $value) {
-                $haslinks = true;
+
+        $items = [];
+        if ($iscoursecontext && $groupsenabled && $courseisgroupenabled) {
+            $canmanage = (has_capability('local/o365:managegroups', $PAGE->context) === true) ? true : false;
+            $canview = (is_enrolled($PAGE->context) && has_capability('local/o365:viewgroups', $PAGE->context)) ? true : false;
+            if ($canmanage === true || $canview === true) {
+                if (!empty($config['settings_showcoursegroup'])) {
+                    $coursegroupurl =  new \moodle_url('/local/o365/groupcp.php', ['courseid' => $PAGE->context->instanceid]);
+                    $managecoursegroupstr = get_string('linkcoursegroup', 'block_microsoft');
+                    $coursegroupattrs = ['class' => 'servicelink block_microsoft_coursegroup'];
+                    $items[] = \html_writer::link($coursegroupurl, $managecoursegroupstr, $coursegroupattrs);
+                }
+                //if (!empty($config['settings_showstudygroups'])) {
+                    // Temporarily removed pending further design work.
+                    //$studygroups = \local_o365\feature\usergroups\utils::study_groups_list($USER->id, ['courseid' => $PAGE->context->instanceid], false, 0, 5);
+                    //$items = array_merge($items, $studygroups);
+                //}
             }
         }
-        if ($iscoursecontext && $groupsenabled && $courseisgroupenabled && $haslinks) {
-            if (has_capability('block/microsoft:managegroups', $PAGE->context)) {
-                if (!empty($config['settings_showcoursegroup'])) {
-                    $html .= \html_writer::tag('h5', get_string('coursesettings', 'block_microsoft'));
-                    $cpcoursegroupstr = get_string('linkcpcoursegroup', 'block_microsoft');
-                    $cpcoursegroupurl =  new \moodle_url('/blocks/microsoft/groups/gcp.php', ['courseid' => $PAGE->context->instanceid]);
-                    $html .= \html_writer::link($cpcoursegroupurl ,$cpcoursegroupstr, ['class' => 'servicelink block_microsoft_cpcoursegroup']);
-                    $html .= \html_writer::tag('br', '');
-                    // Has capability to edit course group name.
-                    $managecoursegroupstr = get_string('linkmanagecoursegroup', 'block_microsoft');
-                    $coursegroupurl =  new \moodle_url('/blocks/microsoft/groups/group.php', ['courseid' => $PAGE->context->instanceid]);
-                    $html .= \html_writer::link($coursegroupurl ,$managecoursegroupstr, ['class' => 'servicelink block_microsoft_coursegroup']);
-                    $html .= \html_writer::tag('br', '');
-                }
-                if (!empty($config['settings_showstudygroups'])) {
-                    // Retrieve study groups user can manage.
-                    $managegroups = block_microsoft_study_groups_list($USER->id, ['courseid' => $PAGE->context->instanceid], true, 0, 5);
-                    if (!empty($managegroups)) {
-                        $html .= \html_writer::tag('h5', get_string('managestudygroups', 'block_microsoft'));
-                        $html .= \html_writer::alist($managegroups);
-                    }
-                }
-            } else if (is_enrolled($PAGE->context) && has_capability('block/microsoft:viewgroups', $PAGE->context)) {
-                // Retrieve groups user is a student in, showing link to control panel.
-                if (!empty($config['settings_showstudygroups'])) {
-                    $studygroups = block_microsoft_study_groups_list($USER->id, ['courseid' => $PAGE->context->instanceid], false, 0, 5);
-                } else {
-                    $studygroups = [];
-                }
-                if (!empty($config['settings_showcoursegroup'])) {
-                    $coursegroupurl =  new \moodle_url('/blocks/microsoft/groups/gcp.php', ['courseid' => $PAGE->context->instanceid]);
-                    $managecoursegroupstr = get_string('linkcpcoursegroup', 'block_microsoft');
-                    array_unshift($studygroups, \html_writer::link($coursegroupurl, $managecoursegroupstr, ['class' => 'servicelink block_microsoft_coursegroup']));
-                }
-                if (!empty($studygroups)) {
-                    $html .= \html_writer::tag('h5', get_string('studygroups', 'block_microsoft'));
-                    $html .= \html_writer::alist($studygroups);
-                }
-            }
-        }
-        return $html;
+        return $items;
     }
 
     /**
@@ -204,18 +175,17 @@ class block_microsoft extends block_base {
             $html .= '</div>';
         }
 
-        $html .= $this->get_study_groups();
-
-        $outlookurl = new \moodle_url('/local/o365/ucp.php?action=calendar');
-        $outlookstr = get_string('linkoutlook', 'block_microsoft');
-        $sharepointstr = get_string('linksharepoint', 'block_microsoft');
-        $prefsurl = new \moodle_url('/local/o365/ucp.php');
-        $prefsstr = get_string('linkprefs', 'block_microsoft');
-
         $items = [];
 
+        $items = array_merge($items, $this->get_study_groups());
+
+        $userupn = \local_o365\utils::get_o365_upn($USER->id);
+
+
         if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+            // Course SharePoint Site.
             if (!empty($this->globalconfig->settings_showcoursespsite) && !empty($o365config->sharepointlink)) {
+                $sharepointstr = get_string('linksharepoint', 'block_microsoft');
                 $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
                 if (!empty($coursespsite)) {
                     $spsite = \local_o365\rest\sharepoint::get_resource();
@@ -229,16 +199,51 @@ class block_microsoft extends block_base {
             }
         }
 
+        // My OneNote Notebook.
         $items[] = $this->render_onenote();
 
+        // My OneDrive.
+        if (!empty($this->globalconfig->settings_showonedrive)) {
+            $odbattrs = [
+                'target' => '_blank',
+                'class' => 'servicelink block_microsoft_onedrive',
+            ];
+            $stronedrive = get_string('linkonedrive', 'block_microsoft');
+            $odburl = get_config('local_o365', 'odburl');
+            if (!empty($odburl)) {
+                $items[] = \html_writer::link('https://'.$odburl, $stronedrive, $odbattrs);
+            }
+        }
+
+        // My Sways.
+        if (!empty($this->globalconfig->settings_showsways) && !empty($userupn)) {
+            $swayurl = 'https://www.sway.com/my?auth_pvr=OrgId&auth_upn='.$userupn;
+            $swayattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_sway'];
+            $items[] = \html_writer::link($swayurl, get_string('linksways', 'block_microsoft'), $swayattrs);
+        }
+
+        // My Docs.com
+        if (!empty($this->globalconfig->settings_showdocsdotcom) && !empty($userupn)) {
+            $docsdotcomurl = 'https://docs.com/me?auth_pvr=OrgId&auth_upn='.$userupn;
+            $docsdotcomattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_docsdotcom'];
+            $items[] = \html_writer::link($docsdotcomurl, get_string('linkdocsdotcom', 'block_microsoft'), $docsdotcomattrs);
+        }
+
+        // Configure Outlook Sync.
         if (!empty($this->globalconfig->settings_showoutlooksync)) {
+            $outlookurl = new \moodle_url('/local/o365/ucp.php?action=calendar');
+            $outlookstr = get_string('linkoutlook', 'block_microsoft');
             $items[] = \html_writer::link($outlookurl, $outlookstr, ['class' => 'servicelink block_microsoft_outlook']);
         }
 
+        // Preferences.
         if (!empty($this->globalconfig->settings_showpreferences)) {
+            $prefsurl = new \moodle_url('/local/o365/ucp.php');
+            $prefsstr = get_string('linkprefs', 'block_microsoft');
             $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
+        // Manage Office 365 connection.
         if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
@@ -247,6 +252,7 @@ class block_microsoft extends block_base {
             }
         }
 
+        // Download Office 365.
         $downloadlinks = $this->get_content_o365download();
         foreach ($downloadlinks as $link) {
             $items[] = $link;
@@ -269,9 +275,9 @@ class block_microsoft extends block_base {
         $connecturl = new \moodle_url('/local/o365/ucp.php');
         $connectstr = get_string('connecttoo365', 'block_microsoft');
 
-        $html .= $this->get_study_groups();
-
         $items = [];
+
+        $items = array_merge($items, $this->get_study_groups());
 
         if (has_capability('auth/oidc:manageconnection', \context_user::instance($USER->id), $USER->id) === true) {
             if (!empty($this->globalconfig->settings_showo365connect)) {

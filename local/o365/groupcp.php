@@ -21,13 +21,10 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2015012745.01;
-$plugin->requires = 2014111000;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.29';
-$plugin->dependencies = [
-    'auth_oidc' => 2015012725
-];
+require_once(__DIR__.'/../../config.php');
+require_login();
+$action = optional_param('action', null, PARAM_TEXT);
+$ucptitle = get_string('groups', 'local_o365');
+$url = '/local/o365/groupcp.php';
+$page = new \local_o365\page\groupcp($url, $ucptitle);
+$page->run($action);

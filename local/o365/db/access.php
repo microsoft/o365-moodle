@@ -21,13 +21,22 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2015012745.01;
-$plugin->requires = 2014111000;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.29';
-$plugin->dependencies = [
-    'auth_oidc' => 2015012725
+$capabilities = [
+    'local/o365:managegroups' => [
+        'riskbitmask' => RISK_SPAM | RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ],
+    ],
+    'local/o365:viewgroups' => [
+        'riskbitmask' => RISK_SPAM | RISK_XSS,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'student' => CAP_ALLOW,
+        ],
+    ],
 ];
