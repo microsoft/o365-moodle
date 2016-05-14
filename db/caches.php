@@ -21,13 +21,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2015011650.01;
-$plugin->requires = 2014051200;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '27.0.0.30';
-$plugin->dependencies = [
-    'auth_oidc' => 2015011630
+$definitions = [
+    'groups' => [
+        'mode' => cache_store::MODE_SESSION
+    ],
 ];
