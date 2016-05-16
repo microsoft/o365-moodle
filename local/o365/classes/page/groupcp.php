@@ -175,12 +175,17 @@ class groupcp extends base {
                     $row .= \html_writer::tag('td', $strpending, ['colspan' => $columncount]);
                 } else {
                     foreach (['conversations', 'onedrive', 'calendar'] as $feature) {
-                        $url = new \moodle_url($groupscache['urls'][$feature]);
-                        $strresourcename = get_string('groups_'.$feature, 'local_o365');
-                        $pixattrs = ['style' => 'width:2rem;height:2rem'];
-                        $icon = $OUTPUT->pix_icon('groups'.$feature, $strresourcename, 'local_o365', $pixattrs);
-                        $tdattrs = ['style' => 'text-align:center'];
-                        $row .= \html_writer::tag('td', \html_writer::link($url, $icon, ['target' => '_blank']), $tdattrs);
+                        $enabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($group->courseid, $feature);
+                        if ($enabled === true) {
+                            $url = new \moodle_url($groupscache['urls'][$feature]);
+                            $strresourcename = get_string('groups_'.$feature, 'local_o365');
+                            $pixattrs = ['style' => 'width:2rem;height:2rem'];
+                            $icon = $OUTPUT->pix_icon('groups'.$feature, $strresourcename, 'local_o365', $pixattrs);
+                            $tdattrs = ['style' => 'text-align:center'];
+                            $row .= \html_writer::tag('td', \html_writer::link($url, $icon, ['target' => '_blank']), $tdattrs);
+                        } else {
+                            $row .= \html_writer::tag('td', '');
+                        }
                     }
                 }
                 echo \html_writer::tag('tr', $row);
@@ -415,6 +420,10 @@ class groupcp extends base {
                 if (!isset($groupscache['urls'][$feature])) {
                     continue;
                 }
+                if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, $feature) !== true) {
+                    continue;
+                }
+
                 $url = new \moodle_url($groupscache['urls'][$feature]);
                 $strresourcename = get_string('groups_'.$feature, 'local_o365');
                 $icon = $OUTPUT->pix_icon('groups'.$feature, $strresourcename, 'local_o365');
