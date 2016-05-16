@@ -35,6 +35,10 @@ $string['acp_usergroupcustom_off'] = 'Disable<br />Disables all usergroup integr
 $string['acp_usergroupcustom_oncustom'] = 'Custom <a href="{$a}">Customize</a><br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.';
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables all usergroup features for all Moodle courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
+$string['acp_usergroupcustom_comingsoon'] = 'Coming Soon';
+$string['acp_usergroupcustom_bulk'] = 'Bulk Operations';
+$string['acp_usergroupcustom_bulk_enable'] = 'Enable All';
+$string['acp_usergroupcustom_bulk_disable'] = 'Disable All';
 $string['acp_usermatch'] = 'User Matching';
 $string['acp_usermatch_desc'] = 'This tool allows you to match Moodle users to Office 365 users. You will upload a file containing Moodle users and associated Office 365 users, and a cron task will verify the data and set up the match.';
 $string['acp_usermatch_matchqueue'] = 'Step 2: Match Queue';
