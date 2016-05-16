@@ -299,21 +299,26 @@ class acp extends base {
      */
     public function mode_usergroupcustom_change() {
         $courseid = (int)required_param('courseid', PARAM_INT);
-        $state = (int)required_param('state', PARAM_BOOL);
+        $enabled = (bool)required_param('state', PARAM_BOOL);
+        $feature = (string)optional_param('feature', 'enabled', PARAM_ALPHA);
         require_sesskey();
-        $usergroupconfig = get_config('local_o365', 'usergroupcustom');
-        $usergroupconfig = @json_decode($usergroupconfig, true);
-        if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
-            $usergroupconfig = [];
+
+        if ($feature === 'enabled') {
+            \local_o365\feature\usergroups\utils::set_course_group_enabled($courseid, $enabled);
+        } else if (in_array($feature, ['onedrive', 'calendar', 'conversations'])) {
+            \local_o365\feature\usergroups\utils::set_course_group_feature_enabled($courseid, [$feature], $enabled);
         }
-        if ($state === 1) {
-            $usergroupconfig[$courseid] = $state;
-        } else {
-            if (isset($usergroupconfig[$courseid])) {
-                unset($usergroupconfig[$courseid]);
-            }
-        }
-        set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
+        echo json_encode(['Saved']);
+    }
+
+    /**
+     * Endpoint to change user group customization.
+     */
+    public function mode_usergroupcustom_bulkchange() {
+        $enabled = (bool)required_param('state', PARAM_BOOL);
+        $feature = (string)optional_param('feature', 'enabled', PARAM_ALPHA);
+        require_sesskey();
+        \local_o365\feature\usergroups\utils::bulk_set_group_feature_enabled($feature, $enabled);
         echo json_encode(['Saved']);
     }
 
@@ -326,18 +331,11 @@ class acp extends base {
         $PAGE->navbar->add(get_string('acp_usergroupcustom', 'local_o365'), new \moodle_url($this->url, ['mode' => 'usergroupcustom']));
 
         $totalcount = 0;
-        $perpage = 10;
+        $perpage = 20;
 
         $curpage = optional_param('page', 0, PARAM_INT);
         $sort = optional_param('sort', '', PARAM_ALPHA);
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
-
-        // Get + unpack config array.
-        $usergroupconfig = get_config('local_o365', 'usergroupcustom');
-        $usergroupconfig = @json_decode($usergroupconfig, true);
-        if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
-            $usergroupconfig = [];
-        }
 
         $headers = [
             'shortname' => get_string('shortnamecourse'),
@@ -362,17 +360,56 @@ class acp extends base {
             $table->head[] = \html_writer::link($link, $desc);
         }
         $table->head[] = get_string('acp_usergroupcustom_enabled', 'local_o365');
+        $table->head[] = get_string('groups_onedrive', 'local_o365');
+        $table->head[] = get_string('groups_calendar', 'local_o365');
+        $table->head[] = get_string('groups_conversations', 'local_o365');
+        $table->head[] = get_string('groups_notebook', 'local_o365');
 
         $limitfrom = $curpage * $perpage;
         $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
         foreach ($courses as $course) {
-            $checkboxchecked = (!empty($usergroupconfig[$course->id])) ? true : false;
-            $checkboxattrs = ['onchange' => 'local_o365_set_usergroup(\''.$course->id.'\', $(this).prop(\'checked\'))'];
+            if ($course->id == SITEID) {
+                continue;
+            }
+            $isenabled = \local_o365\feature\usergroups\utils::course_is_group_enabled($course->id);
+            $enabledname = 'course_'.$course->id.'_enabled';
+            $filesenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'onedrive');
+            $filesname = 'course_files_'.$course->id.'_enabled';
+            $calendarenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'calendar');
+            $calendarname = 'course_files_'.$course->id.'_enabled';
+            $convenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'conversations');
+            $convname = 'course_files_'.$course->id.'_enabled';
+
+            $enablecheckboxattrs = [
+                'onchange' => 'local_o365_set_usergroup(\''.$course->id.'\', $(this).prop(\'checked\'), $(this))'
+            ];
+            $filescheckboxattrs = [
+                'class' => 'feature feature_onedrive',
+                'onchange' => 'local_o365_set_usergroup_feature(\''.$course->id.'\', \'onedrive\', $(this).prop(\'checked\'))',
+            ];
+            $calendarcheckboxattrs = [
+                'class' => 'feature feature_calendar',
+                'onchange' => 'local_o365_set_usergroup_feature(\''.$course->id.'\', \'calendar\', $(this).prop(\'checked\'))',
+            ];
+            $convcheckboxattrs = [
+                'class' => 'feature feature_conversations',
+                'onchange' => 'local_o365_set_usergroup_feature(\''.$course->id.'\', \'conversations\', $(this).prop(\'checked\'))',
+            ];
+
+            if ($isenabled !== true) {
+                $filescheckboxattrs['disabled'] = '';
+                $calendarcheckboxattrs['disabled'] = '';
+                $convcheckboxattrs['disabled'] = '';
+            }
 
             $rowdata = [
                 $course->shortname,
                 $course->fullname,
-                \html_writer::checkbox('', 1, $checkboxchecked, '', $checkboxattrs),
+                \html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
+                \html_writer::checkbox($filesname, 1, $filesenabled, '', $filescheckboxattrs),
+                \html_writer::checkbox($calendarname, 1, $calendarenabled, '', $calendarcheckboxattrs),
+                \html_writer::checkbox($convname, 1, $convenabled, '', $convcheckboxattrs),
+                get_string('acp_usergroupcustom_comingsoon', 'local_o365'),
             ];
             $table->data[] = $rowdata;
         }
@@ -381,13 +418,56 @@ class acp extends base {
         $this->standard_header();
 
         $endpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom_change', 'sesskey' => sesskey()]);
+        $bulkendpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom_bulkchange', 'sesskey' => sesskey()]);
 
-        $js = 'var local_o365_set_usergroup = function(courseid, state) { ';
+        $js = 'var local_o365_set_usergroup = function(courseid, state, checkbox) { ';
         $js .= 'data = {courseid: courseid, state: state}; ';
-        $js .= '$.post(\''.$endpoint->out(false).'\', data, function(data) { console.log(data); }) ';
-        $js .= '}';
+        $js .= '$.post(\''.$endpoint->out(false).'\', data, function(data) { console.log(data); }); ';
+        $js .= 'var newfeaturedisabled = (state == 0) ? true : false; ';
+        $js .= 'var newfeaturechecked = (state == 1) ? true : false; ';
+        $js .= 'var featurecheckboxes = checkbox.parents("tr").find("input.feature"); ';
+        $js .= 'featurecheckboxes.prop("disabled", newfeaturedisabled); ';
+        $js .= 'featurecheckboxes.prop("checked", newfeaturechecked); ';
+        $js .= '}; ';
+
+        $js .= 'var local_o365_set_usergroup_feature = function(courseid, feature, state) { ';
+        $js .= 'data = {courseid: courseid, feature: feature, state: state}; ';
+        $js .= '$.post(\''.$endpoint->out(false).'\', data, function(data) { console.log(data); }); ';
+        $js .= '}; ';
+
+        $js .= 'var local_o365_usergroup_bulk_set_feature = function(feature, state) { ';
+        $js .= 'var enabled = (state == 1) ? true : false; ';
+        $js .= 'console.log(state, enabled); ';
+        $js .= '$("input.feature_"+feature+":not(:disabled)").prop("checked", enabled); ';
+        $js .= 'data = {feature: feature, state: state}; ';
+        $js .= '$.post(\''.$bulkendpoint->out(false).'\', data, function(data) { console.log(data); }); ';
+        $js .= '} ';
         echo \html_writer::script($js);
         echo \html_writer::tag('h2', get_string('acp_usergroupcustom', 'local_o365'));
+
+        // Bulk Operations
+        $strbulkenable = get_string('acp_usergroupcustom_bulk_enable', 'local_o365');
+        $strbulkdisable = get_string('acp_usergroupcustom_bulk_disable', 'local_o365');
+        echo \html_writer::tag('h5', get_string('acp_usergroupcustom_bulk', 'local_o365'));
+        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo \html_writer::tag('span', get_string('groups_onedrive', 'local_o365').': ');
+        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'onedrive\', 1)']);
+        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'onedrive\', 0)']);
+        echo \html_writer::end_tag('div');
+
+        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo \html_writer::tag('span', get_string('groups_calendar', 'local_o365').': ');
+        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'calendar\', 1)']);
+        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'calendar\', 0)']);
+        echo \html_writer::end_tag('div');
+
+        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo \html_writer::tag('span', get_string('groups_conversations', 'local_o365').': ');
+        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'conversations\', 1)']);
+        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'conversations\', 0)']);
+        echo \html_writer::end_tag('div');
+
+        echo \html_writer::tag('h5', get_string('courses'));
         echo \html_writer::table($table);
         $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom']);
         echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
