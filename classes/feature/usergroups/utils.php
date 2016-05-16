@@ -54,6 +54,41 @@ class utils {
     }
 
     /**
+     * Get a list of courses that are enabled for a specific feature.
+     *
+     * @param string $feature The required feature.
+     * @return bool|array Array of course IDs, or TRUE if all courses are enabled.
+     */
+    public static function get_enabled_courses_with_feature($feature) {
+        $creategroups = get_config('local_o365', 'creategroups');
+        if ($creategroups === 'onall') {
+            return true;
+        } else if ($creategroups === 'oncustom') {
+            $coursesenabled = get_config('local_o365', 'usergroupcustom');
+            $coursesenabled = @json_decode($coursesenabled, true);
+            if (empty($coursesenabled) || !is_array($coursesenabled)) {
+                return [];
+            }
+            $enabledcourses = array_keys($coursesenabled);
+
+            $featureconfig = get_config('local_o365', 'usergroupcustomfeatures');
+            $featureconfig = @json_decode($featureconfig, true);
+            if (empty($featureconfig) || !is_array($featureconfig)) {
+                return [];
+            }
+
+            $return = [];
+            foreach ($enabledcourses as $courseid) {
+                if (isset($featureconfig[$courseid]) && isset($featureconfig[$courseid][$feature])) {
+                    $return[] = $courseid;
+                }
+            }
+            return $return;
+        }
+        return [];
+    }
+
+    /**
      * Determine whether a course is group-enabled.
      *
      * @param int $courseid The Moodle course ID to check.
@@ -537,5 +572,113 @@ class utils {
             \local_o365\utils::debug('Exception while retrieving group urls: groupid '.$object->objectid.' '.$e->getMessage(), $caller);
             return null;
         }
+    }
+
+	/**
+	 * Change whether groups are enabled for a course.
+     *
+     * @param int $courseid The ID of the course.
+     * @param bool $enabled Whether to enable or disable.
+     */
+    public static function set_course_group_enabled($courseid, $enabled = true) {
+        $usergroupconfig = get_config('local_o365', 'usergroupcustom');
+        $usergroupconfig = @json_decode($usergroupconfig, true);
+        if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
+            $usergroupconfig = [];
+        }
+        if ($enabled === true) {
+            $usergroupconfig[$courseid] = $enabled;
+            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations'], $enabled);
+        } else {
+            if (isset($usergroupconfig[$courseid])) {
+                unset($usergroupconfig[$courseid]);
+            }
+            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations'], $enabled);
+        }
+        set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
+    }
+
+   /**
+     * Determine whether a group feature is enabled or disabled.
+     *
+     * @param int $courseid The ID of the course.
+     * @param string $feature The feature to check.
+     * @return bool Whether the feature is enabled or not.
+     */
+    public static function course_is_group_feature_enabled($courseid, $feature) {
+        $creategroups = get_config('local_o365', 'creategroups');
+        if ($creategroups === 'onall') {
+            return true;
+        } else if ($creategroups === 'oncustom') {
+            $config = get_config('local_o365', 'usergroupcustomfeatures');
+            $config = @json_decode($config, true);
+            return (!empty($config) && is_array($config) && isset($config[$courseid]) && isset($config[$courseid][$feature]))
+                ? true : false;
+        }
+        return false;
+    }
+
+    /**
+     * Change whether group features are enabled for a course.
+     *
+     * @param int $courseid The ID of the course.
+     * @param array $features Array of features to enable or disable.
+     * @param bool $enabled Whether to enable or disable.
+     */
+    public static function set_course_group_feature_enabled($courseid, array $features, $enabled = true) {
+        $usergroupconfig = get_config('local_o365', 'usergroupcustomfeatures');
+        $usergroupconfig = @json_decode($usergroupconfig, true);
+        if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
+            $usergroupconfig = [];
+        }
+        if (!isset($usergroupconfig[$courseid])) {
+            $usergroupconfig[$courseid] = [];
+        }
+        if ($enabled === true) {
+            foreach ($features as $feature) {
+                $usergroupconfig[$courseid][$feature] = $enabled;
+            }
+        } else {
+            foreach ($features as $feature) {
+                if (isset($usergroupconfig[$courseid][$feature])) {
+                    unset($usergroupconfig[$courseid][$feature]);
+                }
+            }
+        }
+        set_config('usergroupcustomfeatures', json_encode($usergroupconfig), 'local_o365');
+    }
+
+    /**
+     * Enable or disable a feature for all group courses.
+     *
+     * @param string $feature The feature to enable or disable.
+     * @param bool $enabled Whether to enable or disable.
+     */
+    public static function bulk_set_group_feature_enabled($feature, $enabled) {
+        $usergroupconfig = get_config('local_o365', 'usergroupcustomfeatures');
+        $usergroupconfig = @json_decode($usergroupconfig, true);
+        if ($enabled === true) {
+            if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
+                $usergroupconfig = [];
+            }
+            $enabledcourses = static::get_enabled_courses();
+            foreach ($enabledcourses as $courseid) {
+                if (!isset($usergroupconfig[$courseid])) {
+                    $usergroupconfig[$courseid] = [];
+                }
+                $usergroupconfig[$courseid][$feature] = true;
+            }
+        } else {
+            if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
+                return true;
+            } else {
+                foreach ($usergroupconfig as $courseid => $features) {
+                    if (isset($features[$feature])) {
+                        unset($usergroupconfig[$courseid][$feature]);
+                    }
+                }
+            }
+        }
+        set_config('usergroupcustomfeatures', json_encode($usergroupconfig), 'local_o365');
     }
 }
