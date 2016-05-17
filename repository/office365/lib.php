@@ -824,128 +824,121 @@ class repository_office365 extends \repository {
 
         if (isset($response['value'])) {
             foreach ($response['value'] as $content) {
-                switch ($clienttype) {
-                    case 'unified':
-                    case 'unifiedgroup':
-                        $itempath = $pathprefix.'/'.$content['id'];
-                        if (isset($content['folder'])) {
-                            $list[] = [
-                                'title' => $content['name'],
-                                'path' => $itempath,
-                                'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                                'date' => strtotime($content['createdDateTime']),
-                                'datemodified' => strtotime($content['lastModifiedDateTime']),
-                                'datecreated' => strtotime($content['createdDateTime']),
-                                'children' => [],
-                            ];
-                        } else if (isset($content['file'])) {
-                            $url = $content['webUrl'] . '?web=1';
-                            if ($clienttype === 'unified') {
-                                $source = [
-                                    'id' => $content['id'],
-                                    'source' => 'onedrive',
-                                ];
-                            } else if ($clienttype === 'unifiedgroup')) {
-                                $source = [
-                                    'id' => $content['id'],
-                                    'source' => 'onedrivegroup',
-                                    'groupid' => $parentinfo,
-                                ];
-                            }
-
-                            $author = '';
-                            if (!empty($content['createdBy']['user']['displayName'])) {
-                                $author = $content['createdBy']['user']['displayName'];
-                                $author = explode(',', $author);
-                                $author = $author[0];
-                            }
-
-                            $list[] = [
-                                'title' => $content['name'],
-                                'date' => strtotime($content['createdDateTime']),
-                                'datemodified' => strtotime($content['lastModifiedDateTime']),
-                                'datecreated' => strtotime($content['createdDateTime']),
-                                'size' => $content['size'],
-                                'url' => $url,
-                                'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
-                                'author' => $author,
-                                'source' => $this->pack_reference($source),
-                            ];
-                        }
-                        break;
-
-                    case 'trendingaround':
-                        if (isset($content['folder'])) {
-                            $list[] = [
-                                'title' => $content['name'],
-                                'path' => $itempath = $pathprefix . '/' . $content['name'],
-                                'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                                'date' => strtotime($content['DateTimeCreated']),
-                                'datemodified' => strtotime($content['DateTimeLastModified']),
-                                'datecreated' => strtotime($content['DateTimeCreated']),
-                                'children' => [],
-                            ];
-                        } else {
-                            $url = $content['webUrl'] . '?web=1';
-                            $source = [
-                                'id' => $content['@odata.id'],
-                                'source' => 'trendingaround',
-                            ];
-
-                            $list[] = [
-                                'title' => $content['name'],
-                                'date' => strtotime($content['DateTimeCreated']),
-                                'datemodified' => strtotime($content['DateTimeLastModified']),
-                                'datecreated' => strtotime($content['DateTimeCreated']),
-                                'url' => $url,
-                                'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
-                                'source' => $this->pack_reference($source),
-                            ];
-                        }
-                        break;
-
-                    default:
-                        $itempath = $pathprefix.'/'.$content['name'];
-                        if ($content['type'] === 'Folder') {
-                            $list[] = [
-                                'title' => $content['name'],
-                                'path' => $itempath,
-                                'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                                'date' => strtotime($content['dateTimeCreated']),
-                                'datemodified' => strtotime($content['dateTimeLastModified']),
-                                'datecreated' => strtotime($content['dateTimeCreated']),
-                                'children' => [],
-                            ];
-                        } else if ($content['type'] === 'File') {
-                            $url = $content['webUrl'] . '?web=1';
+                if ($clienttype === 'unified' || $clienttype === 'unifiedgroup') {
+                    $itempath = $pathprefix.'/'.$content['id'];
+                    if (isset($content['folder'])) {
+                        $list[] = [
+                            'title' => $content['name'],
+                            'path' => $itempath,
+                            'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                            'date' => strtotime($content['createdDateTime']),
+                            'datemodified' => strtotime($content['lastModifiedDateTime']),
+                            'datecreated' => strtotime($content['createdDateTime']),
+                            'children' => [],
+                        ];
+                    } else if (isset($content['file'])) {
+                        $url = $content['webUrl'] . '?web=1';
+                        if ($clienttype === 'unified') {
                             $source = [
                                 'id' => $content['id'],
-                                'source' => $clienttype,
+                                'source' => 'onedrive',
                             ];
-                            if ($clienttype === 'sharepoint') {
-                                $source['parentsiteuri'] = $parentinfo;
-                            }
-
-                            $author = '';
-                            if (!empty($content['createdBy']['user']['displayName'])) {
-                                $author = $content['createdBy']['user']['displayName'];
-                                $author = explode(',', $author);
-                                $author = $author[0];
-                            }
-
-                            $list[] = [
-                                'title' => $content['name'],
-                                'date' => strtotime($content['dateTimeCreated']),
-                                'datemodified' => strtotime($content['dateTimeLastModified']),
-                                'datecreated' => strtotime($content['dateTimeCreated']),
-                                'size' => $content['size'],
-                                'url' => $url,
-                                'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
-                                'author' => $author,
-                                'source' => $this->pack_reference($source),
+                        } else if ($clienttype === 'unifiedgroup')) {
+                            $source = [
+                                'id' => $content['id'],
+                                'source' => 'onedrivegroup',
+                                'groupid' => $parentinfo,
                             ];
                         }
-                        break;
+
+                        $author = '';
+                        if (!empty($content['createdBy']['user']['displayName'])) {
+                            $author = $content['createdBy']['user']['displayName'];
+                            $author = explode(',', $author);
+                            $author = $author[0];
+                        }
+
+                        $list[] = [
+                            'title' => $content['name'],
+                            'date' => strtotime($content['createdDateTime']),
+                            'datemodified' => strtotime($content['lastModifiedDateTime']),
+                            'datecreated' => strtotime($content['createdDateTime']),
+                            'size' => $content['size'],
+                            'url' => $url,
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
+                            'author' => $author,
+                            'source' => $this->pack_reference($source),
+                        ];
+                    }
+                } else if ($clienttype === 'trendingaround') {
+                    if (isset($content['folder'])) {
+                        $list[] = [
+                            'title' => $content['name'],
+                            'path' => $itempath = $pathprefix . '/' . $content['name'],
+                            'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                            'date' => strtotime($content['DateTimeCreated']),
+                            'datemodified' => strtotime($content['DateTimeLastModified']),
+                            'datecreated' => strtotime($content['DateTimeCreated']),
+                            'children' => [],
+                        ];
+                    } else {
+                        $url = $content['webUrl'] . '?web=1';
+                        $source = [
+                            'id' => $content['@odata.id'],
+                            'source' => 'trendingaround',
+                        ];
+
+                        $list[] = [
+                            'title' => $content['name'],
+                            'date' => strtotime($content['DateTimeCreated']),
+                            'datemodified' => strtotime($content['DateTimeLastModified']),
+                            'datecreated' => strtotime($content['DateTimeCreated']),
+                            'url' => $url,
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
+                            'source' => $this->pack_reference($source),
+                        ];
+                    }
+                } else {
+                    $itempath = $pathprefix.'/'.$content['name'];
+                    if ($content['type'] === 'Folder') {
+                        $list[] = [
+                            'title' => $content['name'],
+                            'path' => $itempath,
+                            'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                            'date' => strtotime($content['dateTimeCreated']),
+                            'datemodified' => strtotime($content['dateTimeLastModified']),
+                            'datecreated' => strtotime($content['dateTimeCreated']),
+                            'children' => [],
+                        ];
+                    } else if ($content['type'] === 'File') {
+                        $url = $content['webUrl'] . '?web=1';
+                        $source = [
+                            'id' => $content['id'],
+                            'source' => $clienttype,
+                        ];
+                        if ($clienttype === 'sharepoint') {
+                            $source['parentsiteuri'] = $parentinfo;
+                        }
+
+                        $author = '';
+                        if (!empty($content['createdBy']['user']['displayName'])) {
+                            $author = $content['createdBy']['user']['displayName'];
+                            $author = explode(',', $author);
+                            $author = $author[0];
+                        }
+
+                        $list[] = [
+                            'title' => $content['name'],
+                            'date' => strtotime($content['dateTimeCreated']),
+                            'datemodified' => strtotime($content['dateTimeLastModified']),
+                            'datecreated' => strtotime($content['dateTimeCreated']),
+                            'size' => $content['size'],
+                            'url' => $url,
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
+                            'author' => $author,
+                            'source' => $this->pack_reference($source),
+                        ];
+                    }
                 }
             }
         }
@@ -977,7 +970,7 @@ class repository_office365 extends \repository {
         $caller = '\repository_office365::get_file';
         $reference = $this->unpack_reference($reference);
 
-        if ($reference['source'] === 'onedrive' || $reference['source'] === 'trendingaround') {
+        if ($reference['source'] === 'onedrive') {
             if ($this->unifiedconfigured === true) {
                 $sourceclient = $this->get_unified_apiclient();
             } else {
@@ -1009,12 +1002,10 @@ class repository_office365 extends \repository {
             }
             $sourceclient->set_site($parentsiteuri);
             $file = $sourceclient->get_file_by_id($reference['id']);
-        }
-        if ($reference['source'] === 'trendingaround') {
+        } else if ($reference['source'] === 'trendingaround') {
             $file = $sourceclient->get_file_by_url($reference['url']);
-        } else {
-            $file = $sourceclient->get_file_by_id($reference['id']);
         }
+
         if (!empty($file)) {
             $path = $this->prepare_file($filename);
             if (!empty($path)) {
@@ -1106,7 +1097,6 @@ class repository_office365 extends \repository {
                         $reference['url'] = $filedata['@microsoft.graph.downloadUrl'];
                     }
                 } else {
-                    $filemetadata = $sourceclient->get_file_metadata($fileid);
                     if (isset($filemetadata['webUrl'])) {
                         $reference['url'] = $filemetadata['webUrl'].'?web=1';
                     }
