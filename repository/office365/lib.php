@@ -837,7 +837,7 @@ class repository_office365 extends \repository {
                             'children' => [],
                         ];
                     } else if (isset($content['file'])) {
-                        $url = $content['webUrl'] . '?web=1';
+                        $url = $content['webUrl'].'?web=1';
                         if ($clienttype === 'unified') {
                             $source = [
                                 'id' => $content['id'],
@@ -911,10 +911,10 @@ class repository_office365 extends \repository {
                             'children' => [],
                         ];
                     } else if ($content['type'] === 'File') {
-                        $url = $content['webUrl'] . '?web=1';
+                        $url = $content['webUrl'].'?web=1';
                         $source = [
                             'id' => $content['id'],
-                            'source' => $clienttype,
+                            'source' => ($clienttype === 'sharepoint') ? 'sharepoint' : 'onedrive',
                         ];
                         if ($clienttype === 'sharepoint') {
                             $source['parentsiteuri'] = $parentinfo;
