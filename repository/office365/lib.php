@@ -1029,7 +1029,10 @@ class repository_office365 extends \repository {
                     $filemetadata = $sourceclient->get_file_metadata($fileid);
                 }
 
-                if (isset($filemetadata['webUrl'])) {
+                if ($this->unifiedconfigured === true) {
+                    $sourceclient = $this->get_unified_apiclient();
+                    $reference['url'] = $sourceclient->create_link($fileid);
+                } else {
                     $reference['url'] = $filemetadata['webUrl'].'?web=1';
                 }
             } catch (\Exception $e) {

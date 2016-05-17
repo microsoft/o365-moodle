@@ -914,4 +914,16 @@ class unified extends \local_o365\rest\o365api {
         }
         return $lastsize;
     }
+
+    /**
+     * Create readonly link for onedrive file.
+     * @param $fileid onedrive file id.
+     * @return string Return readonly file url.
+     */
+    public function create_link($fileid) {
+        $params = array('type' => 'view', 'scope' => 'organization');
+        $apiresponse = $this->apicall('post', "/me/drive/items/$fileid/createLink", json_encode($params));
+        $response = $this->process_apicall_response($apiresponse);
+        return $response['link']['webUrl'];
+    }
 }
