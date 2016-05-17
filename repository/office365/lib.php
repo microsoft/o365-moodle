@@ -1005,18 +1005,22 @@ class repository_office365 extends \repository {
                 if ($filesource === 'onedrive') {
                     if ($this->unifiedconfigured === true) {
                         $sourceclient = $this->get_unified_apiclient();
+                        $reference['url'] = $sourceclient->get_sharing_link($fileid);
                     } else {
                         $sourceclient = $this->get_onedrive_apiclient();
+                        $filemetadata = $sourceclient->get_file_metadata($fileid);
+                        if (isset($filemetadata['webUrl'])) {
+                            $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                        }
                     }
-                    $filemetadata = $sourceclient->get_file_metadata($fileid);
                 } else if ($filesource === 'onedrivegroup') {
                     if ($this->unifiedconfigured !== true) {
                         \local_o365\utils::debug('Tried to access a onedrive group file while the graph api is disabled.', $caller);
                         throw new \moodle_exception('errorwhiledownload', 'repository_office365');
                     }
                     $sourceclient = $this->get_unified_apiclient();
-                    $filemetadata = $sourceclient->get_group_file_metadata($sourceunpacked['groupid'], $fileid);
                     $reference['groupid'] = $sourceunpacked['groupid'];
+                    $reference['url'] = $sourceclient->get_sharing_link($fileid);
                 } else if ($filesource === 'sharepoint') {
                     $sourceclient = $this->get_sharepoint_apiclient();
                     if (isset($sourceunpacked['parentsiteuri'])) {
@@ -1027,11 +1031,11 @@ class repository_office365 extends \repository {
                     $sourceclient->set_site($parentsiteuri);
                     $reference['parentsiteuri'] = $parentsiteuri;
                     $filemetadata = $sourceclient->get_file_metadata($fileid);
+                    if (isset($filemetadata['webUrl'])) {
+                        $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                    }
                 }
 
-                if (isset($filemetadata['webUrl'])) {
-                    $reference['url'] = $filemetadata['webUrl'].'?web=1';
-                }
             } catch (\Exception $e) {
                 $errmsg = 'There was a problem making the API call.';
                 $debugdata = [
