@@ -245,7 +245,19 @@ class main {
                 continue;
             }
             if (isset($aaddata[$remotefield])) {
-                $user->$localfield = $aaddata[$remotefield];
+                if ($localfield !== "country") {
+                    $user->$localfield = $aaddata[$remotefield];
+                } else {
+                    // Update country with two letter country code.
+                    $incoming = strtoupper($aaddata[$remotefield]);
+                    $countrymap = get_string_manager()->get_list_of_countries();
+                    if (isset($countrymap[$incoming])) {
+                        $countrycode = $incoming;
+                    } else {
+                        $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                    }
+                    $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
+                }
             }
         }
 
@@ -276,12 +288,48 @@ class main {
             return true;
         }
 
-        if (!isset($aaddata[$restriction['remotefield']])) {
-            return false;
-        }
+        if ($restriction['remotefield'] === 'o365group') {
+            if (\local_o365\rest\unified::is_configured() !== true) {
+                \local_o365\utils::debug('graph api is not configured.', 'check_usercreationrestriction');
+                return false;
+            }
 
-        if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
-            return true;
+            try {
+                $httpclient = new \local_o365\httpclient();
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+                $resource = \local_o365\rest\unified::get_resource();
+                $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+                $apiclient = new \local_o365\rest\unified($token, $httpclient);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Could not construct graph api', 'check_usercreationrestriction', $e);
+                return false;
+            }
+
+            try {
+                $group = $apiclient->get_group_by_name($restriction['value']);
+                if (empty($group) || !isset($group['id'])) {
+                    \local_o365\utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
+                    return false;
+                }
+                $members = $apiclient->get_group_members($group['id']);
+                foreach ($members['value'] as $member) {
+                    if ($member['id'] === $aaddata['id']) {
+                        return true;
+                    }
+                }
+                return false;
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Could not find group (2)', 'check_usercreationrestriction', $e);
+                return false;
+            }
+        } else {
+            if (!isset($aaddata[$restriction['remotefield']])) {
+                return false;
+            }
+
+            if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
+                return true;
+            }
         }
         return false;
     }
@@ -293,7 +341,7 @@ class main {
      * @return \stdClass An object representing the created Moodle user.
      */
     public function create_user_from_aaddata($aaddata) {
-        global $CFG;
+        global $CFG, $DB;
 
         require_once($CFG->dirroot.'/user/profile/lib.php');
         require_once($CFG->dirroot.'/user/lib.php');
@@ -354,6 +402,24 @@ class main {
         }
         // Set the password.
         update_internal_user_password($user, $password);
+
+        // Add o365 object.
+        if (\local_o365\rest\unified::is_configured()) {
+            $userobjectid = $aaddata['id'];
+        } else {
+            $userobjectid = $aaddata['objectId'];
+        }
+        $now = time();
+        $userobjectdata = (object)[
+            'type' => 'user',
+            'subtype' => '',
+            'objectid' => $userobjectid,
+            'o365name' => $aaddata['userPrincipalName'],
+            'moodleid' => $newuser->id,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
 
         // Trigger event.
         \core\event\user_created::create_from_userid($newuser->id)->trigger();
@@ -421,11 +487,13 @@ class main {
                        conn.id as existingconnectionid,
                        assign.assigned assigned,
                        assign.photoid photoid,
-                       assign.photoupdated photoupdated
+                       assign.photoupdated photoupdated,
+                       obj.id AS objrecid
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
+             LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
                  WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
         $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
@@ -505,7 +573,7 @@ class main {
                     }
                 }
 
-                if ($existinguser->auth !== 'oidc' && empty($existinguser->tok)) {
+                if ($existinguser->auth !== 'oidc' && empty($existinguser->tokid)) {
                     $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
                     $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
 
@@ -528,6 +596,21 @@ class main {
                     $DB->insert_record('local_o365_connections', $matchrec);
                     $this->mtrace('Matched user.');
                 } else {
+                    // Create userobject if it does not exist.
+                    if (empty($existinguser->objrecid)) {
+                        $this->mtrace('Adding o365 object record for user.');
+                        $now = time();
+                        $userobjectdata = (object)[
+                            'type' => 'user',
+                            'subtype' => '',
+                            'objectid' => $userobjectid,
+                            'o365name' => $user['userPrincipalName'],
+                            'moodleid' => $existinguser->muserid,
+                            'timecreated' => $now,
+                            'timemodified' => $now,
+                        ];
+                        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+                    }
                     // User already connected.
                     $this->mtrace('User is already synced.');
                 }

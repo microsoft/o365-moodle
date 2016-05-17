@@ -30,6 +30,11 @@ $string['acp_maintenance_desc'] = 'These tools can help you resolve some common 
 $string['acp_maintenance_warning'] = 'Warning: These are advanced tools. Please use them only if you understand what you are doing.';
 $string['acp_maintenance_coursegroupusers'] = 'Resync users in groups for courses.';
 $string['acp_maintenance_coursegroupusers_desc'] = 'This will resync the user membership for all Office 365 groups created for all Moodle courses. This will ensure all, and only, users enrolled in the Moodle course are in the Office 365 group. <br /><b>Note:</b> If you have added any additional users to a course group that are not enrolled in the associated Moodle course, they will be removed.';
+$string['acp_usergroupcustom'] = 'User Group Customization';
+$string['acp_usergroupcustom_off'] = 'Disable<br />Disables all usergroup integration.';
+$string['acp_usergroupcustom_oncustom'] = 'Custom <a href="{$a}">Customize</a><br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.';
+$string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables all usergroup features for all Moodle courses.';
+$string['acp_usergroupcustom_enabled'] = 'Enabled';
 $string['acp_usermatch'] = 'User Matching';
 $string['acp_usermatch_desc'] = 'This tool allows you to match Moodle users to Office 365 users. You will upload a file containing Moodle users and associated Office 365 users, and a cron task will verify the data and set up the match.';
 $string['acp_usermatch_matchqueue'] = 'Step 2: Match Queue';
@@ -140,8 +145,8 @@ $string['settings_azuresetup_legacyheader'] = 'Office&nbsp;365 API';
 $string['settings_azuresetup_legacydesc'] = 'The Office&nbsp;365 API is made up of application-specific APIs.';
 $string['settings_azuresetup_legacyerror'] = 'There was an error checking Office&nbsp;365 API settings.';
 
-$string['settings_creategroups'] = 'Create User Groups';
-$string['settings_creategroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office&nbsp;365 unified API to be enabled (see above), and added to the application added in Azure. <a href="https://docs.moodle.org/30/en/Office365#User_groups">Setup instructions and documentation.</a>';
+$string['settings_usergroups'] = 'User Groups';
+$string['settings_usergroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Office&nbsp;365 unified API to be enabled (see above), and added to the application added in Azure. <a href="https://docs.moodle.org/30/en/Office365#User_groups">Setup instructions and documentation.</a>';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
@@ -173,7 +178,7 @@ $string['settings_fieldmap_addmapping'] = 'Add Mapping';
 $string['settings_fieldmap_details'] = 'Configure mapping between user fields in Office 365 and Moodle.';
 $string['settings_fieldmap_header_behavior'] = 'Updates';
 $string['settings_fieldmap_header_local'] = 'Moodle Field';
-$string['settings_fieldmap_header_remote'] = 'Azure Field';
+$string['settings_fieldmap_header_remote'] = 'Active Directory Field';
 $string['settings_fieldmap_field_city'] = 'City';
 $string['settings_fieldmap_field_companyName'] = 'Company Name';
 $string['settings_fieldmap_field_objectId'] = 'Object ID';
@@ -234,6 +239,7 @@ $string['settings_usermatch'] = 'User Matching';
 $string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Office 365 users based on an custom uploaded data file.';
 $string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only users that have the specified value for the specified Azure field will be created during user sync.';
+$string['settings_usersynccreationrestriction_o365group'] = 'Office 365 Group Membership';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
@@ -311,3 +317,8 @@ $string['ucp_syncdir_in'] = 'From Outlook To Moodle';
 $string['ucp_syncdir_both'] = 'Update both Outlook and Moodle';
 $string['ucp_title'] = 'Office&nbsp;365 / Moodle Control Panel';
 $string['ucp_options'] = 'Options';
+
+$string['webservices_error_assignnotfound'] = 'The received module\'s assignment record could not be found.';
+$string['webservices_error_invalidassignment'] = 'The received assignment ID cannot be used with this webservices function.';
+$string['webservices_error_modulenotfound'] = 'The received module ID could not be found.';
+$string['webservices_error_sectionnotfound'] = 'The course section could not be found.';

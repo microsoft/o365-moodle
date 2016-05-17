@@ -197,35 +197,35 @@ class acp extends base {
         $matchqueuelength = $DB->count_records('local_o365_matchqueue');
         if ($matchqueuelength > 0) {
 
-            echo \html_writer::start_tag('div', ['class' => 'matchqueuetoolbar']);
+            echo \html_writer::start_tag('div', ['class' => 'local_o365_matchqueuetoolbar']);
 
             $clearurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatchclear']);
             $clearurl = $clearurl->out();
 
             // Clear successful button.
             $checkicon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr.success\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.success\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'success\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearsuccess', 'local_o365');
             echo \html_writer::tag('button', $checkicon.' '.$buttontext, $attrs);
 
             // Clear error button.
             $warningicon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr.error\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.error\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'error\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearerrors', 'local_o365');
             echo \html_writer::tag('button', $warningicon.' '.$buttontext, $attrs);
 
             // Clear warning button.
             $queuedicon = $OUTPUT->pix_icon('i/scheduled', 'warning', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr.queued\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.queued\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'queued\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearqueued', 'local_o365');
             echo \html_writer::tag('button', $queuedicon.' '.$buttontext, $attrs);
 
             // Clear all button.
             $removeicon = $OUTPUT->pix_icon('t/delete', 'warning', 'moodle');
-            $clearcallback = '$(\'table.matchqueue\').find(\'tr:not(:first-child)\').fadeOut();';
+            $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr:not(:first-child)\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'all\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearall', 'local_o365');
             echo \html_writer::tag('button', $removeicon.' '.$buttontext, $attrs);
@@ -234,7 +234,7 @@ class acp extends base {
 
             $matchqueue = $DB->get_recordset('local_o365_matchqueue', null, 'id ASC');
             // Constructing table manually instead of \html_table for memory reasons.
-            echo \html_writer::start_tag('table', ['class' => 'matchqueue']);
+            echo \html_writer::start_tag('table', ['class' => 'local_o365_matchqueue']);
             echo \html_writer::start_tag('tr');
             echo \html_writer::tag('th', '');
             echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_muser', 'local_o365'));
@@ -295,6 +295,106 @@ class acp extends base {
     }
 
     /**
+     * Endpoint to change user group customization.
+     */
+    public function mode_usergroupcustom_change() {
+        $courseid = (int)required_param('courseid', PARAM_INT);
+        $state = (int)required_param('state', PARAM_BOOL);
+        require_sesskey();
+        $usergroupconfig = get_config('local_o365', 'usergroupcustom');
+        $usergroupconfig = @json_decode($usergroupconfig, true);
+        if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
+            $usergroupconfig = [];
+        }
+        if ($state === 1) {
+            $usergroupconfig[$courseid] = $state;
+        } else {
+            if (isset($usergroupconfig[$courseid])) {
+                unset($usergroupconfig[$courseid]);
+            }
+        }
+        set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
+        echo json_encode(['Saved']);
+    }
+
+    /**
+     * User group customization.
+     */
+    public function mode_usergroupcustom() {
+        global $OUTPUT, $PAGE;
+
+        $PAGE->navbar->add(get_string('acp_usergroupcustom', 'local_o365'), new \moodle_url($this->url, ['mode' => 'usergroupcustom']));
+
+        $totalcount = 0;
+        $perpage = 10;
+
+        $curpage = optional_param('page', 0, PARAM_INT);
+        $sort = optional_param('sort', '', PARAM_ALPHA);
+        $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
+
+        // Get + unpack config array.
+        $usergroupconfig = get_config('local_o365', 'usergroupcustom');
+        $usergroupconfig = @json_decode($usergroupconfig, true);
+        if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
+            $usergroupconfig = [];
+        }
+
+        $headers = [
+            'shortname' => get_string('shortnamecourse'),
+            'fullname' => get_string('fullnamecourse'),
+        ];
+        if (empty($sort) || !isset($headers[$sort])) {
+            $sort = 'shortname';
+        }
+        if (!in_array($sortdir, ['asc', 'desc'], true)) {
+            $sortdir = 'asc';
+        }
+
+        $table = new \html_table;
+        foreach ($headers as $hkey => $desc) {
+            $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
+            $linkattrs = ['mode' => 'usergroupcustom', 'sort' => $hkey, 'sortdir' => $diffsortdir];
+            $link = new \moodle_url('/local/o365/acp.php', $linkattrs);
+
+            if ($sort === $hkey) {
+                $desc .= ' '.$OUTPUT->pix_icon('t/'.'sort_'.$sortdir, 'sort');
+            }
+            $table->head[] = \html_writer::link($link, $desc);
+        }
+        $table->head[] = get_string('acp_usergroupcustom_enabled', 'local_o365');
+
+        $limitfrom = $curpage * $perpage;
+        $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+        foreach ($courses as $course) {
+            $checkboxchecked = (!empty($usergroupconfig[$course->id])) ? true : false;
+            $checkboxattrs = ['onchange' => 'local_o365_set_usergroup(\''.$course->id.'\', $(this).prop(\'checked\'))'];
+
+            $rowdata = [
+                $course->shortname,
+                $course->fullname,
+                \html_writer::checkbox('', 1, $checkboxchecked, '', $checkboxattrs),
+            ];
+            $table->data[] = $rowdata;
+        }
+
+        $PAGE->requires->jquery();
+        $this->standard_header();
+
+        $endpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom_change', 'sesskey' => sesskey()]);
+
+        $js = 'var local_o365_set_usergroup = function(courseid, state) { ';
+        $js .= 'data = {courseid: courseid, state: state}; ';
+        $js .= '$.post(\''.$endpoint->out(false).'\', data, function(data) { console.log(data); }) ';
+        $js .= '}';
+        echo \html_writer::script($js);
+        echo \html_writer::tag('h2', get_string('acp_usergroupcustom', 'local_o365'));
+        echo \html_writer::table($table);
+        $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom']);
+        echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
+        $this->standard_footer();
+    }
+
+    /**
      * Resync course usergroup membership.
      */
     public function mode_maintenance_coursegroupusers() {
@@ -315,6 +415,12 @@ class acp extends base {
         $graphclient = new \local_o365\rest\unified($graphtoken, $httpclient);
         $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
 
+        $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
+        if (empty($coursesenabled)) {
+            mtrace('No courses are enabled for groups, or groups are disabled.');
+            return false;
+        }
+
         $sql = 'SELECT crs.id,
                        obj.objectid as groupobjectid
                   FROM {course} crs
@@ -324,6 +430,11 @@ class acp extends base {
         if (!empty($courseid)) {
             $sql .= ' AND crs.id = ?';
             $params[] = $courseid;
+        }
+        if (is_array($coursesenabled)) {
+            list($coursesinsql, $coursesparams) = $DB->get_in_or_equal($coursesenabled);
+            $sql .= ' AND crs.id '.$coursesinsql;
+            $params = array_merge($params, $coursesparams);
         }
         $courses = $DB->get_recordset_sql($sql, $params);
         foreach ($courses as $course) {

@@ -28,7 +28,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/filelib.php');
-
 /**
  * Filter for processing HTML content containing links to media from services that support the OEmbed protocol.
  * The filter replaces the links with the embeddable content returned from the service via the Oembed protocol.
@@ -54,6 +53,10 @@ class filter_oembed extends moodle_text_filter {
                         array(array('courseid' => 0)));
                 $jsinitialised = true;
             }
+        }
+        if (get_config('filter_oembed', 'provider_powerbi_enabled')) {
+            global $PAGE;
+            $PAGE->requires->yui_module('moodle-filter_oembed-powerbiloader', 'M.filter_oembed.init_powerbiloader');
         }
     }
 
@@ -160,7 +163,7 @@ class filter_oembed extends moodle_text_filter {
      */
     public static function get_supported_providers() {
         return [
-            'docsdotcom',
+            'docsdotcom', 'powerbi'
         ];
     }
 }
@@ -437,10 +440,10 @@ function filter_oembed_vidembed($json, $params = '') {
         $width = $dom->getElementsByTagName('iframe')->item(0)->getAttribute('width');
 
         $embedcode = '<a class="lvoembed lvvideo" data-embed="'.$embed.'"';
-        $embedcode .= 'href="#" data-height="'. $height .'" data-width="'. $width .'"><div class="lazyvideo_container">';
-        $embedcode .= '<img class="lazyvideo_placeholder" src="'.$json['thumbnail_url'].'" />';
-        $embedcode .= '<div class="lazyvideo_title"><div class="lazyvideo_text">'.$json['title'].'</div></div>';
-        $embedcode .= '<span class="lazyvideo_playbutton"></span>';
+        $embedcode .= 'href="#" data-height="'. $height .'" data-width="'. $width .'"><div class="filter_oembed_lazyvideo_container">';
+        $embedcode .= '<img class="filter_oembed_lazyvideo_placeholder" src="'.$json['thumbnail_url'].'" />';
+        $embedcode .= '<div class="filter_oembed_lazyvideo_title"><div class="filter_oembed_lazyvideo_text">'.$json['title'].'</div></div>';
+        $embedcode .= '<span class="filter_oembed_lazyvideo_playbutton"></span>';
         $embedcode .= '</div></a>';
     } else {
         $embedcode = $embed;

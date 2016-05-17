@@ -68,6 +68,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_oidc_user_connected(\auth_oidc\event\user_connected $event) {
+        global $DB;
         if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
@@ -76,10 +77,37 @@ class observers {
         $eventdata = $event->get_data();
         if (!empty($eventdata['userid'])) {
             try {
+                $userid = $eventdata['userid'];
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
                 $httpclient = new \local_o365\httpclient();
-                $azureresource = \local_o365\rest\calendar::get_resource();
-                $token = \local_o365\oauth2\token::instance($eventdata['userid'], $azureresource, $clientdata, $httpclient);
+                $calresource = \local_o365\rest\calendar::get_resource();
+                $token = \local_o365\oauth2\token::instance($userid, $calresource, $clientdata, $httpclient);
+
+                // Create local_o365_objects record.
+                if (!empty($eventdata['other']['oidcuniqid'])) {
+                    $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
+                    if (empty($userobject)) {
+                        $azureresource = \local_o365\rest\azuread::get_resource();
+                        $token = \local_o365\oauth2\token::instance($userid, $azureresource, $clientdata, $httpclient);
+                        $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+                        $aaduserdata = $aadapiclient->get_user($eventdata['other']['oidcuniqid']);
+
+                        // Create userobject if it does not exist.
+                        $now = time();
+                        $userobjectdata = (object)[
+                            'type' => 'user',
+                            'subtype' => '',
+                            'objectid' => $aaduserdata['objectId'],
+                            'o365name' => $aaduserdata['userPrincipalName'],
+                            'moodleid' => $userid,
+                            'timecreated' => $now,
+                            'timemodified' => $now,
+                        ];
+                        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+                    }
+                } else {
+                    \local_o365\utils::debug('no oidcuniqid received', 'handle_oidc_user_connected', $eventdata);
+                }
                 return true;
             } catch (\Exception $e) {
                 \local_o365\utils::debug($e->getMessage(), 'handle_oidc_user_connected', $e);
@@ -198,6 +226,22 @@ class observers {
             $updateduser = new \stdClass;
             $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($aaduserdata, $updateduser, $eventtype);
 
+            $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
+            if (empty($userobject)) {
+                // Create userobject if it does not exist.
+                $now = time();
+                $userobjectdata = (object)[
+                    'type' => 'user',
+                    'subtype' => '',
+                    'objectid' => $aaduserdata['objectId'],
+                    'o365name' => $aaduserdata['userPrincipalName'],
+                    'moodleid' => $userid,
+                    'timecreated' => $now,
+                    'timemodified' => $now,
+                ];
+                $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+            }
+
             if (!empty($updateduser)) {
                 $updateduser->id = $userid;
                 $DB->update_record('user', $updateduser);
@@ -217,7 +261,10 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_created(\core\event\user_enrolment_created $event) {
+        global $DB;
+        $caller = 'local_o365\observer::handle_user_enrolment_created';
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
+            \local_o365\utils::debug("Not configured", $caller);
             return false;
         }
 
@@ -225,6 +272,7 @@ class observers {
         $courseid = $event->courseid;
 
         if (empty($userid) || empty($courseid)) {
+            \local_o365\utils::debug("handle_user_enrolment_created no userid $userid or course $courseid", $caller);
             return true;
         }
 
@@ -236,11 +284,13 @@ class observers {
             $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
             if (!empty($aadtoken)) {
                 $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
-                $aadclient->add_user_to_course_group($courseid, $userid);
+                $response = $aadclient->add_user_to_course_group($courseid, $userid);
                 return true;
+            } else {
+                \local_o365\utils::debug("no aadtoken", $caller);
             }
         } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_created', $e);
+            \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
         }
         return false;
     }

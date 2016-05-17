@@ -246,8 +246,8 @@ class azuread extends \local_o365\rest\o365api {
         return [
             'Microsoft.Azure.ActiveDirectory' => [
                 'Directory.ReadWrite.All' => 'Scope',
-                'user_impersonation' => 'Scope',
-                'Directory.Read' => 'Scope',
+                'Directory.AccessAsUser.All' => 'Scope',
+                'Directory.Read.All' => 'Scope',
                 'User.Read.All' => 'Scope',
             ],
             'Microsoft.SharePoint' => [
@@ -325,7 +325,6 @@ class azuread extends \local_o365\rest\o365api {
             if (empty($record)) {
                 $record = new \stdClass;
                 $record->muserid = $muserid;
-                $record->userobjectid = $userid;
                 $record->assigned = 1;
                 $DB->insert_record('local_o365_appassign', $record);
             } else {
