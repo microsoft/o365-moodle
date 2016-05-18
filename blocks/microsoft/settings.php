@@ -25,6 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+// Settings to show My Delve link in block.
+$label = get_string('settings_showmydelve', 'block_microsoft');
+$desc = get_string('settings_showmydelve_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmydelve', $label, $desc, 1));
+
 // Settings to show Office 365 download links in block.
 $label = get_string('settings_showo365download', 'block_microsoft');
 $desc = get_string('settings_showo365download_desc', 'block_microsoft');
