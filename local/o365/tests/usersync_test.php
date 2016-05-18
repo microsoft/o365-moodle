@@ -310,6 +310,8 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $this->assertEquals('Toronto', $createduser->city);
         $this->assertEquals('CA', $createduser->country);
         $this->assertEquals('Dev', $createduser->department);
-        $this->assertEquals('en', $createduser->lang);
+        $langs = get_string_manager()->get_list_of_translations();
+        $expectedlang = isset($langs['de']) ? 'de' : 'en';
+        $this->assertEquals($expectedlang, $createduser->lang);
     }
 }
