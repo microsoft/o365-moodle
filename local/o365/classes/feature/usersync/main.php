@@ -33,7 +33,7 @@ class main {
     }
 
     /**
-     * Construct a user API client, accounting for unified api presence, and fall back to system api user if desired.
+     * Construct a user API client, accounting for Microsoft Graph API presence, and fall back to system api user if desired.
      *
      * @param int $muserid The userid to get the outlook token for. If you want to force a system API user client, use an empty
      *                     value here and set $systemfallback to true.
