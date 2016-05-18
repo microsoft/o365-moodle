@@ -269,8 +269,10 @@ class repository_office365 extends \repository {
                 list($list, $breadcrumb) = $this->get_listing_groups(substr($path, 7));
             }
         } else if (strpos($path, '/trending/') === 0) {
-            // Path is in trending files.
-            list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
+            if ($unifiedactive === true) {
+                // Path is in trending files.
+                list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
+            }
         } else {
             if ($unifiedactive === true || $onedriveactive === true) {
                 $list[] = [
@@ -1003,6 +1005,13 @@ class repository_office365 extends \repository {
             $sourceclient->set_site($parentsiteuri);
             $file = $sourceclient->get_file_by_id($reference['id']);
         } else if ($reference['source'] === 'trendingaround') {
+            if ($this->unifiedconfigured === true) {
+                $sourceclient = $this->get_unified_apiclient();
+            }
+            if (empty($sourceclient)) {
+                \local_o365\utils::debug('Could not construct unified api.', $caller);
+                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
+            }
             $file = $sourceclient->get_file_by_url($reference['url']);
         }
 
@@ -1070,7 +1079,7 @@ class repository_office365 extends \repository {
                     } else {
                         $sourceclient = $this->get_onedrive_apiclient();
                     }
-                    if (($filesource === 'onedrive')
+                    if ($filesource === 'onedrive')
                         $filemetadata = $sourceclient->get_file_metadata($fileid);
                 } else if ($filesource === 'onedrivegroup') {
                     if ($this->unifiedconfigured !== true) {
