@@ -97,7 +97,7 @@ if ($hassiteconfig) {
 
     $label = get_string('settings_enableunifiedapi', 'local_o365');
     $desc = get_string('settings_enableunifiedapi_details', 'local_o365');
-    $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '0'));
+    $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '1'));
 
     $label = get_string('settings_usergroups', 'local_o365');
     $desc = get_string('settings_usergroups_details', 'local_o365');
