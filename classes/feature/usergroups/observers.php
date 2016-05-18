@@ -47,10 +47,10 @@ class observers {
     }
 
     /**
-     * Get a Unified API instance.
+     * Get a Microsoft Graph API instance.
      *
      * @param string $caller The calling function, used for logging.
-     * @return \local_o365\rest\unified A Unified API instance.
+     * @return \local_o365\rest\unified A Microsoft Graph API instance.
      */
     public static function get_unified_api($caller = 'get_unified_api') {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
@@ -60,7 +60,7 @@ class observers {
         if (!empty($token)) {
             return new \local_o365\rest\unified($token, $httpclient);
         } else {
-            $msg = 'Couldn\'t construct unified api client because we didn\'t have a system API user token.';
+            $msg = 'Couldn\'t construct Microsoft Graph API client because we didn\'t have a system API user token.';
             $caller = '\local_o365\feature\usergroups\observers::'.$caller;
             \local_o365\utils::debug($msg, $caller);
             return false;
@@ -231,7 +231,7 @@ class observers {
 
         $unifiedapiclient = static::get_unified_api('handle_group_member_added');
         if (empty($unifiedapiclient)) {
-            \local_o365\utils::debug('unified api connection failed', $caller);
+            \local_o365\utils::debug('Microsoft Graph API connection failed', $caller);
             return false;
         }
 
