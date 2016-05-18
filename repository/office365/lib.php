@@ -289,7 +289,7 @@ class repository_office365 extends \repository {
                 $list[] = [
                     'title' => get_string('groups', 'repository_office365'),
                     'path' => '/groups/',
-                    'thumbnail' => $OUTPUT->pix_url('f/folder-64', 'moodle')->out(false),
+                    'thumbnail' => $OUTPUT->pix_url('coursegroups', 'repository_office365')->out(false),
                     'children' => [],
                 ];
             }
@@ -494,7 +494,7 @@ class repository_office365 extends \repository {
 
             if (count($pathparts) === 1) {
                 $list[] = [
-                    'title' => 'Course Group',
+                    'title' => get_string('defaultgroupsfolder', 'repository_office365'),
                     'path' => $curpath.'/coursegroup/',
                     'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
                     'children' => [],
@@ -516,7 +516,7 @@ class repository_office365 extends \repository {
                 }
                 $curpath .= '/'.$pathparts[1].'/';
                 if ($pathparts[1] === 'coursegroup') {
-                    $breadcrumb[] = ['name' => 'Course Group', 'path' => $curpath];
+                    $breadcrumb[] = ['name' => get_string('defaultgroupsfolder', 'repository_office365'), 'path' => $curpath];
                     $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
                     $group = $DB->get_record('local_o365_objects', $filters);
                 } else {
