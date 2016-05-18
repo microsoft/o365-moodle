@@ -409,7 +409,7 @@ class acp extends base {
         $graphresource = \local_o365\rest\unified::get_resource();
         $graphtoken = \local_o365\oauth2\systemtoken::instance(null, $graphresource, $clientdata, $httpclient);
         if (empty($graphtoken)) {
-            mtrace('Could not get unified API token.');
+            mtrace('Could not get Microsoft Graph API token.');
             return true;
         }
         $graphclient = new \local_o365\rest\unified($graphtoken, $httpclient);
