@@ -920,7 +920,7 @@ class unified extends \local_o365\rest\o365api {
      * @param $fileid onedrive file id.
      * @return string Return readonly file url.
      */
-    public function create_link($fileid) {
+    public function get_sharing_link ($fileid) {
         $params = array('type' => 'view', 'scope' => 'organization');
         $apiresponse = $this->apicall('post', "/me/drive/items/$fileid/createLink", json_encode($params));
         $response = $this->process_apicall_response($apiresponse);
