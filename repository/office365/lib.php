@@ -1009,7 +1009,9 @@ class repository_office365 extends \repository {
                     } else {
                         $sourceclient = $this->get_onedrive_apiclient();
                         $filemetadata = $sourceclient->get_file_metadata($fileid);
-                        $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                        if (isset($filemetadata['webUrl'])) {
+                            $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                        }
                     }
                 } else if ($filesource === 'onedrivegroup') {
                     if ($this->unifiedconfigured !== true) {
@@ -1029,7 +1031,9 @@ class repository_office365 extends \repository {
                     $sourceclient->set_site($parentsiteuri);
                     $reference['parentsiteuri'] = $parentsiteuri;
                     $filemetadata = $sourceclient->get_file_metadata($fileid);
-                    $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                    if (isset($filemetadata['webUrl'])) {
+                        $reference['url'] = $filemetadata['webUrl'].'?web=1';
+                    }
                 }
 
             } catch (\Exception $e) {
