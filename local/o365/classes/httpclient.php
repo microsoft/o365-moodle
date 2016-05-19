@@ -169,4 +169,16 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
         fclose($fp);
         return $ret;
     }
+    
+    /**
+     * HTTP download file method
+     *
+     * @param string $url
+     * @param array $options
+     * @return bool
+     */
+    public function download_file($url, $options = array()) {
+        $url = str_replace(array('+',' '), '%20', $url);
+        return $this->request($url, $options);
+    }
 }

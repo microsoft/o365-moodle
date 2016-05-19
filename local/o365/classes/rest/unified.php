@@ -681,6 +681,40 @@ class unified extends \local_o365\rest\o365api {
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
+    
+    /**
+     * Get a files from trendingAround api.
+     *
+     * @param string $parentid The parent id to use.
+     * @return array|null Returned response, or null if error.
+     */
+    public function get_trending_files($parentid = '') {
+        $response = $this->betaapicall('get', '/me/trendingAround');
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file's data by it's file information.
+     *
+     * @param string $fileinfo The file's drive id and file id.
+     * @return string The file's content.
+     */
+    public function get_file_data($fileinfo) {
+        $response = $this->apicall('get', "/{$fileinfo}");
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get a file's content by it's file URL.
+     *
+     * @param string $url The file's URL.
+     * @return string The file's content.
+     */
+    public function get_file_by_url($url) {
+        return $this->httpclient->download_file($url);
+    }
 
     /**
      * Get a file's metadata by it's file id.
