@@ -195,12 +195,6 @@ class ajax extends base {
         $data = new \stdClass;
         $success = false;
 
-        $enableunifiedapi = optional_param('enableunifiedapi', 0, PARAM_INT);
-        set_config('enableunifiedapi', $enableunifiedapi, 'local_o365');
-
-        $chineseapi = optional_param('chineseapi', 0, PARAM_INT);
-        set_config('chineseapi', $chineseapi, 'local_o365');
-
         $aadtenant = required_param('aadtenant', PARAM_TEXT);
         set_config('aadtenant', $aadtenant, 'local_o365');
 
