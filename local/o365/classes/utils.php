@@ -46,6 +46,25 @@ class utils {
     }
 
     /**
+     * Determine whether the local_msaccount plugin is configured.
+     *
+     * @return bool Whether the plugins are configured.
+     */
+    public static function is_configured_msaccount() {
+        if (!class_exists('\local_msaccount\client')) {
+            return false;
+        }
+        $cfg = get_config('local_msaccount');
+        if (empty($cfg) || !is_object($cfg)) {
+            return false;
+        }
+        if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Filters an array of userids to users that are currently connected to O365.
      *
      * @param array $userids The full array of userids.

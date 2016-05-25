@@ -137,6 +137,9 @@ class api {
      * @return string HTML containing the sign in widget.
      */
     public function render_signin_widget() {
+        if (!\local_o365\utils::is_configured_msaccount()) {
+            return '';
+        }
         $url = $this->get_login_url();
 
         return '<a onclick="window.open(this.href,\'mywin\',' .

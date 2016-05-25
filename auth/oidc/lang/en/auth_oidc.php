@@ -119,7 +119,9 @@ $string['eventuserconnected'] = 'User connected to OpenID Connect';
 $string['eventuserloggedin'] = 'User Logged In with OpenID Connect';
 $string['eventuserdisconnected'] = 'User disconnected from OpenID Connect';
 
-$string['oidc:manageconnection'] = 'Manage OpenID Connect Connection';
+$string['oidc:manageconnection'] = 'Allow OpenID Connection and Disconnection';
+$string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
+$string['oidc:manageconnectiondisconnect'] = 'Allow OpenID Disconnection';
 
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
 // "Office 365", "OpenID Connect", etc.
