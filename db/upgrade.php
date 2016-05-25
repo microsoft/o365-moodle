@@ -409,5 +409,20 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint($result, '2015111913.02', 'local', 'o365');
     }
+
+    if ($oldversion < 2015111914.02) {
+        // Define field openidconnect to be added to local_o365_matchqueue.
+        $table = new xmldb_table('local_o365_matchqueue');
+        $field = new xmldb_field('openidconnect', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'o365username');
+
+        // Conditionally launch add field openidconnect.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2015111914.02, 'local', 'o365');
+    }
+
     return $result;
 }

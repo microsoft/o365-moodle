@@ -23,6 +23,8 @@
 
 namespace local_o365\task;
 
+require_once($CFG->dirroot.'/auth/oidc/auth.php');
+
 /**
  * Scheduled task to process a batch from the match queue.
  */
@@ -74,15 +76,19 @@ class processmatchqueue extends \core\task\scheduled_task {
             return false;
         }
 
+        $auth = new \auth_plugin_oidc;
+
         $sql = 'SELECT mq.*,
                        u.id as muserid,
                        muserconn.id as muserexistingconnectionid,
                        officeconn.id as officeuserexistingconnectionid,
-                       oidctok.id as officeuserexistingoidctoken
+                       oidctok.id as officeuserexistingoidctoken,
+                       officeobj.id as officeuserobjectrecid
                   FROM {local_o365_matchqueue} mq
              LEFT JOIN {user} u ON mq.musername = u.username
              LEFT JOIN {local_o365_connections} muserconn ON muserconn.muserid = u.id
              LEFT JOIN {local_o365_connections} officeconn ON officeconn.aadupn = mq.o365username
+             LEFT JOIN {local_o365_objects} officeobj ON officeobj.moodleid = u.id AND officeobj.o365name = mq.o365username
              LEFT JOIN {auth_oidc_token} oidctok ON oidctok.oidcusername = mq.o365username
                  WHERE mq.completed = ? AND mq.errormessage = ?
               ORDER BY mq.id ASC';
@@ -147,6 +153,17 @@ class processmatchqueue extends \core\task\scheduled_task {
                     continue;
                 }
 
+                // Check if a o365 user object record already exists.
+                if (!empty($matchrec->officeuserobjectrecid)) {
+                    $updatedrec = new \stdClass;
+                    $updatedrec->id = $matchrec->id;
+                    $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadyconnected', 'local_o365');
+                    $updatedrec->completed = 1;
+                    $DB->update_record('local_o365_matchqueue', $updatedrec);
+                    mtrace($updatedrec->errormessage);
+                    continue;
+                }
+
                 // Check o365 username.
                 $userfound = false;
                 try {
@@ -166,17 +183,47 @@ class processmatchqueue extends \core\task\scheduled_task {
                     continue;
                 }
 
-                // Match validated.
-                $connectionrec = new \stdClass;
-                $connectionrec->muserid = $matchrec->muserid;
-                $connectionrec->aadupn = \core_text::strtolower($o365user['userPrincipalName']);
-                $connectionrec->uselogin = 0;
-                $DB->insert_record('local_o365_connections', $connectionrec);
+                if (empty($matchrec->openidconnect)) {
+                    // Match validated.
+                    $connectionrec = new \stdClass;
+                    $connectionrec->muserid = $matchrec->muserid;
+                    $connectionrec->aadupn = \core_text::strtolower($o365user['userPrincipalName']);
+                    $connectionrec->uselogin = 0;
+                    $DB->insert_record('local_o365_connections', $connectionrec);
+                } else {
+                    $userobjectid = null;
+                    if (\local_o365\rest\unified::is_configured()) {
+                        $userobjectid = $o365user['id'];
+                    } else {
+                        $userobjectid = $o365user['objectId'];
+                    }
+
+                    mtrace('Adding o365 object record for user.');
+                    $now = time();
+                    $userobjectdata = (object)[
+                        'type' => 'user',
+                        'subtype' => '',
+                        'objectid' => $userobjectid,
+                        'o365name' => $o365user['userPrincipalName'],
+                        'moodleid' => $matchrec->muserid,
+                        'timecreated' => $now,
+                        'timemodified' => $now,
+                    ];
+                    $DB->insert_record('local_o365_objects', $userobjectdata);
+
+                    // Updated the user's authentication method field.
+                    mtrace('Updating user authentication record.');
+                    $updatedrec = new \stdClass;
+                    $updatedrec->id = $matchrec->muserid;
+                    $updatedrec->auth = $auth->authtype;
+                    $DB->update_record('user', $updatedrec);
+                }
+
                 $updatedrec = new \stdClass;
                 $updatedrec->id = $matchrec->id;
                 $updatedrec->completed = 1;
                 $DB->update_record('local_o365_matchqueue', $updatedrec);
-                mtrace('Match record created for userid #'.$matchrec->muserid.' and o365 user '.$connectionrec->aadupn);
+                mtrace('Match record created for userid #'.$matchrec->muserid.' and o365 user '.\core_text::strtolower($o365user['userPrincipalName']));
 
             } catch (\Exception $e) {
                 $exceptionstring = $e->getMessage().': '.$e->debuginfo;
