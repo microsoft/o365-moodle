@@ -38,9 +38,9 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Switch to disable unified API until release.
+     * Switch to disable Microsoft Graph API until release.
      *
-     * @return bool Whether the unified API is enabled.
+     * @return bool Whether the Microsoft Graph API is enabled.
      */
     public static function is_enabled() {
         $enabled = get_config('local_o365', 'enableunifiedapi');
@@ -731,7 +731,7 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get the service principal object for the unified API.
+     * Get the service principal object for the Microsoft Graph API.
      *
      * @return array Array representing service principal object.
      */
@@ -747,7 +747,7 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get all available permissions for the unified API.
+     * Get all available permissions for the Microsoft Graph API.
      *
      * @return array Array of available permissions, include descriptions and keys.
      */
@@ -786,7 +786,7 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get currently assigned permissions for the unified API.
+     * Get currently assigned permissions for the Microsoft Graph API.
      *
      * @return array Array of permission keys.
      */
