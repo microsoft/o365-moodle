@@ -317,7 +317,6 @@ $(function() {
                 return;
             }
             this.refreshbutton.html(opts.strchecking);
-            opts.showunified = $('#id_s_local_o365_enableunifiedapi').prop('checked');
             $.ajax({
                 url: opts.url,
                 type: 'GET',
