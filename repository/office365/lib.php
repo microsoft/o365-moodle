@@ -35,7 +35,7 @@ class repository_office365 extends \repository {
     /** @var bool Whether sharepoint is configured. */
     protected $sharepointconfigured = false;
 
-    /** @var bool Whether the unified API is configured. */
+    /** @var bool Whether the Microsoft Graph API is configured. */
     protected $unifiedconfigured = false;
 
     /** @var \local_o365\oauth2\clientdata A clientdata object to use with an o365 api class. */
@@ -61,11 +61,11 @@ class repository_office365 extends \repository {
     }
 
     /**
-     * Get a unified api token.
+     * Get a Microsoft Graph API token.
      *
      * @param bool $system If true, get a system API ser token instead of the user's token.
      * @param int|null $userid The userid to get a token for. If null, the current user will be used.
-     * @return \local_o365\oauth2\token A unified api token object.
+     * @return \local_o365\oauth2\token A Microsoft Graph API token object.
      */
     protected function get_unified_token($system = false, $userid = null) {
         global $USER;
@@ -115,11 +115,11 @@ class repository_office365 extends \repository {
     }
 
     /**
-     * Get a unified API client.
+     * Get a Microsoft Graph API client.
      *
      * @param bool $system If true, get a system API ser token instead of the user's token.
      * @param int|null $userid The userid to get an API client for. If null, the current user will be used.
-     * @return \local_o365\rest\unified A unified API client object.
+     * @return \local_o365\rest\unified A Microsoft Graph API client object.
      */
     protected function get_unified_apiclient($system = false, $userid = null) {
         if ($this->unifiedconfigured === true) {
@@ -662,7 +662,7 @@ class repository_office365 extends \repository {
     }
 
     /**
-     * Get listing for a personal onedrive folder using the unified api.
+     * Get listing for a personal onedrive folder using the Microsoft Graph API.
      *
      * @param string $path Folder path.
      * @return array List of $list array and $path array.
