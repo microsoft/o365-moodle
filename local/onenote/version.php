@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111905;
+$plugin->version = 2015111906;
 $plugin->requires = 2015111600;
 $plugin->component = 'local_onenote';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.4';
+$plugin->release = '30.0.0.5';
