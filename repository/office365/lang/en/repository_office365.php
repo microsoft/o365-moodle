@@ -24,7 +24,8 @@
 $string['cachedef_unifiedfolderids'] = 'OneDrive for Business - Unified folder IDs';
 $string['configplugin'] = 'Configure OneDrive for Business Repository';
 $string['courses'] = 'SharePoint (Courses)';
-$string['groups'] = 'Groups';
+$string['groups'] = 'Groups (Courses)';
+$string['defaultgroupsfolder'] = 'Course Files';
 
 $string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the OneDrive for Business repository.';
@@ -35,7 +36,7 @@ $string['errorwhiledownload'] = 'An error occurred while downloading the file';
 $string['erroro365required'] = 'This file is currently only available to Office 365 users.';
 
 $string['file'] = 'File';
-$string['myfiles'] = 'OneDrive';
+$string['myfiles'] = 'My OneDrive';
 $string['office365:view'] = 'View OneDrive for Business repository';
 $string['pluginname'] = 'Office 365';
 $string['pluginname_help'] = 'A OneDrive for Business Repository';
