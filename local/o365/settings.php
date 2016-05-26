@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die;
 if (!$PAGE->requires->is_head_done()) {
     $PAGE->requires->jquery();
 }
+global $install;
 
 // Define tab constants
 if (!defined('LOCAL_O365_TAB_SETUP')) {
@@ -55,7 +56,7 @@ if ($hassiteconfig) {
 
     $tab = $tabs->get_setting();
 
-    if ($tab === LOCAL_O365_TAB_TOOLS) {
+    if ($tab === LOCAL_O365_TAB_TOOLS || !empty($install)) {
 
         $label = new lang_string('settings_healthcheck', 'local_o365');
         $linktext = new lang_string('settings_healthcheck_linktext', 'local_o365');
@@ -75,7 +76,8 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_maintenance_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\toollink('local_o365/maintenance', $label, $linktext, $linkurl, $desc));
 
-    } else if ($tab == LOCAL_O365_TAB_OPTIONS) {
+    }
+    if ($tab == LOCAL_O365_TAB_OPTIONS || !empty($install)) {
 
         $label = new lang_string('settings_options_usersync', 'local_o365');
         $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
@@ -148,7 +150,8 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_photoexpire_details', 'local_o365');
         $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
 
-    } else if ($tab == LOCAL_O365_TAB_SETUP) {
+    }
+    if ($tab == LOCAL_O365_TAB_SETUP || !empty($install)) {
 
         $oidcsettings = new \moodle_url('/admin/settings.php?section=authsettingoidc');
         $label = new lang_string('settings_setup_step1', 'local_o365');
