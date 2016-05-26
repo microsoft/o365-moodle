@@ -52,3 +52,4 @@ $string['signinhelp2'] = 'Click on the button above to sign in to OneNote if you
 $string['submissionnotstarted'] = 'Please work on the assignment in OneNote and then save your changes.';
 $string['submissionlimitexceed'] = 'Your submission size exceeds the acceptable limit.';
 $string['download'] = 'Download';
+$string['viewsubmissionwarning'] = 'Warning: View Submission will overwrite your OneNote page for this submission, with the learner\'s latest copy.';
