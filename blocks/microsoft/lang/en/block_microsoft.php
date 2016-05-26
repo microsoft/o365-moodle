@@ -78,3 +78,7 @@ $string['settings_showcoursegroup_desc'] = 'Show course group link on microsoft 
 //$string['settings_showstudygroups'] = 'Show study group';
 //$string['settings_showstudygroups_desc'] = 'Show study groups links on microsoft block for each Moodle group';
 $string['defaultprofile'] = 'Profile image';
+$string['groupsnotenabledforcourse'] = 'Office Groups are not enabled for this course.';
+$string['settings_geto365link'] = 'Office 365 download link';
+$string['settings_geto365link_desc'] = 'Where to download Office 365 from.';
+$string['settings_geto365link_default'] = 'https://portal.office.com/OLS/MySoftware.aspx';
