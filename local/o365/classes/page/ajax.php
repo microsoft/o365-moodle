@@ -263,7 +263,7 @@ class ajax extends base {
         }
         $data->legacyapi = $legacyapi;
 
-        // Unified API.
+        // Microsoft Graph API.
         $unifiedapi = new \stdClass;
         $unifiedapi->active = false;
         if (\local_o365\rest\unified::is_enabled() === true) {
