@@ -143,6 +143,7 @@ class acp extends base {
                                         $newrec = new \stdClass;
                                         $newrec->musername = trim($data[0]);
                                         $newrec->o365username = trim($data[1]);
+                                        $newrec->openidconnect = (isset($data[2]) &&  intval(trim($data[2]))) >  0  ? 1 : 0;
                                         $newrec->completed = 0;
                                         $newrec->errormessage = '';
                                         $DB->insert_record('local_o365_matchqueue', $newrec);
@@ -238,8 +239,9 @@ class acp extends base {
             echo \html_writer::start_tag('tr');
             echo \html_writer::tag('th', '');
             echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_muser', 'local_o365'));
-                echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_o365user', 'local_o365'));
-                echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_status', 'local_o365'));
+            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_o365user', 'local_o365'));
+            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_openidconnect', 'local_o365'));
+            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_status', 'local_o365'));
             echo \html_writer::end_tag('tr');
             foreach ($matchqueue as $queuerec) {
                 $status = 'queued';
@@ -269,6 +271,7 @@ class acp extends base {
 
                 echo \html_writer::tag('td', $queuerec->musername);
                 echo \html_writer::tag('td', $queuerec->o365username);
+                echo \html_writer::tag('td', $queuerec->openidconnect > 0 ? get_string('yes') : get_string('no'));
 
                 switch ($status) {
                     case 'success':
