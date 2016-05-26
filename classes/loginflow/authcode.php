@@ -312,6 +312,24 @@ class authcode extends \auth_oidc\loginflow\base {
     }
 
     /**
+     * Check for an existing user object.
+     * @param string $oidcuniqid The user object ID to look up.
+     * @param string $username The original username.
+     * @return string If there is an existing user object, return the username associated with it.
+     *                If there is no existing user object, return the original username.
+     */
+    protected function check_objects($oidcuniqid, $username) {
+        global $DB;
+        $sql = 'SELECT u.username
+                  FROM {local_o365_objects} obj
+                  JOIN {user} u ON u.id = obj.moodleid
+                 WHERE obj.objectid = ? and obj.type = "user"';
+        $params = [$oidcuniqid];
+        $user = $DB->get_record_sql($sql, $params);
+        return (!empty($user)) ? $user->username : $username;
+    }
+
+    /**
      * Handle a login event.
      *
      * @param string $oidcuniqid A unique identifier for the user.
@@ -332,6 +350,7 @@ class authcode extends \auth_oidc\loginflow\base {
             if (empty($username)) {
                 $username = $oidcuniqid;
             }
+            $username = $this->check_objects($oidcuniqid, $username);
             $matchedwith = $this->check_for_matched($username);
             if (!empty($matchedwith)) {
                 $matchedwith->aadupn = $username;
