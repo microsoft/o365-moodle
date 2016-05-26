@@ -187,6 +187,22 @@ class authcode extends \auth_oidc\loginflow\base {
         // Check if OIDC user is already migrated.
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
         if (isloggedin() === true && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
+
+            // If user is already logged in and trying to link Office 365 account or use it for OIDC.
+            // Check if that Office 365 account already exists in moodle.
+            $userrec = $DB->get_record('user', ['username' => $idtoken->claim('upn')]);
+
+            if (!empty($userrec)) {
+                if (empty($additionaldata['redirect'])) {
+                    $redirect = '/auth/oidc/ucp.php?o365accountconnected=true';
+                } else if ($additionaldata['redirect'] == '/local/o365/ucp.php') {
+                    $redirect = $additionaldata['redirect'].'?action=connection&o365accountconnected=true';
+                } else {
+                    throw new \moodle_exception('errorinvalidredirect_message', 'auth_oidc');
+                }
+                redirect(new \moodle_url($redirect));
+            }
+
             // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
             $connectiononly = false;
             if (isset($additionaldata['connectiononly']) && $additionaldata['connectiononly'] === true) {
