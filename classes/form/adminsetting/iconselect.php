@@ -86,35 +86,9 @@ class iconselect extends \admin_setting {
      * @return string The setting HTML.
      */
     public function output_html($data, $query = '') {
-        global $OUTPUT;
-        $html = '<style>
-            label.iconselect {
-                display: inline-block !important;
-                padding: 0 !important;
-                margin: 5px;
-            }
-            label.iconselect img {
-                width: 25px;
-                height: 25px;
-                padding: 10px;
-            }
-            input.iconselect {
-                display: none;
-            }
-            input[type="radio"].iconselect:checked + label.iconselect {
-                outline: 1px solid #007fec;
-            }
-            body.ie input.iconselect {
-                display: inline-block;
-            }
-            body.ie label.iconselect {
-                margin-left: 0;
-                margin-right: 20px;
-            }
-            body.ie label.iconselect img {
-                padding: 5px;
-            }
-        </style>';
+        global $CFG, $OUTPUT;
+        $attrs = array('type' => 'text/css', 'rel' => 'stylesheet', 'href' => new \moodle_url('/auth/oidc/classes/form/adminsetting/iconselect.css'));
+        $html = \html_writer::empty_tag('link', $attrs);
         $html .= \html_writer::start_tag('div', ['style' => 'max-width: 390px']);
         $selected = (!empty($data)) ? $data : $this->defaultsetting;
         foreach ($this->choices as $icon) {
