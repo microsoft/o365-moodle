@@ -162,6 +162,7 @@ class observers {
             $DB->delete_records('local_o365_token', ['user_id' => $eventdata['userid']]);
             $DB->delete_records('local_o365_objects', ['type' => 'user', 'moodleid' => $eventdata['userid']]);
             $DB->delete_records('local_o365_connections', ['muserid' => $eventdata['userid']]);
+            $DB->delete_records('local_o365_appassign', ['muserid' => $eventdata['userid']]);
         }
     }
 
