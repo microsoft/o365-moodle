@@ -35,6 +35,21 @@ $label = get_string('settings_showonenotenotebook', 'block_microsoft');
 $desc = get_string('settings_showonenotenotebook_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showonenotenotebook', $label, $desc, 1));
 
+// Settings to show OneDrive link in the block.
+$label = get_string('settings_showonedrive', 'block_microsoft');
+$desc = get_string('settings_showonedrive_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showonedrive', $label, $desc, 1));
+
+// Settings to show sways link in the block.
+$label = get_string('settings_showsways', 'block_microsoft');
+$desc = get_string('settings_showsways_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showsways', $label, $desc, 1));
+
+// Settings to show docs.com link in the block.
+$label = get_string('settings_showdocsdotcom', 'block_microsoft');
+$desc = get_string('settings_showdocsdotcom_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showdocsdotcom', $label, $desc, 1));
+
 // Settings to show Configure Outlook sync link in the block.
 $label = get_string('settings_showoutlooksync', 'block_microsoft');
 $desc = get_string('settings_showoutlooksync_desc', 'block_microsoft');
@@ -60,36 +75,12 @@ $label = get_string('settings_showcoursespsite', 'block_microsoft');
 $desc = get_string('settings_showcoursespsite_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursespsite', $label, $desc, 1));
 
-$title = get_string('settings_cpmanageurlsheader', 'block_microsoft');
-$desc = get_string('settings_cpmanageurlsheader_desc', 'block_microsoft');
-$settings->add(new admin_setting_heading('settings_cpmanageurlsheader', $title, $desc));
-
 // Settings to show course group link in the block.
 $label = get_string('settings_showcoursegroup', 'block_microsoft');
 $desc = get_string('settings_showcoursegroup_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursegroup', $label, $desc, 1));
 
 // Settings to show study groups link in the block.
-$label = get_string('settings_showstudygroups', 'block_microsoft');
-$desc = get_string('settings_showstudygroups_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showstudygroups', $label, $desc, 1));
-
-// Settings to show OneDrive link in the group control panel.
-$label = get_string('settings_cpshowonedrive', 'block_microsoft');
-$desc = get_string('settings_cpshowonedrive_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshowonedrive', $label, $desc, 1));
-
-// Settings to show group notebook link in the block.
-$label = get_string('settings_cpshownotebook', 'block_microsoft');
-$desc = get_string('settings_cpshownotebook_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshownotebook', $label, $desc, 1));
-
-// Settings to show group calendar link in the block.
-$label = get_string('settings_cpshowcalendar', 'block_microsoft');
-$desc = get_string('settings_cpshowcalendar_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshowcalendar', $label, $desc, 1));
-
-// Settings to show group conversations link in the block.
-$label = get_string('settings_cpshowconversations', 'block_microsoft');
-$desc = get_string('settings_cpshowconversations_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_cpshowconversations', $label, $desc, 1));
+//$label = get_string('settings_showstudygroups', 'block_microsoft');
+//$desc = get_string('settings_showstudygroups_desc', 'block_microsoft');
+//$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showstudygroups', $label, $desc, 1));

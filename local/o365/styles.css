@@ -87,7 +87,7 @@
   .local_o365_ucp_featurepage.local_o365_feature_connection div.local_o365_connectionoption h4 {
     margin-top: 0; }
 
-.local_o365_toollink {
+.local_o365_o365toollink {
   margin-bottom: 1rem; }
 
 .local_o365_matchqueuetoolbar {
@@ -101,3 +101,35 @@ table.local_o365_matchqueue {
     table.local_o365_matchqueue td:first-child, table.local_o365_matchqueue th:first-child {
       width: 1.5rem;
       text-align: center; }
+
+.local_o365_groupcp .local_o365_groupcp_icon {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0; }
+.local_o365_groupcp .local_o365_groupcp_managegroups td {
+  padding: 4px; }
+.local_o365_groupcp .local_o365_groupcp_header {
+  display: inline-block;
+  width: 100%; }
+  .local_o365_groupcp .local_o365_groupcp_header img {
+    vertical-align: middle;
+    margin-right: 1rem;
+    display: inline-block;
+    width: 5rem;
+    height: 5rem; }
+  .local_o365_groupcp .local_o365_groupcp_header h4 {
+    display: inline-block;
+    vertical-align: middle; }
+.local_o365_groupcp ul {
+  list-style: none;
+  margin: 3rem 0 0 0; }
+  .local_o365_groupcp ul li {
+    margin: 1rem 0; }
+    .local_o365_groupcp ul li a img {
+      outline: none;
+      width: 3rem;
+      height: 3rem;
+      margin-right: 0.75rem;
+      display: inline-block;
+      vertical-align: middle; }
