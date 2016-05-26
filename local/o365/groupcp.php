@@ -14,10 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
- * @package block_microsoft
- * @author  Remote-Learner.net Inc
+ * @package local_o365
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+require_once(__DIR__.'/../../config.php');
+require_login();
+$action = optional_param('action', null, PARAM_TEXT);
+$ucptitle = get_string('groups', 'local_o365');
+$url = '/local/o365/groupcp.php';
+$page = new \local_o365\page\groupcp($url, $ucptitle);
+$page->run($action);

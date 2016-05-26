@@ -244,8 +244,10 @@ class repository_office365 extends \repository {
         if (\local_o365\rest\unified::is_configured() === true) {
             foreach ($courses as $course) {
                 if (\local_o365\feature\usergroups\utils::course_is_group_enabled($course->id)) {
-                    $showgroups = true;
-                    break;
+                    if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'onedrive')) {
+                        $showgroups = true;
+                        break;
+                    }
                 }
             }
         }
@@ -463,7 +465,7 @@ class repository_office365 extends \repository {
         if ($path === '/') {
             // Show available courses.
             $showgroups = false;
-            $enabledcourses = \local_o365\feature\usergroups\utils::get_enabled_courses();
+            $enabledcourses = \local_o365\feature\usergroups\utils::get_enabled_courses_with_feature('onedrive');
             foreach ($coursesbyid as $course) {
                 if ($enabledcourses === true || in_array($course->id, $enabledcourses)) {
                     $list[] = [
@@ -478,7 +480,8 @@ class repository_office365 extends \repository {
             $pathtrimmed = trim($path, '/');
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0]) || !isset($coursesbyid[$pathparts[0]])
-                    ||  \local_o365\feature\usergroups\utils::course_is_group_enabled($pathparts[0]) !== true) {
+                    || \local_o365\feature\usergroups\utils::course_is_group_enabled($pathparts[0]) !== true
+                    || \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($pathparts[0], 'onedrive') !== true) {
                 \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
                 throw new \moodle_exception('errorbadpath', 'repository_office365');
             }

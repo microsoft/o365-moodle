@@ -35,6 +35,10 @@ $string['acp_usergroupcustom_off'] = 'Disable<br />Disables all usergroup integr
 $string['acp_usergroupcustom_oncustom'] = 'Custom <a href="{$a}">Customize</a><br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.';
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables all usergroup features for all Moodle courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
+$string['acp_usergroupcustom_comingsoon'] = 'Coming Soon';
+$string['acp_usergroupcustom_bulk'] = 'Bulk Operations';
+$string['acp_usergroupcustom_bulk_enable'] = 'Enable All';
+$string['acp_usergroupcustom_bulk_disable'] = 'Disable All';
 $string['acp_usermatch'] = 'User Matching';
 $string['acp_usermatch_desc'] = 'This tool allows you to match Moodle users to Office 365 users. You will upload a file containing Moodle users and associated Office 365 users, and a cron task will verify the data and set up the match.';
 $string['acp_usermatch_matchqueue'] = 'Step 2: Match Queue';
@@ -62,6 +66,28 @@ $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
 $string['calendar_user'] = 'Personal (User) Calendar';
 $string['calendar_site'] = 'Sitewide Calendar';
+
+$string['groups'] = 'Office 365 Groups';
+$string['groups_edit_name'] = 'Group name';
+$string['groups_edit_nameexists'] = 'The group with the {$a} currently exists, please choose another name.';
+$string['groups_edit_description'] = 'Group description';
+$string['groups_edit_newpicture'] = 'Group icon';
+$string['groups_edit_newpicture_help'] = 'The image uploaded for the group icon will be used for the Moodle Group and the Office 365 group';
+$string['groups_columnname'] = 'Name';
+$string['groups_studygroups'] = 'Study groups';
+$string['groups_studygroup'] = 'Study group';
+$string['groups_pending'] = 'This Office 365 group will be created shortly, please try again later.';
+$string['groups_manage_pending'] = 'Your Office 365 group will be created shortly.';
+$string['groups_notenabled'] = 'Office 365 Groups are not enabled for this course.';
+$string['groups_onedrive'] = 'Files';
+$string['groups_calendar'] = 'Calendar';
+$string['groups_conversations'] = 'Conversations';
+$string['groups_notebook'] = 'OneNote';
+$string['groups_notenabledforcourse'] = 'Office Groups are not enabled for this course.';
+$string['groups_editsettings'] = 'Edit group settings';
+$string['groups_manage'] = 'Manage groups';
+$string['groups_more'] = 'More...';
+$string['groups_total'] = 'Total groups: {$a}';
 
 $string['erroracpauthoidcnotconfig'] = 'Please set application credentials in auth_oidc first.';
 $string['erroracplocalo365notconfig'] = 'Please configure local_o365 first.';
