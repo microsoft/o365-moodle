@@ -359,6 +359,19 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Create a readonly sharing link for a group file.
+     *
+     * @param string $fileid OneDrive file id.
+     * @return string Sharing link url.
+     */
+    public function get_group_file_sharing_link($groupid, $fileid) {
+        $params = array('type' => 'view', 'scope' => 'organization');
+        $apiresponse = $this->apicall('post', "/groups/{$groupid}/drive/items/{$fileid}/createLink", json_encode($params));
+        $response = $this->process_apicall_response($apiresponse);
+        return $response['link']['webUrl'];
+    }
+
+    /**
      * Get a file's content by it's file id.
      *
      * @param string $fileid The file's ID.
@@ -917,10 +930,11 @@ class unified extends \local_o365\rest\o365api {
 
     /**
      * Create readonly link for onedrive file.
-     * @param $fileid onedrive file id.
-     * @return string Return readonly file url.
+     *
+     * @param string $fileid onedrive file id.
+     * @return string Readonly file url.
      */
-    public function get_sharing_link ($fileid) {
+    public function get_sharing_link($fileid) {
         $params = array('type' => 'view', 'scope' => 'organization');
         $apiresponse = $this->apicall('post', "/me/drive/items/$fileid/createLink", json_encode($params));
         $response = $this->process_apicall_response($apiresponse);
