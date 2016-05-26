@@ -72,6 +72,12 @@ if (!empty($action)) {
     echo get_string('ucp_general_intro', 'auth_oidc', $opname);
     echo '<br /><br />';
 
+    if (optional_param('o365accountconnected', null, PARAM_TEXT) == 'true') {
+        echo \html_writer::start_div('connectionstatus alert alert-error');
+        echo \html_writer::tag('h5', get_string('ucp_o365accountconnected', 'auth_oidc'));
+        echo \html_writer::end_div();
+    }
+
     // Login status.
     echo \html_writer::start_div('auth_oidc_ucp_indicator');
     echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
