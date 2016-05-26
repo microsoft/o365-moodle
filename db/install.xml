@@ -49,7 +49,6 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="user" UNIQUE="false" FIELDS="user_id"/>
         <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id,caltype,caltypeid"/>
       </INDEXES>
     </TABLE>
@@ -82,7 +81,6 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="user" UNIQUE="false" FIELDS="user_id"/>
         <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id,resource"/>
       </INDEXES>
     </TABLE>
