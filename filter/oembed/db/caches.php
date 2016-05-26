@@ -15,19 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package local_o365
- * @author James McQuillan <james.mcquillan@remote-learner.net>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * oEmbed cache definitions
+ *
+ * @package    filter_oembed
+ * @copyright  2016 Blackboard Inc.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+$definitions = array(
+    'embeddata' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'ttl' => HOURSECS,
+    ),
+);
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2015012745.03;
-$plugin->requires = 2014111000;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '28.0.0.29';
-$plugin->dependencies = [
-    'auth_oidc' => 2015012725
-];

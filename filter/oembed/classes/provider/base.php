@@ -100,12 +100,13 @@ class base {
 
         // Check if curl call fails.
         if ($curl->errno != CURLE_OK) {
+            $retrylimit = get_config('filter_oembed', 'retrylimit');
             // Check if error is due to network connection.
             if (in_array($curl->errno, [6, 7, 28])) {
                 // Try curl call up to 3 times.
                 usleep(50000);
                 $retryno = (!is_int($retryno)) ? 0 : $retryno+1;
-                if ($retryno < 3) {
+                if ($retryno < $retrylimit) {
                     return $this->getoembeddata($url, $retryno);
                 } else {
                     return null;
