@@ -112,8 +112,10 @@ class block_onenote extends block_base {
                     $content->text = get_string('connction_error', 'local_onenote');
                 }
             } else {
-                $content->text .= $onenoteapi->render_signin_widget();
-                $content->text .= file_get_contents($CFG->dirroot.'/local/msaccount/login.html');
+                if (\local_o365\utils::is_configured_msaccount()) {
+                    $content->text .= $onenoteapi->render_signin_widget();
+                    $content->text .= file_get_contents($CFG->dirroot.'/local/msaccount/login.html');
+                }
             }
         } catch (\Exception $e) {
             $content->text = $e->getMessage();
