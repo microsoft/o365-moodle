@@ -499,7 +499,7 @@ class coursegroups {
             $DB->set_field('local_o365_coursegroupdata', 'picture', $group->picture, array('id' => $group->cgdid));
         }
         if ($count) {
-            $this->mtrace('Synced '.$count.' group profile photos.');            
+            $this->mtrace('Synced '.$count.' group profile photos.');
         }
     }
 }
