@@ -77,5 +77,24 @@ function xmldb_local_onenote_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2014110503, 'local', 'onenote');
     }
 
+    if ($oldversion < 2015011613) {
+        // Define field submission_teacher_lastview to be added to onenote_assign_pages.
+        $table = new xmldb_table('onenote_assign_pages');
+        $field = new xmldb_field('teacher_lastviewed', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'feedback_teacher_page_id');
+        // Conditionally launch add field submission_teacher_lastview.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('student_lastmodified', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'teacher_lastviewed');
+        // Conditionally launch add field submission_student_checksum.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Onenote savepoint reached.
+        upgrade_plugin_savepoint(true, 2015011613, 'local', 'onenote');
+    }
+
     return true;
 }

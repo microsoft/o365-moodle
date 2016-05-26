@@ -228,6 +228,14 @@ class assign_submission_onenote extends assign_submission_plugin {
             return false;
         }
 
+        // Retrieve OneNote page metadata and save the last time modified.
+        $pagemetadata = $onenoteapi->get_page_metadata($record->submission_student_page_id);
+        $pagemetadata = $onenoteapi->process_apicall_response($pagemetadata, ['lastModifiedTime' => null]);
+        if (!empty($pagemetadata)) {
+            $record->student_lastmodified = strtotime($pagemetadata['lastModifiedTime']);
+            $DB->update_record('onenote_assign_pages', $record);
+        }
+
         // Get assignment submission size limit.
         $submissionlimit = $this->get_config('maxsubmissionsizebytes');
 
@@ -396,6 +404,9 @@ class assign_submission_onenote extends assign_submission_plugin {
                     $o .= $onenoteapi->render_action_button(get_string('viewsubmission', 'assignsubmission_onenote'),
                             $this->assignment->get_course_module()->id, false, $isteacher,
                             $submission->userid, $submission->id, null);
+                    if ($isteacher) {
+                        $o .= '<p class="warning onenote_warning">'.get_string('viewsubmissionwarning', 'assignsubmission_onenote').'</p>';
+                    }
                 } else {
                     $o .= $onenoteapi->render_signin_widget();
                     $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignsubmission_onenote') . '</p>';
