@@ -1023,7 +1023,7 @@ class repository_office365 extends \repository {
                     }
                     $sourceclient = $this->get_unified_apiclient();
                     $reference['groupid'] = $sourceunpacked['groupid'];
-                    $reference['url'] = $sourceclient->get_sharing_link($fileid);
+                    $reference['url'] = $sourceclient->get_group_file_sharing_link($sourceunpacked['groupid'], $fileid);
                 } else if ($filesource === 'sharepoint') {
                     $sourceclient = $this->get_sharepoint_apiclient();
                     if (isset($sourceunpacked['parentsiteuri'])) {
