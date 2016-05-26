@@ -28,6 +28,24 @@ namespace auth_oidc\loginflow;
  */
 class rocreds extends \auth_oidc\loginflow\base {
     /**
+     * Check for an existing user object.
+     * @param string $oidcuniqid The user object ID to look up.
+     * @param string $username The original username.
+     * @return string If there is an existing user object, return the username associated with it.
+     *                If there is no existing user object, return the original username.
+     */
+    protected function check_objects($o356username) {
+        global $DB;
+        $sql = 'SELECT u.username
+                  FROM {local_o365_objects} obj
+                  JOIN {user} u ON u.id = obj.moodleid
+                 WHERE obj.o365name = ? and obj.type = "user"';
+        $params = [$o356username];
+        $user = $DB->get_record_sql($sql, $params);
+        return (!empty($user)) ? $user->username : $o356username;
+    }
+
+    /**
      * Provides a hook into the login page.
      *
      * @param object &$frm Form object.
@@ -43,15 +61,27 @@ class rocreds extends \auth_oidc\loginflow\base {
             return true;
         }
 
+        $username = $frm->username;
+        $password = $frm->password;
+        $auth = 'oidc';
+
+        $username = $this->check_objects($username);
+        if ($username !== $frm->username) {
+            $success = $this->user_login($username, $password);
+            if ($success === true) {
+                $existinguser = $DB->get_record('user', ['username' => $username]);
+                if (!empty($existinguser)) {
+                    $user = $existinguser;
+                    return true;
+                }
+            }
+        }
+
         $autoappend = get_config('auth_oidc', 'autoappend');
         if (empty($autoappend)) {
             // If we're not doing autoappend, just let things flow naturally.
             return true;
         }
-
-        $username = $frm->username;
-        $password = $frm->password;
-        $auth = 'oidc';
 
         $existinguser = $DB->get_record('user', ['username' => $username]);
         if (!empty($existinguser)) {
