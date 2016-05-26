@@ -15,20 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_microsoft
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @package local_o365
+ * @author Akinsaya Delamarre <adelamarre@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Update plugin.
+ *
+ * @param int $oldversion the version we are upgrading from
+ * @return bool result
+ */
+function xmldb_block_microsoft_upgrade($oldversion) {
+    $result = true;
 
-$plugin->version = 2015111912;
-$plugin->requires = 2015111600;
-$plugin->component = 'block_microsoft';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.10';
-$plugin->dependencies = [
-    'local_onenote' => 2015111906,
-    'local_o365' => 2015111915,
-];
+	if ($result && $oldversion < 2015111912) {
+		set_config('settings_showoutlooksync', 0, 'block_microsoft');
+		set_config('settings_showmanageo365conection', 0, 'block_microsoft');
+		upgrade_block_savepoint(true, 2015111912, 'microsoft');
+	}
+	return $result;
+}
