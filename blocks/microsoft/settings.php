@@ -45,12 +45,12 @@ $label = new lang_string('settings_showdocsdotcom', 'block_microsoft');
 $desc = new lang_string('settings_showdocsdotcom_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showdocsdotcom', $label, $desc, 1));
 
-// Settings to show Configure Outlook sync link in the block.
+// Settings to show Outlook Calendar sync settings link in the block.
 $label = new lang_string('settings_showoutlooksync', 'block_microsoft');
 $desc = new lang_string('settings_showoutlooksync_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showoutlooksync', $label, $desc, 1));
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showoutlooksync', $label, $desc, 0));
 
-// Settings to show Preferences link in the block.
+// Settings to show Settings link in the block.
 $label = new lang_string('settings_showpreferences', 'block_microsoft');
 $desc = new lang_string('settings_showpreferences_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showpreferences', $label, $desc, 1));
@@ -60,10 +60,10 @@ $label = new lang_string('settings_showo365connect', 'block_microsoft');
 $desc = new lang_string('settings_showo365connect_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showo365connect', $label, $desc, 1));
 
-// Settings to show Manage Office 365 Connection link in the block.
+// Settings to show Office 365 connection settings link in the block.
 $label = new lang_string('settings_showmanageo365conection', 'block_microsoft');
 $desc = new lang_string('settings_showmanageo365conection_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmanageo365conection', $label, $desc, 1));
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmanageo365conection', $label, $desc, 0));
 
 // Settings to show Course SharePoint site link in the block.
 $label = new lang_string('settings_showcoursespsite', 'block_microsoft');
