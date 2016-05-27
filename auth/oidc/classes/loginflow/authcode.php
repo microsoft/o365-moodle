@@ -190,7 +190,11 @@ class authcode extends \auth_oidc\loginflow\base {
 
             // If user is already logged in and trying to link Office 365 account or use it for OIDC.
             // Check if that Office 365 account already exists in moodle.
-            $userrec = $DB->get_record('user', ['username' => $idtoken->claim('upn')]);
+            $userrec = $DB->count_records_sql('SELECT COUNT(*)
+                                                 FROM {user}
+                                                WHERE username = ?
+                                                      AND id != ?',
+                    [$idtoken->claim('upn'), $USER->id]);
 
             if (!empty($userrec)) {
                 if (empty($additionaldata['redirect'])) {
