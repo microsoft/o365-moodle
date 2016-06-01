@@ -275,6 +275,11 @@ class repository_office365 extends \repository {
                 // Path is in trending files.
                 list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
             }
+        } else if (strpos($path, '/office365video/') === 0) {
+            if ($sharepointactive === true) {
+                // Path is in office365 channels/videos.
+                list($list, $breadcrumb) = $this->get_listing_videos(substr($path, 15));
+            }
         } else {
             if ($unifiedactive === true || $onedriveactive === true) {
                 $list[] = [
@@ -291,6 +296,17 @@ class repository_office365 extends \repository {
                     'thumbnail' => $OUTPUT->pix_url('sharepoint', 'repository_office365')->out(false),
                     'children' => [],
                 ];
+                $sharepoint = $this->get_sharepoint_apiclient();
+                // Retrieve api url for video service.
+                $url = $sharepoint->videoservice_discover();
+                if (!empty($url)) {
+                    $list[] = [
+                        'title' => get_string('office365video', 'repository_office365'),
+                        'path' => '/office365video/',
+                        'thumbnail' => $OUTPUT->pix_url('office365video', 'repository_office365')->out(false),
+                        'children' => [],
+                    ];
+                }
             }
             if ($showgroups === true) {
                 $list[] = [
@@ -368,6 +384,9 @@ class repository_office365 extends \repository {
                 } else if (strpos($filepath, '/courses/') === 0) {
                     $clienttype = 'sharepoint';
                     $filepath = substr($filepath, 8);
+                } else if (strpos($filepath, '/office365video/') === 0) {
+                    $clienttype = 'office365video';
+                    $filepath = substr($filepath, 15);
                 } else {
                     $errmsg = get_string('errorbadclienttype', 'repository_office365');
                     $debugdata = [
@@ -428,6 +447,27 @@ class repository_office365 extends \repository {
             $sharepoint->set_site($parentsiteuri);
             $result = $sharepoint->create_file($fullpath, $filename, $content);
             $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'parentsiteuri' => $parentsiteuri]);
+        } else if ($clienttype === 'office365video') {
+            if ($this->sharepointconfigured == true) {
+                $sharepoint = $this->get_sharepoint_apiclient();
+                // Retrieve api url for video service.
+                $url = $sharepoint->videoservice_discover();
+                if (!empty($url)) {
+                    $sharepoint->override_resource($url);
+                    $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
+                    $videoobject = $sharepoint->create_video_placeholder($parentid, '', $filename, $filename);
+                    $filesize = number_format((strlen($content) / 1024), 2);
+                    $filesize = intval(str_replace(array(','), '', $filesize)) + 1;
+                    if ($filesize < 8192) {
+                        $result = $sharepoint->upload_video_small($videoobject['ChannelID'], $videoobject['ID'], $content);
+                    } else {
+                        $guid = $this->new_guid();
+                        $result = $sharepoint->upload_video_large($videoobject['ChannelID'], $videoobject['ID'], $content,
+                                $guid, $filesize, 8192);
+                    }
+                    $source = $this->pack_reference(['id' => $result['id'], 'source' => 'office365video']);
+                }
+            }
         } else {
             $errmsg = get_string('errorbadclienttype', 'repository_office365');
             $debugdata = [
@@ -675,6 +715,64 @@ class repository_office365 extends \repository {
     }
 
     /**
+     * Get listing for a o365 video folder.
+     *
+     * @param string $path Folder path.
+     * @return array List of $list array and $path array.
+     */
+    protected function get_listing_videos($path = '') {
+        $path = (empty($path)) ? '/' : $path;
+        $list = [];
+        $sharepoint = $this->get_sharepoint_apiclient();
+        // Retrieve api url for video service.
+        $url = $sharepoint->videoservice_discover();
+        if (!empty($url)) {
+            $sharepoint->override_resource($url);
+            if ($this->path_is_upload($path) === true) {
+                $path = substr($path, 0, -strlen('/upload/'));
+            } else if ($path === '/') {
+                // Get list of Channels.
+                $contents = $sharepoint->get_video_channels();
+                $list = $this->contents_api_response_to_list($contents, $path, 'office365video', null, false);
+            } else {
+                // Get videos of a Channel.
+                $contents = $sharepoint->get_all_channel_videos(substr($path, 1));
+                $list = $this->contents_api_response_to_list($contents, $path, 'office365video', null, true);
+            }
+            if ($path !== '/') {
+                $channel = $sharepoint->get_video_channel(substr($path, 1));
+            }
+        }
+        // Generate path.
+        $breadcrumb = [
+            ['name' => $this->name, 'path' => '/'],
+            ['name' => get_string('office365video', 'repository_office365'), 'path' => '/office365video/'],
+        ];
+        $pathparts = explode('/', $path);
+        $curpath = '/office365video';
+        // Remove empty paths (we do this in a separate loop for proper upload detection in the next loop.
+        foreach ($pathparts as $i => $pathpart) {
+            if (empty($pathpart)) {
+                unset($pathparts[$i]);
+            }
+        }
+        $pathparts = array_values($pathparts);
+        if (!empty($channel)) {
+            array_push($breadcrumb, ['name' => $channel['Title'], 'path' => $curpath.'/'.$pathparts[0]]);
+            array_splice($pathparts, 0, 1);
+        }
+        foreach ($pathparts as $i => $pathpart) {
+            $curpath .= '/'.$pathpart;
+            $pathname = $pathpart;
+            if ($i === (count($pathparts) - 1) && $pathpart === 'upload') {
+                $pathname = get_string('upload', 'repository_office365');
+            }
+            $breadcrumb[] = ['name' => $pathname, 'path' => $curpath];
+        }
+        return [$list, $breadcrumb];
+    }
+
+    /**
      * Get listing for a personal onedrive folder using the Microsoft Graph API.
      *
      * @param string $path Folder path.
@@ -816,6 +914,9 @@ class repository_office365 extends \repository {
             $uploadpathprefix = $pathprefix;
         } else if ($clienttype === 'trendingaround') {
             $pathprefix = '/my';
+        } else if ($clienttype === 'office365video') {
+            $pathprefix = '/office365video';
+            $uploadpathprefix = $pathprefix.$path;
         }
 
         if ($addupload === true) {
@@ -900,6 +1001,38 @@ class repository_office365 extends \repository {
                             'datecreated' => strtotime($content['DateTimeCreated']),
                             'url' => $url,
                             'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['name'], 90))->out(false),
+                            'source' => $this->pack_reference($source),
+                        ];
+                    }
+                } else if ($clienttype === 'office365video') {
+                    if ($content['odata.type'] === 'SP.Publishing.VideoChannel') {
+                        $itempath = $pathprefix.'/'.$content['Id'];
+                        $list[] = [
+                            'title' => $content['Title'],
+                            'path' => $itempath,
+                            'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
+                            'children' => [],
+                        ];
+                    } else if ($content['odata.type'] === 'SP.Publishing.VideoItem') {
+                        $itempath = $pathprefix.'/'.$content['ID'];
+                        $parseurl = explode('/', $content['Url']);
+                        $downloadurl = "https://" . $parseurl[2] . "/_api/SP.AppContextSite(@target)/Web/"
+                                . "GetFileByServerRelativeUrl('" . $content['ServerRelativeUrl'] . "')/"
+                                . "$" . "value?@target='https://" . $parseurl[2] . "/portals/" . $parseurl[4]. "'";
+                        $url = "https://" . $parseurl[2] . "/portals/hub/_layouts/15/PointPublishing.aspx?app=video&"
+                                . "p=p&chid=" . $content['ChannelID'] . "&vid=" . $content['ID'];
+                        $source = [
+                                'id' => $content['odata.id'],
+                                'source' => 'office365video',
+                                'url' => $url,
+                                'downloadurl' => $downloadurl,
+                            ];
+                        $list[] = [
+                            'title' => $content['FileName'],
+                            'date' => strtotime($content['CreatedDate']),
+                            'datecreated' => strtotime($content['CreatedDate']),
+                            'url' => $url,
+                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['FileName'], 90))->out(false),
                             'source' => $this->pack_reference($source),
                         ];
                     }
@@ -1016,6 +1149,13 @@ class repository_office365 extends \repository {
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             $file = $sourceclient->get_file_by_url($reference['url']);
+        } else if ($reference['source'] === 'office365video') {
+            $sourceclient = $this->get_sharepoint_apiclient();
+            if (empty($sourceclient)) {
+                \local_o365\utils::debug('Could not construct sharepoint api.', $caller);
+                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
+            }
+            $file = $sourceclient->get_video_file($reference['downloadurl']);
         }
 
         if (!empty($file)) {
@@ -1074,6 +1214,13 @@ class repository_office365 extends \repository {
                 'id' => $fileid,
                 'url' => '',
             ];
+
+            if (isset($sourceunpacked['url'])) {
+                $reference['url'] = $sourceunpacked['url'];
+            }
+            if (isset($sourceunpacked['downloadurl'])) {
+                $reference['downloadurl'] = $sourceunpacked['downloadurl'];
+            }
 
             try {
                 if ($filesource === 'onedrive') {
@@ -1235,6 +1382,9 @@ class repository_office365 extends \repository {
                 $fileinfo = $sourceclient->get_group_file_metadata($reference['groupid'], $reference['id']);
                 break;
 
+            case 'office365video':
+                break;
+
             default:
                 \local_o365\utils::debug('File reference is broken - invalid source parameter.', 'send_file', $reference);
                 send_file_not_found();
@@ -1281,6 +1431,10 @@ class repository_office365 extends \repository {
             }
         }
 
+        if ($reference['source'] === 'office365video') {
+            redirect($reference['url']);
+        }
+
         redirect($fileinfo['webUrl']);
     }
 
@@ -1314,5 +1468,19 @@ class repository_office365 extends \repository {
             $mform->addElement('static', null, '', get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
         }
         parent::type_config_form($mform);
+    }
+
+    /**
+     * Generate a new GUID.
+     *
+     * @return GUID as a string.
+     */
+    public function new_guid() {
+        if (function_exists('com_create_guid') === true) {
+            return trim(com_create_guid(), '{}');
+        }
+        return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X',
+                mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479),
+                mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
     }
 }
