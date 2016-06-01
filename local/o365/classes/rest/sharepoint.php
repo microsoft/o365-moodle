@@ -867,4 +867,157 @@ class sharepoint extends \local_o365\rest\o365api {
         $response = $this->process_apicall_response($response, $expectedparams);
         return $response['VideoPortalUrl'];
     }
+
+    /**
+     * Get list of channels to which the user can upload videos.
+     *
+     * @return list of Channel objects.
+     */
+    public function get_video_channels() {
+        $response = $this->apicall('get', "/VideoService/Channels");
+        $expectedparams = ['value' => null];
+        $response = $this->process_apicall_response($response, $expectedparams);
+        return $response;
+    }
+
+    /**
+     * Get a channel to which the user can upload video.
+     *
+     * @param string $channelid The ID of the channel.
+     * @return a Channel objects.
+     */
+    public function get_video_channel($channelid) {
+        $response = $this->apicall('get', "/VideoService/Channels('$channelid')");
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Get list of all videos on a channel.
+     * 
+     * @param string $channelid The ID of the channel.
+     * @return a list of Video objects.
+     */
+    public function get_all_channel_videos($channelid) {
+        $response = $this->apicall('get', "/VideoService/Channels('$channelid')/Videos");
+        $expectedparams = ['value' => null];
+        $response = $this->process_apicall_response($response, $expectedparams);
+        return $response;
+    }
+
+    /**
+     * Craete a place holder for where one can upload the video.
+     *
+     * @param string $channelid The ID of the channel where video need to uploaded.
+     * @param string $description The description of the video need to uploaded.
+     * @param string $title The title of the video need to uploaded.
+     * @param string $filename The file name of the video need to uploaded.
+     * @return VideoObject -- The object into which to upload the video.
+     */
+    public function create_video_placeholder($channelid, $description = '', $title = '', $filename = '') {
+        $params = '{ \'__metadata\': { \'type\': \'SP.Publishing.VideoItem\' }, \'Description\': \''.$description.'\', 	\'Title\': \''.$title.'\', \'FileName\' : \''.$filename.'\' }';
+        $options = array('contenttype' => 'application/json;odata=verbose', 'Accept' => 'application/json;odata=verbose');
+        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos", $params, $options);
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Upload a smaller video in a single post.
+     *
+     * @param string $channelid The ID of the channel where video need to uploaded.
+     * @param string $videoid video ID.
+     * @param string $content file content need to uploaded.
+     * @return Response code
+     */
+    protected function upload_video_small($channelid, $videoid, $content) {
+        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/SaveBinaryStream", $content);
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Upload a larger video in chunks.
+     *
+     * @param string $channelid The ID of the channel where video need to uploaded.
+     * @param string $videoid video ID.
+     * @param string $filename The name of file on disk with full path ...
+     * @param string $guid.
+     * @param integer $filesize.
+     * @param integer $offsetsize.
+     * @return Response code
+     */
+    protected function upload_video_large($channelid, $videoid, $filename, $guid, $filesize, $offsetsize) {
+        @set_time_limit(0);
+        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/StartUpload(uploadId=guid'$guid')");
+        $response = $this->process_apicall_response($response);
+        $uploadedsize = 0;
+        while ($uploadedsize + $offsetsize < $filesize) {
+            $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/ContinueUpload(uploadId=guid'$guid',fileOffset='$uploadedsize')",
+                    file_get_contents($filename, false, null, $uploadedsize, $offsetsize));
+            $uploadedsize += $offsetsize;
+            $response = $this->process_apicall_response($response);
+            if (!$response['value']) {
+                return $response;
+            }
+        }
+        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/FinishUpload(uploadId=guid'$guid',fileOffset='$uploadedsize')",
+                file_get_contents($filename, false, null, $uploadedsize, $offsetsize));
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Upload a video.
+     *
+     * @param string $channelid The ID of the channel where video need to uploaded.
+     * @param string $videoid video ID.
+     * @param string $filename The name of file on disk with full path ...
+     * @param integer $offsetsize.
+     * @return Response code
+     */
+    public function upload_video($channelid, $videoid, $filename, $offsetsize = 8192 * 1024) {
+        $filesize = filesize($filename);
+        if ($filesize < (8192 * 1024)) {
+            $result = $this->upload_video_small($channelid, $videoid, file_get_contents($filename));
+        } else {
+            $result = $this->upload_video_large($channelid, $videoid, $filename, static::new_guid(), $filesize, $offsetsize);
+        }
+        return $result;
+    }
+
+    /**
+     * Generate a new GUID.
+     *
+     * @return GUID as a string.
+     */
+    public static function new_guid() {
+        if (function_exists('com_create_guid') === true) {
+            return trim(com_create_guid(), '{}');
+        }
+        return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X',
+                mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479),
+                mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+    }
+
+    /**
+     * Get office video file's metadata by url.
+     *
+     * @param string $url The file's URL.
+     * @return array The file's metadata.
+     */
+    public function get_video_file($url) {
+        $header = [
+            'Authorization: Bearer '.$this->token->get_token(),
+        ];
+        $options = array();
+        $options['CURLOPT_FAILONERROR'] = true;
+        $options['CURLOPT_FOLLOWLOCATION'] = true;
+        $options['CURLOPT_RETURNTRANSFER'] = true;
+        $options['CURLOPT_TIMEOUT'] = 30*60;
+        $options['CURLOPT_HTTPGET'] = true;
+        $options['CURLOPT_HEADER'] = false;
+        $options['CURLOPT_HTTPHEADER'] = $header;
+        return $this->httpclient->download_file($url, $options);
+    }
 }
