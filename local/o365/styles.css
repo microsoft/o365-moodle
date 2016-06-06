@@ -133,3 +133,12 @@ table.local_o365_matchqueue {
       margin-right: 0.75rem;
       display: inline-block;
       vertical-align: middle; }
+
+/* Display spinner while course data is syncing. */
+.local_o365_spinner {
+  margin: 0 0 1em 1em;
+  display: none; }
+
+/* Hide customize link when the setting is disabled. */
+#admin-sharepointcourseselect label.link-disabled a {
+  display: none; }

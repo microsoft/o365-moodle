@@ -37,6 +37,7 @@ class acp extends base {
         $extra = '';
         switch ($mode) {
             case 'usergroupcustom':
+            case 'sharepointcourseselect':
                 $extra = '&s_local_o365_tabs=1';
                 break;
             case 'healthcheck':
@@ -572,6 +573,228 @@ class acp extends base {
         $courses->close();
 
         die();
+    }
+
+    /**
+     * Endpoint to sync sharepoint subsite UI display with existing shareoint subsites.
+     */
+    public function mode_sharepointcourseenabled_sync() {
+        require_sesskey();
+        $syncupgrade = new \stdClass();
+        // Attempt to sync up display values with actual sharepoint subsites.
+        try {
+            $syncupgrade = \local_o365\feature\sharepointcustom\utils::update_enabled_subsites_json();
+        } catch (\Exception $e) {
+            mtrace('Error: '.$e->getMessage());
+        }
+
+        $returnurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcourseselect']);
+        if (!empty($syncupgrade) && $syncupgrade !== false) {
+            // Toggle synced boolean.
+            $setconf = set_config('spcustomsynced', true, 'local_o365');
+            // Reload page to same settings page.
+            redirect($returnurl);
+        } else {
+            // Stays false.
+            $setconf = set_config('spcustomsynced', false, 'local_o365');
+            // Reload page to same settings page.
+            redirect($returnurl);
+        }
+    }
+
+    /**
+     * Endpoint to change sharepoint subsite customization.
+     */
+    public function mode_sharepointcourseenabled_change() {
+        $courseid = (int)required_param('courseid', PARAM_INT);
+        $enabled = (bool)required_param('state', PARAM_BOOL);
+        require_sesskey();
+
+        // Update the enabled JSON set in plugin config.
+        $saved = \local_o365\feature\sharepointcustom\utils::set_course_subsite_enabled($courseid, $enabled);
+
+        echo json_encode([$courseid, $enabled, 'Saved', $saved]);
+    }
+
+    /**
+     * Bulk endpoint to change sharepoint subsite enabled.
+     */
+    public function mode_sharepointcustom_bulkchange() {
+        $coursedata = json_decode(required_param('coursedata', PARAM_RAW), true);
+        require_sesskey();
+
+        $result = [];
+        foreach ($coursedata as $key => $value) {
+            $saved = \local_o365\feature\sharepointcustom\utils::set_course_subsite_enabled($key, $value);
+            $result[] = $saved;
+        }
+
+        echo 'Saved. '. json_encode($result);
+    }
+
+    /**
+     * Sharepoint course resource customization.
+     */
+    public function mode_sharepointcourseselect() {
+        global $OUTPUT, $PAGE, $DB, $CFG;
+
+        // If custom setting is not enabled, redirect back to the settings page.
+        $selectisenabled = get_config('local_o365', 'sharepointcourseselect');
+        if ($selectisenabled !== 'oncustom') {
+            $linkattrs = ['section' => 'local_o365', 's_local_o365_tabs' => '1'];
+            $actionurl = new \moodle_url('/admin/settings.php', $linkattrs);
+            redirect($actionurl);
+        }
+
+        require_once($CFG->libdir.'/coursecatlib.php');
+        require_once ($CFG->libdir.'/formslib.php');
+        $spcustomsynced = get_config('local_o365', 'spcustomsynced');
+        $spcustomsynced = $spcustomsynced ? $spcustomsynced : false;
+
+        $PAGE->navbar->add(get_string('acp_sharepointcourseselect', 'local_o365'), new \moodle_url($this->url, ['mode' => 'sharepointcourseselect']));
+
+        $totalcount = 0;
+        $perpage = 20;
+
+        $curpage = optional_param('page', 0, PARAM_INT);
+        $sort = optional_param('sort', '', PARAM_ALPHA);
+        $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
+
+        $headers = [
+            'shortname' => get_string('shortnamecourse'),
+            'fullname' => get_string('fullnamecourse'),
+            'category' => get_string('category'),
+        ];
+        if (empty($sort) || !isset($headers[$sort])) {
+            $sort = 'shortname';
+        }
+        if (!in_array($sortdir, ['asc', 'desc'], true)) {
+            $sortdir = 'asc';
+        }
+
+        $table = new \html_table;
+        foreach ($headers as $hkey => $desc) {
+            $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
+            $linkattrs = ['mode' => 'sharepointcourseselect', 'sort' => $hkey, 'sortdir' => $diffsortdir];
+            $link = new \moodle_url('/local/o365/acp.php', $linkattrs);
+
+            if ($sort === $hkey) {
+                $desc .= ' '.$OUTPUT->pix_icon('t/'.'sort_'.$sortdir, 'sort');
+            }
+            $table->head[] = \html_writer::link($link, $desc);
+        }
+        $table->head[] = get_string('acp_sharepointcourseselectlabel_enabled', 'local_o365');
+
+        $limitfrom = $curpage * $perpage;
+        $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+        $coursesid = [];
+        $categories = array();
+        foreach ($courses as $course) {
+            if ($course->id == SITEID) {
+                continue;
+            }
+            $coursesid[] = $course->id;
+            $isenabled = \local_o365\feature\sharepointcustom\utils::course_is_sharepoint_enabled($course->id);
+            $enabledname = 'course_'.$course->id.'_enabled';
+
+            $enablecheckboxattrs = [
+                'onchange' => '$(this).toggleClass(\'changed\');'
+            ];
+
+            $category = $DB->get_record('course_categories',array('id'=>$course->category));
+            $name = $category->name;
+            array_push($categories, $name);
+
+            $rowdata = [
+                $course->shortname,
+                $course->fullname,
+                '<span class="category-'.$category->id.'">'.$category->name.'</span>',
+                \html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
+            ];
+            $table->data[] = $rowdata;
+        }
+
+        $PAGE->requires->jquery();
+        $this->standard_header();
+
+        // Endpoint for checkbox toggle.
+        $endpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcourseenabled_change', 'sesskey' => sesskey()]);
+        // Bulk save endpoint.
+        $bulkendpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcustom_bulkchange', 'sesskey' => sesskey()]);
+        // End point for sync courses.
+        $syncendpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcourseenabled_sync', 'sesskey' => sesskey()]);
+        // Build JS script content.
+        $js = 'var local_o365_set_sharepoint_enabled = function(courseid, state, checkbox) { ';
+        $js .= 'data = {courseid: courseid, state: state}; ';
+        $js .= '$.post(\''.$endpoint->out(false).'\', data, function(data) { console.log(data); }); ';
+        $js .= 'var newfeaturedisabled = (state == 0) ? true : false; ';
+        $js .= 'var newfeaturechecked = (state == 1) ? true : false; ';
+        $js .= 'var featurecheckboxes = checkbox.parents("tr").find("input.feature"); ';
+        $js .= 'featurecheckboxes.prop("disabled", newfeaturedisabled); ';
+        $js .= 'featurecheckboxes.prop("checked", newfeaturechecked); ';
+        $js .= 'console.log("local_o365_set_sharepoint_enabled"); ';
+        $js .= '};';
+        // Bulk save changes.
+        $js .= 'var local_o365_sharepointcustom_save = function() { '."\n";
+        $js .= 'var local_o365_spcourseschanged = $(\'table input.changed\');'."\n";
+        $js .= 'if (local_o365_spcourseschanged.length >= 1) {'."\n";
+        $js .= ' // Build data to send. '."\n";
+        $js .= 'var $coursedata = {}; '."\n";
+        $js .= 'for (var i = 0; i < local_o365_spcourseschanged.length; i++) {'."\n";
+        $js .= 'var $courseid = $(local_o365_spcourseschanged[i]).attr(\'name\'); '."\n";
+        $js .= '$courseid = $courseid.replace(/course|enabled|_/gi, \'\'); '."\n";
+        $js .= 'var $enabled = $(local_o365_spcourseschanged[i]).prop(\'checked\'); '."\n";
+        $js .= '$coursedata[$courseid] = $enabled; '."\n";
+        $js .= '}; '."\n";
+        $js .= 'data = JSON.stringify($coursedata); '."\n";
+        $js .= ' // Send data to server. '."\n";
+        $js .= '$.ajax({
+            url: \''.$bulkendpoint->out(false).'\',
+            data: {coursedata: JSON.stringify($coursedata)},
+            type: "POST",
+            success: function(data) {
+                console.log(\'Success: \'+data);
+                $(\'#acp_sharepointcustom_savemessage\').show();
+                setTimeout(function () { $(\'#acp_sharepointcustom_savemessage\').hide(); }, 5000);
+                $(local_o365_spcourseschanged).each( function() { $(this).toggleClass(\'changed\'); } );
+            }
+        }); '."\n";
+        // $js .= '$.post(\''.$bulkendpoint->out(false).'\', data, function(data) { console.log(data); }); ';
+        $js .= '} '."\n";
+        $js .= '}; '."\n";
+        echo \html_writer::script($js);
+
+        // Print functionality heading.
+        echo \html_writer::tag('h2', get_string('acp_sharepointcourseselect', 'local_o365'));
+        // If we haven't updated by syncing data from sharepoint, and there are courses, give the option to do that.
+        if (!$spcustomsynced && (count($courses) > 1)) {
+            $linkattrs = ['mode' => 'sharepointcourseenabled_sync'];
+            $link = new \moodle_url('/local/o365/acp.php', $linkattrs);
+            echo \html_writer::tag('h5', get_string('acp_sharepointcourseselect_syncopt', 'local_o365'));
+            echo \html_writer::tag('p', get_string('acp_sharepointcourseselect_syncopt_inst', 'local_o365'));
+            echo \html_writer::empty_tag('img', ['src' => $OUTPUT->pix_url('spinner', 'local_o365'), 'alt' => 'In process...', 'class' => 'local_o365_spinner']);
+            echo $OUTPUT->single_button($syncendpoint, get_string('acp_sharepointcourseselect_syncopt_btn', 'local_o365'), 'get');
+            $js = '$(\'div.singlebutton :submit\').click(function() { $(\'img.local_o365_spinner\').show(); });';
+            echo \html_writer::script($js);
+        }
+        // Write instrutions for selecting courses.
+        echo \html_writer::tag('h5', get_string('acp_sharepointcourseselect_instr_header', 'local_o365'));
+        echo \html_writer::tag('p', get_string('acp_sharepointcourseselect_instr', 'local_o365'));
+        // Begin courses table.
+        echo \html_writer::tag('h5', get_string('courses'));
+        echo \html_writer::table($table);
+       // URL and paging elements.
+        $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcourseselect']);
+        echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
+         // Notification box to confirm bulk save.
+        echo \html_writer::start_tag('div', ['class' => 'alert alert-success alert-block fade in', 'id' => 'acp_sharepointcustom_savemessage', 'style' => 'display: none;', 'role' => 'alert']);
+        echo \html_writer::tag('button', '×', ['class'=>'close', 'data-dismiss' => 'alert', 'type' => 'button']);
+        echo get_string('acp_sharepointcustom_savemessage', 'local_o365');
+        echo \html_writer::end_tag('div');
+        // Bulk save button.
+        echo  \html_writer::tag('button', get_string('savechanges'), ['class'=>'buttonsbar', 'onclick' => 'local_o365_sharepointcustom_save()']);
+
+        $this->standard_footer();
     }
 
     /**
