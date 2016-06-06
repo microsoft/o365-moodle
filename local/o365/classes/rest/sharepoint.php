@@ -697,6 +697,7 @@ class sharepoint extends \local_o365\rest\o365api {
      *
      * @param int|\stdClass $course A course record or course ID.
      * @return bool Success/Failure.
+     * @uses exit
      */
     public function create_course_site($course) {
         global $DB;
@@ -712,47 +713,54 @@ class sharepoint extends \local_o365\rest\o365api {
             }
         }
 
-        $requiredcapability = static::get_course_site_required_capability();
+        $coursesubsiteenabled = \local_o365\feature\sharepointcustom\utils::course_subsite_enabled($course);
+        if (!$coursesubsiteenabled) {
+            $errmsg = 'Sharepoint subsite not enabled for this course. Cannot create a subsite.';
+            \local_o365\utils::debug($errmsg, 'rest\sharepoint\update_course_site', $course->id);
+            return false;
+        } else {
+            $requiredcapability = static::get_course_site_required_capability();
 
-        $siterec = $this->create_course_subsite($course);
-        $this->set_site($siterec->siteurl);
+            $siterec = $this->create_course_subsite($course);
+            $this->set_site($siterec->siteurl);
 
-        // Create teacher group and save in db.
-        $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
-        if (empty($grouprec)) {
-            $groupname = $siterec->siteurl.' contribute';
-            $description = get_string('spsite_group_contributors_desc', 'local_o365', $siterec->siteurl);
-            $groupname = trim(base64_encode($groupname), '=');
+            // Create teacher group and save in db.
+            $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
+            if (empty($grouprec)) {
+                $groupname = $siterec->siteurl.' contribute';
+                $description = get_string('spsite_group_contributors_desc', 'local_o365', $siterec->siteurl);
+                $groupname = trim(base64_encode($groupname), '=');
 
-            // Get or create the group.
-            try {
-                $groupdata = $this->get_group($groupname);
-            } catch (\Exception $e) {
-                // An error here indicates the group does not exist. Create it.
-                $groupdata = $this->create_group($groupname, $description);
+                // Get or create the group.
+                try {
+                    $groupdata = $this->get_group($groupname);
+                } catch (\Exception $e) {
+                    // An error here indicates the group does not exist. Create it.
+                    $groupdata = $this->create_group($groupname, $description);
+                }
+
+                if (!empty($groupdata) && isset($groupdata['Id']) && isset($groupdata['Title'])) {
+                    $grouprec = new \stdClass;
+                    $grouprec->coursespsiteid = $siterec->id;
+                    $grouprec->groupid = $groupdata['Id'];
+                    $grouprec->grouptitle = $groupdata['Title'];
+                    $grouprec->permtype = 'contribute';
+                    $grouprec->timecreated = $now;
+                    $grouprec->timemodified = $now;
+                    $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+                } else {
+                    throw new \moodle_exception('errorcouldnotcreatespgroup', 'local_o365');
+                }
             }
 
-            if (!empty($groupdata) && isset($groupdata['Id']) && isset($groupdata['Title'])) {
-                $grouprec = new \stdClass;
-                $grouprec->coursespsiteid = $siterec->id;
-                $grouprec->groupid = $groupdata['Id'];
-                $grouprec->grouptitle = $groupdata['Title'];
-                $grouprec->permtype = 'contribute';
-                $grouprec->timecreated = $now;
-                $grouprec->timemodified = $now;
-                $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
-            } else {
-                throw new \moodle_exception('errorcouldnotcreatespgroup', 'local_o365');
-            }
+            // Assign group permissions.
+            $this->assign_group_permissions($grouprec->groupid, $grouprec->permtype);
+
+            // Get users who need access.
+            $coursecontext = \context_course::instance($course->id);
+            $results = $this->add_users_with_capability_to_group($coursecontext, $requiredcapability, $grouprec->groupid);
+            return true;
         }
-
-        // Assign group permissions.
-        $this->assign_group_permissions($grouprec->groupid, $grouprec->permtype);
-
-        // Get users who need access.
-        $coursecontext = \context_course::instance($course->id);
-        $results = $this->add_users_with_capability_to_group($coursecontext, $requiredcapability, $grouprec->groupid);
-        return true;
     }
 
     /**
