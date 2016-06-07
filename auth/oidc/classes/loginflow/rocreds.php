@@ -36,12 +36,16 @@ class rocreds extends \auth_oidc\loginflow\base {
      */
     protected function check_objects($o356username) {
         global $DB;
-        $sql = 'SELECT u.username
-                  FROM {local_o365_objects} obj
-                  JOIN {user} u ON u.id = obj.moodleid
-                 WHERE obj.o365name = ? and obj.type = "user"';
-        $params = [$o356username];
-        $user = $DB->get_record_sql($sql, $params);
+        $user = null;
+        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
+        if (!empty($o365installed)) {
+            $sql = 'SELECT u.username
+                      FROM {local_o365_objects} obj
+                      JOIN {user} u ON u.id = obj.moodleid
+                     WHERE obj.o365name = ? and obj.type = "user"';
+            $params = [$o356username];
+            $user = $DB->get_record_sql($sql, $params);
+        }
         return (!empty($user)) ? $user->username : $o356username;
     }
 
