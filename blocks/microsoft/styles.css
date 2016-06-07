@@ -30,11 +30,11 @@
 .block_microsoft .block_microsoft_sharepoint {
   background-image: url([[pix:block_microsoft|sharepointcolor]]); }
 .block_microsoft .block_microsoft_preferences {
-  background-image: url([[pix:block_microsoft|msftcolor]]); }
+  background-image: url([[pix:moodle|i/settings]]); }
 .block_microsoft .block_microsoft_msasignin {
   background-image: url([[pix:block_microsoft|msftcolor]]); }
 .block_microsoft .block_microsoft_downloado365 {
-  background-image: url([[pix:block_microsoft|msdown]]); }
+  background-image: url([[pix:moodle|i/restore]]); }
 .block_microsoft .block_microsoft_coursegroup {
   background-image: url([[pix:moodle|i/cohort]]); }
 .block_microsoft .block_microsoft_studygroup {
