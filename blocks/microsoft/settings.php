@@ -25,6 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+// Settings to show My Delve link in block.
+$label = get_string('settings_showmydelve', 'block_microsoft');
+$desc = get_string('settings_showmydelve_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmydelve', $label, $desc, 1));
+
 // Settings to show OneNote notebook link in the block.
 $label = new lang_string('settings_showonenotenotebook', 'block_microsoft');
 $desc = new lang_string('settings_showonenotenotebook_desc', 'block_microsoft');
