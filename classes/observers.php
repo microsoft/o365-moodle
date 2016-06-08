@@ -69,6 +69,7 @@ class observers {
      */
     public static function handle_oidc_user_connected(\auth_oidc\event\user_connected $event) {
         global $DB;
+        $caller = '\local_o365\observers::handle_oidc_user_connected';
         if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
@@ -78,27 +79,25 @@ class observers {
         if (!empty($eventdata['userid'])) {
             try {
                 $userid = $eventdata['userid'];
-                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $httpclient = new \local_o365\httpclient();
-                $calresource = \local_o365\rest\calendar::get_resource();
-                $token = \local_o365\oauth2\token::instance($userid, $calresource, $clientdata, $httpclient);
-
                 // Create local_o365_objects record.
                 if (!empty($eventdata['other']['oidcuniqid'])) {
                     $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
                     if (empty($userobject)) {
-                        $azureresource = \local_o365\rest\azuread::get_resource();
-                        $token = \local_o365\oauth2\token::instance($userid, $azureresource, $clientdata, $httpclient);
-                        $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-                        $aaduserdata = $aadapiclient->get_user($eventdata['other']['oidcuniqid']);
+                        try {
+                            $apiclient = \local_o365\utils::get_api();
+                            $userdata = $apiclient->get_user($eventdata['other']['oidcuniqid']);
+                        } catch (\Exception $e) {
+                            \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                            return true;
+                        }
 
                         // Create userobject if it does not exist.
                         $now = time();
                         $userobjectdata = (object)[
                             'type' => 'user',
                             'subtype' => '',
-                            'objectid' => $aaduserdata['objectId'],
-                            'o365name' => $aaduserdata['userPrincipalName'],
+                            'objectid' => $userdata['objectId'],
+                            'o365name' => $userdata['userPrincipalName'],
                             'moodleid' => $userid,
                             'timecreated' => $now,
                             'timemodified' => $now,
@@ -218,14 +217,15 @@ class observers {
                 return false;
             }
 
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $token = \local_o365\oauth2\token::instance($userid, $aadresource, $clientdata, $httpclient);
-            $apiclient = new \local_o365\rest\azuread($token, $httpclient);
-            $aaduserdata = $apiclient->get_user($tokenrec->oidcuniqid);
+            $apiclient = \local_o365\utils::get_api($userid);
+            $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+            // Azuread users objectid, unified uses id.
+            if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
+                $userdata['objectId'] = $userdata['id'];
+            }
 
             $updateduser = new \stdClass;
-            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($aaduserdata, $updateduser, $eventtype);
+            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, $updateduser, $eventtype);
 
             $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
             if (empty($userobject)) {
@@ -234,8 +234,8 @@ class observers {
                 $userobjectdata = (object)[
                     'type' => 'user',
                     'subtype' => '',
-                    'objectid' => $aaduserdata['objectId'],
-                    'o365name' => $aaduserdata['userPrincipalName'],
+                    'objectid' => $userdata['objectId'],
+                    'o365name' => $userdata['userPrincipalName'],
                     'moodleid' => $userid,
                     'timecreated' => $now,
                     'timemodified' => $now,
@@ -279,17 +279,8 @@ class observers {
 
         try {
             // Add user from course usergroup.
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $aadresource = \local_o365\rest\azuread::get_resource();
-            $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
-            if (!empty($aadtoken)) {
-                $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
-                $response = $aadclient->add_user_to_course_group($courseid, $userid);
-                return true;
-            } else {
-                \local_o365\utils::debug("no aadtoken", $caller);
-            }
+            $apiclient = \local_o365\utils::get_api();
+            $apiclient->add_user_to_course_group($courseid, $userid);
         } catch (\Exception $e) {
             \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
         }
@@ -321,15 +312,8 @@ class observers {
 
         try {
             // Remove user from course usergroup.
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $aadresource = \local_o365\rest\azuread::get_resource();
-            $aadtoken = \local_o365\oauth2\systemtoken::instance(null, $aadresource, $clientdata, $httpclient);
-            if (!empty($aadtoken)) {
-                $aadclient = new \local_o365\rest\azuread($aadtoken, $httpclient);
-                $aadclient->remove_user_from_course_group($courseid, $userid);
-                return true;
-            }
+            $apiclient = \local_o365\utils::get_api();
+            $apiclient->remove_user_from_course_group($courseid, $userid);
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
         }
@@ -461,7 +445,11 @@ class observers {
                 return false;
             }
 
-            $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+            if (\local_o365\rest\unified::is_configured()) {
+                $userupn = \local_o365\rest\unified::get_muser_upn($user);
+            } else {
+                $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+            }
             if (empty($userupn)) {
                 // No user UPN, can't continue.
                 return false;

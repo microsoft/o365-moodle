@@ -676,7 +676,11 @@ class sharepoint extends \local_o365\rest\o365api {
             }
 
             try {
-                $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+                if (\local_o365\rest\unified::is_configured()) {
+                    $userupn = \local_o365\rest\unified::get_muser_upn($user);
+                } else {
+                    $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+                }
             } catch (\Exception $e) {
                 continue;
             }

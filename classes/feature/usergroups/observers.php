@@ -24,28 +24,6 @@
 namespace local_o365\feature\usergroups;
 
 class observers {
-
-    /**
-     * Get an Azure AD API instance.
-     *
-     * @param string $caller The calling function, used for logging.
-     * @return \local_o365\rest\azuread An Azure AD API instance.
-     */
-    public static function get_azuread_api($caller = 'get_azuread_api') {
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-        $resource = \local_o365\rest\azuread::get_resource();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
-        if (!empty($token)) {
-            return new \local_o365\rest\azuread($token, $httpclient);
-        } else {
-            $msg = 'Couldn\'t construct azuread api client because we didn\'t have a system API user token.';
-            $caller = '\local_o365\feature\usergroups\observers::'.$caller;
-            \local_o365\utils::debug($msg, $caller);
-            return false;
-        }
-    }
-
     /**
      * Get a Microsoft Graph API instance.
      *
@@ -229,18 +207,6 @@ class observers {
             return false;
         }
 
-        $unifiedapiclient = static::get_unified_api('handle_group_member_added');
-        if (empty($unifiedapiclient)) {
-            \local_o365\utils::debug('Microsoft Graph API connection failed', $caller);
-            return false;
-        }
-
-        $azureadapiclient = static::get_azuread_api('handle_group_member_added');
-        if (empty($azureadapiclient)) {
-            \local_o365\utils::debug('azuread api connection failed', $caller);
-            return false;
-        }
-
         $newmemberid = $event->relateduserid;
         $usergroupid = $event->objectid;
 
@@ -267,7 +233,14 @@ class observers {
             return false;
         }
 
-        $result = $azureadapiclient->add_member_to_group($groupobjectrec->objectid, $userobjectdata->objectid);
+        try {
+            $apiclient = \local_o365\utils::get_api();
+            $result = $apiclient->add_member_to_group($groupobjectrec->objectid, $userobjectdata->objectid);
+        } catch (\Exception $e) {
+            \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+            return false;
+        }
+
         if ($result !== true) {
             $msg = 'Couldn\'t add user to group.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_added';
@@ -288,16 +261,6 @@ class observers {
         global $DB;
 
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
-            return false;
-        }
-
-        $unifiedapiclient = static::get_unified_api('handle_group_member_removed');
-        if (empty($unifiedapiclient)) {
-            return false;
-        }
-
-        $azureadapiclient = static::get_azuread_api('handle_group_member_removed');
-        if (empty($azureadapiclient)) {
             return false;
         }
 
@@ -325,7 +288,14 @@ class observers {
             return false;
         }
 
-        $result = $azureadapiclient->remove_member_from_group($groupobjectrec->objectid, $userobjectdata->objectid);
+        try {
+            $apiclient = \local_o365\utils::get_api();
+            $result = $apiclient->remove_member_from_group($groupobjectrec->objectid, $userobjectdata->objectid);
+        } catch (\Exception $e) {
+            \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+            return false;
+        }
+
         if ($result !== true) {
             $msg = 'Couldn\'t remove user from group.';
             $caller = '\local_o365\feature\usergroups\observers::handle_group_member_removed';
