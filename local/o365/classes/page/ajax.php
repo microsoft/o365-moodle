@@ -120,9 +120,15 @@ class ajax extends base {
                 throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
             $token->refresh();
-            $apiclient = new \local_o365\rest\azuread($token, $httpclient);
-            $data->valid = $apiclient->test_tenant($value);
-            $success = true;
+            try {
+                $apiclient = \local_o365\utils::get_api();
+                $result = $apiclient->add_member_to_group($groupobjectrec->objectid, $userobjectdata->objectid);
+                $data->valid = $apiclient->test_tenant($value);
+                $success = true;
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                $data->valid = false;
+            }
         } else if ($setting === 'odburl') {
             $data->valid = \local_o365\rest\onedrive::validate_resource($value, $clientdata, $httpclient);
             $success = true;
@@ -201,66 +207,19 @@ class ajax extends base {
         $odburl = required_param('odburl', PARAM_TEXT);
         set_config('odburl', $odburl, 'local_o365');
 
-        $resource = \local_o365\rest\azuread::get_resource();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
-        if (empty($token)) {
-            throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
-        }
-
         // App data.
         $appdata = new \stdClass;
-        try {
-            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-            $appinfo = $aadapiclient->get_application_info();
-            $correctredirecturl = \auth_oidc\utils::get_redirecturl();
 
-            // Check reply url.
-            if (isset($appinfo['value'][0]['replyUrls'])) {
-                $redirecturls = (array)$appinfo['value'][0]['replyUrls'];
-                $appdata->replyurl = new \stdClass;
-                $appdata->replyurl->correct = false;
-                $appdata->replyurl->detected = implode(', ', $redirecturls);
-                $appdata->replyurl->intended = $correctredirecturl;
-                foreach ($redirecturls as $redirecturl) {
-                    if ($redirecturl === $correctredirecturl) {
-                        $appdata->replyurl->correct = true;
-                        break;
-                    }
-                }
-            }
-
-            if (isset($appinfo['value'][0]['homepage'])) {
-                $appdata->signonurl = new \stdClass;
-                $appdata->signonurl->correct = ($appinfo['value'][0]['homepage'] === $correctredirecturl) ? true : false;
-                $appdata->signonurl->detected = $appinfo['value'][0]['homepage'];
-                $appdata->signonurl->intended = $correctredirecturl;
-            }
-
-        } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
-            $appdata->error = $e->getMessage();
-        }
-        $data->appdata = $appdata;
-
-        // Legacy API.
-        $legacyapi = new \stdClass;
-        try {
-            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-            list($missingperms, $haswrite) = $aadapiclient->check_permissions();
-            $legacyapi->missingperms = $missingperms;
-            $legacyapi->haswrite = $haswrite;
-        } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
-            $legacyapi->error = $e->getMessage();
-        }
-        $data->legacyapi = $legacyapi;
-
-        // Microsoft Graph API.
         $unifiedapi = new \stdClass;
         $unifiedapi->active = false;
+        $legacyapi = new \stdClass;
+
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $httpclient = new \local_o365\httpclient();
+        $correctredirecturl = \auth_oidc\utils::get_redirecturl();
+
         if (\local_o365\rest\unified::is_enabled() === true) {
+            // Microsoft Graph API.
             try {
                 $httpclient = new \local_o365\httpclient();
                 $unifiedresource = \local_o365\rest\unified::get_resource();
@@ -269,19 +228,65 @@ class ajax extends base {
                     throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
                 }
                 $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
-                $unifiedpermsresult = $unifiedapiclient->check_permissions();
+                $unifiedpermsresult = $unifiedapiclient->check_unified_permissions();
                 if ($unifiedpermsresult === null) {
                     $unifiedapi->active = false;
                 } else {
                     $unifiedapi->active = true;
                     $unifiedapi->missingperms = $unifiedpermsresult;
                 }
+                $appinfo = $unifiedapiclient->get_application_info();
+                list($missingperms, $haswrite) = $unifiedapiclient->check_permissions();
+                $legacyapi->missingperms = $missingperms;
+                $legacyapi->haswrite = $haswrite;
             } catch (\Exception $e) {
                 $unifiedapi->active = false;
                 \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified', $e);
                 $unifiedapi->error = $e->getMessage();
             }
+        } else {
+            // Legacy API.
+            $resource = \local_o365\rest\azuread::get_resource();
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            if (empty($token)) {
+                throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
+            }
+            try {
+                $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+                $appinfo = $aadapiclient->get_application_info();
+                list($missingperms, $haswrite) = $aadapiclient->check_permissions();
+                $legacyapi->missingperms = $missingperms;
+                $legacyapi->haswrite = $haswrite;
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
+                $appdata->error = $e->getMessage();
+            }
         }
+        $data->legacyapi = $legacyapi;
+
+        // Check reply url.
+        if (isset($appinfo['value'][0]['replyUrls'])) {
+            $redirecturls = (array)$appinfo['value'][0]['replyUrls'];
+            $appdata->replyurl = new \stdClass;
+            $appdata->replyurl->correct = false;
+            $appdata->replyurl->detected = implode(', ', $redirecturls);
+            $appdata->replyurl->intended = $correctredirecturl;
+            foreach ($redirecturls as $redirecturl) {
+                if ($redirecturl === $correctredirecturl) {
+                    $appdata->replyurl->correct = true;
+                    break;
+                }
+            }
+        }
+
+        if (isset($appinfo['value'][0]['homepage'])) {
+            $appdata->signonurl = new \stdClass;
+            $appdata->signonurl->correct = ($appinfo['value'][0]['homepage'] === $correctredirecturl) ? true : false;
+            $appdata->signonurl->detected = $appinfo['value'][0]['homepage'];
+            $appdata->signonurl->intended = $correctredirecturl;
+        }
+
+        $data->appdata = $appdata;
         $data->unifiedapi = $unifiedapi;
         set_config('unifiedapiactive', (int)$unifiedapi->active, 'local_o365');
         set_config('azuresetupresult', serialize($data), 'local_o365');
