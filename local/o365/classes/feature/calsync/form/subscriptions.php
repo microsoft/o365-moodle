@@ -48,25 +48,35 @@ class subscriptions extends \moodleform {
         }
 
         $mform->addElement('html', \html_writer::tag('h2', get_string('ucp_calsync_title', 'local_o365')));
-        $mform->addElement('html', \html_writer::div(get_string('ucp_calsync_desc', 'local_o365')));
         $mform->addElement('html', '<br />');
 
-        $mform->addElement('html', \html_writer::tag('b', get_string('ucp_calsync_availcal', 'local_o365')));
+        $settingcalcustom = $this->_customdata;
+        $mform->addElement('html', \html_writer::tag('b', get_string('calendar_setting', 'local_o365')));
+        $mform->addElement('checkbox', 'settingcal', '', get_string('calendar_setting', 'local_o365'));
+        $mform->setDefault('settingcal', $settingcalcustom['o365calendarcheck']);
 
-        $checkboxattrs = ['class' => 'calcheckbox', 'group' => '1'];
+        if (!empty($settingcalcustom['o365calendarcheck'])) {
+            $mform->addElement('html', '<br />');
+            $mform->addElement('html', \html_writer::div(get_string('ucp_calsync_desc', 'local_o365')));
+            $mform->addElement('html', '<br />');
 
-        $sitecalcustom = $this->_customdata;
-        $sitecalcustom['cansyncin'] = $this->_customdata['cancreatesiteevents'];
-        $mform->addElement('localo365calendar', 'sitecal', '', get_string('calendar_site', 'local_o365'), $checkboxattrs, $sitecalcustom);
+            $mform->addElement('html', \html_writer::tag('b', get_string('ucp_calsync_availcal', 'local_o365')));
 
-        $usercalcustom = $this->_customdata;
-        $usercalcustom['cansyncin'] = true;
-        $mform->addElement('localo365calendar', 'usercal', '', get_string('calendar_user', 'local_o365'), $checkboxattrs, $usercalcustom);
+            $checkboxattrs = ['class' => 'calcheckbox', 'group' => '1'];
 
-        foreach ($this->_customdata['usercourses'] as $courseid => $course) {
-            $coursecalcustom = $this->_customdata;
-            $coursecalcustom['cansyncin'] = (!empty($this->_customdata['cancreatecourseevents'][$courseid])) ? true : false;
-            $mform->addElement('localo365calendar', 'coursecal['.$course->id.']', '', $course->fullname, $checkboxattrs, $coursecalcustom);
+            $sitecalcustom = $this->_customdata;
+            $sitecalcustom['cansyncin'] = $this->_customdata['cancreatesiteevents'];
+            $mform->addElement('localo365calendar', 'sitecal', '', get_string('calendar_site', 'local_o365'), $checkboxattrs, $sitecalcustom);
+
+            $usercalcustom = $this->_customdata;
+            $usercalcustom['cansyncin'] = true;
+            $mform->addElement('localo365calendar', 'usercal', '', get_string('calendar_user', 'local_o365'), $checkboxattrs, $usercalcustom);
+
+            foreach ($this->_customdata['usercourses'] as $courseid => $course) {
+                $coursecalcustom = $this->_customdata;
+                $coursecalcustom['cansyncin'] = (!empty($this->_customdata['cancreatecourseevents'][$courseid])) ? true : false;
+                $mform->addElement('localo365calendar', 'coursecal['.$course->id.']', '', $course->fullname, $checkboxattrs, $coursecalcustom);
+            }
         }
 
         $this->add_action_buttons();
@@ -79,10 +89,26 @@ class subscriptions extends \moodleform {
      * @param string $primarycalid The o365 ID of the user's primary calendar.
      * @param bool $cancreatesiteevents Whether the user has permission to create site events.
      * @param array $cancreatecourseevents Array of user courses containing whether the user has permission to create course events.
+     * @param string $sitecalenderid The o365 ID of the user's site calendar.
      * @return bool Success/Failure.
      */
-    public static function update_subscriptions($fromform, $primarycalid, $cancreatesiteevents, $cancreatecourseevents) {
+    public static function update_subscriptions($fromform, $primarycalid, $cancreatesiteevents,
+            $cancreatecourseevents, $sitecalenderid = null) {
         global $DB, $USER;
+
+        // Determine outlook calendar setting check.
+        $usersetting = $DB->get_record('local_o365_calsettings', ['user_id' => $USER->id]);
+        if (!empty($fromform->settingcal) && empty($usersetting)) {
+            // Not currently subscribed.
+            $newsetting = [
+                    'user_id' => $USER->id,
+                    'o365calid' => $sitecalenderid,
+                    'timecreated' => time()
+            ];
+            $newsetting['id'] = $DB->insert_record('local_o365_calsettings', (object)$newsetting);
+        } else if (empty($fromform->settingcal) && !empty($usersetting)) {
+            $DB->delete_records('local_o365_calsettings', array('user_id' => $USER->id));
+        }
 
         // Determine and organize existing subscriptions.
         $currentcaldata = [
@@ -124,6 +150,7 @@ class subscriptions extends \moodleform {
         foreach (['site', 'user'] as $caltype) {
             $formkey = $caltype.'cal';
             $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) ? true : false;
+            $calchecked = (empty($fromform->settingcal)) ? false : $calchecked;
             $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith'])) ? $fromform->{$formkey}['syncwith'] : '';
             $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav'])) ? $fromform->{$formkey}['syncbehav'] : 'out';
             if ($caltype === 'site' && empty($cancreatesiteevents)) {
@@ -198,8 +225,8 @@ class subscriptions extends \moodleform {
                 }
             }
         }
-        $todelete = array_diff_key($existingcoursesubs, $newcoursesubs);
-        $toadd = array_diff_key($newcoursesubs, $existingcoursesubs);
+        $todelete = (empty($fromform->settingcal)) ? $existingcoursesubs : array_diff_key($existingcoursesubs, $newcoursesubs);
+        $toadd = (empty($fromform->settingcal)) ? array() : array_diff_key($newcoursesubs, $existingcoursesubs);
         foreach ($todelete as $courseid => $unused) {
             $DB->delete_records('local_o365_calsub', ['user_id' => $USER->id, 'caltype' => 'course', 'caltypeid' => $courseid]);
             $eventdata = [

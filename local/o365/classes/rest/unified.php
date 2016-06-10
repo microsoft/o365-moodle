@@ -500,6 +500,47 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Create a new calendar in the user's o365 calendars.
+     *
+     * @param string $name The calendar's title.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_calendar($name) {
+        $calendardata = json_encode(['name' => $name]);
+        $response = $this->apicall('post', '/me/calendars', $calendardata);
+        $expectedparams = ['id' => null];
+        $return = $this->process_apicall_response($response, $expectedparams);
+        if (!isset($return['Id']) && isset($return['id'])) {
+            $return['Id'] = $return['id'];
+        }
+        if (!isset($return['Name']) && isset($return['name'])) {
+            $return['Name'] = $return['name'];
+        }
+        return $return;
+    }
+
+    /**
+     * Update a existing o365 calendar.
+     *
+     * @param string $calendearid The calendar's title.
+     * @param array $updated Array of updated information. Keys are 'name'.
+     * @return array|null Returned response, or null if error.
+     */
+    public function update_calendar($outlookcalendearid, $updated) {
+        if (empty($outlookcalendearid) || empty($updated)) {
+            return [];
+        }
+        $updateddata = [];
+        if (!empty($updated['name'])) {
+            $updateddata['name'] = $updated['name'];
+        }
+        $updateddata = json_encode($updateddata);
+        $response = $this->apicall('patch', '/me/calendars/'.$outlookcalendearid, $updateddata);
+        $expectedparams = ['id' => null];
+        return  $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
      * Create a new event in the user's o365 calendar.
      *
      * @param string $subject The event's title/subject.
@@ -527,6 +568,7 @@ class unified extends \local_o365\rest\o365api {
                 'timeZone' => date('T', $endtime),
             ],
             'attendees' => [],
+            'responseRequested' => false, // Sets meeting appears as accepted.
         ];
         foreach ($attendees as $attendee) {
             $eventdata['attendees'][] = [
@@ -627,6 +669,9 @@ class unified extends \local_o365\rest\o365api {
                 'dateTime' => date('c', $updated['endtime']),
                 'timeZone' => date('T', $updated['endtime']),
             ];
+        }
+        if (!empty($updated['responseRequested'])) {
+            $updateddata['responseRequested'] = $updated['responseRequested'];
         }
         if (isset($updated['attendees'])) {
             $updateddata['Attendees'] = [];

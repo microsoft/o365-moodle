@@ -205,5 +205,19 @@
         <INDEX NAME="courseidgroupid" UNIQUE="false" FIELDS="courseid,groupid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_o365_calsettings" COMMENT="Tracks user level Outlook calendar sync settings">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
+        <FIELD NAME="o365calid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the ID of the o365 calendar to sync to"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time subscription created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>
