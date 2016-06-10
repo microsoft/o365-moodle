@@ -65,8 +65,10 @@ $string['acp_usermatch_upload_submit'] = 'Add Data File To Match Queue';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
+$string['calendar_setting'] = 'Enable Outlook Calendar Sync';
 $string['calendar_user'] = 'Personal (User) Calendar';
 $string['calendar_site'] = 'Sitewide Calendar';
+$string['personal_calendar'] = 'Personal';
 
 $string['groups'] = 'Office 365 Groups';
 $string['groups_edit_name'] = 'Group name';
@@ -354,7 +356,7 @@ $string['ucp_onenote_desc'] = 'This page provides options for Office&nbsp;365 On
 $string['ucp_onenote_disable'] = 'Disable Office&nbsp;365 OneNote';
 $string['ucp_status_enabled'] = 'Active';
 $string['ucp_status_disabled'] = 'Not Connected';
-$string['ucp_syncwith_title'] = 'Sync With:';
+$string['ucp_syncwith_title'] = 'Name of Outlook calendar to sync with:';
 $string['ucp_syncdir_title'] = 'Sync Behavior:';
 $string['ucp_syncdir_out'] = 'From Moodle to Outlook';
 $string['ucp_syncdir_in'] = 'From Outlook To Moodle';
