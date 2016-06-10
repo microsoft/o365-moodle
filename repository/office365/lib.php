@@ -456,16 +456,27 @@ class repository_office365 extends \repository {
                     $sharepoint->override_resource($url);
                     $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
                     $videoobject = $sharepoint->create_video_placeholder($parentid, '', $filename, $filename);
-                    $filesize = number_format((strlen($content) / 1024), 2);
-                    $filesize = intval(str_replace(array(','), '', $filesize)) + 1;
-                    if ($filesize < 8192) {
-                        $result = $sharepoint->upload_video_small($videoobject['ChannelID'], $videoobject['ID'], $content);
-                    } else {
-                        $guid = $this->new_guid();
-                        $result = $sharepoint->upload_video_large($videoobject['ChannelID'], $videoobject['ID'], $content,
-                                $guid, $filesize, 8192);
+                    if (!empty($videoobject)) {
+                        $filesize = number_format((strlen($content) / 1024), 2);
+                        $filesize = intval(str_replace(array(','), '', $filesize)) + 1;
+                        if ($filesize < 8192) {
+                            $result = $sharepoint->upload_video_small($videoobject['ChannelID'], $videoobject['ID'], $content);
+                        } else {
+                            $guid = $this->new_guid();
+                            $result = $sharepoint->upload_video_large($videoobject['ChannelID'], $videoobject['ID'], $content,
+                                    $guid, $filesize, 8192);
+                        }
+                        $parseurl = explode('/', $videoobject['Url']);
+                        $downloadurl = "https://" . $parseurl[2] . "/_api/SP.AppContextSite(@target)/Web/"
+                                . "GetFileByServerRelativeUrl('" . $videoobject['ServerRelativeUrl'] . "')/"
+                                . "$" . "value?@target='https://" . $parseurl[2] . "/portals/" . $parseurl[4]. "'";
+                        $url = "https://" . $parseurl[2] . "/portals/hub/_layouts/15/PointPublishing.aspx?app=video&"
+                                . "p=p&chid=" . $videoobject['ChannelID'] . "&vid=" . $videoobject['ID'];
+                        $source = $this->pack_reference(['id' => $videoobject['odata.id'],
+                                                         'source' => 'office365video',
+                                                         'url' => $url,
+                                                         'downloadurl' => $downloadurl]);
                     }
-                    $source = $this->pack_reference(['id' => $result['id'], 'source' => 'office365video']);
                 }
             }
         } else {
@@ -495,6 +506,9 @@ class repository_office365 extends \repository {
         $record->sortorder = 0;
         $record->source = $this->build_source_field($source);
         $info = \repository::move_to_filepool($downloadedfile['path'], $record);
+        if ($clienttype === 'office365video') {
+            $info['url'] = $url;
+        }
         return $info;
     }
 
