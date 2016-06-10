@@ -56,6 +56,40 @@ class calendar extends \local_o365\rest\o365api {
     }
 
     /**
+     * Create a new calendar in the user's o365 calendars.
+     *
+     * @param string $name The calendar's title.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_calendar($name) {
+        $calendardata = json_encode(['Name' => $name]);
+        $response = $this->apicall('post', '/calendars', $calendardata);
+        $return = $this->process_apicall_response($response, ['Id' => null]);
+        return $return;
+    }
+
+    /**
+     * Update a existing o365 calendar.
+     *
+     * @param string $calendearid The calendar's title.
+     * @param array $updated Array of updated information. Keys are 'name'.
+     * @return array|null Returned response, or null if error.
+     */
+    public function update_calendar($outlookcalendearid, $updated) {
+        if (empty($outlookcalendearid) || empty($updated)) {
+            return [];
+        }
+        $updateddata = [];
+        if (!empty($updated['name'])) {
+            $updateddata['Name'] = $updated['name'];
+        }
+        $updateddata = json_encode($updateddata);
+        $response = $this->apicall('patch', '/me/calendars/'.$outlookcalendearid, $updateddata);
+        $expectedparams = ['id' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
      * Get a list of events.
      *
      * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
@@ -95,6 +129,7 @@ class calendar extends \local_o365\rest\o365api {
             'Start' => date('c', $starttime),
             'End' => date('c', $endtime),
             'Attendees' => [],
+            'ResponseRequested' => false, // Sets meeting appears as accepted.
         ];
         foreach ($attendees as $attendee) {
             $eventdata['Attendees'][] = [
@@ -135,6 +170,9 @@ class calendar extends \local_o365\rest\o365api {
         }
         if (!empty($updated['endtime'])) {
             $updateddata['End'] = date('c', $updated['endtime']);
+        }
+        if (!empty($updated['responseRequested'])) {
+            $updateddata['ResponseRequested'] = $updated['responseRequested'];
         }
         if (isset($updated['attendees'])) {
             $updateddata['Attendees'] = [];
