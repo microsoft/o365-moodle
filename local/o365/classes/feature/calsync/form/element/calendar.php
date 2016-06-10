@@ -136,7 +136,12 @@ class calendar extends \MoodleQuickForm_advcheckbox {
         foreach ($availableo365calendars as $i => $info) {
             $calselectopts[$info['id']] = $info['name'];
         }
-        $html .= \html_writer::select($calselectopts, $availcalname, $this->syncwith, false, ['id' => $availcalid]);
+        if (empty($this->syncwith)) {
+            $selectedoption = array_search($GLOBALS['SITE']->fullname, $calselectopts);
+            $html .= \html_writer::select($calselectopts, $availcalname, $selectedoption, false, ['id' => $availcalid]);
+        } else {
+            $html .= \html_writer::select($calselectopts, $availcalname, $this->syncwith, false, ['id' => $availcalid]);
+        }
         $html .= '</div>';
 
         $syncbehavior = [

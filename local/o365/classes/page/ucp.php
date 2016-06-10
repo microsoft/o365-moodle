@@ -92,16 +92,39 @@ class ucp extends base {
         $o365calendars = $calsync->get_calendars();
 
         $customdata = [
+            'o365calendarcheck' => false,
+            'sitecalendarexists' => false,
             'o365calendars' => [],
             'usercourses' => enrol_get_my_courses(['id', 'fullname']),
             'cancreatesiteevents' => false,
             'cancreatecourseevents' => [],
         ];
+
+        // Determine outlook calendar setting check.
+        $usersetting = $DB->get_record('local_o365_calsettings', ['user_id' => $USER->id]);
+        if (!empty($usersetting)) {
+            $customdata['o365calendarcheck'] = true;
+            $updatecalendar = true;
+            foreach ($o365calendars as $o365calendar) {
+                if ($o365calendar['Name'] === $GLOBALS['SITE']->fullname) {
+                    $updatecalendar = false;
+                }
+            }
+            if ($updatecalendar) {
+                // Update the existing calendar.
+                $calsync->update_outlook_calendar($usersetting->o365calid, ['name' => $GLOBALS['SITE']->fullname]);
+                $o365calendars = $calsync->get_calendars();
+            }
+        }
+
         foreach ($o365calendars as $o365calendar) {
             $customdata['o365calendars'][] = [
                 'id' => $o365calendar['Id'],
                 'name' => $o365calendar['Name'],
             ];
+            if ($o365calendar['Name'] === $GLOBALS['SITE']->fullname) {
+                $customdata['sitecalendarexists'] = $o365calendar['Id'];
+            }
         }
         $primarycalid = $customdata['o365calendars'][0]['id'];
 
@@ -113,11 +136,26 @@ class ucp extends base {
         }
 
         $mform = new \local_o365\feature\calsync\form\subscriptions('?action=calendar', $customdata);
+        $fromform = $mform->get_data();
+
+        if (empty($customdata['sitecalendarexists']) && !empty($fromform->settingcal)) {
+            // Create new outlook calender with site name.
+            $sitecalendar = $calsync->create_outlook_calendar($GLOBALS['SITE']->fullname);
+            array_push($customdata['o365calendars'], ['id' => $sitecalendar['Id'], 'name' => $sitecalendar['Name']]);
+        }
+
         if ($mform->is_cancelled()) {
             redirect(new \moodle_url('/local/o365/ucp.php'));
-        } else if ($fromform = $mform->get_data()) {
+        } else if ($fromform) {
+            if (!empty($customdata['sitecalendarexists'])) {
+                $sitecalenderid = $customdata['sitecalendarexists'];
+            } else if (!empty($sitecalendar['Id'])) {
+                    $sitecalenderid = $sitecalendar['Id'];
+            } else {
+                    $sitecalenderid = null;
+            }
             \local_o365\feature\calsync\form\subscriptions::update_subscriptions($fromform, $primarycalid,
-                    $customdata['cancreatesiteevents'], $customdata['cancreatecourseevents']);
+                    $customdata['cancreatesiteevents'], $customdata['cancreatecourseevents'], $sitecalenderid);
             redirect(new \moodle_url('/local/o365/ucp.php?action=calendar&saved=1'));
         } else {
             $PAGE->requires->jquery();

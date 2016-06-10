@@ -167,6 +167,16 @@ class main {
         $timestart = $event->timestart;
         $timeend = $timestart + $event->timeduration;
 
+        // Update event name.
+        if ($event->eventtype === 'site') {
+            $subject = $GLOBALS['SITE']->fullname . ': ' . $subject;
+        } else if ($event->eventtype === 'user') {
+            $subject = get_string('personal_calendar', 'local_o365') . ': ' . $subject;
+        } else if ($event->eventtype === 'course') {
+            $course = $DB->get_record('course', ['id' => $event->courseid]);
+            $subject = $course->fullname . ': ' . $subject;
+        }
+
         // Get attendees.
         if (isset($event->courseid) && $event->courseid == SITEID) {
             // Site event.
@@ -343,6 +353,16 @@ class main {
             'endtime' => $event->timestart + $event->timeduration,
         ];
 
+        // Update event name.
+        if ($event->eventtype === 'site') {
+            $updated['subject'] = $GLOBALS['SITE']->fullname . ': ' . $updated['subject'];
+        } else if ($event->eventtype === 'user') {
+            $updated['subject'] = get_string('personal_calendar', 'local_o365') . ': ' . $updated['subject'];
+        } else if ($event->eventtype === 'course') {
+            $course = $DB->get_record('course', ['id' => $event->courseid]);
+            $updated['subject'] = $course->fullname . ': ' . $updated['subject'];
+        }
+
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
             $apiclient->update_event($idmaprec->outlookeventid, $updated);
@@ -374,5 +394,30 @@ class main {
         $DB->delete_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
 
         return true;
+    }
+
+    /**
+     * Create a new calendar in the user's o365 calendars.
+     *
+     * @param string $name The calendar's title.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_outlook_calendar($name) {
+        global $USER;
+        $apiclient = $this->construct_calendar_api($USER->id, false);
+        return $apiclient->create_calendar($name);
+    }
+
+    /**
+     * Update a existing o365 calendar.
+     *
+     * @param string $calendearid The calendar's title.
+     * @param array $updated Array of updated information. Keys are 'name'.
+     * @return array|null Returned response, or null if error.
+     */
+    public function update_outlook_calendar($outlookcalendearid, $updated) {
+        global $USER;
+        $apiclient = $this->construct_calendar_api($USER->id, false);
+        return $apiclient->update_calendar($outlookcalendearid, $updated);
     }
 }
