@@ -24,7 +24,8 @@
 require_once(__DIR__.'/../../config.php');
 require_login();
 $action = optional_param('action', null, PARAM_TEXT);
+$courseid = optional_param('courseid', 0, PARAM_INT);
 $ucptitle = get_string('groups', 'local_o365');
-$url = '/local/o365/groupcp.php';
-$page = new \local_o365\page\groupcp($url, $ucptitle);
+$url = new \moodle_url('/local/o365/groupcp.php', ['courseid' => $courseid]);
+$page = new \local_o365\page\groupcp($url->out(), $ucptitle);
 $page->run($action);
