@@ -206,11 +206,6 @@ class repository_office365 extends \repository {
         if (empty($context)) {
             $context = \context_system::instance();
         }
-        if ($this->sharepointconfigured === true && $context instanceof \context_course) {
-            if (empty($path)) {
-                $path = '/courses/'.$context->instanceid;
-            }
-        }
 
         $list = [];
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
