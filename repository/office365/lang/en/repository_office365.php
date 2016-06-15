@@ -22,6 +22,7 @@
  */
 
 $string['cachedef_unifiedfolderids'] = 'OneDrive for Business - Unified folder IDs';
+$string['cachedef_unifiedgroupfolderids'] = 'OneDrive for Business Unified group folder IDs';
 $string['configplugin'] = 'Configure OneDrive for Business Repository';
 $string['courses'] = 'SharePoint (Courses)';
 $string['groups'] = 'Groups (Courses)';
