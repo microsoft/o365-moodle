@@ -65,6 +65,7 @@ $string['acp_usermatch_upload_submit'] = 'Add Data File To Match Queue';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
+$string['cachedef_groups'] = 'Groups';
 $string['calendar_user'] = 'Personal (User) Calendar';
 $string['calendar_site'] = 'Sitewide Calendar';
 
