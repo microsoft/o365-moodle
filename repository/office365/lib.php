@@ -573,8 +573,19 @@ class repository_office365 extends \repository {
                         }
                         $breadcrumb[] = ['name' => $metadata['name'], 'path' => $curpath.$metadata['id']];
                     }
-                    $contents = $unified->get_group_files($group->objectid, $curparent);
-                    $list = $this->contents_api_response_to_list($contents, $path, 'unifiedgroup', $group->objectid, false);
+                    try {
+                        $contents = $unified->get_group_files($group->objectid, $curparent);
+                        $list = $this->contents_api_response_to_list($contents, $path, 'unifiedgroup', $group->objectid, false);
+                    } catch (\Exception $e) {
+                        $errmsg = 'Exception when retrieving share point files for group';
+                        $debugdata = [
+                            'fullpath' => $path,
+                            'message' => $e->getMessage(),
+                            'groupid' => $group->objectid,
+                        ];
+                        \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                        $list = [];
+                    }
                 } else {
                     \local_o365\utils::debug('Could not file group object record', $caller, ['path' => $path]);
                     $list = [];
@@ -687,16 +698,27 @@ class repository_office365 extends \repository {
 
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
-        if ($this->path_is_upload($path) === true) {
-            $realpath = substr($path, 0, -strlen('/upload/'));
-        } else {
-            $contents = $unified->get_files($realpath);
-            $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
-        }
 
         // Generate path.
         $strmyfiles = get_string('myfiles', 'repository_office365');
         $breadcrumb = [['name' => $this->name, 'path' => '/'], ['name' => $strmyfiles, 'path' => '/my/']];
+
+        if ($this->path_is_upload($path) === true) {
+            $realpath = substr($path, 0, -strlen('/upload/'));
+        } else {
+            try {
+                $contents = $unified->get_files($realpath);
+                $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
+            } catch (\Exception $e) {
+                $errmsg = 'Exception when retrieving personal onedrive files for folder';
+                $debugdata = [
+                    'fullpath' => $path,
+                    'message' => $e->getMessage(),
+                ];
+                \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                return [[], $breadcrumb];
+            }
+        }
 
         if ($realpath !== '/') {
             $metadata = $unified->get_file_metadata($realpath);
@@ -778,8 +800,18 @@ class repository_office365 extends \repository {
         $list = [];
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
-        $contents = $unified->get_trending_files($realpath);
-        $list = $this->contents_api_response_to_list($contents, $realpath, 'trendingaround', null, false);
+        try {
+            $contents = $unified->get_trending_files($realpath);
+            $list = $this->contents_api_response_to_list($contents, $realpath, 'trendingaround', null, false);
+        } catch (\Exception $e) {
+            $errmsg = 'Exception when retrieving personal trending files';
+            $debugdata = [
+                'fullpath' => $path,
+                'message' => $e->getMessage(),
+            ];
+            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            $list = [];
+        }
 
         // Generate path.
         $strtrendingfiles = get_string('trendingaround', 'repository_office365');
