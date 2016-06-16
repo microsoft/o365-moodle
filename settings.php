@@ -136,6 +136,10 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_sharepointlink_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
 
+        $label = new lang_string('settings_onenote', 'local_o365');
+        $desc = new lang_string('settings_onenote_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
+
         $label = new lang_string('settings_options_advanced', 'local_o365');
         $desc = new lang_string('settings_options_advanced_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_options_advanced', $label, $desc));
