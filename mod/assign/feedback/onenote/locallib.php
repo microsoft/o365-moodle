@@ -117,6 +117,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {
         global $USER;
 
+        // Check to see if one note is disabled site wide.
+        if (get_config('local_o365', 'onenote')) {
+            return true;
+        }
+
         $gradeid = $grade ? $grade->id : 0;
 
         try {
