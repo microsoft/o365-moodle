@@ -50,27 +50,6 @@ class ucp extends base {
     /**
      * Manage calendar syncing.
      */
-    public function mode_onenote() {
-        global $OUTPUT;
-        $mform = new \local_o365\form\onenote('?action=onenote');
-        if ($mform->is_cancelled()) {
-            redirect(new \moodle_url('/local/o365/ucp.php'));
-        } else if ($fromform = $mform->get_data()) {
-            $disableo365onenote = (!empty($fromform->disableo365onenote)) ? 1 : 0;
-            set_user_preference('local_o365_disableo365onenote', $disableo365onenote);
-            redirect(new \moodle_url('/local/o365/ucp.php'));
-        } else {
-            $defaultdata = ['disableo365onenote' => get_user_preferences('local_o365_disableo365onenote', 0)];
-            $mform->set_data($defaultdata);
-            echo $OUTPUT->header();
-            $mform->display();
-            echo $OUTPUT->footer();
-        }
-    }
-
-    /**
-     * Manage calendar syncing.
-     */
     public function mode_calendar() {
         global $DB, $USER, $OUTPUT, $PAGE, $SITE;
 
@@ -420,7 +399,7 @@ class ucp extends base {
     /**
      * Print a feature on the index page.
      *
-     * @param string $id The feature identifier: "connection", "calendar", "onenote".
+     * @param string $id The feature identifier: "connection", "calendar".
      * @param bool $enabled Whether the feature is accessible or not.
      * @return string HTML for the feature entry.
      */
@@ -584,7 +563,6 @@ class ucp extends base {
             echo $this->print_index_feature('connection', true);
         }
         echo $this->print_index_feature('calendar', $this->o365connected);
-        echo $this->print_index_feature('onenote', $this->o365connected);
 
         echo \html_writer::end_div();
 
