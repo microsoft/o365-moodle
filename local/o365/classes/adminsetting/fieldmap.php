@@ -30,6 +30,11 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
  * Admin setting to control field mappings for users.
  */
 class fieldmap extends \admin_setting {
+    /** @var bool Whether to use the update behavior column. */
+    protected $showbehavcolumn = false;
+
+    /** @var str The string ID fron local_o365 to use as the heading for the remote field column. */
+    protected $remotefieldstrid = 'settings_fieldmap_header_remote';
 
     /**
      * Constructor
@@ -39,54 +44,12 @@ class fieldmap extends \admin_setting {
      * @param string $description localised long description
      * @param mixed $defaultsetting string or array depending on implementation
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting) {
+    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = []) {
         global $DB;
 
-        $this->syncbehavopts = [
-            'oncreate' => get_string('update_oncreate', 'auth'),
-            'onlogin' => get_string('update_onlogin', 'auth'),
-            'always' => get_string('settings_fieldmap_update_always', 'local_o365'),
-        ];
-
-        $this->remotefields = [
-            'objectId' => get_string('settings_fieldmap_field_objectId', 'local_o365'),
-            'displayName' => get_string('settings_fieldmap_field_displayName', 'local_o365'),
-            'givenName' => get_string('settings_fieldmap_field_givenName', 'local_o365'),
-            'surname' => get_string('settings_fieldmap_field_surname', 'local_o365'),
-            'mail' => get_string('settings_fieldmap_field_mail', 'local_o365'),
-            'streetAddress' => get_string('settings_fieldmap_field_streetAddress', 'local_o365'),
-            'city' => get_string('settings_fieldmap_field_city', 'local_o365'),
-            'postalCode' => get_string('settings_fieldmap_field_postalCode', 'local_o365'),
-            'state' => get_string('settings_fieldmap_field_state', 'local_o365'),
-            'country' => get_string('settings_fieldmap_field_country', 'local_o365'),
-            'jobTitle' => get_string('settings_fieldmap_field_jobTitle', 'local_o365'),
-            'department' => get_string('settings_fieldmap_field_department', 'local_o365'),
-            'companyName' => get_string('settings_fieldmap_field_companyName', 'local_o365'),
-            'telephoneNumber' => get_string('settings_fieldmap_field_telephoneNumber', 'local_o365'),
-            'facsimileTelephoneNumber' => get_string('settings_fieldmap_field_facsimileTelephoneNumber', 'local_o365'),
-            'mobile' => get_string('settings_fieldmap_field_mobile', 'local_o365'),
-            'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'local_o365'),
-        ];
-
-        $this->localfields = [
-            'idnumber' => get_string('idnumber'),
-            'firstname' => get_string('firstname'),
-            'lastname' => get_string('lastname'),
-            'email' => get_string('email'),
-            'address' => get_string('address'),
-            'city' => get_string('city'),
-            'country' => get_string('country'),
-            'department' => get_string('department'),
-            'institution' => get_string('institution'),
-            'phone1' => get_string('phone'),
-            'phone2' => get_string('phone2'),
-            'lang' => get_string('language'),
-            'theme' => get_string('theme'),
-        ];
-        $customfields = $DB->get_records_select('user_info_field', 'datatype = ? OR datatype = ?', ['text', 'textarea']);
-        foreach ($customfields as $field) {
-            $this->localfields['profile_field_'.$field->shortname] = $field->name;
-        }
+        $this->syncbehavopts = $syncbehav;
+        $this->remotefields = $remotefields;
+        $this->localfields = $localfields;
 
         return parent::__construct($name, $visiblename, $description, $defaultsetting);
     }
@@ -126,17 +89,29 @@ class fieldmap extends \admin_setting {
             $this->config_write($this->name, serialize($newconfig));
             return '';
         }
-        if (!isset($data['behavior']) || !is_array($data['behavior'])) {
-            // Broken data, wipe setting.
-            $this->config_write($this->name, serialize($newconfig));
-            return '';
+
+        if ($this->showbehavcolumn === true) {
+            if (!isset($data['behavior']) || !is_array($data['behavior'])) {
+                // Broken data, wipe setting.
+                $this->config_write($this->name, serialize($newconfig));
+                return '';
+            }
         }
 
         foreach ($data['remotefield'] as $i => $fieldname) {
-            if (!isset($data['localfield'][$i]) || !isset($data['behavior'][$i])) {
+            if (!isset($data['localfield'][$i])) {
                 continue;
             }
-            $newconfig[] = $data['remotefield'][$i].'/'.$data['localfield'][$i].'/'.$data['behavior'][$i];
+            $configentry = $data['remotefield'][$i].'/'.$data['localfield'][$i];
+            if ($this->showbehavcolumn === true) {
+                if (!isset($data['behavior'][$i])) {
+                    continue;
+                } else {
+                    $configentry .= '/'.$data['behavior'][$i];
+                }
+            }
+
+            $newconfig[] = $configentry;
         }
         $this->config_write($this->name, serialize($newconfig));
         return '';
@@ -161,11 +136,13 @@ class fieldmap extends \admin_setting {
         $fieldlist = new \html_table;
         $fieldlist->attributes['class'] = 'fieldlist';
         $fieldlist->head = [
-            get_string('settings_fieldmap_header_remote', 'local_o365'),
+            get_string($this->remotefieldstrid, 'local_o365'),
             '',
             get_string('settings_fieldmap_header_local', 'local_o365'),
-            get_string('settings_fieldmap_header_behavior', 'local_o365'),
         ];
+        if ($this->showbehavcolumn === true) {
+            $fieldlist->head[] = get_string('settings_fieldmap_header_behavior', 'local_o365');
+        }
         $fieldlist->data = [];
 
         if ($data === false) {
@@ -176,27 +153,37 @@ class fieldmap extends \admin_setting {
         }
         foreach ($data as $fieldmap) {
             $fieldmap = explode('/', $fieldmap);
-            if (count($fieldmap) !== 3) {
-                continue;
+
+            if ($this->showbehavcolumn === true) {
+                if (count($fieldmap) !== 3) {
+                    continue;
+                }
+                list($remotefield, $localfield, $behavior) = $fieldmap;
+                if (!isset($this->syncbehavopts[$behavior])) {
+                    continue;
+                }
+            } else {
+                list($remotefield, $localfield) = $fieldmap;
             }
-            list($remotefield, $localfield, $behavior) = $fieldmap;
+
             if (!isset($this->remotefields[$remotefield])) {
                 continue;
             }
             if (!isset($this->localfields[$localfield])) {
                 continue;
             }
-            if (!isset($this->syncbehavopts[$behavior])) {
-                continue;
-            }
 
-            $fieldlist->data[] = [
+            $row = [
                 \html_writer::select($this->remotefields, $this->get_full_name().'[remotefield][]', $remotefield, false),
                 \html_writer::tag('span', '&rarr;'),
                 \html_writer::select($this->localfields, $this->get_full_name().'[localfield][]', $localfield, false),
-                \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', $behavior, false),
-                \html_writer::tag('button', 'X', ['class' => 'removerow']),
             ];
+            if ($this->showbehavcolumn === true) {
+                $row[] = \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', $behavior, false);
+            }
+            $row [] = \html_writer::tag('button', 'X', ['class' => 'removerow']);
+
+            $fieldlist->data[] = $row;
         }
         $html .= \html_writer::table($fieldlist);
 
@@ -207,7 +194,9 @@ class fieldmap extends \admin_setting {
         $maptpl .= \html_writer::tag('td', \html_writer::select($this->remotefields, $this->get_full_name().'[remotefield][]', ''));
         $maptpl .= \html_writer::tag('td', \html_writer::tag('span', '&rarr;'));
         $maptpl .= \html_writer::tag('td', \html_writer::select($this->localfields, $this->get_full_name().'[localfield][]', ''));
-        $maptpl .= \html_writer::tag('td', \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', '', false));
+        if ($this->showbehavcolumn === true) {
+            $maptpl .= \html_writer::tag('td', \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', '', false));
+        }
         $maptpl .= \html_writer::tag('td', \html_writer::tag('button', 'X', ['class' => 'removerow']));
         $maptpl .= \html_writer::end_tag('tr');
         $html .= \html_writer::tag('textarea', htmlentities($maptpl), ['class' => 'maptpl', 'style' => 'display:none;']);
