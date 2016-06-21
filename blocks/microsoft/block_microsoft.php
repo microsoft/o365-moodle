@@ -170,9 +170,33 @@ class block_microsoft extends block_base {
         $user = $DB->get_record('user', array('id' => $USER->id));
         $langconnected = get_string('o365connected', 'block_microsoft', $user);
         $html .= '<h5>'.$langconnected.'</h5>';
+
+        $odburl = get_config('local_o365', 'odburl');
+        if (!empty($odburl) && !empty($this->globalconfig->settings_showmydelve)) {
+            $o365object = $DB->get_record('local_o365_objects', ['moodleid' => $USER->id]);
+            if (!empty($o365object)) {
+                $delveurl = 'https://'.$odburl.'/_layouts/15/me.aspx?u='.$o365object->objectid.'&v=work';
+            }
+        }
+
         if (!empty($user->picture)) {
             $html .= '<div class="profilepicture">';
-            $html .= $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
+            $picture_html = $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
+
+            // if "My Delve" is enabled, then clicking on the user picture should take you to their Delve profile page
+            if (!empty($delveurl)) {
+                $doc = new DOMDocument('1.0', 'UTF-8');
+                $doc->loadHTML($picture_html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                $xpath = new DOMXPath($doc);
+                $links = $doc->getElementsByTagName('a');
+                if (!empty($links)) {
+                    $links[0]->setAttribute('href', $delveurl);
+                    $links[0]->setAttribute('target', '_blank');
+                    $picture_html = $doc->saveHTML();
+                }
+            }
+
+            $html .= $picture_html;
             $html .= '</div>';
         }
 
@@ -181,7 +205,6 @@ class block_microsoft extends block_base {
         $items = array_merge($items, $this->get_study_groups());
 
         $userupn = \local_o365\utils::get_o365_upn($USER->id);
-
 
         if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
             // Course SharePoint Site.
@@ -198,6 +221,13 @@ class block_microsoft extends block_base {
                     }
                 }
             }
+        }
+
+        // My Delve URL
+        if (!empty($delveurl)) {
+            $delveattrs = ['class' => 'servicelink block_microsoft_delve', 'target' => '_blank'];
+            $delvestr = get_string('linkmydelve', 'block_microsoft');
+            $items[] = html_writer::link($delveurl, $delvestr, $delveattrs);
         }
 
         // My OneNote Notebook.
