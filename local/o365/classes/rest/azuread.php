@@ -238,39 +238,6 @@ class azuread extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get an array of the current required permissions.
-     *
-     * @return array Array of required Azure AD application permissions.
-     */
-    public function get_required_permissions() {
-        return [
-            'Microsoft.Azure.ActiveDirectory' => [
-                'Directory.ReadWrite.All' => 'Scope',
-                'Directory.AccessAsUser.All' => 'Scope',
-                'Directory.Read.All' => 'Scope',
-                'User.Read.All' => 'Scope',
-            ],
-            'Microsoft.SharePoint' => [
-                'AllSites.Read' => 'Scope',
-                'AllSites.Write' => 'Scope',
-                'AllSites.Manage' => 'Scope',
-                'AllSites.FullControl' => 'Scope',
-                'MyFiles.Read' => 'Scope',
-                'MyFiles.Write' => 'Scope',
-            ],
-            'Microsoft.Exchange' => [
-                'Calendars.Read' => 'Scope',
-                'Calendars.ReadWrite' => 'Scope',
-            ],
-            'OneNote' => [
-                'Notes.ReadWrite' => 'Scope',
-                'Notes.Read' => 'Scope',
-                'Notes.Create' => 'Scope',
-            ],
-        ];
-    }
-
-    /**
      * Get information on the current application.
      *
      * @return array|null Array of service information, or null if error.
