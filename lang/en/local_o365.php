@@ -32,7 +32,8 @@ $string['acp_maintenance_coursegroupusers'] = 'Resync users in groups for course
 $string['acp_maintenance_coursegroupusers_desc'] = 'This will resync the user membership for all Office 365 groups created for all Moodle courses. This will ensure all, and only, users enrolled in the Moodle course are in the Office 365 group. <br /><b>Note:</b> If you have added any additional users to a course group that are not enrolled in the associated Moodle course, they will be removed.';
 $string['acp_usergroupcustom'] = 'User Group Customization';
 $string['acp_usergroupcustom_off'] = 'Disable<br />Disables all usergroup integration.';
-$string['acp_usergroupcustom_oncustom'] = 'Custom <a href="{$a}">Customize</a><br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.';
+$string['acp_usergroupcustom_savemessage'] = 'Your changes have been saved.';
+$string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables all usergroup features for all Moodle courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
 $string['acp_usergroupcustom_comingsoon'] = 'Coming Soon';
