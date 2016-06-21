@@ -136,6 +136,26 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Test a tenant value.
+     *
+     * @param string $tenant A tenant string to test.
+     * @return bool True if tenant succeeded, false if not.
+     */
+    public function test_tenant($tenant) {
+        if (!is_string($tenant)) {
+            throw new \coding_exception('tenant value must be a string');
+        }
+        $oidcconfig = get_config('auth_oidc');
+        $this->tenantoverride = $tenant;
+        $appinfo = $this->get_application_info();
+        $this->tenantoverride = null;
+        if (isset($appinfo['value']) && isset($appinfo['value'][0]['appId'])) {
+            return ($appinfo['value'][0]['appId'] === $oidcconfig->clientid) ? true : false;
+        }
+        return false;
+    }
+
+    /**
      * Get a list of groups.
      *
      * @return array List of groups.
@@ -908,11 +928,11 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get an array of the current required permissions.
+     * Get an array of the current required permissions for unified api.
      *
      * @return array Array of required Azure AD application permissions.
      */
-    public function get_required_permissions() {
+    public function get_unified_required_permissions() {
         return [
             'openid',
             'Calendars.ReadWrite',
@@ -931,10 +951,10 @@ class unified extends \local_o365\rest\o365api {
      *
      * @return array Array of missing permissions, permission key as array key, human-readable name as values.
      */
-    public function check_permissions() {
+    public function check_unified_permissions() {
         $this->token->refresh();
         $currentperms = $this->get_unified_api_permissions();
-        $neededperms = $this->get_required_permissions();
+        $neededperms = $this->get_unified_required_permissions();
         $availableperms = $this->get_available_permissions();
 
         if ($currentperms === null || $availableperms === null) {
@@ -964,6 +984,49 @@ class unified extends \local_o365\rest\o365api {
         }
 
         return $missingpermsreturn;
+    }
+
+    /**
+     * Check whether all permissions defined in $this->get_required_permissions have been assigned.
+     *
+     * @return array Array of missing permissions.
+     */
+    public function check_permissions() {
+        $this->token->refresh();
+        $neededperms = $this->get_required_permissions();
+        $servicestoget = array_keys($neededperms);
+        $allappdata = $this->get_service_data($servicestoget);
+        $currentperms = $this->get_current_permissions();
+        $missingperms = [];
+        foreach ($neededperms as $app => $perms) {
+            $appid = $allappdata[$app]['appId'];
+            $appname = $allappdata[$app]['appDisplayName'];
+            foreach ($perms as $permname => $neededtype) {
+                if (isset($allappdata[$app]['perms'][$permname])) {
+                    $permid = $allappdata[$app]['perms'][$permname]['id'];
+                    if (!isset($currentperms[$appid][$permid])) {
+                        if (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName'])) {
+                            $permdesc = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
+                        } else {
+                            $permdesc = $permname;
+                        }
+                        $missingperms[$appname][$permname] = $permdesc;
+                    }
+                } else {
+                    $missingperms[$appname][$permname] = $permname;
+                }
+            }
+        }
+
+        // Determine whether we have write permissions.
+        $writeappid = $allappdata['Microsoft.Azure.ActiveDirectory']['appId'];
+        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'])
+            ? $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'] : null;
+        $impersonatepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['user_impersonation']['id'];
+        $haswrite = (!empty($writepermid) && !empty($currentperms[$writeappid][$writepermid])) ? true : false;
+        $hasimpersonate = (!empty($currentperms[$writeappid][$impersonatepermid])) ? true : false;
+        $canfix = ($hasimpersonate === true) ? true : false;
+        return [$missingperms, $canfix];
     }
 
     /**
@@ -1023,5 +1086,229 @@ class unified extends \local_o365\rest\o365api {
         $apiresponse = $this->apicall('post', "/me/drive/items/$fileid/createLink", json_encode($params));
         $response = $this->process_apicall_response($apiresponse);
         return $response['link']['webUrl'];
+    }
+
+    /**
+     * Get information on specified services.
+     *
+     * @param array $servicenames Array of service names to get. (See keys in get_required_permissions for examples.)
+     * @param bool $transform Whether to transform the result for easy consumption (see check_permissions and push_permissions)
+     * @return array|null Array of service information, or null if error.
+     */
+    public function get_service_data(array $servicenames, $transform = true) {
+        $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
+        $response = $this->betaapicall('get', '/servicePrincipals()?$filter='.$filterstr);
+        if (!empty($response)) {
+            $response = @json_decode($response, true);
+            if (!empty($response) && is_array($response)) {
+                if ($transform === true) {
+                    $transformed = [];
+                    foreach ($response['value'] as $i => $appdata) {
+                        $transformed[$appdata['displayName']] = [
+                            'appId' => $appdata['appId'],
+                            'appDisplayName' => $appdata['appDisplayName'],
+                            'perms' => []
+                        ];
+                        foreach ($appdata['oauth2Permissions'] as $i => $permdata) {
+                            $transformed[$appdata['displayName']]['perms'][$permdata['value']] = $permdata;
+                        }
+                    }
+                    return $transformed;
+                } else {
+                    return $response;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the currently assigned permissions for this application.
+     *
+     * @return array Array of currently assign permissions, using service and permission IDs.
+     */
+    public function get_current_permissions() {
+        $currentperms = [];
+        $response = $this->get_application_info();
+        if (isset($response['value'][0]['requiredResourceAccess'])) {
+            foreach ($response['value'][0]['requiredResourceAccess'] as $i => $permset) {
+                if (isset($permset['resourceAppId']) && isset($permset['resourceAccess'])) {
+                    if (!isset($currentperms[$permset['resourceAppId']])) {
+                        $currentperms[$permset['resourceAppId']] = [];
+                    }
+                    foreach ($permset['resourceAccess'] as $i => $access) {
+                        if (isset($access['id']) && isset($access['type'])) {
+                            $currentperms[$permset['resourceAppId']][$access['id']] = $access['type'];
+                        }
+                    }
+                }
+            }
+            unset($response);
+        }
+        return $currentperms;
+    }
+
+    /**
+     * Add a user to a course o365 usergoup.
+     *
+     * @param int $courseid The ID of the moodle group.
+     * @param int $userid The ID of the moodle user.
+     * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     */
+    public function add_user_to_course_group($courseid, $userid) {
+        global $DB;
+
+        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
+        if (empty($coursegroupobject)) {
+            return null;
+        }
+
+        $sql = 'SELECT u.*,
+                       tok.oidcuniqid as userobjectid
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u ON u.username = tok.username
+                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
+        $params = ['https://graph.windows.net', $userid];
+        $userobject = $DB->get_record_sql($sql, $params);
+        if (empty($userobject)) {
+            return null;
+        }
+
+        $response = $this->add_member_to_group($coursegroupobject->objectid, $userobject->userobjectid);
+        return $response;
+    }
+
+    /**
+     * Remove a user from a course o365 usergoup.
+     *
+     * @param int $courseid The ID of the moodle group.
+     * @param int $userid The ID of the moodle user.
+     * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     */
+    public function remove_user_from_course_group($courseid, $userid) {
+        global $DB;
+
+        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
+        if (empty($coursegroupobject)) {
+            return null;
+        }
+
+        $sql = 'SELECT u.*,
+                       tok.oidcuniqid as userobjectid
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u ON u.username = tok.username
+                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
+        $params = ['https://graph.windows.net', $userid];
+        $userobject = $DB->get_record_sql($sql, $params);
+        if (empty($userobject)) {
+            return null;
+        }
+
+        $response = $this->remove_member_from_group($coursegroupobject->objectid, $userobject->userobjectid);
+        return $response;
+    }
+
+    /**
+     * Get a specific user's information.
+     *
+     * @param string $oid The user's object id.
+     * @return array|null Array of user information, or null if failure.
+     */
+    public function get_user($oid, $params = 'default') {
+        $endpoint = "/users/{$oid}";
+        $odataqueries = [];
+        $context = 'https://graph.microsoft.com/v1.0/$metadata#users/$entity';
+        if ($params === 'default') {
+            $params = [
+                'id',
+                'userPrincipalName',
+                'displayName',
+                'givenName',
+                'surname',
+                'mail',
+                'streetAddress',
+                'city',
+                'postalCode',
+                'state',
+                'country',
+                'jobTitle',
+                'department',
+                'companyName',
+                'preferredLanguage',
+                'businessPhones',
+                'facsimileTelephoneNumber',
+                'mobilePhone',
+            ];
+            $context = 'https://graph.microsoft.com/v1.0/$metadata#users(';
+            $context = $context.join(',', $params).')/$entity';
+            $odataqueries[] = '$select='.implode(',', $params);
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?'.implode('&', $odataqueries);
+        }
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = [
+            '@odata.context' => $context,
+            'id' => null,
+            'userPrincipalName' => null,
+        ];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Get the Azure AD UPN of a connected Moodle user.
+     *
+     * @param \stdClass $user The Moodle user.
+     * @return string|bool The user's Azure AD UPN, or false if failure.
+     */
+    public static function get_muser_upn($user) {
+        global $DB;
+        $now = time();
+
+        if (is_numeric($user)) {
+            $user = $DB->get_record('user', ['id' => $user]);
+            if (empty($user)) {
+                \local_o365\utils::debug('User not found', 'local_o365\rest\unified::get_muser_upn', $user);
+                return false;
+            }
+        }
+
+        // Get user UPN.
+        $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
+        if (!empty($userobjectdata)) {
+            return $userobjectdata->o365name;
+        } else {
+            // Get user data.
+            $authoidcuserdata = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
+            if (empty($authoidcuserdata)) {
+                // No data for the user in the OIDC token table. Can't proceed.
+                \local_o365\utils::debug('No oidc token found for user.', 'local_o365\rest\unified::get_muser_upn', $user->username);
+                return false;
+            }
+            $httpclient = new \local_o365\httpclient();
+            try {
+                $apiclient = \local_o365\utils::get_api();
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage(), 'local_o365\rest\unified::get_muser_upn', $e);
+                return false;
+            }
+            $userdata = $apiclient->get_user($authoidcuserdata->oidcuniqid);
+            if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
+                $userdata['objectId'] = $userdata['id'];
+            }
+            $userobjectdata = (object)[
+                'type' => 'user',
+                'subtype' => '',
+                'objectid' => $userdata['objectId'],
+                'o365name' => $userdata['userPrincipalName'],
+                'moodleid' => $user->id,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ];
+            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+            return $userobjectdata->o365name;
+        }
     }
 }
