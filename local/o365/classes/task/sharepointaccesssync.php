@@ -53,7 +53,11 @@ class sharepointaccesssync extends \core\task\adhoc_task {
                     if (!\local_o365\utils::is_o365_connected($userid)) {
                         continue;
                     }
-                    $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+                    if (\local_o365\rest\unified::is_configured()) {
+                        $userupn = \local_o365\rest\unified::get_muser_upn($user);
+                    } else {
+                        $userupn = \local_o365\rest\azuread::get_muser_upn($user);
+                    }
                     $hascap = has_capability($requiredcap, $context, $user);
                     if ($hascap === true) {
                         // Add to group.
