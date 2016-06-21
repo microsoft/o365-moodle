@@ -67,4 +67,13 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*'
     ],
+    [
+        'classname' => 'local_o365\feature\sds\task\sync',
+        'blocking' => 0,
+        'minute' => '*',
+        'hour' => '3',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ],
 ];
