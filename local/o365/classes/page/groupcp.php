@@ -112,7 +112,7 @@ class groupcp extends base {
         $context = \context_course::instance($course->id);
         $this->set_context($context);
         require_login($course);
-        require_capability('local/o365:viewgroups', $this->context);
+        require_capability('local/o365:managegroups', $this->context);
         $PAGE->set_pagelayout('course');
 
         $manage = has_capability('local/o365:managegroups', $context);
@@ -340,7 +340,6 @@ class groupcp extends base {
         $strstudygroup = get_string('groups_studygroup', 'local_o365');
         $strheading = get_string('groups_editsettings', 'local_o365');
 
-        $PAGE->navbar->add($strstudygroup, new \moodle_url('/local/o365/groupcp.php', ['courseid' => $group->courseid, 'groupid' => $group->groupid]));
         $PAGE->navbar->add($strheading);
 
         echo $OUTPUT->header();
@@ -392,7 +391,11 @@ class groupcp extends base {
         $PAGE->set_pagelayout('course');
         $this->set_url(new \moodle_url($this->url, ['courseid' => $group->courseid, 'groupid' => $group->groupid]));
         $this->set_context(\context_course::instance($course->id));
-        require_capability('local/o365:viewgroups', $this->context);
+
+        // If the user doesn't have the manage groups capability, check if they can view groups.
+        if (!has_capability('local/o365:managegroups', $this->context)) {
+            require_capability('local/o365:viewgroups', $this->context);
+        }
 
         $cache = \cache::make('local_o365', 'groups');
         $groupscache = \local_o365\feature\usergroups\utils::get_group_urls($cache, $courseid, $groupid);
@@ -433,7 +436,7 @@ class groupcp extends base {
         }
 
         if (has_capability('local/o365:managegroups', $this->context)) {
-            $url = new \moodle_url('/local/o365/groupcp.php', ['action' => 'editgroup', 'id' => $group->id]);
+            $url = new \moodle_url('/local/o365/groupcp.php', ['action' => 'editgroup', 'id' => $group->id, 'courseid' => $courseid]);
             $streditgroup = get_string('groups_editsettings', 'local_o365');
             $html = \html_writer::tag('h5', \html_writer::link($url, $streditgroup));
             echo \html_writer::tag('div', $html);
