@@ -221,6 +221,37 @@ class main {
                          WHERE e.courseid = ?';
                 $params = ['course', 'out', 'both', $event->courseid];
                 $attendees = $DB->get_records_sql($sql, $params);
+
+                // Retrieve the Outlook group objectid.
+                $groupobject = $DB->get_record('local_o365_objects', ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']);
+                $outlookgroupemail = $this->construct_outlook_group_email($event->courseid);
+                // Add the Outlook group user as an attendee and organizer to the event.
+                if (!empty($groupobject) && !empty($groupobject->o365name) && !empty($outlookgroupemail)) {
+                    // Assemble o365 group data.
+                    $firstname = '';
+                    $lastname = '';
+                    list($firstname, $lastname) = $this->group_first_last_name($groupobject->o365name);
+                    // Add o365 group as organizer for the event.
+                    $outlookeventorganizer = [
+                        'organizer' => [
+                            'emailAddress' => [
+                                'name' => $groupobject->o365name,
+                                'address' => $outlookgroupemail,
+                            ]
+                        ],
+                        'responseRequested' => false,
+                        'isOrganizer' => true,
+                    ];
+                    $apiclient = $this->construct_calendar_api($event->userid);
+                    $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, [], $outlookeventorganizer, $groupobject->objectid);
+                    $idmaprec = [
+                        'eventid' => $event->id,
+                        'outlookeventid' => $response['Id'],
+                        'userid' => $event->userid,
+                        'origin' => 'moodle',
+                    ];
+                    $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                }
             }
         } else {
             // Personal user event. Only sync if user is subscribed to their events.
@@ -374,5 +405,52 @@ class main {
         $DB->delete_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
 
         return true;
+    }
+
+    /**
+     * Construct the o3654 group email.
+     * @return string The o365 group email, or an empty string if an error occurred.
+     */
+    protected function construct_outlook_group_email($courseid) {
+        global $DB;
+        // Assemble Moodle course data and reconstruct the o365 group email.
+        $groupprefix = $DB->get_field('course', 'shortname', ['id' => SITEID]);
+        $groupname = $DB->get_field('course', 'shortname', ['id' => $courseid]);
+        $tenant = get_config('local_o365', 'aadtenant');
+        $mailnickprefix = '';
+        $groupemail = '';
+
+        // If the course shortname and the Azure AD tenant are not empty.
+        if (!empty($groupprefix) && !empty($tenant)) {
+            $mailnickprefix = \core_text::strtolower($groupprefix);
+            $mailnickprefix = preg_replace('/[^a-z0-9]+/iu', '', $mailnickprefix);
+            $groupemail = $mailnickprefix.'_'.$groupname."@{$tenant}";
+        }
+
+        return $groupemail;
+    }
+
+    /**
+     * Get group first and last name.
+     * @param string $groupname The o365 group name.
+     * @return array The first index is the first name and the second index is the last name.
+     */
+    protected function group_first_last_name($groupname) {
+        $firstname = '';
+        $lastname = '';
+        if (empty($groupname)) {
+            return array($firstname, $lastname);
+        }
+
+        $pos = strpos($groupname, ': ');
+
+        if (false === $pos) {
+            return array($firstname, $lastname);
+        }
+
+        $firstname = substr($groupname, 0, $pos + 1);
+        $lastname = substr($groupname, $pos + 1);
+        $lastname = trim($lastname);
+        return array($firstname, $lastname);
     }
 }
