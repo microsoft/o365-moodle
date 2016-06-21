@@ -173,7 +173,7 @@ class block_microsoft extends block_base {
 
         $odburl = get_config('local_o365', 'odburl');
         if (!empty($odburl) && !empty($this->globalconfig->settings_showmydelve)) {
-            $o365object = $DB->get_record('local_o365_objects', ['moodleid' => $USER->id]);
+            $o365object = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $USER->id]);
             if (!empty($o365object)) {
                 $delveurl = 'https://'.$odburl.'/_layouts/15/me.aspx?u='.$o365object->objectid.'&v=work';
             }
