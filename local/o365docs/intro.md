@@ -51,7 +51,7 @@ The Office 365 set of plugins contains 10 different plugins which provide a wide
     -   Allows students to submit assignments using OneNote.
 -   **OneNote Repository** (repository\_onenote)
     -   Allows access to a user's OneNote files from the Moodle repository view.
--   **OneDrive for Business Repository** (repository\_office 365)
+-   **Office 365 Repository** (repository\_office 365)
     -   This is a repository plugin that communicates with OneDrive for Business. If the SharePoint link is configured, this also provides access to Moodle course SharePoint sites' document libraries.
     -   Features
         -   Import files into Moodle from OneDrive for Business
