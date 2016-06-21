@@ -115,6 +115,7 @@ class calendar extends \MoodleQuickForm_advcheckbox {
      * @return string The element HTML.
      */
     public function toHtml() {
+        global $SITE;
         $checkboxid = $this->getAttribute('id').'_checkbox';
         $checkboxname = $this->getName().'[checked]';
         $checkboxchecked = ($this->checked === true) ? 'checked="checked"' : '';
