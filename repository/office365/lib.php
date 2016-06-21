@@ -1349,6 +1349,9 @@ class repository_office365 extends \repository {
         if (empty($reference['source']) || !in_array($reference['source'], ['onedrive', 'sharepoint'])) {
             return false;
         }
+        if (($reference['source'] === 'onedrive') && ($this->unifiedconfigured === true)) {
+            return false;
+        }
         if (!empty($forcedownload)) {
             return false;
         }
@@ -1394,6 +1397,7 @@ class repository_office365 extends \repository {
                     die();
                 }
                 $fileinfo = $sourceclient->get_file_metadata($reference['id']);
+                $fileurl = (isset($fileinfo['webUrl'])) ? $fileinfo['webUrl'] : '';
                 break;
 
             case 'onedrive':
@@ -1403,12 +1407,12 @@ class repository_office365 extends \repository {
                     send_file_not_found();
                     die();
                 }
-                $fileinfo = $sourceclient->get_file_metadata($reference['id']);
+                $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
                 break;
 
             case 'onedrivegroup':
                 $sourceclient = $this->get_unified_apiclient();
-                $fileinfo = $sourceclient->get_group_file_metadata($reference['groupid'], $reference['id']);
+                $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
                 break;
 
             case 'office365video':
@@ -1429,12 +1433,6 @@ class repository_office365 extends \repository {
                 die();
             }
             if (!empty($sourceclient)) {
-                if (isset($fileinfo['webUrl'])) {
-                    $fileurl = $fileinfo['webUrl'];
-                } else {
-                    $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
-                }
-
                 if (empty($fileurl)) {
                     $errstr = 'Embed was requested, but could not get file info to complete request.';
                     \local_o365\utils::debug($errstr, 'send_file', ['reference' => $reference, 'fileinfo' => $fileinfo]);
@@ -1460,11 +1458,7 @@ class repository_office365 extends \repository {
             }
         }
 
-        if ($reference['source'] === 'office365video') {
-            redirect($reference['url']);
-        }
-
-        redirect($fileinfo['webUrl']);
+        redirect($fileurl);
     }
 
     /**
