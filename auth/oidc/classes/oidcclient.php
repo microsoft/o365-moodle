@@ -137,6 +137,7 @@ class oidcclient {
             'response_mode' => 'form_post',
             'resource' => $this->resource,
             'state' => $this->getnewstate($nonce, $stateparams),
+            'redirect_uri' => $this->redirecturi
         ];
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
