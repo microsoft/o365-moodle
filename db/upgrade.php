@@ -28,7 +28,7 @@
  * @return bool result
  */
 function xmldb_local_o365_upgrade($oldversion) {
-    global $DB;
+    global $DB, $USER, $SITE;
 
     $dbman = $DB->get_manager();
     $result = true;
@@ -439,6 +439,46 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         upgrade_plugin_savepoint($result, '2015012745.03', 'local', 'o365');
+    }
+
+    if ($oldversion < 2015012747.01) {
+
+        // Define table local_o365_calsettings to be created.
+        $table = new xmldb_table('local_o365_calsettings');
+
+        // Adding fields to table local_o365_calsettings.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('user_id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('o365calid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table local_o365_calsettings.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for local_o365_calsettings.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $existingsubsrs = $DB->get_recordset('local_o365_calsub', ['user_id' => $USER->id]);
+        if ($existingsubsrs->valid()) {
+            // Create new outlook calender with site name.
+            $calsync = new \local_o365\feature\calsync\main();
+            $sitecalendar = $calsync->create_outlook_calendar($SITE->fullname);
+
+            // Determine outlook calendar setting check.
+            $usersetting = $DB->get_record('local_o365_calsettings', ['user_id' => $USER->id]);
+            if (empty($usersetting)) {
+                $newsetting = [
+                        'user_id' => $USER->id,
+                        'o365calid' => $sitecalendar['Id'],
+                        'timecreated' => time()
+                ];
+                $newsetting['id'] = $DB->insert_record('local_o365_calsettings', (object)$newsetting);
+            }
+        }
+
+        upgrade_plugin_savepoint($result, 2015012747.01, 'local', 'o365');
     }
 
     return $result;
