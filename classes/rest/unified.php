@@ -196,6 +196,7 @@ class unified extends \local_o365\rest\o365api {
             'mailEnabled' => false,
             'securityEnabled' => false,
             'mailNickname' => $mailnickname,
+            'visibility' => 'Private',
         ];
 
         if (!empty($extra) && is_array($extra)) {
