@@ -68,3 +68,21 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
 
     send_stored_file($file, null, 0, $forcedownload, $options);
 }
+
+/**
+ * Check for link connection capabilities.
+ *
+ * @param int $userid Moodle user id to check permissions for.
+ * @param string $mode Mode to check
+ *                     'link' to check for connect specific capability
+ *                     'unlink' to check for disconnect capability.
+ * @param boolean $require Use require_capability rather than has_capability.
+ * @return boolean True if has capability.
+ */
+function local_o365_connectioncapability($userid, $mode = 'link', $require = false) {
+    $check = $require ? 'require_capability' : 'has_capability';
+    $cap = ($mode == 'link') ? 'local/o365:manageconnectionlink' : 'local/o365:manageconnectionunlink';
+    $contextsys = \context_system::instance();
+    $contextuser = \context_user::instance($userid);
+    return has_capability($cap, $contextsys) || $check($cap, $contextuser);
+}
