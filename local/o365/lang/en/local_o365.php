@@ -365,7 +365,7 @@ $string['ucp_connection_status'] = 'Office&nbsp;365 connection is:';
 $string['ucp_connection_start'] = 'Connect to Office&nbsp;365';
 $string['ucp_connection_stop'] = 'Disconnect from Office&nbsp;365';
 $string['ucp_connection_options'] = 'Connection Options:';
-$string['ucp_connection_desc'] = 'Here you can configure how you connect to Office&nbsp;365. To use Office 365 features, you must be connected to an Office 365 account. This can be done one of two ways, outlined below.';
+$string['ucp_connection_desc'] = 'Here you can configure how you connect to Office&nbsp;365. To use Office 365 features, you must be connected to an Office 365 account. This can be accomplished as outlined below.';
 $string['ucp_connection_aadlogin'] = 'Use your Office&nbsp;365 credentials to log in to Moodle<br />';
 $string['ucp_connection_aadlogin_desc_rocreds'] = 'Instead of your Moodle username and password, you will enter your Office 365 username and password on the Moodle login page.';
 $string['ucp_connection_aadlogin_desc_authcode'] = 'Instead of entering a username and password on the Moodle login page, you will see a section that says "Login using your account on {$a}" on the login page. You will click the link and be redirected to Office 365 to log in. After you have logged in to Office 365 successfully, you will be returned to Moodle and logged in to your account.';
@@ -420,6 +420,8 @@ $string['ucp_title'] = 'Office&nbsp;365 / Moodle Control Panel';
 $string['ucp_options'] = 'Options';
 $string['ucp_o365accountconnected'] = 'This Office 365 account is already connected with another Moodle account.';
 
+$string['o365:manageconnectionlink'] = 'Manage Connection Link';
+$string['o365:manageconnectionunlink'] = 'Manage Connection Unlink';
 $string['o365:managegroups'] = 'Manage Groups';
 $string['o365:viewgroups'] = 'View Groups';
 
