@@ -201,7 +201,7 @@ With this method, the user will log in to Moodle using their Office 365 account 
 
 - Users who do not yet have a Moodle account can simply follow the normal OpenID Connect login process (see: [OpenID Connect Authentication Usage](#openid-connect-authentication-plugin). If a Moodle account is not found for a user logging in with OpenID Connect, an account will be created for them.
 - You can migrate existing Moodle users to Azure AD login by following the steps below:
-  1. Ensure the user you want to migrate has the "auth/oidc:manageconnection" capability. Regular users do not have this capability by default.
+  1. Ensure the user you want to migrate has the "auth/oidc:manageconnection" or "auth/oidc:manageconnectionconnect" capability. Regular users do not have this capability by default.
   2. Ensure the Microsoft block has been added to a page in Moodle (for example, the Moodle dashboard).
   3. Log in as the user to be migrated, visit a page that has the Microsoft block visible.
   4. Click the **Connect to Office 365** link in the Microsoft block.
@@ -219,14 +219,15 @@ With this method, the user will log in to Moodle using their Office 365 account 
 This will allow you to connect a user to Office 365, enable all Office 365 features with this user, but not have to change their Moodle login method.
 
 1. Ensure the Microsoft block has been added to a page in Moodle (for example, the Moodle dashboard).
-2. Log in as the user to be migrated, visit a page that has the Microsoft block visible.
-3. Click the **Connect to Office 365** link in the Microsoft block.
-4. You will be brought to the **Office 365 / Moodle Control Panel**.
-5. Click the *Office 365 Connection* link under **Office 365 Features**
-6. Click the link that says **Link your Moodle account to an Office 365 account.**
-7. You will be redirected to Office 365 to log in. Log in to the Office 365 account you'd like to link the Moodle user to.
+2. Ensure the user you want to migrate has the "local/o365:manageconnectionlink" capability. Regular users do not have this capability by default.
+3. Log in as the user to be migrated, visit a page that has the Microsoft block visible.
+4. Click the **Connect to Office 365** link in the Microsoft block.
+5. You will be brought to the **Office 365 / Moodle Control Panel**.
+6. Click the *Office 365 Connection* link under **Office 365 Features**
+7. Click the link that says **Link your Moodle account to an Office 365 account.**
+8. You will be redirected to Office 365 to log in. Log in to the Office 365 account you'd like to link the Moodle user to.
   1.  **NOTE:** If you are already logged in to Office 365, you will not have to enter your credentials on the Office 365 login page - the account you are logged in to will be linked to the Moodle account. Ensure you are logged in to the correct account, use a private browser window, or log out of Office 365 first to show the Office 365 login screen.
-8. You will be redirected back to Moodle to the Office 365 / Moodle control panel. The **Connection status** box on the side of the page should indicate that you are connected to Office 365 and that you are linked to an Office 365 account.
-9. The Moodle account is now linked to the Office 365 account and can use Office 365 features as that user.
-10. The Moodle user's login method will not change, the user will log in to Moodle as they always have.
-11. If the user experiences any problems using Office 365 features, it's possible the token generated during this initial linking process has expired. Return to the **Office 365 / Moodle Control Panel** and click the **Refresh Connection** link in the Connection Status box. This will generate a new token.
+9. You will be redirected back to Moodle to the Office 365 / Moodle control panel. The **Connection status** box on the side of the page should indicate that you are connected to Office 365 and that you are linked to an Office 365 account.
+10. The Moodle account is now linked to the Office 365 account and can use Office 365 features as that user.
+11. The Moodle user's login method will not change, the user will log in to Moodle as they always have.
+12. If the user experiences any problems using Office 365 features, it's possible the token generated during this initial linking process has expired. Return to the **Office 365 / Moodle Control Panel** and click the **Refresh Connection** link in the Connection Status box. This will generate a new token.
