@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015111904;
-$plugin->requires = 2015111600;
+$plugin->version = 2016062000;
+$plugin->requires = 2016052300;
 $plugin->component = 'local_msaccount';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.4';
+$plugin->release = '3.1.0.0';
