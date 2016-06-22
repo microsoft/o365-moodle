@@ -25,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/blocks/microsoft/lib.php');
 require_once($CFG->dirroot.'/auth/oidc/lib.php');
+require_once($CFG->dirroot.'/local/o365/lib.php');
 
 /**
  * Microsoft Block.
@@ -73,7 +74,8 @@ class block_microsoft extends block_base {
                 $this->content->text .= $this->get_content_connected();
             } else {
                 $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
-                if (!empty($connection) && auth_oidc_connectioncapability($USER->id, 'connect')) {
+                if (!empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
+                        local_o365_connectioncapability($USER->id, 'link'))) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
                     $this->content->text .= $this->get_content_matched($connection->aadupn, $uselogin);
                 } else {
@@ -274,7 +276,8 @@ class block_microsoft extends block_base {
             $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (auth_oidc_connectioncapability($USER->id, 'disconnect') === true) {
+        if (auth_oidc_connectioncapability($USER->id, 'connect') === true || auth_oidc_connectioncapability($USER->id, 'disconnect') === true ||
+                local_o365_connectioncapability($USER->id, 'link') || local_o365_connectioncapability($USER->id, 'unlink')) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
                 $connectstr = get_string('linkconnection', 'block_microsoft');
@@ -308,7 +311,7 @@ class block_microsoft extends block_base {
         $items = [];
         $items = array_merge($items, $this->get_study_groups());
 
-        if (auth_oidc_connectioncapability($USER->id, 'connect') === true) {
+        if (auth_oidc_connectioncapability($USER->id, 'connect') === true || local_o365_connectioncapability($USER->id, 'link')) {
             if (!empty($this->globalconfig->settings_showo365connect)) {
                 $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
             }
