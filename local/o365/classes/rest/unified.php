@@ -419,6 +419,22 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Add owner to group.
+     *
+     * @param string $groupobjectid The object ID of the group to add to.
+     * @param string $memberobjectid The object ID of the item to add (user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function add_owner_to_group($groupobjectid, $memberobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/owners/$ref';
+        $data = [
+            '@odata.id' => $this->get_apiuri().'/v1.0/users/'.$memberobjectid
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+        return ($response === '') ? true : $response;
+    }
+
+    /**
      * Remove member from group.
      *
      * @param string $groupobjectid The object ID of the group to remove from.
@@ -810,7 +826,7 @@ class unified extends \local_o365\rest\o365api {
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
-    
+
     /**
      * Get a files from trendingAround api.
      *
