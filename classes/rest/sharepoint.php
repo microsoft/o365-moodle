@@ -898,7 +898,7 @@ class sharepoint extends \local_o365\rest\o365api {
 
     /**
      * Get list of all videos on a channel.
-     * 
+     *
      * @param string $channelid The ID of the channel.
      * @return a list of Video objects.
      */
@@ -977,10 +977,10 @@ class sharepoint extends \local_o365\rest\o365api {
      * @param string $channelid The ID of the channel where video need to uploaded.
      * @param string $videoid video ID.
      * @param string $filename The name of file on disk with full path ...
-     * @param integer $offsetsize.
+     * @param int $offsetsize Upload chunk size (default 8192 * 1024).
      * @return Response code
      */
-    public function upload_video($channelid, $videoid, $filename, $offsetsize = 8192 * 1024) {
+    public function upload_video($channelid, $videoid, $filename, $offsetsize = 8388608) {
         $filesize = filesize($filename);
         if ($filesize < (8192 * 1024)) {
             $result = $this->upload_video_small($channelid, $videoid, file_get_contents($filename));
