@@ -357,7 +357,7 @@ class repository_office365 extends \repository {
      * @return array Array of uploaded file information.
      */
     public function upload($saveasfilename, $maxbytes) {
-        global $CFG, $USER, $SESSION;
+        global $CFG, $USER, $SESSION, $DB;
         $caller = '\repository_office365::upload';
 
         $types = optional_param_array('accepted_types', '*', PARAM_RAW);
@@ -376,6 +376,9 @@ class repository_office365 extends \repository {
                 if (strpos($filepath, '/my/') === 0) {
                     $clienttype = 'onedrive';
                     $filepath = substr($filepath, 3);
+                } else if (strpos($filepath, '/groups/') === 0) {
+                    $clienttype = 'onedrivegroup';
+                    $filepath = substr($filepath, 7);
                 } else if (strpos($filepath, '/courses/') === 0) {
                     $clienttype = 'sharepoint';
                     $filepath = substr($filepath, 8);
@@ -409,6 +412,50 @@ class repository_office365 extends \repository {
                 $result = $apiclient->create_file($filepath, $filename, $content);
             }
             $source = $this->pack_reference(['id' => $result['id'], 'source' => 'onedrive']);
+        } else if ($clienttype === 'onedrivegroup') {
+            if ($this->unifiedconfigured === true) {
+                $apiclient = $this->get_unified_apiclient();
+                $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
+                $pathtrimmed = trim($parentid, '/');
+                $pathparts = explode('/', $pathtrimmed);
+                $coursesbyid = enrol_get_users_courses($USER->id, true);
+                if (!is_numeric($pathparts[0]) || !isset($coursesbyid[$pathparts[0]])
+                        || \local_o365\feature\usergroups\utils::course_is_group_enabled($pathparts[0]) !== true
+                        || \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($pathparts[0], 'onedrive') !== true) {
+                    \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $filepath]);
+                    throw new \moodle_exception('errorbadpath', 'repository_office365');
+                }
+                $courseid = (int)$pathparts[0];
+                if (!is_numeric($pathparts[1]) && $pathparts[1] !== 'coursegroup') {
+                    \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $filepath]);
+                    throw new \moodle_exception('errorbadpath', 'repository_office365');
+                }
+                if ($pathparts[1] === 'coursegroup') {
+                    $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+                    $group = $DB->get_record('local_o365_objects', $filters);
+                } else {
+                    $groupid = (int)$pathparts[1];
+                    $group = $DB->get_record('groups', ['id' => $groupid]);
+                    $filters = ['type' => 'group', 'subtype' => 'usergroup', 'moodleid' => $groupid];
+                    $group = $DB->get_record('local_o365_objects', $filters);
+                }
+                try {
+                    $result = $apiclient->create_group_file($group->objectid, '', $filename, $content);
+                    $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'groupid' => $group->objectid]);
+                } catch (\Exception $e) {
+                    $errmsg = 'Exception when uploading share point files for group';
+                    $debugdata = [
+                        'fullpath' => $filepath,
+                        'message' => $e->getMessage(),
+                        'groupid' => $group->objectid,
+                    ];
+                    \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                    $source = $this->pack_reference([]);
+                }
+            } else {
+                \local_o365\utils::debug('Tried to Upload a onedrive group file while the graph api is disabled.', $caller);
+                throw new \moodle_exception('errorwhileupload', 'repository_office365');
+            }
         } else if ($clienttype === 'sharepoint') {
             $pathtrimmed = trim($filepath, '/');
             $pathparts = explode('/', $pathtrimmed);
@@ -592,38 +639,42 @@ class repository_office365 extends \repository {
                 $curparent = trim(end($intragrouppath));
 
                 if (!empty($group)) {
-                    $unified = $this->get_unified_apiclient();
+                    if ($curparent === 'upload') {
+                        $breadcrumb[] = ['name' => get_string('upload', 'repository_office365'), 'path' => $curpath.'upload/'];
+                    } else {
+                        $unified = $this->get_unified_apiclient();
 
-                    if (!empty($curparent)) {
-                        $metadata = $unified->get_group_file_metadata($group->objectid, $curparent);
-                        if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
-                            $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
-                            $cache = \cache::make('repository_office365', 'unifiedgroupfolderids');
-                            $result = $cache->set($parentrefpath.'/'.$metadata['name'], $metadata['id']);
-                            if (!empty($parentrefpath)) {
-                                $parentrefpath = explode('/', trim($parentrefpath, '/'));
-                                $currentfullpath = '';
-                                foreach ($parentrefpath as $folder) {
-                                    $currentfullpath .= '/'.$folder;
-                                    $folderid = $cache->get($currentfullpath);
-                                    $breadcrumb[] = ['name' => $folder, 'path' => $curpath.$folderid];
+                        if (!empty($curparent)) {
+                            $metadata = $unified->get_group_file_metadata($group->objectid, $curparent);
+                            if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
+                                $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
+                                $cache = \cache::make('repository_office365', 'unifiedgroupfolderids');
+                                $result = $cache->set($parentrefpath.'/'.$metadata['name'], $metadata['id']);
+                                if (!empty($parentrefpath)) {
+                                    $parentrefpath = explode('/', trim($parentrefpath, '/'));
+                                    $currentfullpath = '';
+                                    foreach ($parentrefpath as $folder) {
+                                        $currentfullpath .= '/'.$folder;
+                                        $folderid = $cache->get($currentfullpath);
+                                        $breadcrumb[] = ['name' => $folder, 'path' => $curpath.$folderid];
+                                    }
                                 }
                             }
+                            $breadcrumb[] = ['name' => $metadata['name'], 'path' => $curpath.$metadata['id']];
                         }
-                        $breadcrumb[] = ['name' => $metadata['name'], 'path' => $curpath.$metadata['id']];
-                    }
-                    try {
-                        $contents = $unified->get_group_files($group->objectid, $curparent);
-                        $list = $this->contents_api_response_to_list($contents, $path, 'unifiedgroup', $group->objectid, false);
-                    } catch (\Exception $e) {
-                        $errmsg = 'Exception when retrieving share point files for group';
-                        $debugdata = [
-                            'fullpath' => $path,
-                            'message' => $e->getMessage(),
-                            'groupid' => $group->objectid,
-                        ];
-                        \local_o365\utils::debug($errmsg, $caller, $debugdata);
-                        $list = [];
+                        try {
+                            $contents = $unified->get_group_files($group->objectid, $curparent);
+                            $list = $this->contents_api_response_to_list($contents, $path, 'unifiedgroup', $group->objectid, true);
+                        } catch (\Exception $e) {
+                            $errmsg = 'Exception when retrieving share point files for group';
+                            $debugdata = [
+                                'fullpath' => $path,
+                                'message' => $e->getMessage(),
+                                'groupid' => $group->objectid,
+                            ];
+                            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                            $list = [];
+                        }
                     }
                 } else {
                     \local_o365\utils::debug('Could not file group object record', $caller, ['path' => $path]);
