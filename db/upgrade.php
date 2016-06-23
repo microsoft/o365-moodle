@@ -481,5 +481,16 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, 2015111916.01, 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2016062000.01) {
+        if ($dbman->table_exists('local_o365_coursegroupdata')) {
+            $table = new xmldb_table('local_o365_coursegroupdata');
+            $field = new xmldb_field('classnotebook', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', null);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            upgrade_plugin_savepoint($result, '2016062000.01', 'local', 'o365');
+        }
+    }
+
     return $result;
 }
