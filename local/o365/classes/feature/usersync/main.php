@@ -39,7 +39,12 @@ class main {
      *                     value here and set $systemfallback to true.
      * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
      */
-    public function construct_user_api($muserid = null, $systemfallback = true, $forcelegacy = false) {
+    public function construct_user_api($muserid = null, $systemfallback = true, $forcelegacy = false, $apponlyaccess = false) {
+        // Check to see if application only access is enabled.
+        if (!\local_o365\utils::is_configured_apponlyaccess()) {
+            $apponlyaccess = false;
+        }
+
         $unifiedconfigured = \local_o365\rest\unified::is_configured();
         if ($unifiedconfigured === true && !$forcelegacy) {
             $resource = \local_o365\rest\unified::get_resource();
@@ -49,9 +54,16 @@ class main {
 
         $token = null;
         if (!empty($muserid)) {
-            $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
+            if ($apponlyaccess && !$forcelegacy) {
+                // If app only access is requested and forcelegacy is not, than return app only token.
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc(true);
+                $resource = \local_o365\rest\unified::get_resource();
+                $token = \local_o365\oauth2\token::instance($muserid, $resource, $clientdata, $this->httpclient, true);
+            } else {
+                $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
+            }
         }
-        if (empty($token) && $systemfallback === true) {
+        if (empty($token) && ($systemfallback === true)) {
             $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
@@ -103,7 +115,7 @@ class main {
      * @return array|null Array of app service information, or null if failure.
      */
     public function get_application_serviceprincipal_info() {
-        $apiclient = $this->construct_user_api(0, true);
+        $apiclient = $this->construct_user_api(0, true, false, true);
         return $apiclient->get_application_serviceprincipal_info();
     }
 
@@ -117,7 +129,7 @@ class main {
      */
     public function assign_user($muserid, $userid, $appobjectid) {
         global $DB;
-        // Force using legacy api.
+        // Force using legacy api. Legacy assign user does not support app only access.
         $apiclient = $this->construct_user_api(0, true, true);
         $result = $apiclient->assign_user($muserid, $userid, $appobjectid);
         if (!empty($result['odata.error'])) {
@@ -215,7 +227,7 @@ class main {
      * @return array|null Array of user information, or null if failure.
      */
     public function get_users($params = 'default', $skiptoken = '') {
-        $apiclient = $this->construct_user_api(0, true);
+        $apiclient = $this->construct_user_api(0, true, false, true);
         return $apiclient->get_users($params, $skiptoken);
     }
 

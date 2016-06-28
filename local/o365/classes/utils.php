@@ -65,6 +65,25 @@ class utils {
     }
 
     /**
+     * Determine whether the app only access is configured.
+     *
+     * @return bool Whether the app only access is configured.
+     */
+    public static function is_configured_apponlyaccess() {
+        // App only access requires unified api to be enabled.
+        if (empty(get_config('local_o365', 'enableapponlyaccess'))) {
+            return false;
+        }
+        if (!\local_o365\rest\unified::is_configured()) {
+            return false;
+        }
+        if (empty(get_config('local_o365', 'aadtenant'))) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Filters an array of userids to users that are currently connected to O365.
      *
      * @param array $userids The full array of userids.

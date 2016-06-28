@@ -149,6 +149,7 @@ class ajax extends base {
         $resource = \local_o365\rest\discovery::get_resource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
+        // Get service api currently requires system token to be used.
         $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
@@ -201,6 +202,9 @@ class ajax extends base {
         $data = new \stdClass;
         $success = false;
 
+        // Check to see if application only access is enabled.
+        $apponlyaccess = \local_o365\utils::is_configured_apponlyaccess();
+
         $aadtenant = required_param('aadtenant', PARAM_TEXT);
         set_config('aadtenant', $aadtenant, 'local_o365');
 
@@ -209,6 +213,40 @@ class ajax extends base {
 
         // App data.
         $appdata = new \stdClass;
+
+        try {
+            // Legacy api requires system token access.
+            $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
+            $appinfo = $aadapiclient->get_application_info();
+            $correctredirecturl = \auth_oidc\utils::get_redirecturl();
+
+            // Check reply url.
+            if (isset($appinfo['value'][0]['replyUrls'])) {
+                $redirecturls = (array)$appinfo['value'][0]['replyUrls'];
+                $appdata->replyurl = new \stdClass;
+                $appdata->replyurl->correct = false;
+                $appdata->replyurl->detected = implode(', ', $redirecturls);
+                $appdata->replyurl->intended = $correctredirecturl;
+                foreach ($redirecturls as $redirecturl) {
+                    if ($redirecturl === $correctredirecturl) {
+                        $appdata->replyurl->correct = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isset($appinfo['value'][0]['homepage'])) {
+                $appdata->signonurl = new \stdClass;
+                $appdata->signonurl->correct = ($appinfo['value'][0]['homepage'] === $correctredirecturl) ? true : false;
+                $appdata->signonurl->detected = $appinfo['value'][0]['homepage'];
+                $appdata->signonurl->intended = $correctredirecturl;
+            }
+
+        } catch (\Exception $e) {
+            \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
+            $appdata->error = $e->getMessage();
+        }
+        $data->appdata = $appdata;
 
         $unifiedapi = new \stdClass;
         $unifiedapi->active = false;
@@ -223,7 +261,14 @@ class ajax extends base {
             try {
                 $httpclient = new \local_o365\httpclient();
                 $unifiedresource = \local_o365\rest\unified::get_resource();
-                $token = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc(true);
+
+                if ($apponlyaccess) {
+                    $token = \local_o365\oauth2\apponlytoken::instance(null, $unifiedresource, $clientdata, $httpclient, true);
+                } else {
+                    $token = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
+                }
+
                 if (empty($token)) {
                     throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
                 }

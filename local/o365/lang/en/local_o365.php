@@ -207,6 +207,8 @@ $string['settings_detectperms_valid'] = 'Permissions have been set up.';
 $string['settings_detectperms_invalid'] = 'Check permissions in Azure AD';
 $string['settings_enableunifiedapi'] = 'Enable Microsoft Graph API';
 $string['settings_enableunifiedapi_details'] = 'The Microsoft Graph API is a new API that provides some new features like the "Create user groups" setting below. It will eventually replace the existing Office APIs, however the features used are still in preview and are subject to change which may break some functionality. If you\'d like to try it out, enable this setting and click "Save changes". Add the "Microsoft Graph" to your application in Azure AD then return here and run the "Azure AD setup" tool below.';
+$string['settings_enableapponlyaccess'] = 'Enable application only access';
+$string['settings_enableapponlyaccess_details'] = 'Enable application only access as a replacement for the system user';
 $string['settings_fieldmap'] = 'User Field Mapping';
 $string['settings_fieldmap_addmapping'] = 'Add Mapping';
 $string['settings_fieldmap_details'] = 'Configure mapping between user fields in Office 365 and Moodle.';
@@ -339,6 +341,9 @@ $string['settings_usermatch_details'] = 'This tool allows you to match Moodle us
 $string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only users that have the specified value for the specified Azure AD field will be created during user sync.';
 $string['settings_usersynccreationrestriction_o365group'] = 'Office 365 Group Membership';
+
+$string['settings_apponlytokenendpoint_key'] = 'Token Endpoint for application only access';
+$string['settings_apponlytokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use when accessing by app only permissions.';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';

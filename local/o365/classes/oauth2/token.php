@@ -51,6 +51,9 @@ class token {
     /** @var int The ID of the user the token belongs to. */
     protected $userid;
 
+    /** @var boolean True if an app only request. */
+    protected $apponlyaccess = false;
+
     /**
      * Constructor.
      *
@@ -61,9 +64,10 @@ class token {
      * @param string $resource The token's resource.
      * @param \local_o365\oauth2\clientdata $clientdata Client data used for refreshing the token if needed.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
+     * @param boolean $apponlyaccess True if an app only request.
      */
     public function __construct($token, $expiry, $refreshtoken, $scope, $resource, $userid,
-                                \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+                                \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient, $apponlyaccess = false) {
         $this->token = $token;
         $this->expiry = $expiry;
         $this->refreshtoken = $refreshtoken;
@@ -72,6 +76,10 @@ class token {
         $this->userid = $userid;
         $this->clientdata = $clientdata;
         $this->httpclient = $httpclient;
+        if ($apponlyaccess && !\local_o365\utils::is_configured_apponlyaccess()) {
+            $apponlyaccess = false;
+        }
+        $this->apponlyaccess = $apponlyaccess;
     }
 
     /**
@@ -136,11 +144,14 @@ class token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient, $apponlyaccess = false) {
+        if ($apponlyaccess && !\local_o365\utils::is_configured_apponlyaccess()) {
+            $apponlyaccess = false;
+        }
         $token = static::get_stored_token($userid, $resource);
         if (!empty($token)) {
             $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['resource'],
-                    $token['user_id'], $clientdata, $httpclient);
+                    $token['user_id'], $clientdata, $httpclient, $apponlyaccess);
             return $token;
         } else {
             if ($resource === 'https://graph.windows.net') {
@@ -153,7 +164,7 @@ class token {
                 \local_o365\utils::debug('Cannot retrieve a token for the base resource.', 'local_o365\oauth2\token::instance '.$caller);
                 return null;
             } else {
-                $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
+                $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient, $apponlyaccess);
                 if (!empty($token)) {
                     return $token;
                 }
@@ -170,17 +181,37 @@ class token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function get_for_new_resource($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient);
-        if (!empty($aadgraphtoken)) {
+    public static function get_for_new_resource($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient, $apponlyaccess = false) {
+        if ($apponlyaccess && !\local_o365\utils::is_configured_apponlyaccess()) {
+            $apponlyaccess = false;
+        }
+        $aadgraphtoken = null;
+        if ($apponlyaccess && empty($userid)) {
+            // App only token.
             $params = [
                 'client_id' => $clientdata->get_clientid(),
                 'client_secret' => $clientdata->get_clientsecret(),
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $aadgraphtoken->get_refreshtoken(),
+                'grant_type' => 'client_credentials',
                 'resource' => $resource,
             ];
+        } else {
+            $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient, $apponlyaccess);
+            if (!empty($aadgraphtoken)) {
+                $params = [
+                    'client_id' => $clientdata->get_clientid(),
+                    'client_secret' => $clientdata->get_clientsecret(),
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $aadgraphtoken->get_refreshtoken(),
+                    'resource' => $resource,
+                ];
+            }
+        }
+        if ($apponlyaccess || !$apponlyaccess && !empty($aadgraphtoken)) {
+            // Retrieve a new token.
             $params = http_build_query($params, '', '&');
+            if ($apponlyaccess) {
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc(true);
+            }
             $tokenendpoint = $clientdata->get_tokenendpoint();
 
             $header = [
@@ -193,9 +224,10 @@ class token {
             $tokenresult = @json_decode($tokenresult, true);
 
             if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
+                $token = $apponlyaccess ? $tokenresult['access_token'] : $tokenresult['refresh_token'];
                 static::store_new_token($userid, $tokenresult['access_token'], $tokenresult['expires_on'],
-                        $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
-                $token = static::instance($userid, $resource, $clientdata, $httpclient);
+                        $token, $tokenresult['scope'], $tokenresult['resource']);
+                $token = static::instance($userid, $resource, $clientdata, $httpclient, $apponlyaccess);
                 return $token;
             } else {
                 $errmsg = 'Problem encountered getting a new token.';
@@ -319,6 +351,9 @@ class token {
      * @return bool Success/Failure.
      */
     public function refresh() {
+        if ($this->apponlyaccess) {
+            return $this->refreshapponlyaccess();
+        }
         $result = '';
         if (!empty($this->refreshtoken)) {
             $params = [
@@ -380,6 +415,67 @@ class token {
                 throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
                 return false;
             }
+        }
+    }
+
+    /**
+     * Refresh the appication only token.
+     *
+     * @return bool Success/Failure.
+     */
+    public function refreshapponlyaccess() {
+        if (!$this->apponlyaccess) {
+            return null;
+        }
+        $params = [
+            'client_id' => $this->clientdata->get_clientid(),
+            'client_secret' => $this->clientdata->get_clientsecret(),
+            'grant_type' => 'client_credentials',
+            'resource' => $this->resource,
+        ];
+        $tokenendpoint = $this->clientdata->get_tokenendpoint();
+
+        $params = http_build_query($params, '', '&');
+
+        $header = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Content-Length: '.strlen($params)
+        ];
+        $this->httpclient->resetHeader();
+        $this->httpclient->setHeader($header);
+
+        $result = $this->httpclient->post($tokenendpoint, $params);
+        $result = json_decode($result, true);
+        if (!empty($result) && is_array($result) && isset($result['access_token'])) {
+            $origresource = $this->resource;
+
+            $this->token = $result['access_token'];
+            $this->expiry = $result['expires_on'];
+            if (!empty($result['access_token'])) {
+                $this->refreshtoken = $result['access_token'];
+            } else {
+                $this->refreshtoken = $result['refresh_token'];
+            }
+            $this->scope = $result['scope'];
+            $this->resource = $result['resource'];
+
+            $existingtoken = $this->get_stored_token($this->userid, $origresource);
+            if (!empty($existingtoken)) {
+                $newtoken = [
+                    'scope' => $this->scope,
+                    'token' => $this->token,
+                    'expiry' => $this->expiry,
+                    'refreshtoken' => $this->refreshtoken,
+                    'resource' => $this->resource
+                ];
+                $this->update_stored_token($existingtoken, $newtoken);
+            } else {
+                store_new_token($this->userid, $this->token, $this->expiry, $this->refreshtoken, $this->scope, $this->resource);
+            }
+            return true;
+        } else {
+            throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
+            return false;
         }
     }
 }

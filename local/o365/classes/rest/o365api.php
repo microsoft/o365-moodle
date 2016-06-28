@@ -39,7 +39,7 @@ abstract class o365api {
      * @param \local_o365\oauth2\token $token A token object representing all token information to be used for this client.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client to use for communication.
      */
-    public function __construct(\local_o365\oauth2\token $token, \local_o365\httpclientinterface $httpclient) {
+    public function __construct(\local_o365\oauth2\token $token, \local_o365\httpclientinterface $httpclient, $apponlyaccess = false) {
         $this->token = $token;
         $this->httpclient = $httpclient;
     }

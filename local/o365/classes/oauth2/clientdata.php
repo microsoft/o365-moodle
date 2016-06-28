@@ -39,6 +39,9 @@ class clientdata {
     /** @var string The token endpoint URI. */
     protected $tokenendpoint;
 
+    /** @var boolean True if client is a apponly connection. */
+    protected $apponlyaccess = false;
+
     /**
      * Constructor.
      *
@@ -47,25 +50,40 @@ class clientdata {
      * @param string $authendpoint The authorization endpoint URI.
      * @param string $tokenendpoint The token endpoint URI.
      */
-    public function __construct($clientid, $clientsecret, $authendpoint, $tokenendpoint) {
+    public function __construct($clientid, $clientsecret, $authendpoint, $tokenendpoint, $apponlyaccess = false) {
         $this->clientid = $clientid;
         $this->clientsecret = $clientsecret;
         $this->authendpoint = $authendpoint;
         $this->tokenendpoint = $tokenendpoint;
+        $this->apponlyaccess = $apponlyaccess;
     }
 
     /**
      * Get an instance from auth_oidc config.
      *
+     * @param boolean $apponlyaccess True if connection is for application only access.
+     *
      * @return \local_o365\oauth2\clientdata The constructed client data creds.
      */
-    public static function instance_from_oidc() {
+    public static function instance_from_oidc($apponlyaccess = false) {
         $cfg = get_config('auth_oidc');
         if (empty($cfg) || !is_object($cfg)) {
             throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
         }
         if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
             throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
+        }
+        $tenant = get_config('local_o365', 'aadtenant');
+        if ($apponlyaccess && !empty($tenant)) {
+            if (!empty($cfg->apponlytokenendpoint)) {
+                $tokenendpoint = $cfg->apponlytokenendpoint;
+            }
+            if (empty($tokenendpoint)) {
+                $tokenendpoint = 'https://login.microsoftonline.com/'.$tenant.'/oauth2/token';
+            } else {
+                $tokenendpoint = preg_replace("/{tenant}/", $tenant, $tokenendpoint);
+            }
+            return new static($cfg->clientid, $cfg->clientsecret, $cfg->authendpoint, $tokenendpoint, $apponlyaccess);
         }
         return new static($cfg->clientid, $cfg->clientsecret, $cfg->authendpoint, $cfg->tokenendpoint);
     }
