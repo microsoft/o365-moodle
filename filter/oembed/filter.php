@@ -163,7 +163,7 @@ class filter_oembed extends moodle_text_filter {
      */
     public static function get_supported_providers() {
         return [
-            'docsdotcom', 'powerbi'
+            'docsdotcom', 'powerbi', 'officeforms'
         ];
     }
 }

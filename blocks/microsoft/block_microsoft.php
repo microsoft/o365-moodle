@@ -230,6 +230,16 @@ class block_microsoft extends block_base {
             $items[] = html_writer::link($delveurl, $delvestr, $delveattrs);
         }
 
+        // My Forms URL.
+        if (!empty($this->globalconfig->settings_showmyforms)) {
+            $formsattrs = ['class' => 'servicelink block_microsoft_forms', 'target' => '_blank'];
+            $formsstr = get_string('linkmyforms', 'block_microsoft');
+            $formsurl = get_string('settings_showmyforms_default', 'block_microsoft');
+            if (!empty($odburl)) {
+                $items[] = \html_writer::link($formsurl, $formsstr, $formsattrs);
+            }
+        }
+
         // My OneNote Notebook.
         $items[] = $this->render_onenote();
 
