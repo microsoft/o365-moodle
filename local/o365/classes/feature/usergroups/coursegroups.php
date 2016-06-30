@@ -158,6 +158,36 @@ class coursegroups {
     }
 
     /**
+     * Check to see if the group still exists.
+     */
+    public function get_all_group_ids() {
+        $groupids = [];
+        $groups = $this->graphclient->get_groups();
+        foreach ($groups['value'] as $group) {
+            $this->groups[] = $group['id'];
+        }
+        while (!empty($groups['@odata.nextLink'])) {
+            // Extract skiptoken.
+            $nextlink = parse_url($groups['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $groups = $this->graphclient->get_groups($query['$skiptoken']);
+                    foreach ($groups['value'] as $group) {
+                        if (!in_array($group['id'], $this->groups)) {
+                            $groupids[] = $group['id'];
+                        }
+                    }
+                } else {
+                    $groups = [];
+                }
+            }
+        }
+        return $groupids;
+    }
+
+    /**
      * Resync the membership of a course group based on the users enrolled in the associated course.
      *
      * @param int $courseid The ID of the course.
