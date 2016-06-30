@@ -517,6 +517,89 @@ class acp extends base {
     }
 
     /**
+     * Resync deleted office 365 groups for courses and Moodle groups.
+     */
+    public function mode_maintenance_coursegroupscheck() {
+        global $DB;
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $graphresource = \local_o365\rest\unified::get_resource();
+        $graphtoken = \local_o365\oauth2\systemtoken::instance(null, $graphresource, $clientdata, $httpclient);
+        if (empty($graphtoken)) {
+            mtrace('Could not get Microsoft Graph API token.');
+            return true;
+        }
+        $graphclient = new \local_o365\rest\unified($graphtoken, $httpclient);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
+        $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
+        $groupids = $coursegroups->get_all_group_ids();
+        $siterec = $DB->get_record('course', ['id' => SITEID]);
+        $groupprefix = (!empty($siterec)) ? $siterec->shortname : '';
+        $objects = $DB->get_recordset_sql("SELECT *
+                                             FROM {local_o365_objects}
+                                            WHERE type = 'group' AND
+                                                  subtype IN ('usergroup', 'course')");
+        echo "<pre>";
+        foreach ($objects as $object) {
+            if (!in_array($object->objectid, $groupids)) {
+                if ($object->subtype == 'usergroup') {
+                    $moodleobject = $DB->get_record('groups', ['id' => $object->moodleid]);
+                    if (is_array($coursesenabled) && !in_array($moodleobject->courseid, $coursesenabled)) {
+                        echo "Course not enabled 4\n";
+                        continue;
+                    }
+                    if (empty($coursesenabled)) {
+                        echo "Course not enabled 3\n";
+                        continue;
+                    }
+                    $DB->delete_records('local_o365_objects', ['id' => $object->id]);
+                    if (!empty($moodleobject)) {
+                        echo "Creating object for Moodle group: {$moodleobject->name}\n";
+                        try {
+                            $coursegroups->create_study_group($moodleobject->id);
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not create group for Moodle group #'.$moodleobject->id.'. Reason: '.$e->getMessage());
+                            continue;
+                        }
+                    } else {
+                        echo "Cleaning up object for Moodle group {$object->moodleid} Office 365 object id {$object->objectid}\n";
+                    }
+                } else {
+                    if (is_array($coursesenabled) && !in_array($object->moodleid, $coursesenabled)) {
+                        echo "Course not enabled 1\n";
+                        continue;
+                    }
+                    if (empty($coursesenabled)) {
+                        echo "Course not enabled 2\n";
+                        continue;
+                    }
+                    $course = $DB->get_record('course', ['id' => $object->moodleid]);
+                    $DB->delete_records('local_o365_objects', ['id' => $object->id]);
+                    if (!empty($course)) {
+                        try {
+                            $objectrec = $coursegroups->create_group($course, $groupprefix);
+                            echo "Created object for Moodle course: {$course->fullname}\n";
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not create group for course #'.$course->id.'. Reason: '.$e->getMessage());
+                            continue;
+                        }
+
+                        try {
+                            $coursegroups->resync_group_membership($course->id, $objectrec['objectid'], []);
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not sync users to group for course #'.$course->id.'. Reason: '.$e->getMessage());
+                            continue;
+                        }
+                    } else {
+                        echo "Cleaning up object for Moodle course {$object->moodleid} Office 365 object id {$object->objectid}\n";
+                    }
+                }
+            }
+        }
+        echo "Check completed.";
+    }
+
+    /**
      * Resync course usergroup membership.
      */
     public function mode_maintenance_coursegroupusers() {
@@ -592,6 +675,12 @@ class acp extends base {
         $toolname = get_string('acp_maintenance_coursegroupusers', 'local_o365');
         echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
         echo \html_writer::div(get_string('acp_maintenance_coursegroupusers_desc', 'local_o365'));
+
+        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_coursegroupscheck']);
+        $toolname = get_string('acp_maintenance_coursegroupscheck', 'local_o365');
+        echo \html_writer::empty_tag('br');
+        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo \html_writer::div(get_string('acp_maintenance_coursegroupscheck_desc', 'local_o365'));
 
         $this->standard_footer();
     }
