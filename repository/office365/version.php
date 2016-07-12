@@ -30,5 +30,4 @@ $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '30.0.0.9';
 $plugin->dependencies = [
     'local_o365' => 2015111917,
-    'auth_oidc' => 2015111910
 ];
