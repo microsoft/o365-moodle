@@ -382,6 +382,10 @@ class block_microsoft extends block_base {
             return '';
         }
 
+        if (!class_exists('\local_onenote\api\base')) {
+            return '';
+        }
+
         $action = optional_param('action', '', PARAM_TEXT);
         try {
             $onenoteapi = \local_onenote\api\base::getinstance();
