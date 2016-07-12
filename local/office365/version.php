@@ -32,10 +32,6 @@ $plugin->dependencies = [
     'auth_oidc' => 2015011633,
     'block_microsoft' => 2015080418,
     'local_o365' => 2015011653,
-    'local_onenote' => 2015011614,
-    'assignfeedback_onenote' => 2015011610,
-    'assignsubmission_onenote' => 2015011610,
-    'repository_onenote' => 2015011608,
     'repository_office365' => 2015011619,
     'filter_oembed' => 2015011612,
 ];

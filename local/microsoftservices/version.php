@@ -31,9 +31,5 @@ $plugin->release = '27.0.0.14';
 $plugin->dependencies = [
     'block_microsoft' => 2015080418,
     'local_msaccount' => 2015011608,
-    'local_onenote' => 2015011614,
-    'assignfeedback_onenote' => 2015011610,
-    'assignsubmission_onenote' => 2015011610,
-    'repository_onenote' => 2015011608,
     'filter_oembed' => 2015011612,
 ];
