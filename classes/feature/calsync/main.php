@@ -177,6 +177,8 @@ class main {
             $subject = $course->fullname . ': ' . $subject;
         }
 
+        $body .= $this->get_event_link_html($event);
+
         // Get attendees.
         if (isset($event->courseid) && $event->courseid == SITEID) {
             // Site event.
@@ -394,6 +396,8 @@ class main {
             $updated['subject'] = $course->fullname . ': ' . $updated['subject'];
         }
 
+        $updated['body'] .= $this->get_event_link_html($event);
+
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
             $apiclient->update_event($idmaprec->outlookeventid, $updated);
@@ -473,7 +477,7 @@ class main {
         $lastname = trim($lastname);
         return array($firstname, $lastname);
     }
-    
+
     /**
      * Create a new calendar in the user's o365 calendars.
      *
@@ -497,5 +501,29 @@ class main {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
         return $apiclient->update_calendar($outlookcalendearid, $updated);
+    }
+
+    /**
+     * Get Moodle event link and it's HTML.
+     *
+     * @param object $event The Moddle event database object.
+     * @return string Moodle event HTML with link.
+     */
+    public function get_event_link_html($event) {
+        global $CFG;
+
+        // Update event description.
+        if (isset($event->courseid) && $event->courseid == SITEID) {
+            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time='.$event->timestart.'#event_'.$event->id);
+        } else if (isset($event->courseid) && $event->courseid != SITEID && $event->courseid > 0) {
+            $moodleeventurl = new \moodle_url('/calendar/view.php?course='.$event->courseid.'&view=day&time='.$event->timestart.'#event_'.$event->id);
+        } else {
+            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time='.$event->timestart.'#event_'.$event->id);
+        }
+
+        $linkhtml = \html_writer::link($moodleeventurl, get_string('calendar_event', 'local_o365'));
+        $fulllinkhtml = \html_writer::link($moodleeventurl, $moodleeventurl);
+        $spanhtml = \html_writer::span($linkhtml.\html_writer::empty_tag('br').$fulllinkhtml);
+        return \html_writer::empty_tag('br').\html_writer::tag('p', $spanhtml);
     }
 }
