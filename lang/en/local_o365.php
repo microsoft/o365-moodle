@@ -55,7 +55,6 @@ $string['acp_usergroupcustom_savemessage'] = 'Your changes have been saved.';
 $string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables all usergroup features for all Moodle courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
-$string['acp_usergroupcustom_comingsoon'] = 'Coming Soon';
 $string['acp_usergroupcustom_bulk'] = 'Bulk Operations';
 $string['acp_usergroupcustom_bulk_enable'] = 'Enable All';
 $string['acp_usergroupcustom_bulk_disable'] = 'Disable All';
@@ -105,7 +104,7 @@ $string['groups_notenabled'] = 'Office 365 Groups are not enabled for this cours
 $string['groups_onedrive'] = 'Files';
 $string['groups_calendar'] = 'Calendar';
 $string['groups_conversations'] = 'Conversations';
-$string['groups_notebook'] = 'OneNote';
+$string['groups_notebook'] = 'Course Notebook';
 $string['groups_notenabledforcourse'] = 'Office Groups are not enabled for this course.';
 $string['groups_editsettings'] = 'Edit group settings';
 $string['groups_manage'] = 'Manage groups';
