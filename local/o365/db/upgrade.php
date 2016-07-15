@@ -481,5 +481,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, 2015011652.01, 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011653.01) {
+        set_config('sharepointcourseselect', 'off', 'local_o365');
+        upgrade_plugin_savepoint($result, 2015011653.01, 'local', 'o365');
+    }
+
     return $result;
 }
