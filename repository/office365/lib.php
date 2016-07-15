@@ -211,7 +211,7 @@ class repository_office365 extends \repository {
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
 
         $unifiedactive = false;
-        if ($this->unifiedconfigured === true) {
+        if ($this->unifiedconfigured === true && empty(get_config('office365', 'trendinggroup'))) {
             $unifiedtoken = $this->get_unified_token();
             if (!empty($unifiedtoken)) {
                 $unifiedactive = true;
@@ -219,7 +219,7 @@ class repository_office365 extends \repository {
         }
 
         $onedriveactive = false;
-        if ($this->onedriveconfigured === true) {
+        if ($this->onedriveconfigured === true && empty(get_config('office365', 'onedrivegroup'))) {
             $onedrivetoken = $this->get_onedrive_token();
             if (!empty($onedrivetoken)) {
                 $onedriveactive = true;
@@ -227,7 +227,7 @@ class repository_office365 extends \repository {
         }
 
         $sharepointactive = false;
-        if ($this->sharepointconfigured === true) {
+        if ($this->sharepointconfigured === true && empty(get_config('office365', 'sharepointgroup'))) {
             $sharepointtoken = $this->get_sharepoint_token();
             if (!empty($sharepointtoken)) {
                 $sharepointactive = true;
@@ -236,7 +236,7 @@ class repository_office365 extends \repository {
 
         $courses = enrol_get_users_courses($USER->id, true);
         $showgroups = false;
-        if (\local_o365\rest\unified::is_configured() === true) {
+        if (\local_o365\rest\unified::is_configured() === true  && empty(get_config('office365', 'coursegroup'))) {
             foreach ($courses as $course) {
                 if (\local_o365\feature\usergroups\utils::course_is_group_enabled($course->id)) {
                     if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'onedrive')) {
@@ -276,7 +276,7 @@ class repository_office365 extends \repository {
                 list($list, $breadcrumb) = $this->get_listing_videos(substr($path, 15));
             }
         } else {
-            if ($unifiedactive === true || $onedriveactive === true) {
+            if ($onedriveactive === true && $this->unifiedconfigured) {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
@@ -293,14 +293,16 @@ class repository_office365 extends \repository {
                 ];
                 $sharepoint = $this->get_sharepoint_apiclient();
                 // Retrieve api url for video service.
-                $url = $sharepoint->videoservice_discover();
-                if (!empty($url)) {
-                    $list[] = [
-                        'title' => get_string('office365video', 'repository_office365'),
-                        'path' => '/office365video/',
-                        'thumbnail' => $OUTPUT->pix_url('office365video', 'repository_office365')->out(false),
-                        'children' => [],
-                    ];
+                if (empty(get_config('office365', 'officevideo'))) {
+                    $url = $sharepoint->videoservice_discover();
+                    if (!empty($url)) {
+                        $list[] = [
+                            'title' => get_string('office365video', 'repository_office365'),
+                            'path' => '/office365video/',
+                            'thumbnail' => $OUTPUT->pix_url('office365video', 'repository_office365')->out(false),
+                            'children' => [],
+                        ];
+                    }
                 }
             }
             if ($showgroups === true) {
@@ -1491,5 +1493,28 @@ class repository_office365 extends \repository {
             $mform->addElement('static', null, '', get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
         }
         parent::type_config_form($mform);
+        $coursegroup = get_config('repository_office365', 'coursegroup');
+        $officevideo = get_config('repository_office365', 'officevideo');
+        $sharepointgroup = get_config('repository_office365', 'sharepointgroup');
+        $onedrivegroup = get_config('repository_office365', 'onedrivegroup');
+        $trendinggroup = get_config('repository_office365', 'trendinggroup');
+        $mform->addElement('checkbox', 'coursegroup', get_string('coursegroup', 'repository_office365'));
+        $mform->setType('coursegroup', PARAM_INT);
+        $mform->addElement('checkbox', 'officevideo', get_string('officevideo', 'repository_office365'));
+        $mform->setType('officevideo', PARAM_INT);
+        $mform->addElement('checkbox', 'sharepointgroup', get_string('sharepointgroup', 'repository_office365'));
+        $mform->setType('sharepointgroup', PARAM_INT);
+        $mform->addElement('checkbox', 'onedrivegroup', get_string('onedrivegroup', 'repository_office365'));
+        $mform->setType('onedrivegroup', PARAM_INT);
+        $mform->addElement('checkbox', 'trendinggroup', get_string('trendinggroup', 'repository_office365'));
+        $mform->setType('trendinggroup', PARAM_INT);
+    }
+     /**
+     * Option names of dropbox office365
+     *
+     * @return array
+     */
+    public static function get_type_option_names() {
+        return array('coursegroup', 'officevideo', 'sharepointgroup', 'onedrivegroup', 'trendinggroup', 'pluginname');
     }
 }
