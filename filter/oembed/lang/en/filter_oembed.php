@@ -44,3 +44,4 @@ $string['connection_error'] = 'Error while accessing the embedded media. Please 
 $string['o365video'] = 'Office 365 Video';
 $string['provider_docsdotcom'] = 'Docs.com';
 $string['provider_powerbi'] = 'Power BI';
+$string['provider_officeforms'] = 'Forms';
