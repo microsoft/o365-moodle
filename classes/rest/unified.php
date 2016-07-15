@@ -460,6 +460,28 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Create a group file.
+     *
+     * @param string $groupid The group Id.
+     * @param string $parentid The parent Id.
+     * @param string $filename The file's name.
+     * @param string $content The file's content.
+     * @return file upload response.
+     */
+    public function create_group_file($groupid, $parentid = '', $filename, $content, $contenttype = 'text/plain') {
+        $filename = rawurlencode($filename);
+        if (!empty($parentid) && $parentid !== '/') {
+            $endpoint = "/groups/{$groupid}/drive/items/{$parentid}/children/{$filename}/content";
+        } else {
+            $endpoint = "/groups/{$groupid}/drive/root:/{$filename}:/content";
+        }
+        $fileresponse = $this->apicall('put', $endpoint, ['file' => $content], ['contenttype' => $contenttype]);
+        $expectedparams = ['id' => null];
+        $fileresponse = $this->process_apicall_response($fileresponse, $expectedparams);
+        return $fileresponse;
+    }
+
+    /**
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
