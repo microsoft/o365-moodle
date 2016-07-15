@@ -1,7 +1,6 @@
 Introduction
 ============
-
-Office 365 services complement the Moodle learning platform to provide a more productive experience for teachers and students.
+Office 365 and Active Directory plugins for Moodle provide a more coherent and synchronous experience for teachers and students using both Moodle and Office 365. In order to be used, an Moodle administrator with Office 365 administrator privileges must configure the plugins for the Moodle site.
 
 Requirements
 ============
@@ -11,6 +10,8 @@ To use the Office 365 plugins, you need the following:
 -   An Office 365 subscription.
 -   A Microsoft Azure subscription.
 -   Moodle version 2.7 or above.
+
+Please note no paid Azure services are required to use the plugins. In particular, Azure Active Directory (also known as Azure AD or AAD) comes in three editions: Free, Basic, and Premium. The Free edition is all that is needed for use of the plugins. You can access the Azure Active Directory associated with your Office 365 tenant from the Office 365 Admin Settings.  
 
 Plugins & Features
 ==================
@@ -33,17 +34,21 @@ The Office 365 set of plugins contains 10 different plugins which provide a wide
             -   If you do not want to change your users' login method, you can still connect to an OpenID Connect provider. The plugin provides code-level hooks to link a Moodle account to an OpenID Connect account without changing the Moodle user's authentication method. This means you can obtain tokens from an OpenID Connect service in the background.
         -   Optional user-self-service connection and disconnection
             -   A user-facing page is available for users to switch to and from OpenID Connect authentication. Access to this page and feature is controlled by a capability so administrators can disable it.
--   **Microsoft Block**
-    -   This block provides a user-facing menu to access various Office 365 integration features, resources, and preferences.
-    -   Links to: Course SharePoint sites, Azure AD login preferences, Calendar sync preferences, OneNote notebooks, and the Office 365 integration user control panel.
--   **Office 365 support plugin** (local\_o365)
+-   **Microsoft Block** (block\_microsoft)
+    -   This block provides a user-facing menu to access various Office 365 integration features, resources, and settings.
+    -   Links to Office 365 Resources associated with Moodle Courses (including Course SharePoint sites and Course Office 365 Groups) as well as a user's personal Office 365 Resources (including OneDrive for Business, Sways, Docs.com, Delve, Forms & OneNote Notebook). 
+	-   Contains Settings for settings such as Outlook Calendar sync preferences.
+	-   Shows connection status to Office 365 and user photo from Outlook.
+-   **Microsoft Office 365 Integration Local plugin** (local\_o365)
     -   This plugin provides most of the Office 365 integration back-end. This provides shared code to communicate with Office 365, and powers the calendar sync.
     -   Features
         -   Calendar sync from/to Office 365 Outlook.
             -   Users can sync site events, course events, assignment due dates, and their personal Moodle calendar to their Outlook calendar.
         -   SharePoint sites for each Moodle course.
             -   You can connect your Moodle instance to a SharePoint subsite. Sites below this will be created for each course in your Moodle instance, and the document library from each course subsite is accessible through the OneDrive for Business repository. The course subsite document library is accessible by course teachers, serving as a place for teachers to share documents.
--   **OneNote support plugin** (local\_onenote)
+		-   Office 365 Groups for each Moodle course
+			-	You can create Office 365 groups for each course in your Moodle instance. Links to Office 365 group resources such as Files, Conversations, and Calendar will be accessible from the Microsoft Block in each course. Moreover, the group files from each course group is accessible through the Office 365 repository. The group files is accessible by course teachers and students, serving as a place for teachers and students to share documents.
+-   **OneNote Local plugin** (local\_onenote)
     -   This provides supporting and shared code used by all other OneNote plugins. Does not have an user interface or configuration by itself.
 -   **OneNote Assignment Feedback** (assignfeedback\_onenote)
     -   Allows teachers to leave feedback for students using OneNote.
@@ -52,20 +57,12 @@ The Office 365 set of plugins contains 10 different plugins which provide a wide
 -   **OneNote Repository** (repository\_onenote)
     -   Allows access to a user's OneNote files from the Moodle repository view.
 -   **Office 365 Repository** (repository\_office 365)
-    -   This is a repository plugin that communicates with OneDrive for Business. If the SharePoint link is configured, this also provides access to Moodle course SharePoint sites' document libraries.
-    -   Features
-        -   Import files into Moodle from OneDrive for Business
-        -   Upload files into OneDrive for Business from within Moodle
-        -   Link to files in OneDrive for Business so users always get the most up-to-date version.
-        -   Embed documents into Moodle courses so users can view documents directly on the site.
+    -   This is a repository plugin that allows users to access Office 365 resources in Office 365 services such as OneDrive for Business, SharePoint, and Office Video directly from the Moodle file-picker. 
+    -   Features:
+        -   Import files into Moodle from Office 365.
+        -   Upload files into Office 365 services from within Moodle.
+        -   Link to resources in Office 365 so users always get the most up-to-date version.
+        -   Embed Office 365 resources into Moodle courses so users can view them directly on the site.
 -   **oEmbed Filter** (filter\_oembed)
     -   This filter converts links to a variety of sites into oembed-powered interactions.
-    -   Provides [Office Mix](https://mix.office.com/) support for Moodle, allowing you to embed Office Mixes directly into any text within Moodle.
-
-Resources
-=========
-
-Azure Resource Manager Templates These can be used to set up a quick & easy test enviroment in Azure.
-
--   <https://azure.microsoft.com/en-us/documentation/templates/moodle-singlevm-ubuntu/>
--   <https://azure.microsoft.com/en-us/documentation/templates/moodle-cluster-ubuntu/>
+    -   Allows you to embed Office Mix, Sway, Docs.com, Office Video, Excel Power View, and Microsoft Forms content into your Moodle courses. 
