@@ -23,13 +23,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015060109;
+$plugin->version = 2015060110;
 $plugin->requires = 2015051100;
 $plugin->component = 'local_microsoftservices';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '29.0.0.9';
+$plugin->release = '29.0.0.10';
 $plugin->dependencies = [
-    'block_microsoft' => 2015080418,
+    'block_microsoft' => 2015080420,
     'local_msaccount' => 2015060105,
-    'filter_oembed' => 2015060109,
+    'filter_oembed' => 2015060110,
 ];
