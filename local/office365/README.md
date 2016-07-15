@@ -9,11 +9,6 @@ This plugin requires all Office 365 plugins:
   - [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
   - [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
   - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
-  - [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
-  - [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
-  - [moodle-assignfeedback_onenote](https://github.com/Microsoft/moodle-assignfeedback_onenote)
-  - [moodle-assignsubmission_onenote](https://github.com/Microsoft/moodle-assignsubmission_onenote)
-  - [moodle-repository_onenote](https://github.com/Microsoft/moodle-repository_onenote)
   - [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
   - [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
 
