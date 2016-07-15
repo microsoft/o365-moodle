@@ -29,6 +29,8 @@
   background-image: url([[pix:block_microsoft|o365color]]); }
 .block_microsoft .block_microsoft_delve {
   background-image: url([[pix:block_microsoft|delvecolor]]); }
+.block_microsoft .block_microsoft_forms {
+  background-image: url([[pix:block_microsoft|formscolor]]); }
 .block_microsoft .block_microsoft_sharepoint {
   background-image: url([[pix:block_microsoft|sharepointcolor]]); }
 .block_microsoft .block_microsoft_preferences {
