@@ -1300,7 +1300,11 @@ class unified extends \local_o365\rest\o365api {
             'id' => null,
             'userPrincipalName' => null,
         ];
-        return $this->process_apicall_response($response, $expectedparams);
+        $result = $this->process_apicall_response($response, $expectedparams);
+        if (!empty($result['id'])) {
+            $result['objectId'] = $result['id'];
+        }
+        return $result;
     }
 
     /**
