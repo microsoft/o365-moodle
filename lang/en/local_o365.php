@@ -52,10 +52,10 @@ $string['acp_sharepointcourseselect_syncopt_inst'] = 'Because this functionality
 $string['acp_maintenance_coursegroupscheck'] = 'Check for deleted Office 365 groups and rsync course membership';
 $string['acp_maintenance_coursegroupscheck_desc'] = 'This will check for Office 365 groups and create them. This is intended to be used when a Office 365 group is deleted and needs to be recreated.';
 $string['acp_usergroupcustom'] = 'User Group Customization';
-$string['acp_usergroupcustom_off'] = 'Disable<br />Disables all usergroup integration.';
+$string['acp_usergroupcustom_off'] = 'Disabled<br />Disables all Course Groups (i.e. Office 365 Groups) integration for all Moodle courses.';
 $string['acp_usergroupcustom_savemessage'] = 'Your changes have been saved.';
-$string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to customize the usergroup implementation: Choose specific courses or select certain features.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
-$string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables all usergroup features for all Moodle courses.';
+$string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to select which courses to create Course Groups (i.e. Office 365 Groups) for, as well as select which Group features are exposed in the Microsoft block for each course.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
+$string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course Groups (i.e. Office 365 Groups) for all courses and exposes all Group features in the Microsoft block for all courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
 $string['acp_usergroupcustom_bulk'] = 'Bulk Operations';
 $string['acp_usergroupcustom_bulk_enable'] = 'Enable All';
@@ -154,7 +154,7 @@ $string['healthcheck_ratelimit_result_disabled'] = 'Rate limiting features have 
 $string['healthcheck_ratelimit_result_passed'] = 'Office 365 API calls are executing at full speed.';
 
 $string['settings_aadsync'] = 'Sync users with Azure AD';
-$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the freqency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />For more detailed instructions, see the <a href="https://docs.moodle.org/27/en/Office365#User_sync">user sync documentation</a>.<br /><br />';
+$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
 $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
@@ -197,8 +197,8 @@ $string['settings_azuresetup_legacyheader'] = 'Office&nbsp;365 API';
 $string['settings_azuresetup_legacydesc'] = 'The Office&nbsp;365 API is made up of application-specific APIs.';
 $string['settings_azuresetup_legacyerror'] = 'There was an error checking Office&nbsp;365 API settings.';
 
-$string['settings_usergroups'] = 'User Groups';
-$string['settings_usergroups_details'] = 'If enabled, this will create and maintain a teacher and student group in Office&nbsp;365 for every course on the site. This will create any needed groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Microsoft Graph API to be enabled (see above), and added to the application added in Azure AD. <a href="https://docs.moodle.org/30/en/Office365#User_groups">Setup instructions and documentation.</a>';
+$string['settings_usergroups'] = 'Course Groups';
+$string['settings_usergroups_details'] = 'If enabled, this will create and maintain an Office 365 Group for every course on the site (Default: Disabled). This will create any needed Groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.<br /><b>Note: </b>This feature requires the Microsoft Graph API to be enabled.';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_clientid'] = 'Client ID';
@@ -345,7 +345,7 @@ $string['settings_sharepointlink_connected'] = 'Moodle is connected to this Shar
 $string['settings_sharepointlink_changelink'] = 'Change Site';
 $string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
 $string['settings_sharepointlink_enterurl'] = 'Enter a URL above.';
-$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.<br /><a href="https://docs.moodle.org/27/en/Office365#SharePoint_Connection">Read more about connecting Moodle and SharePoint</a>.';
+$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.';
 $string['settings_sharepointlink_status_invalid'] = 'This is not a usable SharePoint site.';
 $string['settings_sharepointlink_status_notempty'] = 'This site is usable, but already exists. Moodle may conflict with existing content. For best results, enter a SharePoint site that doesn\'t exist and Moodle will create it.';
 $string['settings_sharepointlink_status_valid'] = 'This SharePoint site will be created by Moodle and used for Moodle content.';
