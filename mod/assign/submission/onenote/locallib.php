@@ -133,6 +133,11 @@ class assign_submission_onenote extends assign_submission_plugin {
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
         global $USER;
 
+        // Check to see if one note is disabled site wide.
+        if (get_config('local_o365', 'onenote')) {
+            return true;
+        }
+
         if ($this->get_config('maxfilesubmissions') <= 0) {
             return false;
         }

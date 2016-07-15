@@ -132,7 +132,7 @@ abstract class base {
 
             // Check if the user is logged in to msaccount OneNote, or has o365 OneNote disabled.
             $sesskey = class_exists('\local_msaccount\client') ? 'msaccount_client-'.md5(\local_msaccount\client::SCOPE) : null;
-            $disableo365onenote = get_user_preferences('local_o365_disableo365onenote', 0);
+            $disableo365onenote = get_config('local_o365', 'onenote');
             $iso365user = ((!empty($sesskey) && !empty($SESSION->$sesskey)) || !empty($disableo365onenote)) ? false : true;
 
             if ($iso365user === true) {
