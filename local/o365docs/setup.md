@@ -9,16 +9,16 @@ The packages are available from:
 -   The [Moodle Plugins directory](https://moodle.org/plugins/)
     -   [Office 365 Plugin Set](https://moodle.org/plugins/browse.php?list=set&id=72)
 -   GitHub
-    -   <https://github.com/MSOpenTech/moodle-local_office365>
-    -   <https://github.com/MSOpenTech/moodle-auth_oidc>
-    -   <https://github.com/MSOpenTech/moodle-block_microsoft>
-    -   <https://github.com/MSOpenTech/moodle-local_o365>
-    -   <https://github.com/MSOpenTech/moodle-local_onenote>
-    -   <https://github.com/MSOpenTech/moodle-assignfeedback_onenote>
-    -   <https://github.com/MSOpenTech/moodle-assignsubmission_onenote>
-    -   <https://github.com/MSOpenTech/moodle-repository_onenote>
-    -   <https://github.com/MSOpenTech/moodle-repository_office365>
-    -   <https://github.com/MSOpenTech/moodle-filter_oembed>
+    -   <https://github.com/Microsoft/moodle-local_office365>
+    -   <https://github.com/Microsoft/moodle-auth_oidc>
+    -   <https://github.com/Microsoft/moodle-block_microsoft>
+    -   <https://github.com/Microsoft/moodle-local_o365>
+    -   <https://github.com/Microsoft/moodle-local_onenote>
+    -   <https://github.com/Microsoft/moodle-assignfeedback_onenote>
+    -   <https://github.com/Microsoft/moodle-assignsubmission_onenote>
+    -   <https://github.com/Microsoft/moodle-repository_onenote>
+    -   <https://github.com/Microsoft/moodle-repository_office365>
+    -   <https://github.com/Microsoft/moodle-filter_oembed>
 
 When you log back in to your Moodle instance, you are presented with the all the plugin configuration options. Save the settings without configuring them for now, you will come back to them later.
 
@@ -27,7 +27,7 @@ For information on installing plugins in Moodle see [Installing plugins](Install
 Configuration
 -------------
 
-After you have the code installed in your Moodle instance, you'll need to do a bit of setup before you can use the plugins.
+After you have the plugins installed in your Moodle instance, you'll need to do a bit of setup before you can use and configure additional plugin settings including User Sync, SharePoint, etc. For more information on these additional settings see Microsoft Office 365 Integration Local plugin.
 
 ### Enable the OpenID Connect Authentication Plugin
 
@@ -65,9 +65,9 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 5.  Click **Continue**.
 6.  Log out and sign back in to your Azure account.
 
-**Note**: During the setup, you are required to enter a credit card and phone number. If you do not setup virtual machines or use paid services on the subscription, and only use it to access the Azure Active Directory, you will not be charged for the subscription.
+**Note**: In order to sign-up for an Azure subscription, you are required to enter a credit card and phone number. If only use the subscription to access the Azure Active Directory associated with your Office 365 subscription and enable no other paid services such as Virtual Machines, you will not be charged for the subscription.
 
-### Register Application in Azure
+### Register your Moodle instance as an Application in Azure Active Directory
 
 1.  Sign in to the [Microsoft Azure Management Portal](https://manage.windowsazure.com).
 2.  Click on the **Active Directory** icon on the left menu, and then click on the desired Office 365 connected Azure AD.
@@ -81,7 +81,7 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 7.  Click the checkbox in the bottom-right hand corner of the page and then click Ok to add your app to Azure Active Directory.
 8.  There are a couple more values and changes you need to make and write down some values which you will need in the next section.
 
-### Configure application
+### Configure your Application Permissions in Azure Active Directory
 
 1.  Click on the **Active Directory** icon on the left menu, and then click on the desired Azure AD.
 2.  Click the Applications tab at the top of the screen.
@@ -136,7 +136,7 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 
 16. Click save at the bottom of the screen.
 
-### Add a user to the app
+### Assign Users to your Azure Active Directory Application
 
 1.  Click on the **Active Directory** icon on the left menu, and then click on the desired Azure AD.
 2.  Click the Applications tab at the top of the screen.
@@ -146,49 +146,35 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 6.  Click Assign at the bottom of the screen.
 7.  When prompted whether you are sure you want to enable access, click Yes.
 
-The application will appear in the [My apps](https://portal.office.com/myapps) page of the application launcher on the o365 portal for the users which have been assigned.
+The application will appear in the [My apps](https://portal.office.com/myapps) page of the application launcher on the Office 365 portal for the users which have been assigned.
 
-### Enter Azure application credentials into Moodle
+### Enter Azure Active Directory Application credentials into Moodle
 
 1.  Ensure you have enabled the **OpenID Connect** authentication plugin following the steps a few sections above.
 2.  Navigate to the OpenID Connect authentication plugin's settings page (Site Administration \> Plugins \> Authentication \> OpenID Connect)
-3.  Enter the "Client ID" value you noted earlier from Azure into the "Client ID" box on the screen.
-4.  Enter the client secret key value you noted earlier from Azure into the "Client Secret" box on the screen.
+3.  Enter the "Client ID" value you noted earlier from Azure AD into the "Client ID" box on the screen.
+4.  Enter the client secret key value you noted earlier from Azure AD into the "Client Secret" box on the screen.
 5.  Click "Save changes" at the bottom of the screen.
 
-### Configure the Office 365 support plugin
+### Configure the Setup tab in the Microsoft Office 365 Integration plugin
 
-1.  Navigate to **Site Administration \> Plugins \> Local plugins**.
-2.  Click **Microsoft Office 365 Integration**.
-3.  Scroll down to the **Setup** section.
-4.  Complete each of the setup settings as follows.
-5.  Application Credentials
-    1.  This should report that the credentials have been set. If not, you need to enter your Azure credentials by following the section above.
+Navigate to **Site Administration \> Plugins \> Local plugins**.  Click **Microsoft Office 365 Integration**.  Under the **Setup** tab, complete each of the following steps:
 
-6.  System API User
+1.  Register Moodle with Azure AD.
+    1.  Copy the client ID and key from Azure AD into the appropriate fields.
+
+2.  Set a System API User
     1.  This should report "No user set". Click "Set User"
     2.  You will be taken to an Office 365 login screen. Log in as a user that has administrator access in your Office 365 subscription.
     3.  This user is used for system operations that are not specific to a single user - i.e. user sync operations. This user needs to have administrator access to be able to access all needed information.
     4.  You can change this user later if needed.
 
-7.  Azure AD Tenant
-    1.  This is the domain name that identifies your Office 365 subscription, for example "contoso.onmicrosoft.com"
-    2.  If you know it, enter it in this box, if not, click the "Detect" button to attempt to detect the correct value.
+3.  Detect additional information and verify your setup. 
+    1.  Azure AD Tenant.  This is the domain name that identifies your Office 365 subscription, for example "contoso.onmicrosoft.com".  If you know it, enter it in this box, if not, click the "Detect" button to attempt to detect the correct value.
+	2.  OneDrive for Business URL.  This is the URL that your users use to access OneDrive for Business. This can usually be determined from your AzureAD tenant, for example, if your tenant is "contoso.onmicrosoft.com", your OneDrive for Business URL is "contoso-my.sharepoint.com.".  If you know the URL, enter it here, otherwise click "Detect" to attempt to detect the correct value.  Only enter the domain name, do not include "<http://>", "www." or any trailing slashes. For example "contoso-my.sharepoint.com", not "<https://contoso-my.sharepoint.com/>"
+	3.  Azure Setup.  This tool verifies that Azure has been correctly set up. Click the "Update" button to check setup.  If the tool reports any missing permissions, return to Azure and ensure that all required permissions have been added to your configured application for Moodle.
 
-8.  OneDrive for Business URL
-    1.  This is the URL that your users use to access OneDrive for Business. This can usually be determined from your AzureAD tenant, for example, if your tenant is "contoso.onmicrosoft.com", your OneDrive for Business URL is "contoso-my.sharepoint.com."
-    2.  If you know the URL, enter it here, otherwise click "Detect" to attempt to detect the correct value.
-    3.  Only enter the domain name, do not include "<http://>", "www." or any trailing slashes. For example "contoso-my.sharepoint.com", not "<https://contoso-my.sharepoint.com/>"
-
-9.  Click Save changes.
-10. Azure Setup
-    1.  This tool verifies that Azure has been correctly set up. Click the "Update" button to check setup.
-    2.  If the tool reports any missing permissions, return to Azure and ensure that all required permissions have been added to your configured application for Moodle.
-
-11. SharePoint Link
-    1.  If you want to connect your Moodle site to SharePoint, type the URL of a SharePoint site you'd like to use to connect to Moodle.
-    2.  As you type, Moodle will verify the URL. You should type a complete URL of a SharePoint subsite. If the subsite does not exist, Moodle will attempt to create it.
-    3.  For example: <http://contoso.sharepoint.com/moodle>
+4. Click Save changes.
 
 Connecting users to Office 365
 ------------------------------
