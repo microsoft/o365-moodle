@@ -486,5 +486,36 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, 2015060132.01, 'local', 'o365');
     }
 
+    if ($oldversion < 2015060132.02) {
+        // MSFTMPP-497: new capabilites split from auth_oidc:manageconnection* capabilities.
+        if (get_config('local_o365', 'initconnectioncaps') === false) {
+            set_config('initconnectioncaps', 'upgraded', 'local_o365');
+            $caps = [
+                'auth/oidc:manageconnection' => ['local/o365:manageconnectionlink', 'local/o365:manageconnectionunlink'],
+                'auth/oidc:manageconnectionconnect' => ['local/o365:manageconnectionlink'],
+                'auth/oidc:manageconnectiondisconnect' => ['local/o365:manageconnectionunlink']
+            ];
+            foreach ($caps as $cap => $addcaps) {
+                $roles = get_roles_with_capability($cap, CAP_ALLOW);
+                foreach ($roles as $role) {
+                    $rolecaps = $DB->get_recordset('role_capabilities', ['roleid' => $role->id, 'capability' => $cap]);
+                    foreach ($rolecaps as $rolecap) {
+                        $newrolecap = $rolecap;
+                        unset($newrolecap->id);
+                        foreach ($addcaps as $addcap) {
+                            if (!$DB->record_exists('role_capabilities', ['roleid' => $role->id,
+                                'capability' => $addcap, 'contextid' => $newrolecap->contextid])) {
+                                $newrolecap->capability = $addcap;
+                                $DB->insert_record('role_capabilities', $newrolecap);
+                            }
+                        }
+                    }
+                    unset($rolecaps);
+                }
+            }
+        }
+        upgrade_plugin_savepoint($result, 2015060132.02, 'local', 'o365');
+    }
+
     return $result;
 }
