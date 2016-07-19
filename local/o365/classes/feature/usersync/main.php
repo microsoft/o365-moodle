@@ -354,7 +354,7 @@ class main {
 
         // Locate country code.
         if (isset($aaddata['country'])) {
-            $countries = get_string_manager()->get_list_of_countries();
+            $countries = get_string_manager()->get_list_of_countries(true, 'en');
             foreach ($countries as $code => $name) {
                 if ($aaddata['country'] == $name) {
                     $aaddata['country'] = $code;
@@ -369,7 +369,6 @@ class main {
         $newuser = (object)[
             'auth' => 'oidc',
             'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
-            'lang' => 'en',
             'confirmed' => 1,
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
