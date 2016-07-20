@@ -60,14 +60,15 @@ class sharepointcourseselect extends \admin_setting {
 
         $customizeurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcourseselect']);
         $options = [
-            'off' => get_string('acp_sharepointcourseselect_disabled', 'local_o365'),
-            'oncustom' => get_string('acp_sharepointcourseselect_enabled', 'local_o365', $customizeurl->out()),
+            'none' => get_string('acp_sharepointcourseselect_none', 'local_o365'),
+            'oncustom' => get_string('acp_sharepointcourseselect_oncustom', 'local_o365', $customizeurl->out()),
+            'onall' => get_string('acp_sharepointcourseselect_onall', 'local_o365'),
         ];
 
         $curval = (isset($options[$data])) ? $data : $this->get_defaultsetting();
-        $displayclass = '';
-        if ($curval === 'off') {
-            $displayclass = 'link-disabled';
+        $displayclass = 'link-disabled';
+        if ($curval === 'oncustom') {
+            $displayclass = '';
         }
 
         foreach ($options as $key => $desc) {
