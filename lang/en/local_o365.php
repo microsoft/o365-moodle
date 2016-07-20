@@ -33,9 +33,10 @@ $string['acp_maintenance_coursegroupusers_desc'] = 'This will resync the user me
 $string['acp_sharepointcourseselect'] = 'SharePoint Course Selection';
 $string['acp_sharepointcourseselect_applyfilter'] = 'Apply Filter';
 $string['acp_sharepointcourseselect_bulk'] = 'Bulk Operations';
-$string['acp_sharepointcourseselect_desc'] = 'With Custom enabled, select which courses are associated with a SharePoint subsite. With Sync All enabled, all Moodle courses on the site are associated with a SharePoint subsite.';
-$string['acp_sharepointcourseselect_disabled'] = 'Sync All <br>A SharePoint subsite will be generated for every Moodle course created on this site.';
-$string['acp_sharepointcourseselect_enabled'] = 'Custom <a href="{$a}">Customize</a><br>Customize by selecting which Moodle courses will be associated with a SharePoint subsite.';
+$string['acp_sharepointcourseselect_desc'] = 'Choose which courses will have SharePoint sites created for them. By default, no sites will be created. You can then choose to select specific courses ("Custom"), or create a SharePoint site for all Moodle courses ("Sync All").';
+$string['acp_sharepointcourseselect_none'] = 'None<br />No SharePoint sites will be created.';
+$string['acp_sharepointcourseselect_onall'] = 'Sync All<br />A SharePoint site will be generated for every Moodle course on this site.';
+$string['acp_sharepointcourseselect_oncustom'] = 'Custom <a href="{$a}">Customize</a><br />Choose which Moodle courses will be associated with a SharePoint site.';
 $string['acp_sharepointcourseselect_enableshown'] = 'Return to Settings';
 $string['acp_sharepointcourseselectlabel_enabled'] = 'Enable';
 $string['acp_sharepointcourseselect_filter'] = 'Filter Courses';
