@@ -134,7 +134,7 @@ class utils {
      */
     public static function course_is_sharepoint_enabled($courseid) {
         $customsubsitesenabled = get_config('local_o365', 'sharepointcourseselect');
-        if ($customsubsitesenabled === 'off') {
+        if ($customsubsitesenabled === 'onall') {
             return true;
         } else if ($customsubsitesenabled === 'oncustom') {
             $config = get_config('local_o365', 'sharepointsubsitescustom');
@@ -152,7 +152,13 @@ class utils {
      * @return bool True if course subsite can be created, false otherwise.
      */
     public static function course_subsite_enabled($course) {
-        $customsubsitesenabled = get_config('local_o365', 'sharepointcourseselect');
+        $sharepointcourseselect = get_config('local_o365', 'sharepointcourseselect');
+        if ($sharepointcourseselect === 'onall') {
+            return true;
+        } else if ($sharepointcourseselect !== 'oncustom') {
+            return false;
+        }
+
         $subsitesconfig = get_config('local_o365', 'sharepointsubsitescustom');
         $subsitesconfig = json_decode($subsitesconfig, true);
         $courseid = $course->id;
@@ -164,7 +170,7 @@ class utils {
         if ($courseinconfig) {
             $courseconfigval = $subsitesconfig[$courseid];
         }
-        if ($customsubsitesenabled === 'off' || ($customsubsitesenabled === 'oncustom' && $courseinconfig == true && $courseconfigval == true)) {
+        if ($courseinconfig == true && $courseconfigval == true) {
             return true;
         } else {
             return false;
