@@ -24,7 +24,7 @@
 namespace local_o365\rest;
 
 /**
- * API client for Sharepoint.
+ * API client for SharePoint.
  */
 class sharepoint extends \local_o365\rest\o365api {
     /** @var string The site we're accessing. */
@@ -59,7 +59,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $sharepoint = new \local_o365\rest\sharepoint($token, $httpclient);
         $sharepoint->override_resource($siteinfo['resource']);
 
-        // Try to get the / site's info to validate we can communicate with this parent Sharepoint site.
+        // Try to get the / site's info to validate we can communicate with this parent SharePoint site.
         try {
             $mainsiteinfo = $sharepoint->get_site();
         } catch (\Exception $e) {
@@ -132,11 +132,11 @@ class sharepoint extends \local_o365\rest\o365api {
             if (!empty($siteinfo)) {
                 return $siteinfo['resource'];
             } else {
-                $errmsg = 'Sharepoint link URL was not valid';
+                $errmsg = 'SharePoint link URL was not valid';
                 \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource', $config->sharepointlink);
             }
         } else {
-            $errmsg = 'No Sharepoint link URL was found. Plugin not configured?';
+            $errmsg = 'No SharePoint link URL was found. Plugin not configured?';
             \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource');
         }
         return false;
@@ -656,7 +656,7 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
-     * Add users with a given capability in a given context to a Sharepoint group.
+     * Add users with a given capability in a given context to a SharePoint group.
      *
      * @param \context $context The context to check for the capability.
      * @param string $capability The capability to check for.
@@ -715,7 +715,7 @@ class sharepoint extends \local_o365\rest\o365api {
 
         $coursesubsiteenabled = \local_o365\feature\sharepointcustom\utils::course_subsite_enabled($course);
         if (!$coursesubsiteenabled) {
-            $errmsg = 'Sharepoint subsite not enabled for this course. Cannot create a subsite.';
+            $errmsg = 'SharePoint subsite not enabled for this course. Cannot create a subsite.';
             \local_o365\utils::debug($errmsg, 'rest\sharepoint\update_course_site', $course->id);
             return false;
         } else {
