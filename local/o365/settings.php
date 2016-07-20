@@ -138,7 +138,8 @@ if ($hassiteconfig) {
 
         $label = new lang_string('acp_sharepointcourseselect', 'local_o365');
         $desc = new lang_string('acp_sharepointcourseselect_desc', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\sharepointcourseselect('local_o365/sharepointcourseselect', $label, $desc, 'off'));
+        $settingname = 'local_o365/sharepointcourseselect';
+        $settings->add(new \local_o365\adminsetting\sharepointcourseselect($settingname, $label, $desc, 'none'));
 
         $label = new lang_string('settings_options_advanced', 'local_o365');
         $desc = new lang_string('settings_options_advanced_desc', 'local_o365');
