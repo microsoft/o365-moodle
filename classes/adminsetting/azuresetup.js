@@ -32,7 +32,9 @@ $(function() {
             strupdate: 'Update',
             strchecking: 'Checking...',
             strmissingperms: 'Missing Permissions:',
+            strmissingappperms: 'Missing Application Permissions:',
             strpermscorrect: 'Permissions correct.',
+            strapppermscorrect: 'Application Permissions correct.',
             strfixperms: 'Fix Permissions',
             strfixprereq: '',
             strerrorfix: 'An error occurred trying to fix permissions.',
@@ -157,6 +159,23 @@ $(function() {
             if (unifiedactive === true) {
                 var content = $('<div></div>');
                 content.append(main.rendersuccessbox(opts.strunifiedactive));
+
+                // App-only perms.
+                if (typeof(data.missingappperms) === 'object') {
+                    if (Object.keys(data.missingappperms).length > 0) {
+                        var missingpermsbox = opts.strmissingappperms + '<ul>';
+                        for (var perm in data.missingappperms) {
+                            missingpermsbox += '<li>' + data.missingappperms[perm] + '</li>';
+                        }
+                        missingpermsbox += '</ul>';
+                        content.append(main.rendererrorbox(missingpermsbox));
+                    } else {
+                        content.append(main.rendersuccessbox(opts.strapppermscorrect));
+                    }
+
+                }
+
+                // Delegated perms.
                 if (typeof(data.missingperms) === 'object' && data.missingperms !== null) {
                     if (Object.keys(data.missingperms).length > 0) {
                         var missingpermsbox = opts.strmissingperms + '<ul>';

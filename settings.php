@@ -156,6 +156,10 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_enableunifiedapi_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '1'));
 
+        $label = new lang_string('settings_enableapponlyaccess', 'local_o365');
+        $desc = new lang_string('settings_enableapponlyaccess_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/enableapponlyaccess', $label, $desc, '1'));
+
         $label = new lang_string('settings_debugmode', 'local_o365');
         $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
