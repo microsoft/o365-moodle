@@ -976,6 +976,65 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get all available app-only permissions for the graph api.
+     *
+     * @return array Array of available app-only permissions, indexed by permission name.
+     */
+    public function get_graph_available_apponly_permissions() {
+        // Get list of permissions and associated IDs.
+        $graphsp = $this->get_unified_api_serviceprincipal_info();
+        $graphsp = $graphsp['value'][0];
+        $graphappid = $graphsp['appId'];
+        $graphperms = [];
+        foreach ($graphsp['appRoles'] as $perm) {
+            $graphperms[$perm['value']] = $perm;
+        }
+        return $graphperms;
+    }
+
+    /**
+     * Get currently configured app-only permissions for the graph api.
+     *
+     * @return array Array of current app-only permissions, indexed by permission name.
+     */
+    public function get_graph_current_apponly_permissions() {
+        // Get available permissions.
+        $graphsp = $this->get_unified_api_serviceprincipal_info();
+        $graphsp = $graphsp['value'][0];
+        $graphappid = $graphsp['appId'];
+        $graphperms = [];
+        foreach ($graphsp['appRoles'] as $perm) {
+            $graphperms[$perm['id']] = $perm;
+        }
+
+        // Get a list of configured permissions for the graph api within the client application.
+        $appinfo = $this->get_application_info();
+        $appinfo = $appinfo['value'][0];
+        $graphresource = null;
+        foreach ($appinfo['requiredResourceAccess'] as $resource) {
+            if ($resource['resourceAppId'] === $graphappid) {
+                $graphresource = $resource;
+                break;
+            }
+        }
+        if (empty($graphresource)) {
+            throw new \Exception('Unable to find graph api in application.');
+        }
+
+        // Translate to permission information.
+        $currentperms = [];
+        foreach ($graphresource['resourceAccess'] as $resource) {
+            if ($resource['type'] === 'Role') {
+                if (isset($graphperms[$resource['id']])) {
+                    $perminfo = $graphperms[$resource['id']];
+                    $currentperms[$perminfo['value']] = $perminfo;
+                }
+            }
+        }
+        return $currentperms;
+    }
+
+    /**
      * Get information on the current application.
      *
      * @return array|null Array of application information, or null if failure.
@@ -1024,11 +1083,11 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get an array of the current required permissions for unified api.
+     * Get an array of the current required permissions for the graph api.
      *
-     * @return array Array of required Azure AD application permissions.
+     * @return array Array of required Azure AD permissions.
      */
-    public function get_unified_required_permissions() {
+    public function get_graph_required_permissions() {
         return [
             'openid',
             'Calendars.ReadWrite',
@@ -1043,14 +1102,48 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get required app-only permissions for the graph api.
+     *
+     * @return array Array of required Azure AD application permissions.
+     */
+    public function get_graph_required_apponly_permissions() {
+        return [
+            'Files.ReadWrite.All',
+            'User.ReadWrite.All',
+            'Directory.Read.All',
+            'Group.ReadWrite.All',
+            'Calendars.ReadWrite',
+        ];
+    }
+
+    public function check_graph_apponly_permissions() {
+        $this->token->refresh();
+        $requiredperms = $this->get_graph_required_apponly_permissions();
+        $currentperms = $this->get_graph_current_apponly_permissions();
+        $availableperms = $this->get_graph_available_apponly_permissions();
+
+        $requiredperms = array_flip($requiredperms);
+        $missingperms = array_diff_key($requiredperms, $currentperms);
+        $missingperminfo = [];
+        foreach ($missingperms as $permname => $index) {
+            if (isset($availableperms[$permname])) {
+                $missingperminfo[$permname] = $availableperms[$permname]['displayName'];
+            } else {
+                $missingperminfo[$permname] = $permname;
+            }
+        }
+        return $missingperminfo;
+    }
+
+    /**
      * Check whether all required permissions are present.
      *
      * @return array Array of missing permissions, permission key as array key, human-readable name as values.
      */
-    public function check_unified_permissions() {
+    public function check_graph_delegated_permissions() {
         $this->token->refresh();
         $currentperms = $this->get_unified_api_permissions();
-        $neededperms = $this->get_unified_required_permissions();
+        $neededperms = $this->get_graph_required_permissions();
         $availableperms = $this->get_available_permissions();
 
         if ($currentperms === null || $availableperms === null) {
@@ -1087,7 +1180,7 @@ class unified extends \local_o365\rest\o365api {
      *
      * @return array Array of missing permissions.
      */
-    public function check_permissions() {
+    public function check_legacy_permissions() {
         $this->token->refresh();
         $neededperms = $this->get_required_permissions();
         $servicestoget = array_keys($neededperms);
@@ -1192,8 +1285,13 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null Array of service information, or null if error.
      */
     public function get_service_data(array $servicenames, $transform = true) {
-        $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
-        $response = $this->betaapicall('get', '/servicePrincipals()?$filter='.$filterstr);
+        if (!empty($servicenames)) {
+            $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
+            $endpoint = '/servicePrincipals()?$filter='.$filterstr;
+        } else {
+            $endpoint = '/servicePrincipals()';
+        }
+        $response = $this->betaapicall('get', $endpoint);
         if (!empty($response)) {
             $response = @json_decode($response, true);
             if (!empty($response) && is_array($response)) {
