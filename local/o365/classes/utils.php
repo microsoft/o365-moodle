@@ -65,6 +65,60 @@ class utils {
     }
 
     /**
+     * Get an app token if available or fall back to system API user token.
+     *
+     * @param string $resource The desired resource.
+     * @param \local_o365\oauth2\clientdata $clientdata Client credentials.
+     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @return \local_o365\oauth2\apptoken|\local_o365\oauth2\systemtoken An app or system token.
+     */
+    public static function get_app_or_system_token($resource, $clientdata, $httpclient) {
+        $token = null;
+        try {
+            if (static::is_configured_apponlyaccess() === true) {
+                $token = \local_o365\oauth2\apptoken::instance(null, $resource, $clientdata, $httpclient);
+            }
+        } catch (\Exception $e) {
+            static::debug($e->getMessage(), 'get_app_or_system_token (app)', $e);
+        }
+
+        if (empty($token)) {
+            try {
+                $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            } catch (\Exception $e) {
+                static::debug($e->getMessage(), 'get_app_or_system_token (system)', $e);
+            }
+        }
+
+        if (!empty($token)) {
+            return $token;
+        } else {
+            throw new \Exception('Could not get app or system token');
+        }
+    }
+
+    /**
+     * Determine whether the app only access is configured.
+     *
+     * @return bool Whether the app only access is configured.
+     */
+    public static function is_configured_apponlyaccess() {
+        // App only access requires unified api to be enabled.
+        $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
+        if (empty($apponlyenabled)) {
+            return false;
+        }
+        if (\local_o365\rest\unified::is_configured() !== true) {
+            return false;
+        }
+        $aadtenant = get_config('local_o365', 'aadtenant');
+        if (empty($aadtenant)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Filters an array of userids to users that are currently connected to O365.
      *
      * @param array $userids The full array of userids.

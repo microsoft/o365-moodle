@@ -35,33 +35,32 @@ class main {
     /**
      * Construct a user API client, accounting for Microsoft Graph API presence, and fall back to system api user if desired.
      *
-     * @param int $muserid The userid to get the outlook token for. If you want to force a system API user client, use an empty
-     *                     value here and set $systemfallback to true.
+     * @param bool $forcelegacy If true, force using the legacy API.
      * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
      */
-    public function construct_user_api($muserid = null, $systemfallback = true, $forcelegacy = false) {
+    public function construct_user_api($forcelegacy = false) {
+        $uselegacy = false;
         $unifiedconfigured = \local_o365\rest\unified::is_configured();
-        if ($unifiedconfigured === true && !$forcelegacy) {
-            $resource = \local_o365\rest\unified::get_resource();
+        if ($forcelegacy === true || $unifiedconfigured !== true) {
+            $uselegacy = true;
+        }
+
+        if ($uselegacy === true) {
+            $resource = \local_o365\rest\azuread::get_resource();
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
         } else {
             $resource = \local_o365\rest\azuread::get_resource();
+            $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         }
 
-        $token = null;
-        if (!empty($muserid)) {
-            $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
-        }
-        if (empty($token) && $systemfallback === true) {
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
-        }
         if (empty($token)) {
-            throw new \Exception('No token available for user #'.$muserid);
+            throw new \Exception('No token available for usersync');
         }
 
-        if ($unifiedconfigured === true && !$forcelegacy) {
-            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
-        } else {
+        if ($uselegacy === true) {
             $apiclient = new \local_o365\rest\azuread($token, $this->httpclient);
+        } else {
+            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
         }
         return $apiclient;
     }
@@ -103,7 +102,7 @@ class main {
      * @return array|null Array of app service information, or null if failure.
      */
     public function get_application_serviceprincipal_info() {
-        $apiclient = $this->construct_user_api(0, true);
+        $apiclient = $this->construct_user_api(false);
         return $apiclient->get_application_serviceprincipal_info();
     }
 
@@ -117,8 +116,8 @@ class main {
      */
     public function assign_user($muserid, $userid, $appobjectid) {
         global $DB;
-        // Force using legacy api.
-        $apiclient = $this->construct_user_api(0, true, true);
+        // Force using legacy api. Legacy assign user does not support app only access.
+        $apiclient = $this->construct_user_api(true);
         $result = $apiclient->assign_user($muserid, $userid, $appobjectid);
         if (!empty($result['odata.error'])) {
             $error = '';
@@ -215,7 +214,7 @@ class main {
      * @return array|null Array of user information, or null if failure.
      */
     public function get_users($params = 'default', $skiptoken = '') {
-        $apiclient = $this->construct_user_api(0, true);
+        $apiclient = $this->construct_user_api(false);
         return $apiclient->get_users($params, $skiptoken);
     }
 
