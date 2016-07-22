@@ -49,7 +49,7 @@ class main {
             $resource = \local_o365\rest\azuread::get_resource();
             $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
         } else {
-            $resource = \local_o365\rest\azuread::get_resource();
+            $resource = \local_o365\rest\unified::get_resource();
             $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         }
 
