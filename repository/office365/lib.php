@@ -1396,19 +1396,33 @@ class repository_office365 extends \repository {
      * @return bool True if we should do embedding, false otherwise.
      */
     public function do_embedding($reference, $forcedownload) {
-        if ($_SERVER['SCRIPT_NAME'] === '/draftfile.php') {
-            return false;
-        }
+        global $PAGE, $DB, $CFG;
+
         if (empty($reference['source']) || !in_array($reference['source'], ['onedrive', 'sharepoint'])) {
             return false;
         }
-        if (($reference['source'] === 'onedrive') && ($this->unifiedconfigured === true)) {
-            return false;
-        }
+
         if (!empty($forcedownload)) {
             return false;
         }
-        return true;
+
+        $cm = $PAGE->cm;
+        if (!empty($cm)) {
+            $sql = 'SELECT cm.instance
+                     FROM {course_modules} cm
+                     JOIN {modules} m ON m.id = cm.module
+                    WHERE cm.id = ? AND m.name = "resource"';
+            $rec = $DB->get_record_sql($sql, [$cm->id]);
+            if (!empty($rec)) {
+                $resourcerec = $DB->get_record('resource', ['id' => $rec->instance]);
+                if (!empty($resourcerec)) {
+                    if (defined('RESOURCELIB_DISPLAY_EMBED') && $resourcerec->display == RESOURCELIB_DISPLAY_EMBED) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -1435,6 +1449,8 @@ class repository_office365 extends \repository {
             die();
         }
 
+        $doembed = $this->do_embedding($reference, $forcedownload);
+
         switch ($reference['source']) {
             case 'sharepoint':
                 $sourceclient = $this->get_sharepoint_apiclient(false, $fileuserid);
@@ -1460,7 +1476,16 @@ class repository_office365 extends \repository {
                     send_file_not_found();
                     die();
                 }
-                $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
+                if ($doembed === true) {
+                    $fileinfo = $sourceclient->get_file_metadata($reference['id']);
+                    if (isset($fileinfo['webUrl'])) {
+                        $fileurl = $fileinfo['webUrl'];
+                    } else {
+                        $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
+                    }
+                } else {
+                    $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
+                }
                 break;
 
             case 'onedrivegroup':
@@ -1478,7 +1503,6 @@ class repository_office365 extends \repository {
         }
 
         // Do embedding if relevant.
-        $doembed = $this->do_embedding($reference, $forcedownload);
         if ($doembed === true) {
             if (\local_o365\utils::is_o365_connected($USER->id) !== true) {
                 // Embedding currently only supported for logged-in Office 365 users.
