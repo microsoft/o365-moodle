@@ -260,7 +260,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $role = $this->getDataGenerator()->create_role(['archetype' => 'editingteacher']);
         $coursecontext = \context_course::instance($course->id);
-
+        set_config('sharepointcourseselect', 'onall', 'local_o365');
         $user1 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
         $user2 = $this->getDataGenerator()->create_user(['auth' => 'oidc']);
 
