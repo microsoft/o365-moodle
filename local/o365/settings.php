@@ -138,11 +138,8 @@ if ($hassiteconfig) {
 
         $label = new lang_string('acp_sharepointcourseselect', 'local_o365');
         $desc = new lang_string('acp_sharepointcourseselect_desc', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\sharepointcourseselect('local_o365/sharepointcourseselect', $label, $desc, 'off'));
-
-        $label = new lang_string('settings_onenote', 'local_o365');
-        $desc = new lang_string('settings_onenote_details', 'local_o365');
-        $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
+        $settingname = 'local_o365/sharepointcourseselect';
+        $settings->add(new \local_o365\adminsetting\sharepointcourseselect($settingname, $label, $desc, 'none'));
 
         $label = new lang_string('settings_options_advanced', 'local_o365');
         $desc = new lang_string('settings_options_advanced_desc', 'local_o365');
@@ -151,6 +148,10 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_o365china', 'local_o365');
         $desc = new lang_string('settings_o365china_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
+
+        $label = new lang_string('settings_onenote', 'local_o365');
+        $desc = new lang_string('settings_onenote_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
 
         $label = new lang_string('settings_enableunifiedapi', 'local_o365');
         $desc = new lang_string('settings_enableunifiedapi_details', 'local_o365');
