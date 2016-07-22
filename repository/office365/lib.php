@@ -976,7 +976,7 @@ class repository_office365 extends \repository {
      * @param string $path The list path.
      * @param string $clienttype The type of client that the response is from. onedrive/sharepoint.
      * @param string $parentinfo Client type-specific parent information.
-     *                               If using the Sharepoint clienttype, this is the parent site URI.
+     *                               If using the SharePoint clienttype, this is the parent site URI.
      *                               If using the unifiedgroup clienttype, this is the parent group ID.
      * @param bool $addupload Whether to add the "Upload" file item.
      * @return array A $list array to be used by the respository class in get_listing.
