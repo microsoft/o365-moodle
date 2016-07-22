@@ -184,8 +184,7 @@ class block_microsoft extends block_base {
         if (!empty($user->picture)) {
             $html .= '<div class="profilepicture">';
             $picturehtml = $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
-            $profileurl = new \moodle_url('/user/profile.php', ['id' => 3]);
-
+            $profileurl = new \moodle_url('/user/profile.php', ['id' => $USER->id]);
             if (!empty($delveurl)) {
                 // If "My Delve" is enabled, clicking the user picture should take you to their Delve page.
                 $picturehtml = str_replace($profileurl->out(), $delveurl, $picturehtml);
