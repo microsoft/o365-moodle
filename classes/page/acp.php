@@ -827,7 +827,7 @@ class acp extends base {
     }
 
     /**
-     * Sharepoint course resource customization.
+     * SharePoint course resource customization.
      */
     public function mode_sharepointcourseselect() {
         global $OUTPUT, $PAGE, $DB, $CFG;
