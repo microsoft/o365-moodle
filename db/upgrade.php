@@ -528,5 +528,16 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015011653.03', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015011654.01) {
+        $sharepointcourseselect = get_config('local_o365', 'sharepointcourseselect');
+        // Setting value "Off" used to mean "sync all".
+        if ($sharepointcourseselect === 'off') {
+            set_config('sharepointcourseselect', 'onall', 'local_o365');
+        } else if (empty($sharepointcourseselect) || $sharepointcourseselect !== 'oncustom') {
+            set_config('sharepointcourseselect', 'none', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015011654.01', 'local', 'o365');
+    }
+
     return $result;
 }
