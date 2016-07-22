@@ -149,6 +149,7 @@ class ajax extends base {
         $resource = \local_o365\rest\discovery::get_resource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
+        // Get service api currently requires system token to be used.
         $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
@@ -216,27 +217,38 @@ class ajax extends base {
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
+        $unifiedresource = \local_o365\rest\unified::get_resource();
         $correctredirecturl = \auth_oidc\utils::get_redirecturl();
+
 
         if (\local_o365\rest\unified::is_enabled() === true) {
             // Microsoft Graph API.
             try {
-                $httpclient = new \local_o365\httpclient();
-                $unifiedresource = \local_o365\rest\unified::get_resource();
-                $token = \local_o365\oauth2\systemtoken::instance(null, $unifiedresource, $clientdata, $httpclient);
+                $token = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
                 if (empty($token)) {
                     throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
                 }
+
                 $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
-                $unifiedpermsresult = $unifiedapiclient->check_unified_permissions();
-                if ($unifiedpermsresult === null) {
+
+                // Check app-only perms.
+                $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
+                if (!empty($apponlyenabled)) {
+                    $missingappperms = $unifiedapiclient->check_graph_apponly_permissions();
+                    $unifiedapi->missingappperms = $missingappperms;
+                    $unifiedapi->apptoken = ($token instanceof \local_o365\oauth2\apptoken) ? true : false;
+                }
+
+                // Check delegated (user) perms.
+                $missingdelegatedperms = $unifiedapiclient->check_graph_delegated_permissions();
+                if ($missingdelegatedperms === null) {
                     $unifiedapi->active = false;
                 } else {
                     $unifiedapi->active = true;
-                    $unifiedapi->missingperms = $unifiedpermsresult;
+                    $unifiedapi->missingperms = $missingdelegatedperms;
                 }
                 $appinfo = $unifiedapiclient->get_application_info();
-                list($missingperms, $haswrite) = $unifiedapiclient->check_permissions();
+                list($missingperms, $haswrite) = $unifiedapiclient->check_legacy_permissions();
                 $legacyapi->missingperms = $missingperms;
                 $legacyapi->haswrite = $haswrite;
             } catch (\Exception $e) {
