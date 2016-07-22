@@ -409,7 +409,7 @@ class observers {
     }
 
     /**
-     * Sync Sharepoint course site access when a role was assigned or unassigned for a user.
+     * Sync SharePoint course site access when a role was assigned or unassigned for a user.
      *
      * @param int $roleid The ID of the role that was assigned/unassigned.
      * @param int $userid The ID of the user that it was assigned to or unassigned from.
