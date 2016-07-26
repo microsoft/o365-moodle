@@ -211,7 +211,8 @@ class repository_office365 extends \repository {
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
 
         $unifiedactive = false;
-        if ($this->unifiedconfigured === true && empty(get_config('office365', 'trendinggroup'))) {
+        $trendingdisabled = get_config('office365', 'trendinggroup');
+        if ($this->unifiedconfigured === true && empty($trendingdisabled)) {
             $unifiedtoken = $this->get_unified_token();
             if (!empty($unifiedtoken)) {
                 $unifiedactive = true;
@@ -219,7 +220,8 @@ class repository_office365 extends \repository {
         }
 
         $onedriveactive = false;
-        if ($this->onedriveconfigured === true && empty(get_config('office365', 'onedrivegroup'))) {
+        $onedrivegroupdisabled = get_config('office365', 'onedrivegroup');
+        if ($this->onedriveconfigured === true && empty($onedrivegroupdisabled)) {
             $onedrivetoken = $this->get_onedrive_token();
             if (!empty($onedrivetoken)) {
                 $onedriveactive = true;
@@ -227,7 +229,8 @@ class repository_office365 extends \repository {
         }
 
         $sharepointactive = false;
-        if ($this->sharepointconfigured === true && empty(get_config('office365', 'sharepointgroup'))) {
+        $sharepointgroupdisabled = get_config('office365', 'sharepointgroup');
+        if ($this->sharepointconfigured === true && empty($sharepointgroupdisabled)) {
             $sharepointtoken = $this->get_sharepoint_token();
             if (!empty($sharepointtoken)) {
                 $sharepointactive = true;
@@ -236,7 +239,8 @@ class repository_office365 extends \repository {
 
         $courses = enrol_get_users_courses($USER->id, true);
         $showgroups = false;
-        if (\local_o365\rest\unified::is_configured() === true  && empty(get_config('office365', 'coursegroup'))) {
+        $coursegroupdisabled = get_config('office365', 'coursegroup');
+        if (\local_o365\rest\unified::is_configured() === true  && empty($coursegroupdisabled)) {
             foreach ($courses as $course) {
                 if (\local_o365\feature\usergroups\utils::course_is_group_enabled($course->id)) {
                     if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'onedrive')) {
@@ -293,7 +297,8 @@ class repository_office365 extends \repository {
                 ];
                 $sharepoint = $this->get_sharepoint_apiclient();
                 // Retrieve api url for video service.
-                if (empty(get_config('office365', 'officevideo'))) {
+                $officevideodisabled = get_config('office365', 'officevideo');
+                if (empty($officevideodisabled)) {
                     $url = $sharepoint->videoservice_discover();
                     if (!empty($url)) {
                         $list[] = [
