@@ -169,7 +169,7 @@ Navigate to **Site Administration \> Plugins \> Local plugins**.  Click **Micros
     3.  This user is used for system operations that are not specific to a single user - i.e. user sync operations. This user needs to have administrator access to be able to access all needed information.
     4.  You can change this user later if needed.
 
-3.  Detect additional information and verify your setup. 
+3.  Detect additional information and verify your setup.
     1.  Azure AD Tenant.  This is the domain name that identifies your Office 365 subscription, for example "contoso.onmicrosoft.com".  If you know it, enter it in this box, if not, click the "Detect" button to attempt to detect the correct value.
 	2.  OneDrive for Business URL.  This is the URL that your users use to access OneDrive for Business. This can usually be determined from your AzureAD tenant, for example, if your tenant is "contoso.onmicrosoft.com", your OneDrive for Business URL is "contoso-my.sharepoint.com.".  If you know the URL, enter it here, otherwise click "Detect" to attempt to detect the correct value.  Only enter the domain name, do not include "<http://>", "www." or any trailing slashes. For example "contoso-my.sharepoint.com", not "<https://contoso-my.sharepoint.com/>"
 	3.  Azure Setup.  This tool verifies that Azure has been correctly set up. Click the "Update" button to check setup.  If the tool reports any missing permissions, return to Azure and ensure that all required permissions have been added to your configured application for Moodle.
@@ -192,12 +192,12 @@ With this method, the user will log in to Moodle using their Office 365 account 
   3. Log in as the user to be migrated, visit a page that has the Microsoft block visible.
   4. Click the **Connect to Office 365** link in the Microsoft block.
   5. You will be brought to the **Office 365 / Moodle Control Panel**.
-  6. Click the *'Office 365 Connection* link under **Office 365 Features**
+  6. Click the *Office 365 Connection* link under **Office 365 Features**
   7. Click the "Start using Office 365 to log in to Moodle." link.
   8. You will be redirected to Office 365 to log in. Log in to the Office 365 account you'd like to link the Moodle user to.
     1.  **NOTE:** If you are already logged in to Office 365, you will not have to enter your credentials on the Office 365 login page - the account you are logged in to will be linked to the Moodle account. Ensure you are logged in to the correct account, use a private browser window, or log out of Office 365 first to show the Office 365 login screen.
-  9. You will be redirected back to Moodle to the Office 365 / Moodle control panel. The **Connection status** box on the side of the page should indicate that you are connected to Office 365 and that you are using Office 365 to log in to Moodle. 
-  10. The Moodle account will now use Office 365 to log in. **The previous Moodle login method will not work.**. 
+  9. You will be redirected back to Moodle to the Office 365 / Moodle control panel. The **Connection status** box on the side of the page should indicate that you are connected to Office 365 and that you are using Office 365 to log in to Moodle.
+  10. The Moodle account will now use Office 365 to log in. **The previous Moodle login method will not work.**.
   11. The Moodle user can now use any of the Office 365 features in Moodle.
 
 ### Link a Moodle user to an Office 365 user.
