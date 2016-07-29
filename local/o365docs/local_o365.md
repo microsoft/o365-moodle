@@ -1,6 +1,6 @@
 Microsoft Office 365 Integration Local Plugin
 =============================================
-This plugin contains several configuration options and can be located under **Site Administration \> Plugins \> Local plugins**. It is organized into three tabs:
+This plugin contains several configuration options and can be located under **Site Administration \> Plugins \> Local plugins**. It is organized into four tabs:
 
 1.  **Setup**. Configuration settings are outlined under the Setup section.
 2.  **Options** Contains various configuration options. Includes:
@@ -10,6 +10,7 @@ This plugin contains several configuration options and can be located under **Si
 3.  **Tools**
 	1. Health Check
 	2. User Matching Tool
+4.  **School Data Sync**
 
 User Sync
 ---------
@@ -29,9 +30,9 @@ Users from Azure AD can be automatically created in Moodle using the user sync o
 
 -   The sync job runs in the Moodle cron, and syncs 1000 users at a time.
 -   By default, this runs once per day at 1:00 AM in the time zone local to your server.
--   To sync large sets of users more quickly, you can increase the frequency of the Sync users with Azure AD task using the Scheduled tasks management page. See [Scheduled\_tasks](Scheduled_tasks "wikilink").
+-   To sync large sets of users more quickly, you can increase the frequency of the Sync users with Azure AD task using the Scheduled tasks management page. See [Scheduled\_tasks](https://docs.moodle.org/30/en/Scheduled_tasks).
 
-There are four options that affect user sync:
+There are several options that affect user sync:
 
 1. **Create accounts in Moodle for users in Azure AD**
 
@@ -48,6 +49,18 @@ This will look at the each user in the linked Azure Active Directory and try to 
 4.  **Switch matched users to Office 365 (OpenID Connect) authentication**
 
 This requires the "Match" setting above to be enabled. When a user is matched, enabling this setting will switch their authentication method to OpenID Connect. They will then log in to Moodle with their Office 365 credentials. Note: Please ensure the OpenID Connect authentication plugin is enabled if you want to use this setting.
+
+5.  **Assign users to application during sync**
+
+This will assign Azure AD users to the Moodle application in Azure. This will add the Moodle tile to the user's app launcher, and enable Moodle access if the "User assignment required to access app" setting is enabled in the Azure application.
+
+6.  **Sync Office 365 profile photos to Moodle in cron job**
+
+This will sync users' profile photos into Moodle and set the Moodle user's profile photo to that image. Note that this can increase the time it takes to run user sync significantly.
+
+7.  **Sync Office 365 profile photos to Moodle on login**
+
+If enabled, the user's Office 365 profile photo will be synced upon their log in to Moodle. This can be a more performant solution than (6) but users may experience a slightly delay in seeing profile photo updates.
 
 
 #### User Creation Restriction
@@ -70,9 +83,9 @@ To Delete A Mapping
 2.  Click "Save changes" at the bottom of the page.
 3.  Note this will only prevent future information syncing, it will not undo past operations.
 
-Integration Options
----------------------
-This controls what kind of Office 365 resources you want to create and associate with a Moodle Course. You have the option to create either a SharePoint subsite for your course and/or an Office 365 Group.
+Integration Features
+--------------------
+This section controls the various main features of the plugin suite, including what kind of Office 365 resources you want to create and associate with a Moodle Course. You have the option to create either a SharePoint subsite for your course and/or an Office 365 Group.
 **Please Note** If a SharePoint Site is not needed for your Course, and you are merely looking to have a SharePoint subsite for your course in order to have access to a document library accessible by all students and teachers associated with the course, it is recommended you enable only User Groups rather than the SharePoint connection.
 
 ### SharePoint
@@ -89,7 +102,11 @@ SharePoint sites can be created for each course on your Moodle site. You will pr
     1.  If the valid is invalid, you will see a red box and the text "This is not a usable SharePoint site."
     2.  If the site already exists, you will see a blue box and the text "This site is usable, but already exists". You can use this site, but conflicts can arise. It's recommended to use a URL to a SharePoint site that doesn't yet exist. The site will be created during initialization.
     3.  If the site does not exist but can be created, you will see a green box and the text "This SharePoint site will be created by Moodle and used for Moodle content.". This SharePoint site will be created by Moodle during initialization.
-
+3.  Choose which courses you want to sync.
+    1. Beneath the SharePoint link setting, you will see a "SharePoint course selection" setting. This allows you to choose which courses will have a SharePoint site created.
+        * "None" will not create any SharePoint sites.
+        * "Custom" will allow you to choose which courses have a SharePoint site created. A "customize" link will appear after you choose this link and click "Save changes".
+        * "Sync All" will create a SharePoint site for every Moodle course.
 3.  Click **Save changes** at the bottom of the settings page.
 4.  You will see a spinning icon below the SharePoint Link setting, and the text "Moodle is setting up this SharePoint site.". **This will not automatically update - refresh the page to check if the connection has been set up.**.
 5.  The SharePoint Link is set up during the Moodle cron, so ensure your Moodle cron is set up and running.
@@ -126,13 +143,19 @@ To enable the Microsoft Graph API (for older installations of the plugins where 
 2.  Add the "Microsoft Graph" to your application in Azure.
 3.  Return to Moodle and run through the steps in this plugin's "Setup" tab.
 
+#### Enable application permission access
+
+This allows Moodle to use "Application permissions" rather than the system API user when available. If you have added all the "Application Permissions" outlined in [setup](setup.md), you should leave this enabled.
+
 #### Record debug messages
 
 If you experience problems using any Office 365 features in Moodle, enable this setting. Once enabled, errors will be recorded to the Moodle log for review. These errors can help you or the plugin developers debug and fix the problem. The error log can be viewed by navigating to Site Administration \> Reports \> Logs, changing the "All activities" select box to "Site errors", and clicking "Get these logs".
 
-#### Photo time to live
+#### Profile photo refresh time
 
-Define how long between synchronization of a profile photo from Office 365 in hours
+The number of hours to wait before refreshing a user's profile photo.
+
+Tools
 -----
 
 #### Health Check
