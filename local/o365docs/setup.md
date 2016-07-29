@@ -1,6 +1,16 @@
 Setup
 =====
 
+Server Requirements
+-------------------
+
+This plugin suite supports the [minimum system requirements for Moodle 2.7](https://docs.moodle.org/dev/Moodle_2.7_release_notes#Server_requirements).
+
+Client Requirements
+-------------------
+
+This plugin suite supports the [minimum client requirements for Moodle 2.7](https://docs.moodle.org/dev/Moodle_2.7_release_notes#Client_requirements)
+
 Installation
 ------------
 
@@ -81,49 +91,47 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 7.  Click the checkbox in the bottom-right hand corner of the page and then click Ok to add your app to Azure Active Directory.
 8.  There are a couple more values and changes you need to make and write down some values which you will need in the next section.
 
-### Configure your Application Permissions in Azure Active Directory
+### Configure your Azure Active Directory Application
 
-1.  Click on the **Active Directory** icon on the left menu, and then click on the desired Azure AD.
+1.  In Azure, click on the **Active Directory** icon on the left menu, and then click on the desired Azure AD.
 2.  Click the Applications tab at the top of the screen.
-3.  Select your app.
+3.  Locate the application you created and click it's name in the list.
 4.  Click Configure at the top of the screen.
 5.  Locate the **Client ID**, note this value (write it down or copy it somewhere), and set it aside. You'll need it later.
 6.  Create a client secret key.
     1.  Locate the **keys** section of the page.
     2.  Select a duration for the validity of the key.
     3.  Click "Save" at the bottom of the screen. The page will reload and a key value will be shown in the keys section.
-    4.  Note this key value (write it down or copy it somewhere) and set it aside. You'll need later.
+    4.  Note this key value (copy it to a file on your computer, for example) and set it aside. You'll need later.
     5.  ![OpenID Connect Settings](images/SettingOpenIDConnect.png "fig:OpenID Connect Settings")
 
 7.  Locate the **Permissions to other applications** section.
-8.  Click **Add application** click the plus sign to the right of **Office 365 Exchange Online**, **Office 365 SharePoint Online**, and **OneNote**. Note, the plus will appear when you hover over each of the items.
+8.  Click **Add application** click the plus sign to the right of **Microsoft Graph**, **Office 365 Exchange Online**, **Office 365 SharePoint Online**, and **OneNote**. Note, the plus will appear when you hover over each of the items.
 9.  Click the check mark at the bottom right of the dialog.
 10. In the Delegated Permissions dropdown for Office 365 Exchange Online select the following permissions:
-    1.  Read users’ calendars
-    2.  Read and write users' calendars
+    1.  Read user calendars.
+    2.  Read and write user calendars.
 
 11. In the Delegated Permissions dropdown for Office 365 SharePoint Online select the following permissions:
     1.  Read items in all site collections
     2.  Read and write items in all site collections
-    3.  Create or delete items and lists in all site collections
+    3.  Read and write items and lists in all site collections
     4.  Have full control of all site collections
     5.  Read user files
     6.  Read and write user files
 
-12. In the Application Permissions dropdown for Windows Azure Active Directory select the following permissions:
-    1.  Read directory data
-
-13. In the Delegated Permissions dropdown for Windows Azure Active Directory select the following permissions:
-    1.  Read directory data
+12. In the Delegated Permissions dropdown for Windows Azure Active Directory select the following permissions:
+    1.  Read and write directory data
+        * Note: Write permissions here are used by the Azure AD setup tool to automatically fix permissions. If you do not want to grant directory write access, the plugin suite will work with only the "Read directory data" permission.
     2.  Read all users' full profiles
-    3.  Sign in and read user profile.
+    3.  Access the directory as the signed-in user.
 
-14. In the Delegated Permissions dropdown for OneNote select the following permissions:
+13. In the Delegated Permissions dropdown for OneNote select the following permissions:
     1.  Create pages in OneNote notebooks
     2.  View OneNote notebooks.
     3.  View and modify OneNote notebooks.
 
-15. In the Delegated Permissions dropdown for Microsoft Graph select the following permissions:
+14. In the Delegated Permissions dropdown for Microsoft Graph select the following permissions:
     1. Have full access to user calendars.
     2. Access directory as the signed in user.
     3. Read and write directory data.
@@ -133,6 +141,16 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
     7. Read items in all site collections.
     8. Read and write all users full profiles.
     9. Sign users in.
+
+15. In the Application Permissions dropdown for Windows Azure Active Directory select the following permissions:
+    1.  Read directory data
+
+16. In the Application Permissions dropdown for Microsoft Graph select the following permissions:
+    1. Read and write files in all site collections.
+    2. Read and write all users' full profiles.
+    3. Read directory data.
+    4. Read and write all groups.
+    5. Read and write calendars in all mailboxes.
 
 16. Click save at the bottom of the screen.
 
@@ -146,22 +164,15 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 6.  Click Assign at the bottom of the screen.
 7.  When prompted whether you are sure you want to enable access, click Yes.
 
-The application will appear in the [My apps](https://portal.office.com/myapps) page of the application launcher on the Office 365 portal for the users which have been assigned.
-
-### Enter Azure Active Directory Application credentials into Moodle
-
-1.  Ensure you have enabled the **OpenID Connect** authentication plugin following the steps a few sections above.
-2.  Navigate to the OpenID Connect authentication plugin's settings page (Site Administration \> Plugins \> Authentication \> OpenID Connect)
-3.  Enter the "Client ID" value you noted earlier from Azure AD into the "Client ID" box on the screen.
-4.  Enter the client secret key value you noted earlier from Azure AD into the "Client Secret" box on the screen.
-5.  Click "Save changes" at the bottom of the screen.
+The application will appear in the [My apps](https://portal.office.com/myapps) page of the application launcher on the Office 365 portal for the users which have been assigned. Unless "User assignment required to access app" setting is enabled in the application, assignment is not necessary for users to use the Moodle integration.
 
 ### Configure the Setup tab in the Microsoft Office 365 Integration plugin
 
 Navigate to **Site Administration \> Plugins \> Local plugins**.  Click **Microsoft Office 365 Integration**.  Under the **Setup** tab, complete each of the following steps:
 
-1.  Register Moodle with Azure AD.
-    1.  Copy the client ID and key from Azure AD into the appropriate fields.
+1.  Register Moodle with Azure AD (process outlined above).
+    1.  Copy the client ID and key you noted earlier from Azure AD into the appropriate fields in step 1.
+    2.  Click save changes at the bottom of the page.
 
 2.  Set a System API User
     1.  This should report "No user set". Click "Set User"
@@ -176,18 +187,54 @@ Navigate to **Site Administration \> Plugins \> Local plugins**.  Click **Micros
 
 4. Click Save changes.
 
-Connecting users to Office 365
-------------------------------
 
-To use any Office 365 features, a Moodle user must be connected to an Office 365 user that has an active Office 365 subscription. There are two ways to connect a Moodle user to an Office 365 user.
+Setting up your users.
+----------------------
 
-### Migrate the user to using their Office 365 credentials to log in to Moodle.
+To use any Office 365 features, a Moodle user must be connected to an Office 365 user that has an active Office 365 subscription. The plugin suite provides several different ways to set up user accounts in Moodle to use Office 365 features.
+
+
+Importing Azure AD users into Moodle
+------------------------------------
+
+If you have users in Azure AD that do not already have an account in Moodle, you can import users into Moodle in a few ways. If your Azure AD users already have a separate account in Moodle and you want to link them, see the next section.
+
+### User sync.
+User sync will sync the Moodle user list with Azure AD and can perform various different operations on the Moodle user list depending on a few settings you can select. This method is useful if you want to create users in Moodle that match your users in Azure AD, and have user accounts created ahead of user access. If you would like to populate your Moodle site with users from Azure AD and be able to enrol the users in various courses before users start using Moodle, this is the best solution. See the full documentation on [user sync](local_o365.md) for more information on how to use this feature.
+
+### On-demand user creation.
+The OpenID Connect authentication plugin will create a Moodle user from an Azure AD user that tries to log in to Moodle using Azure AD, successfully authenticates, and does not have an existing linked Moodle account. The Moodle user will be created on the fly as the user logs in. This is useful for a more on-demand Moodle setup where users do not need to be created and pre-enroled ahead of time, but instead allow users to self-select their courses. You can disable this function by going to the common Moodle authentication settings (Site Administration > Plugins > Authentication > Manage authentication), and checking the "Prevent account creation when authenticating" setting.
+
+
+Connecting existing Moodle users to Office 365
+----------------------------------------------
+
+There are four ways to connect existing Moodle users to Office 365 users. Two admin-driven methods, and two end-user-driven methods. The admin methods require a Moodle administrator to configure a setting or run a tool, and the end-user methods require the Moodle user you want to link to perform some operation.
+
+### Admin: Using user sync auto-matching.
+
+If your existing Moodle users have the same usernames as your users in Azure AD, the user sync process can match users automatically. This process will match, case-insensitively, the beginning part of the Azure AD username (before the "@") against any Moodle user with the same username and can link the users either by switching the Moodle user's authentication method to OpenID Connect, or link the Moodle user in the background - leaving the Moodle authentication method unchanged. Please see the [user sync documentation](local_o365.md) for more information about user sync.
+
+### Admin: User matching tool
+
+If your users in Moodle have different usernames from the users in Azure AD, there is a user matching tool that will allow you to upload a CSV file containing a list of Moodle usernames and their corresponding Azure AD usernames.
+
+To access this tool, go to the integration local plugin settings page (Site administration > Plugins > Local plugins > Microsoft Office 365 Integration), and click the "Tools" tab, then the "User Matching" link. This page provides a description of the CSV format, and a file picker to upload the file.
+
+To run the user matching tool:
+1.  Upload a CSV, matching the displayed format, using the file picker on this page.
+2.  Click the "Add Data File to Match Queue" button.
+3.  The CSV will be processed and you will see a list of usernames in "Step 2". This is the processing queue.
+4.  Every time your Moodle cron runs, a batch of users in the queue will be processed. The results will be shown in the queue.
+
+### End User: Migrate the user to using their Office 365 credentials to log in to Moodle.
 
 With this method, the user will log in to Moodle using their Office 365 account credentials.
 
 - Users who do not yet have a Moodle account can simply follow the normal OpenID Connect login process (see: [OpenID Connect Authentication Usage](#openid-connect-authentication-plugin). If a Moodle account is not found for a user logging in with OpenID Connect, an account will be created for them.
 - You can migrate existing Moodle users to Azure AD login by following the steps below:
   1. Ensure the user you want to migrate has the "auth/oidc:manageconnection" or "auth/oidc:manageconnectionconnect" capability. Regular users do not have this capability by default.
+    * The "auth/oidc:manageconnectionconnect" capability will allow users to link an account, while the "auth/oidc:manageconnectiondisconnect" capability will allow them to unlink. It is therefore possible to give users the capability to link, but not unlink.
   2. Ensure the Microsoft block has been added to a page in Moodle (for example, the Moodle dashboard).
   3. Log in as the user to be migrated, visit a page that has the Microsoft block visible.
   4. Click the **Connect to Office 365** link in the Microsoft block.
@@ -200,12 +247,13 @@ With this method, the user will log in to Moodle using their Office 365 account 
   10. The Moodle account will now use Office 365 to log in. **The previous Moodle login method will not work.**.
   11. The Moodle user can now use any of the Office 365 features in Moodle.
 
-### Link a Moodle user to an Office 365 user.
+### End user: Link a Moodle user to an Office 365 user.
 
 This will allow you to connect a user to Office 365, enable all Office 365 features with this user, but not have to change their Moodle login method.
 
 1. Ensure the Microsoft block has been added to a page in Moodle (for example, the Moodle dashboard).
 2. Ensure the user you want to migrate has the "local/o365:manageconnectionlink" capability. Regular users do not have this capability by default.
+    * The "local/o365:manageconnectionlink" capability will allow users to link an account, while the "local/o365:manageconnectionunlink" capability will allow them to unlink. It is therefore possible to give users the capability to link, but not unlink.
 3. Log in as the user to be migrated, visit a page that has the Microsoft block visible.
 4. Click the **Connect to Office 365** link in the Microsoft block.
 5. You will be brought to the **Office 365 / Moodle Control Panel**.
