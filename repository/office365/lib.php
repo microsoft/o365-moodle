@@ -211,11 +211,13 @@ class repository_office365 extends \repository {
         $breadcrumb = [['name' => $this->name, 'path' => '/']];
 
         $unifiedactive = false;
+        $trendingactive = false;
         $trendingdisabled = get_config('office365', 'trendinggroup');
-        if ($this->unifiedconfigured === true && empty($trendingdisabled)) {
+        if ($this->unifiedconfigured === true) {
             $unifiedtoken = $this->get_unified_token();
             if (!empty($unifiedtoken)) {
                 $unifiedactive = true;
+                $trendingactive = (empty($trendingdisabled)) ? true : false;
             }
         }
 
@@ -270,7 +272,7 @@ class repository_office365 extends \repository {
                 list($list, $breadcrumb) = $this->get_listing_groups(substr($path, 7));
             }
         } else if (strpos($path, '/trending/') === 0) {
-            if ($unifiedactive === true) {
+            if ($trendingactive === true) {
                 // Path is in trending files.
                 list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
             }
@@ -280,7 +282,7 @@ class repository_office365 extends \repository {
                 list($list, $breadcrumb) = $this->get_listing_videos(substr($path, 15));
             }
         } else {
-            if ($onedriveactive === true && $this->unifiedconfigured) {
+            if ($unifiedactive === true || $onedriveactive === true) {
                 $list[] = [
                     'title' => get_string('myfiles', 'repository_office365'),
                     'path' => '/my/',
@@ -318,7 +320,7 @@ class repository_office365 extends \repository {
                     'children' => [],
                 ];
             }
-            if ($unifiedactive === true) {
+            if ($trendingactive === true) {
                 $list[] = [
                     'title' => get_string('trendingaround', 'repository_office365'),
                     'path' => '/trending/',
