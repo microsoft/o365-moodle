@@ -318,7 +318,15 @@ class acp extends base {
         require_sesskey();
 
         foreach ($coursedata as $courseid => $course) {
+            if (!is_scalar($courseid) || ((string)$courseid !== (string)(int)$courseid)) {
+                // Non-intlike courseid value. Invalid. Skip.
+                continue;
+            }
             foreach ($course as $feature => $value) {
+                // Value must be boolean - existing set_* functions below already treat non-true as false, so let's be clear.
+                if (!is_bool($value)) {
+                    $value = false;
+                }
                 if ($feature === 'enabled') {
                     \local_o365\feature\usergroups\utils::set_course_group_enabled($courseid, $value);
                 } else if (in_array($feature, ['onedrive', 'calendar', 'conversations', 'notebook'])) {
