@@ -1,19 +1,20 @@
 Microsoft Office 365 Integration Local Plugin
 =============================================
-This plugin contains several configuration options and can be located under **Site Administration \> Plugins \> Local plugins**. It is organized into three tabs:
+This plugin contains several configuration options and can be located under **Site Administration \> Plugins \> Local plugins**. It is organized into four tabs:
 
-1.  **Setup**. Configuration settings are outlined under the Setup section.   
+1.  **Setup**. Configuration settings are outlined under the Setup section.
 2.  **Options** Contains various configuration options. Includes:
-	1. User Sync 
+	1. User Sync
 	2. Integration Settings
 	3. Advanced Settings
 3.  **Tools**
 	1. Health Check
 	2. User Matching Tool
+4.  **School Data Sync**
 
 User Sync
 ---------
-This controls how users are synced from Azure AD to Moodle. This can create or delete users in Moodle, match them with Azure Active Directory users, and assign them to Azure Active Directory applications. 
+This controls how users are synced from Azure AD to Moodle. This can create or delete users in Moodle, match them with Azure Active Directory users, and assign them to Azure Active Directory applications.
 
 #### Sync users with Azure AD
 
@@ -29,9 +30,9 @@ Users from Azure AD can be automatically created in Moodle using the user sync o
 
 -   The sync job runs in the Moodle cron, and syncs 1000 users at a time.
 -   By default, this runs once per day at 1:00 AM in the time zone local to your server.
--   To sync large sets of users more quickly, you can increase the freqency of the Sync users with Azure AD task using the Scheduled tasks management page. See [Scheduled\_tasks](Scheduled_tasks "wikilink").
+-   To sync large sets of users more quickly, you can increase the frequency of the Sync users with Azure AD task using the Scheduled tasks management page. See [Scheduled\_tasks](https://docs.moodle.org/30/en/Scheduled_tasks).
 
-There are four options that affect user sync:
+There are several options that affect user sync:
 
 1. **Create accounts in Moodle for users in Azure AD**
 
@@ -43,11 +44,23 @@ This will delete users from Moodle if they are marked as deleted in Azure AD. Th
 
 3.  **Match preexisting Moodle users with same-named accounts in Azure AD**
 
-This will look at the each user in the linked Azure Active Directory and try to match them with a user in Moodle. This looks for matching usernames in Azure AD and Moodle. Matches are case-insentitive and ignore the Office 365 tenant. For example, "BoB.SmiTh" in Moodle would match "bob.smith@example.onmicrosoft.com". Users who are matched will have their Moodle and Office accounts connected and will be able to use all Office 365/Moodle integration features. The user's authentication method will not change unless the setting below is enabled.
+This will look at the each user in the linked Azure Active Directory and try to match them with a user in Moodle. This looks for matching usernames in Azure AD and Moodle. Matches are case-insensitive and ignore the Office 365 tenant. For example, "BoB.SmiTh" in Moodle would match "bob.smith@example.onmicrosoft.com". Users who are matched will have their Moodle and Office accounts connected and will be able to use all Office 365/Moodle integration features. The user's authentication method will not change unless the setting below is enabled.
 
 4.  **Switch matched users to Office 365 (OpenID Connect) authentication**
 
 This requires the "Match" setting above to be enabled. When a user is matched, enabling this setting will switch their authentication method to OpenID Connect. They will then log in to Moodle with their Office 365 credentials. Note: Please ensure the OpenID Connect authentication plugin is enabled if you want to use this setting.
+
+5.  **Assign users to application during sync**
+
+This will assign Azure AD users to the Moodle application in Azure. This will add the Moodle tile to the user's app launcher, and enable Moodle access if the "User assignment required to access app" setting is enabled in the Azure application.
+
+6.  **Sync Office 365 profile photos to Moodle in cron job**
+
+This will sync users' profile photos into Moodle and set the Moodle user's profile photo to that image. Note that this can increase the time it takes to run user sync significantly.
+
+7.  **Sync Office 365 profile photos to Moodle on login**
+
+If enabled, the user's Office 365 profile photo will be synced upon their log in to Moodle. This can be a more performant solution than (6) but users may experience a slightly delay in seeing profile photo updates.
 
 
 #### User Creation Restriction
@@ -61,7 +74,7 @@ This controls how information is synced from Azure AD to Moodle. The first colum
 1.  Click "Add Mapping"
 2.  In the row that appears, select an Azure field to bring into Moodle.
 3.  In the second column on the same row, select a Moodle field to copy the value into.
-4.  In the third colum on the same row, choose whether this only happens on user creation, on user login, or both.
+4.  In the third column on the same row, choose whether this only happens on user creation, on user login, or both.
 5.  Click "Save Changes" at the bottom of the page.
 
 To Delete A Mapping
@@ -70,14 +83,14 @@ To Delete A Mapping
 2.  Click "Save changes" at the bottom of the page.
 3.  Note this will only prevent future information syncing, it will not undo past operations.
 
-Integration Options
----------------------
-This controls what kind of Office 365 resources you want to create and associate with a Moodle Course. You have the option to create either a SharePoint subsite for your course and/or an Office 365 Group. 
-**Please Note** If a SharePoint Site is not needed for your Course, and you are merely looking to have a SharePoint subsite for your course in order to have access to a document library accessible by all students and teachers associated with the course, it is recommended you enable only User Groups rather than the SharePoint connection.  
+Integration Features
+--------------------
+This section controls the various main features of the plugin suite, including what kind of Office 365 resources you want to create and associate with a Moodle Course. You have the option to create either a SharePoint subsite for your course and/or an Office 365 Group.
+**Please Note** If a SharePoint Site is not needed for your Course, and you are merely looking to have a SharePoint subsite for your course in order to have access to a document library accessible by all students and teachers associated with the course, it is recommended you enable only User Groups rather than the SharePoint connection.
 
-### SharePoint 
+### SharePoint
 SharePoint sites can be created for each course on your Moodle site. You will provide a parent SharePoint site and subsites for each course will be automatically created. The document library for each of these subsites can then be accessed by teachers using the Office 365 repository under "SharePoint (Courses)" . This provides a shared store of files for a course, allowing students and teachers the ability to collaborate on documents and share resources. In addition, this provides a SharePoint site that can be customized for the course and linked to from the Microsoft block.
-**Note** Any AzureAD-connected Moodle user with the **moodle/course:managefiles** capability in a course will be able to access the document library from the repository.
+**Note** Any Azure AD connected Moodle user with the **moodle/course:managefiles** capability in a course will be able to access the document library from the repository.
 
 ** Setting up the SharePoint connection **
 
@@ -89,24 +102,28 @@ SharePoint sites can be created for each course on your Moodle site. You will pr
     1.  If the valid is invalid, you will see a red box and the text "This is not a usable SharePoint site."
     2.  If the site already exists, you will see a blue box and the text "This site is usable, but already exists". You can use this site, but conflicts can arise. It's recommended to use a URL to a SharePoint site that doesn't yet exist. The site will be created during initialization.
     3.  If the site does not exist but can be created, you will see a green box and the text "This SharePoint site will be created by Moodle and used for Moodle content.". This SharePoint site will be created by Moodle during initialization.
-
+3.  Choose which courses you want to sync.
+    1. Beneath the SharePoint link setting, you will see a "SharePoint course selection" setting. This allows you to choose which courses will have a SharePoint site created.
+        * "None" will not create any SharePoint sites.
+        * "Custom" will allow you to choose which courses have a SharePoint site created. A "customize" link will appear after you choose this link and click "Save changes".
+        * "Sync All" will create a SharePoint site for every Moodle course.
 3.  Click **Save changes** at the bottom of the settings page.
 4.  You will see a spinning icon below the SharePoint Link setting, and the text "Moodle is setting up this SharePoint site.". **This will not automatically update - refresh the page to check if the connection has been set up.**.
 5.  The SharePoint Link is set up during the Moodle cron, so ensure your Moodle cron is set up and running.
 
 #### User Groups
 
-User Groups (i.e. Office 365 groups) can be created for each course on your Moodle site giving users the ablity to access Group resources such as Conversations, Group Files, and Calendar directly from the Microsoft Block via the Course Group link. The Group Files for each of these of these Office 365 groups can then be accessed by members using the Office 365 repository under "Groups (Courses)". Simlar to the SharePoint link, this provides a shared store of files for a course, allowing students and teachers the ability to collaborate on documents and share resources.
-	-  Once enabled, new groups will be created every cron run for any course that doesn't have an Office 365 group set up for it.  
-	-  Office 365 groups created will have their membership maintained automatically whenever someone joins or leaves a Moodle course. 
-	-  By default the Office 365 group will be set as "Private" and the Moodle Admin will be set as an owner of the group. 
+User Groups (i.e. Office 365 groups) can be created for each course on your Moodle site giving users the ability to access Group resources such as Conversations, Group Files, and Calendar directly from the Microsoft Block via the Course Group link. The Group Files for each of these of these Office 365 groups can then be accessed by members using the Office 365 repository under "Groups (Courses)". Similar to the SharePoint link, this provides a shared store of files for a course, allowing students and teachers the ability to collaborate on documents and share resources.
+	-  Once enabled, new groups will be created every cron run for any course that doesn't have an Office 365 group set up for it.
+	-  Office 365 groups created will have their membership maintained automatically whenever someone joins or leaves a Moodle course.
+	-  By default the Office 365 group will be set as "Private" and the Moodle Admin will be set as an owner of the group.
 	-  The Office 365 group Calendar is automatically synced with the Moodle Course calendar
 
 ** Setting up User Groups (i.e. Office 365 groups) **
 
 1.  In the *User Groups* setting select from the following choices:
-	-	**Disable** This is the default setting. Leaving this box check will mean no Office 365 groups will be created.   
-	-	**Custom.** This allows you to select which Moodle courses for which you create a Moodle course and which group resources (i.e. Conversations, Group Files, Calendar etc.) are displayed in the Microsoft block. Once an Office 365 groups is created for a Moodle course, it is not deleted when a Course is unselected. Moroever, unselecting items such as Conversations, Group Files, etc. only remove links to those resources from the Microsoft block. They remain accessible from Office 365 for members of the group.  
+	-	**Disable** This is the default setting. Leaving this box check will mean no Office 365 groups will be created.
+	-	**Custom.** This allows you to select which Moodle courses for which you create a Moodle course and which group resources (i.e. Conversations, Group Files, Calendar etc.) are displayed in the Microsoft block. Once an Office 365 groups is created for a Moodle course, it is not deleted when a Course is unselected. Moreover, unselecting items such as Conversations, Group Files, etc. only remove links to those resources from the Microsoft block. They remain accessible from Office 365 for members of the group.
 	-	**All Features Enabled** This enables Office 365 groups for all Moodle courses and lists all group resources (i.e. Conversations, Group Files, Calendar, etc.) in the Microsoft block from the Course Group link.
 
 Advanced Settings
@@ -126,13 +143,19 @@ To enable the Microsoft Graph API (for older installations of the plugins where 
 2.  Add the "Microsoft Graph" to your application in Azure.
 3.  Return to Moodle and run through the steps in this plugin's "Setup" tab.
 
+#### Enable application permission access
+
+This allows Moodle to use "Application permissions" rather than the system API user when available. If you have added all the "Application Permissions" outlined in [setup](setup.md), you should leave this enabled.
+
 #### Record debug messages
 
-If you experience problems using any Office 365 features in Moodle, enable this setting. Once enabled, errors will be recorded to the Moodle log for review. These errors can help you or the plugin developers debug and fix the problem. The error log can be viewed by navigating to Site Administation \> Reports \> Logs, changing the "All activities" select box to "Site errors", and clicking "Get these logs".
+If you experience problems using any Office 365 features in Moodle, enable this setting. Once enabled, errors will be recorded to the Moodle log for review. These errors can help you or the plugin developers debug and fix the problem. The error log can be viewed by navigating to Site Administration \> Reports \> Logs, changing the "All activities" select box to "Site errors", and clicking "Get these logs".
 
-#### Photo time to live
+#### Profile photo refresh time
 
-Define how long between synchronization of a profile photo from Office 365 in hours
+The number of hours to wait before refreshing a user's profile photo.
+
+Tools
 -----
 
 #### Health Check
