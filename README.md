@@ -1,26 +1,28 @@
-# Moodle Plugins for Microsoft Services
-*including* **Office 365** *and other Microsoft services*
+# Office 365 Plugins for Moodle
+*includes support for* **Office 365 Education**, **Office 365 Enterprise** *and* **Active Directory**
 
-This repo is where work on all Moodle plugins related to Microsoft services takes place. At designated intervals, updated versions of these plugins are pushed to individual repos and updated in the [moodle.org listings](https://moodle.org/plugins).
+This repo is where development on all Office 365 plugins for Moodle takes place. At designated intervals, updated versions of these plugins are pushed to individual repos and updated in the [moodle.org listings](https://moodle.org/plugins).
 
-Currently the following plugins are developed here:
+Currently the following plugins are **actively maintained and required** for new installations and provide the core functionality of the integration:
 
 - [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
-- [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
-- [moodle-block_onenote](https://github.com/Microsoft/moodle-block_onenote)
-- [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
-- [moodle-local_msaccount](https://github.com/Microsoft/moodle-local_msaccount)
 - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
+- [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
+- [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
+- [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
+
+The plugins below are *not required* for new installations:
+
+- [moodle-profilefield_o365](https://github.com/Microsoft/moodle-profilefield_o365)
+- [moodle-profilefield_oidc](https://github.com/Microsoft/moodle-profilefield_oidc)
+- [moodle-local_msaccount](https://github.com/Microsoft/moodle-local_msaccount)
+- [moodle-block_onenote](https://github.com/Microsoft/moodle-block_onenote)
+- [moodle-repository_onenote](https://github.com/Microsoft/moodle-repository_onenote)
 - [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
 - [moodle-assignfeedback_onenote](https://github.com/Microsoft/moodle-assignfeedback_onenote)
 - [moodle-assignsubmission_onenote](https://github.com/Microsoft/moodle-assignsubmission_onenote)
-- [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
-- [moodle-repository_onenote](https://github.com/Microsoft/moodle-repository_onenote)
-- [moodle-profilefield_o365](https://github.com/Microsoft/moodle-profilefield_o365)
-- [moodle-profilefield_oidc](https://github.com/Microsoft/moodle-profilefield_oidc)
 
-The following plugins are "parent" plugins which install the above plugins as a collection:
-
+The following plugins are "parent" or "shell" plugins which install a *subset* of the above plugins as a collection. They are also *not required* for new installations:
 - [moodle-local_office365](https://github.com/Microsoft/moodle-local_office365)
 - [moodle-local_microsoftservices](https://github.com/Microsoft/moodle-local_microsoftservices)
 
@@ -34,13 +36,18 @@ The master branch of this repository contains the most up-to-date code. As issue
 
 # Documentation
 
-The documentation for installing, configuring, and using these plugins is available here: https://docs.moodle.org/27/en/Office365.
+The documentation for installing, configuring, and using these plugins is available here: https://docs.moodle.org/30/en/Office365.
+You can submit changes to the documentation at any time here: https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs
 
 # Contributing
+Please be sure to submit an issue via the Github Issue Tracker before working on any pull requests.
 
 Before we can accept your pull request, you'll need to electronically complete Microsoft's [Contributor License Agreement](https://cla.microsoft.com/). If you've done this for other Microsoft projects, then you're already covered.
 
 [Why a CLA?](https://www.gnu.org/licenses/why-assign.html) (from the FSF)
+
+# Code of Conduct
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 # Copyright
 
