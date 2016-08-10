@@ -39,6 +39,8 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
         return false;
     }
 
+    //thisisatest
+
     // Make sure the filearea is one of those used by the plugin.
     if ($filearea !== 'icon' && $filearea !== 'description') {
         return false;
