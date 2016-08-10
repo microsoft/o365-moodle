@@ -41,6 +41,10 @@ class local_o365_oauth2_token_testcase extends \advanced_testcase {
         $this->resetAfterTest(true);
     }
 
+    public function test_fail() {
+        $this->assertTrue(false);
+    }
+
     /**
      * Test refresh method.
      */

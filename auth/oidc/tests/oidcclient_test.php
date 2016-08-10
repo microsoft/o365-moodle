@@ -40,6 +40,10 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
         $this->resetAfterTest(true);
     }
 
+    public function test_fail() {
+        $this->assertTrue(false);
+    }
+
     /**
      * Test getting and setting credentials.
      */
