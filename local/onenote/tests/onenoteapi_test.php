@@ -316,7 +316,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
         $createsubmission = $this->create_submission_feedback($this->cm, false, false, null, null, null);
         $this->submission = $this->assign->get_user_submission($this->user1->id, true);
 
-        $record = $DB->get_record('onenote_assign_pages',
+        $record = $DB->get_record('local_onenote_assign_pages',
                 array("assign_id" => $this->submission->assignment, "user_id" => $this->submission->userid));
 
         $tempfolder = $this->onenoteapi->create_temp_folder();
