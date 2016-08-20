@@ -723,7 +723,9 @@ class unified extends \local_o365\rest\o365api {
         \core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
-            $since = urlencode(date(DATE_ATOM, $since));
+            // Pass datetime in UTC, regardless of Moodle timezone setting.
+            $sinceDT = new \DateTime('@' . $since);
+            $since = urlencode($sinceDT->format('Y-m-d\TH:i:s\Z'));
             $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
