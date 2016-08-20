@@ -161,6 +161,10 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
         $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
 
+        $label = new lang_string('settings_switchauthminupnsplit0', 'local_o365');
+        $desc = new lang_string('settings_switchauthminupnsplit0_details', 'local_o365');
+        $settings->add(new \admin_setting_configtext('local_o365/switchauthminupnsplit0', $label, $desc, '10'));
+
         $label = new lang_string('settings_photoexpire', 'local_o365');
         $desc = new lang_string('settings_photoexpire_details', 'local_o365');
         $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
