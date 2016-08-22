@@ -147,10 +147,26 @@ class azuread extends \local_o365\rest\o365api {
         foreach ($neededperms as $app => $perms) {
             $appid = $allappdata[$app]['appId'];
             $appname = $allappdata[$app]['appDisplayName'];
-            foreach ($perms as $permname => $neededtype) {
-                if (isset($allappdata[$app]['perms'][$permname])) {
-                    $permid = $allappdata[$app]['perms'][$permname]['id'];
-                    if (!isset($currentperms[$appid][$permid])) {
+            foreach ($perms as $permname => $altperms) {
+                $permids = [];
+                $permstocheck = array_merge([$permname], $altperms);
+                foreach ($permstocheck as $permtocheckname) {
+                    if (isset($allappdata[$app]['perms'][$permtocheckname])) {
+                        $permids[$permtocheckname] = $allappdata[$app]['perms'][$permtocheckname]['id'];
+                    }
+                }
+                if (empty($permids)) {
+                    // If $permids is empty no candidate permissions exist in the application.
+                    $missingperms[$appname][$permname] = $permname;
+                } else {
+                    $permsatisfied = false;
+                    foreach ($permids as $permidsname => $permidsid) {
+                        if (isset($currentperms[$appid][$permidsid])) {
+                            $permsatisfied = true;
+                            break;
+                        }
+                    }
+                    if ($permsatisfied === false) {
                         if (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName'])) {
                             $permdesc = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
                         } else {
@@ -158,8 +174,6 @@ class azuread extends \local_o365\rest\o365api {
                         }
                         $missingperms[$appname][$permname] = $permdesc;
                     }
-                } else {
-                    $missingperms[$appname][$permname] = $permname;
                 }
             }
         }
@@ -191,10 +205,10 @@ class azuread extends \local_o365\rest\o365api {
         foreach ($reqdperms as $appname => $perms) {
             $appid = $svcdata[$appname]['appId'];
             $appperms = ['resourceAppId' => $appid, 'resourceAccess' => []];
-            foreach ($perms as $permname => $permtype) {
+            foreach ($perms as $permname => $altperms) {
                 $appperms['resourceAccess'][] = [
                     'id' => $svcdata[$appname]['perms'][$permname]['id'],
-                    'type' => $permtype
+                    'type' => 'Scope',
                 ];
             }
             $newperms[] = $appperms;
