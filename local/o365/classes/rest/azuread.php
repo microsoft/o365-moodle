@@ -166,12 +166,10 @@ class azuread extends \local_o365\rest\o365api {
 
         // Determine whether we have write permissions.
         $writeappid = $allappdata['Microsoft.Azure.ActiveDirectory']['appId'];
-        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'])
-            ? $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'] : null;
-        $impersonatepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['user_impersonation']['id'];
+        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.ReadWrite.All']['id'])
+            ? $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.ReadWrite.All']['id'] : null;
         $haswrite = (!empty($writepermid) && !empty($currentperms[$writeappid][$writepermid])) ? true : false;
-        $hasimpersonate = (!empty($currentperms[$writeappid][$impersonatepermid])) ? true : false;
-        $canfix = ($hasimpersonate === true) ? true : false;
+        $canfix = ($haswrite === true) ? true : false;
 
         return [$missingperms, $canfix];
     }
