@@ -96,5 +96,24 @@ function xmldb_local_onenote_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2015011613, 'local', 'onenote');
     }
 
+    if ($oldversion < 2015011616) {
+        // Define table to be renamed.
+        $table = new xmldb_table('onenote_user_sections');
+        if ($dbman->table_exists($table)) {
+            // Rename the table to use the correct Moodle naming convention.
+            $dbman->rename_table($table, 'local_onenote_user_sections');
+        }
+
+        // Define table to be renamed.
+        $table = new xmldb_table('onenote_assign_pages');
+        if ($dbman->table_exists($table)) {
+            // Rename the table to use the correct Moodle naming convention.
+            $dbman->rename_table($table, 'local_onenote_assign_pages');
+        }
+
+        // Onenote savepoint reached.
+        upgrade_plugin_savepoint(true, 2015011616, 'local', 'onenote');
+    }
+
     return true;
 }
