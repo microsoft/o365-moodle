@@ -60,7 +60,7 @@ function xmldb_local_msaccount_upgrade($oldversion) {
 
         if ($dbman->table_exists($table)) {
             // Rename the table to use the correct Moodle naming convention.
-            $dbman->rename_table($table, 'local_msaccount_refresh_tokens');
+            $dbman->rename_table($table, 'local_msaccount_refreshtok');
         }
 
         // Msaccount savepoint reached.
