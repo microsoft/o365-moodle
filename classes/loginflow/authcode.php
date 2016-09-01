@@ -350,8 +350,8 @@ class authcode extends \auth_oidc\loginflow\base {
             $sql = 'SELECT u.username
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
-                     WHERE obj.objectid = ? and obj.type = "user"';
-            $params = [$oidcuniqid];
+                     WHERE obj.objectid = ? and obj.type = ?';
+            $params = [$oidcuniqid, 'user'];
             $user = $DB->get_record_sql($sql, $params);
         }
         return (!empty($user)) ? $user->username : $username;
