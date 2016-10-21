@@ -136,6 +136,11 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_sharepointlink_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
 
+        $label = new lang_string('acp_sharepointcourseselect', 'local_o365');
+        $desc = new lang_string('acp_sharepointcourseselect_desc', 'local_o365');
+        $settingname = 'local_o365/sharepointcourseselect';
+        $settings->add(new \local_o365\adminsetting\sharepointcourseselect($settingname, $label, $desc, 'none'));
+
         $label = new lang_string('settings_options_advanced', 'local_o365');
         $desc = new lang_string('settings_options_advanced_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_options_advanced', $label, $desc));
@@ -144,14 +149,26 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_o365china_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
 
+        $label = new lang_string('settings_onenote', 'local_o365');
+        $desc = new lang_string('settings_onenote_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
+
         $label = new lang_string('settings_enableunifiedapi', 'local_o365');
         $desc = new lang_string('settings_enableunifiedapi_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '1'));
+
+        $label = new lang_string('settings_enableapponlyaccess', 'local_o365');
+        $desc = new lang_string('settings_enableapponlyaccess_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/enableapponlyaccess', $label, $desc, '1'));
 
         $label = new lang_string('settings_debugmode', 'local_o365');
         $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
         $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
+
+        $label = new lang_string('settings_switchauthminupnsplit0', 'local_o365');
+        $desc = new lang_string('settings_switchauthminupnsplit0_details', 'local_o365');
+        $settings->add(new \admin_setting_configtext('local_o365/switchauthminupnsplit0', $label, $desc, '10'));
 
         $label = new lang_string('settings_photoexpire', 'local_o365');
         $desc = new lang_string('settings_photoexpire_details', 'local_o365');

@@ -70,13 +70,17 @@ class authcode extends \auth_oidc\loginflow\base {
      * @return mixed Determined by loginflow.
      */
     public function handleredirect() {
-        $state = optional_param('state', '', PARAM_RAW);
+        $state = optional_param('state', '', PARAM_ALPHANUMEXT);
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
         $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
         $justauth = (bool)optional_param('justauth', 0, PARAM_BOOL);
         if (!empty($state)) {
+            $requestparams = [
+                'state' => optional_param('state', '', PARAM_ALPHANUMEXT),
+                'code' => optional_param('code', '', PARAM_ALPHANUMEXT),
+            ];
             // Response from OP.
-            $this->handleauthresponse($_REQUEST);
+            $this->handleauthresponse($requestparams);
         } else {
             // Initial login request.
             $stateparams = ['forceflow' => 'authcode'];
@@ -346,8 +350,8 @@ class authcode extends \auth_oidc\loginflow\base {
             $sql = 'SELECT u.username
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
-                     WHERE obj.objectid = ? and obj.type = "user"';
-            $params = [$oidcuniqid];
+                     WHERE obj.objectid = ? and obj.type = ?';
+            $params = [$oidcuniqid, 'user'];
             $user = $DB->get_record_sql($sql, $params);
         }
         return (!empty($user)) ? $user->username : $username;

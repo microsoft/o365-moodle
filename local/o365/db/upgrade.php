@@ -481,5 +481,63 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, 2015111916.01, 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2016062000.01) {
+        set_config('sharepointcourseselect', 'off', 'local_o365');
+        upgrade_plugin_savepoint($result, 2016062000.01, 'local', 'o365');
+    }
+
+    if ($oldversion < 2016062000.02) {
+        // MSFTMPP-497: new capabilites split from auth_oidc:manageconnection* capabilities.
+        if (get_config('local_o365', 'initconnectioncaps') === false) {
+            set_config('initconnectioncaps', 'upgraded', 'local_o365');
+            $caps = [
+                'auth/oidc:manageconnection' => ['local/o365:manageconnectionlink', 'local/o365:manageconnectionunlink'],
+                'auth/oidc:manageconnectionconnect' => ['local/o365:manageconnectionlink'],
+                'auth/oidc:manageconnectiondisconnect' => ['local/o365:manageconnectionunlink']
+            ];
+            foreach ($caps as $cap => $addcaps) {
+                $roles = get_roles_with_capability($cap, CAP_ALLOW);
+                foreach ($roles as $role) {
+                    $rolecaps = $DB->get_recordset('role_capabilities', ['roleid' => $role->id, 'capability' => $cap]);
+                    foreach ($rolecaps as $rolecap) {
+                        $newrolecap = $rolecap;
+                        unset($newrolecap->id);
+                        foreach ($addcaps as $addcap) {
+                            if (!$DB->record_exists('role_capabilities', ['roleid' => $role->id,
+                                'capability' => $addcap, 'contextid' => $newrolecap->contextid])) {
+                                $newrolecap->capability = $addcap;
+                                $DB->insert_record('role_capabilities', $newrolecap);
+                            }
+                        }
+                    }
+                    unset($rolecaps);
+                }
+            }
+        }
+        upgrade_plugin_savepoint($result, 2016062000.02, 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2016062000.03) {
+        if ($dbman->table_exists('local_o365_coursegroupdata')) {
+            $table = new xmldb_table('local_o365_coursegroupdata');
+            $field = new xmldb_field('classnotebook', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', null);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint($result, '2016062000.03', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2016062001.01) {
+        $sharepointcourseselect = get_config('local_o365', 'sharepointcourseselect');
+        // Setting value "Off" used to mean "sync all".
+        if ($sharepointcourseselect === 'off') {
+            set_config('sharepointcourseselect', 'onall', 'local_o365');
+        } else if (empty($sharepointcourseselect) || $sharepointcourseselect !== 'oncustom') {
+            set_config('sharepointcourseselect', 'none', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2016062001.01', 'local', 'o365');
+    }
+
     return $result;
 }

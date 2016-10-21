@@ -158,10 +158,22 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a list of groups.
      *
+     * @param string $skiptoken Skip token.
      * @return array List of groups.
      */
-    public function get_groups() {
-        $response = $this->apicall('get', '/groups');
+    public function get_groups($skiptoken = '') {
+        $endpoint = '/groups';
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken='.$skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?'.implode('&', $odataqueries);
+        }
+        $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -419,6 +431,22 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Add owner to group.
+     *
+     * @param string $groupobjectid The object ID of the group to add to.
+     * @param string $memberobjectid The object ID of the item to add (user object id).
+     * @return bool|string True if successful, returned string if not (may contain error info, etc).
+     */
+    public function add_owner_to_group($groupobjectid, $memberobjectid) {
+        $endpoint = '/groups/'.$groupobjectid.'/owners/$ref';
+        $data = [
+            '@odata.id' => $this->get_apiuri().'/v1.0/users/'.$memberobjectid
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+        return ($response === '') ? true : $response;
+    }
+
+    /**
      * Remove member from group.
      *
      * @param string $groupobjectid The object ID of the group to remove from.
@@ -429,6 +457,28 @@ class unified extends \local_o365\rest\o365api {
         $endpoint = '/groups/'.$groupobjectid.'/members/'.$memberobjectid.'/$ref';
         $response = $this->apicall('delete', $endpoint);
         return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Create a group file.
+     *
+     * @param string $groupid The group Id.
+     * @param string $parentid The parent Id.
+     * @param string $filename The file's name.
+     * @param string $content The file's content.
+     * @return file upload response.
+     */
+    public function create_group_file($groupid, $parentid = '', $filename, $content, $contenttype = 'text/plain') {
+        $filename = rawurlencode($filename);
+        if (!empty($parentid) && $parentid !== '/') {
+            $endpoint = "/groups/{$groupid}/drive/items/{$parentid}/children/{$filename}/content";
+        } else {
+            $endpoint = "/groups/{$groupid}/drive/root:/{$filename}:/content";
+        }
+        $fileresponse = $this->apicall('put', $endpoint, ['file' => $content], ['contenttype' => $contenttype]);
+        $expectedparams = ['id' => null];
+        $fileresponse = $this->process_apicall_response($fileresponse, $expectedparams);
+        return $fileresponse;
     }
 
     /**
@@ -673,7 +723,9 @@ class unified extends \local_o365\rest\o365api {
         \core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
-            $since = urlencode(date(DATE_ATOM, $since));
+            // Pass datetime in UTC, regardless of Moodle timezone setting.
+            $sincedt = new \DateTime('@'.$since);
+            $since = urlencode($sincedt->format('Y-m-d\TH:i:s\Z'));
             $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);
@@ -810,7 +862,7 @@ class unified extends \local_o365\rest\o365api {
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
-    
+
     /**
      * Get a files from trendingAround api.
      *
@@ -926,6 +978,65 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get all available app-only permissions for the graph api.
+     *
+     * @return array Array of available app-only permissions, indexed by permission name.
+     */
+    public function get_graph_available_apponly_permissions() {
+        // Get list of permissions and associated IDs.
+        $graphsp = $this->get_unified_api_serviceprincipal_info();
+        $graphsp = $graphsp['value'][0];
+        $graphappid = $graphsp['appId'];
+        $graphperms = [];
+        foreach ($graphsp['appRoles'] as $perm) {
+            $graphperms[$perm['value']] = $perm;
+        }
+        return $graphperms;
+    }
+
+    /**
+     * Get currently configured app-only permissions for the graph api.
+     *
+     * @return array Array of current app-only permissions, indexed by permission name.
+     */
+    public function get_graph_current_apponly_permissions() {
+        // Get available permissions.
+        $graphsp = $this->get_unified_api_serviceprincipal_info();
+        $graphsp = $graphsp['value'][0];
+        $graphappid = $graphsp['appId'];
+        $graphperms = [];
+        foreach ($graphsp['appRoles'] as $perm) {
+            $graphperms[$perm['id']] = $perm;
+        }
+
+        // Get a list of configured permissions for the graph api within the client application.
+        $appinfo = $this->get_application_info();
+        $appinfo = $appinfo['value'][0];
+        $graphresource = null;
+        foreach ($appinfo['requiredResourceAccess'] as $resource) {
+            if ($resource['resourceAppId'] === $graphappid) {
+                $graphresource = $resource;
+                break;
+            }
+        }
+        if (empty($graphresource)) {
+            throw new \Exception('Unable to find graph api in application.');
+        }
+
+        // Translate to permission information.
+        $currentperms = [];
+        foreach ($graphresource['resourceAccess'] as $resource) {
+            if ($resource['type'] === 'Role') {
+                if (isset($graphperms[$resource['id']])) {
+                    $perminfo = $graphperms[$resource['id']];
+                    $currentperms[$perminfo['value']] = $perminfo;
+                }
+            }
+        }
+        return $currentperms;
+    }
+
+    /**
      * Get information on the current application.
      *
      * @return array|null Array of application information, or null if failure.
@@ -974,11 +1085,11 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get an array of the current required permissions for unified api.
+     * Get an array of the current required permissions for the graph api.
      *
-     * @return array Array of required Azure AD application permissions.
+     * @return array Array of required Azure AD permissions.
      */
-    public function get_unified_required_permissions() {
+    public function get_graph_required_permissions() {
         return [
             'openid',
             'Calendars.ReadWrite',
@@ -993,14 +1104,48 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get required app-only permissions for the graph api.
+     *
+     * @return array Array of required Azure AD application permissions.
+     */
+    public function get_graph_required_apponly_permissions() {
+        return [
+            'Files.ReadWrite.All',
+            'User.ReadWrite.All',
+            'Directory.Read.All',
+            'Group.ReadWrite.All',
+            'Calendars.ReadWrite',
+        ];
+    }
+
+    public function check_graph_apponly_permissions() {
+        $this->token->refresh();
+        $requiredperms = $this->get_graph_required_apponly_permissions();
+        $currentperms = $this->get_graph_current_apponly_permissions();
+        $availableperms = $this->get_graph_available_apponly_permissions();
+
+        $requiredperms = array_flip($requiredperms);
+        $missingperms = array_diff_key($requiredperms, $currentperms);
+        $missingperminfo = [];
+        foreach ($missingperms as $permname => $index) {
+            if (isset($availableperms[$permname])) {
+                $missingperminfo[$permname] = $availableperms[$permname]['displayName'];
+            } else {
+                $missingperminfo[$permname] = $permname;
+            }
+        }
+        return $missingperminfo;
+    }
+
+    /**
      * Check whether all required permissions are present.
      *
      * @return array Array of missing permissions, permission key as array key, human-readable name as values.
      */
-    public function check_unified_permissions() {
+    public function check_graph_delegated_permissions() {
         $this->token->refresh();
         $currentperms = $this->get_unified_api_permissions();
-        $neededperms = $this->get_unified_required_permissions();
+        $neededperms = $this->get_graph_required_permissions();
         $availableperms = $this->get_available_permissions();
 
         if ($currentperms === null || $availableperms === null) {
@@ -1037,7 +1182,7 @@ class unified extends \local_o365\rest\o365api {
      *
      * @return array Array of missing permissions.
      */
-    public function check_permissions() {
+    public function check_legacy_permissions() {
         $this->token->refresh();
         $neededperms = $this->get_required_permissions();
         $servicestoget = array_keys($neededperms);
@@ -1047,10 +1192,26 @@ class unified extends \local_o365\rest\o365api {
         foreach ($neededperms as $app => $perms) {
             $appid = $allappdata[$app]['appId'];
             $appname = $allappdata[$app]['appDisplayName'];
-            foreach ($perms as $permname => $neededtype) {
-                if (isset($allappdata[$app]['perms'][$permname])) {
-                    $permid = $allappdata[$app]['perms'][$permname]['id'];
-                    if (!isset($currentperms[$appid][$permid])) {
+            foreach ($perms as $permname => $altperms) {
+                $permids = [];
+                $permstocheck = array_merge([$permname], $altperms);
+                foreach ($permstocheck as $permtocheckname) {
+                    if (isset($allappdata[$app]['perms'][$permtocheckname])) {
+                        $permids[$permtocheckname] = $allappdata[$app]['perms'][$permtocheckname]['id'];
+                    }
+                }
+                if (empty($permids)) {
+                    // If $permids is empty no candidate permissions exist in the application.
+                    $missingperms[$appname][$permname] = $permname;
+                } else {
+                    $permsatisfied = false;
+                    foreach ($permids as $permidsname => $permidsid) {
+                        if (isset($currentperms[$appid][$permidsid])) {
+                            $permsatisfied = true;
+                            break;
+                        }
+                    }
+                    if ($permsatisfied === false) {
                         if (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName'])) {
                             $permdesc = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
                         } else {
@@ -1058,21 +1219,11 @@ class unified extends \local_o365\rest\o365api {
                         }
                         $missingperms[$appname][$permname] = $permdesc;
                     }
-                } else {
-                    $missingperms[$appname][$permname] = $permname;
                 }
             }
         }
 
-        // Determine whether we have write permissions.
-        $writeappid = $allappdata['Microsoft.Azure.ActiveDirectory']['appId'];
-        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'])
-            ? $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.Write']['id'] : null;
-        $impersonatepermid = $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['user_impersonation']['id'];
-        $haswrite = (!empty($writepermid) && !empty($currentperms[$writeappid][$writepermid])) ? true : false;
-        $hasimpersonate = (!empty($currentperms[$writeappid][$impersonatepermid])) ? true : false;
-        $canfix = ($hasimpersonate === true) ? true : false;
-        return [$missingperms, $canfix];
+        return [$missingperms, false];
     }
 
     /**
@@ -1142,8 +1293,13 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null Array of service information, or null if error.
      */
     public function get_service_data(array $servicenames, $transform = true) {
-        $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
-        $response = $this->betaapicall('get', '/servicePrincipals()?$filter='.$filterstr);
+        if (!empty($servicenames)) {
+            $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
+            $endpoint = '/servicePrincipals()?$filter='.$filterstr;
+        } else {
+            $endpoint = '/servicePrincipals()';
+        }
+        $response = $this->betaapicall('get', $endpoint);
         if (!empty($response)) {
             $response = @json_decode($response, true);
             if (!empty($response) && is_array($response)) {
@@ -1300,7 +1456,11 @@ class unified extends \local_o365\rest\o365api {
             'id' => null,
             'userPrincipalName' => null,
         ];
-        return $this->process_apicall_response($response, $expectedparams);
+        $result = $this->process_apicall_response($response, $expectedparams);
+        if (!empty($result['id'])) {
+            $result['objectId'] = $result['id'];
+        }
+        return $result;
     }
 
     /**

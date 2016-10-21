@@ -35,33 +35,32 @@ class main {
     /**
      * Construct a user API client, accounting for Microsoft Graph API presence, and fall back to system api user if desired.
      *
-     * @param int $muserid The userid to get the outlook token for. If you want to force a system API user client, use an empty
-     *                     value here and set $systemfallback to true.
+     * @param bool $forcelegacy If true, force using the legacy API.
      * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
      */
-    public function construct_user_api($muserid = null, $systemfallback = true, $forcelegacy = false) {
+    public function construct_user_api($forcelegacy = false) {
+        $uselegacy = false;
         $unifiedconfigured = \local_o365\rest\unified::is_configured();
-        if ($unifiedconfigured === true && !$forcelegacy) {
-            $resource = \local_o365\rest\unified::get_resource();
-        } else {
+        if ($forcelegacy === true || $unifiedconfigured !== true) {
+            $uselegacy = true;
+        }
+
+        if ($uselegacy === true) {
             $resource = \local_o365\rest\azuread::get_resource();
-        }
-
-        $token = null;
-        if (!empty($muserid)) {
-            $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
-        }
-        if (empty($token) && $systemfallback === true) {
             $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
-        }
-        if (empty($token)) {
-            throw new \Exception('No token available for user #'.$muserid);
+        } else {
+            $resource = \local_o365\rest\unified::get_resource();
+            $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         }
 
-        if ($unifiedconfigured === true && !$forcelegacy) {
-            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
-        } else {
+        if (empty($token)) {
+            throw new \Exception('No token available for usersync');
+        }
+
+        if ($uselegacy === true) {
             $apiclient = new \local_o365\rest\azuread($token, $this->httpclient);
+        } else {
+            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
         }
         return $apiclient;
     }
@@ -103,7 +102,7 @@ class main {
      * @return array|null Array of app service information, or null if failure.
      */
     public function get_application_serviceprincipal_info() {
-        $apiclient = $this->construct_user_api(0, true);
+        $apiclient = $this->construct_user_api(false);
         return $apiclient->get_application_serviceprincipal_info();
     }
 
@@ -117,8 +116,8 @@ class main {
      */
     public function assign_user($muserid, $userid, $appobjectid) {
         global $DB;
-        // Force using legacy api.
-        $apiclient = $this->construct_user_api(0, true, true);
+        // Force using legacy api. Legacy assign user does not support app only access.
+        $apiclient = $this->construct_user_api(true);
         $result = $apiclient->assign_user($muserid, $userid, $appobjectid);
         if (!empty($result['odata.error'])) {
             $error = '';
@@ -215,7 +214,7 @@ class main {
      * @return array|null Array of user information, or null if failure.
      */
     public function get_users($params = 'default', $skiptoken = '') {
-        $apiclient = $this->construct_user_api(0, true);
+        $apiclient = $this->construct_user_api(false);
         return $apiclient->get_users($params, $skiptoken);
     }
 
@@ -354,7 +353,7 @@ class main {
 
         // Locate country code.
         if (isset($aaddata['country'])) {
-            $countries = get_string_manager()->get_list_of_countries();
+            $countries = get_string_manager()->get_list_of_countries(true, 'en');
             foreach ($countries as $code => $name) {
                 if ($aaddata['country'] == $name) {
                     $aaddata['country'] = $code;
@@ -369,7 +368,6 @@ class main {
         $newuser = (object)[
             'auth' => 'oidc',
             'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
-            'lang' => 'en',
             'confirmed' => 1,
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
@@ -450,6 +448,10 @@ class main {
         $aadsync = get_config('local_o365', 'aadsync');
         $photoexpire = get_config('local_o365', 'photoexpire');
         $aadsync = array_flip(explode(',', $aadsync));
+        $switchauthminupnsplit0 = get_config('local_o365', 'switchauthminupnsplit0');
+        if (empty($switchauthminupnsplit0)) {
+            $switchauthminupnsplit0 = 10;
+        }
 
         $usernames = [];
         $upns = [];
@@ -496,7 +498,8 @@ class main {
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
-                 WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
+                 WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ?
+              ORDER BY CONCAT(u.username, "~") '; // Sort john.smith@example.org before john.smith.
         $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
@@ -575,8 +578,10 @@ class main {
                 $existinguser = null;
                 if (isset($existingusers[$user['upnlower']])) {
                     $existinguser = $existingusers[$user['upnlower']];
+                    $exactmatch = true;
                 } else if (isset($existingusers[$user['upnsplit0']])) {
                     $existinguser = $existingusers[$user['upnsplit0']];
+                    $exactmatch = strlen($user['upnsplit0']) >= $switchauthminupnsplit0;
                 }
                 // Assign user to app if not already assigned.
                 if (empty($existinguser->assigned)) {
@@ -600,29 +605,65 @@ class main {
                     }
                 }
 
-                if ($existinguser->auth !== 'oidc' && empty($existinguser->tokid)) {
+                if ($existinguser->auth !== 'oidc') {
                     $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
                     $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
-
                     if (!isset($aadsync['match'])) {
                         $this->mtrace('Not matching user because that sync option is disabled.');
                         continue;
                     }
 
-                    if (!empty($existinguser->existingconnectionid)) {
+                    if (isset($aadsync['matchswitchauth']) && $exactmatch) {
+                        // Switch the user to OpenID authentication method, but only if this setting is enabled and full username matched.
+                        require_once($CFG->dirroot.'/user/profile/lib.php');
+                        require_once($CFG->dirroot.'/user/lib.php');
+                        // Do not switch Moodle user to OpenID if another Moodle user is already using same Office 365 account for logging in.
+                        $sql = 'SELECT u.username
+                                  FROM {user} u
+                             LEFT JOIN {local_o365_objects} obj ON obj.type="user" AND obj.moodleid = u.id
+                             WHERE obj.o365name = ?
+                               AND u.username != ?';
+                        $params = [$user['upnlower'], $existinguser->username];
+                        $alreadylinkedusername = $DB->get_field_sql($sql, $params);
+
+                        if ($alreadylinkedusername !== false) {
+                            $errmsg = 'This Azure AD user has already been linked with Moodle user %s. Not switching Moodle user %s to OpenID.';
+                            $this->mtrace(sprintf($errmsg, $alreadylinkedusername, $existinguser->username));
+                            continue;
+                        } else {
+                            if (!empty($existinguser->existingconnectionid)) {
+                                // Delete existing connection before linking (in case matching was performed without auth switching previously).
+                                $DB->delete_records_select ('local_o365_connections', "id = {$existinguser->existingconnectionid}");
+                            }
+                            $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                            $existinguser->id = $fullexistinguser->id;
+                            $existinguser->auth = 'oidc';
+                            user_update_user($existinguser, true);
+                            // Clear user's password.
+                            $password = null;
+                            update_internal_user_password($existinguser, $password);
+                            $this->mtrace('Switched user to OpenID.');
+                        }
+
+                    } else if (!empty($existinguser->existingconnectionid)) {
                         $this->mtrace('User is already matched.');
                         continue;
-                    }
 
-                    // Match to o365 account, if enabled.
-                    $matchrec = [
-                        'muserid' => $existinguser->muserid,
-                        'aadupn' => $user['upnlower'],
-                        'uselogin' => (isset($aadsync['matchswitchauth'])) ? 1 : 0,
-                    ];
-                    $DB->insert_record('local_o365_connections', $matchrec);
-                    $this->mtrace('Matched user.');
+                    } else {
+                        // Match to o365 account, if enabled.
+                        $matchrec = [
+                            'muserid' => $existinguser->muserid,
+                            'aadupn' => $user['upnlower'],
+                            'uselogin' => isset($aadsync['matchswitchauth']) ? 1 : 0,
+                        ];
+                        $DB->insert_record('local_o365_connections', $matchrec);
+                        $this->mtrace('Matched user, but did not switch them to OpenID.');
+                    }
                 } else {
+                    $this->mtrace('The user is already using OpenID for authentication.');
+                }
+
+                if ($existinguser->auth === 'oidc' || empty($existinguser->tokid)) {
                     // Create userobject if it does not exist.
                     if (empty($existinguser->objrecid)) {
                         $this->mtrace('Adding o365 object record for user.');
@@ -639,7 +680,7 @@ class main {
                         $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
                     }
                     // User already connected.
-                    $this->mtrace('User is already synced.');
+                    $this->mtrace('User is now synced.');
                 }
             }
         }

@@ -25,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/blocks/microsoft/lib.php');
 require_once($CFG->dirroot.'/auth/oidc/lib.php');
+require_once($CFG->dirroot.'/local/o365/lib.php');
 
 /**
  * Microsoft Block.
@@ -73,7 +74,8 @@ class block_microsoft extends block_base {
                 $this->content->text .= $this->get_content_connected();
             } else {
                 $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
-                if (!empty($connection) && auth_oidc_connectioncapability($USER->id, 'connect')) {
+                if (!empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
+                        local_o365_connectioncapability($USER->id, 'link'))) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
                     $this->content->text .= $this->get_content_matched($connection->aadupn, $uselogin);
                 } else {
@@ -181,22 +183,14 @@ class block_microsoft extends block_base {
 
         if (!empty($user->picture)) {
             $html .= '<div class="profilepicture">';
-            $picture_html = $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
-
-            // if "My Delve" is enabled, then clicking on the user picture should take you to their Delve profile page
+            $picturehtml = $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
+            $profileurl = new \moodle_url('/user/profile.php', ['id' => $USER->id]);
             if (!empty($delveurl)) {
-                $doc = new DOMDocument('1.0', 'UTF-8');
-                $doc->loadHTML($picture_html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-                $xpath = new DOMXPath($doc);
-                $links = $doc->getElementsByTagName('a');
-                if (!empty($links)) {
-                    $links[0]->setAttribute('href', $delveurl);
-                    $links[0]->setAttribute('target', '_blank');
-                    $picture_html = $doc->saveHTML();
-                }
+                // If "My Delve" is enabled, clicking the user picture should take you to their Delve page.
+                $picturehtml = str_replace($profileurl->out(), $delveurl, $picturehtml);
             }
 
-            $html .= $picture_html;
+            $html .= $picturehtml;
             $html .= '</div>';
         }
 
@@ -228,6 +222,16 @@ class block_microsoft extends block_base {
             $delveattrs = ['class' => 'servicelink block_microsoft_delve', 'target' => '_blank'];
             $delvestr = get_string('linkmydelve', 'block_microsoft');
             $items[] = html_writer::link($delveurl, $delvestr, $delveattrs);
+        }
+
+        // My Forms URL.
+        if (!empty($this->globalconfig->settings_showmyforms)) {
+            $formsattrs = ['class' => 'servicelink block_microsoft_forms', 'target' => '_blank'];
+            $formsstr = get_string('linkmyforms', 'block_microsoft');
+            $formsurl = get_string('settings_showmyforms_default', 'block_microsoft');
+            if (!empty($odburl)) {
+                $items[] = \html_writer::link($formsurl, $formsstr, $formsattrs);
+            }
         }
 
         // My OneNote Notebook.
@@ -274,7 +278,8 @@ class block_microsoft extends block_base {
             $items[] = \html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (auth_oidc_connectioncapability($USER->id, 'disconnect') === true) {
+        if (auth_oidc_connectioncapability($USER->id, 'connect') === true || auth_oidc_connectioncapability($USER->id, 'disconnect') === true ||
+                local_o365_connectioncapability($USER->id, 'link') || local_o365_connectioncapability($USER->id, 'unlink')) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
                 $connectstr = get_string('linkconnection', 'block_microsoft');
@@ -308,7 +313,7 @@ class block_microsoft extends block_base {
         $items = [];
         $items = array_merge($items, $this->get_study_groups());
 
-        if (auth_oidc_connectioncapability($USER->id, 'connect') === true) {
+        if (auth_oidc_connectioncapability($USER->id, 'connect') === true || local_o365_connectioncapability($USER->id, 'link')) {
             if (!empty($this->globalconfig->settings_showo365connect)) {
                 $items[] = \html_writer::link($connecturl, $connectstr, ['class' => 'servicelink block_microsoft_connection']);
             }
@@ -380,6 +385,16 @@ class block_microsoft extends block_base {
 
         if (empty($this->globalconfig->settings_showonenotenotebook)) {
             return '';
+        }
+
+        if (!class_exists('\local_onenote\api\base')) {
+            $url = new \moodle_url('http://portal.office.com/onenote');
+            $stropennotebook = get_string('linkonenote', 'block_microsoft');
+            $linkattrs = [
+                'onclick' => 'window.open(this.href,\'_blank\'); return false;',
+                'class' => 'servicelink block_microsoft_onenote',
+            ];
+            return \html_writer::link($url->out(false), $stropennotebook, $linkattrs);
         }
 
         $action = optional_param('action', '', PARAM_TEXT);

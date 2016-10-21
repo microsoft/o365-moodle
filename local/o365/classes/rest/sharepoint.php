@@ -24,7 +24,7 @@
 namespace local_o365\rest;
 
 /**
- * API client for Sharepoint.
+ * API client for SharePoint.
  */
 class sharepoint extends \local_o365\rest\o365api {
     /** @var string The site we're accessing. */
@@ -59,7 +59,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $sharepoint = new \local_o365\rest\sharepoint($token, $httpclient);
         $sharepoint->override_resource($siteinfo['resource']);
 
-        // Try to get the / site's info to validate we can communicate with this parent Sharepoint site.
+        // Try to get the / site's info to validate we can communicate with this parent SharePoint site.
         try {
             $mainsiteinfo = $sharepoint->get_site();
         } catch (\Exception $e) {
@@ -132,11 +132,11 @@ class sharepoint extends \local_o365\rest\o365api {
             if (!empty($siteinfo)) {
                 return $siteinfo['resource'];
             } else {
-                $errmsg = 'Sharepoint link URL was not valid';
+                $errmsg = 'SharePoint link URL was not valid';
                 \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource', $config->sharepointlink);
             }
         } else {
-            $errmsg = 'No Sharepoint link URL was found. Plugin not configured?';
+            $errmsg = 'No SharePoint link URL was found. Plugin not configured?';
             \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource');
         }
         return false;
@@ -656,7 +656,7 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
-     * Add users with a given capability in a given context to a Sharepoint group.
+     * Add users with a given capability in a given context to a SharePoint group.
      *
      * @param \context $context The context to check for the capability.
      * @param string $capability The capability to check for.
@@ -697,6 +697,7 @@ class sharepoint extends \local_o365\rest\o365api {
      *
      * @param int|\stdClass $course A course record or course ID.
      * @return bool Success/Failure.
+     * @uses exit
      */
     public function create_course_site($course) {
         global $DB;
@@ -712,47 +713,54 @@ class sharepoint extends \local_o365\rest\o365api {
             }
         }
 
-        $requiredcapability = static::get_course_site_required_capability();
+        $coursesubsiteenabled = \local_o365\feature\sharepointcustom\utils::course_subsite_enabled($course);
+        if (!$coursesubsiteenabled) {
+            $errmsg = 'SharePoint subsite not enabled for this course. Cannot create a subsite.';
+            \local_o365\utils::debug($errmsg, 'rest\sharepoint\update_course_site', $course->id);
+            return false;
+        } else {
+            $requiredcapability = static::get_course_site_required_capability();
 
-        $siterec = $this->create_course_subsite($course);
-        $this->set_site($siterec->siteurl);
+            $siterec = $this->create_course_subsite($course);
+            $this->set_site($siterec->siteurl);
 
-        // Create teacher group and save in db.
-        $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
-        if (empty($grouprec)) {
-            $groupname = $siterec->siteurl.' contribute';
-            $description = get_string('spsite_group_contributors_desc', 'local_o365', $siterec->siteurl);
-            $groupname = trim(base64_encode($groupname), '=');
+            // Create teacher group and save in db.
+            $grouprec = $DB->get_record('local_o365_spgroupdata', ['coursespsiteid' => $siterec->id, 'permtype' => 'contribute']);
+            if (empty($grouprec)) {
+                $groupname = $siterec->siteurl.' contribute';
+                $description = get_string('spsite_group_contributors_desc', 'local_o365', $siterec->siteurl);
+                $groupname = trim(base64_encode($groupname), '=');
 
-            // Get or create the group.
-            try {
-                $groupdata = $this->get_group($groupname);
-            } catch (\Exception $e) {
-                // An error here indicates the group does not exist. Create it.
-                $groupdata = $this->create_group($groupname, $description);
+                // Get or create the group.
+                try {
+                    $groupdata = $this->get_group($groupname);
+                } catch (\Exception $e) {
+                    // An error here indicates the group does not exist. Create it.
+                    $groupdata = $this->create_group($groupname, $description);
+                }
+
+                if (!empty($groupdata) && isset($groupdata['Id']) && isset($groupdata['Title'])) {
+                    $grouprec = new \stdClass;
+                    $grouprec->coursespsiteid = $siterec->id;
+                    $grouprec->groupid = $groupdata['Id'];
+                    $grouprec->grouptitle = $groupdata['Title'];
+                    $grouprec->permtype = 'contribute';
+                    $grouprec->timecreated = $now;
+                    $grouprec->timemodified = $now;
+                    $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
+                } else {
+                    throw new \moodle_exception('errorcouldnotcreatespgroup', 'local_o365');
+                }
             }
 
-            if (!empty($groupdata) && isset($groupdata['Id']) && isset($groupdata['Title'])) {
-                $grouprec = new \stdClass;
-                $grouprec->coursespsiteid = $siterec->id;
-                $grouprec->groupid = $groupdata['Id'];
-                $grouprec->grouptitle = $groupdata['Title'];
-                $grouprec->permtype = 'contribute';
-                $grouprec->timecreated = $now;
-                $grouprec->timemodified = $now;
-                $grouprec->id = $DB->insert_record('local_o365_spgroupdata', $grouprec);
-            } else {
-                throw new \moodle_exception('errorcouldnotcreatespgroup', 'local_o365');
-            }
+            // Assign group permissions.
+            $this->assign_group_permissions($grouprec->groupid, $grouprec->permtype);
+
+            // Get users who need access.
+            $coursecontext = \context_course::instance($course->id);
+            $results = $this->add_users_with_capability_to_group($coursecontext, $requiredcapability, $grouprec->groupid);
+            return true;
         }
-
-        // Assign group permissions.
-        $this->assign_group_permissions($grouprec->groupid, $grouprec->permtype);
-
-        // Get users who need access.
-        $coursecontext = \context_course::instance($course->id);
-        $results = $this->add_users_with_capability_to_group($coursecontext, $requiredcapability, $grouprec->groupid);
-        return true;
     }
 
     /**
@@ -898,7 +906,7 @@ class sharepoint extends \local_o365\rest\o365api {
 
     /**
      * Get list of all videos on a channel.
-     * 
+     *
      * @param string $channelid The ID of the channel.
      * @return a list of Video objects.
      */
@@ -977,10 +985,10 @@ class sharepoint extends \local_o365\rest\o365api {
      * @param string $channelid The ID of the channel where video need to uploaded.
      * @param string $videoid video ID.
      * @param string $filename The name of file on disk with full path ...
-     * @param integer $offsetsize.
+     * @param int $offsetsize Upload chunk size (default 8192 * 1024).
      * @return Response code
      */
-    public function upload_video($channelid, $videoid, $filename, $offsetsize = 8192 * 1024) {
+    public function upload_video($channelid, $videoid, $filename, $offsetsize = 8388608) {
         $filesize = filesize($filename);
         if ($filesize < (8192 * 1024)) {
             $result = $this->upload_video_small($channelid, $videoid, file_get_contents($filename));

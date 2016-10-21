@@ -132,7 +132,7 @@ abstract class base {
 
             // Check if the user is logged in to msaccount OneNote, or has o365 OneNote disabled.
             $sesskey = class_exists('\local_msaccount\client') ? 'msaccount_client-'.md5(\local_msaccount\client::SCOPE) : null;
-            $disableo365onenote = get_user_preferences('local_o365_disableo365onenote', 0);
+            $disableo365onenote = get_config('local_o365', 'onenote');
             $iso365user = ((!empty($sesskey) && !empty($SESSION->$sesskey)) || !empty($disableo365onenote)) ? false : true;
 
             if ($iso365user === true) {
@@ -529,13 +529,13 @@ abstract class base {
         $newsection->course_id = $courseid;
         $newsection->section_id = $sectionid;
 
-        $section = $DB->get_record('onenote_user_sections', ['course_id' => $courseid, 'user_id' => $USER->id]);
+        $section = $DB->get_record('local_onenote_user_sections', ['course_id' => $courseid, 'user_id' => $USER->id]);
 
         if ($section) {
             $newsection->id = $section->id;
-            $update = $DB->update_record('onenote_user_sections', $newsection);
+            $update = $DB->update_record('local_onenote_user_sections', $newsection);
         } else {
-            $insert = $DB->insert_record('onenote_user_sections', $newsection);
+            $insert = $DB->insert_record('local_onenote_user_sections', $newsection);
         }
     }
 
@@ -740,7 +740,7 @@ abstract class base {
         }
 
         // If the page and corresponding db record already exist just return the URL.
-        $pagerecord = $DB->get_record('onenote_assign_pages', ['assign_id' => $assign->id, 'user_id' => $student->id]);
+        $pagerecord = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $assign->id, 'user_id' => $student->id]);
         if (!empty($pagerecord)) {
             if (!empty($pagerecord->$requestedpageidfield)) {
                 try {
@@ -771,13 +771,13 @@ abstract class base {
 
             // User likely deleted the page. Update the db record to reflect it and recreate the page below.
             $pagerecord->$requestedpageidfield = null;
-            $DB->update_record('onenote_assign_pages', $pagerecord);
+            $DB->update_record('local_onenote_assign_pages', $pagerecord);
         } else {
             // Prepare record object since we will use it further down to insert into database.
             $pagerecord = new \stdClass;
             $pagerecord->assign_id = $assign->id;
             $pagerecord->user_id = $student->id;
-            $pagerecord->id = $DB->insert_record('onenote_assign_pages', $pagerecord);
+            $pagerecord->id = $DB->insert_record('local_onenote_assign_pages', $pagerecord);
         }
 
         // Get the section id for the course so we can create the page in the approp section.
@@ -822,7 +822,7 @@ abstract class base {
             $pagerecord->teacher_lastviewed = strtotime($response->lastModifiedTime);
             $pagerecord->teacher_lastviewed = empty($pagerecord->teacher_lastviewed) ? null : $pagerecord->teacher_lastviewed;
         }
-        $DB->update_record('onenote_assign_pages', $pagerecord);
+        $DB->update_record('local_onenote_assign_pages', $pagerecord);
 
         return $response->links->oneNoteWebUrl->href;
     }
@@ -838,7 +838,7 @@ abstract class base {
     protected function get_section($courseid, $userid) {
         global $DB;
 
-        $section = $DB->get_record('onenote_user_sections', ['course_id' => $courseid, 'user_id' => $userid]);
+        $section = $DB->get_record('local_onenote_user_sections', ['course_id' => $courseid, 'user_id' => $userid]);
 
         // Need to make sure section actually exists in case user may have deleted it.
         if ($section && $section->section_id) {
@@ -855,7 +855,7 @@ abstract class base {
 
         $this->sync_notebook_data();
 
-        $section = $DB->get_record('onenote_user_sections', ['course_id' => $courseid, 'user_id' => $userid]);
+        $section = $DB->get_record('local_onenote_user_sections', ['course_id' => $courseid, 'user_id' => $userid]);
         if ($section && $section->section_id) {
             return $section;
         }
