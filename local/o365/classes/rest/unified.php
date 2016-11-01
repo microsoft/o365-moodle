@@ -43,8 +43,8 @@ class unified extends \local_o365\rest\o365api {
      * @return bool Whether the Microsoft Graph API is enabled.
      */
     public static function is_enabled() {
-        $enabled = get_config('local_o365', 'enableunifiedapi');
-        return (!empty($enabled)) ? true : false;
+        $disabled = get_config('local_o365', 'disablegraphapi');
+        return (!empty($disabled)) ? false : true;
     }
 
     /**

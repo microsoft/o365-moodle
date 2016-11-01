@@ -153,9 +153,9 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_onenote_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
 
-        $label = new lang_string('settings_enableunifiedapi', 'local_o365');
-        $desc = new lang_string('settings_enableunifiedapi_details', 'local_o365');
-        $settings->add(new \admin_setting_configcheckbox('local_o365/enableunifiedapi', $label, $desc, '1'));
+        $label = new lang_string('settings_disablegraphapi', 'local_o365');
+        $desc = new lang_string('settings_disablegraphapi_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/disablegraphapi', $label, $desc, '0'));
 
         $label = new lang_string('settings_enableapponlyaccess', 'local_o365');
         $desc = new lang_string('settings_enableapponlyaccess_details', 'local_o365');
