@@ -722,6 +722,7 @@ class acp extends base {
                 'creategroups',
                 'debugmode',
                 'enableunifiedapi',
+                'disablegraphapi',
                 'fieldmap',
                 'odburl',
                 'photoexpire',
