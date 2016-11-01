@@ -377,6 +377,10 @@ class sharepoint extends \local_o365\rest\o365api {
             $this->parentsite = $cursite;
         }
 
+        if ($response === '404 FILE NOT FOUND') {
+            $response = '';
+        }
+
         return (!empty($response)) ? true : false;
     }
 
