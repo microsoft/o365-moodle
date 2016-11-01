@@ -539,5 +539,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015012749.01', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015012752.01) {
+        $enableunifiedapi = get_config('local_o365', 'enableunifiedapi');
+        if (empty($enableunifiedapi)) {
+            set_config('disablegraphapi', 1, 'local_o365');
+        } else {
+            set_config('disablegraphapi', 0, 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2015012752.01', 'local', 'o365');
+    }
+
     return $result;
 }
