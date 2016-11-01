@@ -504,13 +504,21 @@ abstract class base {
         $sectionendpoint = '/notebooks/'.$notebookid.'/sections/';
 
         foreach ($courses as $course) {
-            if (!in_array($course->fullname, $sections)) {
+            // OneNote sections have character and length restrictions. Ensure course name complies.
+            $coursename = $course->fullname;
+            $restricted = ['?', '*', '\\', '/', ':', '<', '>', '|', '&', '#', '"', '\'', '%', '~'];
+            $coursename = str_replace($restricted, '', $coursename);
+            if (strlen($coursename) >= 50) {
+                $coursename = substr($coursename, 0, 49);
+            }
+
+            if (!in_array($coursename, $sections)) {
                 // Create section.
-                $response = $this->apicall('post', $sectionendpoint, json_encode(['name' => $course->fullname]));
+                $response = $this->apicall('post', $sectionendpoint, json_encode(['name' => $coursename]));
                 $response = $this->process_apicall_response($response, ['id' => null]);
                 $this->upsert_user_section($course->id, $response['id']);
             } else {
-                $sectionid = array_search($course->fullname, $sections);
+                $sectionid = array_search($coursename, $sections);
                 $this->upsert_user_section($course->id, $sectionid);
             }
         }
