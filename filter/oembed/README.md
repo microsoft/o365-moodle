@@ -1,16 +1,20 @@
-# Moodle Plugins for Microsoft Services
-*including* **Office 365** *and other Microsoft services*
+# oEmbed Filter
 
-## OpenID Connect Profile Field
+This is a text filter for Moodle that converts urls from many different media sites into embeded content.
+Embed code is retrieved from the original site so should work even if the site changes embed format.
 
-**This plugin is deprecated and no longer supported. The features provided in this plugin are now contained in the [Microsoft block](https://github.com/Microsoft/moodle-block_microsoft)**
+## Installation
+1. Download the source files. (zip file is available under download section)
+2. Unzip the package
+3. Copy the "oembed" folder to moodle/filter on the Moodle server.
+4. Login as an admin on the Moodle site and install the filter.
 
-This plugin provides a link in users' profiles to access OpenID Connect management functions.
+## Usage
+By default the oembed filter is enabled for all content.  You can change this under Plugins > Filters.
 
-
-This is part of the suite of Office 365 plugins for Moodle.
-
-This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
+When inserting a media link url into a discussion, create a hyperlink and insert the url as the target.
+When the discussion is posted the url will be changed into the embed content.
+N.B. if you enable the "Convert URLs into links and images" filter ahead of this then it is easier for users to embed media.
 
 ## Support
 
@@ -46,8 +50,3 @@ Finally, before we can accept your pull request, you'll need to electronically c
 
 [Why a CLA?](https://www.gnu.org/licenses/why-assign.html) (from the FSF)
 
-## Copyright
-
-&copy; Microsoft, Inc.  Code for this plugin is licensed under the GPLv3 license.
-
-Any Microsoft trademarks and logos included in these plugins are property of Microsoft and should not be reused, redistributed, modified, repurposed, or otherwise altered or used outside of this plugin.
