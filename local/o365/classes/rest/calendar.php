@@ -108,6 +108,25 @@ class calendar extends \local_o365\rest\o365api {
     }
 
     /**
+     * Create a new event in the course group's o365 calendar.
+     *
+     * NOTE: Course groups are not supported in the legacy API, so this logs the call and returns false.
+     *
+     * @param string $subject The event's title/subject.
+     * @param string $body The event's body/description.
+     * @param int $starttime The timestamp when the event starts.
+     * @param int $endtime The timestamp when the event ends.
+     * @param array $attendees Array of moodle user objects that are attending the event.
+     * @param array $other Other parameters to include.
+     * @param string $calendarid The o365 ID of the calendar to create the event in.
+     * @return array|null Returned response, or null if error.
+     */
+    public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
+        \local_o365\utils::debug('Create group event called in legacy API', 'local_o365\rest\calendar::create_group_event', $subject);
+        return false;
+    }
+
+    /**
      * Create a new event in the user's o365 calendar.
      *
      * @param string $subject The event's title/subject.
