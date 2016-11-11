@@ -79,6 +79,7 @@ class read_courseusers extends \external_api {
         }
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
         $context = \context_course::instance($courseid);
+        self::validate_context($context);
 
         try {
             self::validate_context($context);
