@@ -361,6 +361,7 @@ class acp extends base {
 
         $curpage = optional_param('page', 0, PARAM_INT);
         $sort = optional_param('sort', '', PARAM_ALPHA);
+        $search = optional_param('search', '', PARAM_TEXT);
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
 
         $headers = [
@@ -393,7 +394,14 @@ class acp extends base {
 
         $limitfrom = $curpage * $perpage;
         $coursesid = [];
-        $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+
+        if (empty($search)) {
+            $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+        } else {
+            $searchar = explode(' ', $search);
+            $courses = get_courses_search($searchar, 'c.'.$sort.' '.$sortdir, $curpage, $perpage, $totalcount);
+        }
+
         foreach ($courses as $course) {
             if ($course->id == SITEID) {
                 continue;
@@ -527,6 +535,18 @@ class acp extends base {
         echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'notebook\', 1)']);
         echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'notebook\', 0)']);
         echo \html_writer::end_tag('div');
+
+        // Search form.
+        echo \html_writer::tag('h5', get_string('search'));
+        echo \html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
+        echo \html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
+        echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'usergroupcustom']);
+        echo \html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search', 'value' => s($search)]);
+        echo \html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
+        echo \html_writer::div(\html_writer::tag('strong', get_string('acp_usergroupcustom_searchwarning', 'local_o365')));
+        echo \html_writer::end_tag('fieldset');
+        echo \html_writer::end_tag('form');
+        echo \html_writer::empty_tag('br');
 
         echo \html_writer::tag('h5', get_string('courses'));
         echo \html_writer::table($table);
@@ -861,6 +881,7 @@ class acp extends base {
 
         $curpage = optional_param('page', 0, PARAM_INT);
         $sort = optional_param('sort', '', PARAM_ALPHA);
+        $search = optional_param('search', '', PARAM_TEXT);
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
 
         $headers = [
@@ -889,7 +910,12 @@ class acp extends base {
         $table->head[] = get_string('acp_sharepointcourseselectlabel_enabled', 'local_o365');
 
         $limitfrom = $curpage * $perpage;
-        $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+        if (empty($search)) {
+            $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+        } else {
+            $searchar = explode(' ', $search);
+            $courses = get_courses_search($searchar, 'c.'.$sort.' '.$sortdir, $curpage, $perpage, $totalcount);
+        }
         $coursesid = [];
         $categories = array();
         foreach ($courses as $course) {
@@ -980,6 +1006,18 @@ class acp extends base {
             $js = '$(\'div.singlebutton :submit\').click(function() { $(\'img.local_o365_spinner\').show(); });';
             echo \html_writer::script($js);
         }
+        // Search form.
+        echo \html_writer::tag('h5', get_string('search'));
+        echo \html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
+        echo \html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
+        echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'sharepointcourseselect']);
+        echo \html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search', 'value' => s($search)]);
+        echo \html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
+        echo \html_writer::div(\html_writer::tag('strong', get_string('acp_sharepointcourseselect_searchwarning', 'local_o365')));
+        echo \html_writer::end_tag('fieldset');
+        echo \html_writer::end_tag('form');
+        echo \html_writer::empty_tag('br');
+
         // Write instrutions for selecting courses.
         echo \html_writer::tag('h5', get_string('acp_sharepointcourseselect_instr_header', 'local_o365'));
         echo \html_writer::tag('p', get_string('acp_sharepointcourseselect_instr', 'local_o365'));
