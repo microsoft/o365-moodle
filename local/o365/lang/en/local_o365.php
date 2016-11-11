@@ -234,8 +234,8 @@ $string['settings_detectperms_unifiednomissing'] = 'All unified permissions pres
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
 $string['settings_detectperms_invalid'] = 'Check permissions in Azure AD';
-$string['settings_enableunifiedapi'] = 'Enable Microsoft Graph API';
-$string['settings_enableunifiedapi_details'] = 'The Microsoft Graph API is a new API that provides some new features like the "Course Groups" setting above. It will eventually replace the existing Office APIs, however the features used are still in preview and are subject to change which may break some functionality. If you\'d like to try it out, enable this setting and click "Save changes". Add the "Microsoft Graph" to your application in Azure AD then return here and run the "Azure AD setup" tool on the "Setup" tab of this settings page.';
+$string['settings_disablegraphapi'] = 'Disable Microsoft Graph API';
+$string['settings_disablegraphapi_details'] = 'Disable use of the Microsoft Graph API and force API calls to use the legacy API. This should only be enabled if you are experiencing problems with the Graph API.';
 $string['settings_enableapponlyaccess'] = 'Enable application permission access';
 $string['settings_enableapponlyaccess_details'] = 'Enable application permission access as a replacement for the system API user. <br /><b>Note:</b> This requires new permissions in Azure AD. Please see the <a href="https://docs.moodle.org/30/en/Office365#Configure_application">plugin documentation</a> to ensure you have configured the correct permissions.';
 $string['settings_fieldmap'] = 'User Field Mapping';
