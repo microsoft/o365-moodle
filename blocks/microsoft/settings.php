@@ -30,6 +30,11 @@ $label = get_string('settings_showmydelve', 'block_microsoft');
 $desc = get_string('settings_showmydelve_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmydelve', $label, $desc, 1));
 
+// Settings to show email link in block.
+$label = get_string('settings_showemail', 'block_microsoft');
+$desc = get_string('settings_showemail_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showemail', $label, $desc, 1));
+
 // Settings to show My Forms link in block.
 $label = get_string('settings_showmyforms', 'block_microsoft');
 $desc = get_string('settings_showmyforms_desc', 'block_microsoft');
