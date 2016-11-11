@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for o365 calendar.
  */
 class calendar extends \local_o365\rest\o365api {
+    /** The general API area of the class. */
+    public $apiarea = 'calendar';
+
     /**
      * Get the API client's oauth2 resource.
      *
