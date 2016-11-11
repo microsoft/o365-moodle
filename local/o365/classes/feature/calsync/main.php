@@ -256,13 +256,15 @@ class main {
                     ];
                     $apiclient = $this->construct_calendar_api($event->userid);
                     $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, [], $outlookeventorganizer, $groupobject->objectid);
-                    $idmaprec = [
-                        'eventid' => $event->id,
-                        'outlookeventid' => $response['Id'],
-                        'userid' => $event->userid,
-                        'origin' => 'moodle',
-                    ];
-                    $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                    if (!empty($response)) {
+                        $idmaprec = [
+                            'eventid' => $event->id,
+                            'outlookeventid' => $response['Id'],
+                            'userid' => $event->userid,
+                            'origin' => 'moodle',
+                        ];
+                        $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                    }
                 }
             }
         } else {
