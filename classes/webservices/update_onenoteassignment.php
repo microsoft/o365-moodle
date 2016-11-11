@@ -63,6 +63,9 @@ class update_onenoteassignment extends \external_api {
 
         list($course, $module, $assign) = \local_o365\webservices\utils::verify_assignment($params['coursemodule'], $params['course']);
 
+        $context = \context_course::instance($params['course']);
+        self::validate_context($context);
+
         // Update assignment information.
         $updatedassigninfo = [];
         if (isset($params['name']) && $params['name'] !== null) {
