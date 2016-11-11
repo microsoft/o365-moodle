@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for o365 onedrive.
  */
 class onedrive extends \local_o365\rest\o365api {
+    /** The general API area of the class. */
+    public $apiarea = 'onedrive';
+
     /** @var string An override for the API url. */
     protected $apiurioverride = null;
 
