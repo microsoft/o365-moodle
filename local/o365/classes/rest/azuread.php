@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for Azure AD graph.
  */
 class azuread extends \local_o365\rest\o365api {
+    /** The general API area of the class. */
+    public $apiarea = 'directory';
+
     /** @var string A value to use for the Azure AD tenant. If null, will use value from local_o365/aadtenant config setting. */
     protected $tenantoverride = null;
 
@@ -535,7 +538,7 @@ class azuread extends \local_o365\rest\o365api {
         $data = [
             'url' => $this->get_apiuri().'/directoryObjects/'.$memberobjectid
         ];
-        $response = $this->apicall('post', $endpoint, json_encode($data));
+        $response = $this->apicall('post', $endpoint, json_encode($data), ['apiarea' => 'groups']);
         return ($response === '') ? true : $response;
     }
 
@@ -552,7 +555,7 @@ class azuread extends \local_o365\rest\o365api {
             return null;
         }
         $endpoint = '/groups/'.$groupobjectid.'/$links/members/'.$memberobjectid;
-        $response = $this->apicall('delete', $endpoint);
+        $response = $this->apicall('delete', $endpoint, '', ['apiarea' => 'groups']);
         return ($response === '') ? true : $response;
     }
 }
