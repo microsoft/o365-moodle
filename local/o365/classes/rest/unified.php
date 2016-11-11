@@ -988,7 +988,8 @@ class unified extends \local_o365\rest\o365api {
     public function get_unified_api_serviceprincipal_info() {
         static $response = null;
         if (empty($response)) {
-            $endpoint = '/servicePrincipals?$filter=displayName%20eq%20\'Microsoft.Azure.AgregatorService\'';
+            $graphperms = $this->get_required_permissions('graph');
+            $endpoint = '/servicePrincipals?$filter=appId%20eq%20\''.$graphperms['appId'].'\'';
             $response = $this->betatenantapicall('get', $endpoint);
             $expectedparams = ['value' => null];
             $response = $this->process_apicall_response($response, $expectedparams);
@@ -1125,17 +1126,12 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of required Azure AD permissions.
      */
     public function get_graph_required_permissions() {
-        return [
-            'openid',
-            'Calendars.ReadWrite',
-            'Directory.AccessAsUser.All',
-            'Directory.ReadWrite.All',
-            'Files.ReadWrite',
-            'Notes.ReadWrite.All',
-            'User.ReadWrite.All',
-            'Group.ReadWrite.All',
-            'Sites.Read.All',
-        ];
+        $allperms = $this->get_required_permissions();
+        if (isset($allperms['graph'])) {
+            $graphperms = $allperms['graph']['requiredDelegatedPermissions'];
+            return array_keys($graphperms);
+        }
+        return [];
     }
 
     /**
@@ -1144,13 +1140,12 @@ class unified extends \local_o365\rest\o365api {
      * @return array Array of required Azure AD application permissions.
      */
     public function get_graph_required_apponly_permissions() {
-        return [
-            'Files.ReadWrite.All',
-            'User.ReadWrite.All',
-            'Directory.Read.All',
-            'Group.ReadWrite.All',
-            'Calendars.ReadWrite',
-        ];
+        $allperms = $this->get_required_permissions();
+        if (isset($allperms['graph'])) {
+            $graphperms = $allperms['graph']['requiredAppPermissions'];
+            return array_keys($graphperms);
+        }
+        return [];
     }
 
     public function check_graph_apponly_permissions() {
@@ -1220,23 +1215,26 @@ class unified extends \local_o365\rest\o365api {
     public function check_legacy_permissions() {
         $this->token->refresh();
         $neededperms = $this->get_required_permissions();
-        $servicestoget = array_keys($neededperms);
-        $allappdata = $this->get_service_data($servicestoget);
+        unset($neededperms['graph']);
+        $allappdata = $this->get_service_data($neededperms);
         $currentperms = $this->get_current_permissions();
         $missingperms = [];
-        foreach ($neededperms as $app => $perms) {
-            $appid = $allappdata[$app]['appId'];
-            $appname = $allappdata[$app]['appDisplayName'];
-            foreach ($perms as $permname => $altperms) {
+        foreach ($neededperms as $api => $apidata) {
+            $appid = $apidata['appId'];
+            $appname = $allappdata[$appid]['appDisplayName'];
+            $requiredperms = $apidata['requiredDelegatedPermissions'];
+            $availableperms = $allappdata[$appid]['perms'];
+            foreach ($requiredperms as $permname => $altperms) {
+                // First we assemble a list of permission IDs, indexed by permission name.
                 $permids = [];
                 $permstocheck = array_merge([$permname], $altperms);
                 foreach ($permstocheck as $permtocheckname) {
-                    if (isset($allappdata[$app]['perms'][$permtocheckname])) {
-                        $permids[$permtocheckname] = $allappdata[$app]['perms'][$permtocheckname]['id'];
+                    if (isset($availableperms[$permtocheckname])) {
+                        $permids[$permtocheckname] = $availableperms[$permtocheckname]['id'];
                     }
                 }
                 if (empty($permids)) {
-                    // If $permids is empty no candidate permissions exist in the application.
+                    // If $permids is empty no candidate permission exists in the application.
                     $missingperms[$appname][$permname] = $permname;
                 } else {
                     $permsatisfied = false;
@@ -1247,8 +1245,8 @@ class unified extends \local_o365\rest\o365api {
                         }
                     }
                     if ($permsatisfied === false) {
-                        if (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName'])) {
-                            $permdesc = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
+                        if (isset($availableperms[$permname]['adminConsentDisplayName'])) {
+                            $permdesc = $availableperms[$permname]['adminConsentDisplayName'];
                         } else {
                             $permdesc = $permname;
                         }
@@ -1257,7 +1255,6 @@ class unified extends \local_o365\rest\o365api {
                 }
             }
         }
-
         return [$missingperms, false];
     }
 
@@ -1323,13 +1320,17 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get information on specified services.
      *
-     * @param array $servicenames Array of service names to get. (See keys in get_required_permissions for examples.)
+     * @param array $apis Array of api data to get. (See items in get_required_permissions for examples.)
      * @param bool $transform Whether to transform the result for easy consumption (see check_permissions and push_permissions)
      * @return array|null Array of service information, or null if error.
      */
-    public function get_service_data(array $servicenames, $transform = true) {
-        if (!empty($servicenames)) {
-            $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
+    public function get_service_data(array $apis, $transform = true) {
+        if (!empty($apis)) {
+            $appids = [];
+            foreach ($apis as $api) {
+                $appids[] = $api['appId'];
+            }
+            $filterstr = 'appId%20eq%20\''.implode('\'%20or%20appId%20eq%20\'', $appids).'\'';
             $endpoint = '/servicePrincipals()?$filter='.$filterstr;
         } else {
             $endpoint = '/servicePrincipals()';
@@ -1341,13 +1342,13 @@ class unified extends \local_o365\rest\o365api {
                 if ($transform === true) {
                     $transformed = [];
                     foreach ($response['value'] as $i => $appdata) {
-                        $transformed[$appdata['displayName']] = [
+                        $transformed[$appdata['appId']] = [
                             'appId' => $appdata['appId'],
                             'appDisplayName' => $appdata['appDisplayName'],
                             'perms' => []
                         ];
                         foreach ($appdata['oauth2Permissions'] as $i => $permdata) {
-                            $transformed[$appdata['displayName']]['perms'][$permdata['value']] = $permdata;
+                            $transformed[$appdata['appId']]['perms'][$permdata['value']] = $permdata;
                         }
                     }
                     return $transformed;
