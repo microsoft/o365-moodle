@@ -82,6 +82,10 @@ class authcode extends \auth_oidc\loginflow\base {
             // Response from OP.
             $this->handleauthresponse($requestparams);
         } else {
+            if (isloggedin()) {
+                redirect(new \moodle_url('/'));
+                die();
+            }
             // Initial login request.
             $stateparams = ['forceflow' => 'authcode'];
             $extraparams = [];
