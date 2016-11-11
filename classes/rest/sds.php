@@ -30,6 +30,9 @@ class sds extends \local_o365\rest\o365api {
     /** Prefix identifying SDS-specific attributes. */
     const PREFIX = 'extension_fe2174665583431c953114ff7268b7b3_Education';
 
+    /** The general API area of the class. */
+    public $apiarea = 'sds';
+
     /**
      * Determine if the API client is configured.
      *
