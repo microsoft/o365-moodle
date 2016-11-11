@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * Abstract base class for all o365 REST api classes.
  */
 abstract class o365api {
+    /** The general API area of the class. */
+    public $apiarea = null;
+
     /** @var \local_o365\oauth2\token A token object representing all token information to be used for this client. */
     protected $token;
 
@@ -160,6 +163,30 @@ abstract class o365api {
             unset($options['contenttype']);
         }
 
+        // Generate the user agent string.
+        $useragent = 'Moodle';
+
+        // Add API area if available.
+        $apiarea = null;
+        if (!empty($this->apiarea)) {
+            $apiarea = $this->apiarea;
+        }
+        if (!empty($options['apiarea'])) {
+            $apiarea = $options['apiarea'];
+            unset($options['apiarea']);
+        }
+        if (!empty($apiarea)) {
+            $useragent .= '-'.$apiarea;
+        }
+
+        // Add plugin version.
+        $pluginversion = get_config('local_o365', 'version');
+        if (!empty($pluginversion)) {
+            $useragent .= '-'.$pluginversion;
+        }
+        $options['CURLOPT_USERAGENT'] = $useragent;
+
+        // Add headers.
         $header = [
             'Accept: application/json',
             'Content-Type: '.$contenttype,
