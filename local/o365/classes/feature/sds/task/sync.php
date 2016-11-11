@@ -71,7 +71,16 @@ class sync extends \core\task\scheduled_task {
 
         $schools = explode(',', $schools);
         foreach ($schools as $school) {
-            $schooldata = $apiclient->get_school($school);
+            $school = trim($school);
+            if (empty($school)) {
+                continue;
+            }
+            try {
+                $schooldata = $apiclient->get_school($school);
+            } catch (\Exception $e) {
+                mtrace('... Skipped SDS school '.$school.' because we received an error from the API');
+                continue;
+            }
             $coursecat = static::get_or_create_school_coursecategory($schooldata['objectId'], $schooldata['displayName']);
             mtrace('... Processing '.$schooldata['displayName']);
             $schoolnumber = $schooldata[$apiclient::PREFIX.'_SchoolNumber'];
