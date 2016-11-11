@@ -53,6 +53,10 @@ class read_onenoteassignment extends \external_api {
         $params = self::validate_parameters(self::assignment_read_parameters(), ['data' => $data]);
         $params = $params['data'];
         list($course, $module, $assign) = \local_o365\webservices\utils::verify_assignment($params['coursemodule'], $params['course']);
+
+        $context = \context_course::instance($params['course']);
+        self::validate_context($context);
+
         $modinfo = \local_o365\webservices\utils::get_assignment_return_info($module->id, $course->id);
         return ['data' => [$modinfo]];
     }
