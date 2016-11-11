@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for o365 outlook api.
  */
 class outlook extends \local_o365\rest\o365api {
+    /** The general API area of the class. */
+    public $apiarea = 'outlook';
+
     /**
      * Get the API client's oauth2 resource.
      *

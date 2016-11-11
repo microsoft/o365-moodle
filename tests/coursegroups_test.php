@@ -121,6 +121,8 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
 
         // Assert API calls.
         $requests = $httpclient->get_requests();
+        $pluginversion = get_config('local_o365', 'version');
+        $expecteduseragent = 'Moodle-groups-'.$pluginversion;
         $expectedrequests = [
             [
                 'url' => 'https://graph.microsoft.com/v1.0/groups',
@@ -135,6 +137,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                         'visibility' => 'Private',
                         'description' => $course->summary,
                     ]),
+                    'CURLOPT_USERAGENT' => $expecteduseragent,
                 ],
             ],
         ];
@@ -192,6 +195,9 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         $coursegroups = $this->constructcoursegroupsinstance($httpclient);
         list($toadd, $toremove) = $coursegroups->resync_group_membership($course->id, 'testgroupobjectid');
 
+        $pluginversion = get_config('local_o365', 'version');
+        $expecteduseragent = 'Moodle-groups-'.$pluginversion;
+
         $requests = $httpclient->get_requests();
         $expectedrequests = [
             // List request.
@@ -199,6 +205,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                 'url' => 'https://graph.microsoft.com/v1.0/groups/testgroupobjectid/members',
                 'options' => [
                     'CURLOPT_HTTPGET' => '1',
+                    'CURLOPT_USERAGENT' => $expecteduseragent,
                 ],
             ],
 
@@ -208,6 +215,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                 'options' => [
                     'CURLOPT_CUSTOMREQUEST' => 'DELETE',
                     'CURLOPT_USERPWD' => 'anonymous: noreply@moodle.org',
+                    'CURLOPT_USERAGENT' => $expecteduseragent,
                 ],
             ],
 
@@ -217,6 +225,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                 'options' => [
                     'CURLOPT_POST' => '1',
                     'CURLOPT_POSTFIELDS' => '{"@odata.id":"https:\/\/graph.microsoft.com\/v1.0\/directoryObjects\/user0"}',
+                    'CURLOPT_USERAGENT' => $expecteduseragent,
                 ],
             ],
         ];
