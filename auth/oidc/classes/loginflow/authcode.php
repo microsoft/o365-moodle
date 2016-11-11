@@ -78,6 +78,7 @@ class authcode extends \auth_oidc\loginflow\base {
             $requestparams = [
                 'state' => optional_param('state', '', PARAM_ALPHANUMEXT),
                 'code' => optional_param('code', '', PARAM_ALPHANUMEXT),
+                'error_description' => optional_param('error_description', '', PARAM_TEXT),
             ];
             // Response from OP.
             $this->handleauthresponse($requestparams);
@@ -135,6 +136,11 @@ class authcode extends \auth_oidc\loginflow\base {
      */
     protected function handleauthresponse(array $authparams) {
         global $DB, $CFG, $STATEADDITIONALDATA, $USER;
+
+        if (!empty($authparams['error_description'])) {
+            \auth_oidc\utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
+            throw new \moodle_exception('errorauthgeneral', 'auth_oidc');
+        }
 
         if (!isset($authparams['code'])) {
             \auth_oidc\utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
