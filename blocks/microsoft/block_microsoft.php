@@ -224,6 +224,14 @@ class block_microsoft extends block_base {
             $items[] = html_writer::link($delveurl, $delvestr, $delveattrs);
         }
 
+        // My email.
+        if (!empty($this->globalconfig->settings_showemail)) {
+            $emailurl = 'https://outlook.office365.com/';
+            $emailattrs = ['class' => 'servicelink block_microsoft_outlook', 'target' => '_blank'];
+            $emailstr = get_string('linkemail', 'block_microsoft');
+            $items[] = \html_writer::link($emailurl, $emailstr, $emailattrs);
+        }
+
         // My Forms URL.
         if (!empty($this->globalconfig->settings_showmyforms)) {
             $formsattrs = ['class' => 'servicelink block_microsoft_forms', 'target' => '_blank'];
