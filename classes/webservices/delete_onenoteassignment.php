@@ -57,6 +57,9 @@ class delete_onenoteassignment extends \external_api {
 
         list($course, $module, $assign) = \local_o365\webservices\utils::verify_assignment($params['coursemodule'], $params['course']);
 
+        $context = \context_course::instance($params['course']);
+        self::validate_context($context);
+
         // Course_delete_module will throw exception if error, so we can return true b/c if we get there it was successful.
         course_delete_module($module->id);
         return ['result' => true];
