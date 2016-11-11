@@ -31,6 +31,7 @@ $string['acp_maintenance_warning'] = 'Warning: These are advanced tools. Please 
 $string['acp_maintenance_coursegroupusers'] = 'Resync users in groups for courses.';
 $string['acp_maintenance_coursegroupusers_desc'] = 'This will resync the user membership for all Office 365 groups created for all Moodle courses. This will ensure all, and only, users enrolled in the Moodle course are in the Office 365 group. <br /><b>Note:</b> If you have added any additional users to a course group that are not enrolled in the associated Moodle course, they will be removed.';
 $string['acp_sharepointcourseselect'] = 'SharePoint Course Selection';
+$string['acp_sharepointcourseselect_searchwarning'] = 'Note: Searches will lose any unsaved progress. Press save changes to ensure your changes are saved.';
 $string['acp_sharepointcourseselect_applyfilter'] = 'Apply Filter';
 $string['acp_sharepointcourseselect_bulk'] = 'Bulk Operations';
 $string['acp_sharepointcourseselect_desc'] = 'Choose which courses will have SharePoint sites created for them. By default, no sites will be created. You can then choose to select specific courses ("Custom"), or create a SharePoint site for all Moodle courses ("Sync All").';
@@ -55,6 +56,7 @@ $string['acp_maintenance_coursegroupscheck_desc'] = 'This will check for any Off
 $string['acp_usergroupcustom'] = 'User Group Customization';
 $string['acp_usergroupcustom_off'] = 'Disabled<br />Disables all Course Groups (i.e. Office 365 Groups) integration for all Moodle courses.';
 $string['acp_usergroupcustom_savemessage'] = 'Your changes have been saved.';
+$string['acp_usergroupcustom_searchwarning'] = 'Note: Searches will lose any unsaved progress. Press save changes to ensure your changes are saved.';
 $string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to select which courses to create Course Groups (i.e. Office 365 Groups) for, as well as select which Group features are exposed in the Microsoft block for each course.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course Groups (i.e. Office 365 Groups) for all courses and exposes all Group features in the Microsoft block for all courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
