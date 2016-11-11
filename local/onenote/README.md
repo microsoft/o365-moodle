@@ -5,9 +5,7 @@
 
 This plugin provides a common client API for various other Moodle plugins that allow Moodle users to take advantage of Microsoft OneNote Online. This includes  operations such as browsing your notebooks, sections, and pages; students doing assignments in OneNote and teachers providing feedback on those assignments in OneNote. It uses the Microsoft Account local plugin for authentication and using the OneNote Oneline REST API.
 
-
-Usage
------
+## Usage
 
 Instantiation:
         $onenoteapi = \local_onenote\api\base::getinstance();
@@ -19,8 +17,7 @@ Making a REST API call:
         $notebooks = $onenoteapi->get_items_list('');
 
 
-Design details
---------------
+## Design details
 
 There are several parts that make up the Microsoft OneNote Online API Local plugin.
 
@@ -40,8 +37,7 @@ This is a singleton class that provides simple wrappers for various authenticati
 This file processes form submissions from all the OneNote-related submit buttons in the Moodle API that help students work on their assignments and help teachers provide feedback on those assignments in OneNote.
 
 
-Additional notes about the OneNote integration
-----------------------------------------------
+### Additional notes about the OneNote integration
 
 When a user (student or teacher) clicks on the "Work on this" or "View Submission" or "View Feedback" buttons, the following actions may happen if needed:
 - A notebook is created called "Moodle Notebook" in the OneNote account of the user
@@ -56,12 +52,11 @@ Each submission for each student will have a Submission page and a Feedback page
 
 If any of these submission or feedback pages get deleted in OneNote for some reason, they will get recreated when needed from their saved copy in Moodle. So the "master" is always with Moodle and the OneNote pages associated with the master are loosely connected to it.
 
-
 This is part of the suite of Microsoft Services plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 
-## Installation.
+## Installation
 
 1. Unpack the plugin into /local/onenote within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
@@ -69,13 +64,41 @@ This repository is updated with stable releases. To follow active development, s
 
 For more documentation, visit https://docs.moodle.org/28/en/Office365
 
-# Contributing
+## Support
 
-Before we can accept your pull request, you'll need to electronically complete Microsoft's [Contributor License Agreement](https://cla.microsoft.com/). If you've done this for other Microsoft projects, then you're already covered.
+If you are experiencing problems, have a feature request, or have a question, please open an issue on Github at https://github.com/Microsoft/o365-moodle.
+
+To help developers debug problems, please include the following in all issues:
+- Plugin versions.
+- Moodle version.
+- Detailed instructions of what went wrong and how to reproduce the problem.
+- Any error messages encountered.
+- PHP version.
+- Database software and versions.
+- Any other environmental information available.
+
+Note that developers will triage issues and deal with more serious problems first. All issues will be addressed but some may not be addressed immediately.
+
+## Contributing
+
+We're looking for community contributions! Feel free to submit pull requests, but please do so against the development repository at https://github.com/Microsoft/o365-moodle. Pull requests submitted to individual plugin repositories cannot be accepted.
+
+### Needed Contributions
+Smaller issues that developers cannot address right away will be labeled with "Help Wanted" in the issue tracker in the development repository at https://github.com/Microsoft/o365-moodle/issues. These are only suggestions - we can also accept pull requests fixing other bugs, or even adding new features.
+
+Pull requests adding new features are much appreciated but note that they may be rejected (even if technically sound) if they do not match the direction of the project. If you want to add a new feature, it's best to open an issue outlining your idea first, and get feedback from the maintainers.
+
+Contributions to our documentation are especially appreciated! All documentation lives in the /local/o365docs folder of the development repository (https://github.com/Microsoft/o365-moodle). Updates to this documentation can be sent via pull request like any other contributions.
+
+### Code Review
+All pull requests go through a thorough examination from developers before they are merged. Please read our [code review process](https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs/codereview.md) and ensure your code is consistent before submitting. A developer may respond with changes that are needed before a pull request can be accepted and it is up to the submitter to make those changes. If accepted, your commit will remain as-is to ensure you get credit, but developers may modify solutions slightly in subsequent commits.
+
+### CLA
+Finally, before we can accept your pull request, you'll need to electronically complete Microsoft's [Contributor License Agreement](https://cla.microsoft.com/). If you've done this for other Microsoft projects, then you're already covered.
 
 [Why a CLA?](https://www.gnu.org/licenses/why-assign.html) (from the FSF)
 
-# Copyright
+## Copyright
 
 &copy; Microsoft, Inc.  Code for this plugin is licensed under the GPLv3 license.
 
