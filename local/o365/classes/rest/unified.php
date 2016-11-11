@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * Client for unified Office 365 API.
  */
 class unified extends \local_o365\rest\o365api {
+    /** The general API area of the class. */
+    public $apiarea = 'graph';
+
     /**
      * Determine if the API client is configured.
      *
@@ -66,6 +69,26 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Generate an api area.
+     *
+     * @param string $apimethod The API method being called.
+     * @return string a simplified api area string.
+     */
+    protected function generate_apiarea($apimethod) {
+        $apimethod = explode('/', $apimethod);
+        foreach ($apimethod as $apicomponent) {
+            $validareas = ['applications', 'groups', 'calendars', 'events', 'trendingaround', 'users'];
+            $apicomponent = strtolower($apicomponent);
+            $apicomponent = explode('?', $apicomponent);
+            $apicomponent = reset($apicomponent);
+            if (in_array($apicomponent, $validareas)) {
+                return $apicomponent;
+            }
+        }
+        return 'graph';
+    }
+
+    /**
      * Make an API call.
      *
      * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
@@ -79,6 +102,9 @@ class unified extends \local_o365\rest\o365api {
             $apimethod = '/'.$apimethod;
         }
         $apimethod = '/beta'.$apimethod;
+        if (empty($options['apiarea'])) {
+            $options['apiarea'] = $this->generate_apiarea($apimethod);
+        }
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
 
@@ -95,6 +121,9 @@ class unified extends \local_o365\rest\o365api {
         $config = get_config('local_o365');
         if (empty($config->aadtenant)) {
             throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
+        }
+        if (empty($options['apiarea'])) {
+            $options['apiarea'] = $this->generate_apiarea($apimethod);
         }
         $apimethod = '/beta/'.$config->aadtenant.$apimethod;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
@@ -113,6 +142,9 @@ class unified extends \local_o365\rest\o365api {
         if ($apimethod[0] !== '/') {
             $apimethod = '/'.$apimethod;
         }
+        if (empty($options['apiarea'])) {
+            $options['apiarea'] = $this->generate_apiarea($apimethod);
+        }
         $apimethod = '/v1.0'.$apimethod;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
     }
@@ -130,6 +162,9 @@ class unified extends \local_o365\rest\o365api {
         $config = get_config('local_o365');
         if (empty($config->aadtenant)) {
             throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
+        }
+        if (empty($options['apiarea'])) {
+            $options['apiarea'] = $this->generate_apiarea($apimethod);
         }
         $apimethod = '/v1.0/'.$config->aadtenant.$apimethod;
         return parent::apicall($httpmethod, $apimethod, $params, $options);
