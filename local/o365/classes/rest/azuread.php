@@ -143,19 +143,22 @@ class azuread extends \local_o365\rest\o365api {
     public function check_permissions() {
         $this->token->refresh();
         $neededperms = $this->get_required_permissions();
-        $servicestoget = array_keys($neededperms);
-        $allappdata = $this->get_service_data($servicestoget);
+        unset($neededperms['graph']);
+        $allappdata = $this->get_service_data($neededperms);
         $currentperms = $this->get_current_permissions();
         $missingperms = [];
-        foreach ($neededperms as $app => $perms) {
-            $appid = $allappdata[$app]['appId'];
-            $appname = $allappdata[$app]['appDisplayName'];
-            foreach ($perms as $permname => $altperms) {
+        foreach ($neededperms as $api => $apidata) {
+            $appid = $apidata['appId'];
+            $appname = $allappdata[$appid]['appDisplayName'];
+            $requiredperms = $apidata['requiredDelegatedPermissions'];
+            $availableperms = $allappdata[$appid]['perms'];
+            foreach ($requiredperms as $permname => $altperms) {
+                // First we assemble a list of permission IDs, indexed by permission name.
                 $permids = [];
                 $permstocheck = array_merge([$permname], $altperms);
                 foreach ($permstocheck as $permtocheckname) {
-                    if (isset($allappdata[$app]['perms'][$permtocheckname])) {
-                        $permids[$permtocheckname] = $allappdata[$app]['perms'][$permtocheckname]['id'];
+                    if (isset($availableperms[$permtocheckname])) {
+                        $permids[$permtocheckname] = $availableperms[$permtocheckname]['id'];
                     }
                 }
                 if (empty($permids)) {
@@ -170,8 +173,8 @@ class azuread extends \local_o365\rest\o365api {
                         }
                     }
                     if ($permsatisfied === false) {
-                        if (isset($allappdata[$app]['perms'][$permname]['adminConsentDisplayName'])) {
-                            $permdesc = $allappdata[$app]['perms'][$permname]['adminConsentDisplayName'];
+                        if (isset($availableperms[$permname]['adminConsentDisplayName'])) {
+                            $permdesc = $availableperms[$permname]['adminConsentDisplayName'];
                         } else {
                             $permdesc = $permname;
                         }
@@ -321,26 +324,35 @@ class azuread extends \local_o365\rest\o365api {
     /**
      * Get information on specified services.
      *
-     * @param array $servicenames Array of service names to get. (See keys in get_required_permissions for examples.)
+     * @param array $apis Array of api data to get. (See items in get_required_permissions for examples.)
      * @param bool $transform Whether to transform the result for easy consumption (see check_permissions and push_permissions)
      * @return array|null Array of service information, or null if error.
      */
-    public function get_service_data(array $servicenames, $transform = true) {
-        $filterstr = 'displayName%20eq%20\''.implode('\'%20or%20displayName%20eq%20\'', $servicenames).'\'';
-        $response = $this->apicall('get', '/servicePrincipals()?$filter='.$filterstr);
+    public function get_service_data(array $apis, $transform = true) {
+        if (!empty($apis)) {
+            $appids = [];
+            foreach ($apis as $api) {
+                $appids[] = $api['appId'];
+            }
+            $filterstr = 'appId%20eq%20\''.implode('\'%20or%20appId%20eq%20\'', $appids).'\'';
+            $endpoint = '/servicePrincipals()?$filter='.$filterstr;
+        } else {
+            $endpoint = '/servicePrincipals()';
+        }
+        $response = $this->apicall('get', $endpoint);
         if (!empty($response)) {
             $response = @json_decode($response, true);
             if (!empty($response) && is_array($response)) {
                 if ($transform === true) {
                     $transformed = [];
                     foreach ($response['value'] as $i => $appdata) {
-                        $transformed[$appdata['displayName']] = [
+                        $transformed[$appdata['appId']] = [
                             'appId' => $appdata['appId'],
                             'appDisplayName' => $appdata['appDisplayName'],
                             'perms' => []
                         ];
                         foreach ($appdata['oauth2Permissions'] as $i => $permdata) {
-                            $transformed[$appdata['displayName']]['perms'][$permdata['value']] = $permdata;
+                            $transformed[$appdata['appId']]['perms'][$permdata['value']] = $permdata;
                         }
                     }
                     return $transformed;
