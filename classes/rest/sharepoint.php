@@ -27,6 +27,9 @@ namespace local_o365\rest;
  * API client for SharePoint.
  */
 class sharepoint extends \local_o365\rest\o365api {
+    /** The general API area of the class. */
+    public $apiarea = 'sharepoint';
+
     /** @var string The site we're accessing. */
     protected $parentsite = '';
 
