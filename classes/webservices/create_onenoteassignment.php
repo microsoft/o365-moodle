@@ -58,6 +58,9 @@ class create_onenoteassignment extends \external_api {
         $params = self::validate_parameters(self::assignment_create_parameters(), ['data' => $data]);
         $params = $params['data'];
 
+        $context = \context_course::instance($params['course']);
+        self::validate_context($context);
+
         $defaults = [
             'submissiondrafts' => 0,
             'requiresubmissionstatement' => 0,
