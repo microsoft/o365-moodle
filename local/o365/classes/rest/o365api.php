@@ -323,30 +323,81 @@ abstract class o365api {
     /**
      * Get an array of the current required permissions.
      *
+     * @param string $api An API to get information on, or empty for all.
      * @return array Array of required Azure AD application permissions.
      */
-    public function get_required_permissions() {
-        return [
-            'Microsoft.Azure.ActiveDirectory' => [
-                'Directory.Read.All' => ['Directory.ReadWrite.All'],
-                'Directory.AccessAsUser.All' => [],
-                'User.Read.All' => ['User.ReadWrite.All'],
+    public function get_required_permissions($api = null) {
+        $apis = [
+            'graph' => [
+                'appId' => '00000003-0000-0000-c000-000000000000',
+                'displayName' => '',
+                'requiredAppPermissions' => [
+                    'Files.ReadWrite.All' => [],
+                    'User.ReadWrite.All' => [],
+                    'Directory.Read.All' => [],
+                    'Group.ReadWrite.All' => [],
+                    'Calendars.ReadWrite' => [],
+                 ],
+                'requiredDelegatedPermissions' => [
+                    'openid' => [],
+                    'Calendars.ReadWrite' => [],
+                    'Directory.AccessAsUser.All' => [],
+                    'Directory.ReadWrite.All' => [],
+                    'Files.ReadWrite' => [],
+                    'Notes.ReadWrite.All' => [],
+                    'User.ReadWrite.All' => [],
+                    'Group.ReadWrite.All' => [],
+                    'Sites.Read.All' => [],
+                ],
             ],
-            'Microsoft.SharePoint' => [
-                'AllSites.Read' => ['AllSites.FullControl'],
-                'AllSites.Write' => ['AllSites.FullControl'],
-                'AllSites.Manage' => ['AllSites.FullControl'],
-                'AllSites.FullControl' => [],
-                'MyFiles.Read' => [],
-                'MyFiles.Write' => [],
+            'azure' => [
+                'appId' => '00000002-0000-0000-c000-000000000000',
+                'displayName' => 'Microsoft.Azure.ActiveDirectory',
+                'requiredAppPermissions' => [],
+                'requiredDelegatedPermissions' => [
+                    'Directory.Read.All' => ['Directory.ReadWrite.All'],
+                    'Directory.AccessAsUser.All' => [],
+                    'User.Read.All' => ['User.ReadWrite.All'],
+                ],
             ],
-            'Microsoft.Exchange' => [
-                'Calendars.ReadWrite' => [],
+            'sharepoint' => [
+                'appId' => '00000003-0000-0ff1-ce00-000000000000',
+                'displayName' => 'Microsoft.SharePoint',
+                'requiredAppPermissions' => [],
+                'requiredDelegatedPermissions' => [
+                    'AllSites.Read' => ['AllSites.FullControl'],
+                    'AllSites.Write' => ['AllSites.FullControl'],
+                    'AllSites.Manage' => ['AllSites.FullControl'],
+                    'AllSites.FullControl' => [],
+                    'MyFiles.Read' => [],
+                    'MyFiles.Write' => [],
+                ],
             ],
-            'OneNote' => [
-                'Notes.ReadWrite' => [],
-                'Notes.Create' => [],
+            'exchange' => [
+                'appId' => '00000002-0000-0ff1-ce00-000000000000',
+                'displayName' => 'Microsoft.Exchange',
+                'requiredAppPermissions' => [],
+                'requiredDelegatedPermissions' => [
+                    'Calendars.ReadWrite' => [],
+                ],
+            ],
+            'onenote' => [
+                'appId' => '2d4d3d8e-2be3-4bef-9f87-7875a61c29de',
+                'displayName' => 'OneNote',
+                'requiredAppPermissions' => [],
+                'requiredDelegatedPermissions' => [
+                    'Notes.ReadWrite' => [],
+                    'Notes.Create' => [],
+                ],
             ],
         ];
+        if (!empty($api)) {
+            if (!isset($apis[$api])) {
+                throw new \Exception('No API with identifier '.$api.' found.');
+            }
+            return $apis[$api];
+        } else {
+            return $apis;
+        }
     }
 }
