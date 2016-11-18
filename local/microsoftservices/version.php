@@ -31,5 +31,5 @@ $plugin->release = '29.0.0.11';
 $plugin->dependencies = [
     'block_microsoft' => 2015080423,
     'local_msaccount' => 2015060105,
-    'filter_oembed' => 2015060111,
+    'filter_oembed' => 2015060110,
 ];
