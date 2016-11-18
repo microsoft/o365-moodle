@@ -33,5 +33,5 @@ $plugin->dependencies = [
     'block_microsoft' => 2015111919,
     'local_o365' => 2015111922,
     'repository_office365' => 2015111913,
-    'filter_oembed' => 2015111911,
+    'filter_oembed' => 2015111910,
 ];
