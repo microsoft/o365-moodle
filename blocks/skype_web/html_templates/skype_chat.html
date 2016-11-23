@@ -1,0 +1,37 @@
+<div class="wrappingdiv">
+    <div class="">
+        <div class="chat-service">
+            <div class="noMe">{{# get_string}}chat_message{{/ get_string}}</div>
+            <h2>{{# get_string}}lbl_chat{{/ get_string}}</h2>
+            <div class="conversation">
+                <div id="start" class="header">
+                    <div id="chat-to" class="editable" contenteditable="true" 
+                         placeholder="{{# get_string}}email_placeholder{{/ get_string}}"></div>
+                    <div>
+                        <a id="btn-start-messaging" class="iconfont chat" title="{{# get_string}}start_tooltip{{/ get_string}}"></a>
+                    </div>
+                </div>
+                <div id="status-header" class="header" style="display: none;">
+                    <div class="right-controls">
+                        <a id="btn-stop-messaging" class="icon icon-small icon-close" 
+                           title="{{# get_string}}stop_tooltip{{/ get_string}}"></a>
+                    </div>
+                    <h3>{{# get_string}}lbl_userfound{{/ get_string}}</h3>
+                    <div class="chat-name"></div>
+                    <div class="notification"></div>
+                </div>
+                <div id="message-history" class="messages"></div>
+                <div id="input-message" class="chatinput editable" contenteditable="true" 
+                     placeholder="{{# get_string}}type_placeholder{{/ get_string}}" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="cc-conversations">
+</div>
+<script type='text/javascript'>
+    //hide header and footer.
+    $(function(){
+        $("header,#page-footer").hide();
+    });
+</script>

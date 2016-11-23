@@ -1,0 +1,10 @@
+<div class="wrappingdiv">
+    <form id='frmLoginToSkype' method='get' action='https://login.microsoftonline.com/common/oauth2/authorize'>
+        <input type='hidden' name='response_type' value='token' />
+        <input type='hidden' name='client_id' value='' />
+        <input type='hidden' name='redirect_uri' value='@@wwwroot@@/blocks/skype_web/skypeloginreturn.php' />
+        <input type='hidden' name='resource' value='https://webdirin1.online.lync.com' />
+        <input type='hidden' name='state' value='' />
+        <button id='btnSkypeLogin' class='btn btn-success'>{{# get_string}}skypelogin_button{{/ get_string}}</button>
+    </form>
+</div>
