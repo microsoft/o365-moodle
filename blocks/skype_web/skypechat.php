@@ -24,7 +24,11 @@
 // Display the Skype Web Block's chat window page.
 
 require_once(__DIR__ . '/../../config.php');
-require_once('mustache.php');
+// Checks weather Mustache_Engine is already defined or not as
+// Moodle 2.9 onwards Mustache_Engine is already included in Moodle core.
+if (!class_exists('Mustache_Engine')) {
+    require_once('mustache.php');
+}
 require_login();
 // Getting the client ID from OpenID authentication plugin.
 $clientid = get_config('auth_oidc', 'clientid');

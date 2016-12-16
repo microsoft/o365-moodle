@@ -21,7 +21,11 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 defined('MOODLE_INTERNAL') || die();
-require_once('mustache.php');
+// Checks weather Mustache_Engine is already defined or not as
+// Moodle 2.9 onwards Mustache_Engine is already included in Moodle core.
+if (!class_exists('Mustache_Engine')) {
+    require_once('mustache.php');
+}
 
 /**
  * Skype Block.
