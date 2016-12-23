@@ -345,7 +345,15 @@ $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem 
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
 $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or click "Detect" to attempt to detect correct value.';
 $string['settings_setup_step1'] = 'Step 1: Register Moodle with Azure AD';
-$string['settings_setup_step1_desc'] = 'Head over to Azure (<a href="https://manage.windowsazure.com">https://manage.windowsazure.com</a>), go to "Azure AD", and register an application in your Azure AD tenant for Moodle. Once registered, copy the client ID and key into the fields below.<br /><br />These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a>';
+$string['settings_setup_step1_desc'] = 'Head over to Azure (<a href="https://manage.windowsazure.com">https://manage.windowsazure.com</a>), go to "Azure AD", and register an application in your Azure AD tenant for Moodle using the following information. Please ensure this information is entered in Azure exactly as it appears here as small differences may break functionality.';
+$string['settings_setup_step1clientcreds'] = '<br />Once registered, create a key for the application in Azure. One you have the key, copy the client ID and key from Azure into the fields below.';
+$string['settings_setup_step1_appiduri'] = 'App ID URI';
+$string['settings_setup_step1_appiduri_desc'] = '';
+$string['settings_setup_step1_signonurl'] = 'Sign-On URL';
+$string['settings_setup_step1_signonurl_desc'] = '';
+$string['settings_setup_step1_replyurl'] = 'Reply URL';
+$string['settings_setup_step1_replyurl_desc'] = '';
+$string['settings_setup_step1_end'] = 'Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br /><br /><b>Scroll to the bottom of this page and click "Save changes" before continuing.</b><br /><br /><br />';
 $string['settings_setup_step2'] = 'Step 2: Set a system API user';
 $string['settings_setup_step2_desc'] = 'The system API user is a user account we use to perform administrative and background tasks with Office 365. For system operations such as user sync, Moodle will communicate with Office 365 as this user.';
 $string['settings_setup_step3'] = 'Step 3: Detect additional information and verify your setup';
