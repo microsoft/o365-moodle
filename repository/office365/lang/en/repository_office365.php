@@ -22,6 +22,7 @@
  */
 
 $string['cachedef_unifiedfolderids'] = 'Office 365 Repository - Unified folder IDs';
+$string['cachedef_unifiedgroupfolderids'] = 'Office 365 Repository - Unified folder IDs for groups';
 $string['configplugin'] = 'Configure Office 365 Repository';
 $string['courses'] = 'SharePoint (Courses)';
 $string['coursegroup'] = 'Disable Groups (Courses) folder in file picker';
