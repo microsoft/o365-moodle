@@ -45,8 +45,8 @@ After you have the plugins installed in your Moodle instance, you'll need to do 
 2.  Locate the OpenID Connect authentication plugin and click the eye icon to enable
 3.  Click the Settings link for the plugin.
 4.  Verify the Authorization and Token endpoints. These should be set by default but if not, set the endpoints to the following:
-    1.  **Authorization Endpoint:** <https://login.windows.net/common/oauth2/authorize>
-    2.  **Token Endpoint:** <https://login.windows.net/common/oauth2/token>
+    1.  **Authorization Endpoint:** <https://login.microsoftonline.com/common/oauth2/authorize>
+    2.  **Token Endpoint:** <https://login.microsoftonline.com/common/oauth2/token>
 
 5.  Note the Redirect URI. This should be the URI of your Moodle instance followed by /auth/oidc. You will need to enter this value into Azure AD later, so note this value and put it aside.
     1.  For example, <https://www.example.com/auth/oidc/>
