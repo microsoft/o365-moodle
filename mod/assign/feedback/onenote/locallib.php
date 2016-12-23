@@ -206,8 +206,8 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         global $DB, $COURSE;
 
         // Get the OneNote page id corresponding to the teacher's feedback for this submission.
-        $record = $DB->get_record('onenote_assign_pages', array("assign_id" => $grade->assignment, "user_id" => $grade->userid));
-        if (!$record || !$record->feedback_teacher_page_id) {
+        $record = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $grade->assignment, 'user_id' => $grade->userid]);
+        if (empty($record) || empty($record->feedback_teacher_page_id)) {
             return true;
         }
 
