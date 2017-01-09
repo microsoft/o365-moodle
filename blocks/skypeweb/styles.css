@@ -782,19 +782,19 @@
 
 .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Away,
 .wrappingdiv .persona .photo-c .photo-presence.photo-presence-BeRightBack {
-    background-image:  url([[pix:block_skype_web|away]]);
+    background-image:  url([[pix:block_skypeweb|away]]);
 }
 
 .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Online {
-    background-image:  url([[pix:block_skype_web|available]]);
+    background-image:  url([[pix:block_skypeweb|available]]);
 }
 
 .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Busy {
-    background-image:  url([[pix:block_skype_web|busy]]);
+    background-image:  url([[pix:block_skypeweb|busy]]);
 }
 
 .wrappingdiv .persona .photo-c .photo-presence.photo-presence-DoNotDisturb {
-    background-image:  url([[pix:block_skype_web|do-not-disturb]]);
+    background-image:  url([[pix:block_skypeweb|do-not-disturb]]);
 }
 
 .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Offline {

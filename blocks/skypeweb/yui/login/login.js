@@ -1,5 +1,5 @@
-M.block_skype_web = M.block_skype_web || {};
-NS = M.block_skype_web.login = {};
+M.block_skypeweb = M.block_skypeweb || {};
+NS = M.block_skypeweb.login = {};
 NS.init = function (config) {
     'use strict';
     var clientId = config.client_id;
