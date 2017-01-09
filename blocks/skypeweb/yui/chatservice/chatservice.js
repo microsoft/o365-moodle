@@ -6,8 +6,8 @@ registeredListeners.forEach(function (listener) {
 });
 registeredListeners = [];
 
-M.block_skype_web = M.block_skype_web || {};
-NS = M.block_skype_web.chatservice = {};
+M.block_skypeweb = M.block_skypeweb || {};
+NS = M.block_skypeweb.chatservice = {};
 
 NS.init = function (config) {
     // This script demonstrates how to send instant messages

@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_skype_web
+ * @package block_skypeweb
  * @author Aashay Zajriya <aashay@introp.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $capabilities = [
-    'block/skype_web:myaddinstance' => [
+    'block/skypeweb:myaddinstance' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
@@ -30,7 +30,7 @@ $capabilities = [
         ],
         'clonepermissionsfrom' => 'moodle/my:manageblocks'
     ],
-    'block/skype_web:addinstance' => [
+    'block/skypeweb:addinstance' => [
         'riskbitmask' => RISK_SPAM | RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,

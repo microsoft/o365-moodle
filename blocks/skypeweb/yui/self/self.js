@@ -6,8 +6,8 @@ registeredListeners.forEach(function (listener) {
 });
 registeredListeners = [];
 
-M.block_skype_web = M.block_skype_web || {};
-NS = M.block_skype_web.self = {};
+M.block_skypeweb = M.block_skypeweb || {};
+NS = M.block_skypeweb.self = {};
 NS.init = function (config) {
     var root = config.wwwroot;
     'use strict';
@@ -111,7 +111,7 @@ NS.init = function (config) {
         });
         // Show default avatar if user's fails to load.
         $(".photo-c img").error(function (event) {
-            $(event.target).attr('src', root + + '/blocks/skype_web/pix/default.png');
+            $(event.target).attr('src', root + + '/blocks/skypeweb/pix/default.png');
         });
     };
 };

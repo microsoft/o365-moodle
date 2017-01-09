@@ -11,7 +11,7 @@ This repository is updated with stable releases. To follow active development, s
 
 ## Installation
 
-1. Unpack the plugin into /blocks/skype_web within your Moodle install.
+1. Unpack the plugin into /blocks/skypeweb within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
 3. Follow the on-screen instructions to install the plugin.
 4. Add the block to any page you want it displayed.
@@ -49,7 +49,7 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 4.  On the **What do you want to do** page, click on the link to **Add an application my organization is developing**.
 5.  On the **Tell us about your application** page, you must specify a name for your application and indicate the type of application you are registering with Azure AD. Click **web application and/or web API** (default) and then click the arrow icon on the bottom-right corner of the page.
 6.  On the App properties page, provide the **Sign-on URL** and **App ID URI** for your Moodle instance.
-    1.  The Sign-on URI is the main URI of the Moodle instance + '/blocks/skype_web/skypeloginreturn.php'.
+    1.  The Sign-on URI is the main URI of the Moodle instance + '/blocks/skypeweb/skypeloginreturn.php'.
     2.  The APP ID URI is the main URI of the Moodle instance.
 
 7.  Click the checkbox in the bottom-right hand corner of the page and then click Ok to add your app to Azure Active Directory.
