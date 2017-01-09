@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_skype_web
+ * @package block_skypeweb
  * @author Aashay Zajriya <aashay@introp.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $string['pluginname'] = 'Skype Web';
-$string['skype_web'] = 'Skype Web';
-$string['skype_web:addinstance'] = 'Add a new Skype Web block';
-$string['skype_web:myaddinstance'] = 'Add a new Skype Web block to the My Moodle page';
+$string['skypeweb'] = 'Skype Web';
+$string['skypeweb:addinstance'] = 'Add a new Skype Web block';
+$string['skypeweb:myaddinstance'] = 'Add a new Skype Web block to the My Moodle page';
 $string['lbl_self'] = 'Self';
 $string['lbl_title'] = 'Title';
 $string['lbl_email'] = 'Email';

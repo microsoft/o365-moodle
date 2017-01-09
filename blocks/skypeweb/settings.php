@@ -15,38 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_skype_web
+ * @package block_skypeweb
  * @author Aashay Zajriya <aashay@introp.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-// Skype Web Block login return page after the web SDK's Authentication.
+defined('MOODLE_INTERNAL') || die;
 
-require_once(__DIR__ . '/../../config.php');
-?>
-<html>
-    <head>
-         <script type='text/javascript'>
-            var hash = window.location.hash;
-            var regexForState = /&state=(.+)&/g;
-            var match = regexForState.exec(hash);
-            var returnUrl = null;
-            while (match != null) {
-                returnUrl = match[1];
-                break;
-            }
-
-            if (returnUrl != null && returnUrl.indexOf('http') == 0) {
-                window.location = decodeURIComponent(returnUrl);
-            }
-        </script>
-    </head>
-    <body>
-        <h1><?php get_string('waitmessage', 'block_skype_web');?></h1>
-        <?php
-            global $SESSION;
-            $SESSION->skype_login = true;
-        ?>
-    </body>    
-</html>
+$configkey = new lang_string('settings_clientid', 'block_skypeweb');
+$configdesc = new lang_string('settings_clientid_desc', 'block_skypeweb');
+$settings->add(new admin_setting_configtext('auth_oidc/clientid', $configkey, $configdesc, '', PARAM_TEXT));

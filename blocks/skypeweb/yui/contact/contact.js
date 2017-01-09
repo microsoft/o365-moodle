@@ -6,8 +6,8 @@ registeredListeners.forEach(function (listener) {
 });
 registeredListeners = [];
 
-M.block_skype_web = M.block_skype_web || {};
-NS = M.block_skype_web.contact = {};
+M.block_skypeweb = M.block_skypeweb || {};
+NS = M.block_skypeweb.contact = {};
 NS.init = function (config) {
     'use strict';
     var root = config.wwwroot;
@@ -152,7 +152,7 @@ NS.init = function (config) {
         });
         // Show default avatar if contact's fails to load.
         function setDefaultAvatar(event) {
-            $(event.target).attr('src', root + '/blocks/skype_web/pix/default.png');
+            $(event.target).attr('src', root + '/blocks/skypeweb/pix/default.png');
         }
     };
 };
