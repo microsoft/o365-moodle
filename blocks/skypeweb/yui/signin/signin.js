@@ -1,5 +1,5 @@
-M.block_skype_web = M.block_skype_web || {};
-NS = M.block_skype_web.signin = {};
+M.block_skypeweb = M.block_skypeweb || {};
+NS = M.block_skypeweb.signin = {};
 
 NS.init = function (config) {
     'use strict';
@@ -9,7 +9,7 @@ NS.init = function (config) {
     window['sign-in_load'] = function () {
         var windowCtr = 1;
         $('#btnOpenChat').on('click', function () {
-            window.open(root + '/blocks/skype_web/skypechat.php', 'Skype Chat' + windowCtr++, 'width=375,height=400,');
+            window.open(root + '/blocks/skypeweb/skypechat.php', 'Skype Chat' + windowCtr++, 'width=375,height=400,');
         });
         if (window.skypeWebApp && window.skypeWebApp.signInManager.state() == "SignedIn") {
             $('.wrappingdiv .signed-in').show();
@@ -22,7 +22,7 @@ NS.init = function (config) {
                 "origins": ["https://webdir.online.lync.com/autodiscover/autodiscoverservice.svc/root"],
                 "cors": true,
                 "version": 'SkypeOnlinePreviewApp/1.0.0',
-                "redirect_uri": root + '/blocks/skype_web/skypeloginreturn.php'
+                "redirect_uri": root + '/blocks/skypeweb/skypeloginreturn.php'
             });
         }
         function signin(options) {

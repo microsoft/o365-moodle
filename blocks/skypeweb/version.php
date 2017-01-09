@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_skype_web
+ * @package block_skypeweb
  * @author Aashay Zajriya <aashay@introp.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2016041211;
-$plugin->requires = 2015111600;
-$plugin->component = 'block_skype_web';
+$plugin->version = 2016052300;
+$plugin->requires = 2016052300;
+$plugin->component = 'block_skypeweb';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.5';
+$plugin->release = '3.1.0.0';

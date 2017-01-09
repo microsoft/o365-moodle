@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_skype_web
+ * @package block_skypeweb
  * @author Aashay Zajriya <aashay@introp.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -24,13 +24,13 @@ defined('MOODLE_INTERNAL') || die();
 // Checks weather Mustache_Engine is already defined or not as
 // Moodle 2.9 onwards Mustache_Engine is already included in Moodle core.
 if (!class_exists('Mustache_Engine')) {
-    require_once('mustache.php');
+    require_once(__DIR__.'/mustache.php');
 }
 
 /**
  * Skype Block.
  */
-class block_skype_web extends block_base {
+class block_skypeweb extends block_base {
 
     /**
      * Initialize plugin.
@@ -39,9 +39,9 @@ class block_skype_web extends block_base {
 
         global $PAGE;
         // Adding Skype SDK in the $PAGE.
-        $skypesdkurl = new moodle_url(get_string('skypesdkurl', 'block_skype_web'));
+        $skypesdkurl = new moodle_url(get_string('skypesdkurl', 'block_skypeweb'));
         $PAGE->requires->js($skypesdkurl, true);
-        $this->title = get_string('skype_web', 'block_skype_web');
+        $this->title = get_string('skypeweb', 'block_skypeweb');
     }
 
     /**
@@ -81,21 +81,21 @@ class block_skype_web extends block_base {
         $clientid = get_config('auth_oidc', 'clientid');
         $config = array('client_id' => $clientid,
                         'wwwroot' => $CFG->wwwroot,
-                        'errormessage' => get_string('signinerror', 'block_skype_web'));
+                        'errormessage' => get_string('signinerror', 'block_skypeweb'));
 
         $this->content = new stdClass;
         $this->content->text = '';
         if ($USER->auth == 'oidc' || !empty($SESSION->skype_login)) {
             // Added required Skype SDK's YUI module in the $PAGE.
-            $PAGE->requires->yui_module('moodle-block_skype_web-groups', 'M.block_skype_web.groups.init', array($config));
-            $PAGE->requires->yui_module('moodle-block_skype_web-signin', 'M.block_skype_web.signin.init', array($config));
-            $PAGE->requires->yui_module('moodle-block_skype_web-contact', 'M.block_skype_web.contact.init', array($config));
-            $PAGE->requires->yui_module('moodle-block_skype_web-self', 'M.block_skype_web.self.init', array($config));
-            $this->content->text .= $this->get_template($CFG->dirroot . '/blocks/skype_web/html_templates/skype_block.html');
+            $PAGE->requires->yui_module('moodle-block_skypeweb-groups', 'M.block_skypeweb.groups.init', array($config));
+            $PAGE->requires->yui_module('moodle-block_skypeweb-signin', 'M.block_skypeweb.signin.init', array($config));
+            $PAGE->requires->yui_module('moodle-block_skypeweb-contact', 'M.block_skypeweb.contact.init', array($config));
+            $PAGE->requires->yui_module('moodle-block_skypeweb-self', 'M.block_skypeweb.self.init', array($config));
+            $this->content->text .= $this->get_template($CFG->dirroot . '/blocks/skypeweb/html_templates/skype_block.html');
         } else {
             // Added required Skype SDK's authentication module in the $PAGE.
-            $PAGE->requires->yui_module('moodle-block_skype_web-login', 'M.block_skype_web.login.init', array($config));
-            $this->content->text .= $this->get_template($CFG->dirroot . '/blocks/skype_web/html_templates/skype_login.html');
+            $PAGE->requires->yui_module('moodle-block_skypeweb-login', 'M.block_skypeweb.login.init', array($config));
+            $this->content->text .= $this->get_template($CFG->dirroot . '/blocks/skypeweb/html_templates/skype_login.html');
         }
 
         $this->content->text = str_replace("@@wwwroot@@", $CFG->wwwroot, $this->content->text);
@@ -111,9 +111,12 @@ class block_skype_web extends block_base {
      */
     private function get_template($templatepath) {
         $templateengine = new Mustache_Engine();
-        $output = $templateengine->render(file_get_contents($templatepath), array('get_string' => function($stringtolocalize) {
-                return get_string($stringtolocalize, 'block_skype_web');
-        }));
-        return $output;
+        $templatecontents = file_get_contents($templatepath);
+        $templateopts = [
+            'get_string' => function($stringtolocalize) {
+                return get_string($stringtolocalize, 'block_skypeweb');
+            }
+        ];
+        return $templateengine->render($templatecontents, $templateopts);
     }
 }
