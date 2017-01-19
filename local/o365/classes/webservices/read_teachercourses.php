@@ -36,7 +36,14 @@ class read_teachercourses extends \external_api {
      * @return external_function_parameters
      */
     public static function teachercourses_read_parameters() {
-        return new \external_function_parameters([]);
+        return new \external_function_parameters([
+            'courseids' => new \external_multiple_structure(
+                new \external_value(PARAM_INT, 'course id, empty to retrieve all courses'),
+                '0 or more course ids',
+                VALUE_DEFAULT,
+                []
+            ),
+        ]);
     }
 
     /**
@@ -45,15 +52,33 @@ class read_teachercourses extends \external_api {
      *
      * @return array of courses
      */
-    public static function teachercourses_read() {
+    public static function teachercourses_read($courseids = []) {
         global $USER;
 
+        // Validate params.
+        $params = self::validate_parameters(
+            self::teachercourses_read_parameters(),
+            [
+                'courseids' => $courseids
+            ]
+        );
+
+        $courseids = (!empty($params['courseids']) && is_array($params['courseids']))
+            ? array_flip($params['courseids'])
+            : [];
+
+        // Get courses.
         $fields = 'id, shortname, fullname, idnumber, visible, format, showgrades, lang, enablecompletion';
         $courses = enrol_get_users_courses($USER->id, true, $fields);
 
         $result = [];
 
         foreach ($courses as $course) {
+
+            if (!empty($courseids) && !isset($courseids[$course->id])) {
+                continue;
+            }
+
             $context = \context_course::instance($course->id, IGNORE_MISSING);
 
             // Validate the user can execute functions in this course.

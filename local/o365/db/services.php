@@ -64,6 +64,13 @@ $functions = [
         'description' => 'Get a list of students in a course.',
         'type' => 'read',
     ],
+    'local_o365_get_assignments' => [
+        'classname' => '\local_o365\webservices\read_assignments',
+        'methodname' => 'assignments_read',
+        'classpath' => 'local/o365/classes/webservices/read_assignments.php',
+        'description' => 'Get a list of courses and assignments for the user',
+        'type' => 'read',
+    ],
 ];
 
 // Pre-built service.
@@ -76,6 +83,7 @@ $services = [
             'local_o365_delete_onenoteassignment',
             'local_o365_get_teachercourses',
             'local_o365_get_course_users',
+            'local_o365_get_assignments',
             'mod_assign_get_assignments',
             'mod_assign_get_grades',
             'mod_assign_save_grade',
