@@ -70,8 +70,8 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                        tok.oidcusername as oidcusername
                   FROM {auth_oidc_token} tok
                   JOIN {user} u ON u.username = tok.username
-                 WHERE u.auth = ? AND deleted = 0';
-        $params = ['oidc'];
+                 WHERE u.auth = ? AND deleted = ?';
+        $params = ['oidc', 0];
         $userstoupdate = $DB->get_recordset_sql($sql, $params);
         foreach ($userstoupdate as $user) {
             if (empty($user->idtoken)) {
