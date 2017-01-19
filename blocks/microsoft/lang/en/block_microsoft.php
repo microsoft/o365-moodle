@@ -50,6 +50,7 @@ $string['o365matched_complete_authreq'] = 'To complete the connection, please cl
 $string['o365connected'] = '{$a->firstname} you are currently <span class="notifysuccess">connected</span> to Office&nbsp;365';
 $string['notconnected'] = 'You are <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
+$string['cachedef_groups'] = 'Caches Office 365 group information.';
 $string['msalogin'] = 'Log in with Microsoft Account';
 $string['logintoo365'] = 'Log in to Office&nbsp;365';
 $string['connecttoo365'] = 'Connect to Office 365';
