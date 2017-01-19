@@ -179,8 +179,23 @@ if ($hassiteconfig) {
 
         $oidcsettings = new \moodle_url('/admin/settings.php?section=authsettingoidc');
         $label = new lang_string('settings_setup_step1', 'local_o365');
-        $desc = new lang_string('settings_setup_step1_desc', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
+        $desc = new lang_string('settings_setup_step1_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_setup_step1', $label, $desc));
+
+        $configkey = new \lang_string('settings_setup_step1_appiduri', 'local_o365');
+        $configdesc = new \lang_string('settings_setup_step1_appiduri_desc', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\appiduri('local_o365/appiduri', $configkey, $configdesc));
+
+        $configkey = new \lang_string('settings_setup_step1_signonurl', 'local_o365');
+        $configdesc = new \lang_string('settings_setup_step1_signonurl_desc', 'local_o365');
+        $settings->add(new \auth_oidc\form\adminsetting\redirecturi('local_o365/signonurl', $configkey, $configdesc));
+
+        $configkey = new \lang_string('settings_setup_step1_replyurl', 'local_o365');
+        $configdesc = new \lang_string('settings_setup_step1_replyurl_desc', 'local_o365');
+        $settings->add(new \auth_oidc\form\adminsetting\redirecturi('local_o365/replyurl', $configkey, $configdesc));
+
+        $configdesc = new \lang_string('settings_setup_step1clientcreds', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_setup_step1clientcreds', '', $configdesc));
 
         $configkey = new lang_string('settings_clientid', 'local_o365');
         $configdesc = new lang_string('settings_clientid_desc', 'local_o365');
@@ -189,6 +204,9 @@ if ($hassiteconfig) {
         $configkey = new lang_string('settings_clientsecret', 'local_o365');
         $configdesc = new lang_string('settings_clientsecret_desc', 'local_o365');
         $settings->add(new admin_setting_configtext('auth_oidc/clientsecret', $configkey, $configdesc, '', PARAM_TEXT));
+
+        $configdesc = new \lang_string('settings_setup_step1_end', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
+        $settings->add(new admin_setting_heading('local_o365_setup_step1end', '', $configdesc));
 
         $label = new lang_string('settings_setup_step2', 'local_o365');
         $desc = new lang_string('settings_setup_step2_desc', 'local_o365');
