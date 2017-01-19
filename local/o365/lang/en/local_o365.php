@@ -91,6 +91,8 @@ $string['acp_usermatch_upload_submit'] = 'Add Data File To Match Queue';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
 
+$string['cachedef_groups'] = 'Stores Office 365 group data.';
+
 $string['calendar_setting'] = 'Enable Outlook Calendar Sync';
 $string['calendar_user'] = 'Personal (User) Calendar';
 $string['calendar_site'] = 'Sitewide Calendar';
