@@ -202,7 +202,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         global $USER, $DB, $COURSE;
 
         // Get OneNote page id.
-        $record = $DB->get_record('onenote_assign_pages',
+        $record = $DB->get_record('local_onenote_assign_pages',
                 array("assign_id" => $submission->assignment, "user_id" => $submission->userid));
 
         if (!$record || !$record->submission_student_page_id) {
@@ -238,7 +238,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $pagemetadata = $onenoteapi->process_apicall_response($pagemetadata, ['lastModifiedTime' => null]);
         if (!empty($pagemetadata)) {
             $record->student_lastmodified = strtotime($pagemetadata['lastModifiedTime']);
-            $DB->update_record('onenote_assign_pages', $record);
+            $DB->update_record('local_onenote_assign_pages', $record);
         }
 
         // Get assignment submission size limit.
