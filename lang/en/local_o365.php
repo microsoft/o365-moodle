@@ -472,6 +472,7 @@ $string['webservices_error_assignnotfound'] = 'The received module\'s assignment
 $string['webservices_error_invalidassignment'] = 'The received assignment ID cannot be used with this webservices function.';
 $string['webservices_error_modulenotfound'] = 'The received module ID could not be found.';
 $string['webservices_error_sectionnotfound'] = 'The course section could not be found.';
+$string['webservices_error_couldnotsavegrade'] = 'Could not save grade.';
 
 $string['help_user_create'] = 'Create Accounts Help';
 $string['help_user_create_help'] = 'This will create users in Moodle from each user in the linked Azure Active Directory. Only users which do not currently have Moodle accounts will have accounts created. New accounts will be set up to use their Office 365 credentials to log in to Moodle (using the OpenID Connect authentication plugin), and will be able to use all Office 365/Moodle integration features.';
