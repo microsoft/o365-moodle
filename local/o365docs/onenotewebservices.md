@@ -1,6 +1,6 @@
 Class Notebook Add-In for OneNote and Moodle
 ============================================
-In order to use the Class Notebook Add-In for OneNote you must enable Office 365 web services.    
+In order to use the Class Notebook Add-In for OneNote you must enable Office 365 web services.
 
 Setup
 -----
@@ -81,7 +81,7 @@ This function gets a list of user enrolled in a given course. This will only ret
 
 **Function:** local_o365_get_course_users
 
-**Parameters:** 
+**Parameters:**
 - `courseid` *int* The ID of the course
 
 **Response:** array of objects, each containing:
@@ -116,7 +116,7 @@ This function will create a new OneNote assignment in a given course.
   - `intro` *string* The description of the created assignment.
   - `section` *string* The ID of the course section the assignment was created in.
   - `visible` *int* Whether the assignment is visible or hidden. 1 = visible, 0 = hidden.
-  
+
 
 #### Get information about a OneNote assignment
 This function will return information about a OneNote assignment given a course module ID and course ID.
@@ -163,7 +163,7 @@ This function will allow you to update various attributes of a OneNote assignmen
   - `section` *string* The ID of the course section the assignment is in.
   - `visible` *int* Whether the assignment is visible or hidden. 1 = visible, 0 = hidden.
 
-  
+
 #### Delete a OneNote assignment
 This function will allow you to remove a OneNote assignment.
 
@@ -187,7 +187,7 @@ Example use case: Teacher managing assignments
   ```
   POST https://example.com/webservice/rest/server.php
   Content-Type: application/x-www-form-urlencoded
-  
+
   wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_get_teachercourses&moodlewsrestformat=json
   ```
   Response:
@@ -225,7 +225,7 @@ Example use case: Teacher managing assignments
   ```
   POST https://example.com/webservice/rest/server.php
   Content-Type: application/x-www-form-urlencoded
-  
+
   wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_get_course_users&moodlewsrestformat=json&courseid=2
   ```
   Response:
@@ -252,14 +252,14 @@ Example use case: Teacher managing assignments
   ]
   ```
 3. Get a list of assignments for PSYCH101
- 
+
   This uses the 'id' parameter for the PSYCH101 course returned in step 1 as the sole item in the 'courseids' parameter.
 
   Request:
   ```
   POST https://example.com/webservice/rest/server.php
   Content-Type: application/x-www-form-urlencoded
-  
+
   wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=mod_assign_get_assignments&moodlewsrestformat=json&courseids%5B%5D=2
   ```
   Response:
@@ -334,14 +334,14 @@ Example use case: Teacher managing assignments
   }
   ```
 4. Get existing grades for the "OneNote Test Assignment" in PSYCH101.
-  
+
   This uses the 'id' parameter from the assignment we want from the 'assignments' object returned in the above step as the sole item in the 'assignmentids' parameter.
 
   Request:
   ```
   POST https://example.com/webservice/rest/server.php
   Content-Type: application/x-www-form-urlencoded
-  
+
   wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=mod_assign_get_grades&moodlewsrestformat=json&assignmentids%5B%5D=1
   ```
   Response:
@@ -370,26 +370,26 @@ Example use case: Teacher managing assignments
 5. Create a new grade entry
 
   This request uses the assignment id found in step 3, the user id from step 2 and a the new grade to set.
-  
+
   Request:
   ```
   POST https://example.com/webservice/rest/server.php
   Content-Type: application/x-www-form-urlencoded
-  
-  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=mod_assign_save_grade&moodlewsrestformat=json&assignmentid=1&userid=175&grade=78&attemptnumber=-1&addattempt=0&workflowstate=&applytoall=1&plugindata%5Bassignfeedbackcomments_editor%5D%5Btext%5D=&plugindata%5Bassignfeedbackcomments_editor%5D%5Bformat%5D=2&plugindata%5Bfiles_filemanager%5D=0
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_update_grade&moodlewsrestformat=json&assignmentid=1&userid=175&grade=78&attemptnumber=-1&addattempt=0&workflowstate=&applytoall=1&plugindata%5Bassignfeedbackcomments_editor%5D%5Btext%5D=&plugindata%5Bassignfeedbackcomments_editor%5D%5Bformat%5D=2&plugindata%5Bfiles_filemanager%5D=0
   ```
-  
+
   This function should return null if it was successful. You can repeat step 4 to verify the grade was saved correctly.
-  
+
 6. Create a new OneNote assignment
- 
+
   This will create a new assignment in a given course, with the OneNote assignment and feedback types enabled.
 
   Request:
   ```
   POST https://example.com/webservice/rest/server.php
   Content-Type: application/x-www-form-urlencoded
-  
+
   wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_create_onenoteassignment&moodlewsrestformat=json&data%5Bname%5D=A+new+test+onenote+assignment&data%5Bcourse%5D=2
   ```
   Response:
