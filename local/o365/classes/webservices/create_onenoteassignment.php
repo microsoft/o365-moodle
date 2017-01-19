@@ -42,6 +42,7 @@ class create_onenoteassignment extends \external_api {
                 'intro' => new \external_value(PARAM_TEXT, 'intro', VALUE_DEFAULT, ''),
                 'section' => new \external_value(PARAM_INT, 'section', VALUE_DEFAULT, 0),
                 'visible' => new \external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, false),
+                'duedate' => new \external_value(PARAM_INT, 'duedate', VALUE_DEFAULT, 0),
             ])
         ]);
     }
@@ -86,6 +87,7 @@ class create_onenoteassignment extends \external_api {
             'course' => $course->id,
             'section' => $params['section'],
             'visible' => (int)$params['visible'],
+            'duedate' => (int)$params['duedate'],
             'name' => $params['name'],
             'cmidnumber' => '',
             'introeditor' => ['text' => $params['intro'], 'format' => FORMAT_HTML, 'itemid' => null],
