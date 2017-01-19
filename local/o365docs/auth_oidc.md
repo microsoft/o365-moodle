@@ -35,15 +35,15 @@ You can use the default value for this.
 
 #### Auto-Append
 
-When using the "Username/Password" login flow, this setting with automatically append a given string to an entered username. This is useful in Azure AD usernames, where a single domain name is often used for every user - i.e. [user]@contoso.onmicrosoft.com. Users would normally have to enter this entire username to successfully log in to Moodle, but in this example, entering "@contoso.onmicrosoft.com" here means users would only have to enter their unique username, i.e. "bob.smith", instead of "bob.smith@contoso.onmicrosoft.com".
+When using the "Resource Owner Password Credentials" authentication method, this setting with automatically append a given string to an entered username. This is useful in Azure AD usernames, where a single domain name is often used for every user - i.e. [user]@contoso.onmicrosoft.com. Users would normally have to enter this entire username to successfully log in to Moodle, but in this example, entering "@contoso.onmicrosoft.com" here means users would only have to enter their unique username, i.e. "bob.smith", instead of "bob.smith@contoso.onmicrosoft.com".
 
 #### Domain Hint
 
 If users have several different Azure AD accounts with different tenants (i.e. @contoso.onmicrosoft.com, @example.onmicrosoft.com), but Moodle only uses one of these tenants, you can enter that tenant in this box to have the Azure AD login screen only ever suggest accounts from that tenant.
 
-#### Login Flow
+#### Authentication methods
 
-This setting changes how users log in to Moodle using the plugin. You can redirect users to the OpenID Connect provider's login page, or have users enter their credentials directly into Moodle. See the [Login Flows](#login-flows) section below for further information.
+This setting changes how users log in to Moodle using the plugin. You can redirect users to the OpenID Connect provider's login page, or have users enter their credentials directly into Moodle. See the [Authentication methods](#authentication-methods) section below for further information.
 
 #### User Restrictions
 
@@ -76,26 +76,26 @@ This setting allows you to choose from a selection of predefined icons to appear
     2.  If you have uploaded a custom icon and want to go back to one of the stock icons, click the custom icon in the file picker and click "Delete", then "OK", then "Save Changes" at the bottom of the settings page. The selected stock icon will now appear on the Moodle login page.
 
 
-Login flows
------------
+Authentication methods
+----------------------
 
 This plugin supports two different methods for users to log in: Authorization Request and Username/Password Authentication
 
-### Authorization Request
+### Authorization Code Flow (recommended)
 
-This flow redirects the user to Office 365 to log in and are then brought back to Moodle logged in.
+This method redirects the user to Office 365 to log in and are then brought back to Moodle logged in.
 
-Using this flow:
+Using this method:
 
 1.  The user clicks the name of the identity provider (What you entered in the "Provider Name" box at the top of the settings page.) on the Moodle login page.
 2.  The user is redirected to Office 365 to log in.
 3.  Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently.
 
-### Username/Password Authentication
+### Resource Owner Password Credentials Grant
 
-This login flow works like a classic username and password, except the user uses their Office 365 account information.
+This method works like a classic username and password, except the user uses their Office 365 account information.
 
-Using this flow:
+Using this method:
 
 1.  The user enters their Office 365 username and password directly into the Moodle login form.
 2.  Their credentials are securely sent to Office 365 for verification.
