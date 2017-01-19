@@ -41,6 +41,12 @@ class read_courseusers extends \external_api {
                 'courseid' => new \external_value(PARAM_INT, 'course id'),
                 'limitfrom' => new \external_value(PARAM_INT, 'sql limit from', VALUE_DEFAULT, 0),
                 'limitnumber' => new \external_value(PARAM_INT, 'maximum number of returned users', VALUE_DEFAULT, 0),
+                'userids' => new \external_multiple_structure(
+                    new \external_value(PARAM_INT, 'user id, empty to retrieve all users'),
+                    '0 or more user ids',
+                    VALUE_DEFAULT,
+                    []
+                ),
             ]
         );
     }
@@ -50,12 +56,23 @@ class read_courseusers extends \external_api {
      *
      * @return array of courses
      */
-    public static function courseusers_read($courseid, $limitfrom = 0, $limitnumber = 0) {
+    public static function courseusers_read($courseid, $limitfrom = 0, $limitnumber = 0, $userids = []) {
         global $CFG, $USER, $DB;
         require_once($CFG->dirroot.'/user/lib.php');
 
-        $params = ['courseid' => $courseid, 'limitfrom' => $limitfrom, 'limitnumber' => $limitnumber];
-        $params = self::validate_parameters(self::courseusers_read_parameters(), $params);
+        $params = self::validate_parameters(
+            self::courseusers_read_parameters(),
+            [
+                'courseid' => $courseid,
+                'limitfrom' => $limitfrom,
+                'limitnumber' => $limitnumber,
+                'userids' => $userids,
+            ]
+        );
+
+        $userids = (!empty($params['userids']) && is_array($params['userids']))
+            ? array_flip($params['userids'])
+            : [];
 
         $withcapability = '';
         $userfields = [
@@ -126,6 +143,12 @@ class read_courseusers extends \external_api {
         $enrolledusers = $DB->get_recordset_sql($sql, $enrolledparams, $limitfrom, $limitnumber);
         $users = [];
         foreach ($enrolledusers as $user) {
+            // Check user filter.
+            if (!empty($userids) && !isset($userids[$user->id])) {
+                continue;
+            }
+
+            // Get user info.
             \context_helper::preload_from_record($user);
             if ($userdetails = user_get_user_details($user, $course, $userfields)) {
                 $users[] = $userdetails;
