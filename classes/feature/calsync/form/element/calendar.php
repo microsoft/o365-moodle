@@ -29,7 +29,7 @@ require_once("$CFG->libdir/form/advcheckbox.php");
 /**
  * Calendar form element. Provides checkbox to enable/disable calendar and options for sync behavior.
  */
-class calendar extends \MoodleQuickForm_advcheckbox {
+class calendar extends \HTML_QuickForm_advcheckbox {
     /** @var bool Whether the calendar is checked (subscribed) or not. */
     protected $checked = false;
 
@@ -38,6 +38,9 @@ class calendar extends \MoodleQuickForm_advcheckbox {
 
     /** @var string Sync behaviour: in/out/both. */
     protected $syncbehav = 'out';
+
+    /** @var string html for help button, if empty then no help will icon will be dispalyed. */
+    public $_helpbutton='';
 
     /**
      * Constructor, accessed through __call constructor workaround.
@@ -51,6 +54,7 @@ class calendar extends \MoodleQuickForm_advcheckbox {
     public function calendarconstruct($elementName = null, $elementLabel = null, $text = null, $attributes = null, $customdata = []) {
         parent::__construct($elementName, $elementLabel, $text, $attributes, null);
         $this->customdata = $customdata;
+        $this->_type = 'advcheckbox';
     }
 
     /**
@@ -95,6 +99,15 @@ class calendar extends \MoodleQuickForm_advcheckbox {
         if (!empty($value['syncbehav'])) {
             $this->syncbehav = $value['syncbehav'];
         }
+    }
+
+    /**
+     * get html for help button
+     *
+     * @return string html for help button
+     */
+    function getHelpButton(){
+        return $this->_helpbutton;
     }
 
     /**
