@@ -497,10 +497,10 @@ class main {
              LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
-             LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
+             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
                  WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ?
-              ORDER BY CONCAT(u.username, "~") '; // Sort john.smith@example.org before john.smith.
-        $params = array_merge($usernameparams, [$CFG->mnet_localhost_id, '0']);
+              ORDER BY CONCAT(u.username, \'~\')'; // Sort john.smith@example.org before john.smith.
+        $params = array_merge(['user'], $usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
         // Fetch linked AAD user accounts.
@@ -519,9 +519,9 @@ class main {
              LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
-             LEFT JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
+             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
                  WHERE tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
-        $params = array_merge($upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
+        $params = array_merge(['user'], $upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
         $linkedexistingusers = $DB->get_records_sql($sql, $params);
 
         $existingusers = array_merge($existingusers, $linkedexistingusers);
