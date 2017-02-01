@@ -27,7 +27,7 @@ $plugin->version = 2015111920;
 $plugin->requires = 2015111600;
 $plugin->component = 'block_microsoft';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.17';
+$plugin->release = 't90.0.0.17';
 $plugin->dependencies = [
     'local_o365' => 2015111923,
 ];

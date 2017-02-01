@@ -117,9 +117,9 @@ class azuresetup extends \admin_setting {
                                 var opts = {
                                     url: "'.$ajaxurl->out().'",
                                     lastresults: '.$lastresults.',
-                                    iconsuccess: "'.addslashes($OUTPUT->pix_icon('t/check', 'success', 'moodle')).'",
-                                    iconinfo: "'.addslashes($OUTPUT->pix_icon('i/warning', 'information', 'moodle')).'",
-                                    iconerror: "'.addslashes($OUTPUT->pix_icon('t/delete', 'error', 'moodle')).'",
+                                    iconsuccess: "'.str_replace("\n", '', addslashes($OUTPUT->pix_icon('t/check', 'success', 'moodle'))).'",
+                                    iconinfo: "'.str_replace("\n", '', addslashes($OUTPUT->pix_icon('i/warning', 'information', 'moodle'))).'",
+                                    iconerror: "'.str_replace("\n", '', addslashes($OUTPUT->pix_icon('t/delete', 'error', 'moodle'))).'",
 
                                     strupdate: "'.addslashes(get_string('settings_azuresetup_update', 'local_o365')).'",
                                     strchecking: "'.addslashes(get_string('settings_azuresetup_checking', 'local_o365')).'",

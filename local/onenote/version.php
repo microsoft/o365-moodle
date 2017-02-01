@@ -28,4 +28,4 @@ $plugin->version = 2015111910;
 $plugin->requires = 2015111600;
 $plugin->component = 'local_onenote';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '30.0.0.8';
+$plugin->release = 't90.0.0.8';
