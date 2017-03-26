@@ -83,9 +83,9 @@ class usersync extends \core\task\scheduled_task {
                 $usersync->sync_users($users['value']);
             } else {
                 // No users returned, we're likely past the last page of results. Erase deltalink state and exit loop.
-                mtrace('No more users to sync.');
+                mtrace('No more users to sync. Resetting for new run.');
                 set_config('task_usersync_lastskiptoken', '', 'local_o365');
-                break;
+                return true;
             }
 
             $nextlink = '';
