@@ -507,6 +507,7 @@ class main {
         list($upnsql, $upnparams) = $DB->get_in_or_equal($upns);
         list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
         $sql = 'SELECT tok.oidcusername,
+                       u.username as username,
                        u.id as muserid,
                        u.auth,
                        tok.id as tokid,
