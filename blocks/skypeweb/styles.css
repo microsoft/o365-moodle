@@ -1,10 +1,3 @@
-.wrappingdiv {
-    /* Persona Cards */
-    /* Editable Fields */
-    /* Icons */
-    /* Conversation */
-}
-
 .modal {
     display: none;
     position: fixed;
@@ -30,14 +23,14 @@
     margin: 20px auto 40px 30px;
 }
 
-.wrappingdiv .menu {
+.block_skypeweb .wrappingdiv .menu {
     position: absolute;
     top: 0;
     left: 0;
     width: 290px;
 }
 
-.wrappingdiv .menu h2 {
+.block_skypeweb .wrappingdiv .menu h2 {
     display: block;
     font-size: 1.5em;
     -webkit-margin-before: 0.83em;
@@ -47,18 +40,18 @@
     font-weight: bold;
 }
 
-.wrappingdiv .menu .nav {
+.block_skypeweb .wrappingdiv .menu .nav {
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-.wrappingdiv .menu .nav li {
+.block_skypeweb .wrappingdiv .menu .nav li {
     margin: 5px;
     background-color: white;
 }
 
-.wrappingdiv .menu .nav li a {
+.block_skypeweb .wrappingdiv .menu .nav li a {
     color: #31343d;
     padding: 0.5em;
     display: block;
@@ -66,43 +59,43 @@
     cursor: pointer;
 }
 
-.wrappingdiv .menu .idleNav {
+.block_skypeweb .wrappingdiv .menu .idleNav {
     border-left: 5px solid #b6cfd8;
 }
 
-.wrappingdiv .menu .idleNav:hover {
+.block_skypeweb .wrappingdiv .menu .idleNav:hover {
     border-left: 5px solid #7FBA00;
 }
 
-.wrappingdiv .selectedNav {
+.block_skypeweb .wrappingdiv .selectedNav {
     border-left: 5px solid #c23a2b !important;
 }
 
-.wrappingdiv .content {
+.block_skypeweb .wrappingdiv .content {
     width: 800px;
     top: 0;
     left: 290px;
     position: absolute;
 }
 
-.wrappingdiv .login-options {
+.block_skypeweb .wrappingdiv .login-options {
     margin-top: 20px;
 }
 
-.wrappingdiv .login-options div {
+.block_skypeweb .wrappingdiv .login-options div {
     margin-top: 10px;
 }
 
-.wrappingdiv .sign-in {
+.block_skypeweb .wrappingdiv .sign-in {
     display: none;
 }
 
-.wrappingdiv .token-sign-in {
+.block_skypeweb .wrappingdiv .token-sign-in {
     display: none;
     margin-top: 20px;
 }
 
-.wrappingdiv .sign-in h1, .wrappingdiv .token-sign-in h1, .wrappingdiv .cc-login-options h1 {
+.block_skypeweb .wrappingdiv .sign-in h1, .block_skypeweb .wrappingdiv .token-sign-in h1, .block_skypeweb .wrappingdiv .cc-login-options h1 {
     padding: 0;
     margin: 0;
     display: inline-block;
@@ -113,7 +106,7 @@
     color: #0099FF;
 }
 
-.wrappingdiv .cc-conversationControlsHost h1 {
+.block_skypeweb .wrappingdiv .cc-conversationControlsHost h1 {
     padding: 0;
     margin: 0;
     display: inline-block;
@@ -123,21 +116,21 @@
     color: #0099FF;
 }
 
-.wrappingdiv .sign-in div, .wrappingdiv .token-sign-in div, .wrappingdiv .sign-out, .wrappingdiv .cc-login-options div, .wrappingdiv .cc-conversationControlsHost div {
+.block_skypeweb .wrappingdiv .sign-in div, .block_skypeweb .wrappingdiv .token-sign-in div, .block_skypeweb .wrappingdiv .sign-out, .block_skypeweb .wrappingdiv .cc-login-options div, .block_skypeweb .wrappingdiv .cc-conversationControlsHost div {
     margin-top: 20px;
 }
 
-.wrappingdiv .sign-in #txt-username, .wrappingdiv .sign-in #txt-password, .wrappingdiv .token-sign-in #txt-domain, .wrappingdiv .token-sign-in #txt-token, .wrappingdiv .cc-login-options input, .wrappingdiv .cc-conversationControlsHost input {
+.block_skypeweb .wrappingdiv .sign-in #txt-username, .block_skypeweb .wrappingdiv .sign-in #txt-password, .block_skypeweb .wrappingdiv .token-sign-in #txt-domain, .block_skypeweb .wrappingdiv .token-sign-in #txt-token, .block_skypeweb .wrappingdiv .cc-login-options input, .block_skypeweb .wrappingdiv .cc-conversationControlsHost input {
     height: 26px;
 }
 
-.wrappingdiv .cc-conversationControlsHost input {
+.block_skypeweb .wrappingdiv .cc-conversationControlsHost input {
     width: 250px;
     margin-right: 20px;
     margin-left: 10px;
 }
 
-.wrappingdiv .sign-in #btn-sign-in, .wrappingdiv .sign #btn-token-sign-in, .wrappingdiv #btn-token-sign-in, .wrappingdiv #cc-btn-sign-in, .wrappingdiv #cc-btn-startConversation, .wrappingdiv #cc-btn-stopConversation {
+.block_skypeweb .wrappingdiv .sign-in #btn-sign-in, .block_skypeweb .wrappingdiv .sign #btn-token-sign-in, .block_skypeweb .wrappingdiv #btn-token-sign-in, .block_skypeweb .wrappingdiv #cc-btn-sign-in, .block_skypeweb .wrappingdiv #cc-btn-startConversation, .block_skypeweb .wrappingdiv #cc-btn-stopConversation {
     width: 200px;
     font-size: 20px;
     background-color: #109ede;
@@ -147,7 +140,7 @@
     padding: 0.4em;
 }
 
-.wrappingdiv .sign-out #btn-sign-out {
+.block_skypeweb .wrappingdiv .sign-out #btn-sign-out {
     height: 23px;
     width: 80px;
     font-size: 18px;
@@ -158,15 +151,15 @@
     padding: 5px;
 }
 
-.wrappingdiv .sign-in #btn-sign-in:hover, .wrappingdiv .sign-out #btn-sign-out:hover, .wrappingdiv #btn-token-sign-in:hover, .wrappingdiv #cc-btn-sign-in:hover, .wrappingdiv #cc-btn-startConversation:hover, .wrappingdiv #cc-btn-stopConversation:hover {
+.block_skypeweb .wrappingdiv .sign-in #btn-sign-in:hover, .block_skypeweb .wrappingdiv .sign-out #btn-sign-out:hover, .block_skypeweb .wrappingdiv #btn-token-sign-in:hover, .block_skypeweb .wrappingdiv #cc-btn-sign-in:hover, .block_skypeweb .wrappingdiv #cc-btn-startConversation:hover, .block_skypeweb .wrappingdiv #cc-btn-stopConversation:hover {
     cursor: pointer;
 }
 
-.wrappingdiv .self, .wrappingdiv .search, .wrappingdiv .contact, .wrappingdiv .groups, .wrappingdiv .noMe, .wrappingdiv .signed-in, .wrappingdiv .noconvocontrol, .wrappingdiv .useConvoControl {
+.block_skypeweb .wrappingdiv .self, .block_skypeweb .wrappingdiv .search, .block_skypeweb .wrappingdiv .contact, .block_skypeweb .wrappingdiv .groups, .block_skypeweb .wrappingdiv .noMe, .block_skypeweb .wrappingdiv .signed-in, .block_skypeweb .wrappingdiv .noconvocontrol, .block_skypeweb .wrappingdiv .useConvoControl {
     margin-top: 20px;
 }
 
-.wrappingdiv .noMe,  .wrappingdiv .stopConvo, .wrappingdiv .useConvoControl, .wrappingdiv .signed-in {
+.block_skypeweb .wrappingdiv .noMe,  .block_skypeweb .wrappingdiv .stopConvo, .block_skypeweb .wrappingdiv .useConvoControl, .block_skypeweb .wrappingdiv .signed-in {
     display: none;
 }
 
@@ -180,41 +173,39 @@
     transition: background 0.1s;
 }
 
-.wrappingdiv #sel-presence:hover,
-.wrappingdiv #sel-presence:focus {
+.block_skypeweb .wrappingdiv #sel-presence:hover,
+.block_skypeweb .wrappingdiv #sel-presence:focus {
     background: #ccc;
 }
 
-.wrappingdiv .search #txt-query {
+.block_skypeweb .wrappingdiv .search #txt-query {
     width: 200px;
     height: 27px;
     position: relative;
     top: -15px;
 }
 
-.wrappingdiv .search #btn-search:hover, .wrappingdiv .audio-video-manager #btn-search:hover {
+.block_skypeweb .wrappingdiv .search #btn-search:hover, .block_skypeweb .wrappingdiv .audio-video-manager #btn-search:hover {
     cursor: pointer;
 }
 
-.wrappingdiv .contact #btn-get-contact {
-    height: 23px;
-    width: 120px;
+.block_skypeweb .wrappingdiv .contact #btn-get-contact {
     font-size: 18px;
     background-color: #109ede;
     color: #ffffff;
     display: inline-block;
     text-align: center;
     padding: 5px;
+    vertical-align: top;
 }
 
-.wrappingdiv .contact #useruri {
-    width: 230px;
-    height: 27px;
+.block_skypeweb .wrappingdiv .contact #useruri {
     position: relative;
-    top: -3px;
+    width: 70%;
+    vertical-align: top;
 }
 
-.wrappingdiv .contact #subscribe, .wrappingdiv .contact #subscribe2, .wrappingdiv .contact #unsubscribe {
+.block_skypeweb .wrappingdiv .contact #subscribe, .block_skypeweb .wrappingdiv .contact #subscribe2, .block_skypeweb .wrappingdiv .contact #unsubscribe {
     //height: 28px;
     //width: 385px;
     width: 95%;
@@ -227,11 +218,11 @@
     display: block;
 }
 
-.wrappingdiv .contact #btn-get-contact:hover, .wrappingdiv .contact #subscribe:hover, .wrappingdiv .contact #subscribe2:hover, .wrappingdiv .contact #unsubscribe:hover {
+.block_skypeweb .wrappingdiv .contact #btn-get-contact:hover, .block_skypeweb .wrappingdiv .contact #subscribe:hover, .block_skypeweb .wrappingdiv .contact #subscribe2:hover, .block_skypeweb .wrappingdiv .contact #unsubscribe:hover {
     cursor: pointer;
 }
 
-.wrappingdiv .groups .group-name {
+.block_skypeweb .wrappingdiv .groups .group-name {
     font-weight: bold;
     margin-top: 10px;
     color: #ffffff;
@@ -241,18 +232,18 @@
     padding: 5px;
 }
 
-.wrappingdiv .groups li {
+.block_skypeweb .wrappingdiv .groups li {
     list-style: none;
     margin-top: 5px;
     padding-left: 5px;
 }
 
-.wrappingdiv .outgoing-im #to {
+.block_skypeweb .wrappingdiv .outgoing-im #to {
     width: 180px;
     height: 27px;
 }
 
-.wrappingdiv .outgoing-im #btn-start-im {
+.block_skypeweb .wrappingdiv .outgoing-im #btn-start-im {
     height: 23px;
     width: 120px;
     font-size: 18px;
@@ -263,23 +254,23 @@
     padding: 5px;
 }
 
-.wrappingdiv .outgoing-im #chatinput {
+.block_skypeweb .wrappingdiv .outgoing-im #chatinput {
     height: 30px;
     border: solid 1px #aaaaaa;
     display: none;
     margin-top: 10px;
 }
 
-.wrappingdiv .outgoing-im #btn-start-im:hover {
+.block_skypeweb .wrappingdiv .outgoing-im #btn-start-im:hover {
     cursor: pointer;
 }
 
-.wrappingdiv .device-manager .status {
+.block_skypeweb .wrappingdiv .device-manager .status {
     margin-top: 36px;
     line-height: 28px;
 }
 
-.wrappingdiv .audio-video-manager .chat-container {
+.block_skypeweb .wrappingdiv .audio-video-manager .chat-container {
     -display: none;
     width: 260px;
     background-color: #F5FAFC;
@@ -288,7 +279,7 @@
     font: 100%/1.25em "Segoe UI Local","Segoe WP","Segoe UI Web","SkypeIcon",Tahoma,"Helvetica Neue",Helvetica,"Meiryo UI",Meiryo,Arial Unicode MS,sans-serif;
 }
 
-.wrappingdiv .audio-video-manager .conversation-header {
+.block_skypeweb .wrappingdiv .audio-video-manager .conversation-header {
     height: 106px;
     border: solid 1px #cccccc;
     padding-top: 20px;
@@ -297,12 +288,12 @@
     display: none;
 }
 
-.wrappingdiv .audio-video-manager .contact-name {
+.block_skypeweb .wrappingdiv .audio-video-manager .contact-name {
     font-weight: 600;
     font-size: 18px;
 }
 
-.wrappingdiv .presence-status {
+.block_skypeweb .wrappingdiv .presence-status {
     border: 4px solid #A2C5D3;
     height: 8px;
     width: 8px;
@@ -315,33 +306,33 @@
     display: inline-block;
 }
 
-.wrappingdiv .presence-Online {
+.block_skypeweb .wrappingdiv .presence-Online {
     border-color: #7FBA00;
 }
 
-.wrappingdiv .presence-Offline {
+.block_skypeweb .wrappingdiv .presence-Offline {
     border-color: #A2C5D3;
 }
 
-.wrappingdiv .presence-Away, .wrappingdiv .presence-BeRightBack {
+.block_skypeweb .wrappingdiv .presence-Away, .block_skypeweb .wrappingdiv .presence-BeRightBack {
     border-color: #FCD116;
 }
 
-.wrappingdiv .presence-Busy, .wrappingdiv .presence-DoNotDisturb {
+.block_skypeweb .wrappingdiv .presence-Busy, .block_skypeweb .wrappingdiv .presence-DoNotDisturb {
     border-color: #E81123;
 }
 
-.wrappingdiv .audio-video-manager .location {
+.block_skypeweb .wrappingdiv .audio-video-manager .location {
     font-style: italic;
     font-size: 14px;
     font-weight: 400;
 }
 
-.wrappingdiv .sender {
+.block_skypeweb .wrappingdiv .sender {
     font-weight: bold;
 }
 
-.wrappingdiv #stop {
+.block_skypeweb .wrappingdiv #stop {
     height: 28px;
     width: 180px;
     font-size: 18px;
@@ -353,25 +344,25 @@
     margin: 16px 16px 16px 0px;
 }
 
-.wrappingdiv .conversation-con {
+.block_skypeweb .wrappingdiv .conversation-con {
     display: none;
 }
 
-.wrappingdiv .av-container {
+.block_skypeweb .wrappingdiv .av-container {
     background-color: #0170ab;
     position: relative;
     padding: 5px;
 }
 
-.wrappingdiv .av-container > * {
+.block_skypeweb .wrappingdiv .av-container > * {
     margin: 10px;
 }
 
-.wrappingdiv .av-container .right-controls {
+.block_skypeweb .wrappingdiv .av-container .right-controls {
     float: right;
 }
 
-.wrappingdiv .av-container .ctr-buttons {
+.block_skypeweb .wrappingdiv .av-container .ctr-buttons {
     display: flex;
     position: relative;
     height: auto;
@@ -380,15 +371,15 @@
     align-items: center;
 }
 
-.wrappingdiv .av-container .ctr-buttons > * {
+.block_skypeweb .wrappingdiv .av-container .ctr-buttons > * {
     margin: 8px;
 }
 
-.wrappingdiv .av-container .c-name {
+.block_skypeweb .wrappingdiv .av-container .c-name {
     color: #ffffff;
 }
 
-.wrappingdiv .av-container .render-window {
+.block_skypeweb .wrappingdiv .av-container .render-window {
     margin: 10px auto;
     position: static;
     display: block;
@@ -399,15 +390,15 @@
     background-repeat: no-repeat;
 }
 
-.wrappingdiv #av-add-p {
+.block_skypeweb .wrappingdiv #av-add-p {
     margin-bottom: 10px;
 }
 
-.wrappingdiv #txt-contact {
+.block_skypeweb .wrappingdiv #txt-contact {
     height: 25px;
 }
 
-.wrappingdiv .iconfont {
+.block_skypeweb .wrappingdiv .iconfont {
     background-color: #00AFF0;
     font-size: 2em;
     margin: 0;
@@ -425,12 +416,12 @@
     margin: 5px;
 }
 
-.wrappingdiv .iconfont:hover {
+.block_skypeweb .wrappingdiv .iconfont:hover {
     opacity: 0.6;
     cursor: pointer;
 }
 
-.wrappingdiv .iconfont:before {
+.block_skypeweb .wrappingdiv .iconfont:before {
     float: none;
     font-size: 30px;
     line-height: 0;
@@ -444,7 +435,7 @@
     color: #ffffff;
 }
 
-.wrappingdiv .iconfont:before, .wrappingdiv .iconfont:after {
+.block_skypeweb .wrappingdiv .iconfont:before, .block_skypeweb .wrappingdiv .iconfont:after {
     font-family: 'SkypeIcon';
     font-style: normal;
     font-weight: normal;
@@ -454,59 +445,59 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
-.wrappingdiv .iconfont.addp-ok:before {
+.block_skypeweb .wrappingdiv .iconfont.addp-ok:before {
     content: "\e412";
 }
 
-.wrappingdiv .iconfont.search:before {
+.block_skypeweb .wrappingdiv .iconfont.search:before {
     content: "\e406";
 }
 
-.wrappingdiv .iconfont.chat:before {
+.block_skypeweb .wrappingdiv .iconfont.chat:before {
     content: "\e300";
 }
 
-.wrappingdiv .iconfont.videoOn:before {
+.block_skypeweb .wrappingdiv .iconfont.videoOn:before {
     content: "\e102";
 }
 
-.wrappingdiv .iconfont.videoOff:before {
+.block_skypeweb .wrappingdiv .iconfont.videoOff:before {
     content: "\e103";
 }
 
-.wrappingdiv .iconfont.mic-on:before {
+.block_skypeweb .wrappingdiv .iconfont.mic-on:before {
     content: "\e106";
 }
 
-.wrappingdiv .iconfont.mic-off:before {
+.block_skypeweb .wrappingdiv .iconfont.mic-off:before {
     content: "\e107";
 }
 
-.wrappingdiv .iconfont.callStart:before {
+.block_skypeweb .wrappingdiv .iconfont.callStart:before {
     content: "\e100";
 }
 
-.wrappingdiv .iconfont.contactAdd:before {
+.block_skypeweb .wrappingdiv .iconfont.contactAdd:before {
     content: "\e201";
 }
 
-.wrappingdiv .iconfont.fullscreenOn:before {
+.block_skypeweb .wrappingdiv .iconfont.fullscreenOn:before {
     content: "\e404";
 }
 
-.wrappingdiv .iconfont.hang-up {
+.block_skypeweb .wrappingdiv .iconfont.hang-up {
     background-color: red;
 }
 
-.wrappingdiv .iconfont.hang-up:before {
+.block_skypeweb .wrappingdiv .iconfont.hang-up:before {
     content: "\e101";
 }
 
-.wrappingdiv .hide {
+.block_skypeweb .wrappingdiv .hide {
     display: none;
 }
 
-.wrappingdiv .loading {
+.block_skypeweb .wrappingdiv .loading {
     position: absolute;
     top: 116px;
     left: 0px;
@@ -517,7 +508,7 @@
     display: none;
 }
 
-.wrappingdiv .load-content {
+.block_skypeweb .wrappingdiv .load-content {
     display: inline-block;
     margin-top: 120px;
     text-align: center;
@@ -525,14 +516,14 @@
     color: #ffffff;
 }
 
-.wrappingdiv .sdk-input {
+.block_skypeweb .wrappingdiv .sdk-input {
     border: 1pt solid gray;
     padding: 2pt;
     overflow: hidden;
     white-space: nowrap;
 }
 
-.wrappingdiv .button {
+.block_skypeweb .wrappingdiv .button {
     cursor: pointer;
     padding: 2pt 5pt;
     display: inline-block;
@@ -543,19 +534,19 @@
     margin-top: 2px;
 }
 
-.wrappingdiv .button:hover {
+.block_skypeweb .wrappingdiv .button:hover {
     cursor: pointer;
 }
 
-.wrappingdiv .signinframe > div {
+.block_skypeweb .wrappingdiv .signinframe > div {
     margin-bottom: 3pt;
 }
 
-.wrappingdiv .signinframe > .button {
+.block_skypeweb .wrappingdiv .signinframe > .button {
     margin-top: 8pt;
 }
 
-.wrappingdiv .chat-box {
+.block_skypeweb .wrappingdiv .chat-box {
     width: 260px;
     height: 480px;
     position: relative;
@@ -563,20 +554,20 @@
     -display: none;
 }
 
-.wrappingdiv .chat-service .chat-box {
+.block_skypeweb .wrappingdiv .chat-service .chat-box {
     height: 520px;
     position: relative;
     margin-top: 10px;
     background-color: #F5FAFC;
 }
 
-.wrappingdiv .message-list {
+.block_skypeweb .wrappingdiv .message-list {
     height: 435px;
     overflow-y: auto;
     padding: 5px;
 }
 
-.wrappingdiv .input-message-box {
+.block_skypeweb .wrappingdiv .input-message-box {
     height: 28px;
     position: absolute;
     left: 0px;
@@ -584,7 +575,7 @@
     padding: 8px;
 }
 
-.wrappingdiv .btn-send-message {
+.block_skypeweb .wrappingdiv .btn-send-message {
     height: 23px;
     width: 45px !important;
     font-size: 16px;
@@ -595,28 +586,28 @@
     padding: 3px;
 }
 
-.wrappingdiv .btn-send-message:hover {
+.block_skypeweb .wrappingdiv .btn-send-message:hover {
     cursor: pointer;
 }
 
-.wrappingdiv #txt-imput-message {
+.block_skypeweb .wrappingdiv #txt-imput-message {
     height: 22px;
 }
 
-.wrappingdiv .video-list {
+.block_skypeweb .wrappingdiv .video-list {
     position: absolute;
     top: 260px;
     left: 390px;
 }
 
-.wrappingdiv .video-window {
+.block_skypeweb .wrappingdiv .video-window {
     width: 300px;
     height: 300px;
     background-color: green;
     margin-bottom: 8px;
 }
 
-.wrappingdiv .tag {
+.block_skypeweb .wrappingdiv .tag {
     float: left;
     width: 110px;
     text-align: right;
@@ -624,7 +615,7 @@
     margin-top: 2pt;
 }
 
-.wrappingdiv .input {
+.block_skypeweb .wrappingdiv .input {
     border: 1pt solid gray;
     padding: 2pt;
     overflow: hidden;
@@ -634,7 +625,7 @@
     margin-top: 2pt;
 }
 
-.wrappingdiv .list-div select {
+.block_skypeweb .wrappingdiv .list-div select {
     border: 1pt solid gray;
     overflow: hidden;
     white-space: nowrap;
@@ -642,7 +633,7 @@
     margin-top: 2pt;
 }
 
-.wrappingdiv button {
+.block_skypeweb .wrappingdiv button {
     background-color: #109ede;
     color: #ffffff;
     cursor: pointer;
@@ -657,70 +648,74 @@
     width: 95%;
 }
 
-.wrappingdiv .readme_button {
+.block_skypeweb .wrappingdiv .readme_button {
     cursor: pointer;
     padding: 2pt;
     display: inline-block;
 }
 
-.wrappingdiv .person-group-manager .signinframe {
+.block_skypeweb .wrappingdiv .person-group-manager .signinframe {
     padding: 5pt;
 }
 
-.wrappingdiv .signed-in .noconvocontrol {
+.block_skypeweb .wrappingdiv .signed-in .noconvocontrol {
     margin-top: 60px;
 }
 
-.wrappingdiv .conference .add-p-container {
+.block_skypeweb .wrappingdiv .conference .add-p-container {
     display: inline-block;
 }
 
-.wrappingdiv .conference #txt-contact {
+.block_skypeweb .wrappingdiv .conference #txt-contact {
     position: relative;
     top: -15px;
 }
 
-.wrappingdiv .conference #btn-add-participant {
+.block_skypeweb .wrappingdiv .conference #btn-add-participant {
     position: relative;
     top: -10px;
 }
 
-.wrappingdiv .conference #btn-add-participant:hover {
+.block_skypeweb .wrappingdiv .conference #btn-add-participant:hover {
     cursor: pointer;
 }
 
-.wrappingdiv .hide {
+.block_skypeweb .wrappingdiv .hide {
     visibility: hidden;
 }
 
-.wrappingdiv .c-add-p-container {
+.block_skypeweb .wrappingdiv .c-add-p-container {
     display: inline-block;
     position: relative;
     top: 15px;
 }
 
-.wrappingdiv #newMeetingUri {
+.block_skypeweb .wrappingdiv #newMeetingUri {
     display: inline-block;
     position: relative;
 }
 
-.wrappingdiv .persona {
+.block_skypeweb .wrappingdiv .persona {
     position: relative;
-    //width: 370px;
     width: 95%;
     border: 1px solid #ccc;
     padding: 0px;
     margin: 10px 0px;
 }
 
-.wrappingdiv .persona .note-c {
+.block_skypeweb .wrappingdiv .self .persona {
+    text-align: center;
+}
+
+.block_skypeweb .wrappingdiv .persona .note-c {
     display: block;
     margin: -1px;
     padding: 0px;
     position: relative;
+    text-align: left;
 }
 
-.wrappingdiv .persona .note-c :first-child {
+.block_skypeweb .wrappingdiv .persona .note-c :first-child {
     margin: 0px;
     padding: 4px 4px 4px 11px;
     border: 1px solid #00aff0;
@@ -729,18 +724,18 @@
     min-height: 1em;
 }
 
-.wrappingdiv .persona .note-c .editable:hover {
+.block_skypeweb .wrappingdiv .persona .note-c .editable:hover {
     background-color: #c0dce6;
     border-color: #c0dce6;
     color: black;
 }
 
-.wrappingdiv .persona .note-c .editable:focus {
+.block_skypeweb .wrappingdiv .persona .note-c .editable:focus {
     background-color: white;
     color: black;
 }
 
-.wrappingdiv .persona .note-c :first-child + .tick {
+.block_skypeweb .wrappingdiv .persona .note-c :first-child + .tick {
     display: block;
     position: absolute;
     left: 100px;
@@ -750,24 +745,24 @@
     border-right: 10px solid transparent;
 }
 
-.wrappingdiv .persona .note-c .editable:hover + .tick {
+.block_skypeweb .wrappingdiv .persona .note-c .editable:hover + .tick {
     border-top-color: #c0dce6;
 }
 
-.wrappingdiv .persona .photo-c {
+.block_skypeweb .wrappingdiv .persona .photo-c {
     display: inline-block;
-    vertical-align: top;
+    vertical-align: middle;
     position: relative;
     margin: 5px;
 }
 
-.wrappingdiv .persona .photo-c img {
+.block_skypeweb .wrappingdiv .persona .photo-c img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
 }
 
-.wrappingdiv .persona .photo-c .photo-presence {
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence {
     background: white;
     background-image: url(pix/presence/unknown.png);
     background-size: contain;
@@ -780,50 +775,50 @@
     right: 0px;
 }
 
-.wrappingdiv .persona .photo-c .photo-presence.photo-presence-Away,
-.wrappingdiv .persona .photo-c .photo-presence.photo-presence-BeRightBack {
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Away,
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence.photo-presence-BeRightBack {
     background-image:  url([[pix:block_skypeweb|away]]);
 }
 
-.wrappingdiv .persona .photo-c .photo-presence.photo-presence-Online {
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Online {
     background-image:  url([[pix:block_skypeweb|available]]);
 }
 
-.wrappingdiv .persona .photo-c .photo-presence.photo-presence-Busy {
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Busy {
     background-image:  url([[pix:block_skypeweb|busy]]);
 }
 
-.wrappingdiv .persona .photo-c .photo-presence.photo-presence-DoNotDisturb {
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence.photo-presence-DoNotDisturb {
     background-image:  url([[pix:block_skypeweb|do-not-disturb]]);
 }
 
-.wrappingdiv .persona .photo-c .photo-presence.photo-presence-Offline {
+.block_skypeweb .wrappingdiv .persona .photo-c .photo-presence.photo-presence-Offline {
     display: none;
 }
 
-.wrappingdiv .persona .detail {
+.block_skypeweb .wrappingdiv .persona .detail {
     display: inline-block;
-    vertical-align: top;
+    vertical-align: middle;
     margin: 5px;
 }
 
-.wrappingdiv .persona .detail .primary {
+.block_skypeweb .wrappingdiv .persona .detail .primary {
     font-size: 21px;
     margin: 0px;
 }
 
-.wrappingdiv .persona .detail .secondary {
+.block_skypeweb .wrappingdiv .persona .detail .secondary {
     font-size: 14px;
     margin: 0px;
 }
 
-.wrappingdiv .persona .detail .tertiary {
+.block_skypeweb .wrappingdiv .persona .detail .tertiary {
     font-size: 14px;
     color: #666;
     margin: 0px;
 }
 
-.wrappingdiv .persona .detail .editable {
+.block_skypeweb .wrappingdiv .persona .detail .editable {
     position: relative;
     left: -5px;
     top: -1px;
@@ -833,58 +828,58 @@
     transition: background 0.1s;
 }
 
-.wrappingdiv .persona .detail .editable:focus,
-.wrappingdiv .persona .detail .editable:hover {
+.block_skypeweb .wrappingdiv .persona .detail .editable:focus,
+.block_skypeweb .wrappingdiv .persona .detail .editable:hover {
     background-color: #ccc;
     border-radius: 3px;
 }
 
-.wrappingdiv .persona-small .photo-c {
-    width: 50px;
-    height: 50px;
+.block_skypeweb .wrappingdiv .persona-small .photo-c {
+    width: 30px;
+    height: 30px;
 }
 
-.wrappingdiv .persona-small .detail .primary {
-    font-size: 17px;
+.block_skypeweb .wrappingdiv .persona-small .detail .primary {
+    font-size: 0.9rem;
 }
 
-.wrappingdiv .persona-small .detail .secondary {
-    font-size: 14px;
+.block_skypeweb .wrappingdiv .persona-small .detail .secondary {
+    font-size: 0.9rem;
 }
 
-.wrappingdiv .persona-small .detail .tertiary {
-    font-size: 14px;
+.block_skypeweb .wrappingdiv .persona-small .detail .tertiary {
+    font-size: 0.9rem;
 }
 
-.wrappingdiv .persona-xl .detail {
-    width: 230px;
+.block_skypeweb .wrappingdiv .persona-xl .detail {
+    margin: 8px;
+    text-align: left;
+}
+
+.block_skypeweb .wrappingdiv .persona-xl .photo-c {
+    width: 90px;
+    height: 90px;
     margin: 8px;
 }
 
-.wrappingdiv .persona-xl .photo-c {
-    width: 100px;
-    height: 100px;
-    margin: 8px;
-}
-
-.wrappingdiv .persona-xl .photo-c .photo-presence {
+.block_skypeweb .wrappingdiv .persona-xl .photo-c .photo-presence {
     border: 3px solid white;
 }
 
-.wrappingdiv .persona-list .persona {
+.block_skypeweb .wrappingdiv .persona-list .persona {
     border: 0px;
     margin: 0px;
 }
 
-.wrappingdiv .editable {
+.block_skypeweb .wrappingdiv .editable {
     cursor: pointer;
 }
 
-.wrappingdiv div.editable:empty:not(:focus):after {
+.block_skypeweb .wrappingdiv div.editable:empty:not(:focus):after {
     content: attr(placeholder);
 }
 
-.wrappingdiv .icon {
+.block_skypeweb .wrappingdiv .icon {
     height: 30px;
     width: 30px;
     display: inline-block;
@@ -897,15 +892,15 @@
     cursor: pointer;
 }
 
-.wrappingdiv .icon:hover {
+.block_skypeweb .wrappingdiv .icon:hover {
     background-color: #777;
 }
 
-.wrappingdiv .icon-chat {
+.block_skypeweb .wrappingdiv .icon-chat {
     background-image: url(images/ico-chat.svg);
 }
 
-.wrappingdiv .icon-close {
+.block_skypeweb .wrappingdiv .icon-close {
     height: 20px;
     width: 20px;
     border-radius: 10px;
@@ -914,41 +909,41 @@
     background-size: 10px 10px;
 }
 
-.wrappingdiv .icon-close:hover {
+.block_skypeweb .wrappingdiv .icon-close:hover {
     background-color: #e6e6e6;
 }
 
-.wrappingdiv .icon-vid-cam {
+.block_skypeweb .wrappingdiv .icon-vid-cam {
     background-image: url(images/ico-vid-cam.svg);
 }
 
-.wrappingdiv .icon-vid-camno {
+.block_skypeweb .wrappingdiv .icon-vid-camno {
     background-image: url(images/ico-vid-camno.svg);
 }
 
-.wrappingdiv .icon-vid-chat {
+.block_skypeweb .wrappingdiv .icon-vid-chat {
     background-image: url(images/ico-vid-chat.svg);
 }
 
-.wrappingdiv .icon-vid-chatno {
+.block_skypeweb .wrappingdiv .icon-vid-chatno {
     background-image: url(images/ico-vid-chatno.svg);
 }
 
-.wrappingdiv .icon-vid-phone {
+.block_skypeweb .wrappingdiv .icon-vid-phone {
     background-image: url(images/ico-vid-phone.svg);
 }
 
-.wrappingdiv .icon-vid-phoneno {
+.block_skypeweb .wrappingdiv .icon-vid-phoneno {
     background-image: url(images/ico-vid-phoneno.svg);
 }
 
-.wrappingdiv #selfCam {
+.block_skypeweb .wrappingdiv #selfCam {
     position: absolute;
     top: 20%;
     left: 50%;
 }
 
-.wrappingdiv .conversation {
+.block_skypeweb .wrappingdiv .conversation {
     display: inline-block;
     vertical-align: top;
     border: 1px solid #e6e6e6;
@@ -957,108 +952,108 @@
     width: 90%;
 }
 
-.wrappingdiv .conversation .header {
+.block_skypeweb .wrappingdiv .conversation .header {
     color: #333;
     margin: 0px;
     padding: 20px;
     border-bottom: 1px solid #e6e6e6;
 }
 
-.wrappingdiv .conversation .header div {
+.block_skypeweb .wrappingdiv .conversation .header div, .block_skypeweb .wrappingdiv .conversation .header a {
     display: inline-block;
     vertical-align: middle;
 }
 
-.wrappingdiv .conversation .header h3 {
+.block_skypeweb .wrappingdiv .conversation .header h3 {
     margin: 0px 0px 5px 0px;
 }
 
-.wrappingdiv .conversation .header .chat-name,
-.wrappingdiv .conversation .header .notification {
+.block_skypeweb .wrappingdiv .conversation .header .chat-name,
+.block_skypeweb .wrappingdiv .conversation .header .notification {
     display: block;
     margin-bottom: 10px;
 }
 
-.wrappingdiv .conversation .header .editable {
+.block_skypeweb .wrappingdiv .conversation .header .editable {
     width: 200px;
     border: 1px solid #e6e6e6;
     padding: 6px;
 }
 
-.wrappingdiv .conversation .header .editable:empty {
+.block_skypeweb .wrappingdiv .conversation .header .editable:empty {
     color: #777;
 }
 
-.wrappingdiv .conversation .header .right-controls {
+.block_skypeweb .wrappingdiv .conversation .header .right-controls {
     display: block;
     float: right;
 }
 
-.wrappingdiv .conversation .controls {
+.block_skypeweb .wrappingdiv .conversation .controls {
     display: flexbox;
     align-items: center;
     justify-content: center;
 }
 
-.wrappingdiv .conversation .messages {
+.block_skypeweb .wrappingdiv .conversation .messages {
     height: 300px;
     overflow-x: hidden;
     overflow-y: scroll;
     padding: 0px 10px;
 }
 
-.wrappingdiv .conversation .messages::-webkit-scrollbar {
+.block_skypeweb .wrappingdiv .conversation .messages::-webkit-scrollbar {
     -webkit-appearance: none;
 }
 
-.wrappingdiv .conversation .messages::-webkit-scrollbar:vertical {
+.block_skypeweb .wrappingdiv .conversation .messages::-webkit-scrollbar:vertical {
     width: 11px;
 }
 
-.wrappingdiv .conversation .messages::-webkit-scrollbar:horizontal {
+.block_skypeweb .wrappingdiv .conversation .messages::-webkit-scrollbar:horizontal {
     height: 11px;
 }
 
-.wrappingdiv .conversation .messages::-webkit-scrollbar-thumb {
+.block_skypeweb .wrappingdiv .conversation .messages::-webkit-scrollbar-thumb {
     border-right: 2px solid white;
     border-bottom: 2px solid white;
     border-top: 2px solid white;
     background-color: rgba(0, 0, 0, 0.08);
 }
 
-.wrappingdiv .conversation .messages::-webkit-scrollbar-track {
+.block_skypeweb .wrappingdiv .conversation .messages::-webkit-scrollbar-track {
     background-color: #fff;
 }
 
-.wrappingdiv .conversation .messages .message {
+.block_skypeweb .wrappingdiv .conversation .messages .message {
     width: 100%;
 }
 
-.wrappingdiv .conversation .chatinput {
+.block_skypeweb .wrappingdiv .conversation .chatinput {
     font-size: 14px;
     margin: 0px;
     padding: 15px;
     border-top: 1px solid #e6e6e6;
 }
 
-.wrappingdiv .conversation .chatinput:empty {
+.block_skypeweb .wrappingdiv .conversation .chatinput:empty {
     color: #777;
 }
 
-.wrappingdiv .message {
+.block_skypeweb .wrappingdiv .message {
     margin: 15px 0px;
     width: 50%;
     position: relative;
 }
 
-.wrappingdiv .message .sender {
+.block_skypeweb .wrappingdiv .message .sender {
     padding-left: 12px;
     color: #93999D;
     font-size: 11px;
     line-height: 20px;
 }
 
-.wrappingdiv .message .text {
+.block_skypeweb .wrappingdiv .message .text {
     color: #333;
     background: #e9e9e9;
     padding: 5px 12px 7px;
@@ -1067,7 +1062,7 @@
     line-height: 20px;
 }
 
-.wrappingdiv .message .text:after {
+.block_skypeweb .wrappingdiv .message .text:after {
     content: '';
     display: block;
     position: absolute;
@@ -1080,12 +1075,12 @@
     bottom: 12px;
 }
 
-.wrappingdiv .message.fromMe .text {
+.block_skypeweb .wrappingdiv .message.fromMe .text {
     background: #92989C;
     color: #fff;
 }
 
-.wrappingdiv .message.fromMe .text:after {
+.block_skypeweb .wrappingdiv .message.fromMe .text:after {
     border-right: 0px;
     border-left: 3px solid #92989C;
     right: -3px;
