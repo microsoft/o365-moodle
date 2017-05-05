@@ -124,6 +124,16 @@ class base {
             $userinfo['email'] = $email;
         }
 
+        if (empty($userinfo['email'])) {
+            $aademail = $idtoken->claim('upn');
+            if (!empty($aademail)) {
+                $aademailvalidateresult = filter_var($aademail, FILTER_VALIDATE_EMAIL);
+                if (!empty($aademailvalidateresult)) {
+                    $userinfo['email'] = $aademail;
+                }
+            }
+        }
+
         return $userinfo;
     }
 
