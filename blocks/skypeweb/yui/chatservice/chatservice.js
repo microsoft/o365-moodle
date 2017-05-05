@@ -102,7 +102,7 @@ NS.init = function (config) {
                     });
                 });
                 chatService.start().then(function () {
-                    chatService.sendMessage('How are you?');
+                    //chatService.sendMessage('How are you?');
                 });
             }).then(null, function (error) {
                 console.error(error);

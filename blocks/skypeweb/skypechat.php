@@ -48,7 +48,8 @@ $PAGE->requires->yui_module('moodle-block_skypeweb-chatservice', 'M.block_skypew
 
 echo $OUTPUT->header();
 
-echo \html_writer::start_div('wrappingdiv');
+echo \html_writer::start_div('block_skypeweb');
+echo \html_writer::start_div('wrappingdiv block_skypeweb');
 echo \html_writer::start_div();
 echo \html_writer::start_div('chat-service');
 echo \html_writer::div(get_string('chat_message', 'block_skypeweb'), 'noMe');
@@ -102,6 +103,7 @@ echo \html_writer::end_div();
 echo \html_writer::end_div();
 echo \html_writer::end_div();
 echo \html_writer::div('', '', ['id' => 'cc-conversations']);
+echo \html_writer::end_div();
 ?>
 <script type='text/javascript'>
     // Hide header and footer.
