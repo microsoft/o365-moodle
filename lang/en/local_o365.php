@@ -51,6 +51,29 @@ $string['acp_sharepointcustom_savemessage'] = 'Your changes have been saved.';
 $string['acp_sharepointcourseselect_syncopt'] = 'Sync SharePoint Subsites';
 $string['acp_sharepointcourseselect_syncopt_btn'] = 'Sync to SharePoint Subsites';
 $string['acp_sharepointcourseselect_syncopt_inst'] = 'Because this functionality was recently upgraded, the information shown here may not be accurate. Use the button below to sync this display with existing course subsites on SharePoint. This operation may take some time.';
+$string['acp_tenants_title'] = 'Multitenancy';
+$string['acp_tenants_title_desc'] = 'This page helps you set up multitenant access to Moodle from Office 365.';
+$string['acp_tenants_add'] = 'Add New Tenant';
+$string['acp_tenants_errornotsetup'] = 'Please complete the plugin setup process before adding additional tenants.';
+$string['acp_tenants_hosttenant'] = 'Host Tenant: {$a}';
+$string['acp_tenants_intro'] = '<b>How Multitenancy Works:</b><br />Multitenancy allows multiple Office 365 tenants to access your Moodle site. <br /><br />
+    Here\'s how to get set up:
+    <ol>
+        <li>Log in to Moodle as a administrator user that is not using the OpenID Connect authentication plugin.</li>
+        <li>Disable the OpenID Connect authentication plugin in Moodle. (Use <a href="{$a}/admin/settings.php?section=manageauths">the authentication plugins administration page</a>.)</li>
+        <li>Navigate to Azure AD, and find the application you configured for Moodle.</li>
+        <li>Enable multitenancy in the Azure AD application and save changes.</li>
+        <li>For each tenant you want to enable, click "Add New Tenant" and log in with an administrator account from the tenant you want to enable.</li>
+        <li>Once you have added all the tenants you want, re-enable the OpenID Connect authentication plugin in Moodle.</li>
+        <li>You\'re done! To add additional tenants in the future, just click the "Add New Tenant" button and log in with an administrator account from that tenant.</li>
+    </ol>
+    <b>Important Note:</b> Azure AD multitenancy allows all Office 365 tenants to access your application when enabled. Adding the tenants here allows us to restrict Moodle access to tenants you configure. <b>If you remove all the tenants from this list before disabling multitenancy in Azure AD, or enable OpenID Connect authentication in Moodle with an empty list, your Moodle site will be open to all Office 365 tenants.</b>';
+$string['acp_tenants_none'] = 'You have not configured any tenants. If you have enabled multitenancy in Azure AD, you\'re Moodle site may be open to all Office 365 users.';
+$string['acp_tenants_revokeaccess'] = 'Revoke Access';
+$string['acp_tenants_tenant'] = 'Tenant';
+$string['acp_tenants_actions'] = 'Actions';
+$string['acp_tenantsadd_desc'] = 'To grant access to an additional tenant, click the button below and log in to Office 365 using an adminitrator account of the new tenant. You will be returned to the list of additional tenants where the new tenant will be listed. You will then be able to use Moodle with the new tenant.';
+$string['acp_tenantsadd_linktext'] = 'Proceed to Office 365 login page';
 $string['acp_maintenance_coursegroupscheck'] = 'Recreate deleted Office 365 groups.';
 $string['acp_maintenance_coursegroupscheck_desc'] = 'This will check for any Office 365 course groups that may have been manually deleted and recreate them.';
 $string['acp_usergroupcustom'] = 'User Group Customization';
@@ -266,6 +289,7 @@ $string['settings_fieldmap_field_preferredLanguage'] = 'Language';
 $string['settings_fieldmap_field_state'] = 'State';
 $string['settings_fieldmap_field_streetAddress'] = 'Street Address';
 $string['settings_fieldmap_update_always'] = 'On login & creation';
+$string['settings_header_connections'] = 'Connections';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_setup_desc'] = 'Follow these steps in order from top to bottom to get the plugin set up.';
 $string['settings_header_options'] = 'Options';
@@ -377,6 +401,9 @@ $string['settings_systemapiuser_change'] = 'Change user';
 $string['settings_systemapiuser_usernotset'] = 'No user set.';
 $string['settings_systemapiuser_userset'] = '{$a}';
 $string['settings_systemapiuser_setuser'] = 'Set User';
+$string['settings_tools_tenants'] = 'Tenants';
+$string['settings_tools_tenants_linktext'] = 'Configure additional tenants';
+$string['settings_tools_tenants_details'] = 'Manage access to additional Office 365 tenants.';
 $string['settings_usermatch'] = 'User Matching';
 $string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Office 365 users based on an custom uploaded data file.';
 $string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
