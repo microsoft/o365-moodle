@@ -174,8 +174,15 @@ class block_microsoft extends block_base {
         $html .= '<h5>'.$langconnected.'</h5>';
 
         $odburl = get_config('local_o365', 'odburl');
+        $o365object = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $USER->id]);
+        if (!empty($o365object) && !empty($o365object->metadata)) {
+            $metadata = json_decode($o365object->metadata, true);
+            if (!empty($metadata['odburl'])) {
+                $odburl = $metadata['odburl'];
+            }
+        }
+
         if (!empty($odburl) && !empty($this->globalconfig->settings_showmydelve)) {
-            $o365object = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $USER->id]);
             if (!empty($o365object)) {
                 $delveurl = 'https://'.$odburl.'/_layouts/15/me.aspx?u='.$o365object->objectid.'&v=work';
             }
@@ -252,7 +259,6 @@ class block_microsoft extends block_base {
                 'class' => 'servicelink block_microsoft_onedrive',
             ];
             $stronedrive = get_string('linkonedrive', 'block_microsoft');
-            $odburl = get_config('local_o365', 'odburl');
             if (!empty($odburl)) {
                 $items[] = \html_writer::link('https://'.$odburl, $stronedrive, $odbattrs);
             }
