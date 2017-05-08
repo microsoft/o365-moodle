@@ -184,7 +184,7 @@ class authcode extends \auth_oidc\loginflow\base {
 
         // Check restrictions.
         $passed = $this->checkrestrictions($idtoken);
-        if ($passed !== true) {
+        if ($passed !== true && empty($additionaldata['ignorerestrictions'])) {
             $errstr = 'User prevented from logging in due to restrictions.';
             \auth_oidc\utils::debug($errstr, 'handleauthresponse', $idtoken);
             throw new \moodle_exception('errorrestricted', 'auth_oidc');
@@ -192,7 +192,13 @@ class authcode extends \auth_oidc\loginflow\base {
 
         // This is for setting the system API user.
         if (isset($additionaldata['justauth']) && $additionaldata['justauth'] === true) {
-            $eventdata = ['other' => ['authparams' => $authparams, 'tokenparams' => $tokenparams]];
+            $eventdata = [
+                'other' => [
+                    'authparams' => $authparams,
+                    'tokenparams' => $tokenparams,
+                    'statedata' => $additionaldata,
+                ]
+            ];
             $event = \auth_oidc\event\user_authed::create($eventdata);
             $event->trigger();
             return true;

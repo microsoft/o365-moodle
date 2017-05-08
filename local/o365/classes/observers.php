@@ -45,20 +45,49 @@ class observers {
 
         $eventdata = $event->get_data();
 
-        $tokendata = [
-            'idtoken' => $eventdata['other']['tokenparams']['id_token'],
-            $eventdata['other']['tokenparams']['resource'] => [
-                'token' => $eventdata['other']['tokenparams']['access_token'],
-                'scope' => $eventdata['other']['tokenparams']['scope'],
-                'refreshtoken' => $eventdata['other']['tokenparams']['refresh_token'],
-                'resource' => $eventdata['other']['tokenparams']['resource'],
-                'expiry' => $eventdata['other']['tokenparams']['expires_on'],
-            ]
-        ];
+        $redirect = '/admin/settings.php?section=local_o365';
+        $action = (!empty($eventdata['other']['statedata']['action']))
+            ? $eventdata['other']['statedata']['action'] : null;
 
-        set_config('systemtokens', serialize($tokendata), 'local_o365');
-        set_config('sharepoint_initialized', '0', 'local_o365');
-        redirect(new \moodle_url('/admin/settings.php?section=local_o365'));
+        switch ($action) {
+            case 'setsystemapiuser':
+                $tokendata = [
+                    'idtoken' => $eventdata['other']['tokenparams']['id_token'],
+                    $eventdata['other']['tokenparams']['resource'] => [
+                        'token' => $eventdata['other']['tokenparams']['access_token'],
+                        'scope' => $eventdata['other']['tokenparams']['scope'],
+                        'refreshtoken' => $eventdata['other']['tokenparams']['refresh_token'],
+                        'resource' => $eventdata['other']['tokenparams']['resource'],
+                        'expiry' => $eventdata['other']['tokenparams']['expires_on'],
+                    ]
+                ];
+
+                set_config('systemtokens', serialize($tokendata), 'local_o365');
+                set_config('sharepoint_initialized', '0', 'local_o365');
+                redirect(new \moodle_url('/admin/settings.php?section=local_o365'));
+                break;
+
+            case 'addtenant':
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+                $httpclient = new \local_o365\httpclient();
+                $token = $eventdata['other']['tokenparams']['access_token'];
+                $expiry = $eventdata['other']['tokenparams']['expires_on'];
+                $rtoken = $eventdata['other']['tokenparams']['refresh_token'];
+                $scope = $eventdata['other']['tokenparams']['scope'];
+                $res = $eventdata['other']['tokenparams']['resource'];
+                $token = new \local_o365\oauth2\token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
+                $discres = \local_o365\rest\discovery::get_resource();
+                $disctoken = \local_o365\oauth2\token::jump_resource($token, $discres, $clientdata, $httpclient);
+                $discovery = new \local_o365\rest\discovery($disctoken, $httpclient);
+                $tenant = $discovery->get_tenant();
+                $tenant = clean_param($tenant, PARAM_TEXT);
+                \local_o365\utils::enableadditionaltenant($tenant);
+                redirect(new \moodle_url('/local/o365/acp.php?mode=tenants'));
+                break;
+
+            default:
+                return true;
+        }
     }
 
     /**
@@ -91,6 +120,16 @@ class observers {
                             return true;
                         }
 
+                        $tenant = \local_o365\utils::get_tenant_for_user($eventdata['userid']);
+                        $metadata = '';
+                        if (!empty($tenant)) {
+                            // Additional tenant - get ODB url.
+                            $odburl = \local_o365\utils::get_odburl_for_user($eventdata['userid']);
+                            if (!empty($odburl)) {
+                                $metadata = json_encode(['odburl' => $odburl]);
+                            }
+                        }
+
                         // Create userobject if it does not exist.
                         $now = time();
                         $userobjectdata = (object)[
@@ -99,6 +138,8 @@ class observers {
                             'objectid' => $userdata['objectId'],
                             'o365name' => $userdata['userPrincipalName'],
                             'moodleid' => $userid,
+                            'tenant' => $tenant,
+                            'metadata' => $metadata,
                             'timecreated' => $now,
                             'timemodified' => $now,
                         ];
@@ -230,6 +271,15 @@ class observers {
             $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
             if (empty($userobject)) {
                 // Create userobject if it does not exist.
+                $tenant = \local_o365\utils::get_tenant_for_user($userid);
+                $metadata = '';
+                if (!empty($tenant)) {
+                    // Additional tenant - get ODB url.
+                    $odburl = \local_o365\utils::get_odburl_for_user($userid);
+                    if (!empty($odburl)) {
+                        $metadata = json_encode(['odburl' => $odburl]);
+                    }
+                }
                 $now = time();
                 $userobjectdata = (object)[
                     'type' => 'user',
@@ -237,6 +287,8 @@ class observers {
                     'objectid' => $userdata['objectId'],
                     'o365name' => $userdata['userPrincipalName'],
                     'moodleid' => $userid,
+                    'tenant' => $tenant,
+                    'metadata' => $metadata,
                     'timecreated' => $now,
                     'timemodified' => $now,
                 ];
