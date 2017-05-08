@@ -42,12 +42,10 @@ if (!defined('LOCAL_O365_TAB_SETUP')) {
      * LOCAL_O365_TAB_TOOLS - Admin tools
      */
     define('LOCAL_O365_TAB_TOOLS', 2);
-
     /**
      * LOCAL_O365_TAB_SDS - School data sync
      */
     define('LOCAL_O365_TAB_SDS', 3);
-
 }
 
 if ($hassiteconfig) {
@@ -64,6 +62,12 @@ if ($hassiteconfig) {
     $tab = $tabs->get_setting();
 
     if ($tab === LOCAL_O365_TAB_TOOLS || !empty($install)) {
+
+        $label = new lang_string('settings_tools_tenants', 'local_o365');
+        $linktext = new lang_string('settings_tools_tenants_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenants']);
+        $desc = new lang_string('settings_tools_tenants_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/tenants', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_healthcheck', 'local_o365');
         $linktext = new lang_string('settings_healthcheck_linktext', 'local_o365');
