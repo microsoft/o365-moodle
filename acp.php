@@ -28,6 +28,6 @@ require_capability('moodle/site:config', \context_system::instance());
 
 $mode = optional_param('mode', null, PARAM_TEXT);
 $acptitle = get_string('acp_title', 'local_o365');
-$url = '/local/o365/acp.php';
+$url = new \moodle_url('/local/o365/acp.php', ['mode' => $mode]);
 $page = new \local_o365\page\acp($url, $acptitle);
 $page->run($mode);

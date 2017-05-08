@@ -264,7 +264,11 @@ class utils {
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\oauth2\systemtoken::instance($userid, $resource, $clientdata, $httpclient);
+        if (!empty($userid)) {
+            $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+        } else {
+            $token = \local_o365\oauth2\systemtoken::instance($userid, $resource, $clientdata, $httpclient);
+        }
         if (empty($token)) {
             throw new \Exception('No token available for system user. Please run local_o365 health check.');
         }
@@ -276,4 +280,112 @@ class utils {
         }
         return $apiclient;
     }
+
+    /**
+     * Enable an additional Office 365 tenant/
+     */
+    public static function enableadditionaltenant($tenant) {
+        $configuredtenants = get_config('local_o365', 'multitenants');
+        if (!empty($configuredtenants)) {
+            $configuredtenants = json_decode($configuredtenants, true);
+            if (!is_array($configuredtenants)) {
+                $configuredtenants = [];
+            }
+        }
+        $configuredtenants[] = $tenant;
+        $configuredtenants = array_unique($configuredtenants);
+        set_config('multitenants', json_encode($configuredtenants), 'local_o365');
+
+        // Generate restrictions.
+        $newrestrictions = [];
+        $o365config = get_config('local_o365');
+        array_unshift($configuredtenants, $o365config->aadtenant);
+        foreach ($configuredtenants as $configuredtenant) {
+            $newrestriction = '@';
+            $newrestriction .= str_replace('.', '\.', $configuredtenant);
+            $newrestriction .= '$';
+            $newrestrictions[] = $newrestriction;
+        }
+        $userrestrictions = get_config('auth_oidc', 'userrestrictions');
+        $userrestrictions = explode("\n", $userrestrictions);
+        $userrestrictions = array_merge($userrestrictions, $newrestrictions);
+        $userrestrictions = array_unique($userrestrictions);
+        $userrestrictions = implode("\n", $userrestrictions);
+        set_config('userrestrictions', $userrestrictions, 'auth_oidc');
+    }
+
+    /**
+     * Disable an additional Office 365 tenant.
+     */
+    public static function disableadditionaltenant($tenant) {
+        $o365config = get_config('local_o365');
+        if (empty($o365config->multitenants)) {
+            return true;
+        }
+        $configuredtenants = json_decode($o365config->multitenants, true);
+        if (!is_array($configuredtenants)) {
+            $configuredtenants = [];
+        }
+        $configuredtenants = array_diff($configuredtenants, [$tenant]);
+        set_config('multitenants', json_encode($configuredtenants), 'local_o365');
+
+        // Update restrictions.
+        $userrestrictions = get_config('auth_oidc', 'userrestrictions');
+        $userrestrictions = (!empty($userrestrictions)) ? explode("\n", $userrestrictions) : [];
+        $regex = '@'.str_replace('.', '\.', $tenant).'$';
+        $userrestrictions = array_diff($userrestrictions, [$regex]);
+        $userrestrictions = implode("\n", $userrestrictions);
+        set_config('userrestrictions', $userrestrictions, 'auth_oidc');
+    }
+
+    /**
+     * Get the tenant for a user.
+     *
+     * @param int $userid The ID of the user.
+     * @return string The tenant for the user. Empty string unless different from the host tenant.
+     */
+    public static function get_tenant_for_user($userid) {
+        try {
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $httpclient = new \local_o365\httpclient();
+            $discres = \local_o365\rest\discovery::get_resource();
+            $disctoken = \local_o365\oauth2\token::instance($userid, $discres, $clientdata, $httpclient);
+            if (!empty($disctoken)) {
+                $discovery = new \local_o365\rest\discovery($disctoken, $httpclient);
+                $tenant = $discovery->get_tenant();
+                $tenant = clean_param($tenant, PARAM_TEXT);
+                return ($tenant != get_config('local_o365', 'aadtenant'))
+                    ? $tenant : '';
+            }
+        } catch (\Exception $e) {
+
+        }
+        return '';
+    }
+
+    /**
+     * Get the OneDrive for Business URL for a user.
+     *
+     * @param int $userid The ID of the user.
+     * @return string The OneDrive for Business URL for the user.
+     */
+    public static function get_odburl_for_user($userid) {
+        try {
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $httpclient = new \local_o365\httpclient();
+            $discres = \local_o365\rest\discovery::get_resource();
+            $disctoken = \local_o365\oauth2\token::instance($userid, $discres, $clientdata, $httpclient);
+            if (!empty($disctoken)) {
+                $discovery = new \local_o365\rest\discovery($disctoken, $httpclient);
+                $tenant = $discovery->get_odburl();
+                $tenant = clean_param($tenant, PARAM_TEXT);
+                return ($tenant != get_config('local_o365', 'odburl'))
+                    ? $tenant : '';
+            }
+        } catch (\Exception $e) {
+
+        }
+        return '';
+    }
+
 }
