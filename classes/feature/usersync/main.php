@@ -414,6 +414,7 @@ class main {
             'objectid' => $userobjectid,
             'o365name' => $aaddata['userPrincipalName'],
             'moodleid' => $newuser->id,
+            'tenant' => '',
             'timecreated' => $now,
             'timemodified' => $now,
         ];
@@ -674,6 +675,7 @@ class main {
                             'objectid' => $userobjectid,
                             'o365name' => $user['userPrincipalName'],
                             'moodleid' => $existinguser->muserid,
+                            'tenant' => '',
                             'timecreated' => $now,
                             'timemodified' => $now,
                         ];
