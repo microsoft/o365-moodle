@@ -228,9 +228,13 @@ class main {
      */
     public static function apply_configured_fieldmap(array $aaddata, \stdClass $user, $eventtype) {
         $fieldmaps = get_config('local_o365', 'fieldmap');
-        $fieldmaps = (!empty($fieldmaps)) ? @unserialize($fieldmaps) : [];
-        if (empty($fieldmaps) || !is_array($fieldmaps)) {
-            return $user;
+        if ($fieldmaps === false) {
+            $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
+        } else {
+            $fieldmaps = @unserialize($fieldmaps);
+            if (!is_array($fieldmaps)) {
+                $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
+            }
         }
 
         foreach ($fieldmaps as $fieldmap) {
