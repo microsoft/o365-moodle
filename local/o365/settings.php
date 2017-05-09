@@ -117,15 +117,7 @@ if ($hassiteconfig) {
 
         $label = new lang_string('settings_fieldmap', 'local_o365');
         $desc = new lang_string('settings_fieldmap_details', 'local_o365');
-        $default = [
-            'givenName/firstname/always',
-            'surname/lastname/always',
-            'mail/email/always',
-            'city/city/always',
-            'country/country/always',
-            'department/department/always',
-            'preferredLanguage/lang/always',
-        ];
+        $default = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
         $settings->add(new \local_o365\adminsetting\usersyncfieldmap('local_o365/fieldmap', $label, $desc, $default));
 
         $label = new lang_string('settings_options_features', 'local_o365');
