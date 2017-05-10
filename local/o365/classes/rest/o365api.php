@@ -74,11 +74,15 @@ abstract class o365api {
      * @param int $userid The Moodle user ID to construct the API for.
      * @return \local_o365\rest\o365api An instance of the requested API class with dependencies met for a given user.
      */
-    public static function instance_for_user($userid) {
+    public static function instance_for_user($userid = null) {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $resource = static::get_resource();
-        $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+        if (!empty($userid)) {
+            $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+        } else {
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+        }
         if (!empty($token)) {
             return new static($token, $httpclient);
         } else {
