@@ -72,13 +72,44 @@ class coursegroups {
             return false;
         }
 
+        if (is_array($coursesenabled)) {
+            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($coursesenabled);
+        } else {
+            $coursesinsql = '';
+            $coursesparams = [];
+        }
+
+        // First process courses with groups that have been "soft-deleted".
+        $sql = 'SELECT crs.id as courseid,
+                       obj.*
+                  FROM {course} crs
+                  JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id';
+        $params = ['group', 'course'];
+        if (!empty($coursesinsql)) {
+            $sql .= ' WHERE crs.id '.$coursesinsql;
+            $params = array_merge($params, $coursesparams);
+        }
+        $objectrecs = $this->DB->get_recordset_sql($sql, $params);
+        foreach ($objectrecs as $objectrec) {
+            $metadata = (!empty($objectrec->metadata)) ? @json_decode($objectrec->metadata, true) : [];
+            if (is_array($metadata) && !empty($metadata['softdelete'])) {
+                $this->mtrace('Attempting to restore group for course #'.$objectrec->courseid);
+                $result = $this->restore_group($objectrec->id, $objectrec->objectid, $metadata);
+                if ($result === true) {
+                    $this->mtrace('....success!');
+                } else {
+                    $this->mtrace('....failed. Group may have been deleted for too long.');
+                }
+            }
+        }
+
+        // Process courses without an associated group.
         $sql = 'SELECT crs.*
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
                  WHERE obj.id IS NULL AND crs.id != ?';
         $params = ['group', 'course', SITEID];
-        if (is_array($coursesenabled)) {
-            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($coursesenabled);
+        if (!empty($coursesinsql)) {
             $sql .= ' AND crs.id '.$coursesinsql;
             $params = array_merge($params, $coursesparams);
         }
@@ -107,6 +138,35 @@ class coursegroups {
             $this->mtrace('Processed courses: '.$coursesprocessed);
         }
         $courses->close();
+    }
+
+    /**
+     * Restore a deleted group.
+     *
+     * @param int $objectrecid The id of the local_o365_objects record.
+     * @param string $objectid The O365 object id of the group.
+     * @param array $objectrecmetadata The metadata of the object database record.
+     */
+    public function restore_group($objectrecid, $objectid, $objectrecmetadata) {
+        global $DB;
+        $deletedgroups = $this->graphclient->list_deleted_groups();
+        if (is_array($deletedgroups) && !empty($deletedgroups['value'])) {
+            foreach ($deletedgroups['value'] as $deletedgroup) {
+                if (!empty($deletedgroup) && isset($deletedgroup['id']) && $deletedgroup['id'] == $objectid) {
+                    // Deleted group found.
+                    $this->graphclient->restore_deleted_group($objectid);
+                    $updatedobjectrec = new \stdClass;
+                    $updatedobjectrec->id = $objectrecid;
+                    unset($objectrecmetadata['softdelete']);
+                    $updatedobjectrec->metadata = json_encode($objectrecmetadata);
+                    $DB->update_record('local_o365_objects', $updatedobjectrec);
+                    return true;
+                }
+            }
+        }
+        // No deleted group found. May have expired. Delete our record.
+        $DB->delete_records('local_o365_objects', ['id' => $objectrecid]);
+        return false;
     }
 
     /**
@@ -332,6 +392,11 @@ class coursegroups {
         $notebookclient = new \local_o365\rest\notebook($notebooktoken, $httpclient);
         $groups = $this->get_all_officegroupids_classnotebook_notpresent();
 
+        if (empty($groups)) {
+            $this->mtrace('No groups waiting to have class notebook created.');
+            return true;
+        }
+
         foreach ($groups as $group) {
             $o365groupid = $group->objectid;
             $dbcoursegroupid = $group->id;
@@ -376,29 +441,41 @@ class coursegroups {
      * The function will fetch and return all the o365 groups for whom notebook is not replaced with class notebook.
      */
     public function get_all_officegroupids_classnotebook_notpresent() {
-        $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
-                FROM {local_o365_objects} obj
-                INNER JOIN {local_o365_coursegroupdata} cg ON obj.moodleid = cg.courseid
-                WHERE obj.type = ? AND obj.subtype = ?  AND cg.classnotebook = 0 AND cg.groupid = 0';
+        $notebookcourses = \local_o365\feature\usergroups\utils::get_enabled_courses_with_feature('notebook');
+        $allgroups = [];
 
+        $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
+                  FROM {local_o365_objects} obj
+            INNER JOIN {local_o365_coursegroupdata} cg ON obj.moodleid = cg.courseid
+                 WHERE obj.type = ? AND obj.subtype = ? AND cg.classnotebook = 0 AND cg.groupid = 0';
         $params = ['group', 'course'];
+        if (is_array($notebookcourses)) {
+            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($notebookcourses);
+            $sql .= ' AND cg.courseid '.$coursesinsql;
+            $params = array_merge($params, $coursesparams);
+        }
         $coursegroups = $this->DB->get_recordset_sql($sql, $params);
-
-        $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
-                FROM {local_o365_objects} obj
-                INNER JOIN {local_o365_coursegroupdata} cg ON obj.moodleid = cg.groupid
-                WHERE obj.type = ? AND obj.subtype = ?  AND cg.classnotebook = 0';
-
-        $params = ['group', 'usergroup'];
-        $incourseusergroups = $this->DB->get_recordset_sql($sql, $params);
-
-        $allgroups = array();
         foreach ($coursegroups as $group) {
             array_push($allgroups, $group);
         }
+        $coursegroups->close();
+
+        $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
+                  FROM {local_o365_objects} obj
+            INNER JOIN {local_o365_coursegroupdata} cg ON obj.moodleid = cg.groupid
+                 WHERE obj.type = ? AND obj.subtype = ? AND cg.classnotebook = 0';
+        $params = ['group', 'usergroup'];
+        if (is_array($notebookcourses)) {
+            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($notebookcourses);
+            $sql .= ' AND cg.courseid '.$coursesinsql;
+            $params = array_merge($params, $coursesparams);
+        }
+        $incourseusergroups = $this->DB->get_recordset_sql($sql, $params);
         foreach ($incourseusergroups as $group) {
             array_push($allgroups, $group);
         }
+        $incourseusergroups->close();
+
         return $allgroups;
     }
 
