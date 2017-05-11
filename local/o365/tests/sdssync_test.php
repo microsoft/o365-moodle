@@ -83,6 +83,18 @@ class local_o365_sdssync_testcase extends \advanced_testcase {
     }
 
     /**
+     * Get a mock apiclient
+     *
+     * @return \local_o365\rest\sds A mock SDS api client.
+     */
+    protected function get_mock_apiclient() {
+        $mocktoken = $this->get_mock_token();
+        $mockhttpclient = new \local_o365\tests\mockhttpclient();
+        $mockclient = new \local_o365\rest\sds($mocktoken, $mockhttpclient);
+        return $mockclient;
+    }
+
+    /**
      * Test get_or_create_school_coursecategory.
      */
     public function test_get_or_create_school_coursecategory() {
@@ -174,22 +186,198 @@ class local_o365_sdssync_testcase extends \advanced_testcase {
     }
 
     /**
+     * Test the main runsync function.
+     */
+    public function test_runsync() {
+        global $DB;
+        $mocktoken = $this->get_mock_token();
+        $mockhttpclient = new \local_o365\tests\mockhttpclient();
+        $schoolresponse = $this->get_school_response();
+        $schoolsectionsresponse = $this->get_school_sections_response();
+        $responses = [
+            json_encode($schoolresponse),
+            json_encode($schoolsectionsresponse),
+        ];
+        $mockhttpclient->set_responses($responses);
+        $mockclient = new \local_o365\rest\sds($mocktoken, $mockhttpclient);
+
+        set_config('sdsschools', 'fd1bdc2b-a59c-444e-af75-e250c546410e', 'local_o365');
+        set_config('sdsprofilesyncenabled', '0', 'local_o365');
+        set_config('sdsfieldmap', serialize([]), 'local_o365');
+        set_config('sdsenrolmentenabled', '0', 'local_o365');
+
+        \local_o365\feature\sds\task\sync::runsync($mockclient);
+
+        // Verify course is created.
+        $sectiondata = $schoolsectionsresponse['value'][0];
+        $expectedcoursename = $sectiondata[$mockclient::PREFIX.'_CourseName'];
+        $expectedcoursename .= ' '.$sectiondata[$mockclient::PREFIX.'_SectionNumber'];
+        $expectedcourseshortname = $sectiondata['displayName'];
+        $params = [
+            'fullname' => $expectedcoursename,
+            'shortname' => $expectedcourseshortname
+        ];
+        $course = $DB->get_record('course', $params);
+        $this->assertNotEmpty($course);
+
+        // Verify objects records.
+        $params = [
+            'type' => 'sdsschool',
+            'subtype' => 'coursecat',
+        ];
+        $sdscoursecats = $DB->get_records('local_o365_objects', $params);
+        $this->assertNotEmpty($sdscoursecats, 'No sdsschool/coursecat object record for the school found.');
+        $this->assertEquals(1, count($sdscoursecats), 'Only 1 sdsschool/coursecat object record for the school should exist.');
+        $objectrec = reset($sdscoursecats);
+        $this->assertEquals($schoolresponse['displayName'], $objectrec->o365name, 'o365name incorrect');
+        $this->assertEquals($schoolresponse['objectId'], $objectrec->objectid, 'Object ID should match');
+
+        $params = [
+            'type' => 'sdssection',
+            'subtype' => 'course',
+        ];
+        $sdssections = $DB->get_records('local_o365_objects', $params);
+        $this->assertNotEmpty($sdssections, 'No sdssection/course object record for the section found.');
+        $this->assertEquals(1, count($sdssections), 'Only 1 sdssection/course object record for the school should exist.');
+        $objectrec = reset($sdssections);
+        $this->assertEquals($expectedcourseshortname, $objectrec->o365name, 'o365name incorrect');
+        $this->assertEquals($sectiondata['objectId'], $objectrec->objectid, 'Object ID should match');
+
+        $params = [
+            'type' => 'group',
+            'subtype' => 'course',
+        ];
+        $groups = $DB->get_records('local_o365_objects', $params);
+        $this->assertNotEmpty($groups, 'No group/course object record for the section found.');
+        $this->assertEquals(1, count($groups), 'Only 1 group/course object record for the school should exist.');
+        $objectrec = reset($groups);
+        $this->assertEquals($expectedcourseshortname, $objectrec->o365name, 'o365name incorrect');
+        $this->assertEquals($sectiondata['objectId'], $objectrec->objectid, 'Object ID should match');
+
+        // Run sync again to make sure we don't create duplicates.
+        $mockhttpclient->set_responses($responses);
+        \local_o365\feature\sds\task\sync::runsync($mockclient);
+
+        $params = [
+            'fullname' => $expectedcoursename,
+            'shortname' => $expectedcourseshortname
+        ];
+        $course = $DB->get_record('course', $params);
+        $this->assertNotEmpty($course);
+
+        // Verify objects records.
+        $params = [
+            'type' => 'sdsschool',
+            'subtype' => 'coursecat',
+        ];
+        $sdscoursecats = $DB->get_records('local_o365_objects', $params);
+        $this->assertNotEmpty($sdscoursecats, 'No sdsschool/coursecat object record for the school found.');
+        $this->assertEquals(1, count($sdscoursecats), 'Only 1 sdsschool/coursecat object record for the school should exist.');
+        $objectrec = reset($sdscoursecats);
+        $this->assertEquals($schoolresponse['displayName'], $objectrec->o365name, 'o365name incorrect');
+        $this->assertEquals($schoolresponse['objectId'], $objectrec->objectid, 'Object ID should match');
+
+        $params = [
+            'type' => 'sdssection',
+            'subtype' => 'course',
+        ];
+        $sdssections = $DB->get_records('local_o365_objects', $params);
+        $this->assertNotEmpty($sdssections, 'No sdssection/course object record for the section found.');
+        $this->assertEquals(1, count($sdssections), 'Only 1 sdssection/course object record for the school should exist.');
+        $objectrec = reset($sdssections);
+        $this->assertEquals($expectedcourseshortname, $objectrec->o365name, 'o365name incorrect');
+        $this->assertEquals($sectiondata['objectId'], $objectrec->objectid, 'Object ID should match');
+
+        $params = [
+            'type' => 'group',
+            'subtype' => 'course',
+        ];
+        $groups = $DB->get_records('local_o365_objects', $params);
+        $this->assertNotEmpty($groups, 'No group/course object record for the section found.');
+        $this->assertEquals(1, count($groups), 'Only 1 group/course object record for the school should exist.');
+        $objectrec = reset($groups);
+        $this->assertEquals($expectedcourseshortname, $objectrec->o365name, 'o365name incorrect');
+        $this->assertEquals($sectiondata['objectId'], $objectrec->objectid, 'Object ID should match');
+    }
+
+    /**
      * Get a response for a school query.
      *
-     * @param string $objectid The school objectid.
-     * @param string $name The school name.
-     * @param string $schoolnumber The school number.
-     * @return string API response JSON.
+     * @return array Array of response data.
      */
-    protected function get_school_response($objectid, $name, $schoolnumber) {
-        $prefix = \local_o365\rest\sds::PREFIX;
-        $data = [
-            'objectType' => 'AdministrativeUnit',
-            'objectId' => $objectid,
-            'displayName' => $name,
-            'description' => '',
-            $prefix.'_SchoolNumber' => $schoolnumber,
+    protected function get_school_response() {
+        $response = [
+            "odata.metadata" => 'https://graph.windows.net/contososd.com/$metadata#directoryObjects/Microsoft.DirectoryServices.AdministrativeUnit/@Element',
+            "odata.type" => "Microsoft.DirectoryServices.AdministrativeUnit",
+            "objectType" => "AdministrativeUnit",
+            "objectId" => "fd1bdc2b-a59c-444e-af75-e250c546410e",
+            "deletionTimestamp" => null,
+            "displayName" => "Palo Alto High School",
+            "description" => null,
+            \local_o365\rest\sds::PREFIX."_SchoolPrincipalEmail" => "principal@example.com",
+            \local_o365\rest\sds::PREFIX."_SchoolPrincipalName" => "John Doe",
+            \local_o365\rest\sds::PREFIX."_HighestGrade" => "12",
+            \local_o365\rest\sds::PREFIX."_LowestGrade" => "9",
+            \local_o365\rest\sds::PREFIX."_SchoolNumber" => "425",
+            \local_o365\rest\sds::PREFIX."_SyncSource_SchoolId" => "425",
+            \local_o365\rest\sds::PREFIX."_SyncSource" => "SIS",
+            \local_o365\rest\sds::PREFIX."_Phone" => "(916) 555-1200",
+            \local_o365\rest\sds::PREFIX."_Zip" => "94003",
+            \local_o365\rest\sds::PREFIX."_State" => "CA",
+            \local_o365\rest\sds::PREFIX."_City" => "Palo Alto",
+            \local_o365\rest\sds::PREFIX."_Address" => "123 Fake St",
+            \local_o365\rest\sds::PREFIX."_AnchorId" => "School_425",
+            \local_o365\rest\sds::PREFIX."_ObjectType" => "School"
         ];
-        return json_encode($data);
+        return $response;
+    }
+
+    /**
+     * Get a mock response for a school sections query.
+     *
+     * @return array Array of response data.
+     */
+    protected function get_school_sections_response() {
+        $response = [
+            'odata.metadata' => 'https://graph.windows.net/95b43ae0-0554-4cc5-8c22-fe219dc31156/$metadata#directoryObjects/Microsoft.DirectoryServices.Group',
+            'value' => [
+                [
+                    "odata.type" => "Microsoft.DirectoryServices.Group",
+                    "objectType" => "Group",
+                    "objectId" => "d016567a-3d56-4162-aa16-1d938dbd7b8e",
+                    "deletionTimestamp" => null,
+                    "description" => null,
+                    "dirSyncEnabled" => null,
+                    "displayName" => "425_JZ100 Section 20",
+                    "lastDirSyncTime" => null,
+                    "mail" => "Section_1140@example.com",
+                    "mailNickname" => "Section_1140",
+                    "mailEnabled" => true,
+                    "onPremisesSecurityIdentifier" => null,
+                    "provisioningErrors" => [],
+                    "proxyAddresses" => [
+                      "SMTP:Section_1140@example.com"
+                    ],
+                    "securityEnabled" => true,
+                    \local_o365\rest\sds::PREFIX."_Period" => "2",
+                    \local_o365\rest\sds::PREFIX."_CourseNumber" => "JZ100",
+                    \local_o365\rest\sds::PREFIX."_CourseDescription" => "JZ100 - JAZZ ENSEMBLE 1",
+                    \local_o365\rest\sds::PREFIX."_CourseName" => "JAZZ ENSEMBLE 1",
+                    \local_o365\rest\sds::PREFIX."_SyncSource_CourseId" => "15057",
+                    \local_o365\rest\sds::PREFIX."_TermEndDate" => "12/21/2015",
+                    \local_o365\rest\sds::PREFIX."_TermStartDate" => "8/30/2015",
+                    \local_o365\rest\sds::PREFIX."_TermName" => "2015 Term 1",
+                    \local_o365\rest\sds::PREFIX."_SyncSource_TermId" => "2015",
+                    \local_o365\rest\sds::PREFIX."_SectionNumber" => "425_JZ100_20",
+                    \local_o365\rest\sds::PREFIX."_SectionName" => "425_JZ100 Section 20",
+                    \local_o365\rest\sds::PREFIX."_SyncSource_SectionId" => "1140",
+                    \local_o365\rest\sds::PREFIX."_SyncSource_SchoolId" => "425",
+                    \local_o365\rest\sds::PREFIX."_SyncSource" => "SIS",
+                    \local_o365\rest\sds::PREFIX."_AnchorId" => "Section_1140",
+                    \local_o365\rest\sds::PREFIX."_ObjectType" => "Section",
+                ]
+            ]
+        ];
+        return $response;
     }
 }
