@@ -121,13 +121,13 @@ class ajax extends base {
             }
             $token->refresh();
             try {
-                $apiclient = \local_o365\utils::get_api();
-                $result = $apiclient->add_member_to_group($groupobjectrec->objectid, $userobjectdata->objectid);
+                $apiclient = \local_o365\utils::get_api(null, true);
                 $data->valid = $apiclient->test_tenant($value);
                 $success = true;
             } catch (\Exception $e) {
                 \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
                 $data->valid = false;
+                $success = true;
             }
         } else if ($setting === 'odburl') {
             $data->valid = \local_o365\rest\onedrive::validate_resource($value, $clientdata, $httpclient);
@@ -159,11 +159,10 @@ class ajax extends base {
         $discovery = new \local_o365\rest\discovery($token, $httpclient);
 
         if ($setting === 'aadtenant') {
-            $entitykey = 'Directory@AZURE';
             try {
-                $service = $discovery->get_service($entitykey);
-                if (!empty($service) && isset($service['serviceEndpointUri'])) {
-                    $data->settingval = trim(parse_url($service['serviceEndpointUri'], PHP_URL_PATH), '/');
+                $service = $discovery->get_tenant();
+                if (!empty($service)) {
+                    $data->settingval = $service;
                     $success = true;
                 } else {
                     echo $this->error_response(get_string('settings_aadtenant_error', 'local_o365'));
@@ -175,11 +174,10 @@ class ajax extends base {
                 die();
             }
         } else if ($setting === 'odburl') {
-            $entitykey = 'MyFiles@O365_SHAREPOINT';
             try {
-                $service = $discovery->get_service($entitykey);
-                if (!empty($service) && isset($service['serviceResourceId'])) {
-                    $data->settingval = trim(parse_url($service['serviceResourceId'], PHP_URL_HOST), '/');
+                $service = $discovery->get_odburl();
+                if (!empty($service)) {
+                    $data->settingval = $service;
                     $success = true;
                 } else {
                     echo $this->error_response(get_string('settings_odburl_error', 'local_o365'));
