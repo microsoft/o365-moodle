@@ -78,4 +78,41 @@ class discovery extends \local_o365\rest\o365api {
         }
         return null;
     }
+
+    /**
+     * Get the tenant associated with the current token.
+     *
+     * @return string|null The tenant, or null if error.
+     */
+    public function get_tenant() {
+        $entitykey = 'Directory@AZURE';
+        $service = $this->get_service($entitykey);
+        if (!empty($service) && isset($service['serviceEndpointUri'])) {
+            $tenant = trim(parse_url($service['serviceEndpointUri'], PHP_URL_PATH), '/');
+            $tenant = trim($tenant);
+            if (!empty($tenant)) {
+                return $tenant;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the OneDrive for Business URL associated with the current token.
+     *
+     * @return string|null The URL, or null if error.
+     */
+    public function get_odburl() {
+        $entitykey = 'MyFiles@O365_SHAREPOINT';
+        $service = $this->get_service($entitykey);
+        if (!empty($service) && isset($service['serviceResourceId'])) {
+            $odburl = trim(parse_url($service['serviceResourceId'], PHP_URL_HOST), '/');
+            $odburl = trim($odburl);
+            if (!empty($odburl)) {
+                return $odburl;
+            }
+        }
+        return null;
+    }
+
 }
