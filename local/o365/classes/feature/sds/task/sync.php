@@ -256,6 +256,7 @@ class sync extends \core\task\scheduled_task {
             'objectid' => $sectionobjectid,
             'moodleid' => $course->id,
             'o365name' => $sectionshortname,
+            'tenant' => '',
             'timecreated' => $now,
             'timemodified' => $now,
         ];
@@ -308,6 +309,7 @@ class sync extends \core\task\scheduled_task {
             'objectid' => $schoolobjectid,
             'moodleid' => $coursecat->id,
             'o365name' => $schoolname,
+            'tenant' => '',
             'timecreated' => $now,
             'timemodified' => $now,
         ];
