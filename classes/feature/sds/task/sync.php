@@ -78,19 +78,39 @@ class sync extends \core\task\scheduled_task {
             try {
                 $schooldata = $apiclient->get_school($school);
             } catch (\Exception $e) {
-                mtrace('... Skipped SDS school '.$school.' because we received an error from the API');
+                static::mtrace('... Skipped SDS school '.$school.' because we received an error from the API');
                 continue;
             }
             $coursecat = static::get_or_create_school_coursecategory($schooldata['objectId'], $schooldata['displayName']);
-            mtrace('... Processing '.$schooldata['displayName']);
+            static::mtrace('... Processing '.$schooldata['displayName']);
             $schoolnumber = $schooldata[$apiclient::PREFIX.'_SchoolNumber'];
             $sections = $apiclient->get_school_sections($schoolnumber);
             foreach ($sections['value'] as $section) {
-                mtrace('...... Processing '.$section['displayName']);
+                static::mtrace('...... Processing '.$section['displayName']);
+                // Create the course.
                 $fullname = $section[$apiclient::PREFIX.'_CourseName'];
                 $fullname .= ' '.$section[$apiclient::PREFIX.'_SectionNumber'];
                 $course = static::get_or_create_section_course($section['objectId'], $section['displayName'], $fullname, $coursecat->id);
                 $coursecontext = \context_course::instance($course->id);
+
+                // Associate the section group with the course.
+                $groupobjectparams = [
+                    'type' => 'group',
+                    'subtype' => 'course',
+                    'objectid' => $section['objectId'],
+                    'moodleid' => $course->id,
+                ];
+                $groupobjectrec = $DB->get_record('local_o365_objects', $groupobjectparams);
+                if (empty($groupobjectrec)) {
+                    $now = time();
+                    $groupobjectrec = $groupobjectparams;
+                    $groupobjectrec['o365name'] = $section['displayName'];
+                    $groupobjectrec['timecreated'] = $now;
+                    $groupobjectrec['timemodified'] = $now;
+                    $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object)$groupobjectrec);
+                }
+
+                // Sync membership.
                 if (!empty($enrolenabled) || !empty($profilesyncenabled)) {
                     $members = $apiclient->get_section_members($section['objectId']);
                     foreach ($members['value'] as $member) {
@@ -118,9 +138,9 @@ class sync extends \core\task\scheduled_task {
                                 ];
                                 $ra = $DB->get_record('role_assignments', $roleparams, 'id');
                                 if (empty($ra)) {
-                                    mtrace('......... Assigning role for user '.$objectrec->moodleid.' in course '.$course->id);
+                                    static::mtrace('......... Assigning role for user '.$objectrec->moodleid.' in course '.$course->id);
                                     role_assign($role->id, $objectrec->moodleid, $coursecontext->id);
-                                    mtrace('......... Enrolling user '.$objectrec->moodleid.' into course '.$course->id);
+                                    static::mtrace('......... Enrolling user '.$objectrec->moodleid.' into course '.$course->id);
                                     enrol_try_internal_enrol($course->id, $objectrec->moodleid);
                                 }
                             }
@@ -130,7 +150,7 @@ class sync extends \core\task\scheduled_task {
             }
 
             if (!empty($profilesyncenabled)) {
-                mtrace('...... Running profile sync');
+                static::mtrace('...... Running profile sync');
                 $skiptoken = get_config('local_o365', 'sdsprofilesync_skiptoken');
                 $students = $apiclient->get_school_users($schooldata['objectId'], $skiptoken);
                 foreach ($students['value'] as $student) {
@@ -148,14 +168,25 @@ class sync extends \core\task\scheduled_task {
                         $query = [];
                         parse_str($nextlink['query'], $query);
                         if (isset($query['$skiptoken'])) {
-                            mtrace('...... Skip token saved for next run');
+                            static::mtrace('...... Skip token saved for next run');
                             set_config('sdsprofilesync_skiptoken', $query['$skiptoken'], 'local_o365');
                         }
                     }
                 } else {
-                    mtrace('...... Full run complete.');
+                    static::mtrace('...... Full run complete.');
                 }
             }
+        }
+    }
+
+    /**
+     * Run mtrace if not in a unit test.
+     *
+     * @param string $str The trace string.
+     */
+    public static function mtrace($str) {
+        if (!PHPUNIT_TEST) {
+            mtrace($str);
         }
     }
 
@@ -171,7 +202,7 @@ class sync extends \core\task\scheduled_task {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/user/profile/lib.php');
 
-        mtrace("......... Updating user {$muser->id}");
+        static::mtrace("......... Updating user {$muser->id}");
         foreach ($fieldmaps as $fieldmap) {
             $fieldmap = explode('/', $fieldmap);
             list($remotefield, $localfield) = $fieldmap;
