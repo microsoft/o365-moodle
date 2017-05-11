@@ -574,8 +574,34 @@ class utils {
         }
     }
 
-	/**
-	 * Change whether groups are enabled for a course.
+    /**
+     * (Soft) delete a course group.
+     *
+     * @param int $courseid The ID of the course.
+     */
+    public static function delete_course_group($courseid) {
+        global $DB;
+        $params = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+        $objectrec = $DB->get_record('local_o365_objects', $params);
+        if (!empty($objectrec)) {
+            $graphclient = \local_o365\rest\unified::instance_for_user(null);
+            $result = $graphclient->delete_group($objectrec->objectid);
+            if ($result === true) {
+                $metadata = (!empty($objectrec->metadata)) ? @json_decode($objectrec->metadata, true) : [];
+                if (empty($metadata) || !is_array($metadata)) {
+                    $metadata = [];
+                }
+                $metadata['softdelete'] = true;
+                $updatedobject = new \stdClass;
+                $updatedobject->id = $objectrec->id;
+                $updatedobject->metadata = json_encode($metadata);
+                $DB->update_record('local_o365_objects', $updatedobject);
+            }
+        }
+    }
+
+    /**
+     * Change whether groups are enabled for a course.
      *
      * @param int $courseid The ID of the course.
      * @param bool $enabled Whether to enable or disable.
@@ -592,6 +618,7 @@ class utils {
         } else {
             if (isset($usergroupconfig[$courseid])) {
                 unset($usergroupconfig[$courseid]);
+                static::delete_course_group($courseid);
             }
             static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations'], $enabled);
         }
