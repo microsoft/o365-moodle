@@ -53,7 +53,141 @@ class acp extends base {
      * Set the system API user.
      */
     public function mode_setsystemuser() {
-        redirect(new \moodle_url('/auth/oidc/index.php', ['promptaconsent' => 1, 'justauth' => 1]));
+        $auth = new \auth_oidc\loginflow\authcode;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $stateparams = [
+            'redirect' => '/admin/settings.php?section=local_o365',
+            'justauth' => true,
+            'forceflow' => 'authcode',
+            'action' => 'setsystemapiuser',
+        ];
+        $extraparams = ['prompt' => 'admin_consent'];
+        $auth->initiateauthrequest(true, $stateparams, $extraparams);
+    }
+
+    /**
+     * This function ensures setup is sufficiently complete to add additional tenants.
+     */
+    public function checktenantsetup() {
+        $config = get_config('local_o365');
+        return (!empty($config->systemtokens) && !empty($config->aadtenant)) ? true : false;
+    }
+
+    /**
+     * Configure additional tenants.
+     */
+    public function mode_tenants() {
+        global $CFG;
+        $this->standard_header();
+        echo \html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
+        echo \html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
+        echo \html_writer::empty_tag('br');
+        $config = get_config('local_o365');
+        if ($this->checktenantsetup() !== true) {
+            $errmsg = get_string('acp_tenants_errornotsetup', 'local_o365');
+            echo \html_writer::div($errmsg, 'alert alert-info');
+            $this->standard_footer();
+            return;
+        }
+
+        $multitenantdesc = get_string('acp_tenants_intro', 'local_o365', $CFG->wwwroot);
+        echo \html_writer::div($multitenantdesc, 'alert alert-info');
+
+        echo \html_writer::empty_tag('br');
+        $hosttenantstr = get_string('acp_tenants_hosttenant', 'local_o365', $config->aadtenant);
+        $hosttenanthtml = \html_writer::tag('h4', $hosttenantstr);
+        echo \html_writer::div($hosttenanthtml, '');
+        echo \html_writer::empty_tag('br');
+
+        $addtenantstr = get_string('acp_tenants_add', 'local_o365');
+        $addtenanturl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenantsadd']);
+        echo \html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
+
+        $configuredtenants = get_config('local_o365', 'multitenants');
+        if (!empty($configuredtenants)) {
+            $configuredtenants = json_decode($configuredtenants, true);
+            if (!is_array($configuredtenants)) {
+                $configuredtenants = [];
+            }
+        }
+
+        if (!empty($configuredtenants)) {
+            $table = new \html_table;
+            $table->head[] = get_string('acp_tenants_tenant', 'local_o365');
+            $table->head[] = get_string('acp_tenants_actions', 'local_o365');
+            $revokeaccessstr = get_string('acp_tenants_revokeaccess', 'local_o365');
+            foreach ($configuredtenants as $configuredtenant) {
+                $revokeurlparams = [
+                    'mode' => 'tenantsrevoke',
+                    't' => base64_encode($configuredtenant),
+                    'sesskey' => sesskey(),
+                ];
+                $revokeurl = new \moodle_url('/local/o365/acp.php', $revokeurlparams);
+                $table->data[] = [
+                    $configuredtenant,
+                    \html_writer::link($revokeurl, $revokeaccessstr),
+                ];
+            }
+            echo \html_writer::table($table);
+        } else {
+            $emptytenantstr = get_string('acp_tenants_none', 'local_o365');
+            echo \html_writer::empty_tag('br');
+            echo \html_writer::empty_tag('br');
+            echo \html_writer::div($emptytenantstr, 'alert alert-error');
+        }
+
+        $this->standard_footer();
+    }
+
+    /**
+     * Description page shown before adding an additional tenant.
+     */
+    public function mode_tenantsadd() {
+        $this->standard_header();
+        echo \html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
+        echo \html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
+        echo \html_writer::empty_tag('br');
+        if ($this->checktenantsetup() !== true) {
+            $errmsg = get_string('acp_tenants_errornotsetup', 'local_o365');
+            echo \html_writer::div($errmsg, 'alert alert-info');
+            $this->standard_footer();
+            return;
+        }
+        echo \html_writer::div(get_string('acp_tenantsadd_desc', 'local_o365'));
+        echo \html_writer::empty_tag('br');
+        $addtenantstr = get_string('acp_tenantsadd_linktext', 'local_o365');
+        $addtenanturl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenantsaddgo']);
+        echo \html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
+
+        $this->standard_footer();
+    }
+
+    /**
+     * Revoke access to a specific tenant.
+     */
+    public function mode_tenantsrevoke() {
+        require_sesskey();
+        $tenant = required_param('t', PARAM_TEXT);
+        $tenant = (string)base64_decode($tenant);
+        \local_o365\utils::disableadditionaltenant($tenant);
+        redirect(new \moodle_url('/local/o365/acp.php?mode=tenants'));
+    }
+
+    /**
+     * Perform auth request for tenant addition.
+     */
+    public function mode_tenantsaddgo() {
+        $auth = new \auth_oidc\loginflow\authcode;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $stateparams = [
+            'redirect' => '/local/o365/acp.php?mode=tenantsadd',
+            'justauth' => true,
+            'forceflow' => 'authcode',
+            'action' => 'addtenant',
+            'ignorerestrictions' => true,
+        ];
+        $extraparams = ['prompt' => 'admin_consent'];
+        $auth->initiateauthrequest(true, $stateparams, $extraparams);
     }
 
     /**
