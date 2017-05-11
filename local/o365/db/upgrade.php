@@ -549,5 +549,27 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015060136.01', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015060138.05) {
+        if ($dbman->table_exists('local_o365_objects')) {
+            $table = new xmldb_table('local_o365_objects');
+            $field = new xmldb_field('tenant', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'o365name');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint($result, '2015060138.05', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2015060138.06) {
+        if ($dbman->table_exists('local_o365_objects')) {
+            $table = new xmldb_table('local_o365_objects');
+            $field = new xmldb_field('metadata', XMLDB_TYPE_TEXT, null, null, null, null, null, 'tenant');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint($result, '2015060138.06', 'local', 'o365');
+    }
+
     return $result;
 }
