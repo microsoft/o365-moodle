@@ -120,6 +120,15 @@ class token {
     }
 
     /**
+     * Get the token's userid.
+     *
+     * @return int|null The token's userid.
+     */
+    public function get_userid() {
+        return $this->userid;
+    }
+
+    /**
      * Determine whether the token is expired.
      *
      * @return bool Whether the token is expired.
@@ -160,6 +169,57 @@ class token {
             }
         }
         return null;
+    }
+
+    /**
+     * Given a token for one resource, attempt to get a token for a different resource.
+     *
+     * @param \local_o365\oauth2\token $token The starting token.
+     * @param string $newresource The new resource.
+     * @param \local_o365\oauth2\clientdata $clientdata Client information.
+     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     */
+    public static function jump_resource(\local_o365\oauth2\token $token, $newresource, \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+        $params = [
+            'client_id' => $clientdata->get_clientid(),
+            'client_secret' => $clientdata->get_clientsecret(),
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $token->get_refreshtoken(),
+            'resource' => $newresource,
+        ];
+        $params = http_build_query($params, '', '&');
+        $tokenendpoint = $clientdata->get_tokenendpoint();
+
+        $header = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Content-Length: '.strlen($params)
+        ];
+        $httpclient->resetHeader();
+        $httpclient->setHeader($header);
+        $tokenresult = $httpclient->post($tokenendpoint, $params);
+        $tokenresult = @json_decode($tokenresult, true);
+
+        if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
+            $userid = $token->get_userid();
+            $newtoken = new \local_o365\oauth2\token($tokenresult['access_token'], $tokenresult['expires_on'],
+                $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource'], $userid, $clientdata,
+                $httpclient);
+            return $newtoken;
+        } else {
+            $errmsg = 'Problem encountered getting a new token.';
+            if (isset($tokenresult['access_token'])) {
+                $tokenresult['access_token'] = '---';
+            }
+            if (isset($tokenresult['refresh_token'])) {
+                $tokenresult['refresh_token'] = '---';
+            }
+            $debuginfo = [
+                'tokenresult' => $tokenresult,
+                'resource' => $newresource,
+            ];
+            \local_o365\utils::debug($errmsg, 'local_o365\oauth2\token::jump_resource', $debuginfo);
+        }
     }
 
     /**

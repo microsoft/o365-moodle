@@ -65,7 +65,9 @@ class unified extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        return (static::use_chinese_api() === true)
+            ? 'https://microsoftgraph.chinacloudapi.cn'
+            : 'https://graph.microsoft.com';
     }
 
     /**
