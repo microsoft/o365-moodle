@@ -109,6 +109,8 @@
         <FIELD NAME="objectid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="o365 object id"/>
         <FIELD NAME="moodleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="corresponding moodle id"/>
         <FIELD NAME="o365name" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="identifiable name in o365"/>
+        <FIELD NAME="tenant" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="O365 tenant empty is host"/>
+        <FIELD NAME="metadata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="additional metadata"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time record created"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time record modified"/>
       </FIELDS>
