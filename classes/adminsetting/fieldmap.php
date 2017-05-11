@@ -210,4 +210,20 @@ class fieldmap extends \admin_setting {
 
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', null, $query);
     }
+
+    /**
+     * Return the default mapping.
+     */
+    public static function defaultmap() {
+        $default = [
+            'givenName/firstname/always',
+            'surname/lastname/always',
+            'mail/email/always',
+            'city/city/always',
+            'country/country/always',
+            'department/department/always',
+            'preferredLanguage/lang/always',
+        ];
+        return $default;
+    }
 }
