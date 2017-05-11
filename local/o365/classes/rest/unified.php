@@ -382,8 +382,34 @@ class unified extends \local_o365\rest\o365api {
      * @return bool|string True if group successfully deleted, otherwise returned string (may contain error info, etc).
      */
     public function delete_group($objectid) {
+        if (empty($objectid)) {
+            return null;
+        }
         $response = $this->apicall('delete', '/groups/'.$objectid);
         return ($response === '') ? true : $response;
+    }
+
+    /**
+     * Get a list of recently deleted groups.
+     *
+     * @return array Array of returned information.
+     */
+    public function list_deleted_groups() {
+        $response = $this->betaapicall('get', '/directory/deleteditems/Microsoft.Graph.Group');
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+    /**
+     * Restore a recently deleted group.
+     *
+     * @param string $objectid The Object ID of the group to be restored.
+     * @return array Array of returned information.
+     */
+    public function restore_deleted_group($objectid) {
+        $response = $this->betaapicall('post', '/directory/deleteditems/'.$objectid.'/restore');
+        $response = $this->process_apicall_response($response);
+        return $response;
     }
 
     /**
