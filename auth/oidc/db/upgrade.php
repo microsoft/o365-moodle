@@ -146,6 +146,25 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint($result, '2015111904.01', 'auth', 'oidc');
     }
+    
+    if ($result && $oldversion < 2015111905) {
+        // Update old endpoints.
+        $config = get_config('auth_oidc');
+        
+        $regex_authorize = '/(https:\/\/)(login\.windows\.net)(\/.+\/oauth2\/authorize)/i';
+        
+        if (preg_match($regex_authorize, $config->authendpoint, $matches)) {
+            set_config('authendpoint', $matches[1] . 'login.microsoftonline.com' . $matches[3], 'auth_oidc');
+        }
+        
+        $regex_token = '/(https:\/\/)(login\.windows\.net)(\/.+\/oauth2\/token)/i';
+        
+        if (preg_match($regex_token, $config->tokenendpoint, $matches)) {
+            set_config('tokenendpoint', $matches[1] . 'login.microsoftonline.com' . $matches[3], 'auth_oidc');
+        }
+        
+        upgrade_plugin_savepoint($result, '2015111905', 'auth', 'oidc');
+    }
 
     if ($result && $oldversion < 2015111905.01) {
         // Update old endpoints.
