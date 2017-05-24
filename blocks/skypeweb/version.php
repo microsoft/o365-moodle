@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2016052300;
-$plugin->requires = 2016052300;
+$plugin->version = 2015051100;
+$plugin->requires = 2015051100;
 $plugin->component = 'block_skypeweb';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '3.1.0.0';
+$plugin->release = '2.9.0.0';
