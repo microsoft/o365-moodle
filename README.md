@@ -13,7 +13,7 @@ Currently the following plugins are **actively maintained and required** for new
 
 The plugins below are *not required* for new installations:
 
-- [moodle-profilefield_o365](https://github.com/Microsoft/moodle-profilefield_o365)
+- [moodle-block_skypeweb](https://github.com/Microsoft/moodle-block_skypeweb)
 - [moodle-profilefield_oidc](https://github.com/Microsoft/moodle-profilefield_oidc)
 - [moodle-local_msaccount](https://github.com/Microsoft/moodle-local_msaccount)
 - [moodle-block_onenote](https://github.com/Microsoft/moodle-block_onenote)
