@@ -26,3 +26,8 @@ defined('MOODLE_INTERNAL') || die;
 $configkey = new lang_string('settings_clientid', 'block_skypeweb');
 $configdesc = new lang_string('settings_clientid_desc', 'block_skypeweb');
 $settings->add(new admin_setting_configtext('auth_oidc/clientid', $configkey, $configdesc, '', PARAM_TEXT));
+
+$label = new lang_string('setup_title', 'block_skypeweb');
+$desc = new lang_string('setup_desc', 'block_skypeweb', (object)['wwwroot' => $CFG->wwwroot]);
+$settings->add(new admin_setting_heading('blocK_skypeweb_install', $label, $desc));
+
