@@ -40,7 +40,43 @@ $string['option_back'] = 'Be right back';
 $string['option_busy'] = 'Busy';
 $string['option_disturb'] = 'Do not disturb';
 $string['settings_clientid'] = 'Client ID';
-$string['settings_clientid_desc'] = 'Your Azure AD application client ID. This is shown in the "Configure" section of your Azure AD application.';
+$string['settings_clientid_desc'] = 'Your Azure Active Directory application client ID.';
+$string['setup_title'] = 'Setup Instructions';
+$string['setup_desc'] = 'There are a few setup steps you will need to perform to set up this plugin.
+    <br /><br />
+<b>If you are currently using the Moodle / Microsoft Office 365 integration plugins:</b>
+<ol>
+    <li>Navigate to your registered Azure Active Directory application in the <a href="https://portal.azure.com" target="_blank">Azure Portal</a>.</li>
+    <li>Click "All settings", then "Reply URLs".</li>
+    <li>Add <b>{$a->wwwroot}/blocks/skypeweb/skypeloginreturn.php</b> to the list of reply URLs for the application. Click Save.</li>
+    <li>Follow the steps in the last section to add Skype permissions.</li>
+</ol>
+<br />
+<b>If you are not using the Moodle / Microsoft Office 365 integration plugins, and do not have an Azure Active Directory application set up:</b>
+<ol>
+    <li>Navigate to the <a href="https://portal.azure.com" target="_blank">Azure Portal</a>, click on "Azure Active Directory", then "App registrations".</li>
+    <li>Click "New application registration".</li>
+    <li>Enter a name of your choosing, and use <b>{$a->wwwroot}/blocks/skypeweb/skypeloginreturn.php</b> as the "Sign-on URL".</li>
+    <li>Click "Create".</li>
+    <li>Click the name of your application in the list of registered applications.</li>
+    <li>Copy the value for "Application ID" into the "Client ID" setting above, and click "Save changes" on this page.</li>
+    <li>Follow the steps in the next section.</li>
+</ol>
+<br />
+<b>Add Skype permissions to your Azure Active Directory application:</b>
+<ol>
+    <li>Navigate to your registered Azure Active Directory application.</li>
+    <li>Click "Manifest", and change "oauth2AllowImplicitFlow" from false to true. Click Save.</li>
+    <li>Click "All settings", then "Required permissions".</li>
+    <li>Click "Add", then "Select an API".</li>
+    <li>Find "Skype for Business Online" in the list, click it, and click "Select" at the bottom of the screen.</li>
+    <li>Enable all of the permissions in the "Delegated Permissions" section, and click "Select" at the bottom of the screen.</li>
+    <li>Click the "Done" button.</li>
+</ol>
+When your Azure Active Directory application has been set up and you have entered a value for the "Client ID" setting above, you can add the Skype
+Web block to any Moodle page, just like a regular block. If you are not signed in, the block will show a sign-in button. If you are
+signed in, you will see your Skype information displayed.';
+
 $string['signinerror'] = "Can't sign in, please check the user name and password.";
 $string['skypelogin_button'] = 'Login To Skype';
 $string['skypesdkurl'] = 'https://swx.cdn.skype.com/shared/v/1.2.9/SkypeBootstrap.js';
