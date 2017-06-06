@@ -1,0 +1,337 @@
+.chat-box{
+    width: 260px;
+    height: 480px;
+    position: relative;
+    border:solid 1px #cccccc;
+    -display: none;
+    background-color: #ffffff;
+}
+
+.chat-service{
+    position: relative;
+    margin-top: 10px;
+    background-color: #ffffff;
+}
+
+/* Conversation */
+.conversation {
+    display: inline-block;
+    vertical-align: top;
+    background-color: #ffffff;
+    border: 1px solid #e6e6e6;
+    padding: 0px;
+    margin: 10px;
+    width: 343px;
+}
+
+.conversation .header {
+    color: #333;
+    margin: 0px;
+    padding: 20px;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.conversation .header div {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.conversation .header h3 {
+    margin: 0px 0px 5px 0px;
+}
+
+.conversation .header .chat-name,
+.conversation .header .notification {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.conversation .header .editable {
+    width: 200px;
+    border: 1px solid #e6e6e6;
+    padding: 6px;
+}
+
+.conversation .header .editable:empty {
+    color: #777;
+}
+
+.conversation .header .right-controls {
+    display: block;
+    float: right;
+}
+
+.conversation .controls {
+    display: flexbox;
+    align-items: center;
+    justify-content: center;
+}
+
+.conversation .messages {
+    height: 300px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+
+    padding: 0px 10px;
+}
+
+.conversation .messages::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+.conversation .messages::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+.conversation .messages::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+.conversation .messages::-webkit-scrollbar-thumb {
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    border-top: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.08);
+}
+.conversation .messages::-webkit-scrollbar-track {
+    background-color: #fff;
+}
+
+.conversation .messages .message {
+    width: 100%;
+}
+
+.conversation .chatinput {
+    font-size: 14px;
+    margin: 0px;
+    padding: 15px;
+    border-top: 1px solid #e6e6e6;
+}
+
+.conversation .chatinput:empty {
+    color: #777;
+}
+
+.header{
+    padding: 0;
+    border-bottom: 8px solid rgb(236,236,236);
+    margin-bottom: 20px;
+    color: #0099FF;
+    margin: 20px auto 40px 30px;
+}
+
+.header h1 {
+    font-size: 40px;
+    margin-bottom: 2px;
+    padding-bottom: 10px;
+    display: inline-block;
+    -webkit-margin-before: 0;
+    -webkit-margin-after: 0;
+}
+
+.iconfont {
+    background-color: #00AFF0;
+    font-size: 2em;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    direction: ltr;
+    display: inline-block;
+    outline: 0;
+    position: relative;
+    speak: none;
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+}
+
+.iconfont:hover{
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.iconfont:before {
+    float: none;
+    font-size: 30px;
+    line-height: 0;
+    margin-right: 5px;
+    position: absolute;
+    top: 16px;
+    left: 0px;
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    color: #ffffff;
+}
+
+.iconfont:before, .iconfont:after {
+    font-family: 'SkypeIcon';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.iconfont.addp-ok:before {
+    content: "\e412";
+}
+
+.iconfont.search:before {
+    content: "\e406";
+}
+
+.iconfont.chat:before {
+    content: "\e300";
+}
+
+.iconfont.videoOn:before {
+    content: "\e102";
+}
+
+.iconfont.videoOff:before {
+    content: "\e103";
+}
+
+.iconfont.mic-on:before {
+    content: "\e106";
+}
+
+.iconfont.mic-off:before {
+    content: "\e107";
+}
+
+.iconfont.callStart:before {
+    content: "\e100";
+}
+
+.iconfont.contactAdd:before {
+    content: "\e201";
+}
+
+.iconfont.fullscreenOn:before {
+    content: "\e404";
+}
+
+.iconfont.hang-up{
+    background-color: red;
+}
+
+.iconfont.hang-up:before {
+    content: "\e101";
+}
+
+.icon-chat {
+    background-image: url(images/ico-chat.svg);
+}
+
+.iconfont.chat:before {
+    content: "\e300";
+}
+
+.icon-close {
+    height: 20px;
+    width: 20px;
+    border-radius: 10px;
+
+    background-color: transparent;
+    background-image: url(images/ico-close.svg);
+    background-size: 10px 10px;
+}
+
+.icon-close:hover {
+    background-color: #e6e6e6;
+}
+
+.c-add-p-container{
+    display: inline-block;
+    position: relative;
+    top: 15px;
+}
+
+.button {
+    cursor: pointer;
+    padding: 2pt 5pt;
+    display: inline-block;
+    -height: 23px;
+    font-size: 18px;
+    background-color: rgb(16,158,222);
+    color: #ffffff;
+    margin-top: 2px;
+}
+
+.button:hover {
+    cursor: pointer;
+}
+
+.conference .add-p-container{
+    display: inline-block;
+}
+
+.c-add-p-container{
+    display: inline-block;
+    position: relative;
+    top: 15px;
+}
+
+.av-container {
+    background-color: #0170ab;
+    position: relative;
+    padding: 5px;
+}
+
+.av-container > * {
+    margin: 10px;
+}
+
+.av-container .right-controls {
+    float: right;
+}
+
+.av-container .ctr-buttons {
+    display: flex;
+    position: relative;
+    height: auto;
+    margin: 8px;
+
+    justify-content: center;
+    align-items: center;
+}
+
+.av-container .ctr-buttons > * {
+    margin: 8px;
+}
+
+.av-container .c-name {
+    color: #ffffff;
+}
+
+.av-container .render-window {
+    margin: 10px auto;
+
+    position: static;
+    display: block;
+    width: 260px;
+    height: 260px;
+
+    background-image: url([[pix:block_skype_web|default]]);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.input {
+    border: 1pt solid gray;
+    padding: 2pt;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.input {
+    border: 1pt solid gray;
+    padding: 2pt;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 252pt;
+    height: 15pt;
+    margin-top: 2pt;
+}

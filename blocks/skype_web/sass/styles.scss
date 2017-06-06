@@ -1,0 +1,234 @@
+/* Conversation */
+.chat-box {
+  width: 260px;
+  height: 480px;
+  position: relative;
+  border: solid 1px #cccccc;
+  -display: none;
+}
+.chat-service {
+  .chat-box {
+    height: 520px;
+    position: relative;
+    margin-top: 10px;
+    background-color: #F5FAFC;
+  }
+}
+.conversation {
+  display: inline-block;
+  vertical-align: top;
+  border: 1px solid #e6e6e6;
+  padding: 0px;
+  margin: 10px;
+  width: 370px;
+  .header {
+    color: #333;
+    margin: 0px;
+    padding: 20px;
+    border-bottom: 1px solid #e6e6e6;
+    div {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    h3 {
+      margin: 0px 0px 5px 0px;
+    }
+    .chat-name {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .notification {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .editable {
+      width: 200px;
+      border: 1px solid #e6e6e6;
+      padding: 6px;
+      &:empty {
+        color: #777;
+      }
+    }
+    .right-controls {
+      display: block;
+      float: right;
+    }
+  }
+  .controls {
+    display: flexbox;
+    align-items: center;
+    justify-content: center;
+  }
+  .messages {
+    height: 300px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding: 0px 10px;
+    &::-webkit-scrollbar {
+      -webkit-appearance: none;
+      &:vertical {
+        width: 11px;
+      }
+      &:horizontal {
+        height: 11px;
+      }
+    }
+    &::-webkit-scrollbar-thumb {
+      border-right: 2px solid white;
+      border-bottom: 2px solid white;
+      border-top: 2px solid white;
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+    &::-webkit-scrollbar-track {
+      background-color: #fff;
+    }
+    .message {
+      width: 100%;
+    }
+  }
+  .chatinput {
+    font-size: 14px;
+    margin: 0px;
+    padding: 15px;
+    border-top: 1px solid #e6e6e6;
+    &:empty {
+      color: #777;
+    }
+  }
+}
+.header {
+  padding: 0;
+  border-bottom: 8px solid rgb(236,236,236);
+  margin-bottom: 20px;
+  color: #0099FF;
+  margin: 20px auto 40px 30px;
+  h1 {
+    font-size: 40px;
+    margin-bottom: 2px;
+    padding-bottom: 10px;
+    display: inline-block;
+    -webkit-margin-before: 0;
+    -webkit-margin-after: 0;
+  }
+}
+.iconfont {
+  background-color: #00AFF0;
+  font-size: 2em;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  -webkit-border-radius: 50%;
+  border-radius: 50%;
+  direction: ltr;
+  display: inline-block;
+  outline: 0;
+  position: relative;
+  speak: none;
+  width: 30px;
+  height: 30px;
+  margin: 5px;
+  &:hover {
+    opacity: 0.6;
+    cursor: pointer;
+  }
+  &:before {
+    float: none;
+    font-size: 30px;
+    line-height: 0;
+    margin-right: 5px;
+    position: absolute;
+    top: 16px;
+    left: 0px;
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    color: #ffffff;
+    font-family: 'SkypeIcon';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  &:after {
+    font-family: 'SkypeIcon';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+.iconfont.addp-ok {
+  &:before {
+    content: "\e412";
+  }
+}
+.iconfont.search {
+  &:before {
+    content: "\e406";
+  }
+}
+.iconfont.chat {
+  &:before {
+    content: "\e300";
+    content: "\e300";
+  }
+}
+.iconfont.videoOn {
+  &:before {
+    content: "\e102";
+  }
+}
+.iconfont.videoOff {
+  &:before {
+    content: "\e103";
+  }
+}
+.iconfont.mic-on {
+  &:before {
+    content: "\e106";
+  }
+}
+.iconfont.mic-off {
+  &:before {
+    content: "\e107";
+  }
+}
+.iconfont.callStart {
+  &:before {
+    content: "\e100";
+  }
+}
+.iconfont.contactAdd {
+  &:before {
+    content: "\e201";
+  }
+}
+.iconfont.fullscreenOn {
+  &:before {
+    content: "\e404";
+  }
+}
+.iconfont.hang-up {
+  background-color: red;
+  &:before {
+    content: "\e101";
+  }
+}
+.icon-chat {
+  background-image: url(images/ico-chat.svg);
+}
+.icon-close {
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  background-color: transparent;
+  background-image: url(images/ico-close.svg);
+  background-size: 10px 10px;
+  &:hover {
+    background-color: #e6e6e6;
+  }
+}
