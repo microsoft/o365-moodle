@@ -275,8 +275,14 @@ class ajax extends base {
         $data->legacyapi = $legacyapi;
 
         // Check reply url.
+        $replyurls = [];
         if (isset($appinfo['value'][0]['replyUrls'])) {
-            $redirecturls = (array)$appinfo['value'][0]['replyUrls'];
+            $replyurls = $appinfo['value'][0]['replyUrls'];
+        } else if (isset($appinfo['value'][0]['web']) && isset($appinfo['value'][0]['web']['redirectUrls'])) {
+            $replyurls = $appinfo['value'][0]['web']['redirectUrls'];
+        }
+        if (!empty($replyurls)) {
+            $redirecturls = (array)$replyurls;
             $appdata->replyurl = new \stdClass;
             $appdata->replyurl->correct = false;
             $appdata->replyurl->detected = implode(', ', $redirecturls);
