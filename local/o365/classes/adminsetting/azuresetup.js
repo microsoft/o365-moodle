@@ -278,8 +278,6 @@ $(function() {
                                     errstr += opts.strcorrectval+' <b>'+results.data.appdata.signonurl.intended+'</b>';
                                     appdata.append(main.rendererrorbox(errstr));
                                 }
-                            } else {
-                                appdata.append(main.renderinfobox(opts.strappdatasignonurlgeneralerror));
                             }
                         } else {
                             appdata.append(main.rendererrorbox(results.data.appdata.error));
