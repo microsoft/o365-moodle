@@ -989,7 +989,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_application_info() {
         $oidcconfig = get_config('auth_oidc');
-        $endpoint = '/applications/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
+        $endpoint = '/applications/?$filter=id%20eq%20\''.$oidcconfig->clientid.'\'';
         $response = $this->betatenantapicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
@@ -1035,10 +1035,16 @@ class unified extends \local_o365\rest\o365api {
         if (empty($svc) || !is_array($svc)) {
             return null;
         }
-        if (!isset($svc['value']) || !isset($svc['value'][0]) || !isset($svc['value'][0]['oauth2Permissions'])) {
+        if (!isset($svc['value']) || !isset($svc['value'][0])) {
             return null;
         }
-        return $svc['value'][0]['oauth2Permissions'];
+        if (isset($svc['value'][0]['oauth2Permissions'])) {
+            return $svc['value'][0]['oauth2Permissions'];
+        } else if (isset($svc['value'][0]['publishedPermissionScopes'])) {
+            return $svc['value'][0]['publishedPermissionScopes'];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -1375,7 +1381,13 @@ class unified extends \local_o365\rest\o365api {
                             'appDisplayName' => $appdata['appDisplayName'],
                             'perms' => []
                         ];
-                        foreach ($appdata['oauth2Permissions'] as $i => $permdata) {
+                        $permissionslist = [];
+                        if (isset($appdata['oauth2Permissions'])) {
+                            $permissionslist = $appdata['oauth2Permissions'];
+                        } else if (isset($appdata['publishedPermissionScopes'])) {
+                            $permissionslist = $appdata['publishedPermissionScopes'];
+                        }
+                        foreach ($permissionslist as $i => $permdata) {
                             $transformed[$appdata['appId']]['perms'][$permdata['value']] = $permdata;
                         }
                     }
