@@ -314,10 +314,10 @@ class main {
                     \local_o365\utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
                     return false;
                 }
-                $members = $apiclient->get_group_members($group['id']);
-                foreach ($members['value'] as $member) {
-                    if ($member['id'] === $aaddata['id']) {
-                        return true;
+                $usersgroups = $apiclient->get_users_groups($group['id'],$aaddata['id']);
+                foreach($usersgroups['value'] as $usergroup) {
+                    if ($group['id'] === $usergroup) {
+                       return true;
                     }
                 }
                 return false;
