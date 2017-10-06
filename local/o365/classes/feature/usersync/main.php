@@ -288,12 +288,14 @@ class main {
             return true;
         }
         if (empty($restriction['remotefield']) || empty($restriction['value'])) {
+            mtrace('restriction removefield/value empty');
             return true;
         }
 
         if ($restriction['remotefield'] === 'o365group') {
             if (\local_o365\rest\unified::is_configured() !== true) {
                 \local_o365\utils::debug('graph api is not configured.', 'check_usercreationrestriction');
+                mtrace('graph api is not configured.');
                 return false;
             }
 
@@ -305,24 +307,38 @@ class main {
                 $apiclient = new \local_o365\rest\unified($token, $httpclient);
             } catch (\Exception $e) {
                 \local_o365\utils::debug('Could not construct graph api', 'check_usercreationrestriction', $e);
+                mtrace('could not construct graph api.');
                 return false;
             }
 
             try {
+                mtrace("restriction['value'] = ". $restriction['value']);
                 $group = $apiclient->get_group_by_name($restriction['value']);
                 if (empty($group) || !isset($group['id'])) {
                     \local_o365\utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
+                    mtrace('could no ground group(1).');
                     return false;
                 }
+
+                $groups = $apiclient->get_users_groups($aaddata['id']);
+                foreach ($groups['value'] as $g) {
+                    if ($g['id'] === $group['id']) {
+                        return true;
+                    }
+                }
+
                 $members = $apiclient->get_group_members($group['id']);
                 foreach ($members['value'] as $member) {
                     if ($member['id'] === $aaddata['id']) {
                         return true;
                     }
                 }
+                
+                mtrace('could not find group (2)');
                 return false;
             } catch (\Exception $e) {
                 \local_o365\utils::debug('Could not find group (2)', 'check_usercreationrestriction', $e);
+                mtrace('could not find group (2)');
                 return false;
             }
         } else {
@@ -333,7 +349,7 @@ class main {
             if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
                 return true;
             }
-        }
+        }        
         return false;
     }
 
