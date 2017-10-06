@@ -412,9 +412,9 @@ class unified extends \local_o365\rest\o365api {
         return $response;
     }
 
-        /**
-    * Gets a list of groups for a member
-    *
+     /**
+     * Gets a list of groups for a user
+     *
      * @param string $userobjectid The object ID of the user.
      * @return array Array of returned groups.
      */
