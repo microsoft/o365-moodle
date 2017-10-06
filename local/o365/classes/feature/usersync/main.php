@@ -349,7 +349,7 @@ class main {
             if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
                 return true;
             }
-        }        
+        }
         return false;
     }
 
