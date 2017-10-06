@@ -412,6 +412,19 @@ class unified extends \local_o365\rest\o365api {
         return $response;
     }
 
+     /**
+     * Gets a list of groups for a user
+     *
+     * @param string $userobjectid The object ID of the user.
+     * @return array Array of returned groups.
+     */
+     public function get_users_groups($userobjectid) {
+        $endpoint = '/users/'.$userobjectid.'/memberOf';
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
     /**
      * Get a list of group members.
      *
