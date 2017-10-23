@@ -83,7 +83,7 @@ class sync extends \core\task\scheduled_task {
             }
             $coursecat = static::get_or_create_school_coursecategory($schooldata['objectId'], $schooldata['displayName']);
             static::mtrace('... Processing '.$schooldata['displayName']);
-            $schoolnumber = $schooldata[$apiclient::PREFIX.'_SchoolNumber'];
+            $schoolnumber = $schooldata[$apiclient::PREFIX.'_SyncSource_SchoolId'];
             $sections = $apiclient->get_school_sections($schoolnumber);
             foreach ($sections['value'] as $section) {
                 static::mtrace('...... Processing '.$section['displayName']);
