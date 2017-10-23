@@ -115,7 +115,7 @@ class sds extends \local_o365\rest\o365api {
         $reqparams = [
             'objectId' => null,
             'displayName' => null,
-            static::PREFIX.'_SchoolNumber' => null,
+            static::PREFIX.'_SyncSource_SchoolId' => null,
         ];
         return $this->process_apicall_response($response, $reqparams);
     }
@@ -123,15 +123,14 @@ class sds extends \local_o365\rest\o365api {
     /**
      * Get sections within a school.
      *
-     * @param string $schoolnumber The "school number" SDS param of the school to get sections for.
-     *                              NOTE: This is NOT the object id.
+     * @param string $schoolid The "school id" SDS param of the school to get sections for.
      * @return array API call response.
      */
-    public function get_school_sections($schoolnumber) {
+    public function get_school_sections($schoolid) {
         $endpoint = '/groups';
         $endpoint .= '?api-version=1.5';
         $endpoint .= '&$filter='.static::PREFIX.'_ObjectType%20eq%20\'Section\'';
-        $endpoint .= '%20and%20'.static::PREFIX.'_SyncSource_SchoolId%20eq%20\''.$schoolnumber.'\'';
+        $endpoint .= '%20and%20'.static::PREFIX.'_SyncSource_SchoolId%20eq%20\''.$schoolid.'\'';
         $response = $this->apicall('get', $endpoint);
         return $this->process_apicall_response($response, ['value' => null]);
     }
