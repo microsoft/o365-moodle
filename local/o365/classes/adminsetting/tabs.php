@@ -107,17 +107,19 @@ class tabs extends \admin_setting {
      *
      * @param int    $id   The tab id
      * @param string $name The tab name
+     * @param \moodle_url|null $url An explicit URL to use instead of settings page section.
      * @uses $CFG
      */
-    public function addtab($id, $name) {
+    public function addtab($id, $name, \moodle_url $url = null) {
         global $CFG;
 
-        $urlparams = [
-            'section' => $this->section,
-            $this->get_full_name() => $id
-        ];
-        $url = new \moodle_url('/admin/settings.php', $urlparams);
-
+        if (empty($url)) {
+            $urlparams = [
+                'section' => $this->section,
+                $this->get_full_name() => $id
+            ];
+            $url = new \moodle_url('/admin/settings.php', $urlparams);
+        }
         $tab = new \tabobject($id, $url, $name);
 
         $this->tabs[0][] = $tab;

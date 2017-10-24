@@ -43,6 +43,10 @@ if (!defined('LOCAL_O365_TAB_SETUP')) {
      */
     define('LOCAL_O365_TAB_TOOLS', 2);
     /**
+     * LOCAL_O365_TAB_CONNECTIONS - User connections table.
+     */
+    define('LOCAL_O365_TAB_CONNECTIONS', 4);
+    /**
      * LOCAL_O365_TAB_SDS - School data sync
      */
     define('LOCAL_O365_TAB_SDS', 3);
@@ -74,6 +78,12 @@ if ($hassiteconfig) {
         $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
         $desc = new lang_string('settings_healthcheck_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\toollink('local_o365/healthcheck', $label, $linktext, $linkurl, $desc));
+
+        $label = new lang_string('settings_userconnections', 'local_o365');
+        $linktext = new lang_string('settings_userconnections_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
+        $desc = new lang_string('settings_userconnections_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/userconnections', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_usermatch', 'local_o365');
         $linktext = new lang_string('settings_usermatch', 'local_o365');
@@ -169,6 +179,9 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_photoexpire', 'local_o365');
         $desc = new lang_string('settings_photoexpire_details', 'local_o365');
         $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
+
+    }
+    if ($tab == LOCAL_O365_TAB_CONNECTIONS || !empty($install)) {
 
     }
     if ($tab == LOCAL_O365_TAB_SETUP || !empty($install)) {
