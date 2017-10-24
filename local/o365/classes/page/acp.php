@@ -1207,4 +1207,187 @@ class acp extends base {
 
         $this->standard_footer();
     }
+
+    /**
+     * User connection management.
+     */
+    public function mode_userconnections() {
+        global $DB, $OUTPUT, $PAGE, $SESSION, $CFG;
+        $url = new \moodle_url($this->url, ['mode' => 'userconnections']);
+        $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
+        $PAGE->requires->jquery();
+        $this->standard_header();
+
+        $searchurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
+        $filterfields = [
+            'o365username' => 0,
+            'realname' => 0,
+            'username' => 0,
+            'idnumber' => 1,
+            'firstname' => 1,
+            'lastname' => 1,
+            'email' => 1,
+        ];
+        $ufiltering = new \local_o365\feature\userconnections\filtering($filterfields, $searchurl);
+        list($extrasql, $params) = $ufiltering->get_sql_filter();
+        list($o365usernamesql, $o365usernameparams) = $ufiltering->get_filter_o365username();
+
+        $ufiltering->display_add();
+        $ufiltering->display_active();
+
+        $table = new \local_o365\feature\userconnections\table('local_o365_userconnections');
+        $table->define_baseurl($CFG->wwwroot.'/local/o365/acp.php?mode=userconnections');
+        $table->set_where($extrasql, $params);
+        $table->set_having($o365usernamesql, $o365usernameparams);
+        $table->out(25, true);
+
+        $this->standard_footer();
+    }
+
+    /**
+     * Manual match action from the userconnections tool.
+     */
+    public function mode_userconnections_manualmatch() {
+        global $DB;
+        $userid = required_param('userid', PARAM_INT);
+        confirm_sesskey();
+
+        // Perform prechecks.
+        $userrec = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+
+        // Check whether Moodle user is already o365 connected.
+        if (\local_o365\utils::is_o365_connected($userid)) {
+            throw new \moodle_exception('acp_userconnections_manualmatch_error_muserconnected', 'local_o365');
+        }
+
+        // Check existing matches for Moodle user.
+        $existingmatchforuser = $DB->get_record('local_o365_connections', ['muserid' => $userid]);
+        if (!empty($existingmatchforuser)) {
+            throw new \moodle_exception('acp_userconnections_manualmatch_error_musermatched', 'local_o365');
+        }
+
+        $urlparams = ['mode' => 'userconnections_manualmatch', 'userid' => $userid];
+        $redirect = new \moodle_url('/local/o365/acp.php', $urlparams);
+        $customdata = ['userid' => $userid];
+        $mform = new \local_o365\form\manualusermatch($redirect, $customdata);
+        if ($fromform = $mform->get_data()) {
+            $o365username = trim($fromform->o365username);
+
+            // Check existing matches for Office user.
+            $existingmatchforo365user = $DB->get_record('local_o365_connections', ['aadupn' => $o365username]);
+            if (!empty($existingmatchforo365user)) {
+                throw new \moodle_exception('acp_userconnections_manualmatch_error_o365usermatched', 'local_o365');
+            }
+
+            // Check existing tokens for Office 365 user (indicates o365 user is already connected to someone).
+            $existingtokenforo365user = $DB->get_record('auth_oidc_token', ['oidcusername' => $o365username]);
+            if (!empty($existingtokenforo365user)) {
+                throw new \moodle_exception('acp_userconnections_manualmatch_error_o365userconnected', 'local_o365');
+            }
+
+            // Check if a o365 user object record already exists.
+            $params = [
+                'moodleid' => $userid,
+                'type' => 'user',
+            ];
+            $existingobject = $DB->get_record('local_o365_objects', $params);
+            if (!empty($existingobject) && $existingobject->o365name === $o365username) {
+                throw new \moodle_exception('acp_userconnections_manualmatch_error_muserconnected2', 'local_o365');
+            }
+
+            $uselogin = (!empty($fromform->uselogin)) ? 1 : 0;
+            $matchrec = (object)[
+                'muserid' => $userid,
+                'aadupn' => $o365username,
+                'uselogin' => $uselogin,
+            ];
+            $DB->insert_record('local_o365_connections', $matchrec);
+            redirect(new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']));
+            die();
+        }
+
+        global $OUTPUT, $PAGE, $SESSION, $CFG;
+        $url = new \moodle_url($this->url, ['mode' => 'userconnections']);
+        $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
+        $PAGE->requires->jquery();
+        $this->standard_header();
+        $mform->display();
+        $this->standard_footer();
+    }
+
+    /**
+     * Unmatch action from the userconnections tool.
+     */
+    public function mode_userconnections_unmatch() {
+        global $DB;
+        $userid = required_param('userid', PARAM_INT);
+        confirm_sesskey();
+        $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+        $confirmed = optional_param('confirmed', 0, PARAM_INT);
+        if (!empty($confirmed)) {
+            $DB->delete_records('local_o365_connections', ['muserid' => $userid]);
+            redirect(new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']));
+            die();
+        } else {
+            global $DB, $OUTPUT, $PAGE, $SESSION, $CFG;
+            $url = new \moodle_url($this->url, ['mode' => 'userconnections']);
+            $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
+            $PAGE->requires->jquery();
+            $this->standard_header();
+            $message = get_string('acp_userconnections_table_unmatch_confirmmsg', 'local_o365', $user->username);
+            $message .= '<br /><br />';
+            $urlparams = [
+                'mode' => 'userconnections_unmatch',
+                'userid' => $userid,
+                'confirmed' => 1,
+                'sesskey' => sesskey(),
+            ];
+            $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+            $label = get_string('acp_userconnections_table_unmatch', 'local_o365');
+            $message .= \html_writer::link($url, $label);
+            echo \html_writer::tag('div', $message, ['class' => 'alert alert-info', 'style' => 'text-align:center']);
+            $this->standard_footer();
+        }
+    }
+
+    /**
+     * Disconnect action from the userconnections tool.
+     */
+    public function mode_userconnections_disconnect() {
+        global $CFG, $DB;
+        require_once($CFG->dirroot.'/auth/oidc/auth.php');
+        $userid = required_param('userid', PARAM_INT);
+        confirm_sesskey();
+        $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+        $confirmed = optional_param('confirmed', 0, PARAM_INT);
+        if (!empty($confirmed)) {
+            $auth = new \auth_plugin_oidc;
+            $auth->set_httpclient(new \auth_oidc\httpclient());
+            $redirect = new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
+            $selfurlparams = ['mode' => 'userconnections_disconnect', 'userid' => $userid, 'confirmed' => 1];
+            $selfurl = new \moodle_url('/local/o365/acp.php', $selfurlparams);
+            $justtokens = ($user->auth == 'oidc') ? false : true;
+            $auth->disconnect($justtokens, false, $redirect, $selfurl, $userid);
+            die();
+        } else {
+            global $DB, $OUTPUT, $PAGE, $SESSION, $CFG;
+            $url = new \moodle_url($this->url, ['mode' => 'userconnections']);
+            $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
+            $PAGE->requires->jquery();
+            $this->standard_header();
+            $message = get_string('acp_userconnections_table_disconnect_confirmmsg', 'local_o365', $user->username);
+            $message .= '<br /><br />';
+            $urlparams = [
+                'mode' => 'userconnections_disconnect',
+                'userid' => $userid,
+                'confirmed' => 1,
+                'sesskey' => sesskey(),
+            ];
+            $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+            $label = get_string('acp_userconnections_table_disconnect', 'local_o365');
+            $message .= \html_writer::link($url, $label);
+            echo \html_writer::tag('div', $message, ['class' => 'alert alert-info', 'style' => 'text-align:center']);
+            $this->standard_footer();
+        }
+    }
 }
