@@ -115,8 +115,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @param \moodle_url $selfurl The page this is accessed from. Used for some redirects.
      */
     public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
-                               \moodle_url $selfurl = null) {
-        return $this->loginflow->disconnect($justremovetokens, $donotremovetokens, $redirect, $selfurl);
+                               \moodle_url $selfurl = null, $userid = null) {
+        return $this->loginflow->disconnect($justremovetokens, $donotremovetokens, $redirect, $selfurl, $userid);
     }
 
     /**
