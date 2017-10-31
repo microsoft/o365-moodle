@@ -315,9 +315,9 @@ class main {
                     return false;
                 }
                 $usersgroups = $apiclient->get_users_groups($group['id'],$aaddata['id']);
-                foreach($usersgroups['value'] as $usergroup) {
+                foreach ($usersgroups['value'] as $usergroup) {
                     if ($group['id'] === $usergroup) {
-                       return true;
+                        return true;
                     }
                 }
                 return false;
