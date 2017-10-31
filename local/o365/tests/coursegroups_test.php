@@ -158,7 +158,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
             $this->getDataGenerator()->create_user(),
         ];
 
-        // Create tokens for users.
+        // Create tokens and objects for users.
         foreach ($users as $i => $user) {
             $tokenrec = [
                 'oidcuniqid' => 'user'.$i,
@@ -172,6 +172,16 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                 'expiry' => time() + 9999,
             ];
             $tokenrec['id'] = $DB->insert_record('auth_oidc_token', (object)$tokenrec);
+
+            $objectrec = [
+                'moodleid' => $user->id,
+                'type' => 'user',
+                'objectid' => 'user'.$i,
+                'o365name' => 'testuser'.$i.'@example.onmicrosoft.com',
+                'timecreated' => time(),
+                'timemodified' => time(),
+            ];
+            $objectrec['id'] = $DB->insert_record('local_o365_objects', (object)$objectrec);
         }
 
         // Enrol users.
