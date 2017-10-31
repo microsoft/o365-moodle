@@ -328,6 +328,7 @@ class sync extends \core\task\scheduled_task {
 
         ];
         if (strlen($data['name']) > 255) {
+            static::mtrace('School name was over 255 chrs when creating course category, truncating to 255.');
             $data['name'] = substr($data['name'], 0, 255);
         }
 
@@ -355,11 +356,20 @@ class sync extends \core\task\scheduled_task {
      */
     public static function get_apiclient() {
         $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $resource = \local_o365\rest\sds::get_resource();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
-        $apiclient = new \local_o365\rest\sds($token, $httpclient);
-        return $apiclient;
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        if (!empty($clientdata)) {
+            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            if (!empty($token)) {
+                $apiclient = new \local_o365\rest\sds($token, $httpclient);
+                return $apiclient;
+            } else {
+                static::mtrace('Could not construct system API user token for SDS sync task.');
+            }
+        } else {
+            static::mtrace('Could not construct client data object for SDS sync task.');
+        }
+        return null;
     }
 
     /**
@@ -369,10 +379,16 @@ class sync extends \core\task\scheduled_task {
         global $DB, $CFG;
 
         if (\local_o365\utils::is_configured() !== true) {
+            static::mtrace('local_o365 reported unconfigured during SDS sync task, so exiting.');
             return false;
         }
 
         $apiclient = static::get_apiclient();
-        return static::runsync($apiclient);
+        if (!empty($apiclient)) {
+            return static::runsync($apiclient);
+        } else {
+            static::mtrace('Could not construct API client for SDS task, so exiting.');
+            return false;
+        }
     }
 }
