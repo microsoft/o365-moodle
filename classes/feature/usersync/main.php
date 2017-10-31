@@ -536,14 +536,42 @@ class main {
             $this->mtrace(' ');
             $this->mtrace('Syncing user '.$user['upnlower']);
 
-            if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
-                $this->mtrace('User is deleted. Skipping.');
-                continue;
-            }
             if (\local_o365\rest\unified::is_configured()) {
                 $userobjectid = $user['id'];
             } else {
                 $userobjectid = $user['objectId'];
+            }
+
+            if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
+                if (isset($aadsync['delete'])) {
+                    // Check for synced user.
+                    $sql = 'SELECT u.*
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
+                              JOIN {auth_oidc_token} tok ON tok.username = u.username
+                             WHERE u.username = ?
+                                   AND u.mnethostid = ?
+                                   AND u.deleted = ?
+                                   AND u.suspended = ?
+                                   AND u.auth = ?';
+                    $params = [
+                        trim(\core_text::strtolower($user['userPrincipalName'])),
+                        $CFG->mnet_localhost_id,
+                        '0',
+                        '0',
+                        'oidc',
+                        time()
+                    ];
+                    $synceduser = $DB->get_record_sql($sql, $params);
+                    if (!empty($synceduser)) {
+                        $synceduser->suspended = 1;
+                        user_update_user($synceduser, false);
+                        $this->mtrace($synceduser->username.' was marked deleted in Azure.');
+                    }
+                } else {
+                    $this->mtrace('User is deleted. Skipping.');
+                }
+                continue;
             }
 
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
