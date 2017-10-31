@@ -183,7 +183,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      */
     protected function do_role_delete($requiredcap, $sharepoint) {
         global $DB;
-        $users = $DB->get_records('users', null, '', 'id, username');
+        $users = $DB->get_records('user', null, '', 'id, username');
         $courses = $DB->get_records('course', null, '', 'id');
         return $this->sync_spsiteaccess_for_courses_and_users($courses, $users, $requiredcap, $sharepoint);
     }
