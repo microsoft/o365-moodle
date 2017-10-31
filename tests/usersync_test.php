@@ -250,9 +250,9 @@ class local_o365_usersync_testcase extends \advanced_testcase {
     }
 
     /**
-     * Test sync_users method.
+     * Test sync_users method when creating users.
      */
-    public function test_sync_users() {
+    public function test_sync_users_create() {
         global $CFG, $DB;
         set_config('aadsync', 'create', 'local_o365');
         for ($i = 1; $i <= 2; $i++) {
@@ -312,4 +312,90 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $this->assertEquals('Dev', $createduser->department);
         $this->assertEquals('en', $createduser->lang);
     }
+
+    /**
+     * Test aadsync delete option.
+     */
+    public function test_sync_users_delete() {
+        global $CFG, $DB;
+        set_config('aadsync', 'create,delete', 'local_o365');
+
+        $response = [
+            'value' => [
+                $this->get_aad_userinfo(1),
+                $this->get_aad_userinfo(2),
+                $this->get_aad_userinfo(3),
+            ],
+        ];
+
+        $clientdata = $this->get_mock_clientdata();
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_response(json_encode($response));
+
+        $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
+        $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
+        $users = $apiclient->get_users();
+        $usersync->sync_users($users['value']);
+
+        // Simulate user logins - create mock tokens.
+        for ($i =1; $i <=3; $i++) {
+            $token = [
+                'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,
+                'authcode' => '000',
+                'username' => 'testuser'.$i.'@example.onmicrosoft.com',
+                'scope' => 'test',
+                'resource' => \local_o365\rest\azuread::get_resource(),
+                'token' => '000',
+                'expiry' => '9999999999',
+                'refreshtoken' => 'fsdfsdf'.$i,
+                'idtoken' => 'sdfsdfsdf'.$i,
+            ];
+            $DB->insert_record('auth_oidc_token', (object)$token);
+        }
+
+        // Change user 2 to look like a non-synced user to test synced user checking.
+        $user2 = $DB->get_record('user', ['username' => $response['value'][1]['userPrincipalName']]);
+        $user2->username = 'sometestuser';
+        $DB->update_record('user', $user2);
+
+        // Now run sync again with deleted users marked.
+        $response = [
+            'value' => [
+                $this->get_aad_userinfo(1),
+                $this->get_aad_userinfo(2),
+                $this->get_aad_userinfo(3),
+            ],
+        ];
+        $response['value'][0]['aad.isDeleted'] = '1';
+        $response['value'][1]['aad.isDeleted'] = '1';
+        $clientdata = $this->get_mock_clientdata();
+        $httpclient = new \local_o365\tests\mockhttpclient();
+        $httpclient->set_response(json_encode($response));
+        $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
+        $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
+        $users = $apiclient->get_users();
+        $usersync->sync_users($users['value']);
+
+        // User 1 should be suspended.
+        $params = ['username' => $response['value'][0]['userPrincipalName']];
+        $user = $DB->get_record('user', $params);
+        $this->assertNotEmpty($user);
+        $this->assertEquals(1, $user->suspended);
+
+        // User 2 should not be suspended (not a synced user).
+        $params = ['username' => $response['value'][1]['userPrincipalName']];
+        $user = $DB->get_record('user', $params);
+        $this->assertEmpty($user);
+        $params = ['username' => 'sometestuser'];
+        $user = $DB->get_record('user', $params);
+        $this->assertNotEmpty($user);
+        $this->assertEquals(0, $user->suspended);
+
+        // User 3 should not be suspended (not marked deleted in AAD).
+        $params = ['username' => $response['value'][2]['userPrincipalName']];
+        $user = $DB->get_record('user', $params);
+        $this->assertNotEmpty($user);
+        $this->assertEquals(0, $user->suspended);
+    }
+
 }
