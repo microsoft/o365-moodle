@@ -113,6 +113,34 @@ $string['acp_usermatch_upload_err_nofile'] = 'No file was received to add to the
 $string['acp_usermatch_upload_submit'] = 'Add Data File To Match Queue';
 $string['acp_parentsite_name'] = 'Moodle';
 $string['acp_parentsite_desc'] = 'Site for shared Moodle course data.';
+$string['acp_userconnections'] = 'User Connections';
+$string['acp_userconnections_column_muser'] = 'Moodle User';
+$string['acp_userconnections_column_o365user'] = 'Office 365 User';
+$string['acp_userconnections_column_status'] = 'Connection Status';
+$string['acp_userconnections_column_actions'] = 'Actions';
+$string['acp_userconnections_column_usinglogin'] = 'Using Login';
+$string['acp_userconnections_filtering_muserfullname'] = 'Moodle user full name';
+$string['acp_userconnections_filtering_musername'] = 'Moodle username';
+$string['acp_userconnections_filtering_o365username'] = 'Office 365 username';
+$string['acp_userconnections_manualmatch_title'] = 'Manual user match';
+$string['acp_userconnections_manualmatch_details'] = 'This page allows you to match a single Moodle user with a single Office 365 user.';
+$string['acp_userconnections_manualmatch_musername'] = 'Moodle user';
+$string['acp_userconnections_manualmatch_uselogin'] = 'Log in with Office 365';
+$string['acp_userconnections_manualmatch_o365username'] = 'Office 365 username';
+$string['acp_userconnections_manualmatch_error_muserconnected'] = 'The Moodle user is already connected to an Office 365 user';
+$string['acp_userconnections_manualmatch_error_muserconnected2'] = 'The Moodle user is already connected to an Office 365 user (2)';
+$string['acp_userconnections_manualmatch_error_musermatched'] = 'The Moodle user is already matched to an Office 365 user';
+$string['acp_userconnections_manualmatch_error_o365usermatched'] = 'The Office 365 user is already matched to another Moodle user';
+$string['acp_userconnections_manualmatch_error_o365userconnected'] = 'The Office 365 user is already connected to another Moodle user';
+$string['acp_userconnections_table_connected'] = 'Connected';
+$string['acp_userconnections_table_disconnect'] = 'Disconnect';
+$string['acp_userconnections_table_disconnect_confirmmsg'] = 'This will disconnect the Moodle user "{$a}" from Office 365. Click the link below to proceed.';
+$string['acp_userconnections_table_match'] = 'Match';
+$string['acp_userconnections_table_matched'] = 'Matched with existing user.<br />Awaiting completion.';
+$string['acp_userconnections_table_noconnection'] = 'No Connection';
+$string['acp_userconnections_table_synced'] = 'Synced from Azure AD.<br />Awaiting initial login.';
+$string['acp_userconnections_table_unmatch'] = 'Unmatch';
+$string['acp_userconnections_table_unmatch_confirmmsg'] = 'This will unmatch the Moodle user "{$a}" from Office 365. Click the link below to proceed.';
 
 $string['cachedef_groups'] = 'Stores Office 365 group data.';
 
@@ -411,7 +439,9 @@ $string['settings_usersynccreationrestriction_details'] = 'If enabled, only user
 $string['settings_usersynccreationrestriction_o365group'] = 'Office 365 Group Membership';
 $string['settings_onenote'] = 'Disable Office 365 OneNote';
 $string['settings_onenote_details'] = 'Disabling Office 365 OneNote will allow users to use OneNote features with a Microsoft account instead of their current Office 365 account. This setting is present to match plugin functionality from the first few plugin releases. Most users will want to leave Office 365 OneNote enabled.<br /><b>Note:</b> Using a Microsoft account with OneNote requires the following plugins: local_onenote, local_msaccount, assignfeedback_onenote, and assignsubmission_onenote.';
-
+$string['settings_userconnections'] = 'Connections';
+$string['settings_userconnections_linktext'] = 'Manage User Connections';
+$string['settings_userconnections_details'] = 'Review and manage connections between Moodle and Office 365 users.';
 
 $string['spsite_group_contributors_name'] = '{$a} contributors';
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
