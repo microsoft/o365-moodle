@@ -35,7 +35,13 @@ class disconnect extends \moodleform {
      * Form definition.
      */
     protected function definition() {
-        global $USER;
+        global $USER, $DB;
+
+        if (!empty($this->_customdata['userid'])) {
+            $userrec = $DB->get_record('user', ['id' => $this->_customdata['userid']]);
+        } else {
+            $userrec = $DB->get_record('user', ['id' => $USER->id]);
+        }
 
         $authconfig = get_config('auth_oidc');
         $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_oidc');
@@ -78,7 +84,7 @@ class disconnect extends \moodleform {
 
             // If the user cannot choose a username, set it to their current username and freeze.
             if (isset($this->_customdata['canchooseusername']) && $this->_customdata['canchooseusername'] == false) {
-                $mform->setDefault('username', $USER->username);
+                $mform->setDefault('username', $userrec->username);
                 $element = $mform->getElement('username');
                 $element->freeze();
             }

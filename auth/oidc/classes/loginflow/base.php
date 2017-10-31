@@ -156,23 +156,34 @@ class base {
      * @param \moodle_url $selfurl The page this is accessed from. Used for some redirects.
      */
     public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
-                               \moodle_url $selfurl = null) {
+                               \moodle_url $selfurl = null, $userid = null) {
+        global $USER, $DB, $CFG;
         if ($redirect === null) {
             $redirect = new \moodle_url('/auth/oidc/ucp.php');
         }
         if ($selfurl === null) {
             $selfurl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
         }
+
+        // Get the record of the user involved. Current user if no ID received.
+        if (empty($userid)) {
+            $userid = $USER->id;
+        }
+        $userrec = $DB->get_record('user', ['id' => $userid]);
+        if (empty($userrec)) {
+            redirect($redirect);
+            die();
+        }
+
         if ($justremovetokens === true) {
-            global $USER, $DB, $CFG;
             // Delete token data.
-            $DB->delete_records('auth_oidc_token', ['username' => $USER->username]);
-            $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+            $DB->delete_records('auth_oidc_token', ['username' => $userrec->username]);
+            $eventdata = ['objectid' => $userrec->id, 'userid' => $userrec->id];
             $event = \auth_oidc\event\user_disconnected::create($eventdata);
             $event->trigger();
             redirect($redirect);
         } else {
-            global $OUTPUT, $PAGE, $USER, $DB, $CFG;
+            global $OUTPUT, $PAGE;
             require_once($CFG->dirroot.'/user/lib.php');
             $PAGE->set_url($selfurl->out());
             $PAGE->set_context(\context_system::instance());
@@ -184,7 +195,7 @@ class base {
             $PAGE->set_title($ucptitle);
 
             // Check if we have recorded the user's previous login method.
-            $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $USER->id]);
+            $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $userrec->id]);
             $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) ? $prevmethodrec->method : null;
             // Manual is always available, we don't need it twice.
             if ($prevauthmethod === 'manual') {
@@ -199,13 +210,14 @@ class base {
             // Check to see if the user has a username created by OIDC, or a self-created username.
             // OIDC-created usernames are usually very verbose, so we'll allow them to choose a sensible one.
             // Otherwise, keep their existing username.
-            $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
-            $ccun = (isset($oidctoken->oidcuniqid) && strtolower($oidctoken->oidcuniqid) === $USER->username) ? true : false;
+            $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $userrec->username]);
+            $ccun = (isset($oidctoken->oidcuniqid) && strtolower($oidctoken->oidcuniqid) === $userrec->username) ? true : false;
             $customdata = [
                 'canchooseusername' => $ccun,
                 'prevmethod' => $prevauthmethod,
                 'donotremovetokens' => $donotremovetokens,
                 'redirect' => $redirect,
+                'userid' => $userrec->id,
             ];
 
             $mform = new \auth_oidc\form\disconnect($selfurl, $customdata);
@@ -214,7 +226,7 @@ class base {
                 redirect($redirect);
             } else if ($fromform = $mform->get_data()) {
 
-                $origusername = $USER->username;
+                $origusername = $userrec->username;
 
                 if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod && $fromform->newmethod !== 'manual')) {
                     throw new \moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
@@ -231,7 +243,7 @@ class base {
                             throw new \moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
                         }
 
-                        if (strtolower($fromform->username) !== $USER->username) {
+                        if (strtolower($fromform->username) !== $userrec->username) {
                             $newusername = strtolower($fromform->username);
                             $usercheck = ['username' => $newusername, 'mnethostid' => $CFG->mnet_localhost_id];
                             if ($DB->record_exists('user', $usercheck) === false) {
@@ -248,14 +260,14 @@ class base {
                     // We can't use user_update_user as it will rehash the value.
                     if (!empty($prevmethodrec->password)) {
                         $manualuserupdate = new \stdClass;
-                        $manualuserupdate->id = $USER->id;
+                        $manualuserupdate->id = $userrec->id;
                         $manualuserupdate->password = $prevmethodrec->password;
                         $DB->update_record('user', $manualuserupdate);
                     }
                 }
 
                 // Update user.
-                $updateduser->id = $USER->id;
+                $updateduser->id = $userrec->id;
                 try {
                     user_update_user($updateduser);
                 } catch (\Exception $e) {
@@ -266,12 +278,16 @@ class base {
                 if (empty($fromform->donotremovetokens)) {
                     $DB->delete_records('auth_oidc_token', ['username' => $origusername]);
 
-                    $eventdata = ['objectid' => $USER->id, 'userid' => $USER->id];
+                    $eventdata = ['objectid' => $userrec->id, 'userid' => $userrec->id];
                     $event = \auth_oidc\event\user_disconnected::create($eventdata);
                     $event->trigger();
                 }
 
-                $USER = $DB->get_record('user', ['id' => $USER->id]);
+                // If we're dealing with the current user, refresh the object.
+                if ($userrec->id == $USER->id) {
+                    $USER = $DB->get_record('user', ['id' => $USER->id]);
+                }
+
                 if (!empty($fromform->redirect)) {
                     redirect($fromform->redirect);
                 } else {
