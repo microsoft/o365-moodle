@@ -289,12 +289,13 @@ class coursegroups {
         $coursecontext = \context_course::instance($courseid);
         list($esql, $params) = get_enrolled_sql($coursecontext);
         $sql = "SELECT u.id,
-                       tok.oidcuniqid as userobjectid
+                       objs.objectid as userobjectid
                   FROM {user} u
                   JOIN ($esql) je ON je.id = u.id
-                  JOIN {auth_oidc_token} tok ON tok.username = u.username AND tok.resource = :tokresource
-                 WHERE u.deleted = 0";
+                  JOIN {local_o365_objects} objs ON objs.moodleid = u.id
+                 WHERE u.deleted = 0 AND objs.type = :user";
         $params['tokresource'] = 'https://graph.windows.net';
+        $params['user'] = 'user';
         $enrolled = $this->DB->get_recordset_sql($sql, $params);
         foreach ($enrolled as $user) {
             $intendedmembers[$user->userobjectid] = $user->id;
