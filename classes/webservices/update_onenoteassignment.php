@@ -100,6 +100,8 @@ class update_onenoteassignment extends \external_api {
                 'assignsubmission_onenote_maxfiles' => 1,
                 'assignsubmission_onenote_maxsizebytes' => 1024,
                 'visible' => $module->visible,
+                'visibleoncoursepage' => $module->visible,
+                'gradingduedate' => 0,
             ];
             foreach ($assignkeys as $key) {
                 $assigninfo[$key] = $assign->$key;

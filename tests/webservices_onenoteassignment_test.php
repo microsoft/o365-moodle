@@ -298,9 +298,10 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
             if (!empty($data[self::EXPECTEDEXCEPTION])) {
                 if (isset($data[self::EXPECTEDEXCEPTION][1])) {
-                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0], $data[self::EXPECTEDEXCEPTION][1]);
+                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
+                    $this->expectExceptionMessage($data[self::EXPECTEDEXCEPTION][1]);
                 } else {
-                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0]);
+                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
                 }
             }
 
@@ -464,9 +465,10 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
             if (!empty($data[self::EXPECTEDEXCEPTION])) {
                 if (isset($data[self::EXPECTEDEXCEPTION][1])) {
-                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0], $data[self::EXPECTEDEXCEPTION][1]);
+                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
+                    $this->expectExceptionMessage($data[self::EXPECTEDEXCEPTION][1]);
                 } else {
-                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0]);
+                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
                 }
             }
 
@@ -536,9 +538,10 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
             if (!empty($data[self::EXPECTEDEXCEPTION])) {
                 if (isset($data[self::EXPECTEDEXCEPTION][1])) {
-                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0], $data[self::EXPECTEDEXCEPTION][1]);
+                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
+                    $this->expectExceptionMessage($data[self::EXPECTEDEXCEPTION][1]);
                 } else {
-                    $this->setExpectedException($data[self::EXPECTEDEXCEPTION][0]);
+                    $this->expectException($data[self::EXPECTEDEXCEPTION][0]);
                 }
             }
 

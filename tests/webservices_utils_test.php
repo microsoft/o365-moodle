@@ -277,9 +277,10 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
 
         if (!empty($expectedexception)) {
             if (isset($expectedexception[1])) {
-                $this->setExpectedException($expectedexception[0], $expectedexception[1]);
+                $this->expectException($expectedexception[0]);
+                $this->expectExceptionMessage($expectedexception[1]);
             } else {
-                $this->setExpectedException($expectedexception[0]);
+                $this->expectException($expectedexception[0]);
             }
         }
 
@@ -367,9 +368,10 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
 
         if (!empty($expectedexception)) {
             if (isset($expectedexception[1])) {
-                $this->setExpectedException($expectedexception[0], $expectedexception[1]);
+                $this->expectException($expectedexception[0]);
+                $this->expectExceptionMessage($expectedexception[1]);
             } else {
-                $this->setExpectedException($expectedexception[0]);
+                $this->expectException($expectedexception[0]);
             }
         }
 
@@ -463,9 +465,10 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
 
         if (!empty($expectedexception)) {
             if (isset($expectedexception[1])) {
-                $this->setExpectedException($expectedexception[0], $expectedexception[1]);
+                $this->expectException($expectedexception[0]);
+                $this->expectExceptionMessage($expectedexception[1]);
             } else {
-                $this->setExpectedException($expectedexception[0]);
+                $this->expectException($expectedexception[0]);
             }
         }
 
