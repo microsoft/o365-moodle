@@ -9,18 +9,21 @@ Currently the following plugins are **actively maintained and required** for new
 - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
 - [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
 - [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
-- [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
+- [moodle-filter_oembed](https://github.com/PoetOS/moodle-filter_oembed)
 
-The plugins below are *not required* for new installations:
+The plugins below are *optional* for new installations:
 
 - [moodle-block_skypeweb](https://github.com/Microsoft/moodle-block_skypeweb)
+- [moodle-assignfeedback_onenote](https://github.com/Microsoft/moodle-assignfeedback_onenote)
+- [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
+- [moodle-assignsubmission_onenote](https://github.com/Microsoft/moodle-assignsubmission_onenote)
+
+The plugins below are *deprecated* and not maintained. They are here only for historical purposes.
+
 - [moodle-profilefield_oidc](https://github.com/Microsoft/moodle-profilefield_oidc)
 - [moodle-local_msaccount](https://github.com/Microsoft/moodle-local_msaccount)
 - [moodle-block_onenote](https://github.com/Microsoft/moodle-block_onenote)
 - [moodle-repository_onenote](https://github.com/Microsoft/moodle-repository_onenote)
-- [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
-- [moodle-assignfeedback_onenote](https://github.com/Microsoft/moodle-assignfeedback_onenote)
-- [moodle-assignsubmission_onenote](https://github.com/Microsoft/moodle-assignsubmission_onenote)
 
 The following plugins are "parent" or "shell" plugins which install a *subset* of the above plugins as a collection. They are also *not required* for new installations:
 - [moodle-local_office365](https://github.com/Microsoft/moodle-local_office365)
