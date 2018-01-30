@@ -71,6 +71,7 @@ class create_onenoteassignment extends \external_api {
             'cutoffdate' => 0,
             'allowsubmissionsfromdate' => 0,
             'grade' => 0,
+            'gradingduedate' => 0,
             'completionsubmit' => 0,
             'teamsubmission' => 0,
             'requireallteammemberssubmit' => 0,

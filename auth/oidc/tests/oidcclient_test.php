@@ -106,7 +106,8 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
      */
     public function test_endpoints_getters_and_setters($endpoints, $expectedexception) {
         if (!empty($expectedexception)) {
-            $this->setExpectedException($expectedexception[0], $expectedexception[1]);
+            $this->expectException($expectedexception[0]);
+            $this->expectExceptionMessage($expectedexception[1]);
         }
         $httpclient = new \auth_oidc\tests\mockhttpclient();
         $client = new \auth_oidc\tests\mockoidcclient($httpclient);
