@@ -454,6 +454,10 @@ class main {
 
         $aadsync = get_config('local_o365', 'aadsync');
         $photoexpire = get_config('local_o365', 'photoexpire');
+        if (empty($photoexpire) || !is_numeric($photoexpire)) {
+            $photoexpire = 24;
+        }
+        $photoexpiresec = $photoexpire * 3600;
         $aadsync = array_flip(explode(',', $aadsync));
         $switchauthminupnsplit0 = get_config('local_o365', 'switchauthminupnsplit0');
         if (empty($switchauthminupnsplit0)) {
@@ -631,13 +635,15 @@ class main {
                         $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
-                if (isset($aadsync['photosync']) && (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpire * 3600) < time())) {
-                    try {
-                        if (!PHPUNIT_TEST) {
-                            $this->assign_photo($existinguser->muserid, $user['upnlower']);
+                if (isset($aadsync['photosync'])) {
+                    if (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpiresec) < time()) {
+                        try {
+                            if (!PHPUNIT_TEST) {
+                                $this->assign_photo($existinguser->muserid, $user['upnlower']);
+                            }
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not assign profile photo to user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                         }
-                    } catch (\Exception $e) {
-                        $this->mtrace('Could not assign profile photo to user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
                     }
                 }
 
