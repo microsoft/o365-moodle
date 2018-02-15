@@ -235,9 +235,14 @@ class assign_submission_onenote extends assign_submission_plugin {
 
         // Retrieve OneNote page metadata and save the last time modified.
         $pagemetadata = $onenoteapi->get_page_metadata($record->submission_student_page_id);
-        $pagemetadata = $onenoteapi->process_apicall_response($pagemetadata, ['lastModifiedTime' => null]);
+        if (\local_o365\rest\unified::is_configured() === true) {
+            $modtimeparam = 'lastModifiedDateTime';
+        } else {
+            $modtimeparam = 'lastModifiedTime';
+        }
+        $pagemetadata = $onenoteapi->process_apicall_response($pagemetadata, [$modtimeparam => null]);
         if (!empty($pagemetadata)) {
-            $record->student_lastmodified = strtotime($pagemetadata['lastModifiedTime']);
+            $record->student_lastmodified = strtotime($pagemetadata[$modtimeparam]);
             $DB->update_record('local_onenote_assign_pages', $record);
         }
 
