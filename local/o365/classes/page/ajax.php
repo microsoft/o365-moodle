@@ -94,7 +94,14 @@ class ajax extends base {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
 
-        $data->result = \local_o365\rest\sharepoint::validate_site($uncleanurl, $clientdata, $httpclient);
+        if (\local_o365\rest\unified::is_configured() === true) {
+            $resource = \local_o365\rest\unified::get_resource();
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $apiclient = new \local_o365\rest\unified($token, $httpclient);
+            $data->result = $apiclient->sharepoint_validate_site($uncleanurl);
+        } else {
+            $data->result = \local_o365\rest\sharepoint::validate_site($uncleanurl, $clientdata, $httpclient);
+        }
         $success = true;
 
         echo $this->ajax_response($data, $success);
@@ -227,21 +234,13 @@ class ajax extends base {
 
             case 'odburl':
                 try {
-                    $tenant = $apiclient->get_tenant();
-                    $suffix = '.onmicrosoft.com';
-                    $sufflen = strlen($suffix);
-                    if (substr($tenant, -$sufflen) === $suffix) {
-                        $prefix = substr($tenant, 0, -$sufflen);
-                        $service = $prefix.'-my.sharepoint.com';
-                        $data->settingval = $service;
-                        $success = true;
-                        echo $this->ajax_response($data, $success);
-                    } else {
-                        echo $this->error_response(get_string('settings_odburl_error_graph', 'local_o365'));
-                    }
+                    $service = $apiclient->get_odburl();
+                    $data->settingval = $service;
+                    $success = true;
+                    echo $this->ajax_response($data, $success);
                 } catch (\Exception $e) {
                     \local_o365\utils::debug($e->getMessage(), 'detect aadtenant graph', $e);
-                    echo $this->error_response($e->getMessage());
+                    echo $this->error_response(get_string('settings_odburl_error_graph', 'local_o365'));
                 }
                 die();
         }
