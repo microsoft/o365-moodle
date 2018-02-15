@@ -930,6 +930,7 @@ class acp extends base {
             'alternateloginurl' => $CFG->alternateloginurl,
             'release' => $CFG->release,
             'version' => $CFG->version,
+            'localo365forcelegacyapi' => (isset($CFG->local_o365_forcelegacyapi)) ? 1 : 0,
         ];
 
         $configdata['plugin_data'] = [];

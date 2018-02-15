@@ -296,18 +296,18 @@ $(function() {
                             unified.append(main.rendererrorbox(opts.strunifiederror));
                         }
                         content.append(unified);
-                    }
-
-                    // Legacy API.
-                    var legacy = $('<section></section>');
-                    legacy.append('<h5>' + opts.strlegacyheader + '</h5>');
-                    legacy.append('<span>' + opts.strlegacydesc + '</h5>');
-                    if (typeof(results.data.legacyapi) !== 'undefined') {
-                        legacy.append(main.rendersection_legacyapi(results.data.legacyapi));
                     } else {
-                        legacy.append(main.rendererrorbox(opts.strlegacyerror));
+                        // Legacy API.
+                        var legacy = $('<section></section>');
+                        legacy.append('<h5>' + opts.strlegacyheader + '</h5>');
+                        legacy.append('<span>' + opts.strlegacydesc + '</h5>');
+                        if (typeof(results.data.legacyapi) !== 'undefined') {
+                            legacy.append(main.rendersection_legacyapi(results.data.legacyapi));
+                        } else {
+                            legacy.append(main.rendererrorbox(opts.strlegacyerror));
+                        }
+                        content.append(legacy);
                     }
-                    content.append(legacy);
 
                     main.updatedisplay(content);
                     return true;

@@ -61,7 +61,8 @@ class ucp extends base {
         }
 
         $outlookresource = \local_o365\rest\calendar::get_resource();
-        if (empty($outlookresource)) {
+        $unifiedconfigured = \local_o365\rest\unified::is_configured();
+        if (empty($outlookresource) && empty($unifiedconfigured)) {
             throw new \Exception('Not configured');
         }
         $httpclient = new \local_o365\httpclient();
