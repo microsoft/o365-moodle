@@ -186,10 +186,44 @@ class unified extends \local_o365\rest\o365api {
         $this->tenantoverride = $tenant;
         $appinfo = $this->get_application_info();
         $this->tenantoverride = null;
-        if (isset($appinfo['value']) && isset($appinfo['value'][0]['appId'])) {
-            return ($appinfo['value'][0]['appId'] === $oidcconfig->clientid) ? true : false;
+        if (isset($appinfo['value']) && isset($appinfo['value'][0]['id'])) {
+            return ($appinfo['value'][0]['id'] === $oidcconfig->clientid) ? true : false;
         }
         return false;
+    }
+
+    /**
+     * Get the tenant associated with the current account.
+     *
+     * @return string The tenant string.
+     */
+    public function get_tenant() {
+        $response = $this->apicall('get', '/domains');
+        $response = $this->process_apicall_response($response, ['value' => null]);
+        foreach ($response['value'] as $domain) {
+            if (!empty($domain['isInitial']) && isset($domain['id'])) {
+                return $domain['id'];
+            }
+        }
+        throw new \moodle_exception('erroracpcantgettenant', 'local_o365');
+    }
+
+    /**
+     * Validate that a given url is a valid OneDrive for Business SharePoint URL.
+     *
+     * @param string $resource Uncleaned, unvalidated URL to check.
+     * @param \local_o365\oauth2\clientdata $clientdata oAuth2 Credentials
+     * @param \local_o365\httpclientinterface $httpclient An HttpClient to use for transport.
+     * @return bool Whether the received resource is valid or not.
+     */
+    public function validate_resource($resource, $clientdata) {
+        $cleanresource = clean_param($resource, PARAM_URL);
+        if ($cleanresource !== $resource) {
+            return false;
+        }
+        $fullcleanresource = 'https://'.$cleanresource;
+        $token = \local_o365\utils::get_app_or_system_token($fullcleanresource, $clientdata, $this->httpclient);
+        return (!empty($token)) ? true : false;
     }
 
     /**

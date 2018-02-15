@@ -34,7 +34,7 @@ class observers {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         $resource = \local_o365\rest\unified::get_resource();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
         if (!empty($token)) {
             return new \local_o365\rest\unified($token, $httpclient);
         } else {

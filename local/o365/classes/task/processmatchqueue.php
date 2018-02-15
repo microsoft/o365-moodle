@@ -53,7 +53,7 @@ class processmatchqueue extends \core\task\scheduled_task {
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \Exception('No token available for system user. Please run local_o365 health check.');
         }

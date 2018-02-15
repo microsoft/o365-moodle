@@ -455,7 +455,7 @@ class azuread extends \local_o365\rest\o365api {
                 return false;
             }
             $resource = static::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
             $aaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
             $userobjectdata = (object)[

@@ -70,7 +70,7 @@ class utils {
      * @param string $resource The desired resource.
      * @param \local_o365\oauth2\clientdata $clientdata Client credentials.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
-     * @return \local_o365\oauth2\apptoken|\local_o365\oauth2\systemtoken An app or system token.
+     * @return \local_o365\oauth2\apptoken|\local_o365\oauth2\systemapiusertoken An app or system token.
      */
     public static function get_app_or_system_token($resource, $clientdata, $httpclient) {
         $token = null;
@@ -84,7 +84,7 @@ class utils {
 
         if (empty($token)) {
             try {
-                $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+                $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
             } catch (\Exception $e) {
                 static::debug($e->getMessage(), 'get_app_or_system_token (system)', $e);
             }
@@ -108,14 +108,21 @@ class utils {
         if (empty($apponlyenabled)) {
             return false;
         }
-        if (\local_o365\rest\unified::is_configured() !== true) {
-            return false;
-        }
         $aadtenant = get_config('local_o365', 'aadtenant');
         if (empty($aadtenant)) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Determine whether app-only access is both configured and active.
+     *
+     * @return bool Whether app-only access is active.
+     */
+    public static function is_active_apponlyaccess() {
+        return (static::is_configured_apponlyaccess() === true && \local_o365\rest\unified::is_configured() === true)
+            ? true : false;
     }
 
     /**
@@ -267,7 +274,7 @@ class utils {
         if (!empty($userid)) {
             $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
         } else {
-            $token = \local_o365\oauth2\systemtoken::instance($userid, $resource, $clientdata, $httpclient);
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
         }
         if (empty($token)) {
             throw new \Exception('No token available for system user. Please run local_o365 health check.');
