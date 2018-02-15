@@ -46,8 +46,13 @@ class refreshsystemrefreshtoken extends \core\task\scheduled_task {
 
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $graphresource = \local_o365\rest\azuread::get_resource();
-        $systemtoken = \local_o365\oauth2\systemtoken::get_for_new_resource(null, $graphresource, $clientdata, $httpclient);
+        $graphresource = \local_o365\rest\unified::get_resource();
+        $systemtoken = \local_o365\utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+        if (!empty($systemtoken)) {
+            mtrace('... Success!');
+        } else {
+            mtrace('... !!! Could not refresh token. !!!');
+        }
         return true;
     }
 }

@@ -48,7 +48,7 @@ class main {
 
         $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
         if (empty($token) && $systemfallback === true) {
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+            $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
             throw new \Exception('No token available for user #'.$muserid);
