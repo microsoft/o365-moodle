@@ -159,6 +159,10 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_onenote_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
 
+        $label = new lang_string('settings_previewfeatures', 'local_o365');
+        $desc = new lang_string('settings_previewfeatures_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/enablepreview', $label, $desc, '0'));
+
         $label = new lang_string('settings_debugmode', 'local_o365');
         $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
@@ -299,9 +303,12 @@ if ($hassiteconfig) {
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $resource = \local_o365\rest\sds::get_resource();
             $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
-            $apiclient = new \local_o365\rest\sds($token, $httpclient);
-            $schools = $apiclient->get_schools();
-            $schools = $schools['value'];
+            $schools = null;
+            if (!empty($token)) {
+                $apiclient = new \local_o365\rest\sds($token, $httpclient);
+                $schools = $apiclient->get_schools();
+                $schools = $schools['value'];
+            }
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage(), 'settings.php', $e);
             $schools = [];
