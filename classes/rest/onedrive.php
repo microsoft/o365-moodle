@@ -60,7 +60,7 @@ class onedrive extends \local_o365\rest\o365api {
             return false;
         }
         $fullcleanresource = 'https://'.$cleanresource;
-        $token = \local_o365\oauth2\systemtoken::get_for_new_resource(null, $fullcleanresource, $clientdata, $httpclient);
+        $token = \local_o365\utils::get_app_or_system_token($fullcleanresource, $clientdata, $httpclient);
         return (!empty($token)) ? true : false;
     }
 
