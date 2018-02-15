@@ -341,6 +341,8 @@ abstract class o365api {
                     'Directory.Read.All' => [],
                     'Group.ReadWrite.All' => [],
                     'Calendars.ReadWrite' => [],
+                    'Notes.ReadWrite.All' => [],
+                    'Domain.ReadWrite.All' => [],
                  ],
                 'requiredDelegatedPermissions' => [
                     'openid' => [],
