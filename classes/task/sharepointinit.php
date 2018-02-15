@@ -46,6 +46,130 @@ class sharepointinit extends \core\task\adhoc_task {
             return false;
         }
 
+        $this->execute_legacy();
+
+        /*
+        Uncomment when site creation is available in graph API.
+        $graphconfigured = \local_o365\rest\unified::is_configured();
+        if ($graphconfigured === true) {
+            $this->execute_graph();
+        } else {
+            $this->execute_legacy();
+        }
+        */
+    }
+
+    protected function execute_graph() {
+        mtrace('SharePoint Init using Graph API...');
+
+        try {
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $httpclient = new \local_o365\httpclient();
+            $resource = \local_o365\rest\unified::get_resource();
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            if (empty($token)) {
+                throw new \moodle_exception('erroracpnosptoken', 'local_o365');
+            }
+            $apiclient = new \local_o365\rest\unified($token, $httpclient);
+        } catch (\Exception $e) {
+            $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: '.$e->getMessage();
+            mtrace($errmsg);
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+            return false;
+        }
+
+        // Get configured site and validate.
+        try {
+            $spsiteurl = get_config('local_o365', 'sharepointlink');
+            $valid = $apiclient->sharepoint_validate_site($spsiteurl);
+            if ($valid === 'invalid') {
+                throw new \Exception('Invalid sharepoint site URL');
+            }
+            mtrace('Using site '.$spsiteurl.'...');
+            $parsedurl = parse_url($spsiteurl);
+        } catch (\Exception $e) {
+            $errmsg = 'ERROR: Problem initializing SharePoint integration. Reason: '.$e->getMessage();
+            mtrace($errmsg);
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+            return false;
+        }
+
+        // Create parent site(s).
+        try {
+            $nopath = (empty($parsedurl['path']) || $parsedurl['path'] === '/') ? true : false;
+            if ($nopath === false && $valid === 'valid') {
+                // We only have to create the parent site if there is a path and the site does not exist.
+                mtrace('Requested site does not exist, creating it and any ancestors...');
+                $path = trim($parsedurl['path'], '/');
+                $currentparentsite = '';
+                foreach ($path as $pathpart) {
+                    $currentparentsite .= '/'.$pathpart;
+                    $siteexists = $apiclient->sharepoint_site_exists($parsedurl['host'], $currentparentsite);
+                    if ($siteexists === false) {
+                        $moodlesitename = get_string('acp_parentsite_name', 'local_o365');
+                        $moodlesitedesc = get_string('acp_parentsite_desc', 'local_o365');
+                        $frontpagerec = $DB->get_record('course', ['id' => SITEID], 'id,shortname');
+                        if (!empty($frontpagerec) && !empty($frontpagerec->shortname)) {
+                            $moodlesitename = $frontpagerec->shortname;
+                        }
+                        mtrace('Setting parent site to "'.$currentparentsite.'", creating subsite "'.$partialurl.'"');
+                        $result = $apiclient->sharepoint_create_site($parsedurl['host'], $currentparentsite, $moodlesitename, $moodlesitedesc);
+                        mtrace('Created parent site "'.$currentparentsite.'"');
+                    } else {
+                        mtrace('Parent site "'.$currentparentsite.'" already exists.');
+                    }
+                }
+                mtrace('Finished creating Moodle parent site(s).');
+            }
+        } catch (\Exception $e) {
+            $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
+            mtrace($errmsg);
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+            return false;
+        }
+
+        // Create course sites.
+        mtrace('Creating course subsites in "'.$spsiteurl.'"');
+        $courses = $DB->get_recordset('course');
+        $successes = [];
+        $failures = [];
+        foreach ($courses as $course) {
+            if ($course->id == SITEID) {
+                continue;
+            }
+
+            if (\local_o365\feature\sharepointcustom\utils::course_subsite_enabled($course) === true) {
+                try {
+                    // $sharepoint->create_course_site($course); TODO - Once site creation is enabled in graph API.
+                    $successes[] = $course->id;
+                    mtrace('Created course subsite for course '.$course->id);
+                } catch (\Exception $e) {
+                    mtrace('Encountered error creating course subsite for course '.$course->id);
+                    $failures[$course->id] = $e->getMessage();
+                }
+            } else {
+                mtrace('Skipping course '.$course->id.' (not enabled)');
+            }
+        }
+
+        if (!empty($failures)) {
+            $errmsg = 'ERROR: Encountered problems creating course sites.';
+            mtrace($errmsg.' See logs.');
+            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute', $failures);
+            set_config('sharepoint_initialized', 'error', 'local_o365');
+        } else {
+            set_config('sharepoint_initialized', '1', 'local_o365');
+            mtrace('SharePoint successfully initialized.');
+            return true;
+        }
+    }
+
+    protected function execute_legacy() {
+        mtrace('SharePoint Init using Legacy API...');
+
         // API Setup.
         try {
             $spresource = \local_o365\rest\sharepoint::get_resource();

@@ -73,7 +73,7 @@ class azuresetup extends \admin_setting {
     public function output_html($data, $query = '') {
         global $OUTPUT;
 
-        $button = \html_writer::tag('button', get_string('settings_detectperms_update', 'local_o365'), ['class' => 'refreshperms']);
+        $button = \html_writer::tag('button', get_string('settings_detectperms_update', 'local_o365'), ['class' => 'refreshperms', 'style' => 'margin: 0 0 0.75rem']);
         $results = \html_writer::tag('div', '', ['class' => 'results']);
         $settinghtml = $button.$results;
 

@@ -159,10 +159,6 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_onenote_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
 
-        $label = new lang_string('settings_disablegraphapi', 'local_o365');
-        $desc = new lang_string('settings_disablegraphapi_details', 'local_o365');
-        $settings->add(new \admin_setting_configcheckbox('local_o365/disablegraphapi', $label, $desc, '0'));
-
         $label = new lang_string('settings_debugmode', 'local_o365');
         $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
@@ -213,8 +209,11 @@ if ($hassiteconfig) {
         $configdesc = new lang_string('settings_clientsecret_desc', 'local_o365');
         $settings->add(new admin_setting_configtext('auth_oidc/clientsecret', $configkey, $configdesc, '', PARAM_TEXT));
 
-        $configdesc = new \lang_string('settings_setup_step1_end', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
-        $settings->add(new admin_setting_heading('local_o365_setup_step1end', '', $configdesc));
+        $configdesc = new \lang_string('settings_setup_step1_credentials_end', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
+        $settings->add(new admin_setting_heading('local_o365_setup_step1_credentialsend', '', $configdesc));
+
+        $configdesc = new \lang_string('settings_setup_step1_perms', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
+        $settings->add(new admin_setting_heading('local_o365_setup_step1_perms', '', $configdesc));
 
         // STEP 2: Connection Method.
         $clientid = get_config('auth_oidc', 'clientid');
@@ -240,7 +239,7 @@ if ($hassiteconfig) {
             $settings->add(new \local_o365\adminsetting\systemapiuser('local_o365/systemapiuser', $label, $desc, '', PARAM_RAW));
 
             $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
-            $systemapiuser = get_config('local_o365', 'systemapiuser');
+            $systemapiuser = get_config('local_o365', 'systemtokens');
             if (!empty($enableapponlyaccess) || !empty($systemapiuser)) {
                 $stepsenabled = 3;
             } else {
@@ -249,6 +248,7 @@ if ($hassiteconfig) {
             }
         }
 
+        // STEP 3: Consent and additional information.
         if ($stepsenabled === 3) {
             $label = new lang_string('settings_setup_step3', 'local_o365');
             $desc = new lang_string('settings_setup_step3_desc', 'local_o365');
@@ -277,6 +277,7 @@ if ($hassiteconfig) {
             }
         }
 
+        // Step 4: Verify.
         if ($stepsenabled === 4) {
             $label = new lang_string('settings_setup_step4', 'local_o365');
             $desc = new lang_string('settings_setup_step4_desc', 'local_o365');
