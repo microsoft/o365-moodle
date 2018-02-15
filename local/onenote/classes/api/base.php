@@ -438,11 +438,28 @@ abstract class base {
                     break;
 
                 case 'section':
+                    $itemname = 'Notebook';
+                    if (isset($item['name'])) {
+                        // Legacy
+                        $itemname = $item['name'];
+                    } else if (isset($item['displayName'])) {
+                        // Graph
+                        $itemname = $item['displayName'];
+                    }
+                    $itemlastmodified = 'now';
+                    if (isset($item['lastModifiedTime'])) {
+                        // Legacy
+                        $itemlastmodified = $item['lastModifiedTime'];
+                    } else if (isset($item['lastModifiedDateTime'])) {
+                        // Graph
+                        $itemlastmodified = $item['lastModifiedDateTime'];
+                    }
+
                     $items[] = [
-                        'title' => $item['name'],
+                        'title' => $itemname,
                         'path' => $path.'/'.urlencode($item['id']),
-                        'date' => strtotime($item['lastModifiedTime']),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($item['name'], 90))->out(false),
+                        'date' => strtotime($itemlastmodified),
+                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname, 90))->out(false),
                         'source' => $item['id'],
                         'url' => $item['self'],
                         'author' => $item['createdBy'],
@@ -452,10 +469,19 @@ abstract class base {
                     break;
 
                 case 'page':
+                    $itemcreatedtime = 'now';
+                    if (isset($item['createdTime'])) {
+                        // Legacy
+                        $itemcreatedtime = $item['createdTime'];
+                    } else if (isset($item['createdDateTime'])) {
+                        // Graph
+                        $itemcreatedtime = $item['createdDateTime'];
+                    }
+
                     $items[] = [
                         'title' => $item['title'].".zip",
                         'path' => $path.'/'.urlencode($item['id']),
-                        'date' => strtotime($item['createdTime']),
+                        'date' => strtotime($itemcreatedtime),
                         'thumbnail' => $OUTPUT->image_url(file_extension_icon($item['title'], 90))->out(false),
                         'source' => $item['id'],
                         'url' => $item['links']['oneNoteWebUrl']['href'],
@@ -487,7 +513,12 @@ abstract class base {
         if (!(in_array($notebookname, $notebooksarray))) {
             // Moodle notebook not found, create it.
             try {
-                $creatednotebook = $this->apicall('post', '/notebooks', json_encode(['name' => $notebookname]));
+                if (\local_o365\rest\unified::is_configured() === true) {
+                    $notebookdata = json_encode(['displayName' => $notebookname]);
+                } else {
+                    $notebookdata = json_encode(['name' => $notebookname]);
+                }
+                $creatednotebook = $this->apicall('post', '/notebooks', $notebookdata);
                 $creatednotebook = $this->process_apicall_response($creatednotebook, ['id' => null]);
             } catch (\Exception $e) {
                 \local_onenote\utils::debug('Could not create Moodle notebook', 'sync_notebook_data', $e);
@@ -504,7 +535,11 @@ abstract class base {
             $existingsections = $this->process_apicall_response($response, ['value' => null]);
             $sections = [];
             foreach ($existingsections['value'] as $section) {
-                $sections[$section['id']] = $section['name'];
+                if (isset($section['displayName'])) {
+                    $sections[$section['id']] = $section['displayName'];
+                } else {
+                    $sections[$section['id']] = $section['name'];
+                }
             }
             if (!empty($courses)) {
                 $this->sync_sections($courses, $notebookid, $sections);
@@ -533,7 +568,12 @@ abstract class base {
 
             if (!in_array($coursename, $sections)) {
                 // Create section.
-                $response = $this->apicall('post', $sectionendpoint, json_encode(['name' => $coursename]));
+                if (\local_o365\rest\unified::is_configured() === true) {
+                    $sectiondata = json_encode(['displayName' => $coursename]);
+                } else {
+                    $sectiondata = json_encode(['name' => $coursename]);
+                }
+                $response = $this->apicall('post', $sectionendpoint, $sectiondata);
                 $response = $this->process_apicall_response($response, ['id' => null]);
                 $this->upsert_user_section($course->id, $response['id']);
             } else {
@@ -846,7 +886,12 @@ abstract class base {
         // If this user is a teacher and viewing a submission, add a timestamp for the new
         // OneNote page.
         if ($isteacher && 'submission_teacher_page_id' == $requestedpageidfield) {
-            $pagerecord->teacher_lastviewed = strtotime($response->lastModifiedTime);
+            if (\local_o365\rest\unified::is_configured() === true) {
+                $modtimeparam = 'lastModifiedDateTime';
+            } else {
+                $modtimeparam = 'lastModifiedTime';
+            }
+            $pagerecord->teacher_lastviewed = strtotime($response->$modtimeparam);
             $pagerecord->teacher_lastviewed = empty($pagerecord->teacher_lastviewed) ? null : $pagerecord->teacher_lastviewed;
         }
         $DB->update_record('local_onenote_assign_pages', $pagerecord);
@@ -1093,40 +1138,51 @@ abstract class base {
      */
     protected function create_page_from_postdata($sectionid, $postdata, $boundary) {
         try {
-            $url = static::API.'/sections/'.$sectionid.'/pages';
-            $token = $this->get_token();
-            if (empty($token)) {
-                \local_onenote\utils::debug('Could not get user token', 'create_page_from_postdata');
-                return null;
-            }
-
-            $curl = new \curl();
-
-            $headers = [
-                'Content-Type: multipart/form-data; boundary='.$boundary,
-                'Authorization: Bearer '.rawurlencode($token),
-            ];
-            foreach ($headers as $header) {
-                $curl->setHeader($header);
-            }
-
-            $rawresponse = $curl->post($url, $postdata, ['CURLOPT_HEADER' => 1]);
-
-            // Check if curl call fails.
-            if ($curl->errno != CURLE_OK) {
-                $errorstr = 'curl error '.$curl->errno.': '.$curl->error;
-                \local_onenote\utils::debug('curl connection error', 'onenote\api\create_page_from_postdata', $errorstr);
-                // If curl call fails and reason is net connectivity return it or return null.
-                return (in_array($curl->errno, ['6', '7', '28'])) ? 'connection_error' : null;
-            }
-
-            if ($curl->info['http_code'] == 201) {
-                $responsewithoutheader = substr($rawresponse, $curl->info['header_size']);
-                $response = json_decode($responsewithoutheader);
+            if (\local_o365\rest\unified::is_configured() === true) {
+                $endpoint = '/sections/'.$sectionid.'/pages';
+                $options['contenttype'] = 'multipart/form-data; boundary='.$boundary;
+                $response = $this->apicall('post', $endpoint, $postdata, $options);
+                $response = $this->process_apicall_response($response, ['id' => null]);
+                // Deep convert array to object.
+                $response = json_decode(json_encode($response));
                 return $response;
             } else {
-                $debugdata = ['curlinfo' => $info, 'postdata' => $postdata];
-                \local_onenote\utils::debug('problem creating page', 'onenote\api\create_page_from_postdata', $debugdata);
+                $url = static::API.'/sections/'.$sectionid.'/pages';
+
+                $token = $this->get_token();
+                if (empty($token)) {
+                    \local_onenote\utils::debug('Could not get user token', 'create_page_from_postdata');
+                    return null;
+                }
+
+                $curl = new \curl();
+
+                $headers = [
+                    'Content-Type: multipart/form-data; boundary='.$boundary,
+                    'Authorization: Bearer '.rawurlencode($token),
+                ];
+                foreach ($headers as $header) {
+                    $curl->setHeader($header);
+                }
+
+                $rawresponse = $curl->post($url, $postdata, ['CURLOPT_HEADER' => 1]);
+
+                // Check if curl call fails.
+                if ($curl->errno != CURLE_OK) {
+                    $errorstr = 'curl error '.$curl->errno.': '.$curl->error;
+                    \local_onenote\utils::debug('curl connection error', 'onenote\api\create_page_from_postdata', $errorstr);
+                    // If curl call fails and reason is net connectivity return it or return null.
+                    return (in_array($curl->errno, ['6', '7', '28'])) ? 'connection_error' : null;
+                }
+
+                if ($curl->info['http_code'] == 201) {
+                    $responsewithoutheader = substr($rawresponse, $curl->info['header_size']);
+                    $response = json_decode($responsewithoutheader);
+                    return $response;
+                } else {
+                    $debugdata = ['curlinfo' => $curl->info, 'postdata' => $postdata];
+                    \local_onenote\utils::debug('problem creating page', 'onenote\api\create_page_from_postdata', $debugdata);
+                }
             }
         } catch (\Exception $e) {
             \local_onenote\utils::debug($e->getMessage(), 'create_page_from_postdata', $e);
