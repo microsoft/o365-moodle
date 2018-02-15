@@ -54,7 +54,7 @@ class sharepoint extends \local_o365\rest\o365api {
             return 'invalid';
         }
 
-        $token = \local_o365\oauth2\systemtoken::get_for_new_resource(null, $siteinfo['resource'], $clientdata, $httpclient);
+        $token = \local_o365\utils::get_app_or_system_token($siteinfo['resource'], $clientdata, $httpclient);
         if (empty($token)) {
             return 'invalid';
         }
