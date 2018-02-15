@@ -140,7 +140,9 @@ abstract class base {
                 try {
                     $httpclient = new \local_o365\httpclient();
                     $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                    $onenoteresource = \local_o365\rest\onenote::get_resource();
+                    $onenoteresource = (\local_o365\rest\unified::is_configured() === true)
+                        ? \local_o365\rest\unified::get_resource()
+                        : \local_o365\rest\onenote::get_resource();
                     $token = \local_o365\oauth2\token::instance($USER->id, $onenoteresource, $clientdata, $httpclient);
                     if (empty($token)) {
                         $debugtracker .= '5';
@@ -405,11 +407,28 @@ abstract class base {
         foreach ($response['value'] as $item) {
             switch ($itemtype) {
                 case 'notebook':
+                    $itemname = 'Notebook';
+                    if (isset($item['name'])) {
+                        // Legacy
+                        $itemname = $item['name'];
+                    } else if (isset($item['displayName'])) {
+                        // Graph
+                        $itemname = $item['displayName'];
+                    }
+                    $itemlastmodified = 'now';
+                    if (isset($item['lastModifiedTime'])) {
+                        // Legacy
+                        $itemlastmodified = $item['lastModifiedTime'];
+                    } else if (isset($item['lastModifiedDateTime'])) {
+                        // Graph
+                        $itemlastmodified = $item['lastModifiedDateTime'];
+                    }
+
                     $items[] = [
-                        'title' => $item['name'],
+                        'title' => $itemname,
                         'path' => $path.'/'.urlencode($item['id']),
-                        'date' => strtotime($item['lastModifiedTime']),
-                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($item['name'], 90))->out(false),
+                        'date' => strtotime($itemlastmodified),
+                        'thumbnail' => $OUTPUT->pix_url(file_extension_icon($itemname, 90))->out(false),
                         'source' => $item['id'],
                         'url' => $item['links']['oneNoteWebUrl']['href'],
                         'author' => $item['createdBy'],

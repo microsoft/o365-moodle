@@ -80,10 +80,14 @@ class observers {
                 $scope = $eventdata['other']['tokenparams']['scope'];
                 $res = $eventdata['other']['tokenparams']['resource'];
                 $token = new \local_o365\oauth2\token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
-                $discres = \local_o365\rest\discovery::get_resource();
-                $disctoken = \local_o365\oauth2\token::jump_resource($token, $discres, $clientdata, $httpclient);
-                $discovery = new \local_o365\rest\discovery($disctoken, $httpclient);
-                $tenant = $discovery->get_tenant();
+                $resource = (\local_o365\rest\unified::is_enabled() === true)
+                    ? \local_o365\rest\unified::get_resource()
+                    : \local_o365\rest\discovery::get_resource();
+                $token = \local_o365\oauth2\token::jump_resource($token, $resource, $clientdata, $httpclient);
+                $apiclient = (\local_o365\rest\unified::is_enabled() === true)
+                    ? new \local_o365\rest\unified($token, $httpclient)
+                    : new \local_o365\rest\discovery($token, $httpclient);
+                $tenant = $apiclient->get_tenant();
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 \local_o365\utils::enableadditionaltenant($tenant);
                 redirect(new \moodle_url('/local/o365/acp.php?mode=tenants'));
