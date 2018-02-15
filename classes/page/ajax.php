@@ -104,6 +104,57 @@ class ajax extends base {
      * Check if a service resource is valid.
      */
     public function mode_checkserviceresource() {
+        if (\local_o365\rest\unified::is_configured() === true) {
+            return $this->checkserviceresource_graph();
+        } else {
+            return $this->checkserviceresource_legacy();
+        }
+    }
+
+    /**
+     * Check is a service resource is valid using the graph API.
+     */
+    protected function checkserviceresource_graph() {
+        $data = new \stdClass;
+        $success = false;
+        $setting = required_param('setting', PARAM_TEXT);
+        $value = required_param('value', PARAM_TEXT);
+        $resource = \local_o365\rest\unified::get_resource();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $httpclient = new \local_o365\httpclient();
+        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+        $apiclient = new \local_o365\rest\unified($token, $httpclient);
+        $caller = 'checkserviceresource_graph';
+        switch ($setting) {
+            case 'aadtenant':
+                try {
+                    $data->valid = $apiclient->test_tenant($value);
+                    $success = true;
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                    $data->valid = false;
+                    $success = true;
+                }
+                break;
+
+            case 'odburl':
+                try {
+                    $data->valid = $apiclient->validate_resource($value, $clientdata);
+                    $success = true;
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                    $data->valid = false;
+                    $success = true;
+                }
+                break;
+        }
+        echo $this->ajax_response($data, $success);
+    }
+
+    /**
+     * Check is a service resource is valid using the legacy API.
+     */
+    protected function checkserviceresource_legacy() {
         $data = new \stdClass;
         $success = false;
 
@@ -112,10 +163,11 @@ class ajax extends base {
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
+        $caller = 'checkserviceresource_legacy';
 
         if ($setting === 'aadtenant') {
             $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
             if (empty($token)) {
                 throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
@@ -141,6 +193,64 @@ class ajax extends base {
      * Detect the correct value for a service resource.
      */
     public function mode_detectserviceresource() {
+        if (\local_o365\rest\unified::is_configured() === true) {
+            return $this->detectserviceresource_graph();
+        } else {
+            return $this->detectserviceresource_legacy();
+        }
+    }
+
+    /**
+     * Detect the correct value for a service resource using the graph API.
+     */
+    protected function detectserviceresource_graph() {
+        $data = new \stdClass;
+        $success = false;
+        $setting = required_param('setting', PARAM_TEXT);
+        $resource = \local_o365\rest\unified::get_resource();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+        $httpclient = new \local_o365\httpclient();
+        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+        $apiclient = new \local_o365\rest\unified($token, $httpclient);
+        switch ($setting) {
+            case 'aadtenant':
+                try {
+                    $service = $apiclient->get_tenant();
+                    $data->settingval = $service;
+                    $success = true;
+                    echo $this->ajax_response($data, $success);
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug($e->getMessage(), 'detect aadtenant graph', $e);
+                    echo $this->error_response($e->getMessage());
+                }
+                die();
+
+            case 'odburl':
+                try {
+                    $tenant = $apiclient->get_tenant();
+                    $suffix = '.onmicrosoft.com';
+                    $sufflen = strlen($suffix);
+                    if (substr($tenant, -$sufflen) === $suffix) {
+                        $prefix = substr($tenant, 0, -$sufflen);
+                        $service = $prefix.'-my.sharepoint.com';
+                        $data->settingval = $service;
+                        $success = true;
+                        echo $this->ajax_response($data, $success);
+                    } else {
+                        echo $this->error_response(get_string('settings_odburl_error_graph', 'local_o365'));
+                    }
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug($e->getMessage(), 'detect aadtenant graph', $e);
+                    echo $this->error_response($e->getMessage());
+                }
+                die();
+        }
+    }
+
+    /**
+     * Detect the correct value for a service resource using the legacy API.
+     */
+    protected function detectserviceresource_legacy() {
         $data = new \stdClass;
         $success = false;
 
@@ -150,7 +260,7 @@ class ajax extends base {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         // Get service api currently requires system token to be used.
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
         }
@@ -218,7 +328,6 @@ class ajax extends base {
         $unifiedresource = \local_o365\rest\unified::get_resource();
         $correctredirecturl = \auth_oidc\utils::get_redirecturl();
 
-
         if (\local_o365\rest\unified::is_enabled() === true) {
             // Microsoft Graph API.
             try {
@@ -226,7 +335,6 @@ class ajax extends base {
                 if (empty($token)) {
                     throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
                 }
-
                 $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
 
                 // Check app-only perms.
@@ -257,7 +365,7 @@ class ajax extends base {
         } else {
             // Legacy API.
             $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
             if (empty($token)) {
                 throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
@@ -321,7 +429,7 @@ class ajax extends base {
         $resource = \local_o365\rest\azuread::get_resource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
         }
