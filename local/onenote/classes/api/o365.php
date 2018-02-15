@@ -48,7 +48,7 @@ class o365 extends base {
             } else {
                 $apiclient = \local_o365\rest\onenote::instance_for_user($USER->id);
             }
-            return $apiclient->apicall($httpmethod, $apimethod, $params);
+            return $apiclient->apicall($httpmethod, $apimethod, $params, $options);
         } catch (\Exception $e) {
             return json_encode(['error' => $e->getMessage()]);
         }
