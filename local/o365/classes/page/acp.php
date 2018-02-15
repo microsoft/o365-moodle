@@ -50,6 +50,22 @@ class acp extends base {
     }
 
     /**
+     * Provide admin consent.
+     */
+    public function mode_adminconsent() {
+        $auth = new \auth_oidc\loginflow\authcode;
+        $auth->set_httpclient(new \auth_oidc\httpclient());
+        $stateparams = [
+            'redirect' => '/admin/settings.php?section=local_o365',
+            'justauth' => true,
+            'forceflow' => 'authcode',
+            'action' => 'adminconsent',
+        ];
+        $extraparams = ['prompt' => 'admin_consent'];
+        $auth->initiateauthrequest(true, $stateparams, $extraparams);
+    }
+
+    /**
      * Set the system API user.
      */
     public function mode_setsystemuser() {
@@ -199,7 +215,12 @@ class acp extends base {
         echo \html_writer::tag('h2', get_string('acp_healthcheck', 'local_o365'));
         echo '<br />';
 
-        $healthchecks = ['systemapiuser', 'ratelimit'];
+        $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
+        if (empty($enableapponlyaccess)) {
+            $healthchecks = ['systemapiuser', 'ratelimit'];
+        } else {
+            $healthchecks = ['ratelimit'];
+        }
         foreach ($healthchecks as $healthcheck) {
             $healthcheckclass = '\local_o365\healthcheck\\'.$healthcheck;
             $healthcheck = new $healthcheckclass();
@@ -699,7 +720,7 @@ class acp extends base {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $graphresource = \local_o365\rest\unified::get_resource();
-        $graphtoken = \local_o365\oauth2\systemtoken::instance(null, $graphresource, $clientdata, $httpclient);
+        $graphtoken = \local_o365\utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
         if (empty($graphtoken)) {
             mtrace('Could not get Microsoft Graph API token.');
             return true;
@@ -769,6 +790,8 @@ class acp extends base {
                         echo "Cleaning up object for Moodle course {$object->moodleid} Office 365 object id {$object->objectid}\n";
                     }
                 }
+            } else {
+                echo "Group for course {$object->moodleid} still exists. Object id: {$object->objectid} \n";
             }
         }
         echo "Check completed.";
@@ -787,7 +810,7 @@ class acp extends base {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $graphresource = \local_o365\rest\unified::get_resource();
-        $graphtoken = \local_o365\oauth2\systemtoken::instance(null, $graphresource, $clientdata, $httpclient);
+        $graphtoken = \local_o365\utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
         if (empty($graphtoken)) {
             mtrace('Could not get Microsoft Graph API token.');
             return true;
