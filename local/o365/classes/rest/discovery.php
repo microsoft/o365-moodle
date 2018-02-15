@@ -36,7 +36,7 @@ class discovery extends \local_o365\rest\o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-        return 'https://api.office.com/discovery/';
+        return 'https://graph.microsoft.com';
     }
 
     /**
@@ -45,7 +45,7 @@ class discovery extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        return 'https://api.office.com/discovery/v1.0/me/services';
+        return 'https://graph.microsoft.com/v1.0';
     }
 
     /**

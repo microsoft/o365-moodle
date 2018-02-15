@@ -81,7 +81,7 @@ abstract class o365api {
         if (!empty($userid)) {
             $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
         } else {
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
         }
         if (!empty($token)) {
             return new static($token, $httpclient);

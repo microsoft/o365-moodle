@@ -24,21 +24,9 @@
 namespace local_o365\oauth2;
 
 /**
- * Represents an oauth2 token.
+ * Represents an oauth2 token from the system API user.
  */
-class systemtoken extends \local_o365\oauth2\token {
-
-    /**
-     * Get a token for a given resource and user.
-     *
-     * @param string $resource The new resource.
-     * @param \local_o365\oauth2\clientdata $clientdata Client information.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
-     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
-     */
-    public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-    }
-
+class systemapiusertoken extends \local_o365\oauth2\token {
     /**
      * Get stored token for a user and resourse.
      *
