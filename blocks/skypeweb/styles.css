@@ -1,4 +1,4 @@
-.modal {
+.block_skypeweb .modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -9,7 +9,7 @@
     background: rgba(255, 255, 255, 0.65) 50% 50% url("pix/loading.gif") no-repeat;
 }
 
-.header h1 {
+.block_skypeweb .header h1 {
     font-size: 40px;
     margin-bottom: 2px;
     padding-bottom: 10px;
@@ -18,7 +18,7 @@
     -webkit-margin-after: 0;
 }
 
-.container {
+.block_skypeweb .container {
     position: relative;
     margin: 20px auto 40px 30px;
 }
