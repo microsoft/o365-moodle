@@ -202,7 +202,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
         if (!empty($spresource)) {
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
+            $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
             if (!empty($sptoken)) {
                 $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
             } else {

@@ -359,7 +359,7 @@ class sync extends \core\task\scheduled_task {
         $resource = \local_o365\rest\sds::get_resource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         if (!empty($clientdata)) {
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
             if (!empty($token)) {
                 $apiclient = new \local_o365\rest\sds($token, $httpclient);
                 return $apiclient;
