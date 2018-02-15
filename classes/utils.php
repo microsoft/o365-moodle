@@ -355,11 +355,15 @@ class utils {
         try {
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $httpclient = new \local_o365\httpclient();
-            $discres = \local_o365\rest\discovery::get_resource();
-            $disctoken = \local_o365\oauth2\token::instance($userid, $discres, $clientdata, $httpclient);
-            if (!empty($disctoken)) {
-                $discovery = new \local_o365\rest\discovery($disctoken, $httpclient);
-                $tenant = $discovery->get_tenant();
+            $resource = (\local_o365\rest\unified::is_enabled() === true)
+                ? \local_o365\rest\unified::get_resource()
+                : \local_o365\rest\discovery::get_resource();
+            $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+            if (!empty($token)) {
+                $apiclient = (\local_o365\rest\unified::is_enabled() === true)
+                    ? new \local_o365\rest\unified($token, $httpclient)
+                    : new \local_o365\rest\discovery($token, $httpclient);
+                $tenant = $apiclient->get_tenant();
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 return ($tenant != get_config('local_o365', 'aadtenant'))
                     ? $tenant : '';
@@ -380,11 +384,15 @@ class utils {
         try {
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $httpclient = new \local_o365\httpclient();
-            $discres = \local_o365\rest\discovery::get_resource();
-            $disctoken = \local_o365\oauth2\token::instance($userid, $discres, $clientdata, $httpclient);
-            if (!empty($disctoken)) {
-                $discovery = new \local_o365\rest\discovery($disctoken, $httpclient);
-                $tenant = $discovery->get_odburl();
+            $resource = (\local_o365\rest\unified::is_enabled() === true)
+                ? \local_o365\rest\unified::get_resource()
+                : \local_o365\rest\discovery::get_resource();
+            $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+            if (!empty($token)) {
+                $apiclient = (\local_o365\rest\unified::is_enabled() === true)
+                    ? new \local_o365\rest\unified($token, $httpclient)
+                    : new \local_o365\rest\discovery($token, $httpclient);
+                $tenant = $apiclient->get_odburl();
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 return ($tenant != get_config('local_o365', 'odburl'))
                     ? $tenant : '';
