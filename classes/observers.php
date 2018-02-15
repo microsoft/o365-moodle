@@ -67,6 +67,10 @@ class observers {
                 redirect(new \moodle_url('/admin/settings.php?section=local_o365'));
                 break;
 
+            case 'adminconsent':
+                redirect(new \moodle_url('/admin/settings.php?section=local_o365'));
+                break;
+
             case 'addtenant':
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
                 $httpclient = new \local_o365\httpclient();
@@ -415,7 +419,7 @@ class observers {
             if (!empty($spresource)) {
                 $httpclient = new \local_o365\httpclient();
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $sptoken = \local_o365\oauth2\systemtoken::instance(null, $spresource, $clientdata, $httpclient);
+                $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
                 if (!empty($sptoken)) {
                     $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
                     return $sharepoint;

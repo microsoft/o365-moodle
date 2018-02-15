@@ -47,7 +47,7 @@ class main {
 
         if ($uselegacy === true) {
             $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $this->clientdata, $this->httpclient);
         } else {
             $resource = \local_o365\rest\unified::get_resource();
             $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
@@ -82,7 +82,9 @@ class main {
 
         $token = \local_o365\oauth2\token::instance($muserid, $resource, $this->clientdata, $this->httpclient);
         if (empty($token) && $systemfallback === true) {
-            $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+            $token = ($unifiedconfigured === true)
+                ? \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient)
+                : \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
             throw new \Exception('No token available for user #'.$muserid);
@@ -301,7 +303,7 @@ class main {
                 $httpclient = new \local_o365\httpclient();
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
                 $resource = \local_o365\rest\unified::get_resource();
-                $token = \local_o365\oauth2\systemtoken::instance(null, $resource, $clientdata, $httpclient);
+                $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
                 $apiclient = new \local_o365\rest\unified($token, $httpclient);
             } catch (\Exception $e) {
                 \local_o365\utils::debug('Could not construct graph api', 'check_usercreationrestriction', $e);

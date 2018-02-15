@@ -75,6 +75,9 @@ class apptoken extends \local_o365\oauth2\token {
         $tokenresult = $httpclient->post($tokenendpoint, $params);
         $tokenresult = @json_decode($tokenresult, true);
         if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
+            if (empty($tokenresult['scope'])) {
+                $tokenresult['scope'] = '';
+            }
             return $tokenresult;
         } else {
             $errmsg = 'Problem encountered getting a new token.';
