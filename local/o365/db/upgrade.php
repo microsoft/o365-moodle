@@ -571,5 +571,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2016120500.06', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2017111301) {
+        mtrace('Warning! This version removes the legacy Office 365 API. If you *absolutely* need it, add "$CFG->local_o365_forcelegacyapi = true;" to your config.php. This option will be removed in the next version.');
+        upgrade_plugin_savepoint($result, '2017111301', 'local', 'o365');
+    }
+
     return $result;
 }
