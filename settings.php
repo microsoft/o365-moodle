@@ -184,6 +184,9 @@ if ($hassiteconfig) {
 
         $stepsenabled = 1;
 
+        $configdesc = new \lang_string('settings_migration', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_setup_migration', '', $configdesc));
+
         // STEP 1: Registration.
         $oidcsettings = new \moodle_url('/admin/settings.php?section=authsettingoidc');
         $label = new lang_string('settings_setup_step1', 'local_o365');
