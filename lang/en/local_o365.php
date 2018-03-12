@@ -216,6 +216,7 @@ $string['healthcheck_ratelimit_result_passed'] = 'Office 365 API calls are execu
 $string['settings_aadsync'] = 'Sync users with Azure AD';
 $string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
+$string['settings_aadsync_update'] = 'Update all accounts in Moodle for users in Azure AD';
 $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
 $string['settings_aadsync_matchswitchauth'] = 'Switch matched users to Office 365 (OpenID Connect) authentication';
@@ -551,6 +552,8 @@ $string['webservices_error_couldnotsavegrade'] = 'Could not save grade.';
 
 $string['help_user_create'] = 'Create Accounts Help';
 $string['help_user_create_help'] = 'This will create users in Moodle from each user in the linked Azure Active Directory. Only users which do not currently have Moodle accounts will have accounts created. New accounts will be set up to use their Office 365 credentials to log in to Moodle (using the OpenID Connect authentication plugin), and will be able to use all Office 365/Moodle integration features.';
+$string['help_user_update'] = 'Update All Accounts Help';
+$string['help_user_update_help'] = 'This will update all users in Moodle from each user in the linked Azure Active Directory.';
 $string['help_user_delete'] = 'Delete Accounts Help';
 $string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Azure Active Directory. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful!';
 $string['help_user_match'] = 'Match Accounts Help';
