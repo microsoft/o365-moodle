@@ -435,6 +435,59 @@ class main {
     }
 
     /**
+     * Updates a Moodle user from Azure AD user data.
+     *
+     * @param array $aaddata Array of Azure AD user data.
+     * @return \stdClass An object representing the created Moodle user.
+     */
+    public function update_user_from_aaddata($aaddata,$fullexistinguser) {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot.'/user/profile/lib.php');
+        require_once($CFG->dirroot.'/user/lib.php');
+
+        // Locate country code.
+        if (isset($aaddata['country'])) {
+            $countries = get_string_manager()->get_list_of_countries(true, 'en');
+            foreach ($countries as $code => $name) {
+                if ($aaddata['country'] == $name) {
+                    $aaddata['country'] = $code;
+                }
+            }
+            if (strlen($aaddata['country']) > 2) {
+                // Limit string to 2 chars to prevent sql error.
+                $aaddata['country'] = substr($aaddata['country'], 0, 2);
+            }
+        }
+
+        $existinguser = static::apply_configured_fieldmap($aaddata, $fullexistinguser, 'login');
+
+        $password = null;
+        $existinguser->idnumber = $existinguser->username;
+
+        if (!empty($existinguser->email)) {
+            if (email_is_not_allowed($existinguser->email)) {
+                unset($existinguser->email);
+            }
+        }
+
+        if (empty($existinguser->lang) || !get_string_manager()->translation_exists($existinguser->lang)) {
+            $existinguser->lang = $CFG->lang;
+        }
+
+        $existinguser->timemodified = time();
+        user_update_user($existinguser, false, false); // Update a user with a user object (will compare against the ID)
+
+        // Save user profile data.
+        profile_save_data($existinguser);
+
+        // Trigger event.
+        \core\event\user_updated::create_from_userid($existinguser->id)->trigger();
+
+        return TRUE;
+    }
+
+    /**
      * Selectively run mtrace.
      *
      * @param string $msg The message.
@@ -726,6 +779,16 @@ class main {
                     }
                     // User already connected.
                     $this->mtrace('User is now synced.');
+                }
+
+                // Update existing user on moodle from AD
+                if ($existinguser->auth === 'oidc'){
+                    if(isset($aadsync['update'])){ // config setting in here
+                        $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                        $this->update_user_from_aaddata($user,$fullexistinguser);
+                        $this->mtrace('User is now updated.');
+                    }
+
                 }
             }
         }
