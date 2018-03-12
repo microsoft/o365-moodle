@@ -183,12 +183,13 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
         $choices = [
             'create' => new lang_string('settings_aadsync_create', 'local_o365'),
+            'update' => new lang_string('settings_aadsync_update', 'local_o365'),
             'delete' => new lang_string('settings_aadsync_delete', 'local_o365'),
             'match' => new lang_string('settings_aadsync_match', 'local_o365'),
             'matchswitchauth' => new lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
             'appassign' => new lang_string('settings_aadsync_appassign', 'local_o365'),
             'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
-            'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
+            'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365')
         ];
         $default = [];
         $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));
