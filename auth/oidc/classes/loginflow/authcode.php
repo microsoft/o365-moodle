@@ -70,14 +70,14 @@ class authcode extends \auth_oidc\loginflow\base {
      * @return mixed Determined by loginflow.
      */
     public function handleredirect() {
-        $state = optional_param('state', '', PARAM_ALPHANUMEXT);
+        $state = optional_param('state', '', PARAM_RAW);
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
         $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
         $justauth = (bool)optional_param('justauth', 0, PARAM_BOOL);
         if (!empty($state)) {
             $requestparams = [
-                'state' => optional_param('state', '', PARAM_ALPHANUMEXT),
-                'code' => optional_param('code', '', PARAM_ALPHANUMEXT),
+                'state' => optional_param('state', '', PARAM_RAW),
+                'code' => optional_param('code', '', PARAM_RAW),
                 'error_description' => optional_param('error_description', '', PARAM_TEXT),
             ];
             // Response from OP.
