@@ -415,8 +415,6 @@ $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or cli
 $string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Azure AD';
 $string['settings_setup_step1_desc'] = 'Head over to Azure (<a href="https://portal.azure.com">https://portal.azure.com</a>), go to "Azure Active Directory", then "App Registrations", and register an application for Moodle using the following information. Please ensure this information is entered in Azure exactly as it appears here as small differences may break functionality.';
 $string['settings_setup_step1clientcreds'] = '<br />Once registered, create a key for the application in Azure. One you have the key, copy the application ID and key from Azure into the fields below.';
-$string['settings_setup_step1_appiduri'] = 'App ID URI';
-$string['settings_setup_step1_appiduri_desc'] = '';
 $string['settings_setup_step1_signonurl'] = 'Sign-On URL';
 $string['settings_setup_step1_signonurl_desc'] = '';
 $string['settings_setup_step1_replyurl'] = 'Reply URL';
