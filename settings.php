@@ -77,17 +77,9 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_setup_step1_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_setup_step1', $label, $desc));
 
-        $configkey = new \lang_string('settings_setup_step1_appiduri', 'local_o365');
-        $configdesc = new \lang_string('settings_setup_step1_appiduri_desc', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\appiduri('local_o365/appiduri', $configkey, $configdesc));
-
         $configkey = new \lang_string('settings_setup_step1_signonurl', 'local_o365');
         $configdesc = new \lang_string('settings_setup_step1_signonurl_desc', 'local_o365');
         $settings->add(new \auth_oidc\form\adminsetting\redirecturi('local_o365/signonurl', $configkey, $configdesc));
-
-        $configkey = new \lang_string('settings_setup_step1_replyurl', 'local_o365');
-        $configdesc = new \lang_string('settings_setup_step1_replyurl_desc', 'local_o365');
-        $settings->add(new \auth_oidc\form\adminsetting\redirecturi('local_o365/replyurl', $configkey, $configdesc));
 
         $configdesc = new \lang_string('settings_setup_step1clientcreds', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_setup_step1clientcreds', '', $configdesc));
