@@ -445,6 +445,10 @@ class coursegroups {
      */
     public function get_all_officegroupids_classnotebook_notpresent() {
         $notebookcourses = \local_o365\feature\usergroups\utils::get_enabled_courses_with_feature('notebook');
+        if (empty($notebookcourses)) {
+            return [];
+        }
+
         $allgroups = [];
 
         $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
