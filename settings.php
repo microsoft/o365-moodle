@@ -39,9 +39,9 @@ if (!defined('LOCAL_O365_TAB_SETUP')) {
      */
     define('LOCAL_O365_TAB_OPTIONS', 1);
     /**
-     * LOCAL_O365_TAB_TOOLS - Admin tools
+     * LOCAL_O365_TAB_ADVANCED - Admin tools + advanced settings.
      */
-    define('LOCAL_O365_TAB_TOOLS', 2);
+    define('LOCAL_O365_TAB_ADVANCED', 2);
     /**
      * LOCAL_O365_TAB_CONNECTIONS - User connections table.
      */
@@ -59,129 +59,13 @@ if ($hassiteconfig) {
     $tabs = new \local_o365\adminsetting\tabs('local_o365/tabs', $settings->name, false);
     $tabs->addtab(LOCAL_O365_TAB_SETUP, new lang_string('settings_header_setup', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_OPTIONS, new lang_string('settings_header_options', 'local_o365'));
-    $tabs->addtab(LOCAL_O365_TAB_TOOLS, new lang_string('settings_header_tools', 'local_o365'));
+    $tabs->addtab(LOCAL_O365_TAB_ADVANCED, new lang_string('settings_header_advanced', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_SDS, new lang_string('settings_header_sds', 'local_o365'));
     $settings->add($tabs);
 
     $tab = $tabs->get_setting();
 
-    if ($tab === LOCAL_O365_TAB_TOOLS || !empty($install)) {
-
-        $label = new lang_string('settings_tools_tenants', 'local_o365');
-        $linktext = new lang_string('settings_tools_tenants_linktext', 'local_o365');
-        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenants']);
-        $desc = new lang_string('settings_tools_tenants_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\toollink('local_o365/tenants', $label, $linktext, $linkurl, $desc));
-
-        $label = new lang_string('settings_healthcheck', 'local_o365');
-        $linktext = new lang_string('settings_healthcheck_linktext', 'local_o365');
-        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
-        $desc = new lang_string('settings_healthcheck_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\toollink('local_o365/healthcheck', $label, $linktext, $linkurl, $desc));
-
-        $label = new lang_string('settings_userconnections', 'local_o365');
-        $linktext = new lang_string('settings_userconnections_linktext', 'local_o365');
-        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
-        $desc = new lang_string('settings_userconnections_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\toollink('local_o365/userconnections', $label, $linktext, $linkurl, $desc));
-
-        $label = new lang_string('settings_usermatch', 'local_o365');
-        $linktext = new lang_string('settings_usermatch', 'local_o365');
-        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatch']);
-        $desc = new lang_string('settings_usermatch_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\toollink('local_o365/usermatch', $label, $linktext, $linkurl, $desc));
-
-        $label = new lang_string('settings_maintenance', 'local_o365');
-        $linktext = new lang_string('settings_maintenance_linktext', 'local_o365');
-        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'maintenance']);
-        $desc = new lang_string('settings_maintenance_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\toollink('local_o365/maintenance', $label, $linktext, $linkurl, $desc));
-
-    }
-    if ($tab == LOCAL_O365_TAB_OPTIONS || !empty($install)) {
-
-        $label = new lang_string('settings_options_usersync', 'local_o365');
-        $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
-        $settings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
-
-        $label = new lang_string('settings_aadsync', 'local_o365');
-        $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
-        $desc = new lang_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
-        $choices = [
-            'create' => new lang_string('settings_aadsync_create', 'local_o365'),
-            'delete' => new lang_string('settings_aadsync_delete', 'local_o365'),
-            'match' => new lang_string('settings_aadsync_match', 'local_o365'),
-            'matchswitchauth' => new lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
-            'appassign' => new lang_string('settings_aadsync_appassign', 'local_o365'),
-            'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
-            'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
-        ];
-        $default = [];
-        $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));
-
-        $key = 'local_o365/usersynccreationrestriction';
-        $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
-        $desc = new lang_string('settings_usersynccreationrestriction_details', 'local_o365');
-        $default = [];
-        $settings->add(new \local_o365\adminsetting\usersynccreationrestriction($key, $label, $desc, $default));
-
-        $label = new lang_string('settings_fieldmap', 'local_o365');
-        $desc = new lang_string('settings_fieldmap_details', 'local_o365');
-        $default = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
-        $settings->add(new \local_o365\adminsetting\usersyncfieldmap('local_o365/fieldmap', $label, $desc, $default));
-
-        $label = new lang_string('settings_options_features', 'local_o365');
-        $desc = new lang_string('settings_options_features_desc', 'local_o365');
-        $settings->add(new admin_setting_heading('local_o365_options_features', $label, $desc));
-
-        $label = new lang_string('settings_usergroups', 'local_o365');
-        $desc = new lang_string('settings_usergroups_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\usergroups('local_o365/creategroups', $label, $desc, 'off'));
-
-        $label = new lang_string('settings_sharepointlink', 'local_o365');
-        $desc = new lang_string('settings_sharepointlink_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
-
-        $label = new lang_string('acp_sharepointcourseselect', 'local_o365');
-        $desc = new lang_string('acp_sharepointcourseselect_desc', 'local_o365');
-        $settingname = 'local_o365/sharepointcourseselect';
-        $settings->add(new \local_o365\adminsetting\sharepointcourseselect($settingname, $label, $desc, 'none'));
-
-        $label = new lang_string('settings_options_advanced', 'local_o365');
-        $desc = new lang_string('settings_options_advanced_desc', 'local_o365');
-        $settings->add(new admin_setting_heading('local_o365_options_advanced', $label, $desc));
-
-        $label = new lang_string('settings_o365china', 'local_o365');
-        $desc = new lang_string('settings_o365china_details', 'local_o365');
-        $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
-
-        $label = new lang_string('settings_onenote', 'local_o365');
-        $desc = new lang_string('settings_onenote_details', 'local_o365');
-        $settings->add(new \admin_setting_configcheckbox('local_o365/onenote', $label, $desc, '0'));
-
-        $label = new lang_string('settings_previewfeatures', 'local_o365');
-        $desc = new lang_string('settings_previewfeatures_details', 'local_o365');
-        $settings->add(new \admin_setting_configcheckbox('local_o365/enablepreview', $label, $desc, '0'));
-
-        $label = new lang_string('settings_debugmode', 'local_o365');
-        $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
-        $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
-        $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
-
-        $label = new lang_string('settings_switchauthminupnsplit0', 'local_o365');
-        $desc = new lang_string('settings_switchauthminupnsplit0_details', 'local_o365');
-        $settings->add(new \admin_setting_configtext('local_o365/switchauthminupnsplit0', $label, $desc, '10'));
-
-        $label = new lang_string('settings_photoexpire', 'local_o365');
-        $desc = new lang_string('settings_photoexpire_details', 'local_o365');
-        $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
-
-    }
-    if ($tab == LOCAL_O365_TAB_CONNECTIONS || !empty($install)) {
-
-    }
     if ($tab == LOCAL_O365_TAB_SETUP || !empty($install)) {
-
         $stepsenabled = 1;
 
         $configdesc = new \lang_string('settings_migration', 'local_o365');
@@ -295,6 +179,131 @@ if ($hassiteconfig) {
             $settings->add(new \local_o365\adminsetting\azuresetup('local_o365/azuresetup', $label, $desc));
         }
     }
+
+    if ($tab == LOCAL_O365_TAB_OPTIONS || !empty($install)) {
+
+        $label = new lang_string('settings_options_usersync', 'local_o365');
+        $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
+
+        $label = new lang_string('settings_aadsync', 'local_o365');
+        $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
+        $desc = new lang_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
+        $choices = [
+            'create' => new lang_string('settings_aadsync_create', 'local_o365'),
+            'delete' => new lang_string('settings_aadsync_delete', 'local_o365'),
+            'match' => new lang_string('settings_aadsync_match', 'local_o365'),
+            'matchswitchauth' => new lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
+            'appassign' => new lang_string('settings_aadsync_appassign', 'local_o365'),
+            'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
+            'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
+        ];
+        $default = [];
+        $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));
+
+        $key = 'local_o365/usersynccreationrestriction';
+        $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
+        $desc = new lang_string('settings_usersynccreationrestriction_details', 'local_o365');
+        $default = [];
+        $settings->add(new \local_o365\adminsetting\usersynccreationrestriction($key, $label, $desc, $default));
+
+        $label = new lang_string('settings_fieldmap', 'local_o365');
+        $desc = new lang_string('settings_fieldmap_details', 'local_o365');
+        $default = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
+        $settings->add(new \local_o365\adminsetting\usersyncfieldmap('local_o365/fieldmap', $label, $desc, $default));
+
+        $label = new lang_string('settings_secthead_coursesync', 'local_o365');
+        $desc = new lang_string('settings_secthead_coursesync_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_section_coursesync', $label, $desc));
+
+        $label = new lang_string('settings_usergroups', 'local_o365');
+        $desc = new lang_string('settings_usergroups_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\usergroups('local_o365/creategroups', $label, $desc, 'off'));
+
+    }
+
+    if ($tab === LOCAL_O365_TAB_ADVANCED || !empty($install)) {
+        // Tools.
+        $label = new lang_string('settings_header_tools', 'local_o365');
+        $desc = '';
+        $settings->add(new admin_setting_heading('local_o365_section_tools', $label, $desc));
+
+        $label = new lang_string('settings_tools_tenants', 'local_o365');
+        $linktext = new lang_string('settings_tools_tenants_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenants']);
+        $desc = new lang_string('settings_tools_tenants_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/tenants', $label, $linktext, $linkurl, $desc));
+
+        $label = new lang_string('settings_healthcheck', 'local_o365');
+        $linktext = new lang_string('settings_healthcheck_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
+        $desc = new lang_string('settings_healthcheck_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/healthcheck', $label, $linktext, $linkurl, $desc));
+
+        $label = new lang_string('settings_userconnections', 'local_o365');
+        $linktext = new lang_string('settings_userconnections_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
+        $desc = new lang_string('settings_userconnections_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/userconnections', $label, $linktext, $linkurl, $desc));
+
+        $label = new lang_string('settings_usermatch', 'local_o365');
+        $linktext = new lang_string('settings_usermatch', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatch']);
+        $desc = new lang_string('settings_usermatch_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/usermatch', $label, $linktext, $linkurl, $desc));
+
+        $label = new lang_string('settings_maintenance', 'local_o365');
+        $linktext = new lang_string('settings_maintenance_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'maintenance']);
+        $desc = new lang_string('settings_maintenance_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/maintenance', $label, $linktext, $linkurl, $desc));
+
+        // Advanced settings.
+        $label = new lang_string('settings_secthead_advanced', 'local_o365');
+        $desc = new lang_string('settings_secthead_advanced_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_section_advanced', $label, $desc));
+
+        $label = new lang_string('settings_o365china', 'local_o365');
+        $desc = new lang_string('settings_o365china_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
+
+        $label = new lang_string('settings_debugmode', 'local_o365');
+        $logurl = new \moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
+        $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
+        $settings->add(new \admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
+
+        $label = new lang_string('settings_switchauthminupnsplit0', 'local_o365');
+        $desc = new lang_string('settings_switchauthminupnsplit0_details', 'local_o365');
+        $settings->add(new \admin_setting_configtext('local_o365/switchauthminupnsplit0', $label, $desc, '10'));
+
+        $label = new lang_string('settings_photoexpire', 'local_o365');
+        $desc = new lang_string('settings_photoexpire_details', 'local_o365');
+        $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
+
+        // Legacy settings.
+        $label = new lang_string('settings_secthead_legacy', 'local_o365');
+        $desc = new lang_string('settings_secthead_legacy_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_section_legacy', $label, $desc));
+
+        $label = new lang_string('settings_sharepointlink', 'local_o365');
+        $desc = new lang_string('settings_sharepointlink_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
+
+        $label = new lang_string('acp_sharepointcourseselect', 'local_o365');
+        $desc = new lang_string('acp_sharepointcourseselect_desc', 'local_o365');
+        $settingname = 'local_o365/sharepointcourseselect';
+        $settings->add(new \local_o365\adminsetting\sharepointcourseselect($settingname, $label, $desc, 'none'));
+
+        // Preview features.
+        $label = new lang_string('settings_secthead_preview', 'local_o365');
+        $desc = new lang_string('settings_secthead_preview_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_section_preview', $label, $desc));
+
+        $label = new lang_string('settings_previewfeatures', 'local_o365');
+        $desc = new lang_string('settings_previewfeatures_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/enablepreview', $label, $desc, '0'));
+    }
+
     if ($tab == LOCAL_O365_TAB_SDS || !empty($install)) {
         $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_sds_intro_previewwarning', 'local_o365');
