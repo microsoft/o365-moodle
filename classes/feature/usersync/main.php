@@ -382,7 +382,9 @@ class main {
         $newuser = static::apply_configured_fieldmap($aaddata, $newuser, 'create');
 
         $password = null;
-        $newuser->idnumber = $newuser->username;
+        if (!isset($newuser->idnumber)) {
+            $newuser->idnumber = $newuser->username;
+        }
 
         if (!empty($newuser->email)) {
             if (email_is_not_allowed($newuser->email)) {
