@@ -1,4 +1,0 @@
-OneNote
-=======
-
-If you have installed all the plugins (for example, by installing [1](https://moodle.org/plugins/view/local_office365)) then you already have the OneNote plugins installed. To access OneNote using your Office 365 subscription, add OneNote to the list of applications in your Azure application. This is done the same way you configured Azure permissions, above. Note that OneNote is still in preview, and may not be available to everyone yet. If you don't see OneNote in the list of applications to add to your Azure application, you can try logging in to a desktop OneNote application using an administrator account in your Office 365 tenant. This sometimes expedites to the process of adding the OneNote preview to your tenant. For more information on OneNote, see [MicrosoftServices\#Configuring\_OneNote](MicrosoftServices#Configuring_OneNote "wikilink")
