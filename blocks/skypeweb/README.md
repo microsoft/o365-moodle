@@ -24,7 +24,7 @@ For more documentation, visit https://docs.moodle.org/30/en/Office365
 
 You will need an Azure subscription. If you do not have one, you can create one by visiting [http://azure.microsoft.com/en-us/pricing/free-trial/ Microsoft Azure Sign Up](http://azure.microsoft.com/en-us/pricing/free-trial/ Microsoft Azure Sign Up "wikilink")
 
-To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](https://manage.windowsazure.com) to manage your Office 365 Microsoft Azure Active Directory:
+To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](https://portal.azure.com) to manage your Office 365 Microsoft Azure Active Directory:
 
 1.  Create a new Active Directory.
 2.  Select Use existing directory.
@@ -43,7 +43,7 @@ To use Moodle with Office 365 for SSO, you must [configure Microsoft Azure](http
 
 ### Register your Moodle instance as an Application in Azure Active Directory
 
-1.  Sign in to the [Microsoft Azure Management Portal](https://manage.windowsazure.com).
+1.  Sign in to the [Microsoft Azure Management Portal](https://portal.azure.com).
 2.  Click on the **Active Directory** icon on the left menu, and then click on the desired Office 365 connected Azure AD.
 3.  On the top menu, click **Applications**. If no apps have been added to your directory, this page will only show the **Add an App** link. Click on the link, or alternatively you can click on the **Add** button on the command bar.
 4.  On the **What do you want to do** page, click on the link to **Add an application my organization is developing**.
