@@ -69,7 +69,7 @@ Pull requests adding new features are much appreciated but note that they may be
 Contributions to our documentation are especially appreciated! All documentation lives in the /local/o365docs folder of the development repository (https://github.com/Microsoft/o365-moodle). Updates to this documentation can be sent via pull request like any other contributions.
 
 ### Code Review
-All pull requests go through a thorough examination from developers before they are merged. Please read our [code review process](https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs/codereview.md) and ensure your code is consistent before submitting. A developer may respond with changes that are needed before a pull request can be accepted and it is up to the submitter to make those changes. If accepted, your commit will remain as-is to ensure you get credit, but developers may modify solutions slightly in subsequent commits.
+All pull requests go through a thorough examination from maintainers before they are merged. Please read our [development guide](https://github.com/Microsoft/o365-moodle/blob/master/local/o365docs/devguide.md) and ensure your code adheres to the coding standard before submitting. A maintainer may respond with changes that are needed before a pull request can be accepted and it is up to the submitter to make those changes. If accepted, your commit will remain as-is to ensure you get credit, but maintainers may modify solutions slightly in subsequent commits.
 
 ### CLA
 Finally, before we can accept your pull request, you'll need to electronically complete Microsoft's [Contributor License Agreement](https://cla.microsoft.com/). If you've done this for other Microsoft projects, then you're already covered.
