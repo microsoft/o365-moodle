@@ -747,6 +747,21 @@ Where is the Microsoft block?
 
 The Microsoft block is not added to a Moodle page automatically. Once installed, navigate to the Moodle page you want to add the block to and click the "Customise this page" button. Look for the "Add a block" block and choose "Microsoft" from the dropdown. The Microsoft block will be added to the current page and can be managed like any other Moodle block.
 
+Troubleshooting
+===============
+
+Having trouble? Here are a few things to check, and how to proceed.
+1. Have you upgraded to the latest version of the plugins? Issues that encountered by others by already be fixed. Be sure to get the latest version of the plugins before anything else.
+2. Does your system meet the server minimum requirements? The plugins have the same minimum requirements as core Moodle. Please ensure your environment meets these requirements.
+3. Have you enabled the plugins you want? OpenID Connect and the Office 365 repository are not enabled by default. Be sure you have enabled these plugins through the Moodle administration interface.
+4. Are your permissions in Azure AD correct? From time to time these permissions may change. Check the Setup section of these docs to get the current list. You can also run the Azure AD Setup verification tool on the "Setup" tab of the local plugin settings page.
+5. Enable "Record debug messages" from the local plugin settings page then reproduce the error. The "View recorded log messages." link from the "Record debug messages" setting will show you any recorded logs. These often contain useful information that may point to the problem.
+6. Still having trouble? Submit an issue at https://github.com/Microsoft/o365-moodle/issues/. Please include:
+    1. Your Moodle version
+    2. The version of: auth_oidc, local_o365, repository_office365, and any other optional Office 365 plugins you have installed.
+    3. Any debug messages recorded (see above).
+Thanks!
+
 Any further questions?
 ======================
 
