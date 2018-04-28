@@ -58,7 +58,7 @@ if ($hassiteconfig) {
 
     $tabs = new \local_o365\adminsetting\tabs('local_o365/tabs', $settings->name, false);
     $tabs->addtab(LOCAL_O365_TAB_SETUP, new lang_string('settings_header_setup', 'local_o365'));
-    $tabs->addtab(LOCAL_O365_TAB_OPTIONS, new lang_string('settings_header_options', 'local_o365'));
+    $tabs->addtab(LOCAL_O365_TAB_OPTIONS, new lang_string('settings_header_syncsettings', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_ADVANCED, new lang_string('settings_header_advanced', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_SDS, new lang_string('settings_header_sds', 'local_o365'));
     $settings->add($tabs);
