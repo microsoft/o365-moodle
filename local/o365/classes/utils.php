@@ -98,18 +98,47 @@ class utils {
     }
 
     /**
+     * Get the tenant from an ID Token.
+     *
+     * @param \auth_oidc\jwt $idtoken The ID token.
+     * @return string|null The tenant, or null is failure.
+     */
+    public static function get_tenant_from_idtoken(\auth_oidc\jwt $idtoken) {
+        $iss = $idtoken->claim('iss');
+        $parsediss = parse_url($iss);
+        if (!empty($parsediss['path'])) {
+            $tenant = trim($parsediss['path'], '/');
+            if (!empty($tenant)) {
+                return $tenant;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Determine whether app-only access is enabled.
+     *
+     * @return bool Enabled/disabled.
+     */
+    public static function is_enabled_apponlyaccess() {
+        $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
+        return (!empty($apponlyenabled)) ? true : false;
+    }
+
+    /**
      * Determine whether the app only access is configured.
      *
      * @return bool Whether the app only access is configured.
      */
     public static function is_configured_apponlyaccess() {
         // App only access requires unified api to be enabled.
-        $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
+        $apponlyenabled = static::is_enabled_apponlyaccess();
         if (empty($apponlyenabled)) {
             return false;
         }
         $aadtenant = get_config('local_o365', 'aadtenant');
-        if (empty($aadtenant)) {
+        $aadtenantid = get_config('local_o365', 'aadtenantid');
+        if (empty($aadtenant) && empty($aadtenantid)) {
             return false;
         }
         return true;

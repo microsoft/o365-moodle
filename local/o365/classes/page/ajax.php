@@ -217,7 +217,12 @@ class ajax extends base {
         $resource = \local_o365\rest\unified::get_resource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+        try {
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+        } catch (\Exception $e) {
+            $err = 'Could not get App or System API User token. If you have not yet provided admin consent, please do that first.';
+            throw new \Exception($err);
+        }
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
         switch ($setting) {
             case 'aadtenant':
