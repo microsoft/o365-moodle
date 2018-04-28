@@ -329,6 +329,7 @@ $string['settings_header_connections'] = 'Connections';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_setup_desc'] = 'Follow these steps in order from top to bottom to get the plugin set up.';
 $string['settings_header_options'] = 'Options';
+$string['settings_header_syncsettings'] = 'Sync Settings';
 $string['settings_header_tools'] = 'Tools';
 $string['settings_header_advanced'] = 'Advanced';
 $string['settings_header_sds'] = 'School Data Sync (preview)';
