@@ -65,19 +65,40 @@ class authcode extends \auth_oidc\loginflow\base {
     }
 
     /**
+     * Get an OIDC parameter.
+     *
+     * This is a modification to PARAM_ALPHANUMEXT to add a few additional characters from Base64-variants.
+     *
+     * @param string $name The name of the parameter.
+     * @param string $fallback The fallback value.
+     * @return string The parameter value, or fallback.
+     */
+    protected function getoidcparam($name, $fallback = '') {
+        $val = optional_param($name, $fallback, PARAM_RAW);
+        $val = trim($val);
+        $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
+        if ($valclean !== $val) {
+            \auth_oidc\utils::debug('Authorization error.', 'authcode::cleanoidcparam', $name);
+            throw new \moodle_exception('errorauthgeneral', 'auth_oidc');
+        }
+        return $valclean;
+    }
+
+    /**
      * Handle requests to the redirect URL.
      *
      * @return mixed Determined by loginflow.
      */
     public function handleredirect() {
-        $state = optional_param('state', '', PARAM_ALPHANUMEXT);
+        $state = $this->getoidcparam('state');
+        $code = $this->getoidcparam('code');
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
         $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
         $justauth = (bool)optional_param('justauth', 0, PARAM_BOOL);
         if (!empty($state)) {
             $requestparams = [
-                'state' => optional_param('state', '', PARAM_ALPHANUMEXT),
-                'code' => optional_param('code', '', PARAM_ALPHANUMEXT),
+                'state' => $state,
+                'code' => $code,
                 'error_description' => optional_param('error_description', '', PARAM_TEXT),
             ];
             // Response from OP.
