@@ -61,11 +61,20 @@ class clientdata {
         } else {
             $tenant = get_config('local_o365', 'aadtenant');
             if (!empty($tenant)) {
-                $this->apptokenendpoint = 'https://login.microsoftonline.com/'.$tenant.'/oauth2/token';
+                $this->apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenant);
             } else {
-                \local_o365\utils::debug('Did not populate clientdata:apptokenendpoint because no tenant was present');
+                $tenantid = get_config('local_o365', 'aadtenantid');
+                if (!empty($tenantid)) {
+                    $this->apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenantid);
+                } else {
+                    \local_o365\utils::debug('Did not populate clientdata:apptokenendpoint because no tenant was present');
+                }
             }
         }
+    }
+
+    public static function get_apptokenendpoint_from_tenant($tenant) {
+        return 'https://login.microsoftonline.com/'.$tenant.'/oauth2/token';
     }
 
     /**
@@ -73,7 +82,7 @@ class clientdata {
      *
      * @return \local_o365\oauth2\clientdata The constructed client data creds.
      */
-    public static function instance_from_oidc() {
+    public static function instance_from_oidc($tenant = null) {
         $cfg = get_config('auth_oidc');
         if (empty($cfg) || !is_object($cfg)) {
             throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
@@ -81,7 +90,11 @@ class clientdata {
         if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
             throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
         }
-        return new static($cfg->clientid, $cfg->clientsecret, $cfg->authendpoint, $cfg->tokenendpoint);
+        $apptokenendpoint = null;
+        if (!empty($tenant)) {
+            $apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenant);
+        }
+        return new static($cfg->clientid, $cfg->clientsecret, $cfg->authendpoint, $cfg->tokenendpoint, $apptokenendpoint);
     }
 
     /**
