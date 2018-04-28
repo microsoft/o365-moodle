@@ -111,7 +111,7 @@ class ajax extends base {
      * Check if a service resource is valid.
      */
     public function mode_checkserviceresource() {
-        if (\local_o365\rest\unified::is_configured() === true) {
+        if (\local_o365\rest\unified::is_enabled() === true) {
             return $this->checkserviceresource_graph();
         } else {
             return $this->checkserviceresource_legacy();
@@ -200,7 +200,7 @@ class ajax extends base {
      * Detect the correct value for a service resource.
      */
     public function mode_detectserviceresource() {
-        if (\local_o365\rest\unified::is_configured() === true) {
+        if (\local_o365\rest\unified::is_enabled() === true) {
             return $this->detectserviceresource_graph();
         } else {
             return $this->detectserviceresource_legacy();
