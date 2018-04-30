@@ -50,15 +50,20 @@ $label = new lang_string('settings_showonedrive', 'block_microsoft');
 $desc = new lang_string('settings_showonedrive_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showonedrive', $label, $desc, 1));
 
+// Settings to show Microsoft Stream link in the block.
+$label = new lang_string('settings_showmsstream', 'block_microsoft');
+$desc = new lang_string('settings_showmsstream_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmsstream', $label, $desc, 1));
+
+// Settings to show Microsoft Teams link in the block.
+$label = new lang_string('settings_showmsteams', 'block_microsoft');
+$desc = new lang_string('settings_showmsteams_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmsteams', $label, $desc, 1));
+
 // Settings to show sways link in the block.
 $label = new lang_string('settings_showsways', 'block_microsoft');
 $desc = new lang_string('settings_showsways_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showsways', $label, $desc, 1));
-
-// Settings to show docs.com link in the block.
-$label = new lang_string('settings_showdocsdotcom', 'block_microsoft');
-$desc = new lang_string('settings_showdocsdotcom_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showdocsdotcom', $label, $desc, 1));
 
 // Settings to show Outlook Calendar sync settings link in the block.
 $label = new lang_string('settings_showoutlooksync', 'block_microsoft');

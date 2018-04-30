@@ -264,18 +264,25 @@ class block_microsoft extends block_base {
             }
         }
 
+        // Microsoft Stream.
+        if (!empty($this->globalconfig->settings_showmsstream)) {
+            $streamurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
+            $streamattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
+            $items[] = \html_writer::link($streamurl, get_string('linkmsstream', 'block_microsoft'), $streamattrs);
+        }
+
+        // Microsoft Teams.
+        if (!empty($this->globalconfig->settings_showmsteams)) {
+            $teamsurl = 'https://teams.microsoft.com/_';
+            $teamsattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msteams'];
+            $items[] = \html_writer::link($teamsurl, get_string('linkmsteams', 'block_microsoft'), $teamsattrs);
+        }
+
         // My Sways.
         if (!empty($this->globalconfig->settings_showsways) && !empty($userupn)) {
             $swayurl = 'https://www.sway.com/my?auth_pvr=OrgId&auth_upn='.$userupn;
             $swayattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_sway'];
             $items[] = \html_writer::link($swayurl, get_string('linksways', 'block_microsoft'), $swayattrs);
-        }
-
-        // My Docs.com
-        if (!empty($this->globalconfig->settings_showdocsdotcom) && !empty($userupn)) {
-            $docsdotcomurl = 'https://docs.com/me?auth_pvr=OrgId&auth_upn='.$userupn;
-            $docsdotcomattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_docsdotcom'];
-            $items[] = \html_writer::link($docsdotcomurl, get_string('linkdocsdotcom', 'block_microsoft'), $docsdotcomattrs);
         }
 
         // Configure Outlook Sync.
