@@ -60,6 +60,7 @@ class sharepointinit extends \core\task\adhoc_task {
     }
 
     protected function execute_graph() {
+        global $DB;
         mtrace('SharePoint Init using Graph API...');
 
         try {
@@ -168,6 +169,7 @@ class sharepointinit extends \core\task\adhoc_task {
     }
 
     protected function execute_legacy() {
+        global $DB;
         mtrace('SharePoint Init using Legacy API...');
 
         // API Setup.
