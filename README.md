@@ -1,57 +1,52 @@
-# Office 365 Plugins for Moodle
-*includes support for* **Office 365 Education**, **Office 365 Enterprise** *and* **Active Directory**
+# Office 365 and Azure Active Directory Plugins for Moodle
+*includes support for* **Office 365 Education**, **Office 365 Enterprise** *and* **Azure Active Directory**
 
-This repo is where development on all Office 365 plugins for Moodle takes place. At designated intervals, updated versions of these plugins are pushed to individual repos and updated in the [moodle.org listings](https://moodle.org/plugins).
+This repo is where development on all Office 365 and Azure Active Directory plugins for Moodle takes place. After every release, updated versions of these plugins are pushed to the [Office 365 plugin set](https://moodle.org/plugins/browse.php?list=set&id=72) available in the [Moodle plugins directory.](https://moodle.org/plugins)
 
-Currently the following plugins are **actively maintained and required** for new installations and provide the core functionality of the integration:
+The following plugins are **actively maintained and required** for new installations and provide the core functionality of the integration:
 
 - [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
 - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
 - [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
 - [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
-- [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
 
 The plugins below are *not required* for new installations:
 
+- [moodle-filter_oembed](https://github.com/PoetOS/moodle-filter_oembed)
 - [moodle-block_skypeweb](https://github.com/Microsoft/moodle-block_skypeweb)
-- [moodle-profilefield_oidc](https://github.com/Microsoft/moodle-profilefield_oidc)
-- [moodle-local_msaccount](https://github.com/Microsoft/moodle-local_msaccount)
-- [moodle-block_onenote](https://github.com/Microsoft/moodle-block_onenote)
-- [moodle-repository_onenote](https://github.com/Microsoft/moodle-repository_onenote)
-- [moodle-local_onenote](https://github.com/Microsoft/moodle-local_onenote)
-- [moodle-assignfeedback_onenote](https://github.com/Microsoft/moodle-assignfeedback_onenote)
-- [moodle-assignsubmission_onenote](https://github.com/Microsoft/moodle-assignsubmission_onenote)
 
-The following plugins are "parent" or "shell" plugins which install a *subset* of the above plugins as a collection. They are also *not required* for new installations:
-- [moodle-local_office365](https://github.com/Microsoft/moodle-local_office365)
-- [moodle-local_microsoftservices](https://github.com/Microsoft/moodle-local_microsoftservices)
+### Supported Moodle versions
+The plugins currently support Moodle 2.7 through 3.4. Support for newer releases of Moodle typically comes a few weeks after the release.
 
-# About this repository
-The master branch of this repository contains the most up-to-date code. As issues are completed and new features are added, they are immediately added to master. Master should be fairly stable, however it is the absolute newest code and not intended for production systems. Periodically (about every two weeks), all completed issues are packaged into releases and added to the STABLE branches. You'll find a stable branch for each version of Moodle supported - MOODLE_27_STABLE would be for Moodle 2.7, for example. These branches contain production-ready, stable code.
+### How this repository is structured
+The master branch of this repository contains the most up-to-date code. As issues are completed and new features are added, they are immediately added to master. Master should be fairly stable, however it is the absolute newest code and not intended for production systems. Periodically completed issues are packaged into releases and added to the STABLE branches. You'll find a stable branch for each version of Moodle supported - MOODLE_27_STABLE would be for Moodle 2.7, for example. These branches contain production-ready, stable code.
 
-# Installation
+## Installation of the plugins
+You can find informations on how to install Moodle plugins [here](https://docs.moodle.org/34/en/Installing_plugins). The simplest option is to install directly from the Moodle plugins directory. You can find all the plugins required for the installation in the [Office 365 plugin set](https://moodle.org/plugins/browse.php?list=set&id=72).
+
+Alternatively you might choose to manually install the plugins from Github. If doing so please note the following:
+
 1. The file structure of this repository mimics that of a Moodle install, so the /auth/oidc folder in this repository would go in the /auth/oidc folder of your Moodle install, for example. Place each folder of this repository in your Moodle install according to the folder structure of this repository.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
 3. Follow the on-screen instuctions to install each plugin.
 
-# Documentation
+## Documentation
 The documentation for installing, configuring, and using these plugins is available here: https://docs.moodle.org/34/en/Office365.
 You can submit changes to the documentation at any time here: https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs
 
 ## Support
+We do not provide any SLA on the use of these plugins.  If you are experiencing problems, have a feature request, or have a question, please open an issue on Github at https://github.com/Microsoft/o365-moodle.
 
-If you are experiencing problems, have a feature request, or have a question, please open an issue on Github at https://github.com/Microsoft/o365-moodle.
-
-To help developers debug problems, please include the following in all issues:
+## Reporting Issues
+To help the community triage and debug problems, please include the following in all issues:
 - Plugin versions.
 - Moodle version.
-- Detailed instructions of what went wrong and how to reproduce the problem.
-- Any error messages encountered.
 - PHP version.
 - Database software and versions.
-- Any other environmental information available.
+- Detailed instructions of what went wrong and how to reproduce the problem. (Screenshots are always helpful!)
+- Any error messages encountered and recorded debug messages
 
-Note that developers will triage issues and deal with more serious problems first. All issues will be addressed but some may not be addressed immediately.
+Please note that without this information it is often impossible for us to fully investigate your issue.
 
 ## Contributing
 We're looking for community contributions! Feel free to submit pull requests, but please do so against the development repository at https://github.com/Microsoft/o365-moodle. Pull requests submitted to individual plugin repositories cannot be accepted.
