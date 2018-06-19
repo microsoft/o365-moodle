@@ -569,6 +569,34 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get an array of general user fields to query for.
+     *
+     * @return array Array of user fields.
+     */
+    protected function get_default_user_fields() {
+        return [
+            'id',
+            'userPrincipalName',
+            'displayName',
+            'givenName',
+            'surname',
+            'mail',
+            'streetAddress',
+            'city',
+            'postalCode',
+            'state',
+            'country',
+            'jobTitle',
+            'department',
+            'companyName',
+            'preferredLanguage',
+            'telephoneNumber',
+            'facsimileTelephoneNumber',
+            'mobile',
+        ];
+    }
+
+    /**
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
@@ -578,49 +606,95 @@ class unified extends \local_o365\rest\o365api {
     public function get_users($params = 'default', $skiptoken = '') {
         $endpoint = "/users";
         $odataqueries = [];
+
+        // Select params.
         if ($params === 'default') {
-            $params = [
-                'id',
-                'userPrincipalName',
-                'displayName',
-                'givenName',
-                'surname',
-                'mail',
-                'streetAddress',
-                'city',
-                'postalCode',
-                'state',
-                'country',
-                'jobTitle',
-                'department',
-                'companyName',
-                'preferredLanguage',
-                'telephoneNumber',
-                'facsimileTelephoneNumber',
-                'mobile',
-            ];
+            $params = $this->get_default_user_fields();
+        }
+        if (is_array($params)) {
             $odataqueries[] = '$select='.implode(',', $params);
         }
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
+
+        // Skip token.
+        if (!empty($skiptoken) && is_string($skiptoken)) {
             $odataqueries[] = '$skiptoken='.$skiptoken;
         }
+
+        // Process and append odata params.
         if (!empty($odataqueries)) {
             $endpoint .= '?'.implode('&', $odataqueries);
         }
+
         $response = $this->apicall('get', $endpoint);
-        $response = $this->process_apicall_response($response, ['value' => null]);
-        if (!empty($response)) {
-            if (is_array($response['value'])) {
-                foreach ($response['value'] as $i => $user) {
-                    // Legacy value.
-                    $response['value'][$i]['objectId'] = $response['value'][$i]['id'];
-                }
+        return $this->process_apicall_response($response, ['value' => null]);
+    }
+
+    public function get_users_delta($params, $skiptoken, $deltatoken) {
+        $endpoint = "/users/delta";
+        $odataqueries = [];
+
+        // Select params.
+        if ($params === 'default') {
+            $params = $this->get_default_user_fields();
+        }
+        if (is_array($params) && empty($skiptoken) && empty($deltatoken)) {
+            $odataqueries[] = '$select='.implode(',', $params);
+        }
+
+        // Delta/skip tokens.
+        if (!empty($skiptoken) && is_string($skiptoken)) {
+            $odataqueries[] = '$skiptoken='.$skiptoken;
+        } else {
+            if (!empty($deltatoken) && is_string($deltatoken)) {
+                $odataqueries[] = '$deltatoken='.$deltatoken;
             }
         }
-        return $response;
+
+        // Process and append odata params.
+        if (!empty($odataqueries)) {
+            $endpoint .= '?'.implode('&', $odataqueries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
+        $result = $this->process_apicall_response($response, ['value' => null]);
+        $users = null;
+        $skiptoken = null;
+        $deltatoken = null;
+
+        if (!empty($result) && is_array($result)) {
+            if (!empty($result['value']) && is_array($result['value'])) {
+                $users = $result['value'];
+            }
+
+            if (isset($result['@odata.nextLink'])) {
+                $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
+            }
+
+            if (isset($result['@odata.deltaLink'])) {
+                $deltatoken = $this->extract_param_from_link($result['@odata.deltaLink'], '$deltatoken');
+            }
+        }
+
+        return [$users, $skiptoken, $deltatoken];
+    }
+
+    /**
+     * Extract a parameter value from a URL.
+     *
+     * @param string $link A URL.
+     * @param string $param Parameter name.
+     * @return string|null The extracted deltalink value, or null if none found.
+     */
+    protected function extract_param_from_link($link, $param) {
+        $link = parse_url($link);
+        if (isset($link['query'])) {
+            $output = [];
+            parse_str($link['query'], $output);
+            if (isset($output[$param])) {
+                return $output[$param];
+            }
+        }
+        return null;
     }
 
     /**
