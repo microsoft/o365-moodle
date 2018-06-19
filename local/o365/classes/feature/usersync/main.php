@@ -23,13 +23,40 @@
 
 namespace local_o365\feature\usersync;
 
+use \local_o365\oauth2\clientdata;
+use \local_o365\httpclient;
+
 class main {
     protected $clientdata = null;
     protected $httpclient = null;
 
-    public function __construct(\local_o365\oauth2\clientdata $clientdata = null, \local_o365\httpclient $httpclient = null) {
-        $this->clientdata = (!empty($clientdata)) ? $clientdata : \local_o365\oauth2\clientdata::instance_from_oidc();
-        $this->httpclient = (!empty($httpclient)) ? $httpclient : new \local_o365\httpclient();
+    /**
+     * Constructor
+     *
+     * @param clientdata $clientdata The client data to use for API construction.
+     * @param httpclient $httpclient The HTTP client to use for API construction.
+     */
+    public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
+        $this->clientdata = (!empty($clientdata))
+            ? $clientdata
+            : clientdata::instance_from_oidc();
+
+        $this->httpclient = (!empty($httpclient))
+            ? $httpclient
+            : new httpclient();
+    }
+
+    /**
+     * Determine whether any sync-related options are enabled.
+     *
+     * @return bool Enabled/disabled.
+     */
+    public static function is_enabled() {
+        $aadsyncenabled = get_config('local_o365', 'aadsync');
+        if (empty($aadsyncenabled) || $aadsyncenabled === 'photosynconlogin') {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -39,30 +66,27 @@ class main {
      * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
      */
     public function construct_user_api($forcelegacy = false) {
-        $uselegacy = false;
-        $unifiedconfigured = \local_o365\rest\unified::is_configured();
-        if ($forcelegacy === true || $unifiedconfigured !== true) {
+        if ($forcelegacy === true) {
             $uselegacy = true;
+        } else {
+            $uselegacy = (\local_o365\rest\unified::is_configured() === true) ? false : true;
         }
 
         if ($uselegacy === true) {
             $resource = \local_o365\rest\azuread::get_resource();
             $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $this->clientdata, $this->httpclient);
+            if (empty($token)) {
+                throw new \Exception('No token available for usersync');
+            }
+            return new \local_o365\rest\azuread($token, $this->httpclient);
         } else {
             $resource = \local_o365\rest\unified::get_resource();
             $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
+            if (empty($token)) {
+                throw new \Exception('No token available for usersync');
+            }
+            return new \local_o365\rest\unified($token, $this->httpclient);
         }
-
-        if (empty($token)) {
-            throw new \Exception('No token available for usersync');
-        }
-
-        if ($uselegacy === true) {
-            $apiclient = new \local_o365\rest\azuread($token, $this->httpclient);
-        } else {
-            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
-        }
-        return $apiclient;
     }
 
     /**
@@ -111,16 +135,33 @@ class main {
     /**
      * Assign user to application.
      *
-     * @param string|array $params Requested user parameters.
-     * @param string $userid Object id of user.
-     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
+     * @param int $muserid The Moodle user ID.
+     * @param string $userobjectid Object ID of user.
      * @return array|null Array of user information, or null if failure.
      */
-    public function assign_user($muserid, $userid, $appobjectid) {
+    public function assign_user($muserid, $userobjectid) {
         global $DB;
+
+        // Not supported in unit tests at the moment.
+        if (PHPUNIT_TEST) {
+            return null;
+        }
+
+        // Get object ID on first call.
+        static $objectid = null;
+        if (empty($objectid)) {
+            $appinfo = $this->get_application_serviceprincipal_info();
+            if (empty($appinfo)) {
+                return null;
+            }
+            $objectid = (\local_o365\rest\unified::is_configured())
+                ? $appinfo['value'][0]['id']
+                : $appinfo['value'][0]['objectId'];
+        }
+
         // Force using legacy api. Legacy assign user does not support app only access.
         $apiclient = $this->construct_user_api(true);
-        $result = $apiclient->assign_user($muserid, $userid, $appobjectid);
+        $result = $apiclient->assign_user($muserid, $userobjectid, $appobjectid);
         if (!empty($result['odata.error'])) {
             $error = '';
             $code = '';
@@ -209,6 +250,25 @@ class main {
     }
 
     /**
+     * Extract a parameter value from a URL.
+     *
+     * @param string $link A URL.
+     * @param string $param Parameter name.
+     * @return string|null The extracted deltalink value, or null if none found.
+     */
+    protected function extract_param_from_link($link, $param) {
+        $link = parse_url($link);
+        if (isset($link['query'])) {
+            $output = [];
+            parse_str($link['query'], $output);
+            if (isset($output[$param])) {
+                return $output[$param];
+            }
+        }
+        return null;
+    }
+
+    /**
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
@@ -216,8 +276,38 @@ class main {
      * @return array|null Array of user information, or null if failure.
      */
     public function get_users($params = 'default', $skiptoken = '') {
+        if (empty($skiptoken)) {
+            $skiptoken = '';
+        }
+
         $apiclient = $this->construct_user_api(false);
-        return $apiclient->get_users($params, $skiptoken);
+        $result = $apiclient->get_users($params, $skiptoken);
+        $users = null;
+        $skiptoken = null;
+
+        if (!empty($result) && is_array($result)) {
+            if (!empty($result['value']) && is_array($result['value'])) {
+                $users = $result['value'];
+            }
+
+            if (isset($result['odata.nextLink'])) {
+                $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], '$skiptoken');
+            } else if (isset($result['@odata.nextLink'])) {
+                $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
+            }
+        }
+
+        return [$users, $skiptoken];
+    }
+
+    public function get_users_delta($params = 'default', $skiptoken = null, $deltatoken = null) {
+        $resource = \local_o365\rest\unified::get_resource();
+        $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
+        if (empty($token)) {
+            throw new \Exception('No token available for usersync');
+        }
+        $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
+        return $apiclient->get_users_delta($params, $skiptoken, $deltatoken);
     }
 
     /**
@@ -440,7 +530,7 @@ class main {
      * @param array $aaddata Array of Azure AD user data.
      * @return \stdClass An object representing the created Moodle user.
      */
-    public function update_user_from_aaddata($aaddata,$fullexistinguser) {
+    public function update_user_from_aaddata($aaddata, $fullexistinguser) {
         global $CFG, $DB;
 
         require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -462,21 +552,16 @@ class main {
 
         $existinguser = static::apply_configured_fieldmap($aaddata, $fullexistinguser, 'login');
 
-        $password = null;
-        $existinguser->idnumber = $existinguser->username;
-
         if (!empty($existinguser->email)) {
             if (email_is_not_allowed($existinguser->email)) {
                 unset($existinguser->email);
             }
         }
 
-        if (empty($existinguser->lang) || !get_string_manager()->translation_exists($existinguser->lang)) {
-            $existinguser->lang = $CFG->lang;
-        }
-
         $existinguser->timemodified = time();
-        user_update_user($existinguser, false, false); // Update a user with a user object (will compare against the ID)
+
+        // Update a user with a user object (will compare against the ID).
+        user_update_user($existinguser, false, false);
 
         // Save user profile data.
         profile_save_data($existinguser);
@@ -484,7 +569,7 @@ class main {
         // Trigger event.
         \core\event\user_updated::create_from_userid($existinguser->id)->trigger();
 
-        return TRUE;
+        return true;
     }
 
     /**
@@ -508,11 +593,6 @@ class main {
         global $DB, $CFG;
 
         $aadsync = get_config('local_o365', 'aadsync');
-        $photoexpire = get_config('local_o365', 'photoexpire');
-        if (empty($photoexpire) || !is_numeric($photoexpire)) {
-            $photoexpire = 24;
-        }
-        $photoexpiresec = $photoexpire * 3600;
         $aadsync = array_flip(explode(',', $aadsync));
         $switchauthminupnsplit0 = get_config('local_o365', 'switchauthminupnsplit0');
         if (empty($switchauthminupnsplit0)) {
@@ -532,20 +612,6 @@ class main {
             if (!empty($upnsplit[0])) {
                 $aadusers[$i]['upnsplit0'] = $upnsplit[0];
                 $usernames[] = $upnsplit[0];
-            }
-        }
-
-        // Retrieve object id for app.
-        if (!PHPUNIT_TEST) {
-            $appinfo = $this->get_application_serviceprincipal_info();
-        }
-
-        $objectid = null;
-        if (!empty($appinfo)) {
-            if (\local_o365\rest\unified::is_configured()) {
-                $objectid = $appinfo['value'][0]['id'];
-            } else {
-                $objectid = $appinfo['value'][0]['objectId'];
             }
         }
 
@@ -636,39 +702,7 @@ class main {
             }
 
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
-                $this->mtrace('User doesn\'t exist in Moodle');
-                if (!isset($aadsync['create'])) {
-                    $this->mtrace('Not creating a Moodle user because that sync option is disabled.');
-                    continue;
-                }
-
-                try {
-                    // Create moodle account, if enabled.
-                    $newmuser = $this->create_user_from_aaddata($user);
-                    if (!empty($newmuser)) {
-                        $this->mtrace('Created user #'.$newmuser->id);
-                    }
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not create user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                }
-                try {
-                    if (!PHPUNIT_TEST) {
-                        if (!empty($newmuser) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
-                            $this->assign_user($newmuser->id, $userobjectid, $objectid);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                }
-                try {
-                    if (!PHPUNIT_TEST) {
-                        if (!empty($newmuser) && isset($aadsync['photosync'])) {
-                            $this->assign_photo($newmuser->id, $user['upnlower']);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not assign photo to user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                }
+                $newmuser = $this->sync_new_user($aadsync, $user);
             } else {
                 $existinguser = null;
                 if (isset($existingusers[$user['upnlower']])) {
@@ -678,87 +712,8 @@ class main {
                     $existinguser = $existingusers[$user['upnsplit0']];
                     $exactmatch = strlen($user['upnsplit0']) >= $switchauthminupnsplit0;
                 }
-                // Assign user to app if not already assigned.
-                if (empty($existinguser->assigned)) {
-                    try {
-                        if (!PHPUNIT_TEST) {
-                            if (!empty($existinguser->muserid) && !empty($userobjectid) && !empty($objectid) && isset($aadsync['appassign'])) {
-                                $this->assign_user($existinguser->muserid, $userobjectid, $objectid);
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        $this->mtrace('Could not assign user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                    }
-                }
-                if (isset($aadsync['photosync'])) {
-                    if (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpiresec) < time()) {
-                        try {
-                            if (!PHPUNIT_TEST) {
-                                $this->assign_photo($existinguser->muserid, $user['upnlower']);
-                            }
-                        } catch (\Exception $e) {
-                            $this->mtrace('Could not assign profile photo to user "'.$user['userPrincipalName'].'" Reason: '.$e->getMessage());
-                        }
-                    }
-                }
 
-                if ($existinguser->auth !== 'oidc') {
-                    $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
-                    $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $user['upnlower']));
-                    if (!isset($aadsync['match'])) {
-                        $this->mtrace('Not matching user because that sync option is disabled.');
-                        continue;
-                    }
-
-                    if (isset($aadsync['matchswitchauth']) && $exactmatch) {
-                        // Switch the user to OpenID authentication method, but only if this setting is enabled and full username matched.
-                        require_once($CFG->dirroot.'/user/profile/lib.php');
-                        require_once($CFG->dirroot.'/user/lib.php');
-                        // Do not switch Moodle user to OpenID if another Moodle user is already using same Office 365 account for logging in.
-                        $sql = 'SELECT u.username
-                                  FROM {user} u
-                             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                             WHERE obj.o365name = ?
-                               AND u.username != ?';
-                        $params = ['user', $user['upnlower'], $existinguser->username];
-                        $alreadylinkedusername = $DB->get_field_sql($sql, $params);
-
-                        if ($alreadylinkedusername !== false) {
-                            $errmsg = 'This Azure AD user has already been linked with Moodle user %s. Not switching Moodle user %s to OpenID.';
-                            $this->mtrace(sprintf($errmsg, $alreadylinkedusername, $existinguser->username));
-                            continue;
-                        } else {
-                            if (!empty($existinguser->existingconnectionid)) {
-                                // Delete existing connection before linking (in case matching was performed without auth switching previously).
-                                $DB->delete_records_select ('local_o365_connections', "id = {$existinguser->existingconnectionid}");
-                            }
-                            $fullexistinguser = get_complete_user_data('username', $existinguser->username);
-                            $existinguser->id = $fullexistinguser->id;
-                            $existinguser->auth = 'oidc';
-                            user_update_user($existinguser, true);
-                            // Clear user's password.
-                            $password = null;
-                            update_internal_user_password($existinguser, $password);
-                            $this->mtrace('Switched user to OpenID.');
-                        }
-
-                    } else if (!empty($existinguser->existingconnectionid)) {
-                        $this->mtrace('User is already matched.');
-                        continue;
-
-                    } else {
-                        // Match to o365 account, if enabled.
-                        $matchrec = [
-                            'muserid' => $existinguser->muserid,
-                            'aadupn' => $user['upnlower'],
-                            'uselogin' => isset($aadsync['matchswitchauth']) ? 1 : 0,
-                        ];
-                        $DB->insert_record('local_o365_connections', $matchrec);
-                        $this->mtrace('Matched user, but did not switch them to OpenID.');
-                    }
-                } else {
-                    $this->mtrace('The user is already using OpenID for authentication.');
-                }
+                $result = $this->sync_existing_user($aadsync, $user, $existinguser, $exactmatch);
 
                 if ($existinguser->auth === 'oidc' || empty($existinguser->tokid)) {
                     // Create userobject if it does not exist.
@@ -782,16 +737,170 @@ class main {
                 }
 
                 // Update existing user on moodle from AD
-                if ($existinguser->auth === 'oidc'){
-                    if(isset($aadsync['update'])){ // config setting in here
+                if ($existinguser->auth === 'oidc') {
+                    if(isset($aadsync['update'])) {
+                        $this->mtrace('Updating Moodle user data from Azure AD user data.');
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
-                        $this->update_user_from_aaddata($user,$fullexistinguser);
+                        $this->update_user_from_aaddata($user, $fullexistinguser);
                         $this->mtrace('User is now updated.');
                     }
-
                 }
             }
         }
         return true;
+    }
+
+    protected function sync_new_user($syncoptions, $aaduserdata) {
+        $this->mtrace('User doesn\'t exist in Moodle');
+
+        $userobjectid = (\local_o365\rest\unified::is_configured())
+            ? $aaduserdata['id']
+            : $aaduserdata['objectId'];
+
+        // Create moodle account, if enabled.
+        if (!isset($syncoptions['create'])) {
+            $this->mtrace('Not creating a Moodle user because that sync option is disabled.');
+            return null;
+        }
+        try {
+            $newmuser = $this->create_user_from_aaddata($aaduserdata);
+            if (!empty($newmuser)) {
+                $this->mtrace('Created user #'.$newmuser->id);
+            }
+        } catch (\Exception $e) {
+            $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+        }
+
+        // User app assignment.
+        if (!PHPUNIT_TEST) {
+            if (!empty($syncoptions['appassign'])) {
+                try {
+                    if (!empty($newmuser) && !empty($userobjectid)) {
+                        $this->assign_user($newmuser->id, $userobjectid);
+                    }
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
+            }
+        }
+
+        // User photo assignment.
+        if (!PHPUNIT_TEST) {
+            if (!empty($syncoptions['photosync'])) {
+                try {
+                    if (!empty($newmuser)) {
+                        $this->assign_photo($newmuser->id, $aaduserdata['upnlower']);
+                    }
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not assign photo to user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
+            }
+        }
+        return $newmuser;
+    }
+
+    protected function sync_existing_user($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
+        $photoexpire = get_config('local_o365', 'photoexpire');
+        if (empty($photoexpire) || !is_numeric($photoexpire)) {
+            $photoexpire = 24;
+        }
+        $photoexpiresec = $photoexpire * 3600;
+
+        $userobjectid = (\local_o365\rest\unified::is_configured())
+            ? $aaduserdata['id']
+            : $aaduserdata['objectId'];
+
+        // Assign user to app if not already assigned.
+        if (isset($syncoptions['appassign'])) {
+            if (empty($existinguser->assigned)) {
+                try {
+                    if (!PHPUNIT_TEST) {
+                        if (!empty($existinguser->muserid) && !empty($userobjectid)) {
+                            $this->assign_user($existinguser->muserid, $userobjectid);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
+            }
+        }
+
+        // Perform photo sync.
+        if (isset($syncoptions['photosync'])) {
+            if (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpiresec) < time()) {
+                try {
+                    if (!PHPUNIT_TEST) {
+                        $this->assign_photo($existinguser->muserid, $aaduserdata['upnlower']);
+                    }
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not assign profile photo to user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
+            }
+        }
+
+        // Match user if needed.
+        if ($existinguser->auth !== 'oidc') {
+            $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
+            $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $aaduserdata['upnlower']));
+            return $this->sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch);
+        } else {
+            $this->mtrace('The user is already using OpenID for authentication.');
+            return true;
+        }
+    }
+
+    protected function sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
+        global $CFG, $DB;
+
+        if (!isset($syncoptions['match'])) {
+            $this->mtrace('Not matching user because that sync option is disabled.');
+            return true;
+        }
+
+        if (isset($syncoptions['matchswitchauth']) && $exactmatch) {
+            // Switch the user to OpenID authentication method, but only if this setting is enabled and full username matched.
+            require_once($CFG->dirroot.'/user/profile/lib.php');
+            require_once($CFG->dirroot.'/user/lib.php');
+            // Do not switch Moodle user to OpenID if another Moodle user is already using same Office 365 account for logging in.
+            $sql = 'SELECT u.username
+                      FROM {user} u
+                 LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+                 WHERE obj.o365name = ?
+                   AND u.username != ?';
+            $params = ['user', $aaduserdata['upnlower'], $existinguser->username];
+            $alreadylinkedusername = $DB->get_field_sql($sql, $params);
+
+            if ($alreadylinkedusername !== false) {
+                $errmsg = 'This Azure AD user has already been linked with Moodle user %s. Not switching Moodle user %s to OpenID.';
+                $this->mtrace(sprintf($errmsg, $alreadylinkedusername, $existinguser->username));
+                return true;
+            } else {
+                if (!empty($existinguser->existingconnectionid)) {
+                    // Delete existing connection before linking (in case matching was performed without auth switching previously).
+                    $DB->delete_records_select ('local_o365_connections', "id = {$existinguser->existingconnectionid}");
+                }
+                $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                $existinguser->id = $fullexistinguser->id;
+                $existinguser->auth = 'oidc';
+                user_update_user($existinguser, true);
+                // Clear user's password.
+                $password = null;
+                update_internal_user_password($existinguser, $password);
+                $this->mtrace('Switched user to OpenID.');
+            }
+        } else if (!empty($existinguser->existingconnectionid)) {
+            $this->mtrace('User is already matched.');
+            return true;
+        } else {
+            // Match to o365 account, if enabled.
+            $matchrec = [
+                'muserid' => $existinguser->muserid,
+                'aadupn' => $aaduserdata['upnlower'],
+                'uselogin' => isset($syncoptions['matchswitchauth']) ? 1 : 0,
+            ];
+            $DB->insert_record('local_o365_connections', $matchrec);
+            $this->mtrace('Matched user, but did not switch them to OpenID.');
+            return true;
+        }
     }
 }
