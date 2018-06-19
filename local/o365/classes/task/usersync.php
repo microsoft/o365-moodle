@@ -37,21 +37,31 @@ class usersync extends \core\task\scheduled_task {
     }
 
     /**
-     * Extract a deltalink value from a full aad.nextLink URL.
+     * Get a stored token.
      *
-     * @param string $deltalink A full aad.nextLink URL.
-     * @return string|null The extracted deltalink value, or null if none found.
+     * @param string $name The token name.
+     * @return string|null The token, or null if empty/not found.
      */
-    protected function extract_skiptoken($nextlink) {
-        $nextlink = parse_url($nextlink);
-        if (isset($nextlink['query'])) {
-            $output = [];
-            parse_str($nextlink['query'], $output);
-            if (isset($output['$skiptoken'])) {
-                return $output['$skiptoken'];
-            }
+    protected function get_token($name) {
+        $token = get_config('local_o365', 'task_usersync_last'.$name);
+        return (!empty($token)) ? $token : null;
+    }
+
+    /**
+     * Store a token.
+     *
+     * @param string $name The token name.
+     * @param string $value The token value.
+     */
+    protected function store_token($name, $value) {
+        if (empty($value)) {
+            $value = '';
         }
-        return null;
+        set_config('task_usersync_last'.$name, $value, 'local_o365');
+    }
+
+    protected function mtrace($msg) {
+        mtrace('...... '.$msg);
     }
 
     /**
@@ -59,63 +69,54 @@ class usersync extends \core\task\scheduled_task {
      */
     public function execute() {
         if (\local_o365\utils::is_configured() !== true) {
+            $this->mtrace('Office 365 not configured');
             return false;
         }
 
-        $aadsyncenabled = get_config('local_o365', 'aadsync');
-        if (empty($aadsyncenabled) || $aadsyncenabled === 'photosynconlogin') {
-            mtrace('Azure AD cron sync disabled. Nothing to do.');
+        if (\local_o365\feature\usersync\main::is_enabled() !== true) {
+            $this->mtrace('Azure AD cron sync disabled. Nothing to do.');
             return true;
         }
+        $this->mtrace('Starting sync');
 
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
+        $usersync = new \local_o365\feature\usersync\main();
 
-        $skiptoken = get_config('local_o365', 'task_usersync_lastskiptoken');
-        if (empty($skiptoken)) {
-            $skiptoken = '';
+        $skiptoken = $this->get_token('skiptoken');
+        $deltatoken = $this->get_token('deltatoken');
+
+        if (!empty($deltatoken)) {
+            $this->mtrace('Using deltatoken');
         }
-
-        for ($i = 0; $i < 5; $i++) {
-            $users = $usersync->get_users('default', $skiptoken);
-            if (!empty($users) && is_array($users) && !empty($users['value']) && is_array($users['value'])) {
-                $usersync->sync_users($users['value']);
-            } else {
-                // No users returned, we're likely past the last page of results. Erase deltalink state and exit loop.
-                mtrace('No more users to sync. Resetting for new run.');
-                set_config('task_usersync_lastskiptoken', '', 'local_o365');
-                return true;
-            }
-
-            $nextlink = '';
-            if (isset($users['odata.nextLink'])) {
-                $nextlink = $users['odata.nextLink'];
-            } else if (isset($users['@odata.nextLink'])) {
-                $nextlink = $users['@odata.nextLink'];
-            }
-
-            // If we have an odata.nextLink, extract deltalink value and store in $deltalink for the next loop. Otherwise break.
-            if (!empty($nextlink)) {
-                $skiptoken = $this->extract_skiptoken($nextlink);
-                if (empty($skiptoken)) {
-                    $skiptoken = '';
-                    mtrace('Bad odata.nextLink received.');
-                    break;
-                }
-            } else {
-                $skiptoken = '';
-                mtrace('No odata.nextLink received.');
-                break;
-            }
-        }
-
         if (!empty($skiptoken)) {
-            mtrace('Partial user sync completed. Saving place for next run.');
-        } else {
-            mtrace('Full user sync completed. Resetting saved state for new run.');
+            $this->mtrace('Using skiptoken');
         }
-        set_config('task_usersync_lastskiptoken', $skiptoken, 'local_o365');
+
+        $this->mtrace('Contacting Azure AD');
+        list($users, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+        if (!empty($users)) {
+            $this->mtrace('Users received. Syncing...');
+            $usersync->sync_users($users);
+        } else {
+            $this->mtrace('No users received to sync.');
+        }
+
+        // Store skiptoken.
+        if (!empty($skiptoken)) {
+            $this->mtrace('Storing skiptoken');
+        } else {
+            $this->mtrace('Clearing skiptoken (none received)');
+        }
+        $this->store_token('skiptoken', $skiptoken);
+
+        // Store deltatoken.
+        if (!empty($deltatoken)) {
+            $this->mtrace('Storing deltatoken');
+        } else {
+            $this->mtrace('Clearing deltatoken (none received)');
+        }
+        $this->store_token('deltatoken', $deltatoken);
+
+        $this->mtrace('Sync process finished.');
         return true;
     }
 }
