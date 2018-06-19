@@ -86,7 +86,13 @@ class acp extends base {
      */
     public function checktenantsetup() {
         $config = get_config('local_o365');
-        return (!empty($config->systemtokens) && !empty($config->aadtenant)) ? true : false;
+        if (empty($config->aadtenant)) {
+            return false;
+        }
+        if (\local_o365\utils::is_configured_apponlyaccess() === true || !empty($config->systemtokens)) {
+            return true;
+        }
+        return false;
     }
 
     /**
