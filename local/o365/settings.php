@@ -190,6 +190,7 @@ if ($hassiteconfig) {
             'appassign' => new lang_string('settings_aadsync_appassign', 'local_o365'),
             'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
             'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
+            'nodelta' => new lang_string('settings_aadsync_nodelta', 'local_o365'),
         ];
         $default = [];
         $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));

@@ -201,6 +201,54 @@ class unified extends \local_o365\rest\o365api {
         return (!empty($token)) ? true : false;
     }
 
+    public function assign_user($muserid, $userobjectid, $appobjectid) {
+        global $DB;
+        var_dump($userobjectid);
+        var_dump($appobjectid);
+        $endpoint = '/servicePrincipals/'.$appobjectid.'/appRoleAssignments';
+        $response = $this->betaapicall('get', $endpoint);
+        $response = json_decode($response);
+        print_r($response);
+        $params = [
+            'resourceId' => $appobjectid,
+            'principalId' => $userobjectid,
+        ];
+        $endpoint = '/users/'.$userobjectid.'/appRoleAssignments';
+        $response = $this->betaapicall('post', $endpoint, json_encode($params));
+        $response = json_decode($response);
+        print_r($response);
+        die();
+        $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
+        if (empty($record) || $record->assigned == 0) {
+            $roleid = '00000000-0000-0000-0000-000000000000';
+            $endpoint = '/users/'.$userobjectid.'/appRoleAssignments/'.$roleid;
+            $endpoint = '/appRoleAssignments';
+            $endpoint = '/servicePrincipals/'.$appobjectid.'/appRoleAssignedTo';
+            $params = [
+                'id' => $roleid,
+            //    'resourceId' => $appobjectid,
+                'principalId' => $userobjectid,
+            ];
+            print_r($params);
+            $response = $this->betaapicall('patch', $endpoint, json_encode($params));
+            if (empty($record)) {
+                $record = new \stdClass;
+                $record->muserid = $muserid;
+                $record->assigned = 1;
+                $DB->insert_record('local_o365_appassign', $record);
+            } else {
+                $record->assigned = 1;
+                $DB->update_record('local_o365_appassign', $record);
+            }
+            var_dump($response);
+            print_r($response);
+            die();
+            return $response;
+        }
+        return null;
+
+    }
+
     /**
      * Get a list of groups.
      *
