@@ -146,15 +146,16 @@ class main {
         if (PHPUNIT_TEST) {
             return null;
         }
+        $this->mtrace('Assigning Moodle user '.$muserid.' (objectid '.$userobjectid.') to application');
 
         // Get object ID on first call.
-        static $objectid = null;
+        static $appobjectid = null;
         if (empty($objectid)) {
             $appinfo = $this->get_application_serviceprincipal_info();
             if (empty($appinfo)) {
                 return null;
             }
-            $objectid = (\local_o365\rest\unified::is_configured())
+            $appobjectid = (\local_o365\rest\unified::is_configured())
                 ? $appinfo['value'][0]['id']
                 : $appinfo['value'][0]['objectId'];
         }
@@ -172,9 +173,9 @@ class main {
                 $error = $result['odata.error']['message']['value'];
             }
             $user = $DB->get_record('user', array('id' => $muserid));
-            mtrace('Error assigning users "'.$user->username.'" Reason: '.$code.' '.$error);
+            $this->mtrace('Error assigning users "'.$user->username.'" Reason: '.$code.' '.$error);
         } else {
-            mtrace('User assigned to application.');
+            $this->mtrace('User assigned to application.');
         }
         return $result;
     }
@@ -579,8 +580,30 @@ class main {
      */
     public static function mtrace($msg) {
         if (!PHPUNIT_TEST) {
-            mtrace($msg);
+            mtrace('......... '.$msg);
         }
+    }
+
+    /**
+     * Get an array of sync options.
+     *
+     * @return array Sync options
+     */
+    public static function get_sync_options() {
+        $aadsync = get_config('local_o365', 'aadsync');
+        $aadsync = array_flip(explode(',', $aadsync));
+        return $aadsync;
+    }
+
+    /**
+     * Determine whether a sync option is enabled.
+     *
+     * @param string $option The option to check.
+     * @return bool Whether the option is enabled.
+     */
+    public static function sync_option_enabled($option) {
+        $options = static::get_sync_options();
+        return (!empty($options[$option])) ? true : false;
     }
 
     /**
@@ -592,8 +615,7 @@ class main {
     public function sync_users(array $aadusers = array()) {
         global $DB, $CFG;
 
-        $aadsync = get_config('local_o365', 'aadsync');
-        $aadsync = array_flip(explode(',', $aadsync));
+        $aadsync = $this->get_sync_options();
         $switchauthminupnsplit0 = get_config('local_o365', 'switchauthminupnsplit0');
         if (empty($switchauthminupnsplit0)) {
             $switchauthminupnsplit0 = 10;
@@ -772,21 +794,19 @@ class main {
         }
 
         // User app assignment.
-        if (!PHPUNIT_TEST) {
-            if (!empty($syncoptions['appassign'])) {
-                try {
-                    if (!empty($newmuser) && !empty($userobjectid)) {
-                        $this->assign_user($newmuser->id, $userobjectid);
-                    }
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+        if (!empty($syncoptions['appassign'])) {
+            try {
+                if (!empty($newmuser) && !empty($userobjectid)) {
+                    $this->assign_user($newmuser->id, $userobjectid);
                 }
+            } catch (\Exception $e) {
+                $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
             }
         }
 
         // User photo assignment.
-        if (!PHPUNIT_TEST) {
-            if (!empty($syncoptions['photosync'])) {
+        if (!empty($syncoptions['photosync'])) {
+            if (!PHPUNIT_TEST) {
                 try {
                     if (!empty($newmuser)) {
                         $this->assign_photo($newmuser->id, $aaduserdata['upnlower']);
@@ -814,10 +834,8 @@ class main {
         if (isset($syncoptions['appassign'])) {
             if (empty($existinguser->assigned)) {
                 try {
-                    if (!PHPUNIT_TEST) {
-                        if (!empty($existinguser->muserid) && !empty($userobjectid)) {
-                            $this->assign_user($existinguser->muserid, $userobjectid);
-                        }
+                    if (!empty($existinguser->muserid) && !empty($userobjectid)) {
+                        $this->assign_user($existinguser->muserid, $userobjectid);
                     }
                 } catch (\Exception $e) {
                     $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
