@@ -225,6 +225,7 @@ $string['settings_switchauthminupnsplit0_details'] = 'If you enable the "Switch 
 $string['settings_aadsync_appassign'] = 'Assign users to application during sync';
 $string['settings_aadsync_photosync'] = 'Sync Office 365 profile photos to Moodle in cron job';
 $string['settings_aadsync_photosynconlogin'] = 'Sync Office 365 profile photos to Moodle on login';
+$string['settings_aadsync_nodelta'] = 'Perform a full sync each run';
 $string['settings_previewfeatures'] = 'Enable preview features';
 $string['settings_previewfeatures_details'] = 'Enable features provided on a "preview" basis. These features use brand new APIs, or are experimental in some way. These features may be more prone to break, but will give you a sneak peak at what\'s coming in the near future.';
 $string['settings_photoexpire'] = 'Profile photo refresh time';
@@ -566,3 +567,6 @@ $string['help_user_photosync'] = 'Sync Office 365 Profile Photos (Cron) Help';
 $string['help_user_photosync_help'] = 'This will cause all users\' Moodle profile photos to get synced with their Office 365 profile photos.';
 $string['help_user_photosynconlogin'] = 'Sync Office 365 Profile Photos (Login) Help';
 $string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle profile photo to get synced with their Office 365 profile photo when that user logs in.';
+$string['help_user_nodelta'] = 'Perform a full sync help';
+$string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Azure AD. Checking this option will force a full user sync each time.';
+

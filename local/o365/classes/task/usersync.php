@@ -82,19 +82,41 @@ class usersync extends \core\task\scheduled_task {
         $usersync = new \local_o365\feature\usersync\main();
 
         $skiptoken = $this->get_token('skiptoken');
-        $deltatoken = $this->get_token('deltatoken');
-
-        if (!empty($deltatoken)) {
-            $this->mtrace('Using deltatoken');
-        }
         if (!empty($skiptoken)) {
             $this->mtrace('Using skiptoken');
+        } else {
+            $this->mtrace('No skiptoken stored.');
         }
 
-        $this->mtrace('Contacting Azure AD');
-        list($users, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+        if ($usersync->sync_option_enabled('nodelta') === true) {
+            $this->mtrace('Forcing full sync.');
+            $this->mtrace('Contacting Azure AD...');
+            list($users, $skiptoken) = $usersync->get_users('default', $skiptoken);
+            $this->mtrace('Got response from Azure AD');
+        } else {
+            $deltatoken = $this->get_token('deltatoken');
+            if (!empty($deltatoken)) {
+                $this->mtrace('Using deltatoken.');
+            } else {
+                $this->mtrace('No deltatoken stored.');
+            }
+
+            $this->mtrace('Using delta sync.');
+            $this->mtrace('Contacting Azure AD...');
+            list($users, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+            $this->mtrace('Got response from Azure AD');
+
+            // Store deltatoken.
+            if (!empty($deltatoken)) {
+                $this->mtrace('Storing deltatoken');
+            } else {
+                $this->mtrace('Clearing deltatoken (none received)');
+            }
+            $this->store_token('deltatoken', $deltatoken);
+        }
+
         if (!empty($users)) {
-            $this->mtrace('Users received. Syncing...');
+            $this->mtrace(count($users).' users received. Syncing...');
             $usersync->sync_users($users);
         } else {
             $this->mtrace('No users received to sync.');
@@ -107,14 +129,6 @@ class usersync extends \core\task\scheduled_task {
             $this->mtrace('Clearing skiptoken (none received)');
         }
         $this->store_token('skiptoken', $skiptoken);
-
-        // Store deltatoken.
-        if (!empty($deltatoken)) {
-            $this->mtrace('Storing deltatoken');
-        } else {
-            $this->mtrace('Clearing deltatoken (none received)');
-        }
-        $this->store_token('deltatoken', $deltatoken);
 
         $this->mtrace('Sync process finished.');
         return true;
