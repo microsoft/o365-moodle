@@ -50,3 +50,4 @@ $string['upload'] = 'Upload New File';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Office 365 plugins</a></p>';
 $string['trendingaround'] = 'Files Trending Around Me';
 $string['office365video'] = 'Office 365 Video';
+$string['privacy:metadata'] = 'This plugin communicates with the Office 365 OneDrive API as the current user. Any files uploaded will be sent to the remote server';

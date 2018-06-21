@@ -22,3 +22,4 @@
  */
 
 $string['pluginname'] = 'Office 365 Integration';
+$string['privacy:metadata'] = 'This plugin is just a shell plugin.';

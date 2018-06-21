@@ -47,4 +47,8 @@ $string['notsignedin'] = 'Please sign in to OneNote before attempting to save yo
 $string['feedbacknotstarted'] = 'Please add your feedback using OneNote and then save your changes.';
 $string['feedbacklimitexceed'] = 'Your feedback size exceeds the acceptable limit.';
 $string['onenoteactions'] = 'OneNote Actions:';
-
+$string['privacy:path'] = 'Number of files';
+$string['privacy:metadata:assignmentid'] = 'Assignment identifier';
+$string['privacy:metadata:gradepurpose'] = 'The grade ID associated with the record';
+$string['privacy:metadata:numfiles'] = 'Number of files';
+$string['privacy:metadata:tablepurpose'] = 'Stores the number of files used for the feedback.';

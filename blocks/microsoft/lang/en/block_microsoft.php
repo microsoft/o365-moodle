@@ -97,3 +97,4 @@ $string['settings_geto365link_desc'] = 'The URL to use for the "Install Office" 
 $string['settings_geto365link_default'] = 'https://portal.office.com/OLS/MySoftware.aspx';
 $string['linkmydelve'] = 'My Delve';
 $string['linkmyforms'] = 'My Forms';
+$string['privacy:metadata'] = 'The Microsoft block only displays links to various features and services.';
