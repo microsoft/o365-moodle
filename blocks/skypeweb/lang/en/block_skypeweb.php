@@ -88,3 +88,4 @@ $string['status_placeholder'] = 'What\'s happening today?';
 $string['stop_tooltip'] = 'Stop Instant Messaging';
 $string['type_placeholder'] = 'Type a message here';
 $string['waitmessage'] = 'Please wait while system redirects to moodle ...!';
+$string['privacy:metadata'] = 'This plugin does not store any user data, but does communicate with the remote service as the current user. Presence and chat information is transmitted.';

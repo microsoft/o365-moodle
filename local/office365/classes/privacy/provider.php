@@ -21,5 +21,18 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-$string['pluginname'] = 'Office 365 Integration';
-$string['privacy:metadata'] = 'This plugin is just a shell plugin.';
+namespace local_office365\privacy;
+
+class provider implements
+    \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}

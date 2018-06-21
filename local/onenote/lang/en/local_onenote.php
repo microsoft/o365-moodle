@@ -35,3 +35,17 @@ $string['errornosection'] = 'Could not get or create a section in your OneNote N
 $string['errornopostdata'] = 'Could not create page data to send to OneNote.';
 $string['errorsubmissioninteachercontext'] = 'Attempted to create a submission from teacher grading context.';
 $string['errorfeedbackinstudentcontext'] = 'Attempted to create feedback in student submission context.';
+
+$string['privacy:metadata:local_onenote_user_sections'] = 'Information about OneNote sections for Moodle courses';
+$string['privacy:metadata:local_onenote_user_sections:user_id'] = 'The ID of the Moodle user';
+$string['privacy:metadata:local_onenote_user_sections:course_id'] = 'The ID of the Moodle course';
+$string['privacy:metadata:local_onenote_user_sections:section_id'] = 'The ID of the OneNote section.';
+$string['privacy:metadata:local_onenote_assign_pages'] = 'Information about OneNote pages for assignment submission and feedback.';
+$string['privacy:metadata:local_onenote_assign_pages:user_id'] = 'The ID of the Moodle user';
+$string['privacy:metadata:local_onenote_assign_pages:assign_id'] = 'The ID of the assignment';
+$string['privacy:metadata:local_onenote_assign_pages:submission_student_page_id'] = 'The page ID for the student submission';
+$string['privacy:metadata:local_onenote_assign_pages:feedback_student_page_id'] = 'The page ID for the student feedback';
+$string['privacy:metadata:local_onenote_assign_pages:submission_teacher_page_id'] = 'The page ID for the teacher submission';
+$string['privacy:metadata:local_onenote_assign_pages:feedback_teacher_page_id'] = 'The page ID for the teacher feedback';
+$string['privacy:metadata:local_onenote_assign_pages:teacher_lastviewed'] = 'The time the teacher last viewed the submission';
+$string['privacy:metadata:local_onenote_assign_pages:student_lastmodified'] = 'The time the student last modified the submission';
