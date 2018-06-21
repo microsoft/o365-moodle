@@ -125,6 +125,22 @@ $string['oidc:manageconnection'] = 'Allow OpenID Connection and Disconnection';
 $string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
 $string['oidc:manageconnectiondisconnect'] = 'Allow OpenID Disconnection';
 
+$string['privacy:metadata:auth_oidc_prevlogin'] = 'Information about users previous login methods to undo Office 365 connections';
+$string['privacy:metadata:auth_oidc_prevlogin:userid'] = 'The ID of the Moodle user';
+$string['privacy:metadata:auth_oidc_prevlogin:method'] = 'The previous login method';
+$string['privacy:metadata:auth_oidc_prevlogin:password'] = 'The previous (encrypted) user password field.';
+$string['privacy:metadata:auth_oidc_token'] = 'Information about OpenID Connect tokens for users';
+$string['privacy:metadata:auth_oidc_token:oidcuniqid'] = 'The OIDC unique user identifier.';
+$string['privacy:metadata:auth_oidc_token:username'] = 'The username of the Moodle user';
+$string['privacy:metadata:auth_oidc_token:oidcusername'] = 'The username of the OIDC user';
+$string['privacy:metadata:auth_oidc_token:scope'] = 'The scope of the token';
+$string['privacy:metadata:auth_oidc_token:resource'] = 'The resource of the token';
+$string['privacy:metadata:auth_oidc_token:authcode'] = 'The auth code for the token';
+$string['privacy:metadata:auth_oidc_token:token'] = 'The token';
+$string['privacy:metadata:auth_oidc_token:expiry'] = 'The token expiry';
+$string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'The token refresh token';
+$string['privacy:metadata:auth_oidc_token:idtoken'] = 'The token id token';
+
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
 // "Office 365", "OpenID Connect", etc.
 $string['ucp_general_intro'] = 'Here you can manage your connection to {$a}. If enabled, you will be able to use your {$a} account to log in to Moodle instead of a separate username and password. Once connected, you\'ll no longer have to remember a username and password for Moodle, all log-ins will be handled by {$a}.';
