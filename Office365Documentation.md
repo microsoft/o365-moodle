@@ -768,3 +768,734 @@ Any further questions?
 For support, please open an issue on Github at [2](https://github.com/Microsoft/o365-moodle/issues)
 
 For community discussion, please post in the [Moodle office tool integrations forum](https://moodle.org/mod/forum/view.php?id=8273) on moodle.org. Note: developers may or may not see questions in this forum thread.
+
+Appendix: Office 365 LTI integrations for Moodle
+================================================
+
+The Office 365 LTI integrations for Moodle do not require that you setup the Office 365 plugins to use and can be used independently or in conjucntion of the Office 365 plugins.
+
+Office Mix
+----------
+
+#### Instructions for setting up Office Mix as an External Tool in Moodle
+
+1. Register your Moodle installation with Office Mix
+
+  * Go to https://mix.office.com/lti/.
+  * Click Register an LMS.
+  * If you are not already signed in, you will need to sign in with an appropriate account.
+  * Type a name to describe your Moodle installation.
+  * Select the checkbox indicating that you agree to allow Office Mix to pass data to your Moodle installation.
+  * Click Save.
+  * Make note of the Consumer Key, Shared Secret, and Launch URL that will be displayed on the page. You will need these in the subsequent steps below.
+  * To retrieve these at a later time, you can return to https://mix.office.com/lti/ and click Manage Your Registrations.
+
+2.  Add Office Mix as an External Tool in Moodle
+
+  * Log in to Moodle using your administrator account.
+  * Go to Site Administration.
+  * Go to Plugins > Activity modules > LTI > Manage external tool types.
+  * Select Active.
+  * Click Add external tool configuration.
+  * In the Tool name box, type an appropriate name, such as "Office Mix".
+  * In the Tool base URL box, enter the Launch URL obtained above.
+  * In the Consumer key and Shared secret boxes, enter the values obtained above.
+  * Check the "Show tool type when creating tool instances" checkbox.
+  * Configure Privacy settings according to your requirements.
+
+      Note: Sending the Name of the user will allow Office Mix to display rich analytics and question responses.
+      If you do not send any user information, then Office Mix will not be able restore a student's answers
+      if they view the content on a subsequent visit.
+
+  * Click Save changes.
+
+Now that Office Mix has been configured, teachers or admins can follow the instructions in the next section to embed a Mix into course content:
+
+  * Log in to Moodle as a Teacher or Admin.
+  * Select the course you'd like to work with.
+  * Click Turn editing on.
+  * Locate the section that you'd like to modify and click Add an activity or resource.
+  * Select External tool.
+  * Click Add.
+  * In the General settings:
+  * In the Activity name box, type a name for your activity.
+  * Select Office Mix from the External tool type list.
+  * Set your Privacy and Grade settings.
+  * Click Save and display. At this point, you should see a placeholder for your activity.
+  * In the embedded activity, use one of these methods to select a mix:
+
+    * Using URL: A simple way to select a mix is to visit the Office Mix website, select the mix you want to include in the course, copy the URL from the browser address bar and paste it in the dialog. This method makes it easy to include mixes that have been created by other people.
+
+    * Using My Mixes: You can also select a mix from your My Mixes page from the Office Mix website. In order to prevent students from having to sign in to view a mix, only those mixes with permissions set to Unlisted or Public are shown.
+
+  * After you have selected a mix, click Yes to confirm that this is the mix you'd like to use.
+  * At this point, you should see the mix embedded within your course.
+
+** Additional Resources**
+You may also refer to these Office Mixes for more information
+
+  * <https://mix.office.com/en-us/Lti/UsingMoodle>
+  * <https://mix.office.com/en-us/Lti/SetupMoodle>
+
+OneNote Class Notebook
+----------------------
+
+#### Instructions for setting up OneNote Class Notebook as an External Tool
+
+
+1.  Register your Moodle installation with OneNote Class Notebook
+
+  * Go to https://www.onenote.com/lti.
+  * If you are not already signed in, you will need to sign in with an appropriate account.
+  * On the "Register Your LMS" page, enter a name to describe your Moodle installation.
+  * Click "Register".
+  * Make note of the Consumer Key, Shared Secret, and Launch URL that will be displayed on the page. You will need these in the subsequent steps below.
+  * To retrieve these at a later time, you can return to https://www.onenote.com/lti/ and click View/Manage Your Registration.
+
+2.  Add OneNote Class Notebook as an External Tool in Moodle
+
+  * Log in to Moodle using your Moodle administrator account.
+  * Go to Site Administration.
+  * Go to Plugins > Activity modules > LTI > Manage external tool types.
+  * Select Active.
+  * Click Add external tool configuration.
+  * In the Tool name box, type an appropriate name, such as "OneNote Class Notebook".
+  * In the Tool base URL box, enter the Launch URL obtained above.
+  * In the Consumer key and Shared secret boxes, enter the values obtained above.
+  * Check the "Show tool type when creating tool instances" checkbox.
+  * Configure Privacy settings according to your requirements.
+  * Click Save changes.
+
+Now that OneNote Class Notebook has been configured, teachers or admins can follow the instructions in the next section to embed a Class Notebook into course content by following the steps below:
+
+  * Log in to Moodle as a Teacher or Admin.
+  * Select the course you'd like to work with.
+  * Click Turn editing on.
+  * Locate the section that you'd like to modify and click Add an activity or resource.
+  * Select External tool.
+  * Click Add.
+  * In the General settings:
+  * In the Activity name box, type a name for your activity.
+  * Select "OneNote Class Notebook" from the External tool type list.
+  * Set your Privacy and Grade settings.
+  * Click Save and display. At this point, you should see a placeholder for your activity.
+  * At this point, you should see the Notebook embedded within your course.
+  * You will be guided through a sequence of dialogs to set up your notebook. Unless you want to change something, you can simply click Next on each one of them.
+  * At the end, a notebook will be added to your course.
+
+**Additional Resources**
+You may also refer to this Office Mix presentation for more information: <https://mix.office.com/watch/hg1qya375vxx>
+
+Appendix: Class Notebook Add-in for OneNote and Moodle
+======================================================
+
+In order to use the Class Notebook Add-In for OneNote you must enable Office 365 web services.
+
+Setup
+-----
+
+1. Enable web services.
+  1. Go to `Site administration > Advanced features`. Check the box next to "Enable webservices" and click "Save changes"
+2. Enable the REST web services protocol
+  1. Go to the web services "Manage protocols" page: `Site administration > Plugins > Web services > Manage protocols`.
+  2. If the icon in the "Enable" column for the "REST protocol" row has a slash through it, click the icon to enable the protocol.
+  3. Click Save changes
+3. Enable the "Microsoft Office 365 Webservices" service.
+  1. Go to the web services "External services" page: `Site administration > Plugins > Web services > External services`.
+  2. Find "Moodle Office 365 Webservices" in the "Built-in services" list, and click the "Edit" link in that row.
+  3. Ensure the "Enabled" setting is checked (check it if it is not), and click "Save changes".
+4. Create a "webservices" role that allows users to use the REST webservice protocol.
+  1. Go to the "Define roles" page: `Site administration > Users > Permissions > Define roles`
+  2. Click "Add a new role"
+  3. Choose "No role" for "Use role or archetype", click "Continue"
+  4. Enter "rest_webservice_user" as the role short name, and "REST Webservice User" as the custom full name.
+  5. Allow this role to be assigned at the system context.
+  6. Search for `webservice/rest:use` in the list of permissions, and check the "Allow" box in that row.
+  7. Scroll to the bottom of the page and click "Create this role"
+5. Assign each of the users you want to use the webservice this "REST Webservice User" role.
+  1. Go to the "Assign system roles" page: `Site administration > Users > Permissions > Assign system roles`.
+  2. Click the "REST Webservice User" link.
+  3. Choose each user you want to assign from the right menu (you may have to search for each user individually), and click "Add" to assign them to the role.
+6. Create a token for each user you want to be able to use the webservice.
+  1. Go to the web service "Manage tokens" page: `Site administration > Plugins > Web services > Manage tokens`
+  2. Click the "Add" link.
+  3. Choose the user you want to create a token for from the "User" list.
+  4. Choose "Moodle Office 365 Webservices" from the "Service" list.
+  5. Click "Save changes"
+
+Making a webservice call
+------------------------
+Now that webservices are set up on your Moodle site, you can begin making webservice calls.
+
+All webservice calls:
+- are POST requests made to `[moodle]/webservice/rest/server.php`
+- use URL encoded parameters in the body of the post request.
+- require (at minimum) three parameters:
+  - `wstoken` This is the token you created for the user in the "setup" section above.
+  - `wsfunction` This is the name of the function you are calling.
+  - `moodlewsrestformat` This is the format you expect the response in, we will use "json"
+
+For example, a request to get a list of a teacher's courses:
+```
+POST http://example.com/webservice/rest/server.php
+Content-Type: application/x-www-form-urlencoded
+
+wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_get_teachercourses&moodlewsrestformat=json
+```
+
+Service reference
+-----------------
+
+#### Get courses of a teacher
+This function gets a list of courses that the requesting user is a teacher in. "Teacher" in this case is defined as a user with the `moodle/grade:edit` capability.
+
+**Function:** local_o365_get_teachercourses
+
+**Parameters:** none
+
+**Response:** array of objects, each containing:
+- `id` *int* The course ID.
+- `shortname` *string* The shortname of the course.
+- `fullname` *string* The full name of the course.
+- `idnumber` *string* The course ID number.
+- `visible` *int* Whether the course is visible. 1 or 0, 1 being visible, 0 being hidden.
+- `format` *string* The course format.
+- `showgrades` *int* Whether grades are shown.
+- `lang` *string* The course language.
+- `enablecompletion` *int* Whether completion is enabled.
+
+
+#### Get users by course ID
+This function gets a list of user enrolled in a given course. This will only return information for courses the requesting user can access.
+
+**Function:** local_o365_get_course_users
+
+**Parameters:**
+- `courseid` *int* The ID of the course
+
+**Response:** array of objects, each containing:
+- `id` *int* The user's ID.
+- `fullname` *string* The user's full name.
+- `firstname` *string* The user's first name.
+- `lastname` *string* The user's last name.
+- `email` *string* The user's email address.
+- `profileimageurlsmall` *string* A URL to a small version of the user's profile photo.
+- `profileimageurl` *string* A URL to the user's profile photo.
+
+
+#### Create OneNote Assignment
+This function will create a new OneNote assignment in a given course.
+
+**Function:** local_o365_create_onenoteassignment
+
+**Parameters:**
+- `data` *array* An wrapper array containing:
+  - `name` *string* The name of the assignment.
+  - `course` *int* The ID of the course to create the assignment in.
+  - `intro` *string* (Optional) A description of the assignment. Default is an empty string.
+  - `section` *int* The ID of the course section to create the assignment in.
+  - `visible` *int* (Optional) Whether to make the assignment visible or hidden. 1 to make visible, 0 to make hidden. Default is 0 (hidden).
+
+**Response:**
+- `data` *array* Array of objects, each containing:
+  - `course` *int* The ID of the course the assignment was created in.
+  - `coursemodule` *int* The course module ID.
+  - `instance` *int* The assignment ID.
+  - `name` *string* The name of the created assignment.
+  - `intro` *string* The description of the created assignment.
+  - `section` *string* The ID of the course section the assignment was created in.
+  - `visible` *int* Whether the assignment is visible or hidden. 1 = visible, 0 = hidden.
+
+
+#### Get information about a OneNote assignment
+This function will return information about a OneNote assignment given a course module ID and course ID.
+
+**Function:** local_o365_get_onenoteassignment
+
+**Parameters:**
+- `data` *array* An wrapper array containing:
+  - `coursemodule` *int* The course module ID.
+  - `course` *int* The ID of the course the assignment is in.
+
+**Response:**
+- `data` *array* Array of objects, each containing:
+  - `course` *int* The ID of the course the assignment is in.
+  - `coursemodule` *int* The course module ID.
+  - `instance` *int* The assignment ID.
+  - `name` *string* The name of the assignment.
+  - `intro` *string* The description of the assignment.
+  - `section` *string* The ID of the course section the assignment is in.
+  - `visible` *int* Whether the assignment is visible or hidden. 1 = visible, 0 = hidden.
+
+
+#### Update a OneNote assignment
+This function will allow you to update various attributes of a OneNote assignment.
+
+**Function:** local_o365_get_onenoteassignment
+
+**Parameters:**
+- `data` *array* An wrapper array containing:
+  - `coursemodule` *int* The course module ID.
+  - `course` *int* The ID of the course the assignment is in.
+  - `name` *string* (Optional) The new assignment name to set.
+  - `intro` *string* (Optional) The new description to set.
+  - `section` *string* (Optional) The ID of the course section to move the assignment to.
+  - `visible` *int* (Optional) The assignment's new visibility status. 1 = visible, 0 = hidden.
+
+**Response:**
+- `data` *array* Array of objects, each containing:
+  - `course` *int* The ID of the course the assignment is in.
+  - `coursemodule` *int* The course module ID.
+  - `instance` *int* The assignment ID.
+  - `name` *string* The name of the assignment.
+  - `intro` *string* The description of the assignment.
+  - `section` *string* The ID of the course section the assignment is in.
+  - `visible` *int* Whether the assignment is visible or hidden. 1 = visible, 0 = hidden.
+
+
+#### Delete a OneNote assignment
+This function will allow you to remove a OneNote assignment.
+
+**Function:** local_o365_delete_onenoteassignment
+
+**Parameters:**
+- `data` *array* An wrapper array containing:
+  - `coursemodule` *int* The course module ID.
+  - `course` *int* The ID of the course the assignment is in.
+
+**Response:**
+- `result` *bool* Whether the operation was successful (true), or not (false).
+
+
+Example use case: Teacher managing assignments
+----------------------------------------------
+
+1. Get a list of the teacher's courses
+
+  Request:
+  ```
+  POST https://example.com/webservice/rest/server.php
+  Content-Type: application/x-www-form-urlencoded
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_get_teachercourses&moodlewsrestformat=json
+  ```
+  Response:
+  ```
+  [
+    {
+      "id":3,
+      "shortname":"PSYCH102",
+      "fullname":"Introductory Psychology 2",
+      "idnumber":"",
+      "visible":1,
+      "format":"weeks",
+      "showgrades":true,
+      "lang":"",
+      "enablecompletion":false
+    },
+    {
+      "id":2,
+      "shortname":"PSYCH101",
+      "fullname":"Introductory Psychology 1",
+      "idnumber":"",
+      "visible":1,
+      "format":"weeks",
+      "showgrades":true,
+      "lang":"",
+      "enablecompletion":false
+    }
+  ]
+  ```
+2. Get a list of users for PSYCH101.
+
+  This uses the 'id' parameter for the PSYCH101 course returned above as the 'courseid' parameter.
+
+  Request:
+  ```
+  POST https://example.com/webservice/rest/server.php
+  Content-Type: application/x-www-form-urlencoded
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_get_course_users&moodlewsrestformat=json&courseid=2
+  ```
+  Response:
+  ```
+  [
+    {
+      "id":175,
+      "fullname":"John Smith",
+      "firstname":"John",
+      "lastname":"Smith",
+      "email":"john.smith@example.com",
+      "profileimageurlsmall":"http:\/\/example.com\/theme\/image.php\/clean\/core\/1459671559\/u\/f2",
+      "profileimageurl":"http:\/\/example.com\/theme\/image.php\/clean\/core\/1459671559\/u\/f1"
+    },
+    {
+      "id":176,
+      "fullname":"Jane Smith",
+      "firstname":"Jane",
+      "lastname":"Smith",
+      "email":"jane.smith@example.com",
+      "profileimageurlsmall":"http:\/\/example.com\/pluginfile.php\/24\/user\/icon\/clean\/f2?rev=469",
+      "profileimageurl":"http:\/\/example.com\/pluginfile.php\/24\/user\/icon\/clean\/f1?rev=469"
+    },
+  ]
+  ```
+3. Get a list of assignments for PSYCH101
+
+  This uses the 'id' parameter for the PSYCH101 course returned in step 1 as the sole item in the 'courseids' parameter.
+
+  Request:
+  ```
+  POST https://example.com/webservice/rest/server.php
+  Content-Type: application/x-www-form-urlencoded
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=mod_assign_get_assignments&moodlewsrestformat=json&courseids%5B%5D=2
+  ```
+  Response:
+  ```
+  {
+    "courses":[
+      {
+        "id":2,
+        "fullname":"Introductory Psychology",
+        "shortname":"PSYCH101",
+        "timemodified":1450214936,
+        "assignments":[
+          {
+            "id":1,
+            "cmid":2,
+            "course":2,
+            "name":"OneNote Test Assignment",
+            "nosubmissions":0,
+            "submissiondrafts":0,
+            "sendnotifications":0,
+            "sendlatenotifications":0,
+            "sendstudentnotifications":1,
+            "duedate":0,
+            "allowsubmissionsfromdate":0,
+            "grade":100,
+            "timemodified":1447960195,
+            "completionsubmit":0,
+            "cutoffdate":0,
+            "teamsubmission":0,
+            "requireallteammemberssubmit":0,
+            "teamsubmissiongroupingid":0,
+            "blindmarking":0,
+            "revealidentities":0,
+            "attemptreopenmethod":"none",
+            "maxattempts":-1,
+            "markingworkflow":0,
+            "markingallocation":0,
+            "requiresubmissionstatement":0,
+            "configs":[
+              {
+                "id":1,
+                "assignment":1,
+                "plugin":"file",
+                "subtype":"assignsubmission",
+                "name":"enabled",
+                "value":"0"
+              },
+              {
+                "id":2,
+                "assignment":1,
+                "plugin":"onlinetext",
+                "subtype":"assignsubmission",
+                "name":"enabled",
+                "value":"0"
+              },
+              {
+                "id":3,
+                "assignment":1,
+                "plugin":"onenote",
+                "subtype":"assignsubmission",
+                "name":"enabled",
+                "value":"1"
+              },
+              ...
+            ]
+            "intro":"",
+            "introformat":1
+          }
+        ]
+      }
+    ]
+  }
+  ```
+4. Get existing grades for the "OneNote Test Assignment" in PSYCH101.
+
+  This uses the 'id' parameter from the assignment we want from the 'assignments' object returned in the above step as the sole item in the 'assignmentids' parameter.
+
+  Request:
+  ```
+  POST https://example.com/webservice/rest/server.php
+  Content-Type: application/x-www-form-urlencoded
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=mod_assign_get_grades&moodlewsrestformat=json&assignmentids%5B%5D=1
+  ```
+  Response:
+  ```
+  {
+    "assignments":[
+      {
+        "assignmentid":1,
+        "grades":[
+          {
+            "id":3,
+            "userid":175,
+            "attemptnumber":0,
+            "timecreated":1459661701,
+            "timemodified":1459662202,
+            "grader":3,
+            "grade":"88.00000"
+          }
+        ]
+      }
+    ],
+    "warnings":[]
+  }
+  ```
+  We can see here there is one grade present for this assignment, from user "John Smith" (ID 175 from step 2).
+5. Create a new grade entry
+
+  This request uses the assignment id found in step 3, the user id from step 2 and a the new grade to set.
+
+  Request:
+  ```
+  POST https://example.com/webservice/rest/server.php
+  Content-Type: application/x-www-form-urlencoded
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_update_grade&moodlewsrestformat=json&assignmentid=1&userid=175&grade=78&attemptnumber=-1&addattempt=0&workflowstate=&applytoall=1&plugindata%5Bassignfeedbackcomments_editor%5D%5Btext%5D=&plugindata%5Bassignfeedbackcomments_editor%5D%5Bformat%5D=2&plugindata%5Bfiles_filemanager%5D=0
+  ```
+
+  This function should return null if it was successful. You can repeat step 4 to verify the grade was saved correctly.
+
+6. Create a new OneNote assignment
+
+  This will create a new assignment in a given course, with the OneNote assignment and feedback types enabled.
+
+  Request:
+  ```
+  POST https://example.com/webservice/rest/server.php
+  Content-Type: application/x-www-form-urlencoded
+
+  wstoken=309ada75ccb5518f368d103b3c1fb0cb&wsfunction=local_o365_create_onenoteassignment&moodlewsrestformat=json&data%5Bname%5D=A+new+test+onenote+assignment&data%5Bcourse%5D=2
+  ```
+  Response:
+  ```
+  {
+    "data":[
+      {
+        "course":2,
+        "coursemodule":91,
+        "name":"A new test onenote assignment",
+        "intro":"",
+        "section":1,
+        "visible":0,
+        "instance":49
+      }
+    ]
+  }
+  ```
+  Note that the "assignment id" referenced above for use with the grade-related functions is the "instance" attribute returned here. The "coursemodule" attribute is used with the other OneNote assignment functions (along with the course id) to get, update, or delete the assignment.
+
+Appendix: oEmbed Filter
+=======================
+
+This filter allows users to embed documents from various online sources to be embedded into Moodle content. The user only has to enter the URL to the document and the filter takes care of converting the URL into an embeddable IFRAME. This filter has a white list of services it supports. The list of supported services can be seen and selectively enabled or disabled in the settings page for this filter.
+
+Embedding Power BI Reports
+--------------------------
+
+This filter allows users to embed Power BI items into a course.
+
+1. If you have upgraded filter plugin recently, clear the Moodle cache first then go to filter plugin settings and esure that the PowerBI filter is enabled.
+
+2. In the Azure Portal (https://manage.windowsazure.com) go to your AD application, then inside 'Permissions to other applications' click Add Application.
+
+3. Select Power BI Service, save, then set Delegated permissions as follows:
+    1. View all reports(preview)
+    2. Read and Write all Datasets
+    3. View all Datasets
+    4. View all Dashboards(preview)
+
+4. Click on Save
+
+5. Login to Office 365 and go to the Power BI app.
+
+6. The menu on the left hand side contains the Reports section. Select the report you want to embed. (Note that the filter only works for Reports, not for Tiles.)
+
+7. Copy the URL & paste it into Moodle content where you would like to embed the report.
+
+8. Save the Moodle content and view it. You should see the URL you entered get converted into an IFRAME with the report showing inside it.
+
+Appendix: Developer Documentation
+=================================
+
+Setting up a Moodle Dev Test with the Office 365 plugins in Azure using Azure Resource Manager Templates
+--------------------------------------------------------------------------------------------------------
+
+This document describes how to deploy Moodle and the Office 365 plugins quickly and easily on Microsoft Azure using an Azure Resource Manager (ARM) template. Azure Resource Manager (ARM) templates are declarative templates written in JSON that can be used to quickly create entire deployments consisting of VM's, databases, load balancers, network configuration etc. Please note that you need to have an Azure subscription to create these deployments. If you don't already have a subscription, you can get a free trial subscription here: https://azure.microsoft.com/en-us/pricing/free-trial/
+* Go to the appropriate template on Github:
+    * To create a single VM deployment on Ubuntu, go to https://github.com/Azure/azure-quickstart-templates/tree/master/moodle-singlevm-ubuntu
+    * To create a clustered deployment on Ubuntu, go to https://github.com/Azure/azure-quickstart-templates/tree/master/moodle-cluster-ubuntu
+* The readme describes the layout of the deployment that will be created and additional services you can set up after the deployment is done.
+* Click on the "Deploy to Azure" button in the readme
+* This will take you to the Azure portal with the template ready to be customized and deployed.
+* You will need to enter the required parameters, specify a resource group, accept the legal terms, and start your deployment.
+* When the deployment is complete, your Moodle instance will already be set up with the Office 365 plugins (if selected).
+
+Setting up a development site
+-----------------------------
+
+While Moodle requires each plugin to be it's own repository, developing a set of dependant plugins can be made easier by using a single repository for all plugins and overlaying the repository on top of a Moodle repository. In this setup, two repositories live in the same directory using two different .git directories – usually .git and .mdlgit. Using repository-specific gitignore rules, each repository deals with it's own files – allowing you to manage files, change branches, and view status independently.
+
+### Setup
+1. Clone Moodle into a new directory (or use a clean existing site), and check out the branch you'll be using.
+    ```
+    git clone [repository] [directoryname]
+    ```
+2. Change directories to the cloned site
+3. Check out the branch you'll be using.
+    ```
+    git checkout -t -b MOODLE_35_STABLE origin/MOODLE_35_STABLE
+    ```
+4. Rename the .git directory to .mdlgit
+5. Clone the development repository into a bare repository within the checked out Moodle code git clone --bare [repository] .git
+6. Add gitignore rules.
+   1. Note: In a .git directory, repository-specific gitignore rules can be placed in info/exclude. Note that these rules will not be committed to the repository, so must be manually added for each new clone.
+   2. Add the following to .git/info/exclude:
+    ```
+    **
+    !auth
+    !auth/oidc
+    !auth/oidc/**
+    !blocks
+    !blocks/microsoft
+    !blocks/microsoft/**
+    !filter
+    !filter/oembed
+    !filter/oembed/**
+    !local
+    !local/o365
+    !local/o365/**
+    !local/office365
+    !local/office365/**
+    !local/onenote
+    !local/onenote/**
+    !mod
+    !mod/assign
+    !mod/assign/feedback
+    !mod/assign/feedback/onenote
+    !mod/assign/feedback/onenote/**
+    !mod/assign/submission
+    !mod/assign/submission/onenote
+    !mod/assign/submission/onenote/**
+    !repository
+    !repository/office365
+    !repository/office365/**
+    ```
+   3. Add the following to .mdlgit/info/exclude.
+    ```
+    .mdlgit
+    auth/oidc
+    blocks/microsoft
+    filter/oembed
+    local/o365
+    local/office365
+    local/onenote
+    mod/assign/feedback/onenote
+    mod/assign/submission/onenote
+    repository/office365
+    ```
+7. Manually change the development repository into a normal repository
+    ```
+    git config core.bare false
+    git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+    git fetch
+    git checkout [branch]
+    ```
+8. Check status
+    ```
+    git status
+    git --git-dir=.mdlgit status
+    ```
+
+Coding Standards
+----------------
+
+### Code Style
+- All changes must adhere to the Moodle coding style.
+- All changes must pass a peer-review by a maintainer.
+- Use the short-array syntax - [] instead of array()
+
+### Code Documentation
+1. All files must have the standard Moodle copyright notice at the top.
+```php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+```
+2. All files must have a package, author, license, and copyright line.
+```php
+/**
+ * @package local_o365
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ */
+```
+   1. The package must be the component name of the plugin the file is part of - local_o365, repository_office365, etc.
+   2. The author line must be your full name and company email address.
+   3. The license must be a GPLv3 or later line, shown above.
+   4. The copyright line must be "[year] onwards Microsoft Open Technologies, Inc.", shown above.
+3. All classes must have a doc block, explaining the purpose of the class.
+4. All methods must have a complete doc block explaining the purpose of the method, all parameters, and return values.
+5. All class properties must have a short doc block explaining the property type and the property's purpose.
+   Ex.
+   ```
+   /** @var \local_o365\httpclientinterface An HTTP client to use for communication. */
+   ```
+
+### Autoloading
+All new classes must be autoloadable and placed in the classes directory of the plugin. No exceptions.
+
+### API Calls
+1. All API calls must have their responses validated, with any errors logged. For classes that extend \local_o365\rest\o365api, you can use $this->process_apicall_response, which will detect standard error responses and allow you to specify required keys and values.
+2. Use existing classes to manage and access tokens, http requests, and client data. They handle things like token refreshing, tokens for new resources, and http request quirks automatically.
+3. Plugin code generally doesn't access the rest API classes directly, but calls higher-level functions in feature classes. These are located in classes\feature. This allows the underlying API to be switched out by only modifying the feature class. This is not a strict rule but should be done whenever possible.
+4. When making an API call and fetching the token with \local_o365\oauth2\token::instance or \local_o365\oauth2\systemtoken::instance, check that you actually received a token object. This function will return null if it could not get a token for the specified user/resource, and this often happens when the plugins have not yet been configured, or configured incorrectly.
+\local_o365\oauth2\clientdata::instance_from_oidc is a time-saving function that will construct a clientdata object from the configured values in auth_oidc. You should use this to keep code simple and ensure a proper object is constructed. However, it will throw an exception if auth_oidc is not configured, so your code needs to expect and handle that.
+
+### Architecture
+1. Feature Classes/Namespaces
+   1. Plugin features, ex. Calendar sync, user sync, and user group creation, must be organized into "feature" namespaces within the \local_o365\feature namespace. Everything specific to a feature incl. event handlers, tasks, page classes, and general code must live somewhere within the feature namespace. This keeps feature-specific mode centralized and modular.
+   2. "Features" often have "main" classes that are functionality abstractions that live between the main plugin code and the API classes. This is mainly done to gracefully handle API changes like the Graph API migration, but also keeps specific actions centralized and standardized.
+   3. Main plugin code, i.e. user/admin control panel pages, must call a feature class instead of a specific API class. If we need to change the underlying API or change how an API call is handled, we can just update the feature class and not every API call.
+2. API Classes
+   1. All classes that call Office 365 APIs must live in the \local_o365\rest namespace. These must extend \local_o365\rest\o365api.
+   2. All JSON API responses must be run through $this->process_apicall_response. This will check for error responses, and optional defined structure, and do required logging.
+3. Utility Class
+   1. \local_o365\utils provides a number of useful functions to perform common tasks in a standardized way.
+      1. is_configured() - This determines whether the plugins are configured and active. Any plugin code that could run when the plugins are not configured, ex. event handlers and tasks, must use this function to check whether the plugins are configured and, if not, exit early before attempting any work.
+      2. is_o365_connected() - Performs a number of checks to determine whether a user is connected to Office 365. This should be used to check whether to perform plugin-specific tasks for a user, ex. in event handlers and tasks.
+4. Page Classes
+   1. Any user-facing interface must use page classes, extending the \local_o365\page\base class.
+   2. Page classes implement different views in "mode" functions within the class and are then run by instantiating the page class and running $page->run($mode).
+   3. For example, if you run $page->run('calendar') the page class will run mode_calendar(). There is also a general "header()" function you can implement to run general page setup tasks. See \local_o365\page\ajax and \local_o365\page\ucp for examples of implemented page classes, and /local/o365/ajax.php and /local/o365/ucp.php for example of how to run a page class.
+
+### Installs, Upgrades, Uninstalls
+1. All upgrade steps must be able to be run more than once without damaging data. They should be written in a way to check whether the upgrade is needed, or to check for old data when migrating data. Remember that all upgrade steps will be run again when a user moves major Moodle versions - 2.7 to 2.8 for example, so be prepared!
+2. Use db_manager functions like table_exists, field_exists, index_exists.
+3. Check for existing values when setting default values.
