@@ -81,19 +81,41 @@ class usersync extends \core\task\scheduled_task {
 
         $usersync = new \local_o365\feature\usersync\main();
 
-        $skiptoken = $this->get_token('skiptoken');
-        if (!empty($skiptoken)) {
-            $this->mtrace('Using skiptoken');
-        } else {
-            $this->mtrace('No skiptoken stored.');
-        }
-
         if ($usersync->sync_option_enabled('nodelta') === true) {
+            $skiptoken = $this->get_token('skiptokenfull');
+            if (!empty($skiptoken)) {
+                $this->mtrace('Using skiptoken (full)');
+            } else {
+                $this->mtrace('No skiptoken (full) stored.');
+            }
+
             $this->mtrace('Forcing full sync.');
             $this->mtrace('Contacting Azure AD...');
-            list($users, $skiptoken) = $usersync->get_users('default', $skiptoken);
+            try {
+                list($users, $skiptoken) = $usersync->get_users('default', $skiptoken);
+            } catch (\Exception $e) {
+                $this->mtrace('Error in full usersync: '.$e->getMessage());
+                \local_o365\utils::debug($e->getMessage(), 'usersync task', $e);
+                $this->mtrace('Resetting skip and delta tokens.');
+                $skiptoken = null;
+            }
             $this->mtrace('Got response from Azure AD');
+
+            // Store skiptoken.
+            if (!empty($skiptoken)) {
+                $this->mtrace('Storing skiptoken (full)');
+            } else {
+                $this->mtrace('Clearing skiptoken (full) (none received)');
+            }
+            $this->store_token('skiptokenfull', $skiptoken);
         } else {
+            $skiptoken = $this->get_token('skiptokendelta');
+            if (!empty($skiptoken)) {
+                $this->mtrace('Using skiptoken (delta)');
+            } else {
+                $this->mtrace('No skiptoken (delta) stored.');
+            }
+
             $deltatoken = $this->get_token('deltatoken');
             if (!empty($deltatoken)) {
                 $this->mtrace('Using deltatoken.');
@@ -103,7 +125,16 @@ class usersync extends \core\task\scheduled_task {
 
             $this->mtrace('Using delta sync.');
             $this->mtrace('Contacting Azure AD...');
-            list($users, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+            try {
+                list($users, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+            } catch (\Exception $e) {
+                $this->mtrace('Error in delta usersync: '.$e->getMessage());
+                \local_o365\utils::debug($e->getMessage(), 'usersync task', $e);
+                $this->mtrace('Resetting skip and delta tokens.');
+                $skiptoken = null;
+                $deltatoken = null;
+            }
+
             $this->mtrace('Got response from Azure AD');
 
             // Store deltatoken.
@@ -113,6 +144,14 @@ class usersync extends \core\task\scheduled_task {
                 $this->mtrace('Clearing deltatoken (none received)');
             }
             $this->store_token('deltatoken', $deltatoken);
+
+            // Store skiptoken.
+            if (!empty($skiptoken)) {
+                $this->mtrace('Storing skiptoken (delta)');
+            } else {
+                $this->mtrace('Clearing skiptoken (delta) (none received)');
+            }
+            $this->store_token('skiptokendelta', $skiptoken);
         }
 
         if (!empty($users)) {
@@ -121,14 +160,6 @@ class usersync extends \core\task\scheduled_task {
         } else {
             $this->mtrace('No users received to sync.');
         }
-
-        // Store skiptoken.
-        if (!empty($skiptoken)) {
-            $this->mtrace('Storing skiptoken');
-        } else {
-            $this->mtrace('Clearing skiptoken (none received)');
-        }
-        $this->store_token('skiptoken', $skiptoken);
 
         $this->mtrace('Sync process finished.');
         return true;

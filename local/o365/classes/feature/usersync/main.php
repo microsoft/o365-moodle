@@ -557,6 +557,9 @@ class main {
             if (email_is_not_allowed($existinguser->email)) {
                 unset($existinguser->email);
             }
+        } else {
+            // Email is originally pulled (optionally) from UPN, so an empty email should not wipe out Moodle email.
+            unset($existinguser->email);
         }
 
         $existinguser->timemodified = time();
