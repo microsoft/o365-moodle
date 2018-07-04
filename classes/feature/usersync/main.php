@@ -699,7 +699,7 @@ class main {
                     // Check for synced user.
                     $sql = 'SELECT u.*
                               FROM {user} u
-                              JOIN {local_o365_objects} obj ON obj.type = "user" AND obj.moodleid = u.id
+                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
                               JOIN {auth_oidc_token} tok ON tok.username = u.username
                              WHERE u.username = ?
                                    AND u.mnethostid = ?
