@@ -1570,7 +1570,7 @@ class unified extends \local_o365\rest\o365api {
                        tok.oidcuniqid as userobjectid
                   FROM {auth_oidc_token} tok
                   JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
+                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = 0';
         $params = ['https://graph.windows.net', $userid];
         $userobject = $DB->get_record_sql($sql, $params);
         if (empty($userobject)) {
@@ -1601,7 +1601,7 @@ class unified extends \local_o365\rest\o365api {
                        tok.oidcuniqid as userobjectid
                   FROM {auth_oidc_token} tok
                   JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
+                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = 0';
         $params = ['https://graph.windows.net', $userid];
         $userobject = $DB->get_record_sql($sql, $params);
         if (empty($userobject)) {
