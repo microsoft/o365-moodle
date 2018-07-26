@@ -121,7 +121,7 @@ $observers = [
         'eventname'   => '\auth_oidc\event\user_disconnected',
         'callback'    => '\local_o365\observers::handle_oidc_user_disconnected',
         'priority'    => 200,
-        'internal'    => false,
+        'internal'    => true,
     ],
     [
         'eventname'   => '\auth_oidc\event\user_loggedin',
@@ -195,6 +195,6 @@ $observers = [
         'eventname'   => '\core\event\user_deleted',
         'callback'    => '\local_o365\observers::handle_user_deleted',
         'priority'    => 200,
-        'internal'    => false,
+        'internal'    => true,
     ],
 ];
