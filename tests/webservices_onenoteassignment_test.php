@@ -158,15 +158,23 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                                                            'name' => 'OneNote Assignment',
                                                            'intro' => 'This is a test assignment'));
 
-        // Enable OneNote submission for this assignment
-        $assignpluginconfig = $DB->get_record('assign_plugin_config', array('assignment' => $assign->id,
-                                                                            'plugin' => 'onenote',
-                                                                            'subtype' => 'assignsubmission'));
-        $assignpluginconfig->value = 1;
-        $DB->update_record('assign_plugin_config', $assignpluginconfig);
+        // Enable OneNote submission for this assignment.
+        $pluginconfigparams = [
+            'assignment' => $assign->id,
+            'plugin' => 'onenote',
+            'subtype' => 'assignsubmission',
+            'name' => 'enabled',
+        ];
+        $assignpluginconfig = $DB->get_record('assign_plugin_config', $pluginconfigparams);
+        if (empty($assignpluginconfig)) {
+            $pluginconfigparams['value'] = 1;
+            $DB->insert_record('assign_plugin_config', $pluginconfigparams);
+        } else if (empty($pluginconfigparams['value'])) {
+            $pluginconfigparams['value'] = 1;
+            $DB->update_record('assign_plugin_config', $pluginconfigparams);
+        }
 
-        // get assignment config
-        $module = $DB->get_field('modules', 'id', array('name' => 'assign'));
+        // Get assignment config.
         $fakecourseid = $course->id + 1;
         $fakecmid = $assign->cmid + 1;
 
