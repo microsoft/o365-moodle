@@ -170,8 +170,8 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
             $pluginconfigparams['value'] = 1;
             $DB->insert_record('assign_plugin_config', $pluginconfigparams);
         } else if (empty($pluginconfigparams['value'])) {
-            $pluginconfigparams['value'] = 1;
-            $DB->update_record('assign_plugin_config', $pluginconfigparams);
+            $assignpluginconfig->value = 1;
+            $DB->update_record('assign_plugin_config', $assignpluginconfig);
         }
 
         // Get assignment config.
