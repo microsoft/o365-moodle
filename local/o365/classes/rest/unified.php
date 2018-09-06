@@ -1113,7 +1113,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_application_info() {
         $oidcconfig = get_config('auth_oidc');
-        $endpoint = '/applications/?$filter=id%20eq%20\''.$oidcconfig->clientid.'\'';
+        $endpoint = '/applications/?$filter=appId%20eq%20\''.$oidcconfig->clientid.'\'';
         $response = $this->betaapicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
