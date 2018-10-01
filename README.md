@@ -30,7 +30,7 @@ Alternatively you might choose to manually install the plugins from Github. If d
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
 3. Follow the on-screen instuctions to install each plugin.
 
-*Don't have a Moodle site already?* You might want to check out our Moodle on Azure repo (http://github.com/azure/moodle) where you can quickly deploy a Moodle instance on Azure and customize it to your needs.
+*Don't have a Moodle site already?* You might want to check out our Moodle on Azure repo (https://github.com/azure/moodle) where you can quickly deploy a Moodle instance on Azure and customize it to your needs.
 
 ## Documentation
 The documentation for installing, configuring, and using these plugins is available on Moodle.org [here.](https://docs.moodle.org/34/en/Office365)
