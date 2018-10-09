@@ -376,10 +376,7 @@ class azuread extends \local_o365\rest\o365api {
         if ($params === 'default') {
             $params = ['mail', 'city', 'country', 'department', 'givenName', 'surname', 'preferredLanguage', 'userPrincipalName'];
         }
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($params) && is_array($params)) {
+        if (!empty($skiptoken) && is_string($skiptoken) && !empty($params) && is_array($params)) {
             $endpoint .= '?$skiptoken='.$skiptoken;
         }
         $response = $this->apicall('get', $endpoint);
