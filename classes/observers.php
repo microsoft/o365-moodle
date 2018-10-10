@@ -417,6 +417,7 @@ class observers {
             // Remove user from course usergroup.
             $apiclient = \local_o365\utils::get_api();
             $apiclient->remove_user_from_course_group($courseid, $userid);
+            $apiclient->remove_owner_from_course_group($courseid, $userid);
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
         }
@@ -600,17 +601,48 @@ class observers {
      * Handle role_assigned event
      *
      * Does the following:
-     *     - check if the assigned role has the permission needed to access course sharepoint sites.
-     *     - if it does, add the assigned user to the course sharepoint sites as a contributor.
+     *     - check if the assigned role has the permission needed to access course sharepoint sites. If it does, add
+     *       the assigned user to the course sharepoint sites as a contributor.
+     *     - check if group sync is enabled for the course. If it does, add the user as group owner if the user is a
+     *       teacher.
      *
      * @param \core\event\role_assigned $event The triggered event.
      * @return bool Success/Failure.
      */
     public static function handle_role_assigned(\core\event\role_assigned $event) {
-        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
-            return false;
+        global $DB;
+
+        $response = false;
+        if (\local_o365\utils::is_configured() === true) {
+            if (\local_o365\rest\sharepoint::is_configured() === true) {
+                $response = static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid,
+                    $event->contextid);
+            }
+            if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
+                $userid = $event->relateduserid;
+                $courseid = $event->courseid;
+                $roleid = $event->objectid;
+
+                if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+                    $caller = 'local_o365\observer::handle_role_assigned';
+
+                    if (empty($userid) || empty($courseid)) {
+                        \local_o365\utils::debug("handle_role_assigned no userid $userid or course $courseid", $caller);
+                    } else {
+                        $roleteacher = $DB->get_record('role', array('shortname' => 'editingteacher'));
+                        $rolenoneditingteacher = $DB->get_record('role', array('shortname' => 'teacher'));
+                        $apiclient = \local_o365\utils::get_api();
+                        if (in_array($roleid, array($roleteacher->id, $rolenoneditingteacher->id))) {
+                            $response = $apiclient->add_owner_to_course_group($courseid, $userid);
+                        } else {
+                            $response = $apiclient->add_user_to_course_group($courseid, $Userid);
+                        }
+                    }
+                }
+            }
         }
-        return static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid, $event->contextid);
+
+        return $response;
     }
 
     /**
@@ -619,15 +651,46 @@ class observers {
      * Does the following:
      *     - check if, by unassigning this role, the related user no longer has the required capability to access course sharepoint
      *       sites. If they don't, remove them from the sharepoint sites' contributor groups.
+     *     - check if group sync is enabled for the course. If it does, remove the user as group owner if the user is
+     *       a teacher.
      *
      * @param \core\event\role_unassigned $event The triggered event.
      * @return bool Success/Failure.
      */
     public static function handle_role_unassigned(\core\event\role_unassigned $event) {
-        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
-            return false;
+        global $DB;
+
+        $response = false;
+
+        if (\local_o365\utils::is_configured() === true) {
+            if (\local_o365\rest\sharepoint::is_configured() === true) {
+                $response = static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid,
+                    $event->contextid);
+            }
+            if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
+                $userid = $event->relateduserid;
+                $courseid = $event->courseid;
+                $roleid = $event->objectid;
+
+                if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+                    $caller = 'local_o365\observer::handle_role_unassigned';
+
+                    if (empty($userid) || empty($courseid)) {
+                        \local_o365\utils::debug("handle_role_unassigned no userid $userid or course $courseid",
+                            $caller);
+                    } else {
+                        $roleteacher = $DB->get_record('role', array('shortname' => 'editingteacher'));
+                        $rolenoneditingteacher = $DB->get_record('role', array('shortname' => 'teacher'));
+                        if (in_array($roleid, array($roleteacher->id, $rolenoneditingteacher->id))) {
+                            $apiclient = \local_o365\utils::get_api();
+                            $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
+                        }
+                    }
+                }
+            }
         }
-        return static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid, $event->contextid);
+
+        return $response;
     }
 
     /**
