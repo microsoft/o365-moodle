@@ -138,6 +138,38 @@ class coursegroups {
             $this->mtrace('Processed courses: '.$coursesprocessed);
         }
         $courses->close();
+
+        // Process team sync changes
+        $sql = 'SELECT crs.*
+                  FROM {course} crs
+             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
+                 WHERE obj.id IS NULL AND crs.id != ?';
+        $params = ['group', 'courseteam', SITEID];
+        if (!empty($coursesinsql)) {
+            $sql .= ' AND crs.id ' . $coursesinsql;
+            $params = array_merge($params, $coursesparams);
+        }
+        $courses = $this->DB->get_recordset_sql($sql, $params);
+        $coursesprocessed = 0;
+        foreach ($courses as $course) {
+            if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
+                $this->mtrace('Attempting to create team for course #' . $course->id . '...');
+                $coursesprocessed++;
+                $groupobjectrec = $this->DB->get_record('local_o365_objects',
+                    ['type' => 'group', 'subtype' => 'course', 'moodleid' => $course->id]);
+                if (empty($groupobjectrec)) {
+                    $errmsg = 'Could not find group object ID in local_o365_objects for course ' . $course->id;
+                    $errmsg .= 'Please ensure group exists first.';
+                    $this->mtrace($errmsg);
+                    continue;
+                }
+                try {
+                    $this->create_team($course->id, $groupobjectrec->objectid);
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not create team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                }
+            }
+        }
     }
 
     /**
@@ -735,6 +767,80 @@ class coursegroups {
         }
         if ($count) {
             $this->mtrace('Synced '.$count.' group profile photos.');
+        }
+    }
+
+    /**
+     * Create an Office 365 team for a Moodle course.
+     *
+     * @param $courseid
+     * @param null $groupobjectid
+     *
+     * @return array|bool|mixed
+     * @throws \dml_exception
+     */
+    public function create_team($courseid, $groupobjectid = null) {
+        $this->mtrace('Create team for course #' . $courseid);
+
+        // Get group object and id, if needed
+        if ($groupobjectid) {
+            $groupobjectrec = $this->DB->get_record('local_o365_objects', ['objectid' => $groupobjectid]);
+        }
+        if ($groupobjectid === null || is_null($groupobjectrec)) {
+            $groupparams = [
+                'type' => 'group',
+                'subtype' => 'course',
+                'moodleid' => $courseid,
+            ];
+            $groupobjectrec = $this->DB->get_record('local_o365_objects', $groupparams);
+            if (empty($groupobjectrec)) {
+                $errmsg = 'Could not find group object ID in local_o365_objects for course ' . $courseid . '. ';
+                $errmsg .= 'Please ensure group exists first.';
+                $this->mtrace($errmsg);
+                return false;
+            }
+            $groupobjectid = $groupobjectrec->objectid;
+        }
+
+        $this->mtrace('Syncing to group "' . $groupobjectid . '"');
+
+        // Check if team exists
+        $teamparams = [
+            'type' => 'group',
+            'subtype' => 'courseteam',
+            'moodleid' => $courseid,
+        ];
+        $teamobjectrec = $this->DB->get_record('local_o365_objects', $teamparams);
+        if (empty($teamobjectrec)) {
+            // create team
+            $now = time();
+
+            try {
+                $response = $this->graphclient->create_team($groupobjectid);
+            } catch (\Exception $e) {
+                $this->mtrace('Could not create team for course #' . $courseid . '. Reason: ' . $e->getMessage());
+                return false;
+            }
+
+            $this->mtrace('Created team ' . $response['id']  . ' for course #' . $courseid);
+            $teamobjectrec = [
+                'type' => 'group',
+                'subtype' => 'courseteam',
+                'objectid' => $response['id'],
+                'moodleid' => $courseid,
+                'o365name' => $groupobjectrec->o365name,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ];
+            $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
+            $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id '
+                . $teamobjectrec['id']);
+            return $teamobjectrec;
+        } else {
+            // team already exists
+            $this->mtrace('Team existed for course #' . $courseid . ' with object table record id ' .
+                $teamobjectrec['id']);
+            return true;
         }
     }
 }
