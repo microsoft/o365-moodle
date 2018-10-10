@@ -170,6 +170,7 @@ $string['groups_notenabledforcourse'] = 'Office Groups are not enabled for this 
 $string['groups_editsettings'] = 'Edit group settings';
 $string['groups_manage'] = 'Manage groups';
 $string['groups_more'] = 'More...';
+$string['groups_team'] = 'Team';
 $string['groups_total'] = 'Total groups: {$a}';
 
 $string['erroracpauthoidcnotconfig'] = 'Please set application credentials in auth_oidc first.';

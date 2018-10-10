@@ -614,13 +614,15 @@ class utils {
         }
         if ($enabled === true) {
             $usergroupconfig[$courseid] = $enabled;
-            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations'], $enabled);
+            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations', 'team'],
+                $enabled);
         } else {
             if (isset($usergroupconfig[$courseid])) {
                 unset($usergroupconfig[$courseid]);
                 static::delete_course_group($courseid);
             }
-            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations'], $enabled);
+            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations', 'team'],
+                $enabled);
         }
         set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
     }
