@@ -1565,11 +1565,13 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Add a user to a course o365 usergoup.
+     * Add a user to a course o365 usergroup.
      *
-     * @param int $courseid The ID of the moodle group.
-     * @param int $userid The ID of the moodle user.
+     * @param int $courseid The ID of the Moodle group.
+     * @param int $userid The ID of the Moodle user.
+     *
      * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     * @throws \dml_exception
      */
     public function add_user_to_course_group($courseid, $userid) {
         global $DB;
@@ -1580,13 +1582,15 @@ class unified extends \local_o365\rest\o365api {
             return null;
         }
 
-        $sql = 'SELECT u.*,
-                       tok.oidcuniqid as userobjectid
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
-        $params = ['https://graph.windows.net', $userid];
+        $sql = "SELECT u.id,
+                       objs.objectid as userobjectid
+                  FROM {user} u
+                  JOIN {local_o365_objects} objs ON objs.moodleid = u.id
+                 WHERE u.deleted = 0 AND objs.type = :user AND u.id = :userid";
+        $params['user'] = 'user';
+        $params['userid'] = $userid;
         $userobject = $DB->get_record_sql($sql, $params);
+
         if (empty($userobject)) {
             return null;
         }
@@ -1596,11 +1600,13 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Add a user as owner to a course o365 usergoup.
+     * Add a user as owner to a course o365 usergroup.
      *
-     * @param int $courseid The ID of the moodle group.
-     * @param int $userid The ID of the moodle user.
+     * @param int $courseid The ID of the Moodle group.
+     * @param int $userid The ID of the Moodle user.
+     *
      * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     * @throws \dml_exception
      */
     public function add_owner_to_course_group($courseid, $userid) {
         global $DB;
@@ -1611,13 +1617,15 @@ class unified extends \local_o365\rest\o365api {
             return null;
         }
 
-        $sql = 'SELECT u.*,
-                       tok.oidcuniqid as userobjectid
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
-        $params = ['https://graph.windows.net', $userid];
+        $sql = "SELECT u.id,
+                       objs.objectid as userobjectid
+                  FROM {user} u
+                  JOIN {local_o365_objects} objs ON objs.moodleid = u.id
+                 WHERE u.deleted = 0 AND objs.type = :user AND u.id = :userid";
+        $params['user'] = 'user';
+        $params['userid'] = $userid;
         $userobject = $DB->get_record_sql($sql, $params);
+
         if (empty($userobject)) {
             return null;
         }
@@ -1627,11 +1635,13 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Remove a user from a course o365 usergoup.
+     * Remove a user from a course o365 usergroup.
      *
-     * @param int $courseid The ID of the moodle group.
-     * @param int $userid The ID of the moodle user.
+     * @param int $courseid The ID of the Moodle group.
+     * @param int $userid The ID of the Moodle user.
+     *
      * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     * @throws \dml_exception
      */
     public function remove_user_from_course_group($courseid, $userid) {
         global $DB;
@@ -1642,13 +1652,15 @@ class unified extends \local_o365\rest\o365api {
             return null;
         }
 
-        $sql = 'SELECT u.*,
-                       tok.oidcuniqid as userobjectid
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
-        $params = ['https://graph.windows.net', $userid];
+        $sql = "SELECT u.id,
+                       objs.objectid as userobjectid
+                  FROM {user} u
+                  JOIN {local_o365_objects} objs ON objs.moodleid = u.id
+                 WHERE u.deleted = 0 AND objs.type = :user AND u.id = :userid";
+        $params['user'] = 'user';
+        $params['userid'] = $userid;
         $userobject = $DB->get_record_sql($sql, $params);
+
         if (empty($userobject)) {
             return null;
         }
@@ -1658,11 +1670,13 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Remove an owner from a course o365 usergoup.
+     * Remove an owner from a course o365 usergroup.
      *
-     * @param int $courseid The ID of the moodle group.
-     * @param int $userid The ID of the moodle user.
+     * @param int $courseid The ID of the Moodle group.
+     * @param int $userid The ID of the Moodle user.
+     *
      * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     * @throws \dml_exception
      */
     public function remove_owner_from_course_group($courseid, $userid) {
         global $DB;
@@ -1673,13 +1687,15 @@ class unified extends \local_o365\rest\o365api {
             return null;
         }
 
-        $sql = 'SELECT u.*,
-                       tok.oidcuniqid as userobjectid
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
-        $params = ['https://graph.windows.net', $userid];
+        $sql = "SELECT u.id,
+                       objs.objectid as userobjectid
+                  FROM {user} u
+                  JOIN {local_o365_objects} objs ON objs.moodleid = u.id
+                 WHERE u.deleted = 0 AND objs.type = :user AND u.id = :userid";
+        $params['user'] = 'user';
+        $params['userid'] = $userid;
         $userobject = $DB->get_record_sql($sql, $params);
+
         if (empty($userobject)) {
             return null;
         }
