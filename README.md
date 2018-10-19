@@ -16,7 +16,7 @@ The plugins below are *optional* for new installations:
 - [moodle-block_skypeweb](https://github.com/Microsoft/moodle-block_skypeweb)
 
 ### Supported Moodle versions
-The plugins currently support Moodle 2.7 through 3.4. Support for newer releases of Moodle typically comes a few weeks after the release.
+The plugins currently support Moodle 2.7 through 3.5. Support for newer releases of Moodle typically comes a few weeks after the release.
 
 ### How this repository is structured
 The master branch of this repository contains the most up-to-date code. As issues are completed and new features are added, they are immediately added to master. Master should be fairly stable, however it is the absolute newest code and not intended for production systems. Periodically completed issues are packaged into releases and added to the STABLE branches. You'll find a stable branch for each version of Moodle supported - MOODLE_27_STABLE would be for Moodle 2.7, for example. These branches contain production-ready, stable code.
