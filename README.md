@@ -1,5 +1,5 @@
 # Office 365 and Azure Active Directory Plugins for Moodle
-*includes support for* **Office 365 Education**, **Office 365 Enterprise**, **Azure Active Directory** *and* **Microsoft School Data Sync** 
+*includes support for* **Office 365 Education**, **Office 365 Enterprise**, **Azure Active Directory** *and* **Microsoft School Data Sync**
 
 This repo is where development on all Office 365 and Azure Active Directory plugins for Moodle takes place. After every release, updated versions of these plugins are pushed to the [Office 365 plugin set](https://moodle.org/plugins/browse.php?list=set&id=72) available in the [Moodle plugins directory.](https://moodle.org/plugins)
 
@@ -16,7 +16,7 @@ The plugins below are *optional* for new installations:
 - [moodle-block_skypeweb](https://github.com/Microsoft/moodle-block_skypeweb)
 
 ### Supported Moodle versions
-The plugins currently support Moodle 2.7 through 3.5. Support for newer releases of Moodle typically comes a few weeks after the release.
+The plugins currently support Moodle 3.1 through 3.5. Support for newer releases of Moodle typically comes a few weeks after the release.
 
 ### How this repository is structured
 The master branch of this repository contains the most up-to-date code. As issues are completed and new features are added, they are immediately added to master. Master should be fairly stable, however it is the absolute newest code and not intended for production systems. Periodically completed issues are packaged into releases and added to the STABLE branches. You'll find a stable branch for each version of Moodle supported - MOODLE_27_STABLE would be for Moodle 2.7, for example. These branches contain production-ready, stable code.
@@ -30,12 +30,12 @@ Alternatively you might choose to manually install the plugins from Github. If d
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
 3. Follow the on-screen instuctions to install each plugin.
 
-*Don't have a Moodle site already?* You might want to check out our Moodle on Azure repo (http://github.com/azure/moodle) where you can quickly deploy a Moodle instance on Azure and customize it to your needs. 
+*Don't have a Moodle site already?* You might want to check out our Moodle on Azure repo (http://github.com/azure/moodle) where you can quickly deploy a Moodle instance on Azure and customize it to your needs.
 
 ## Documentation
 The documentation for installing, configuring, and using these plugins is available on Moodle.org [here.](https://docs.moodle.org/34/en/Office365)
 
-Like any open source project, documentation can sometimes be out of date, especially as their are UI changes to Azure Active Directory. You can submit pull requests modify or contribute to the to the documentation at any time [here.](https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs) Note that these changes are then merged back periodically with the plugin documentation on Moodle.org.   
+Like any open source project, documentation can sometimes be out of date, especially as their are UI changes to Azure Active Directory. You can submit pull requests modify or contribute to the to the documentation at any time [here.](https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs) Note that these changes are then merged back periodically with the plugin documentation on Moodle.org.
 
 ## Support
 We do not provide any SLA on the use of these plugins.  If you are experiencing problems, have a feature request, or have a question, please open an issue on Github on our [issue tracker.](https://github.com/Microsoft/o365-moodle)
@@ -62,13 +62,13 @@ Finally, before we can accept your pull request, you'll need to electronically c
 [Why a CLA?](https://www.gnu.org/licenses/why-assign.html) (from the FSF)
 
 ## Frequently Asked Questions
-1.  **Moodle already offers some Office 365 and Azure Active Directory functionality out-of-the-box. Are these plugins different?** Yes. These plugins provide a different set of Office 365 and Azure Active Directory functionality that is not provided by Moodle today. This includes features such as user matching between Azure Active Directory and Moodle, as well as the ability to create Office 365 Groups from existing Moodle courses and have Office 365 Group Files accessible through the Moodle file picker. The plugins also provide preview support for [Microsoft School Data Sync.](https://sds.microsoft.com) In short, there is a lot more functionality available through these plugins and we highly encourage you to install them to find out what.     
+1.  **Moodle already offers some Office 365 and Azure Active Directory functionality out-of-the-box. Are these plugins different?** Yes. These plugins provide a different set of Office 365 and Azure Active Directory functionality that is not provided by Moodle today. This includes features such as user matching between Azure Active Directory and Moodle, as well as the ability to create Office 365 Groups from existing Moodle courses and have Office 365 Group Files accessible through the Moodle file picker. The plugins also provide preview support for [Microsoft School Data Sync.](https://sds.microsoft.com) In short, there is a lot more functionality available through these plugins and we highly encourage you to install them to find out what.
 
-2.  **Are the current plugins stable? Can they be used in-production?** Yes. The plugins are stable and there are many customers using them today in-production. 
+2.  **Are the current plugins stable? Can they be used in-production?** Yes. The plugins are stable and there are many customers using them today in-production.
 
 3. **What additional functionality do you plan on adding to the plugins?** At this stage we are not looking to make any significant changes to the core functionality of the plugins.
 
-4. **Newer releases of the plugins lack features present in older versions of the plugins. Why is that?** This is true. The plugins have evolved as functionality and direction of Office 365 have evolved (for example the introduction of Office 365 Groups).  Moreover, with the deprecation of our Office 365 legacy plugins, we have tended to focus on features that are supported by the [Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs/concepts/overview).   
+4. **Newer releases of the plugins lack features present in older versions of the plugins. Why is that?** This is true. The plugins have evolved as functionality and direction of Office 365 have evolved (for example the introduction of Office 365 Groups).  Moreover, with the deprecation of our Office 365 legacy plugins, we have tended to focus on features that are supported by the [Microsoft Graph](https://developer.microsoft.com/en-us/graph/docs/concepts/overview).
 
 # Code of Conduct
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
