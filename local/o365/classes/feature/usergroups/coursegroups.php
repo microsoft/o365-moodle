@@ -782,29 +782,29 @@ class coursegroups {
     public function create_team($courseid, $groupobjectid = null) {
         $this->mtrace('Create team for course #' . $courseid);
 
-        // Get group object and id, if needed
-        if ($groupobjectid) {
-            $groupobjectrec = $this->DB->get_record('local_o365_objects', ['objectid' => $groupobjectid]);
-        }
-        if ($groupobjectid === null || is_null($groupobjectrec)) {
+        // Get group object and id, if needed.
+        if (!empty($groupobjectid)) {
+            $groupparams = ['objectid' => $groupobjectid];
+        } else {
             $groupparams = [
                 'type' => 'group',
                 'subtype' => 'course',
                 'moodleid' => $courseid,
             ];
-            $groupobjectrec = $this->DB->get_record('local_o365_objects', $groupparams);
-            if (empty($groupobjectrec)) {
-                $errmsg = 'Could not find group object ID in local_o365_objects for course ' . $courseid . '. ';
-                $errmsg .= 'Please ensure group exists first.';
-                $this->mtrace($errmsg);
-                return false;
-            }
+        }
+        $groupobjectrec = $this->DB->get_record('local_o365_objects', $groupparams);
+        if (!empty($groupobjectrec)) {
             $groupobjectid = $groupobjectrec->objectid;
+        } else {
+            $errmsg = 'Could not find group object ID in local_o365_objects for course ' . $courseid . '. ';
+            $errmsg .= 'Please ensure group exists first.';
+            $this->mtrace($errmsg);
+            return false;
         }
 
         $this->mtrace('Syncing to group "' . $groupobjectid . '"');
 
-        // Check if team exists
+        // Check if team exists.
         $teamparams = [
             'type' => 'group',
             'subtype' => 'courseteam',
@@ -812,7 +812,7 @@ class coursegroups {
         ];
         $teamobjectrec = $this->DB->get_record('local_o365_objects', $teamparams);
         if (empty($teamobjectrec)) {
-            // create team
+            // Create team.
             $now = time();
 
             try {
