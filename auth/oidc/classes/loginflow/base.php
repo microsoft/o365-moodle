@@ -435,7 +435,7 @@ class base {
      * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
      * @return \stdClass The created token database record.
      */
-    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, \auth_oidc\jwt $idtoken) {
+    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, \auth_oidc\jwt $idtoken, $userid = 0) {
         global $DB;
 
         // Determine remote username. Use 'upn' if available (Azure-specific), or fall back to standard 'sub'.
@@ -452,6 +452,7 @@ class base {
         $tokenrec = new \stdClass;
         $tokenrec->oidcuniqid = $oidcuniqid;
         $tokenrec->username = $username;
+        $tokenrec->userid = $userid;
         $tokenrec->oidcusername = $oidcusername;
         $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : 'openid profile email';
         $tokenrec->resource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : $this->config->oidcresource;
