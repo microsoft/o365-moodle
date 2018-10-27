@@ -175,7 +175,23 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @param string $password plain text password (with system magic quotes)
      */
     public function user_authenticated_hook(&$user, $username, $password) {
+        global $DB;
         if (!empty($user) && !empty($user->auth) && $user->auth === 'oidc') {
+            $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+            if (empty($tokenrec)) {
+                // There should always be a token record here, so a failure here means
+                // the user's token record doesn't yet contain their userid.
+                $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
+                if (!empty($tokenrec)) {
+                    $tokenrec->userid = $user->id;
+                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec->id = $tokenrec->id;
+                    $updatedtokenrec->userid = $user->id;
+                    $DB->update_record('auth_oidc_token', $updatedtokenrec);
+                    $tokenrec = $updatedtokenrec;
+                }
+            }
+
             $eventdata = [
                 'objectid' => $user->id,
                 'userid' => $user->id,
