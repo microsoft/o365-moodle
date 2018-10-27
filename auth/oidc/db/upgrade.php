@@ -161,5 +161,23 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015111905.01', 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2018051700.01) {
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'username');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+            $sql = 'SELECT tok.id, tok.username, u.username, u.id as userid
+                      FROM {auth_oidc_token} tok
+                      JOIN {user} u ON u.username = tok.username';
+            $records = $DB->get_recordset_sql($sql);
+            foreach ($records as $record) {
+                $newrec = new \stdClass;
+                $newrec->id = $record->id;
+                $newrec->userid = $record->userid;
+                $DB->update_record('auth_oidc_token', $newrec);
+            }
+        }
+        upgrade_plugin_savepoint($result, '2018051700.01', 'auth', 'oidc');
+    }
     return $result;
 }
