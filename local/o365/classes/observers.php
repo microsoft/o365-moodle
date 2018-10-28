@@ -266,22 +266,15 @@ class observers {
                 return true;
             }
 
-            $aadresource = \local_o365\rest\azuread::get_resource();
-            $sql = 'SELECT tok.*
-                      FROM {auth_oidc_token} tok
-                      JOIN {user} u
-                           ON tok.username = u.username
-                     WHERE u.id = ? AND tok.resource = ?';
-            $params = [$userid, $aadresource];
-            $tokenrec = $DB->get_record_sql($sql, $params);
-            if (empty($tokenrec)) {
+            $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
+            if (empty($o365user)) {
                 // No OIDC token for this user and resource - maybe not an Azure AD user.
                 return false;
             }
 
-            $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
+            $idtoken = \auth_oidc\jwt::instance_from_encoded($o365user->get_idtoken());
             $apiclient = \local_o365\utils::get_api($userid);
-            $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+            $userdata = $apiclient->get_user($o365user->objectid);
             // Azuread users objectid, unified uses id.
             if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
                 $userdata['objectId'] = $userdata['id'];
