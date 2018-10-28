@@ -301,7 +301,7 @@ class authcode extends \auth_oidc\loginflow\base {
         }
 
         // Check if Moodle user is already connected to an OIDC user.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
+        $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $USER->id]);
         if (!empty($tokenrec)) {
             if ($tokenrec->oidcuniqid === $oidcuniqid) {
                 // Already connected to current user.

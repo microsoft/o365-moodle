@@ -132,6 +132,7 @@ $string['privacy:metadata:auth_oidc_prevlogin:password'] = 'The previous (encryp
 $string['privacy:metadata:auth_oidc_token'] = 'Information about OpenID Connect tokens for users';
 $string['privacy:metadata:auth_oidc_token:oidcuniqid'] = 'The OIDC unique user identifier.';
 $string['privacy:metadata:auth_oidc_token:username'] = 'The username of the Moodle user';
+$string['privacy:metadata:auth_oidc_token:userid'] = 'The user ID of the Moodle user';
 $string['privacy:metadata:auth_oidc_token:oidcusername'] = 'The username of the OIDC user';
 $string['privacy:metadata:auth_oidc_token:scope'] = 'The scope of the token';
 $string['privacy:metadata:auth_oidc_token:resource'] = 'The resource of the token';

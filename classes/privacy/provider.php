@@ -49,6 +49,7 @@ class provider implements
             'auth_oidc_token' => [
                 'oidcuniqid',
                 'username',
+                'userid',
                 'oidcusername',
                 'scope',
                 'resource',
@@ -137,7 +138,7 @@ class provider implements
     protected static function get_table_user_map(\stdClass $user): array {
         $tables = [
             'auth_oidc_prevlogin' => ['userid' => $user->id],
-            'auth_oidc_token' => ['username' => $user->username],
+            'auth_oidc_token' => ['userid' => $user->id],
         ];
         return $tables;
     }
