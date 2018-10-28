@@ -29,7 +29,7 @@ require_login();
 
 $action = optional_param('action', null, PARAM_TEXT);
 
-$oidctoken = $DB->get_record('auth_oidc_token', ['username' => $USER->username]);
+$oidctoken = $DB->get_record('auth_oidc_token', ['userid' => $USER->id]);
 $oidcconnected = (!empty($oidctoken)) ? true : false;
 
 $oidcloginconnected = ($USER->auth === 'oidc') ? true : false;
