@@ -448,7 +448,7 @@ class coursegroups {
                                    tok.oidcuniqid as userobjectidd
                               FROM {user} u
                               JOIN ($esql) je ON je.id = u.id
-                              JOIN {auth_oidc_token} tok ON tok.username = u.username AND tok.resource = :tokresource
+                              JOIN {auth_oidc_token} tok ON tok.userid = u.id AND tok.resource = :tokresource
                              WHERE u.deleted = 0";
                     $params['tokresource'] = 'https://graph.windows.net';
                     $enrolled = $this->DB->get_recordset_sql($sql, $params);

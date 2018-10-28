@@ -164,6 +164,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                 'oidcuniqid' => 'user'.$i,
                 'resource' => 'https://graph.windows.net',
                 'username' => $user->username,
+                'userid' => $user->id,
                 'scope' => 'User.Read',
                 'authcode' => '000',
                 'token' => '111',

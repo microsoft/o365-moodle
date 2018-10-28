@@ -178,7 +178,16 @@ class auth_plugin_oidc extends \auth_plugin_base {
         global $DB;
         if (!empty($user) && !empty($user->auth) && $user->auth === 'oidc') {
             $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
-            if (empty($tokenrec)) {
+            if (!empty($tokenrec)) {
+                // If the token record username is out of sync (ie username changes), update it.
+                if ($tokenrec->username != $user->username) {
+                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec->id = $tokenrec->id;
+                    $updatedtokenrec->username = $user->username;
+                    $DB->update_record('auth_oidc_token', $updatedtokenrec);
+                    $tokenrec = $updatedtokenrec;
+                }
+            } else {
                 // There should always be a token record here, so a failure here means
                 // the user's token record doesn't yet contain their userid.
                 $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
