@@ -165,14 +165,15 @@ class utils {
         if (empty($userids)) {
             return [];
         }
+        $aadresource = \local_o365\rest\azuread::get_resource();
         list($idsql, $idparams) = $DB->get_in_or_equal($userids);
         $sql = 'SELECT u.id as userid
                   FROM {user} u
              LEFT JOIN {local_o365_token} localtok ON localtok.user_id = u.id
-             LEFT JOIN {auth_oidc_token} authtok ON authtok.resource = ? AND authtok.username = u.username
+             LEFT JOIN {auth_oidc_token} authtok ON authtok.resource = ? AND authtok.userid = u.id
                  WHERE u.id '.$idsql.'
                        AND (localtok.id IS NOT NULL OR authtok.id IS NOT NULL)';
-        $params = ['https://graph.windows.net'];
+        $params = [$aadresource];
         $params = array_merge($params, $idparams);
         $records = $DB->get_recordset_sql($sql, $params);
         $return = [];
@@ -189,19 +190,8 @@ class utils {
      * @return string|null The UPN of the connected Office 365 account, or null if none found.
      */
     public static function get_o365_upn($userid) {
-        global $DB;
-        $sql = 'SELECT *
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON tok.username = u.username
-                 WHERE tok.resource = ? AND u.id = ? ORDER BY tok.id DESC';
-        $params = ['https://graph.windows.net', $userid];
-        $records = $DB->get_records_sql($sql, $params, 0, 1);
-        if (!empty($records)) {
-            $record = reset($records);
-           return (!empty($record) && !empty($record->oidcusername)) ? $record->oidcusername : null;
-        } else {
-            return null;
-        }
+        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
+        return (!empty($o365user)) ? $o365user->upn : null;
     }
 
     /**
@@ -212,24 +202,8 @@ class utils {
      */
     public static function is_o365_connected($userid) {
         global $DB;
-        try {
-            if ($DB->record_exists('local_o365_token', ['user_id' => $userid])) {
-                return true;
-            } else {
-                $sql = 'SELECT *
-                          FROM {auth_oidc_token} tok
-                          JOIN {user} u ON tok.username = u.username
-                         WHERE tok.resource = ? AND u.id = ?';
-                $params = ['https://graph.windows.net', $userid];
-                $records = $DB->get_records_sql($sql, $params, 0, 1);
-                if (!empty($records)) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (\Exception $e) {
-            return false;
-        }
+        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
+        return (!empty($o365user)) ? true : false;
     }
 
     /**

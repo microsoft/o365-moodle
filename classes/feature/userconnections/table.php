@@ -121,7 +121,7 @@ class table extends \table_sql {
         $sql = 'SELECT '.implode(',', $columns).'
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} aotok
-                       ON aotok.username = u.username
+                       ON aotok.userid = u.id
              LEFT JOIN {local_o365_connections} o365match
                        ON o365match.muserid = u.id
              LEFT JOIN {local_o365_objects} objects
