@@ -438,10 +438,10 @@ class azuread extends \local_o365\rest\o365api {
             return $userobjectdata->o365name;
         } else {
             // Get user data.
-            $authoidcuserdata = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
-            if (empty($authoidcuserdata)) {
-                // No data for the user in the OIDC token table. Can't proceed.
-                \local_o365\utils::debug('No oidc token found for user.', 'rest\azuread\get_muser_upn', $user->username);
+            $o365user = \local_o365\obj\o365user::instance_from_muserid($user->id);
+            if (empty($o365user)) {
+                // No o365 user data for the user is available.
+                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn', $user->username);
                 return false;
             }
             $httpclient = new \local_o365\httpclient();
@@ -454,7 +454,7 @@ class azuread extends \local_o365\rest\o365api {
             $resource = static::get_resource();
             $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-            $aaduserdata = $aadapiclient->get_user($authoidcuserdata->oidcuniqid);
+            $aaduserdata = $aadapiclient->get_user($o365user->objectid);
             $userobjectdata = (object)[
                 'type' => 'user',
                 'subtype' => '',
@@ -485,18 +485,12 @@ class azuread extends \local_o365\rest\o365api {
             return null;
         }
 
-        $sql = 'SELECT u.*,
-                       tok.oidcuniqid as userobjectid
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
-        $params = ['https://graph.windows.net', $userid];
-        $userobject = $DB->get_record_sql($sql, $params);
-        if (empty($userobject)) {
+        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
+        if (empty($o365user)) {
             return null;
         }
 
-        $response = $this->add_member_to_group($coursegroupobject->objectid, $userobject->userobjectid);
+        $response = $this->add_member_to_group($coursegroupobject->objectid, $o365user->objectid);
         return $response;
     }
 
@@ -516,18 +510,12 @@ class azuread extends \local_o365\rest\o365api {
             return null;
         }
 
-        $sql = 'SELECT u.*,
-                       tok.oidcuniqid as userobjectid
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.username = tok.username
-                 WHERE tok.resource = ? AND u.id = ? AND u.deleted = "0"';
-        $params = ['https://graph.windows.net', $userid];
-        $userobject = $DB->get_record_sql($sql, $params);
-        if (empty($userobject)) {
+        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
+        if (empty($o365user)) {
             return null;
         }
 
-        $response = $this->remove_member_from_group($coursegroupobject->objectid, $userobject->userobjectid);
+        $response = $this->remove_member_from_group($coursegroupobject->objectid, $o365user->objectid);
         return $response;
     }
 

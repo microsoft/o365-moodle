@@ -271,12 +271,13 @@ class local_o365_usersync_testcase extends \advanced_testcase {
                 'email' => 'testuser'.$i.'@example.onmicrosoft.com',
                 'lang' => 'en'
             ];
-            $DB->insert_record('user', (object)$muser);
+            $muser['id'] = $DB->insert_record('user', (object)$muser);
 
             $token = [
                 'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,
                 'authcode' => '000',
                 'username' => 'testuser'.$i.'@example.onmicrosoft.com',
+                'userid' => $muser['id'],
                 'scope' => 'test',
                 'resource' => \local_o365\rest\azuread::get_resource(),
                 'token' => '000',
@@ -344,10 +345,12 @@ class local_o365_usersync_testcase extends \advanced_testcase {
 
         // Simulate user logins - create mock tokens.
         for ($i =1; $i <=3; $i++) {
+            $user = $DB->get_record('user', ['username' => 'testuser'.$i.'@example.onmicrosoft.com']);
             $token = [
                 'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,
                 'authcode' => '000',
                 'username' => 'testuser'.$i.'@example.onmicrosoft.com',
+                'userid' => $user->id,
                 'scope' => 'test',
                 'resource' => \local_o365\rest\azuread::get_resource(),
                 'token' => '000',
