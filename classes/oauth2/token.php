@@ -293,7 +293,7 @@ class token {
                            tok.refreshtoken
                       FROM {auth_oidc_token} tok
                       JOIN {user} u
-                           ON u.username = tok.username
+                           ON u.id = tok.userid
                      WHERE u.id = ?';
             $params = [$userid];
             $record = $DB->get_record_sql($sql, $params);
