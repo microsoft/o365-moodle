@@ -1860,10 +1860,10 @@ class unified extends \local_o365\rest\o365api {
             return $userobjectdata->o365name;
         } else {
             // Get user data.
-            $authoidcuserdata = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
-            if (empty($authoidcuserdata)) {
-                // No data for the user in the OIDC token table. Can't proceed.
-                \local_o365\utils::debug('No oidc token found for user.', 'local_o365\rest\unified::get_muser_upn', $user->username);
+            $o365user = \local_o365\obj\o365user::instance_from_muserid($user->id);
+            if (empty($o365user)) {
+                // No o365 user data for the user is available.
+                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn', $user->username);
                 return false;
             }
             $httpclient = new \local_o365\httpclient();
@@ -1873,7 +1873,7 @@ class unified extends \local_o365\rest\o365api {
                 \local_o365\utils::debug($e->getMessage(), 'local_o365\rest\unified::get_muser_upn', $e);
                 return false;
             }
-            $userdata = $apiclient->get_user($authoidcuserdata->oidcuniqid);
+            $userdata = $apiclient->get_user($o365user->objectid);
             if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
                 $userdata['objectId'] = $userdata['id'];
             }
