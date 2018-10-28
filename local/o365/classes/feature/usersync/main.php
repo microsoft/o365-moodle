@@ -651,7 +651,7 @@ class main {
                        assign.photoupdated photoupdated,
                        obj.id AS objrecid
                   FROM {user} u
-             LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
+             LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
@@ -674,7 +674,7 @@ class main {
                        assign.photoupdated photoupdated,
                        obj.id AS objrecid
                   FROM {user} u
-             LEFT JOIN {auth_oidc_token} tok ON tok.username = u.username
+             LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
@@ -700,7 +700,7 @@ class main {
                     $sql = 'SELECT u.*
                               FROM {user} u
                               JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
-                              JOIN {auth_oidc_token} tok ON tok.username = u.username
+                              JOIN {auth_oidc_token} tok ON tok.userid = u.id
                              WHERE u.username = ?
                                    AND u.mnethostid = ?
                                    AND u.deleted = ?
