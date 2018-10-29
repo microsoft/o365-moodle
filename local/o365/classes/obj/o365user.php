@@ -29,9 +29,9 @@ namespace local_o365\obj;
 class o365user {
     protected $muserid = null;
     protected $oidctoken = null;
-    protected $objectid = null;
-    protected $username = null;
-    protected $upn = null;
+    public $objectid = null;
+    public $username = null;
+    public $upn = null;
 
     protected function __construct($userid, $oidctoken) {
         $this->muserid = $userid;
@@ -54,6 +54,6 @@ class o365user {
         if (empty($oidctoken)) {
             return null;
         }
-        return static::__construct($userid, $oidctoken);
+        return new \local_o365\obj\o365user($userid, $oidctoken);
     }
 }
