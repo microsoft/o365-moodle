@@ -363,6 +363,10 @@ If enabled, the user's Office 365 profile photo will be synced upon their log in
 
 During user sync, by default, all users from Azure AD will be created in Moodle. This setting allows you to set a required field and value that a user must have in Azure to have an account created in Moodle. For example, if you wanted to only have users from the "IT" department syncing into Moodle, you would choose the "Department" field, and enter "IT".
 
+You can configure this setting to only sync users in an Office 365 "Office" group by choosing Office 365 Group Membership in the field select box. Type the exact name of the group in the "Field value" text box.
+
+For other fields (anything but the group membership setting), you can also use regular expressions to match users. Choose the field you want to match against, and check the "Value is a regular expression" checkbox. Regular expressions allow you to specify patterns to match against. Read more about regular expressions at https://en.wikipedia.org/wiki/Regular_expression
+
 #### User Field Mapping
 
 This controls how information is synced from Azure AD to Moodle. The first column lists Azure fields, the second column lists Moodle fields, and the third column controls when information is synced. To create mappings:
