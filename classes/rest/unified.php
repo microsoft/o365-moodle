@@ -630,9 +630,6 @@ class unified extends \local_o365\rest\o365api {
             'department',
             'companyName',
             'preferredLanguage',
-            'telephoneNumber',
-            'facsimileTelephoneNumber',
-            'mobile',
         ];
     }
 

@@ -67,9 +67,6 @@ class usersyncfieldmap extends fieldmap {
             'jobTitle' => get_string('settings_fieldmap_field_jobTitle', 'local_o365'),
             'department' => get_string('settings_fieldmap_field_department', 'local_o365'),
             'companyName' => get_string('settings_fieldmap_field_companyName', 'local_o365'),
-            'telephoneNumber' => get_string('settings_fieldmap_field_telephoneNumber', 'local_o365'),
-            'facsimileTelephoneNumber' => get_string('settings_fieldmap_field_facsimileTelephoneNumber', 'local_o365'),
-            'mobile' => get_string('settings_fieldmap_field_mobile', 'local_o365'),
             'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'local_o365'),
         ];
 
