@@ -90,7 +90,12 @@ class usersynccreationrestriction extends \admin_setting {
             $this->config_write($this->name, serialize($newconfig));
             return '';
         }
-        $newconfig = ['remotefield' => $data['remotefield'], 'value' => $data['value']];
+
+        $newconfig = [
+            'remotefield' => $data['remotefield'],
+            'value' => $data['value'],
+            'useregex' => (!empty($data['useregex'])) ? true : false,
+        ];
         $this->config_write($this->name, serialize($newconfig));
         return '';
     }
@@ -108,17 +113,47 @@ class usersynccreationrestriction extends \admin_setting {
         }
         $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']])) ? $data['remotefield'] : '';
         $value = (isset($data['value'])) ? $data['value'] : '';
+        $useregex = (!empty($data['useregex'])) ? true : false;
 
         $html = \html_writer::start_tag('div');
+        $selectattrs = [
+            'style' => 'width: 250px;vertical-align: top;margin-right: 0.25rem;margin-top:0.25rem;',
+            'onchange' => 'document.getElementById(\'usercreationrestriction_useregex_wrapper\').style.visibility = (this.value == \'o365group\') ? \'hidden\' : \'visible\'',
+        ];
+        $html .= \html_writer::select($this->remotefields, $this->get_full_name().'[remotefield]', $remotefield, ['' => 'choosedots'], $selectattrs);
 
-        $html .= \html_writer::select($this->remotefields, $this->get_full_name().'[remotefield]', $remotefield);
-
+        $inputdivattrs = ['style' => 'display:inline-block;margin-top:0.25rem;'];
+        $html .= \html_writer::start_tag('div', $inputdivattrs);
         $inputattrs = [
             'type' => 'text',
             'name' => $this->get_full_name().'[value]',
+            'placeholder' => get_string('settings_usersynccreationrestriction_fieldval', 'local_o365'),
+            'class' => 'form-control',
+            'style' => 'width: 250px;display:inline-block;',
             'value' => $value,
         ];
         $html .= \html_writer::empty_tag('input', $inputattrs);
+        $html .= \html_writer::empty_tag('br');
+        $regexwrapperattrs = [
+            'id' => 'usercreationrestriction_useregex_wrapper',
+            'style' => ($remotefield == 'o365group') ? 'visibility: hidden' : '',
+        ];
+        $html .= \html_writer::start_tag('div', $regexwrapperattrs);
+        $inputattrs = [
+            'type' => 'checkbox',
+            'id' => 'usercreationrestriction_useregex',
+            'name' => $this->get_full_name().'[useregex]',
+            'value' => '1',
+        ];
+        if ($useregex === true) {
+            $inputattrs['checked'] = 'checked';
+        }
+        $html .= \html_writer::empty_tag('input', $inputattrs);
+        $html .= ' ';
+        $regexstr = get_string('settings_usersynccreationrestriction_regex', 'local_o365');
+        $html .= \html_writer::tag('label', $regexstr, ['for' => 'usercreationrestriction_useregex', 'style' => 'margin:0']);
+        $html .= \html_writer::end_tag('div');
+        $html .= \html_writer::end_tag('div');
 
         $html .= \html_writer::end_tag('div');
 
