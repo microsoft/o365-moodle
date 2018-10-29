@@ -197,6 +197,10 @@ class main {
         }
         $result = false;
         $apiclient = $this->construct_outlook_api($muserid, true);
+        if (empty($user)) {
+            $o365user = \local_o365\obj\o365user::instance_from_muserid($muserid);
+            $user = $o365user->upn;
+        }
         $size = $apiclient->get_photo_metadata($user);
         $muser = $DB->get_record('user', array('id' => $muserid), 'id, picture', MUST_EXIST);
         $context = \context_user::instance($muserid, MUST_EXIST);
