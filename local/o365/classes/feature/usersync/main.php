@@ -383,6 +383,7 @@ class main {
         if (empty($restriction['remotefield']) || empty($restriction['value'])) {
             return true;
         }
+        $useregex = (!empty($restriction['useregex'])) ? true : false;
 
         if ($restriction['remotefield'] === 'o365group') {
             if (\local_o365\rest\unified::is_configured() !== true) {
@@ -422,9 +423,18 @@ class main {
             if (!isset($aaddata[$restriction['remotefield']])) {
                 return false;
             }
+            $fieldval = $aaddata[$restriction['remotefield']];
+            $restrictionval = $restriction['value'];
 
-            if ($aaddata[$restriction['remotefield']] === $restriction['value']) {
-                return true;
+            if ($useregex === true) {
+                $count = @preg_match('/'.$restrictionval.'/', $fieldval, $matches);
+                if (!empty($count)) {
+                    return true;
+                }
+            } else {
+                if ($fieldval === $restrictionval) {
+                    return true;
+                }
             }
         }
         return false;
