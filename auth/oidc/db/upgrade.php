@@ -163,7 +163,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($result && $oldversion < 2017051501.01) {
         $table = new xmldb_table('auth_oidc_token');
-        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'username');
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'username');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
             $sql = 'SELECT tok.id, tok.username, u.username, u.id as userid
