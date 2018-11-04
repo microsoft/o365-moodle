@@ -40,7 +40,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="oidcuniqid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="oidc uniqid"/>
         <FIELD NAME="username" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="username"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0" COMMENT="moodle userid"/>
         <FIELD NAME="oidcusername" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="oidc username"/>
         <FIELD NAME="scope" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token scope"/>
         <FIELD NAME="resource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
