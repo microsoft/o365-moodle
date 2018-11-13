@@ -1,5 +1,4 @@
-# Moodle Plugins for Microsoft Services
-*including* **Office 365** *and other Microsoft services*
+# Office 365 and Azure Active Directory Plugins for Moodle
 
 ## o365 Local Plugin
 
@@ -18,6 +17,10 @@ This repository is updated with stable releases. To follow active development, s
 For more documentation, visit https://docs.moodle.org/34/en/Office365
 
 For more information including support and instructions on how to contribute, please see: https://github.com/Microsoft/o365-moodle/blob/master/README.md
+
+## Issues and Contributing
+Please post issues for this plugin to: https://github.com/Microsoft/o365-moodle/issues/
+Pull requests for this plugin should be submitted against our main repository: https://github.com/Microsoft/o365-moodle
 
 ## Copyright
 
