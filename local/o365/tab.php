@@ -25,7 +25,7 @@
 
 require_once('/var/www/html/config.php');
 
-// force theme
+// Force theme.
 if (get_config('theme_boost_o365teams', 'version')) {
     $SESSION->theme = 'boost_o365teams';
 }
@@ -37,7 +37,7 @@ echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anon
 
 $id = required_param('id', PARAM_INT);
 
-$USER->editing = false; // turn off editing if the page is opened in iframe
+$USER->editing = false; // Turn off editing if the page is opened in iframe.
 
 $redirecturl = new moodle_url('/local/o365/tab_redirect.php');
 $coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
@@ -46,12 +46,12 @@ $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
 
-// output login pages
+// Output login pages.
 echo html_writer::start_div('manuallogin');
-// Azure AD login box
+// Azure AD login box.
 echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
     array('onclick' => 'login()', 'class' => 'manualloginbutton'));
-// Manual login link
+// Manual login link.
 echo html_writer::tag('button', get_string('other_login', 'local_o365'),
     array('onclick' => 'otherLogin()', 'class' => 'manualloginbutton'));
 echo html_writer::end_div();
@@ -116,7 +116,7 @@ function loadData(upn) {
         authContext._renewIdToken(function (err, idToken) {
             if (err) {
                 console.log("Renewal failed: " + err);
-                
+
                 // Failed to get the token silently; need to show the login button
                 $(".manuallogin").css("display", "block");
             } else {
@@ -145,7 +145,7 @@ function login() {
                 window.location.href = "' . $oidcloginurl->out() . '";
                 sleep(20);
             } else {
-                console.error("Error getting cached id token. This should never happen.");                            
+                console.error("Error getting cached id token. This should never happen.");
                 // At this point sso login does not work. redirect to normal Moodle login page.
                 window.location.href = "' . $externalloginurl->out() . '";
             };

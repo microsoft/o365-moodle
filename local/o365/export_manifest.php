@@ -30,7 +30,7 @@ require_once($CFG->dirroot . '/local/o365/lib.php');
 $manifestfilepath = local_o365_create_manifest_file();
 
 if ($manifestfilepath) {
-    // download manifest file
+    // Download manifest file.
     header("Content-type: application/zip");
     header("Content-Disposition: attachment; filename=manifest.zip");
     header("Content-length: " . filesize($manifestfilepath));

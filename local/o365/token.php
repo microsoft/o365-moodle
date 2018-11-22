@@ -34,7 +34,7 @@ $username = required_param('username', PARAM_USERNAME);
 $serviceshortname = required_param('service', PARAM_TEXT);
 
 $headers = apache_request_headers();
-if(!isset($headers['Authorization'])){
+if(!isset($headers['Authorization'])) {
     throw new moodle_exception('invalidlogin');
 }
 $headr = array();
@@ -50,7 +50,7 @@ curl_setopt_array($curl, array(
 $data = json_decode(curl_exec($curl));
 curl_close($curl);
 
-if($data->mail !== $username){
+if($data->mail !== $username) {
     throw new moodle_exception('invalidlogin');
 }
 
@@ -66,7 +66,7 @@ if (!$CFG->enablewebservices) {
 $systemcontext = context_system::instance();
 
 $user = $DB->get_record('user', ['username' => $username, 'auth' => 'oidc']);
-if(empty($user)){
+if(empty($user)) {
     throw new moodle_exception('invalidlogin');
 }
 
@@ -85,7 +85,7 @@ if (!empty($user)) {
     if (empty($user->confirmed)) {
         throw new moodle_exception('usernotconfirmed', 'moodle', '', $user->username);
     }
-    // check credential expiry
+    // Check credential expiry.
     $userauth = get_auth_plugin($user->auth);
     if (!empty($userauth->config->expiration) and $userauth->config->expiration == 1) {
         $days2expire = $userauth->password_expire($user->username);
@@ -94,16 +94,16 @@ if (!empty($user)) {
         }
     }
 
-    // let enrol plugins deal with new enrolments if necessary
+    // Let enrol plugins deal with new enrolments if necessary.
     enrol_check_plugins($user);
 
-    // setup user session to check capability
+    // Setup user session to check capability.
     \core\session\manager::set_user($user);
 
-    //check if the service exists and is enabled
+    // Check if the service exists and is enabled.
     $service = $DB->get_record('external_services', array('shortname' => $serviceshortname, 'enabled' => 1));
     if (empty($service)) {
-        // will throw exception if no token found
+        // Will throw exception if no token found.
         throw new moodle_exception('servicenotavailable', 'webservice');
     }
 
