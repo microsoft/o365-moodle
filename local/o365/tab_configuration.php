@@ -29,7 +29,7 @@ $url = new moodle_url('/local/o365/tab_configuration.php');
 
 $PAGE->set_context(context_system::instance());
 
-// force a theme without navigation and block
+// Force a theme without navigation and block.
 if (get_config('theme_boost_o365teams', 'version')) {
     $SESSION->theme = 'boost_o365teams';
 }
@@ -62,12 +62,12 @@ if ($USER->id == 0) {
     }
 }
 
-// output login pages
+// Output login pages.
 echo html_writer::start_div('manuallogin');
-// Azure AD login box
+// Azure AD login box.
 echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
     array('onclick' => 'login()', 'class' => 'manualloginbutton'));
-// Manual login link
+// Manual login link.
 echo html_writer::tag('button', get_string('other_login', 'local_o365'),
     array('onclick' => 'otherLogin()', 'class' => 'manualloginbutton'));
 echo html_writer::end_div();
@@ -121,7 +121,7 @@ function loadData(upn) {
         authContext._renewIdToken(function (err, idToken) {
             if (err) {
                 console.log("Renewal failed: " + err);
-                
+
                 // Failed to get the token silently; redirect to manual login page
                 $("#courselist").css("display", "none");
                 $(".manuallogin").css("display", "block");
@@ -151,7 +151,7 @@ function login() {
                 window.location.href = "' . $oidcloginurl->out() . '";
                 sleep(20);
             } else {
-                console.error("Error getting cached id token. This should never happen.");                            
+                console.error("Error getting cached id token. This should never happen.");
                 // At this point we have to get the user involved, so show the login button
                 window.location.href = "' . $oidcloginurl->out() . '";
             };
@@ -214,7 +214,7 @@ function inIframe() {
     }
 }
 
-function setTitles() { 
+function setTitles() {
    var text;
    var x = document.getElementById("id_course").options.length;
    for (i = 0; i < x; i++ ) {
@@ -230,7 +230,7 @@ function sleep(ms) {
 ';
 
 if (!$bypassauth) {
-    $js .= '    
+    $js .= '
 microsoftTeams.getContext(function (context) {
     upn = context.upn;
     loadData(upn);

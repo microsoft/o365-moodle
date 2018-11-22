@@ -29,7 +29,7 @@ echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTea
     integrity=\"sha384-SNENyRfvDvybst1u0LawETYF6L5yMx5Ya1dIqWoG4UDTZ/5UAMB15h37ktdBbyFh\"
     crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\"
-    integrity=\"sha384-lIk8T3uMxKqXQVVfFbiw0K/Nq+kt1P3NtGt/pNexiDby2rKU6xnDY8p16gIwKqgI\" 
+    integrity=\"sha384-lIk8T3uMxKqXQVVfFbiw0K/Nq+kt1P3NtGt/pNexiDby2rKU6xnDY8p16gIwKqgI\"
     crossorigin=\"anonymous\"></script>";
 
 $js = '
@@ -44,14 +44,14 @@ microsoftTeams.getContext(function (context) {
         cacheLocation: "localStorage",
         navigateToLoginRequestUrl: false,
     };
-    
+
     // Setup extra query parameters for ADAL
     // - openid and profile scope adds profile information to the id_token
     // - login_hint provides the expected user name
     if (context.upn) {
         config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(context.upn);
     } else {
-        config.extraQueryParameters = "scope=openid+profile";              
+        config.extraQueryParameters = "scope=openid+profile";
     }
 
     // Use a custom displayCall function to add extra query parameters to the url before navigating to it
@@ -63,8 +63,8 @@ microsoftTeams.getContext(function (context) {
             window.location.replace(urlNavigate);
         }
     }
-    
-    // Navigate to the AzureAD login page        
+
+    // Navigate to the AzureAD login page
     let authContext = new AuthenticationContext(config);
     authContext.login();
 });
