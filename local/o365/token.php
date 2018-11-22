@@ -26,7 +26,7 @@ define('REQUIRE_CORRECT_ACCESS', true);
 define('NO_MOODLE_COOKIES', true);
 
 
-require_once('/var/www/html/config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot.'/lib/authlib.php');
 require_once($CFG->libdir . '/externallib.php');
 

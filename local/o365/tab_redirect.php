@@ -24,7 +24,7 @@
  * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once('/var/www/html/config.php');
+require_once(__DIR__ . '/../../config.php');
 
 unset($SESSION->theme);
 print_error('errornodirectaccess', 'local_o365');

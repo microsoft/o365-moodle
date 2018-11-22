@@ -23,7 +23,7 @@
  * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once('/var/www/html/config.php');
+require_once(__DIR__ . '/../../config.php');
 
 // Force theme.
 if (get_config('theme_boost_o365teams', 'version')) {
