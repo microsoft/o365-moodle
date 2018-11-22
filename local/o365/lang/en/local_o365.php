@@ -75,13 +75,13 @@ $string['acp_tenants_actions'] = 'Actions';
 $string['acp_tenantsadd_desc'] = 'To grant access to an additional tenant, click the button below and log in to Office 365 using an adminitrator account of the new tenant. You will be returned to the list of additional tenants where the new tenant will be listed. You will then be able to use Moodle with the new tenant.';
 $string['acp_tenantsadd_linktext'] = 'Proceed to Office 365 login page';
 $string['acp_maintenance_coursegroupscheck'] = 'Recreate deleted Office 365 groups.';
-$string['acp_maintenance_coursegroupscheck_desc'] = 'This will check for any Office 365 course groups that may have been manually deleted and recreate them.';
-$string['acp_usergroupcustom'] = 'User Group Customization';
-$string['acp_usergroupcustom_off'] = 'Disabled<br />Disables all Course Groups (i.e. Office 365 Groups) integration for all Moodle courses.';
+$string['acp_maintenance_coursegroupscheck_desc'] = 'This will check for any Office 365 Teams that may have been manually deleted and recreate them.';
+$string['acp_usergroupcustom'] = 'Teams Customization';
+$string['acp_usergroupcustom_off'] = 'Disabled<br />Disable Teams creation for all Moodle courses.';
 $string['acp_usergroupcustom_savemessage'] = 'Your changes have been saved.';
 $string['acp_usergroupcustom_searchwarning'] = 'Note: Searches will lose any unsaved progress. Press save changes to ensure your changes are saved.';
-$string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to select which courses to create Course Groups (i.e. Office 365 Groups) for, as well as select which Group features are exposed in the Microsoft block for each course.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
-$string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course Groups (i.e. Office 365 Groups) for all courses and exposes all Group features in the Microsoft block for all courses.';
+$string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to select which courses to create Course Groups (i.e. Teams) for, as well as select which Group features are exposed in the Microsoft block for each course.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
+$string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course Groups (i.e. Teams) for all courses and exposes all Group features in the Microsoft block for all courses.';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
 $string['acp_usergroupcustom_bulk'] = 'Bulk Operations';
 $string['acp_usergroupcustom_bulk_enable'] = 'Enable All';
@@ -165,12 +165,12 @@ $string['groups_notenabled'] = 'Office 365 Groups are not enabled for this cours
 $string['groups_onedrive'] = 'Files';
 $string['groups_calendar'] = 'Calendar';
 $string['groups_conversations'] = 'Conversations';
-$string['groups_notebook'] = 'Course Notebook';
+$string['groups_notebook'] = 'Class Notebook';
 $string['groups_notenabledforcourse'] = 'Office Groups are not enabled for this course.';
+$string['groups_team'] = 'Teams';
 $string['groups_editsettings'] = 'Edit group settings';
 $string['groups_manage'] = 'Manage groups';
 $string['groups_more'] = 'More...';
-$string['groups_team'] = 'Team';
 $string['groups_total'] = 'Total groups: {$a}';
 
 $string['erroracpauthoidcnotconfig'] = 'Please set application credentials in auth_oidc first.';
@@ -323,14 +323,14 @@ $string['settings_azuresetup_legacyheader'] = 'Office&nbsp;365 API';
 $string['settings_azuresetup_legacydesc'] = 'The Office&nbsp;365 API is made up of application-specific APIs.';
 $string['settings_azuresetup_legacyerror'] = 'There was an error checking Office&nbsp;365 API settings.';
 
-$string['settings_usergroups'] = 'Course Groups';
-$string['settings_usergroups_details'] = 'If enabled, this will create and maintain an Office 365 Group for every course on the site (Default: Disabled). This will create any needed Groups each cron run (and add all current members). After that, group membership will be maintained as users are enrolled or unenrolled from Moodle courses.';
+$string['settings_usergroups'] = 'Teams';
+$string['settings_usergroups_details'] = 'If enabled, this will create and maintain a Team for every course on the site (Default: Disabled). This will create any needed Teams each cron run (and add all current members). After that, Team membership will be maintained as users are enrolled or unenrolled from Moodle courses.';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_clientid'] = 'Application ID';
-$string['settings_clientid_desc'] = 'Your Azure AD application ID. This is shown in the Azure after to click on your registered applicatin.';
-$string['settings_clientsecret'] = 'Key';
-$string['settings_clientsecret_desc'] = 'Your Azure AD application key. Create a key by clicking "Settings", then "Keys" under the "API Access" section. Copy the value here.';
+$string['settings_clientid_desc'] = '';
+$string['settings_clientsecret'] = 'Application Key';
+$string['settings_clientsecret_desc'] = '';
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_detectoidc'] = 'Application Credentials';
@@ -406,8 +406,8 @@ $string['settings_secthead_legacy'] = 'Legacy';
 $string['settings_secthead_legacy_desc'] = 'These settings and features are deprecated and likely to be removed soon.';
 $string['settings_secthead_preview'] = 'Preview Features';
 $string['settings_secthead_preview_desc'] = '';
-$string['settings_secthead_coursesync'] = 'Course Sync';
-$string['settings_secthead_coursesync_desc'] = 'These following settings control course synchronization between Office 365 and Moodle.';
+$string['settings_secthead_coursesync'] = 'Teams Sync';
+$string['settings_secthead_coursesync_desc'] = 'These following settings control course synchronization between Microsoft Teams and Moodle.';
 $string['settings_options_usersync'] = 'User Sync';
 $string['settings_options_usersync_desc'] = 'The following settings control user synchronization between Office 365 and Moodle.';
 
@@ -471,14 +471,15 @@ $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem 
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
 $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or click "Detect" to attempt to detect correct value.';
 $string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Azure AD';
-$string['settings_setup_step1_desc'] = 'Head over to Azure (<a href="https://portal.azure.com">https://portal.azure.com</a>), go to "Azure Active Directory", then "App Registrations", and register an application for Moodle using the following information. Please ensure this information is entered in Azure exactly as it appears here as small differences may break functionality.';
-$string['settings_setup_step1clientcreds'] = '<br />Once registered, create a key for the application in Azure. One you have the key, copy the application ID and key from Azure into the fields below.';
-$string['settings_setup_step1_signonurl'] = 'Sign-On URL';
-$string['settings_setup_step1_signonurl_desc'] = '';
-$string['settings_setup_step1_replyurl'] = 'Reply URL';
-$string['settings_setup_step1_replyurl_desc'] = '';
-$string['settings_setup_step1_perms'] = '<b>Permissions:</b> Once you have the Application ID and key, you will need to enable the <a href="https://docs.moodle.org/34/en/Office365#Configure_your_Application_Permissions">Permissions</a> listed in the integration documentation.<br /><br /><br />';
-$string['settings_setup_step1_credentials_end'] = 'Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
+$string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for your Office 365 tenant by using Windows PowerShell:
+
+<a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download PowerShell Script</a>
+
+<p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
+$string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Application Key returned by script into the fields below:';
+$string['settings_setup_step1_credentials_end'] = 'If you are unable to setup the AzureAD app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.
+
+Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step2'] = 'Step 2/3: Choose connection method';
 $string['settings_setup_step2_desc'] = 'This section allows you to choose how the Office 365 integration suite connects to Azure. Communication can be made using "Application Access", or on behalf of a user you have dedicated as the "system" user.';
@@ -627,3 +628,85 @@ $string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle p
 $string['help_user_nodelta'] = 'Perform a full sync help';
 $string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Azure AD. Checking this option will force a full user sync each time.';
 
+$string['assignment'] = 'Assignment';
+$string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />
+                        Submitted on - {$a->submittedon} &nbsp; |  &nbsp; Due date - {$a->duedate}';
+$string['due_date'] = 'Due date - {$a}';
+$string['grade_date'] = 'Grade - {$a->grade} &nbsp; | &nbsp; Date - {$a->date}';
+$string['help_message'] = 'Hi there! I am your Moodle assistant. You can ask me the following questions:';
+$string['last_login_date'] = 'Last login date - {$a}';
+$string['list_of_absent_students'] = 'This is the list of students that were absent this month:';
+$string['list_of_assignments_grades_compared'] = 'This is the list of your assignments grades compared with class average:';
+$string['list_of_assignments_needs_grading'] = 'This is the list of the assignments that need grading:';
+$string['list_of_due_assignments'] = 'This is the list of due assignments';
+$string['list_of_incomplete_assignments'] = 'This is the list of the assignments that are incomplete:';
+$string['list_of_last_logged_students'] = 'This is the list of last logged students:';
+$string['list_of_late_submissions'] = 'This is the list of students who made late submissions:';
+$string['list_of_latest_logged_students'] = 'This is the list of latest logged students:';
+$string['list_of_recent_grades'] = 'This is the list of your recent grades:';
+$string['list_of_students_with_least_score'] = 'This is the list of students with least score in the latest assignment:';
+$string['list_of_students_with_name'] = 'These are the students with the name {$a}:';
+$string['never'] = 'Never';
+$string['no_absent_users_found'] = 'No absent users found';
+$string['no_assignments_for_grading_found'] = 'No assignments for grading found';
+$string['no_assignments_found'] = 'No assignments found';
+$string['no_due_assignments_found'] = 'No due assignments found';
+$string['no_due_incomplete_assignments_found'] = 'No due and incomplete assignments found';
+$string['no_graded_assignments_found'] = 'No graded assignments found';
+$string['no_grades_found'] = 'No grades found';
+$string['no_late_submissions_found'] = 'No late submissions found';
+$string['no_users_found'] = 'No users found';
+$string['no_user_with_name_found'] = 'No user with such name found';
+$string['participants_submitted_needs_grading'] = 'Participants - {$a->participants}  &nbsp; |  &nbsp; Submitted - {$a->submitted}  &nbsp; |  &nbsp;
+                        Needs grading - {$a->needsgrading}';
+$string['pending_submissions_due_date'] = 'Pending submissions - {$a->incomplete} / {$a->total} &nbsp; |  &nbsp; Due - {$a->duedate}';
+$string['sorry_do_not_understand'] = 'Sorry, I do not understand';
+$string['question_student_assignments_compared'] = "How did I do in my latest assignments compared to the class?";
+$string['question_student_assignments_due'] = "What assignments are due next?";
+$string['question_student_latest_grades'] = "What are the latest grades I've received?";
+$string['question_teacher_absent_students'] = "Which students have been absent this month?";
+$string['question_teacher_assignments_incomplete_submissions'] = "How many assignments have incomplete submissions?";
+$string['question_teacher_assignments_for_grading'] = "What assignments are yet to be graded?";
+$string['question_teacher_last_logged_students'] = "Which students have logged in last to moodle?";
+$string['question_teacher_late_submissions'] = "Which students have made late submissions?";
+$string['question_teacher_latest_logged_students'] = "Which students have logged in latest to moodle?";
+$string['question_teacher_least_scored_in_assignment'] = "Which students scored the least in the last assignment?";
+$string['question_teacher_student_last_logged'] = "When did Firstname Lastname last log into moodle?";
+$string['your_grade'] = 'Your grade - {$a}';
+$string['your_grade_class_grade'] = 'Your grade - {$a->usergrade} &nbsp; |  &nbsp; Class average grade - {$a->classgrade}';
+$string['error_missing_app_id'] = 'Missing Application ID setting.';
+$string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
+$string['errornodirectaccess'] = 'Direct access to the page is prohibited';
+$string['settings_header_teams'] = 'Teams Settings';
+$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_settings_teams_h4_spacer">Setup your Moodle app for Microsoft Teams</h4>
+<ul class="local_o365_settings_teams_horizontal_spacer">
+<li>Go to <a href="settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
+<li>Go to <a href="settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
+<li>Go to <a href="settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
+<li>Go to <a href="settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
+<li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
+<li>Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">Microsoft Application Registration Portal</a> and register a new app. Enter the Bot Application ID and Password below:</li>
+</ul>';
+$string['settings_bot_feature_enabled'] = 'Bot feature enabled';
+$string['settings_bot_feature_enabled_desc'] = '';
+$string['settings_bot_app_id'] = 'Bot Application ID';
+$string['settings_bot_app_id_desc'] = '';
+$string['settings_bot_app_password'] = 'Bot Application Password';
+$string['settings_bot_app_password_desc'] = 'Click on \'Generate New Password\' in the app page and paste the one-time password';
+$string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
+$string['settings_bot_webhook_endpoint_desc'] = 'Format: https://<moodlebotname\>.azurewebsites.net/api/webhook';
+$string['settings_bot_sharedsecret'] = 'Shared Moodle Secret';
+$string['settings_bot_sharedsecret_desc'] = 'Please paste this secret to the \'Shared Moodle Secret\' field in the Azure Bot template';
+$string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
+$string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
+$string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
+$string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
+$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
+$string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
+$string['settings_teams_deploy_bot_2'] = 'Need help?';
+$string['teams_no_course'] = 'You don\'t have any course to add.';
+$string['tab_name'] = 'Tab name';
+$string['tab_moodle'] = 'Moodle';
+$string['sso_login'] = 'Login to Office 365';
+$string['other_login'] = 'Login manually';
+$string['course_selector_label'] = "Select existing course";

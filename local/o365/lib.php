@@ -86,3 +86,217 @@ function local_o365_connectioncapability($userid, $mode = 'link', $require = fal
     $contextuser = \context_user::instance($userid);
     return has_capability($cap, $contextsys) || $check($cap, $contextuser);
 }
+
+/**
+ * Recursively delete content of the folder and all its contents.
+ *
+ * @param $path
+ */
+function local_o365_rmdir($path) {
+    $it = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
+    $files = new RecursiveIteratorIterator($it,
+        RecursiveIteratorIterator::CHILD_FIRST);
+    foreach($files as $file) {
+        if ($file->isDir()){
+            rmdir($file->getRealPath());
+        } else {
+            unlink($file->getRealPath());
+        }
+    }
+    rmdir($path);
+}
+
+/**
+ * Create manifest file and return its contents in string.
+ *
+ * @return false|string
+ * @throws coding_exception
+ * @throws dml_exception
+ */
+function local_o365_get_manifest_file_content() {
+    $filecontent = '';
+
+    $manifestfilepath = local_o365_create_manifest_file();
+
+    if ($manifestfilepath) {
+        $filecontent = file_get_contents($manifestfilepath);
+    }
+
+    return $filecontent;
+}
+
+/**
+ * Attempt to create manifest file. Return error details and/or path to the manifest file.
+ *
+ * @return string
+ * @throws coding_exception
+ * @throws dml_exception
+ */
+function local_o365_create_manifest_file() {
+    global $CFG;
+    require_once($CFG->libdir . '/filestorage/zip_archive.php');
+
+    $error = '';
+    $zipfilename = '';
+
+    // Task 1: check if bot settings are consistent.
+    $botappid = get_config('local_o365', 'bot_app_id');
+    $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
+    if ($botfeatureenabled) {
+        if (!$botappid || $botappid == '00000000-0000-0000-0000-000000000000') {
+            // bot id not configured, cannot create manifest file
+            $error = get_string('error_missing_app_id', 'local_o365');
+            return [$error, $zipfilename];
+        }
+
+        $botapppassword = get_config('local_o365', 'bot_app_password');
+        $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
+        if (!$botapppassword || !$botwebhookendpoint) {
+            $error = get_string('error_missing_bot_settings', 'local_o365');
+            return [$error, $zipfilename];
+        }
+    }
+
+    // Task 2: prepare manifest folder.
+    $pathtomanifestfolder = $CFG->dataroot . '/temp/ms_teams_manifest';
+    if (file_exists($pathtomanifestfolder)) {
+        local_o365_rmdir($pathtomanifestfolder);
+    }
+    mkdir($pathtomanifestfolder, 0777, true);
+
+    // Task 3: prepare manifest file.
+    $manifest = array(
+        '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.3/MicrosoftTeams.schema.json',
+        'manifestVersion' => '1.3',
+        'version' => '1.2.1',
+        'id' => '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95',
+        'packageName' => 'ie.enovation.microsoft.o365',
+        'developer' => array(
+            'name' => 'Enovation Solutions',
+            'websiteUrl' => 'https://enovation.ie',
+            'privacyUrl' => 'https://enovation.ie/moodleteamsapp-privacy',
+            'termsOfUseUrl' => 'https://enovation.ie/moodleteamsapp-termsofuse',
+        ),
+        'icons' => array(
+            'color' => 'color.png',
+            'outline' => 'outline.png',
+        ),
+        'name' => array(
+            'short' => 'Moodle',
+            'full' => 'Moodle integration with Microsoft Teams',
+        ),
+        'description' => array(
+            'short' => 'Access your Moodle courses and ask questions to your Moodle Assistant in Teams.',
+            'full' => 'The Moodle app for Microsoft Teams allows you to easily access and collaborate around your Moodle courses from within your teams through tabs. You can also get regular notifications from Moodle and ask questions about your courses, assignments, grades and students using the Moodle Assistant bot.',
+        ),
+        'accentColor' => '#FF7A00',
+        'configurableTabs' => array(
+            array(
+                'configurationUrl' => $CFG->wwwroot . '/local/o365/teams_tab_configuration.php',
+                'canUpdateConfiguration' => false,
+                'scopes' => array(
+                    'team',
+                ),
+            ),
+        ),
+        'permissions' => array(
+            'identity',
+            'messageTeamMembers',
+        ),
+        'validDomains' => array(
+            parse_url($CFG->wwwroot, PHP_URL_HOST),
+            'token.botframework.com',
+        ),
+    );
+
+    // Task 4: add bot part to manifest if enabled.
+    if ($botfeatureenabled) {
+        $manifest['bots'] = array(
+            array(
+                'botId' => $botappid,
+                'needsChannelSelector' => false,
+                'isNotificationOnly' => false,
+                'scopes' => array(
+                    'team',
+                    'personal',
+                ),
+                'commandLists' => array(
+                    array(
+                        'scopes' => array(
+                            'team',
+                            'personal',
+                        ),
+                        'commands' => array(
+                            array(
+                                'title' => 'Help',
+                                'description' => 'Displays help dialog'
+                            ),
+                            array(
+                                'title' => 'Feedback',
+                                'description' => 'Displays feedback dialog'
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        );
+    }
+
+    $file = $pathtomanifestfolder . '/manifest.json';
+    file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    // Task 5: prepare icons.
+    copy($CFG->dirroot . '/local/o365/pix/color.png', $pathtomanifestfolder . '/color.png');
+    copy($CFG->dirroot . '/local/o365/pix/outline.png', $pathtomanifestfolder . '/outline.png');
+
+    // Task 6: compress the folder.
+    $ziparchive = new zip_archive();
+    $zipfilename = $pathtomanifestfolder . '/manifest.zip';
+    $ziparchive->open($zipfilename);
+    $filenames = array('manifest.json', 'color.png', 'outline.png');
+    foreach ($filenames as $filename) {
+        $ziparchive->add_file_from_pathname($filename, $pathtomanifestfolder . '/' . $filename);
+    }
+    $ziparchive->close();
+
+    return [$error, $zipfilename];
+}
+
+/**
+ * Decodes JWT token elements
+ *
+ * @param string $data - encoded string
+ * @return string - decoded string
+ */
+function base64UrlDecode($data){
+    $urlUnsafeData = strtr($data, '-_', '+/');
+    $paddedData = str_pad($urlUnsafeData, strlen($data) % 4, '=', STR_PAD_RIGHT);
+    return base64_decode($paddedData);
+}
+
+/**
+ *  Checks if bot shared secret is set and if not generates new secret
+ */
+function check_sharedsecret(){
+    $sharedsecret = get_config('local_o365', 'bot_sharedsecret');
+    if(empty($sharedsecret)){
+        $secret = generate_sharedsecret();
+        set_config('bot_sharedsecret', $secret, 'local_o365');
+    }
+}
+
+/**
+ * Generates shared secret of random symbols
+ *
+ * @param int $length
+ * @return string
+ */
+function generate_sharedsecret($length = 36){
+    $chars =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
+    $sharedsecret = '';
+    $max = strlen($chars) - 1;
+    for ($i=0; $i < $length; $i++){
+        $sharedsecret .= $chars[random_int(0, $max)];
+    }
+    return $sharedsecret;
+}
