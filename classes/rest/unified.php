@@ -362,7 +362,7 @@ class unified extends \local_o365\rest\o365api {
             'notebook' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=notebook',
             'conversations' => 'https://outlook.office.com/owa/?path=/group/'.$group['mail'].'/mail',
             'calendar' => 'https://outlook.office365.com/owa/?path=/group/'.$group['mail'].'/calendar',
-            'team' => 'https://office.com', // todo get team URL.
+            'team' => 'https://team.microsoft.com', // todo get team URL.
         ];
         return $o365urls;
     }

@@ -15,19 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Redirect visitor to site page.
+ * This page is triggered when a page that should be accessed from iframe is accessed directly.
+ *
  * @package local_o365
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+require_once(__DIR__ . '/../../config.php');
 
-$plugin->version = 2017111308;
-$plugin->requires = 2017111300;
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '3.4.0.4';
-$plugin->dependencies = [
-    'auth_oidc' => 2017111302,
-];
+unset($SESSION->theme);
+print_error('errornodirectaccess', 'local_o365');

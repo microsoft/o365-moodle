@@ -222,5 +222,20 @@
         <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id"/>
       </INDEXES>
     </TABLE>
+
+    <TABLE NAME="local_o365_notif" COMMENT="List of processed assignment notifications.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="assignid" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" COMMENT="assignment ID"/>
+        <FIELD NAME="timenotified" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="when was the notification sent"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="assignid" UNIQUE="false" FIELDS="assignid"/>
+      </INDEXES>
+    </TABLE>
+
   </TABLES>
 </XMLDB>
