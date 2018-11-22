@@ -1,11 +1,32 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_o365
+ * @author  Enovation Solutions
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ */
 
 namespace local_o365\bot\intents;
 
-class absentstudents implements \local_o365\bot\intents\intentinterface
-{
-    function get_message($language, $entities = [])
-    {
+defined('MOODLE_INTERNAL') || die();
+
+class absentstudents implements \local_o365\bot\intents\intentinterface {
+    public function get_message($language, $entities = []) {
         global $USER, $DB, $PAGE;
         $listitems = [];
         $warnings = [];
@@ -44,10 +65,10 @@ class absentstudents implements \local_o365\bot\intents\intentinterface
         if (empty($userslist)) {
             $message = get_string_manager()->get_string('no_absent_users_found', 'local_o365', null, $language);
             $warnings[] = array(
-                'item' => 'users',
-                'itemid' => 0,
-                'warningcode' => '1',
-                'message' => 'No  absent users found'
+                    'item' => 'users',
+                    'itemid' => 0,
+                    'warningcode' => '1',
+                    'message' => 'No  absent users found'
             );
         } else {
             $message = get_string_manager()->get_string('list_of_absent_students', 'local_o365', null, $language);
@@ -57,20 +78,20 @@ class absentstudents implements \local_o365\bot\intents\intentinterface
                 $pictureurl = $userpicture->get_url($PAGE)->out(false);
                 $date = (empty($user->lastaccess) ? get_string('never', 'local_o365') : date('d/m/Y', $user->lastaccess));
                 $listitems[] = array(
-                    'title' => $user->firstname . ' ' . $user->lastname,
-                    'subtitle' => get_string_manager()->get_string('last_login_date', 'local_o365', $date, $language),
-                    'icon' => $pictureurl,
-                    'action' => null,
-                    'actionType' => null
+                        'title' => $user->firstname . ' ' . $user->lastname,
+                        'subtitle' => get_string_manager()->get_string('last_login_date', 'local_o365', $date, $language),
+                        'icon' => $pictureurl,
+                        'action' => null,
+                        'actionType' => null
                 );
             }
         }
 
         return array(
-            'message' => $message,
-            'listTitle' => '',
-            'listItems' => $listitems,
-            'warnings' => $warnings
+                'message' => $message,
+                'listTitle' => '',
+                'listItems' => $listitems,
+                'warnings' => $warnings
         );
     }
 }

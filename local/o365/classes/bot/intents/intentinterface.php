@@ -16,11 +16,13 @@
 
 /**
  * @package local_o365
- * @author Enovation
+ * @author Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace local_o365\bot\intents;
+
+defined('MOODLE_INTERNAL') || die();
 
 interface intentinterface {
     /**

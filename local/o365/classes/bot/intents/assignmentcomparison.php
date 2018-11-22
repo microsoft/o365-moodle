@@ -1,15 +1,36 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_o365
+ * @author  Enovation Solutions
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
+ */
 
 namespace local_o365\bot\intents;
 
-class assignmentcomparison implements \local_o365\bot\intents\intentinterface
-{
-    function get_message($language, $entities = [])
-    {
+defined('MOODLE_INTERNAL') || die();
+
+class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
+    public function get_message($language, $entities = []) {
         global $USER, $DB, $OUTPUT;
         $listitems = [];
         $warnings = [];
-        $listTitle = '';
+        $listtitle = '';
         $message = '';
 
         $sql = "SELECT gi.iteminstance, g.itemid, g.finalgrade, g.timemodified FROM {grade_grades} g
@@ -17,7 +38,7 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface
                 WHERE g.userid = ? AND gi.itemmodule LIKE 'assign' AND g.finalgrade IS NOT NULL
                 ORDER BY g.timemodified DESC";
 
-        $sql .= " LIMIT ".self::DEFAULT_LIMIT_NUMBER;
+        $sql .= " LIMIT " . self::DEFAULT_LIMIT_NUMBER;
 
         $sqlparams = [$USER->id];
         $assignments = $DB->get_records_sql($sql, $sqlparams);
@@ -25,30 +46,30 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface
         if (empty($assignments)) {
             $message = get_string_manager()->get_string('no_assignments_found', 'local_o365', null, $language);
             $warnings[] = array(
-                'item' => 'grades',
-                'itemid' => 0,
-                'warningcode' => '1',
-                'message' => 'No assignments found'
+                    'item' => 'grades',
+                    'itemid' => 0,
+                    'warningcode' => '1',
+                    'message' => 'No assignments found'
             );
         } else {
             $message = get_string_manager()->get_string('list_of_assignments_grades_compared', 'local_o365', null, $language);
-            foreach($assignments as $assign){
+            foreach ($assignments as $assign) {
                 $cm = get_coursemodule_from_instance('assign', $assign->iteminstance);
                 $coursecontext = \context_course::instance($cm->course);
                 $course = get_course($cm->course);
                 $group = groups_get_course_group($course);
-                $participants = get_enrolled_users($coursecontext,'',$group,'u.id',null,0,0,false);
+                $participants = get_enrolled_users($coursecontext, '', $group, 'u.id', null, 0, 0, false);
                 $participants = join(',', array_keys($participants));
                 $url = new \moodle_url("/mod/assign/view.php", ['id' => $cm->id]);
                 $sql = "SELECT g.itemid, COUNT(*) AS amount, SUM(g.finalgrade) AS sum
                       FROM {grade_items} gi
                       JOIN {grade_grades} g ON g.itemid = gi.id
-                      JOIN {user} u ON u.id = g.userid                      
-                     WHERE gi.itemmodule LIKE 'assign' 
+                      JOIN {user} u ON u.id = g.userid
+                     WHERE gi.itemmodule LIKE 'assign'
                        AND gi.iteminstance = :assignmentid
                        AND u.deleted = 0
                        AND g.finalgrade IS NOT NULL
-                       AND u.id IN ($participants)                      
+                       AND u.id IN ($participants)
                      GROUP BY g.itemid";
                 $sqlparams = ['assignmentid' => $assign->iteminstance];
                 $average = $DB->get_record_sql($sql, $sqlparams);
@@ -56,21 +77,22 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface
                 $subtitledata->usergrade = $assign->finalgrade;
                 $subtitledata->classgrade = $average->sum / $average->amount;
                 $assignment = array(
-                    'title' => $cm->name,
-                    'subtitle' => get_string_manager()->get_string('your_grade_class_grade', 'local_o365', $subtitledata, $language),
-                    'icon' => $OUTPUT->image_url('icon', 'assign')->out(),
-                    'action' => $url->out(),
-                    'actionType' => 'openUrl'
+                        'title' => $cm->name,
+                        'subtitle' => get_string_manager()->get_string('your_grade_class_grade', 'local_o365', $subtitledata,
+                                $language),
+                        'icon' => $OUTPUT->image_url('icon', 'assign')->out(),
+                        'action' => $url->out(),
+                        'actionType' => 'openUrl'
                 );
                 $listitems[] = $assignment;
             }
         }
 
         return array(
-            'message' => $message,
-            'listTitle' => $listTitle,
-            'listItems' => $listitems,
-            'warnings' => $warnings
+                'message' => $message,
+                'listTitle' => $listtitle,
+                'listItems' => $listitems,
+                'warnings' => $warnings
         );
     }
 }
