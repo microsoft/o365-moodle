@@ -197,4 +197,10 @@ $observers = [
         'priority'    => 200,
         'internal'    => true,
     ],
+    [
+        'eventname'    => '\core\event\notification_sent',
+        'callback'    => '\local_o365\observers::handle_notification_sent',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
 ];

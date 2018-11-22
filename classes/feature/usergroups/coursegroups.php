@@ -53,15 +53,14 @@ class coursegroups {
     }
 
     /**
-     * Create groups and populate membership for all courses that don't have an associated group recorded.
+     * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
     public function create_groups_for_new_courses() {
         $this->replace_group_notebook_job();
-        $siterec = $this->DB->get_record('course', ['id' => SITEID]);
-        $groupprefix = (!empty($siterec)) ? $siterec->shortname : '';
+        $groupprefix = '';
 
-        $creategroups = get_config('local_o365', 'creategroups');
-        if ($creategroups === 'onall' || $creategroups === 'oncustom') {
+        $createteams = get_config('local_o365', 'createteams');
+        if ($createteams === 'onall' || $createteams === 'oncustom') {
             $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
             if (empty($coursesenabled)) {
                 $this->mtrace('Custom group creation is enabled, but no courses are enabled.');

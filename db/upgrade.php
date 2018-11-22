@@ -21,6 +21,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+require_once ($CFG->dirroot.'/local/o365/lib.php');
+
 /**
  * Update plugin.
  *
@@ -574,6 +576,37 @@ function xmldb_local_o365_upgrade($oldversion) {
     if ($result && $oldversion < 2017111301) {
         mtrace('Warning! This version removes the legacy Office 365 API. If you *absolutely* need it, add "$CFG->local_o365_forcelegacyapi = true;" to your config.php. This option will be removed in the next version.');
         upgrade_plugin_savepoint($result, '2017111301', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2018051702) {
+        $createteamssetting = get_config('local_o365', 'creategroups');
+        set_config('createteams', $createteamssetting, 'local_o365');
+        upgrade_plugin_savepoint($result, '2018051702', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2018051703) {
+        if (!$dbman->table_exists('local_o365_notif')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_o365_notif');
+        }
+
+        upgrade_plugin_savepoint($result, '2018051703', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2018051704) {
+        $botappid = get_config('local_o365', 'bot_app_id');
+        $botapppassword = get_config('local_o365', 'bot_app_password');
+        $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
+        if ($botappid && $botapppassword && $botwebhookendpoint) {
+            set_config('bot_feature_enabled', '1', 'local_o365');
+        } else {
+            set_config('bot_feature_enabled', '0', 'local_o365');
+        }
+        upgrade_plugin_savepoint($result, '2018051704', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2018051705) {
+        check_sharedsecret();
+        upgrade_plugin_savepoint($result, '2018051705', 'local', 'o365');
     }
 
     return $result;

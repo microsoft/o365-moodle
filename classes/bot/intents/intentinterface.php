@@ -16,18 +16,29 @@
 
 /**
  * @package local_o365
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2018051705;
-$plugin->requires = 2018051700;
-$plugin->release = '3.5.0.1';
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = [
-    'auth_oidc' => 2018051701,
-];
+/**
+ * Interface intentinterface defines constants default for all intents and  methods that all intents must implement
+ * @package local_o365\bot\intents
+ */
+interface intentinterface {
+    /**
+     * Default list items maximum limit number
+     */
+    const DEFAULT_LIMIT_NUMBER = 10;
+
+    /**
+     * Get bot ready message.
+     * @param $language - message language code
+     * @param mixed $entities - intent entities (optional)
+     * @return array - structured message with all details for bot
+     */
+    public function get_message($language, $entities = null);
+}

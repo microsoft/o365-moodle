@@ -15,19 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Download tab manifest file.
+ *
  * @package local_o365
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/filestorage/zip_archive.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
-$plugin->version = 2018051705;
-$plugin->requires = 2018051700;
-$plugin->release = '3.5.0.1';
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = [
-    'auth_oidc' => 2018051701,
-];
+list($error, $manifestfilepath) = local_o365_create_manifest_file();
+
+if ($manifestfilepath) {
+    // Download manifest file.
+    header("Content-type: application/zip");
+    header("Content-Disposition: attachment; filename=manifest.zip");
+    header("Content-length: " . filesize($manifestfilepath));
+    header("Pragma: no-cache");
+    header("Expires: 0");
+    readfile($manifestfilepath);
+} else {
+    print_error($error);
+}

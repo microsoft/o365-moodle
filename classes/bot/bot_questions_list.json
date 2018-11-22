@@ -1,0 +1,17 @@
+{
+  "student": [
+    {"text" : "question_student_assignments_compared", "clickable" : true},
+    {"text" : "question_student_latest_grades", "clickable" : true},
+    {"text" : "question_student_assignments_due", "clickable" : true}
+  ],
+  "editingteacher": [
+    {"text" : "question_teacher_assignments_incomplete_submissions", "clickable" : true},
+    {"text" : "question_teacher_assignments_for_grading", "clickable" : true},
+    {"text" : "question_teacher_absent_students", "clickable" : true},
+    {"text" : "question_teacher_last_logged_students", "clickable" : true},
+    {"text" : "question_teacher_latest_logged_students", "clickable" : true},
+    {"text" : "question_teacher_late_submissions", "clickable" : true},
+    {"text" : "question_teacher_least_scored_in_assignment", "clickable" : true},
+    {"text" : "question_teacher_student_last_logged", "clickable" : false}
+  ]
+}
