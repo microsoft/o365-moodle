@@ -48,22 +48,22 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
     public function test_is_enabled() {
         global $DB;
 
-        $DB->delete_records('config_plugins', ['name' => 'creategroups', 'plugin' => 'local_o365']);
+        $DB->delete_records('config_plugins', ['name' => 'createteams', 'plugin' => 'local_o365']);
         $this->assertFalse(\local_o365\feature\usergroups\utils::is_enabled());
 
-        set_config('creategroups', '', 'local_o365');
+        set_config('createteams', '', 'local_o365');
         $this->assertFalse(\local_o365\feature\usergroups\utils::is_enabled());
 
-        set_config('creategroups', 'onall', 'local_o365');
+        set_config('createteams', 'onall', 'local_o365');
         $this->assertTrue(\local_o365\feature\usergroups\utils::is_enabled());
 
-        set_config('creategroups', 'off', 'local_o365');
+        set_config('createteams', 'off', 'local_o365');
         $this->assertFalse(\local_o365\feature\usergroups\utils::is_enabled());
 
-        set_config('creategroups', 'oncustom', 'local_o365');
+        set_config('createteams', 'oncustom', 'local_o365');
         $this->assertTrue(\local_o365\feature\usergroups\utils::is_enabled());
 
-        set_config('creategroups', 'off', 'local_o365');
+        set_config('createteams', 'off', 'local_o365');
         $this->assertFalse(\local_o365\feature\usergroups\utils::is_enabled());
     }
 
@@ -73,23 +73,23 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
     public function test_get_enabled_courses() {
         global $DB;
 
-        $DB->delete_records('config_plugins', ['name' => 'creategroups', 'plugin' => 'local_o365']);
+        $DB->delete_records('config_plugins', ['name' => 'createteams', 'plugin' => 'local_o365']);
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
         $this->assertInternalType('array', $actual);
         $this->assertEmpty($actual);
 
-        set_config('creategroups', 'off', 'local_o365');
+        set_config('createteams', 'off', 'local_o365');
         set_config('usergroupcustom', json_encode([1 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
         $this->assertInternalType('array', $actual);
         $this->assertEmpty($actual);
 
-        set_config('creategroups', 'onall', 'local_o365');
+        set_config('createteams', 'onall', 'local_o365');
         set_config('usergroupcustom', json_encode([1 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
         $this->assertTrue($actual);
 
-        set_config('creategroups', 'oncustom', 'local_o365');
+        set_config('createteams', 'oncustom', 'local_o365');
         set_config('usergroupcustom', json_encode([1 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
         $this->assertInternalType('array', $actual);
@@ -101,27 +101,27 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
      */
     public function test_course_is_group_enabled() {
         global $DB;
-        $DB->delete_records('config_plugins', ['name' => 'creategroups', 'plugin' => 'local_o365']);
+        $DB->delete_records('config_plugins', ['name' => 'createteams', 'plugin' => 'local_o365']);
         $DB->delete_records('config_plugins', ['name' => 'usergroupcustom', 'plugin' => 'local_o365']);
         $actual = \local_o365\feature\usergroups\utils::course_is_group_enabled(3);
         $this->assertFalse($actual);
 
-        set_config('creategroups', 'off', 'local_o365');
+        set_config('createteams', 'off', 'local_o365');
         set_config('usergroupcustom', json_encode([1 => 1, 3 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::course_is_group_enabled(3);
         $this->assertFalse($actual);
 
-        set_config('creategroups', 'onall', 'local_o365');
+        set_config('createteams', 'onall', 'local_o365');
         set_config('usergroupcustom', json_encode([2 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::course_is_group_enabled(3);
         $this->assertTrue($actual);
 
-        set_config('creategroups', 'oncustom', 'local_o365');
+        set_config('createteams', 'oncustom', 'local_o365');
         set_config('usergroupcustom', json_encode([2 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::course_is_group_enabled(3);
         $this->assertFalse($actual);
 
-        set_config('creategroups', 'oncustom', 'local_o365');
+        set_config('createteams', 'oncustom', 'local_o365');
         set_config('usergroupcustom', json_encode([2 => 1, 3 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::course_is_group_enabled(3);
         $this->assertTrue($actual);

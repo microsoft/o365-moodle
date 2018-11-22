@@ -1,3 +1,33 @@
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeui.ttf) format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeuib.ttf) format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeuil.ttf) format('truetype');
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeuisl.ttf) format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/seguisb.ttf) format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
 .local_o365_statusmessage.alert {
   margin-bottom: 0.25rem; }
 .local_o365_statusmessage img {
@@ -142,3 +172,148 @@ table.local_o365_matchqueue {
 /* Hide customize link when the setting is disabled. */
 #admin-sharepointcourseselect label.link-disabled a {
   display: none; }
+
+/* Teams tab configuration page. */
+select#id_local_o365_teams_course select::-webkit-scrollbar {
+    width: 6px;
+}
+select#id_local_o365_teams_course::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 0px grey;
+    border-radius: 0px;
+}
+select#id_local_o365_teams_course::-webkit-scrollbar-thumb {
+    background: rgba(50,50,50,.3);
+    border-radius: 10px;
+}
+select#id_local_o365_teams_course::-webkit-scrollbar-thumb:hover {
+    background: rgba(100,100,100,.5);
+}
+select#id_local_o365_teams_course > option:hover {
+  background-color: #6264a7;
+  color: white;
+}
+select#id_local_o365_teams_course:focus option:checked {
+  background: #6264a7 linear-gradient(0deg, #6264a7 0%, #6264a7 100%);
+  color: white;
+}
+select#id_local_o365_teams_course {
+  overflow: auto;
+  width: 100%;
+  max-height: 270px;
+  overflow-x: hidden;
+  border-color: #f1f1f1;
+  color: #484644;
+}
+select#id_local_o365_teams_course:focus {
+  outline-offset: 0px !important;
+  outline: none !important;
+}
+select#id_local_o365_teams_course option {
+  padding-top: 10px;
+  padding-left: 20px;
+  padding-bottom: 10px;
+  font-size: 15px;
+}
+form#local_o365_course_list label {
+  font-size: 13px;
+}
+form#local_o365_course_list {
+  font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif;
+}
+
+/* Teams tab page. */
+#id_local_o365_teams_tab_name {
+  background-color: #f0f2f4;
+  border: 0px;
+  padding: 8px 8px 8px 12px;
+  width: 100%;
+  margin-bottom: 20px;
+  color: #484644;
+  font-size: 15px;
+}
+
+/* Teams tab manual login. */
+div.local_o365_manual_login {
+  display: none;
+  margin: auto;
+  width: 300px;
+  height: 300px;
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+}
+button.local_o365_manual_login_button {
+  font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif !important;
+  display: block;
+  width: 200px;
+  background: #6264A7;
+  border: 0.125rem solid;
+  border-color: transparent;
+  border-radius: 0.1875rem;
+  box-sizing: border-box;
+  color: #201F1F;
+  cursor: pointer;
+  font: inherit;
+  height: 2rem;
+  min-width: 6rem;
+  padding: 0.25rem;
+  white-space: nowrap;
+  -webkit-box-shadow: unset !important;
+  box-shadow: unset !important;
+  color: #FFFFFF;
+  margin: 5px;
+}
+button.local_o365_manual_login_button:not(:disabled):not(.disabled):active {
+  background: #A6A7DC;
+  border-color: transparent;
+  color: #201F1F;
+}
+button.local_o365_manual_login_button:hover, button.local_o365_manual_login_button.enabled {
+  background: #464775;
+  border-color: transparent;
+  color: #FFFFFF;
+}
+button.local_o365_manual_login_button:focus, button.local_o365_manual_login_button:focus:enabled {
+}
+
+.local_o365_acp_option {
+  vertical-align: top;
+  margin-right: 10px;
+}
+
+.local_o365_settings_manifest_container {
+  margin: 40px 0px 20px 0px;
+}
+
+.local_o365_settings_teams_banner_part_1 {
+  margin: 30px 40px 0px 40px;
+  text-align: center;
+}
+
+.local_o365_settings_teams_banner_part_2 {
+  margin: 0px 40px 10px 40px;
+}
+
+.local_o365_settings_teams_app_img {
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.local_o365_settings_teams_horizontal_spacer {
+  margin-left: 80px;
+}
+
+.local_o365_settings_teams_h4_spacer {
+  margin: 20px 0px 30px 0px;
+  border-top: 1px solid #e9ecef;
+  padding-top: 10px;
+}
+
+#admin-bot_app_id,
+#admin-bot_app_password,
+#admin-bot_feature_enabled,
+#admin-bot_webhook_endpoint,
+#admin-bot_domains_whitelist {
+  margin-bottom: 20px;
+}
