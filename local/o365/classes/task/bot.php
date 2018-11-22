@@ -23,6 +23,8 @@
 
 namespace local_o365\task;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Scheduled task to trigger sending messages from Moodle to user via the bot.
  */
@@ -45,11 +47,6 @@ class bot extends \core\task\scheduled_task {
             mtrace('Office 365 not configured');
             return false;
         }
-
-        //if (\local_o365\feature\usersync\main::is_enabled() !== true) {
-        //    $this->mtrace('Azure AD cron sync disabled. Nothing to do.');
-        //    return true;
-        //}
 
         // Get all courses to be included.
         $sql = 'SELECT crs.id, crs.id AS id2
@@ -91,8 +88,7 @@ class bot extends \core\task\scheduled_task {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    private function assignment_past_due_date()
-    {
+    private function assignment_past_due_date() {
         global $DB, $CFG, $OUTPUT;
 
         // Get all assignments up to 1 day after due date that were not processed yet.

@@ -22,6 +22,8 @@
 
 namespace local_o365\webservices;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Get help card for user
  */
@@ -94,12 +96,14 @@ class read_bot_message extends \external_api {
         return new \external_single_structure(
             array(
                 'message' => new \external_value(PARAM_TEXT, 'message to be returned', VALUE_DEFAULT, ''),
-                'listTitle' => new \external_value(PARAM_TEXT, 'title that is showed below the message and above the list cards',VALUE_DEFAULT, ''),
-                'listItems' => new \external_multiple_structure(self::get_cards_structure(), 'list of cards to beshowed with message', VALUE_DEFAULT, []),
+                'listTitle' => new \external_value(PARAM_TEXT, 'title that is showed below the message and above
+                    the list cards', VALUE_DEFAULT, ''),
+                'listItems' => new \external_multiple_structure(self::get_cards_structure(), 'list of cards to beshowed
+                    with message', VALUE_DEFAULT, []),
                 'warnings'  => new \external_warnings('warning messages that occured when getting data',
                     'Item id is mod or user id and if not possible to define 0 by default',
                     ''),
-                'language' => new \external_value(PARAM_TEXT, 'message language',VALUE_DEFAULT, 'en'),
+                'language' => new \external_value(PARAM_TEXT, 'message language', VALUE_DEFAULT, 'en'),
             )
         );
     }

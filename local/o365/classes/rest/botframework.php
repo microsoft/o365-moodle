@@ -23,6 +23,8 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 class botframework {
     private $token;
     private $httpclient;
@@ -90,7 +92,7 @@ class botframework {
      *
      * @throws \dml_exception
      */
-    public function send_notification($teamid, $userid, $message, $listItems, $endpoint = null) {
+    public function send_notification($teamid, $userid, $message, $listitems, $endpoint = null) {
         if (is_null($endpoint)) {
             $endpoint = get_config('local_o365', 'bot_webhook_endpoint');
         }
@@ -99,7 +101,7 @@ class botframework {
             'team' => $teamid,
             'user' => $userid,
             'message' => $message,
-            'listItems' => $listItems
+            'listItems' => $listitems
         ];
         $params = json_encode($params);
 
@@ -114,6 +116,6 @@ class botframework {
 
         $result = $this->httpclient->info['http_code'];
 
-        // todo handle result
+        // Todo handle result.
     }
 }
