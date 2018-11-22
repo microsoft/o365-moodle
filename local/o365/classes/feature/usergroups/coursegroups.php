@@ -53,7 +53,7 @@ class coursegroups {
     }
 
     /**
-     * Create groups and populate membership for all courses that don't have an associated group recorded.
+     * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
     public function create_groups_for_new_courses() {
         $this->replace_group_notebook_job();
