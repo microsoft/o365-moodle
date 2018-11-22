@@ -358,11 +358,8 @@ class unified extends \local_o365\rest\o365api {
         $url = preg_replace("/-my.sharepoint.com/", ".sharepoint.com", $config->odburl);
         $o365urls = [
             // First time visiting the onedrive or notebook urls will result in a please wait while we provision onedrive message.
-            'onedrive' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=documents',
             'notebook' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=notebook',
-            'conversations' => 'https://outlook.office.com/owa/?path=/group/'.$group['mail'].'/mail',
-            'calendar' => 'https://outlook.office365.com/owa/?path=/group/'.$group['mail'].'/calendar',
-            'team' => 'https://office.com', // todo get team URL.
+            'team' => 'https://team.microsoft.com', // todo get team URL.
         ];
         return $o365urls;
     }

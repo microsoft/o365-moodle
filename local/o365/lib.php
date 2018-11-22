@@ -86,3 +86,158 @@ function local_o365_connectioncapability($userid, $mode = 'link', $require = fal
     $contextuser = \context_user::instance($userid);
     return has_capability($cap, $contextsys) || $check($cap, $contextuser);
 }
+
+/**
+ * Recursively delete content of the folder and all its contents.
+ *
+ * @param $path
+ */
+function local_o365_rmdir($path) {
+    $it = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
+    $files = new RecursiveIteratorIterator($it,
+        RecursiveIteratorIterator::CHILD_FIRST);
+    foreach($files as $file) {
+        if ($file->isDir()){
+            rmdir($file->getRealPath());
+        } else {
+            unlink($file->getRealPath());
+        }
+    }
+    rmdir($path);
+}
+
+/**
+ * Create manifest file and return its contents in string.
+ *
+ * @return bool|string
+ * @throws dml_exception
+ */
+function local_o365_get_manifest_file_content() {
+    $filecontent = '';
+
+    $manifestfilepath = local_o365_create_manifest_file();
+
+    if ($manifestfilepath) {
+        $filecontent = file_get_contents($manifestfilepath);
+    }
+
+    return $filecontent;
+}
+
+/**
+ * Create manifest zip file.
+ *
+ * @return bool|string
+ * @throws dml_exception
+ */
+function local_o365_create_manifest_file() {
+    global $CFG;
+    require_once($CFG->libdir . '/filestorage/zip_archive.php');
+
+    // task 1 : check if app ID has been set, and exit if missing
+    $appid = get_config('local_o365', 'bot_app_id');
+    if (!$appid || $appid == '00000000-0000-0000-0000-000000000000') {
+        // bot id not configured, cannot create manifest file
+        return false;
+    }
+
+    // task 2 : prepare manifest folder
+    $pathtomanifestfolder = $CFG->dataroot . '/temp/manifest';
+    if (file_exists($pathtomanifestfolder)) {
+        local_o365_rmdir($pathtomanifestfolder);
+    }
+    mkdir($pathtomanifestfolder, 0777, true);
+
+    // task 3 : prepare manifest file
+    $manifest = array(
+        '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.3/MicrosoftTeams.schema.json',
+        'manifestVersion' => '1.3',
+        'version' => '1.2.1',
+        'id' => $appid,
+        'packageName' => 'ie.enovation.microsoft.o365', //todo update package name
+        'developer' => array(
+            'name' => 'Enovation Solutions', // todo update developer name
+            'websiteUrl' => 'https://enovation.ie', // todo update developer website URL
+            'privacyUrl' => 'https://moodle.org/admin/tool/policy/view.php?policyid=1',
+            'termsOfUseUrl' => 'https://moodle.org', // todo update terms of use URL
+        ),
+        'icons' => array(
+            'color' => 'color.png',
+            'outline' => 'outline.png',
+        ),
+        'name' => array(
+            'short' => 'Moodle', // todo update short name
+            'full' => 'Moodle integration with Microsoft Teams', // todo update full name
+        ),
+        'description' => array(
+            'short' => 'Bot and tab for Moodle in Teams.', // todo update short description
+            'full' => 'This plugin contains a bot that allows users to interact with Moodle from Teams, and a tab to show course page in Teams.', // todo update full description
+        ),
+        'accentColor' => '#FF7A00',
+        'bots' => array(
+            array(
+                'botId' => $appid,
+                'needsChannelSelector' => false,
+                'isNotificationOnly' => false,
+                'scopes' => array(
+                    'team',
+                    'personal',
+                ),
+                'commandLists' => array(
+                    array(
+                        'scopes' => array(
+                            'team',
+                            'personal',
+                        ),
+                        'commands' => array(
+                            array(
+                                'title' => 'Help',
+                                'description' => 'Displays help dialog'
+                            ),
+                            array(
+                                'title' => 'Feedback',
+                                'description' => 'Displays feedback dialog'
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+        'configurableTabs' => array(
+            array(
+                'configurationUrl' => $CFG->wwwroot . '/local/o365/tab_configuration.php',
+                'canUpdateConfiguration' => false,
+                'scopes' => array(
+                    'team',
+                ),
+            ),
+        ),
+        'permissions' => array(
+            'identity',
+            'messageTeamMembers',
+        ),
+        'validDomains' => array(
+            parse_url($CFG->wwwroot, PHP_URL_HOST),
+            'token.botframework.com',
+        ),
+    );
+
+    $file = $pathtomanifestfolder . '/manifest.json';
+    file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    // task 4 : prepare icons
+    copy($CFG->dirroot . '/local/o365/pix/color.png', $pathtomanifestfolder . '/color.png');
+    copy($CFG->dirroot . '/local/o365/pix/outline.png', $pathtomanifestfolder . '/outline.png');
+
+    // task 5 : compress the folder
+    $ziparchive = new zip_archive();
+    $zipfilename = $pathtomanifestfolder . '/manifest.zip';
+    $ziparchive->open($zipfilename);
+    $filenames = array('manifest.json', 'color.png', 'outline.png');
+    foreach ($filenames as $filename) {
+        $ziparchive->add_file_from_pathname($filename, $pathtomanifestfolder . '/' . $filename);
+    }
+    $ziparchive->close();
+
+    return $zipfilename;
+}

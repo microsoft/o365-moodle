@@ -30,8 +30,8 @@ class utils {
      * @return bool True if group creation is enabled. False otherwise.
      */
     public static function is_enabled() {
-        $creategroups = get_config('local_o365', 'creategroups');
-        return ($creategroups === 'oncustom' || $creategroups === 'onall') ? true : false;
+        $createteams = get_config('local_o365', 'createteams');
+        return ($createteams === 'oncustom' || $createteams === 'onall') ? true : false;
     }
 
     /**
@@ -40,10 +40,10 @@ class utils {
      * @return array Array of course IDs, or TRUE if all courses enabled.
      */
     public static function get_enabled_courses() {
-        $creategroups = get_config('local_o365', 'creategroups');
-        if ($creategroups === 'onall') {
+        $createteams = get_config('local_o365', 'createteams');
+        if ($createteams === 'onall') {
             return true;
-        } else if ($creategroups === 'oncustom') {
+        } else if ($createteams === 'oncustom') {
             $coursesenabled = get_config('local_o365', 'usergroupcustom');
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled)) {
@@ -60,10 +60,10 @@ class utils {
      * @return bool|array Array of course IDs, or TRUE if all courses are enabled.
      */
     public static function get_enabled_courses_with_feature($feature) {
-        $creategroups = get_config('local_o365', 'creategroups');
-        if ($creategroups === 'onall') {
+        $createteams = get_config('local_o365', 'createteams');
+        if ($createteams === 'onall') {
             return true;
-        } else if ($creategroups === 'oncustom') {
+        } else if ($createteams === 'oncustom') {
             $coursesenabled = get_config('local_o365', 'usergroupcustom');
             $coursesenabled = @json_decode($coursesenabled, true);
             if (empty($coursesenabled) || !is_array($coursesenabled)) {
@@ -95,10 +95,10 @@ class utils {
      * @return bool Whether the course is group enabled or not.
      */
     public static function course_is_group_enabled($courseid) {
-        $creategroups = get_config('local_o365', 'creategroups');
-        if ($creategroups === 'onall') {
+        $createteams = get_config('local_o365', 'createteams');
+        if ($createteams === 'onall') {
             return true;
-        } else if ($creategroups === 'oncustom') {
+        } else if ($createteams === 'oncustom') {
             $coursesenabled = get_config('local_o365', 'usergroupcustom');
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled) && isset($coursesenabled[$courseid])) {
@@ -614,14 +614,14 @@ class utils {
         }
         if ($enabled === true) {
             $usergroupconfig[$courseid] = $enabled;
-            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations', 'team'],
+            static::set_course_group_feature_enabled($courseid, ['team'],
                 $enabled);
         } else {
             if (isset($usergroupconfig[$courseid])) {
                 unset($usergroupconfig[$courseid]);
                 static::delete_course_group($courseid);
             }
-            static::set_course_group_feature_enabled($courseid, ['onedrive', 'calendar', 'conversations', 'team'],
+            static::set_course_group_feature_enabled($courseid, ['team'],
                 $enabled);
         }
         set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
@@ -635,10 +635,10 @@ class utils {
      * @return bool Whether the feature is enabled or not.
      */
     public static function course_is_group_feature_enabled($courseid, $feature) {
-        $creategroups = get_config('local_o365', 'creategroups');
-        if ($creategroups === 'onall') {
+        $createteams = get_config('local_o365', 'createteams');
+        if ($createteams === 'onall') {
             return true;
-        } else if ($creategroups === 'oncustom') {
+        } else if ($createteams === 'oncustom') {
             $config = get_config('local_o365', 'usergroupcustomfeatures');
             $config = @json_decode($config, true);
             return (!empty($config) && is_array($config) && isset($config[$courseid]) && isset($config[$courseid][$feature]))

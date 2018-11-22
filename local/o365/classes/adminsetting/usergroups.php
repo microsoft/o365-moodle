@@ -65,14 +65,14 @@ class usergroups extends \admin_setting {
             'onall' => get_string('acp_usergroupcustom_onall', 'local_o365'),
         ];
         $curval = (isset($options[$data])) ? $data : $this->get_defaultsetting();
-        $customenabled = get_string('acp_usergroupcustom_oncustom', 'local_o365', $customizeurl->out());
         foreach ($options as $key => $desc) {
             $radioattrs = [
                 'type' => 'radio',
                 'id' => $this->get_id().'_'.$key,
                 'name' => $this->get_full_name(),
                 'value' => $key,
-                'onchange' => 'usergroups_togglecustom()',
+                'onchange' => 'teams_togglecustom()',
+                'class' => 'acpoption',
             ];
             if ($curval === $key) {
                 $radioattrs['checked'] = 'checked';
@@ -82,8 +82,8 @@ class usergroups extends \admin_setting {
             $settinghtml .= \html_writer::empty_tag('br');
             $settinghtml .= \html_writer::empty_tag('br');
         }
-        $js = 'function usergroups_togglecustom() { if ($("#id_s_local_o365_creategroups_oncustom").is(":checked")) { console.log("custom on"); $("#adminsetting_usergroups").show(); } else { console.log("custom off"); $("#adminsetting_usergroups").hide(); } };';
-        $js .= 'usergroups_togglecustom();';
+        $js = 'function teams_togglecustom() { if ($("#id_s_local_o365_creategroups_oncustom").is(":checked")) { console.log("custom on"); $("#adminsetting_usergroups").show(); } else { console.log("custom off"); $("#adminsetting_usergroups").hide(); } };';
+        $js .= 'teams_togglecustom();';
         $settinghtml .= \html_writer::script($js);
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
     }

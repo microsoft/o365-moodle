@@ -576,5 +576,32 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2017111301', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2018101901) {
+        $createteamssetting = get_config('local_o365', 'creatgroups');
+        set_config('createteams', $createteamssetting, 'local_o365');
+        upgrade_plugin_savepoint($result, '2018101901', 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2018111300) {
+        $table = new xmldb_table('local_o365_notif');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('assignid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timenotified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $index = new xmldb_index('assignid', XMLDB_INDEX_UNIQUE, ['assignid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint($result, '2018111300', 'local', 'o365');
+    }
+
     return $result;
 }

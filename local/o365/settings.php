@@ -17,6 +17,7 @@
 /**
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -50,6 +51,10 @@ if (!defined('LOCAL_O365_TAB_SETUP')) {
      * LOCAL_O365_TAB_SDS - School data sync
      */
     define('LOCAL_O365_TAB_SDS', 3);
+    /**
+     * LOCAL_O365_TAB_TEAMS - Teams tab.
+     */
+    define('LOCAL_O365_TAB_TEAMS', 5);
 }
 
 if ($hassiteconfig) {
@@ -61,6 +66,7 @@ if ($hassiteconfig) {
     $tabs->addtab(LOCAL_O365_TAB_OPTIONS, new lang_string('settings_header_syncsettings', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_ADVANCED, new lang_string('settings_header_advanced', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_SDS, new lang_string('settings_header_sds', 'local_o365'));
+    $tabs->addtab(LOCAL_O365_TAB_TEAMS, new lang_string('settings_header_teams', 'local_o365'));
     $settings->add($tabs);
 
     $tab = $tabs->get_setting();
@@ -212,7 +218,7 @@ if ($hassiteconfig) {
 
         $label = new lang_string('settings_usergroups', 'local_o365');
         $desc = new lang_string('settings_usergroups_details', 'local_o365');
-        $settings->add(new \local_o365\adminsetting\usergroups('local_o365/creategroups', $label, $desc, 'off'));
+        $settings->add(new \local_o365\adminsetting\usergroups('local_o365/createteams', $label, $desc, 'off'));
 
     }
 
@@ -361,5 +367,34 @@ if ($hassiteconfig) {
             $desc = new lang_string('settings_sds_noschools', 'local_o365');
             $settings->add(new admin_setting_heading('local_o365_sds_noschools', '', $desc));
         }
+    }
+
+    if ($tab == LOCAL_O365_TAB_TEAMS || !empty($install)) {
+        // bot_app_id
+        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
+            get_string('settings_bot_app_id', 'local_o365'),
+            get_string('settings_bot_app_id_desc', 'local_o365'),
+            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
+
+        // bot_app_password
+        $settings->add(new admin_setting_configpasswordunmask('local_o365/bot_app_password',
+            get_string('settings_bot_app_password', 'local_o365'),
+            get_string('settings_bot_app_password_desc', 'local_o365'),
+            ''));
+
+        // bot_webhook_endpoint
+        $settings->add(new admin_setting_configtext('local_o365/bot_webhook_endpoint',
+            get_string('settings_bot_webhook_endpoint', 'local_o365'),
+            get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
+            ''));
+
+        // manifest download link
+        $html = html_writer::start_tag('p');
+        $manifesturl = new moodle_url('/local/o365/export_manifest.php');
+        $html .= html_writer::link($manifesturl, get_string('settings_download_teams_tab_app_manifest', 'local_o365'));
+        $html .= html_writer::end_tag('p');
+
+        $settings->add(new admin_setting_heading('download_manifest_header',
+            get_string('settings_download_teams_tab_app_manifest', 'local_o365'), $html));
     }
 }

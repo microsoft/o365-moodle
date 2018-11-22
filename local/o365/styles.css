@@ -1,3 +1,42 @@
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeui.ttf) format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeuib.ttf) format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeuil.ttf) format('truetype');
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/segoeuisl.ttf) format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face { /* where FontName and fontname represents the name of the font you want to add */
+  font-family: 'Segoe UI';
+  src: url(font/seguisb.ttf) format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+body {
+  font-family: "Segoe UI","Helvetica Neue","Apple Color Emoji","Segoe UI Emoji",Helvetica,Arial,sans-serif;
+}
+div.felement select option {
+  font-family: "Segoe UI","Helvetica Neue","Apple Color Emoji","Segoe UI Emoji",Helvetica,Arial,sans-serif;
+}
+form .felement input {
+  font-family: "Segoe UI","Helvetica Neue","Apple Color Emoji","Segoe UI Emoji",Helvetica,Arial,sans-serif;
+}
 .local_o365_statusmessage.alert {
   margin-bottom: 0.25rem; }
 .local_o365_statusmessage img {
@@ -142,3 +181,121 @@ table.local_o365_matchqueue {
 /* Hide customize link when the setting is disabled. */
 #admin-sharepointcourseselect label.link-disabled a {
   display: none; }
+
+
+
+/* width */
+select::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Track */
+select::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 0px grey;
+    border-radius: 0px;
+}
+
+/* Handle */
+select::-webkit-scrollbar-thumb {
+    background: rgba(50,50,50,.3);
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+select::-webkit-scrollbar-thumb:hover {
+    background: rgba(100,100,100,.5);
+}
+
+option:hover {
+  background-color: #6264a7;
+  color: white;
+}
+select:focus option:checked {
+  background: #6264a7 linear-gradient(0deg, #6264a7 0%, #6264a7 100%);
+  color: white;
+}
+
+#id_tab_name {
+  background-color: #f0f2f4;
+  border: 0px;
+  padding: 8px;
+  padding-left: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+select#id_course {
+  overflow: auto;
+  width: 100%;
+  max-height: 270px;
+  overflow-x: hidden;
+  border-color: #f1f1f1;
+}
+select#id_course:focus {
+  outline-offset: 0px !important;
+  outline: none !important;
+}
+select#id_course option {
+  padding-top: 10px;
+  padding-left: 20px;
+  padding-bottom: 10px;
+  font-size: 15px;
+}
+#id_tab_name {
+  font-size: 15px;
+}
+.form-group .col-md-3{
+  padding-bottom: 6px;
+}
+label {
+  font-size: 13px;
+}
+select#id_course, #id_tab_name, body {
+  color: #484644;
+}
+div.manuallogin {
+  display: none;
+  margin: auto;
+  width: 300px;
+  height: 300px;
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+}
+button.manualloginbutton {
+  display: block;
+  width: 200px;
+  background: #6264A7;
+  border: 0.125rem solid;
+  border-color: transparent;
+  border-radius: 0.1875rem;
+  box-sizing: border-box;
+  color: #201F1F;
+  cursor: pointer;
+  font: inherit;
+  height: 2rem;
+  min-width: 6rem;
+  padding: 0.25rem;
+  white-space: nowrap;
+  -webkit-box-shadow: unset !important;
+  box-shadow: unset !important;
+  color: #FFFFFF;
+  margin: 5px;
+}
+button.manualloginbutton:not(:disabled):not(.disabled):active {
+  background: #A6A7DC;
+  border-color: transparent;
+  color: #201F1F;
+}
+button.manualloginbutton:hover, button.manualloginbutton.enabled {
+  background: #464775;
+  border-color: transparent;
+  color: #FFFFFF;
+}
+button.manualloginbutton:focus, button.manualloginbutton:focus:enabled {
+
+}
+.acpoption {
+  vertical-align: top;
+  margin-right: 10px;
+}

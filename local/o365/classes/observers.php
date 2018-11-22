@@ -505,6 +505,9 @@ class observers {
         }
         $courseid = $event->objectid;
 
+        // delete course group
+        \local_o365\feature\usergroups\utils::delete_course_group($courseid);
+
         $sharepoint = static::construct_sharepoint_api_with_system_user();
         if (!empty($sharepoint)) {
             $sharepoint->delete_course_site($courseid);
@@ -684,6 +687,8 @@ class observers {
                         if (in_array($roleid, array($roleteacher->id, $rolenoneditingteacher->id))) {
                             $apiclient = \local_o365\utils::get_api();
                             $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
+                            // add the user back to the group as member
+                            $apiclient->add_user_to_course_group($courseid, $userid);
                         }
                     }
                 }
@@ -754,6 +759,115 @@ class observers {
         $DB->delete_records('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
         $DB->delete_records('local_o365_connections', ['muserid' => $userid]);
         $DB->delete_records('local_o365_appassign', ['muserid' => $userid]);
+        return true;
+    }
+
+    /**
+     * Send proactive notifications to o365 users when a notification is sent to the Moodle user.
+     *
+     * @param \core\event\notification_sent $event
+     *
+     * @return bool
+     * @throws \dml_exception
+     */
+    public static function handle_notification_sent(\core\event\notification_sent $event) {
+        global $DB, $OUTPUT, $PAGE;
+
+        // check if we have the configuration to send proactive notifications
+        $aadtenant = get_config('local_o365', 'aadtenant');
+        $botappid = get_config('local_o365', 'bot_app_id');
+        $botappsecret = get_config('local_o365', 'bot_app_password');
+        $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
+        if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
+            // incomplete settings, exit.
+            mtrace('ERROR: handle_notification_sent - incomplete settings');
+            return true;
+        }
+
+        $notificationid = $event->objectid;
+        $notification = $DB->get_record('notifications', ['id' => $notificationid]);
+        if (!$notification) {
+            // notification cannot be found, exit.
+            mtrace('ERROR: handle_notification_sent - notification cannot be found');
+            return true;
+        }
+
+        $user = $DB->get_record('user', ['id' => $notification->useridto]);
+        if (!$user) {
+            // recipient user invalid, exit.
+            mtrace('ERROR: handle_notification_sent - recipient user invalid');
+            return true;
+        }
+
+        if ($user->auth != 'oidc') {
+            // recipient user is not office 365 user, exit.
+            mtrace('ERROR: handle_notification_sent - recipient user is not office 365 user');
+            return true;
+        }
+
+        // get user object record
+        $userrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
+        if (!$userrecord) {
+            // recipient user doesn't have an object ID, exit.
+            mtrace('ERROR: handle_notification_sent - recipient user doesn\'t have an object ID');
+            return true;
+        }
+
+        // get course object record
+        if (!array_key_exists('courseid', $event->other)) {
+            // course doesn't exist, exit.
+            mtrace('ERROR: handle_notification_sent - course doesn\'t exist');
+            return true;
+        }
+        $courseid = $event->other['courseid'];
+        if (!$courseid || $courseid == SITEID) {
+            // invalid course id, exit.
+            mtrace('ERROR: handle_notification_sent - invalid course id');
+            return true;
+        }
+        $course = $DB->get_record('course', ['id' => $courseid]);
+        if (!$course) {
+            // invalid course, exit.
+            mtrace('ERROR: handle_notification_sent - invalid course id');
+            return true;
+        }
+
+        // get course object record
+        $courserecord = $DB->get_record('local_o365_objects',
+            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
+        if (!$courserecord) {
+            // course record doesn't have an object ID, exit.
+            mtrace('ERROR: handle_notification_sent - course record doesn\'t have an object ID');
+            return true;
+        }else{
+            $courseobjectid = $courserecord->objectid;
+        }
+
+        // passed all tests, need to send notification
+        $botframework = new \local_o365\rest\botframework();
+        if (!$botframework->has_token()) {
+            // cannot get token, exit.
+            mtrace('ERROR: handle_notification_sent - cannot get token from bot framework');
+            return true;
+        }
+
+        //Check if we need to add activity details
+        $listItems = [];
+        if ((strpos($notification->component, 'mod_') !== FALSE) && !empty($notification->contexturl)) {
+            $PAGE->theme->force_svg_use(null);
+            $modname = str_replace('mod_', '', $notification->component);
+            $listItems[] = [
+                'title' => $notification->contexturlname,
+                'subtitle' => '',
+                'icon' => $OUTPUT->image_url('icon', $modname)->out(),
+                'action' => $notification->contexturl,
+                'actionType' => 'openUrl'
+            ];
+        }
+
+        // send notification
+        $botframework->send_notification($courseobjectid, $userrecord->objectid,
+            $notification->fullmessage, $listItems, $notificationendpoint);
         return true;
     }
 }
