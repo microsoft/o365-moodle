@@ -49,7 +49,7 @@ class help implements \local_o365\bot\intents\intentinterface {
                     $listitems[] = [
                             'title' => $text,
                             'subtitle' => null,
-                            'icon' => 'http://www.e-technology.com.au/wp-content/uploads/2018/05/moodle-logo-39b36ce704607472-512x512-300x300.png',
+                            'icon' => $CFG->wwwroot . '/local/o365/pix/moodle.png',
                             'action' => $action,
                             'actionType' => $actiontype
                     ];
