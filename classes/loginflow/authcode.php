@@ -90,6 +90,8 @@ class authcode extends \auth_oidc\loginflow\base {
      * @return mixed Determined by loginflow.
      */
     public function handleredirect() {
+        global $CFG, $SESSION;
+
         $state = $this->getoidcparam('state');
         $code = $this->getoidcparam('code');
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
@@ -105,7 +107,13 @@ class authcode extends \auth_oidc\loginflow\base {
             $this->handleauthresponse($requestparams);
         } else {
             if (isloggedin() && empty($justauth) && empty($promptaconsent)) {
-                redirect(new \moodle_url('/'));
+                if (isset($SESSION->wantsurl) and (strpos($SESSION->wantsurl, $CFG->wwwroot) === 0)) {
+                    $urltogo = $SESSION->wantsurl;
+                    unset($SESSION->wantsurl);
+                } else {
+                    $urltogo = new \moodle_url('/');
+                }
+                redirect($urltogo);
                 die();
             }
             // Initial login request.
