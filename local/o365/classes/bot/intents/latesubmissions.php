@@ -25,6 +25,8 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/mod/assign/locallib.php');
+
 class latesubmissions implements \local_o365\bot\intents\intentinterface {
     public function get_message($language, $entities = []) {
         global $USER, $DB, $PAGE;
@@ -79,7 +81,7 @@ class latesubmissions implements \local_o365\bot\intents\intentinterface {
                 $url = new \moodle_url('/mod/assign/view.php',
                         ['action' => 'grading', 'id' => $cm->id, 'tsort' => 'timesubmitted']);
                 $subtitledata = new \stdClass();
-                $subtitledata->coursename = $submission->coursename;
+                $subtitledata->course = $submission->coursename;
                 $subtitledata->assignment = $cm->name;
                 $subtitledata->submittedon = date('d/mY', $submission->timemodified);
                 $subtitledata->duedate = date('d/m/Y', $submission->duedate);
