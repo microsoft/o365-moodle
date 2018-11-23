@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 class assignmentsforgrading implements \local_o365\bot\intents\intentinterface {
-    public function get_message($language, $entities = []) {
+    public function get_message($language, $entities = null) {
         global $USER, $DB, $OUTPUT;
         $listitems = [];
         $warnings = [];

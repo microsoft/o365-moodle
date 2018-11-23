@@ -26,49 +26,51 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 class laststudentlogin implements \local_o365\bot\intents\intentinterface {
-    public function get_message($language, $entities = []) {
+    public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
         $warnings = [];
         $listtitle = '';
-        $message = '';
+        $users = [];
 
-        $name = (empty($entities['personName']) ? '' : $entities['personName'][0]);
+        $name = (empty($entities->personName) ? false : $entities->personName[0]);
 
-        $lastloginsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess FROM {user} u
+        if ($name) {
+            $lastloginsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess FROM {user} u
                     WHERE CONCAT(u.firstname, ' ', u.lastname) LIKE '%{$name}%' AND u.suspended = 0 AND u.deleted = 0";
 
-        if (!is_siteadmin()) {
-            $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-            $teachercourses = [];
-            foreach ($courses as $course) {
-                $context = \context_course::instance($course, IGNORE_MISSING);
-                if (!has_capability('moodle/grade:edit', $context)) {
-                    continue;
+            if (!is_siteadmin()) {
+                $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
+                $teachercourses = [];
+                foreach ($courses as $course) {
+                    $context = \context_course::instance($course, IGNORE_MISSING);
+                    if (!has_capability('moodle/grade:edit', $context)) {
+                        continue;
+                    }
+                    $teachercourses[] = $course;
                 }
-                $teachercourses[] = $course;
-            }
-            $courses = $teachercourses;
-            if (!empty($courses)) {
-                $userssql = 'SELECT u.id FROM {user} u ';
-                $coursessqlparam = join(',', $courses);
-                $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
+                $courses = $teachercourses;
+                if (!empty($courses)) {
+                    $userssql = 'SELECT u.id FROM {user} u ';
+                    $coursessqlparam = join(',', $courses);
+                    $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
                                JOIN {role} r ON ra.roleid = r.id AND r.shortname = 'student'
                                JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = 50
                                AND c.instanceid IN ($coursessqlparam)
                                ";
-                $userssql .= ' WHERE u.deleted = 0 AND u.suspended = 0';
+                    $userssql .= ' WHERE u.deleted = 0 AND u.suspended = 0';
 
-                $userslist = $DB->get_fieldset_sql($userssql);
-                $userssqlparam = join(',', $userslist);
-                $lastloginsql .= ' AND u.id IN (' . $userssqlparam . ')';
-            } else {
-                $lastloginsql .= ' AND u.id IN (' . $USER->id . ')';
+                    $userslist = $DB->get_fieldset_sql($userssql);
+                    $userssqlparam = join(',', $userslist);
+                    $lastloginsql .= ' AND u.id IN (' . $userssqlparam . ')';
+                } else {
+                    $lastloginsql .= ' AND u.id IN (' . $USER->id . ')';
+                }
             }
-        }
-        $lastloginsql .= ' ORDER BY u.lastaccess DESC';
+            $lastloginsql .= ' ORDER BY u.lastaccess DESC';
 
-        $users = $DB->get_records_sql($lastloginsql);
+            $users = $DB->get_records_sql($lastloginsql);
+        }
 
         if (empty($users)) {
             $message = get_string_manager()->get_string('no_user_with_name_found', 'local_o365', null, $language);

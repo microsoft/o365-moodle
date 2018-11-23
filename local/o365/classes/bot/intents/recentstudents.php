@@ -26,7 +26,7 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 class recentstudents implements \local_o365\bot\intents\intentinterface {
-    public function get_message($language, $entities = []) {
+    public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
         $warnings = [];

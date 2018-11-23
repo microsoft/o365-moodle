@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 class latesubmissions implements \local_o365\bot\intents\intentinterface {
-    public function get_message($language, $entities = []) {
+    public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
         $warnings = [];

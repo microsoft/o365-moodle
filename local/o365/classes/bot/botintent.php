@@ -48,7 +48,7 @@ class botintent {
     public function __construct($params) {
         global $USER;
         $this->userlanguage = $USER->lang;
-        $this->entities = $params['entities'];
+        $this->entities = json_decode($params['entities']);
         $intent = $params['intent'];
         if ($intentclassname = $this->availableintents[$intent]) {
             $this->intetclass = "\\local_o365\\bot\\intents\\$intentclassname";

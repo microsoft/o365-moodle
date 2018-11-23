@@ -35,5 +35,5 @@ interface intentinterface {
      *
      * @return string A name for the health check.
      */
-    public function get_message($language, $entities = []);
+    public function get_message($language, $entities = null);
 }
