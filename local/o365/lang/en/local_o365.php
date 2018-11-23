@@ -657,7 +657,7 @@ $string['no_late_submissions_found'] = 'No late submissions found';
 $string['no_users_found'] = 'No users found';
 $string['no_user_with_name_found'] = 'No user with such name found';
 $string['participants_submitted_needs_grading'] = 'Participants - {$a->participants}  &nbsp; |  &nbsp; Submitted - {$a->submitted}  &nbsp; |  &nbsp;
-                        Needs grading - {$a->needsgrading}`';
+                        Needs grading - {$a->needsgrading}';
 $string['pending_submissions_due_date'] = 'Pending submissions - {$a->incomplete} / {$a->total} &nbsp; |  &nbsp; Due - {$a->duedate}';
 $string['sorry_do_not_understand'] = 'Sorry, I do not understand';
 $string['question_student_assignments_compared'] = "How did I do in my latest assignments compared to the class?";

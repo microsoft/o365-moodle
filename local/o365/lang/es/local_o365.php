@@ -201,7 +201,7 @@ $string['no_late_submissions_found'] = 'No se encontraron envíos tardíos';
 $string['no_users_found'] = 'No se encontraron usuarios';
 $string['no_user_with_name_found'] = 'No se encontró ningún usuario con ese nombre';
 $string['participants_submitted_needs_grading'] = 'Usuarios - {$a->participants}  &nbsp; |  &nbsp; Entregado - {$a->submitted}  &nbsp; |  &nbsp;
-                        Necesita calificación - {$a->needsgrading}`';
+                        Necesita calificación - {$a->needsgrading}';
 $string['pending_submissions_due_date'] = ' Entrega Pendiente - {$a->incomplete} / {$a->total} &nbsp; |  &nbsp; Fecha entrega pasada - {$a->duedate}';
 $string['sorry_do_not_understand'] = 'Lo siento, no entiendo';
 $string['question_student_assignments_compared'] = "¿Cómo lo hice en mis últimas tareas en comparación con la clase?";
