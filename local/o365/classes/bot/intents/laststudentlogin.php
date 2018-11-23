@@ -86,7 +86,7 @@ class laststudentlogin implements \local_o365\bot\intents\intentinterface {
                 $userpicture = new \user_picture($user);
                 $userpicture->size = 1;
                 $pictureurl = $userpicture->get_url($PAGE)->out(false);
-                $subtitledata = date('d/m/Y H:i', $user->lastaccess);
+                $subtitledata = (empty($user->lastaccess) ? get_string('never', 'local_o365') : date('d/m/Y H:i', $user->lastaccess));
                 $listitems[] = [
                         'title' => $user->fullname,
                         'subtitle' => get_string_manager()->get_string('last_login_date', 'local_o365', $subtitledata, $language),
