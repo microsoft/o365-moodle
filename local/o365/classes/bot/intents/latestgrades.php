@@ -57,7 +57,7 @@ class latestgrades implements \local_o365\bot\intents\intentinterface {
             $message = get_string_manager()->get_string('list_of_recent_grades', 'local_o365', null, $language);
             foreach ($grades as $grade) {
                 $cm = get_coursemodule_from_instance($grade->itemmodule, $grade->iteminstance);
-                $url = new \moodle_url("/mod/{$grade->itemmodule}/view.php", ['id' => $grade->iteminstance]);
+                $url = new \moodle_url("/mod/{$grade->itemmodule}/view.php", ['id' => $cm->id]);
                 $subtitledata = $grade->finalgrade;
                 $grade = array(
                         'title' => $cm->name,
