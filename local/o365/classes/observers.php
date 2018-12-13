@@ -867,7 +867,7 @@ class observers {
 
         // send notification
         $botframework->send_notification($courseobjectid, $userrecord->objectid,
-            $notification->fullmessage, $listItems, $notificationendpoint);
+            $notification->smallmessage, $listItems, $notificationendpoint);
         return true;
     }
 }
