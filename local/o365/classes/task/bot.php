@@ -76,13 +76,14 @@ class bot extends \core\task\scheduled_task {
         }
 
         $this->notificationendpoint = $notificationendpoint;
-        $this->assignment_past_due_date();
+        //$this->assignment_past_due_date(); - will be used for custom proactive notifications
 
         mtrace('Finishing bot task.');
     }
 
     /**
      * Notify teachers just after assignment due date.
+     * TODO: Cards data needs to be reviewed
      *
      * @throws \coding_exception
      * @throws \dml_exception
