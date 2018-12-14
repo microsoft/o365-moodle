@@ -864,10 +864,10 @@ class observers {
                 'actionType' => 'openUrl'
             ];
         }
-
+        $message = (empty($notification->smallmessage) ? $notification->fullmessage : $notification->smallmessage);
         // send notification
         $botframework->send_notification($courseobjectid, $userrecord->objectid,
-            $notification->smallmessage, $listItems, $notificationendpoint);
+            $message, $listItems, $notificationendpoint);
         return true;
     }
 }
