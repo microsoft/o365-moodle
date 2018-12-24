@@ -61,14 +61,14 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
             $userssql = 'SELECT u.id, u.username, u.firstname, u.lastname, u.lastaccess, u.picture FROM {user} u ';
             $sqlparams = [];
             if (!empty($courses)) {
-                list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses);
+                list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
                 $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
                     JOIN {role} r ON ra.roleid = r.id AND r.shortname = :studentstr
                     JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = :contextcourse AND c.instanceid $coursessql
                 ";
                 $sqlparams['studentstr'] = 'student';
                 $sqlparams['contextcourse'] = CONTEXT_COURSE;
-                $sqlparams[] = $coursesparams;
+                $sqlparams = array_merge($sqlparams, $coursesparams);
             }
             $userssql .= ' WHERE u.lastaccess < :monthstart AND u.deleted = 0 AND u.suspended = 0';
             $sqlparams['monthstart'] = $monthstart;

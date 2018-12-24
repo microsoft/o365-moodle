@@ -66,7 +66,7 @@ class botintent {
             $this->entities = (empty($params['entities']) ? null : json_decode($params['entities']));
             $intent = (empty($params['intent']) ? null : $params['intent']);
             if (!is_null($intent) && !empty($this->availableintents[$intent])) {
-                $this->intentclass = "\\local_o365\\bot\\intents\\$this->availableintents[$intent]";
+                $this->intentclass = "\\local_o365\\bot\\intents\\{$this->availableintents[$intent]}";
                 if(!class_exists($this->intentclass)){
                     $this->intentclass = null;
                 }
@@ -79,7 +79,7 @@ class botintent {
      * @return array - The answer message with all required details for bot
      */
     public function get_message() {
-        if ($this->intetclass) {
+        if (!is_null($this->intentclass)) {
             $message = $this->intentclass::get_message($this->userlanguage, $this->entities);
             $message['language'] = $this->userlanguage;
             return $message;
