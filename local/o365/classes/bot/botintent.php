@@ -25,9 +25,18 @@ namespace local_o365\bot;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class botintent - general class for accessing specific intent based on params
+ * @package local_o365\bot
+ *
+ * @var string $intentclass - Specific intent class name
+ * @var string $userlanguage - Current user language set in Moodle
+ * @var mixed $entities - Intent entities if intent needs them (optional)
+ * @var array $availableintents - Implemented intents name => class name list
+ */
 class botintent {
 
-    private $intetclass;
+    private $intentclass;
     private $userlanguage;
     private $entities;
     private $availableintents = [
@@ -45,21 +54,33 @@ class botintent {
             'get-help' => 'help'
     ];
 
+    /**
+     * Botintent constructor to set object properties
+     * @param array $params - webservice call params containing intent name and its entities (optional)
+     */
     public function __construct($params) {
         global $USER;
+        $this->intentclass = null;
         $this->userlanguage = $USER->lang;
-        $this->entities = json_decode($params['entities']);
-        $intent = $params['intent'];
-        if ($intentclassname = $this->availableintents[$intent]) {
-            $this->intetclass = "\\local_o365\\bot\\intents\\$intentclassname";
-        } else {
-            $this->intetobject = null;
+        if(!empty($params) && is_array($params)){
+            $this->entities = (empty($params['entities']) ? null : json_decode($params['entities']));
+            $intent = (empty($params['intent']) ? null : $params['intent']);
+            if (!is_null($intent) && !empty($this->availableintents[$intent])) {
+                $this->intentclass = "\\local_o365\\bot\\intents\\$this->availableintents[$intent]";
+                if(!class_exists($this->intentclass)){
+                    $this->intentclass = null;
+                }
+            }
         }
     }
 
+    /**
+     * General get_message function to access specific intent get_message function
+     * @return array - The answer message with all required details for bot
+     */
     public function get_message() {
         if ($this->intetclass) {
-            $message = $this->intetclass::get_message($this->userlanguage, $this->entities);
+            $message = $this->intentclass::get_message($this->userlanguage, $this->entities);
             $message['language'] = $this->userlanguage;
             return $message;
         } else {

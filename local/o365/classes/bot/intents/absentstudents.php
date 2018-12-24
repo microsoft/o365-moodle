@@ -25,7 +25,19 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/accesslib.php');
+
+/**
+ * Class absentstudents implements bot intent interface
+ * @package local_o365\bot\intents
+ */
 class absentstudents implements \local_o365\bot\intents\intentinterface {
+    /**
+     * Gets absent students message for bot with all required params
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities (optional and not used at the moment)
+     * @return array|string
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
@@ -49,11 +61,14 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
             $userssql = 'SELECT u.id, u.username, u.firstname, u.lastname, u.lastaccess, u.picture FROM {user} u ';
             $sqlparams = [];
             if (!empty($courses)) {
-                $coursessqlparam = join(',', $courses);
+                list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses);
                 $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
-                    JOIN {role} r ON ra.roleid = r.id AND r.shortname = 'student'
-                    JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = 50 AND c.instanceid IN ($coursessqlparam)
+                    JOIN {role} r ON ra.roleid = r.id AND r.shortname = :studentstr
+                    JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = :contextcourse AND c.instanceid $coursessql
                 ";
+                $sqlparams['studentstr'] = 'student';
+                $sqlparams['contextcourse'] = CONTEXT_COURSE;
+                $sqlparams[] = $coursesparams;
             }
             $userssql .= ' WHERE u.lastaccess < :monthstart AND u.deleted = 0 AND u.suspended = 0';
             $sqlparams['monthstart'] = $monthstart;
@@ -61,7 +76,6 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
             $userssql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
             $userslist = $DB->get_records_sql($userssql, $sqlparams);
         }
-
         if (empty($userslist)) {
             $message = get_string_manager()->get_string('no_absent_users_found', 'local_o365', null, $language);
             $warnings[] = array(
@@ -86,7 +100,6 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
                 );
             }
         }
-
         return array(
                 'message' => $message,
                 'listTitle' => '',
