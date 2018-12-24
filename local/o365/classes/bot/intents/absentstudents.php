@@ -36,7 +36,7 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
      * Gets absent students message for bot with all required params
      * @param $language - Message language
      * @param mixed $entities - Intent entities (optional and not used at the moment)
-     * @return array|string
+     * @return array|string - Bot message structure with data
      */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;

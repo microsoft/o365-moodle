@@ -25,7 +25,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class assignmentcomparison implements bot intent interface
+ * @package local_o365\bot\intents
+ */
 class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message with details about user assignments with grades compared to class average
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities (optional and not used at the moment)
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $OUTPUT;
         $listitems = [];
@@ -33,14 +44,15 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $sql = "SELECT gi.iteminstance, g.itemid, g.finalgrade, g.timemodified FROM {grade_grades} g
-                JOIN {grade_items} gi ON gi.id = g.itemid
-                WHERE g.userid = ? AND gi.itemmodule LIKE 'assign' AND g.finalgrade IS NOT NULL
-                ORDER BY g.timemodified DESC";
+        $sql = "SELECT gi.iteminstance, g.itemid, g.finalgrade, g.timemodified 
+                  FROM {grade_grades} g
+                  JOIN {grade_items} gi ON gi.id = g.itemid
+                 WHERE g.userid = :userid AND gi.itemmodule LIKE :assignstr AND g.finalgrade IS NOT NULL
+              ORDER BY g.timemodified DESC";
 
         $sql .= " LIMIT " . self::DEFAULT_LIMIT_NUMBER;
 
-        $sqlparams = [$USER->id];
+        $sqlparams = ['assignstr' => 'assign', 'userid' => $USER->id];
         $assignments = $DB->get_records_sql($sql, $sqlparams);
 
         if (empty($assignments)) {
@@ -62,16 +74,16 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
                 $participants = join(',', array_keys($participants));
                 $url = new \moodle_url("/mod/assign/view.php", ['id' => $cm->id]);
                 $sql = "SELECT g.itemid, COUNT(*) AS amount, SUM(g.finalgrade) AS sum
-                      FROM {grade_items} gi
-                      JOIN {grade_grades} g ON g.itemid = gi.id
-                      JOIN {user} u ON u.id = g.userid
-                     WHERE gi.itemmodule LIKE 'assign'
-                       AND gi.iteminstance = :assignmentid
-                       AND u.deleted = 0
-                       AND g.finalgrade IS NOT NULL
-                       AND u.id IN ($participants)
-                     GROUP BY g.itemid";
-                $sqlparams = ['assignmentid' => $assign->iteminstance];
+                          FROM {grade_items} gi
+                          JOIN {grade_grades} g ON g.itemid = gi.id
+                          JOIN {user} u ON u.id = g.userid
+                         WHERE gi.itemmodule LIKE :asignstr
+                               AND gi.iteminstance = :assignmentid
+                               AND u.deleted = 0
+                               AND g.finalgrade IS NOT NULL
+                               AND u.id IN ($participants)
+                      GROUP BY g.itemid";
+                $sqlparams = ['assignstr' => 'assign', 'assignmentid' => $assign->iteminstance];
                 $average = $DB->get_record_sql($sql, $sqlparams);
                 $subtitledata = new \stdClass();
                 $subtitledata->usergrade = $assign->finalgrade;
