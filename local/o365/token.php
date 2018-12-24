@@ -35,6 +35,7 @@ $serviceshortname = required_param('service', PARAM_TEXT);
 
 $headers = apache_request_headers();
 if (!isset($headers['Authorization'])) {
+    http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
 $headr = array();
@@ -51,6 +52,7 @@ $data = json_decode(curl_exec($curl));
 curl_close($curl);
 
 if ($data->mail !== $username) {
+    http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
 
@@ -60,6 +62,7 @@ header('Access-Control-Allow-Origin: *');
 echo $OUTPUT->header();
 
 if (!$CFG->enablewebservices) {
+    http_response_code(503);
     throw new moodle_exception('enablewsdescription', 'webservice');
 }
 
@@ -67,6 +70,7 @@ $systemcontext = context_system::instance();
 
 $user = $DB->get_record('user', ['username' => $username, 'auth' => 'oidc']);
 if (empty($user)) {
+    http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
 
@@ -76,13 +80,16 @@ if (!empty($user)) {
     // Cannot authenticate unless maintenance access is granted.
     $hasmaintenanceaccess = has_capability('moodle/site:maintenanceaccess', $systemcontext, $user);
     if (!empty($CFG->maintenance_enabled) and !$hasmaintenanceaccess) {
+        http_response_code(503);
         throw new moodle_exception('sitemaintenance', 'admin');
     }
 
     if (isguestuser($user)) {
+        http_response_code(401);
         throw new moodle_exception('noguest');
     }
     if (empty($user->confirmed)) {
+        http_response_code(401);
         throw new moodle_exception('usernotconfirmed', 'moodle', '', $user->username);
     }
     // Check credential expiry.
@@ -90,6 +97,7 @@ if (!empty($user)) {
     if (!empty($userauth->config->expiration) and $userauth->config->expiration == 1) {
         $days2expire = $userauth->password_expire($user->username);
         if (intval($days2expire) < 0 ) {
+            http_response_code(401);
             throw new moodle_exception('passwordisexpired', 'webservice');
         }
     }
@@ -103,7 +111,7 @@ if (!empty($user)) {
     // Check if the service exists and is enabled.
     $service = $DB->get_record('external_services', array('shortname' => $serviceshortname, 'enabled' => 1));
     if (empty($service)) {
-        // Will throw exception if no token found.
+        http_response_code(503);
         throw new moodle_exception('servicenotavailable', 'webservice');
     }
 
