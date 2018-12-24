@@ -77,7 +77,7 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
                           FROM {grade_items} gi
                           JOIN {grade_grades} g ON g.itemid = gi.id
                           JOIN {user} u ON u.id = g.userid
-                         WHERE gi.itemmodule LIKE :asignstr
+                         WHERE gi.itemmodule LIKE :assignstr
                                AND gi.iteminstance = :assignmentid
                                AND u.deleted = 0
                                AND g.finalgrade IS NOT NULL
