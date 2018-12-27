@@ -142,7 +142,7 @@ function local_o365_create_manifest_file() {
     }
 
     // task 2 : prepare manifest folder
-    $pathtomanifestfolder = $CFG->dataroot . '/temp/manifest';
+    $pathtomanifestfolder = $CFG->dataroot . '/temp/ms_teams_manifest';
     if (file_exists($pathtomanifestfolder)) {
         local_o365_rmdir($pathtomanifestfolder);
     }
@@ -154,24 +154,24 @@ function local_o365_create_manifest_file() {
         'manifestVersion' => '1.3',
         'version' => '1.2.1',
         'id' => $appid,
-        'packageName' => 'ie.enovation.microsoft.o365', //todo update package name
+        'packageName' => 'ie.enovation.microsoft.o365',
         'developer' => array(
-            'name' => 'Enovation Solutions', // todo update developer name
-            'websiteUrl' => 'https://enovation.ie', // todo update developer website URL
-            'privacyUrl' => 'https://moodle.org/admin/tool/policy/view.php?policyid=1',
-            'termsOfUseUrl' => 'https://moodle.org', // todo update terms of use URL
+            'name' => 'Enovation Solutions',
+            'websiteUrl' => 'https://enovation.ie',
+            'privacyUrl' => 'https://enovation.ie/moodleteamsapp/privacy.html',
+            'termsOfUseUrl' => 'https://enovation.ie/moodleteamsapp/termsofuse.html',
         ),
         'icons' => array(
             'color' => 'color.png',
             'outline' => 'outline.png',
         ),
         'name' => array(
-            'short' => 'Moodle', // todo update short name
-            'full' => 'Moodle integration with Microsoft Teams', // todo update full name
+            'short' => 'Moodle',
+            'full' => 'Moodle integration with Microsoft Teams',
         ),
         'description' => array(
-            'short' => 'Bot and tab for Moodle in Teams.', // todo update short description
-            'full' => 'This plugin contains a bot that allows users to interact with Moodle from Teams, and a tab to show course page in Teams.', // todo update full description
+            'short' => 'Access your Moodle courses and ask questions to your Moodle Assistant in Teams.',
+            'full' => 'The Moodle app for Microsoft Teams allows you to easily access and collaborate around your Moodle courses from within your teams through tabs. You can also get regular notifications from Moodle and ask questions about your courses, assignments, grades and students using the Moodle Assistant bot.',
         ),
         'accentColor' => '#FF7A00',
         'bots' => array(
@@ -205,7 +205,7 @@ function local_o365_create_manifest_file() {
         ),
         'configurableTabs' => array(
             array(
-                'configurationUrl' => $CFG->wwwroot . '/local/o365/tab_configuration.php',
+                'configurationUrl' => $CFG->wwwroot . '/local/o365/teams_tab_configuration.php',
                 'canUpdateConfiguration' => false,
                 'scopes' => array(
                     'team',

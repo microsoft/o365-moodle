@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page allows a Microsoft Teams Tab to be configured.
+ * This page displays a course page in a Microsoft Teams tab.
  *
  * @package local_o365
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -25,11 +25,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-$url = new moodle_url('/local/o365/tab_configuration.php');
-
-$PAGE->set_context(context_system::instance());
-
-// Force a theme without navigation and block.
+// Force theme.
 if (get_config('theme_boost_o365teams', 'version')) {
     $SESSION->theme = 'boost_o365teams';
 }
@@ -39,28 +35,16 @@ echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTea
 echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anonymous\"></script>";
 
-$redirecturl = new moodle_url('/local/o365/tab_redirect.php');
+$id = required_param('id', PARAM_INT);
+
+$USER->editing = false; // Turn off editing if the page is opened in iframe.
+
+$redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
+$coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
 $ssostarturl = new moodle_url('/local/o365/sso_start.php');
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
-
-$url->params(array('bypassauth' => 1, 'sesskey' => sesskey()));
-$SESSION->wantsurl = $url;
-
-if ($USER->id == 0) {
-    $bypassauth = false;
-} else {
-    $sesskey = optional_param('sesskey', null, PARAM_RAW);
-    $bypassauth = optional_param('bypassauth', false, PARAM_BOOL);
-    if ($sesskey) {
-        if (!confirm_sesskey($sesskey)) {
-            $bypassauth = false;
-        }
-    } else {
-        $bypassauth = false;
-    }
-}
 
 // Output login pages.
 echo html_writer::start_div('manuallogin');
@@ -71,6 +55,12 @@ echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
 echo html_writer::tag('button', get_string('other_login', 'local_o365'),
     array('onclick' => 'otherLogin()', 'class' => 'manualloginbutton'));
 echo html_writer::end_div();
+
+$SESSION->wantsurl = $coursepageurl;
+
+if ($USER->id != 0) {
+    redirect($coursepageurl);
+}
 
 $js = '
 microsoftTeams.initialize();
@@ -89,8 +79,13 @@ let config = {
 };
 
 let upn = undefined;
+microsoftTeams.getContext(function (context) {
+    theme = context.theme;
+    setPageTheme(theme);
 
-window.onload = setTitles;
+    upn = context.upn;
+    loadData(upn);
+});
 
 // Loads data for the given user
 function loadData(upn) {
@@ -122,8 +117,7 @@ function loadData(upn) {
             if (err) {
                 console.log("Renewal failed: " + err);
 
-                // Failed to get the token silently; redirect to manual login page
-                $("#courselist").css("display", "none");
+                // Failed to get the token silently; need to show the login button
                 $(".manuallogin").css("display", "block");
             } else {
                 // login using the token
@@ -152,8 +146,8 @@ function login() {
                 sleep(20);
             } else {
                 console.error("Error getting cached id token. This should never happen.");
-                // At this point we have to get the user involved, so show the login button
-                window.location.href = "' . $oidcloginurl->out() . '";
+                // At this point sso login does not work. redirect to normal Moodle login page.
+                window.location.href = "' . $externalloginurl->out() . '";
             };
         },
         failureCallback: function (reason) {
@@ -161,52 +155,17 @@ function login() {
             if (reason === "CancelledByUser" || reason === "FailedToOpenWindow") {
                 console.log("Login was blocked by popup blocker or canceled by user.");
             }
-            // At this point we have to get the user involved, so show the login button
+            // At this point sso login does not work. redirect to normal Moodle login page.
             window.location.href = "' . $externalloginurl->out() . '";
         }
     });
 }
 
-function onCourseChange() {
-    var course = document.getElementsByName("course[]")[0];
-    var courseid = course.value;
-    course.removeAttribute("multiple");
-
-    var options = course.options;
-    for (var i = 0; i < options.length; i++) {
-        if (options[i].value != courseid) {
-            options[i].selected = false;
-        }
-    }
-
-    var tabname =  document.getElementsByName("tab_name")[0];
-    var tabnamevalue = tabname.value;
-
-    microsoftTeams.settings.setSettings({
-        entityId: "course_" + courseid,
-        contentUrl: "' . $CFG->wwwroot . '/local/o365/tab.php?id=' . '" + courseid,
-        websiteUrl: "' . $CFG->wwwroot . '/course/view.php?id=' . '" + courseid,
-        suggestedTabName: tabnamevalue,
-    });
-    microsoftTeams.settings.setValidityState(true);
+function otherLogin() {
+    window.location.href = "' . $externalloginurl->out() . '";
 }
 
-function onTabNameChange() {
-    var course = document.getElementsByName("course[]")[0];
-    var courseid = course.value;
-
-    var tabname =  document.getElementsByName("tab_name")[0];
-    var tabnamevalue = tabname.value;
-
-    microsoftTeams.settings.setSettings({
-        entityId: "course_" + courseid,
-        contentUrl: "' . $CFG->wwwroot . '/local/o365/tab.php?id=' . '" + courseid,
-        websiteUrl: "' . $CFG->wwwroot . '/course/view.php?id=' . '" + courseid,
-        suggestedTabName: tabnamevalue,
-    });
-}
-
-function inIframe() {
+function inIframe () {
     try {
         return window.self !== window.top;
     } catch (e) {
@@ -214,31 +173,13 @@ function inIframe() {
     }
 }
 
-function setTitles() {
-   var text;
-   var x = document.getElementById("id_course").options.length;
-   for (i = 0; i < x; i++ ) {
-      text = document.getElementById("id_course").options[i].text;
-      document.getElementById("id_course").options[i].title=text;
-   }
-}
-
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function setPageTheme(theme) {
+    $("body").addClass(theme);
+}
 ';
 
-if (!$bypassauth) {
-    $js .= '
-microsoftTeams.getContext(function (context) {
-    upn = context.upn;
-    loadData(upn);
-});
-    ';
-}
-
 echo html_writer::script($js);
-
-$form = new \local_o365\form\tabconfiguration(null, null, 'post', '', array('id' => 'courselist'));
-$form->display();

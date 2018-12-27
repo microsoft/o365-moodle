@@ -25,6 +25,7 @@ namespace local_o365\form;
 
 defined('MOODLE_INTERNAL') || die;
 
+global $CFG;
 require_once($CFG->dirroot . '/lib/formslib.php');
 
 /**
@@ -34,7 +35,7 @@ require_once($CFG->dirroot . '/lib/formslib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
-class tabconfiguration extends \moodleform {
+class teamstabconfiguration extends \moodleform {
 
     /**
      * Definition of the form.
