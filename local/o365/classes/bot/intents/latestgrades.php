@@ -25,7 +25,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class latestgrades implements bot intent interface for student-latest-grades intent
+ * @package local_o365\bot\intents
+ */
 class latestgrades implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message for student with their latest grades
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities. Gives student name.
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $OUTPUT;
         $listitems = [];
@@ -37,13 +48,14 @@ class latestgrades implements \local_o365\bot\intents\intentinterface {
                 'assign',
                 'quiz'
         ];
-        $activities = join("','", $activities);
-        $sql = "SELECT g.id, gi.itemmodule, gi.iteminstance, g.finalgrade, g.timemodified FROM {grade_grades} g
-                JOIN {grade_items} gi ON gi.id = g.itemid
-                WHERE g.userid = ? AND gi.itemmodule IN ('$activities') AND g.finalgrade IS NOT NULL
-                ORDER BY g.timemodified DESC";
+        list($activitiessql, $activitiesparams) = $DB->get_in_or_equal($activities, SQL_PARAMS_NAMED);
+        $sql = "SELECT g.id, gi.itemmodule, gi.iteminstance, g.finalgrade, g.timemodified
+                  FROM {grade_grades} g
+                  JOIN {grade_items} gi ON gi.id = g.itemid
+                 WHERE g.userid = :userid AND gi.itemmodule $activitiessql AND g.finalgrade IS NOT NULL
+              ORDER BY g.timemodified DESC";
         $sql .= " LIMIT " . self::DEFAULT_LIMIT_NUMBER;
-        $sqlparams = [$USER->id];
+        $sqlparams = array_merge(['userid' => $USER->id], $activitiesparams);
         $grades = $DB->get_records_sql($sql, $sqlparams);
         if (empty($grades)) {
             $message = get_string_manager()->get_string('no_grades_found', 'local_o365', null, $language);
@@ -69,7 +81,6 @@ class latestgrades implements \local_o365\bot\intents\intentinterface {
                 $listitems[] = $grade;
             }
         }
-
         return array(
                 'message' => $message,
                 'listTitle' => $listtitle,

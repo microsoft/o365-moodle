@@ -47,9 +47,10 @@ class incompleteassignments implements \local_o365\bot\intents\intentinterface {
         $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
         if (!empty($courses)) {
             list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
-            $sql = "SELECT id, duedate FROM {assign}
-                    WHERE course $coursessql AND duedate > :timenow
-                    ORDER BY duedate ASC";
+            $sql = "SELECT id, duedate
+                      FROM {assign}
+                     WHERE course $coursessql AND duedate > :timenow
+                  ORDER BY duedate ASC";
             $coursesparams['timenow'] = time();
             $assignments = $DB->get_records_sql($sql, $coursesparams);
         } else {
@@ -76,8 +77,10 @@ class incompleteassignments implements \local_o365\bot\intents\intentinterface {
                 $enrolledteachers = array_keys($enrolledteachers);
                 $enrolledusers = array_diff($enrolledusers, $enrolledteachers);
                 $total = count($enrolledusers);
-                $completedusers = $DB->get_fieldset_sql('SELECT DISTINCT(userid) FROM {course_modules_completion}
-                                        WHERE coursemoduleid = :cmid AND completionstate > 0', array('cmid' => $cm->id));
+                $completedusers = $DB->get_fieldset_sql('
+                                        SELECT DISTINCT(userid)
+                                          FROM {course_modules_completion}
+                                         WHERE coursemoduleid = :cmid AND completionstate > 0', array('cmid' => $cm->id));
                 $completedusers = array_diff($completedusers, $enrolledteachers);
                 $completedusers = count($completedusers);
                 $incomplete = $total - $completedusers;

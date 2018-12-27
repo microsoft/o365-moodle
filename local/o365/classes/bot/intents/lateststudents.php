@@ -25,7 +25,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class lateststudents implements bot intent interface for teacher-latest-students intent
+ * @package local_o365\bot\intents
+ */
 class lateststudents implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message for teachers with the list of students who logged in longest time ago
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities. Gives student name.
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
@@ -33,41 +44,27 @@ class lateststudents implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $lastloggedsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess FROM {user} u
-                    WHERE u.suspended = 0 AND u.deleted = 0 AND u.lastaccess > 0";
-
+        $lastloggedsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess
+                            FROM {user} u
+                           WHERE u.suspended = 0 AND u.deleted = 0 AND u.lastaccess > 0";
+        $lastloggedparams = [];
         if (!is_siteadmin()) {
-            $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-            $teachercourses = [];
-            foreach ($courses as $course) {
-                $context = \context_course::instance($course, IGNORE_MISSING);
-                if (!has_capability('moodle/grade:edit', $context)) {
-                    continue;
-                }
-                $teachercourses[] = $course;
-            }
-            $courses = $teachercourses;
+            $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
             if (!empty($courses)) {
-                $userssql = 'SELECT u.id FROM {user} u ';
-                $coursessqlparam = join(',', $courses);
-                $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
-                               JOIN {role} r ON ra.roleid = r.id AND r.shortname = 'student'
-                               JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = 50
-                               AND c.instanceid IN ($coursessqlparam)
-                               ";
-                $userssql .= ' WHERE u.deleted = 0 AND u.suspended = 0';
-
-                $userslist = $DB->get_fieldset_sql($userssql);
-                $userssqlparam = join(',', $userslist);
-                $lastloggedsql .= ' AND u.id IN (' . $userssqlparam . ')';
+                list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,'u.id');
+                $userslist = $DB->get_fieldset_sql($userssql, $userssqlparams);
+                list($userslastlogedsql, $userslastloggedparams) = $DB->get_in_or_equal($userslist, SQL_PARAMS_NAMED);
+                $lastloggedsql .= " AND u.id IN $userslastlogedsql";
+                $lastloggedparams = array_merge($lastloggedparams, $userslastloggedparams);
             } else {
-                $lastloggedsql .= ' AND u.id IN (' . $USER->id . ')';
+                $lastloggedsql .= ' AND u.id = :userid ';
+                $lastloggedparams['userid'] = $USER->id;
             }
         }
         $lastloggedsql .= ' ORDER BY u.lastaccess ASC';
         $lastloggedsql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
 
-        $users = $DB->get_records_sql($lastloggedsql);
+        $users = $DB->get_records_sql($lastloggedsql, $lastloggedparams);
 
         if (empty($users)) {
             $message = get_string_manager()->get_string('no_users_found', 'local_o365', null, $language);
@@ -83,7 +80,7 @@ class lateststudents implements \local_o365\bot\intents\intentinterface {
                 $userpicture = new \user_picture($user);
                 $userpicture->size = 1;
                 $pictureurl = $userpicture->get_url($PAGE)->out(false);
-                $subtitledata = date('d/m/Y H:i', $user->lastaccess);
+                $subtitledata = \local_o365\bot\intents\intentshelper::formatdate($user->lastaccess, true);
                 $listitems[] = [
                         'title' => $user->fullname,
                         'subtitle' => get_string_manager()->get_string('last_login_date', 'local_o365', $subtitledata, $language),

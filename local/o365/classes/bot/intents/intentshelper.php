@@ -28,7 +28,35 @@ defined('MOODLE_INTERNAL') || die();
 define("INTENTDATEFORMAT", "d/m/Y");
 define("INTENTTIMEFORMAT", "H:i");
 
+require_once($CFG->libdir . '/accesslib.php');
+
 class intentshelper {
+
+    public function getcoursesstudentslistsql($courses, $fields = 'u.id', $where = '', $whereparams = [], $limit = false){
+        global $DB;
+        $userssql = "SELECT $fields FROM {user} u ";
+        $sqlparams = [];
+        if (!empty($courses)) {
+            list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+            $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
+                    JOIN {role} r ON ra.roleid = r.id AND r.shortname = :studentstr
+                    JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = :contextcourse AND c.instanceid $coursessql
+                ";
+            $sqlparams['studentstr'] = 'student';
+            $sqlparams['contextcourse'] = CONTEXT_COURSE;
+            $sqlparams = array_merge($sqlparams, $coursesparams);
+        }
+        $userssql .= ' WHERE u.deleted = 0 AND u.suspended = 0';
+        if(!empty($where)){
+            $userssql .= " AND $where";
+            $sqlparams = array_merge($sqlparams, $whereparams);
+        }
+        $userssql .= ' ORDER BY u.lastaccess DESC';
+        if($limit){
+            $userssql .= ' LIMIT ' . \local_o365\bot\intents\intentinterface::DEFAULT_LIMIT_NUMBER;
+        }
+        return [$userssql, $sqlparams];
+    }
 
     public function getteachercourses($teacherid){
         $courses = array_keys(enrol_get_users_courses($teacherid, true, 'id'));

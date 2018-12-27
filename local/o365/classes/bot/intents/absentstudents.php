@@ -25,8 +25,6 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/accesslib.php');
-
 /**
  * Class absentstudents implements bot intent interface for teacher-absent-students intent
  * @package local_o365\bot\intents
@@ -49,23 +47,10 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
         }
         if (!empty($courses) || is_siteadmin()) {
             $monthstart = mktime(0, 0, 0, date("n"), 1);
-            $userssql = 'SELECT u.id, u.username, u.firstname, u.lastname, u.lastaccess, u.picture FROM {user} u ';
-            $sqlparams = [];
-            if (!empty($courses)) {
-                list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
-                $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
-                    JOIN {role} r ON ra.roleid = r.id AND r.shortname = :studentstr
-                    JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = :contextcourse AND c.instanceid $coursessql
-                ";
-                $sqlparams['studentstr'] = 'student';
-                $sqlparams['contextcourse'] = CONTEXT_COURSE;
-                $sqlparams = array_merge($sqlparams, $coursesparams);
-            }
-            $userssql .= ' WHERE u.lastaccess < :monthstart AND u.deleted = 0 AND u.suspended = 0';
-            $sqlparams['monthstart'] = $monthstart;
-            $userssql .= ' ORDER BY u.lastaccess DESC';
-            $userssql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
-            $userslist = $DB->get_records_sql($userssql, $sqlparams);
+            list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,
+                        'u.id, u.username, u.firstname, u.lastname, u.lastaccess, u.picture',
+                        'u.lastaccess < :monthstart', ['monthstart' => $monthstart], true);
+            $userslist = $DB->get_records($userssql, $userssqlparams);
         }
         if (empty($userslist)) {
             $message = get_string_manager()->get_string('no_absent_users_found', 'local_o365', null, $language);

@@ -27,7 +27,18 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
+/**
+ * Class latesubmissions implements bot intent interface for teacher-late-submissions intent
+ * @package local_o365\bot\intents
+ */
 class latesubmissions implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message for teachers with the list of students late submissions
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities. Gives student name.
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
@@ -35,29 +46,21 @@ class latesubmissions implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-        $teachercourses = [];
-        foreach ($courses as $course) {
-            $context = \context_course::instance($course, IGNORE_MISSING);
-            if (!has_capability('moodle/grade:edit', $context)) {
-                continue;
-            }
-            $teachercourses[] = $course;
-        }
-        $courses = $teachercourses;
+        $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
 
         if (!empty($courses)) {
-            $coursessqlparam = join(',', $courses);
-            $sql = 'SELECT ass.id, ass.userid, ass.assignment, ass.timemodified, a.duedate, co.fullname as coursename
-                    FROM {assign_submission} ass
-                    JOIN {assign} a ON ass.assignment = a.id
-                    JOIN {course} co ON co.id = a.course
-                    WHERE a.course IN (' . $coursessqlparam . ') AND ass.status LIKE "' . ASSIGN_SUBMISSION_STATUS_SUBMITTED .
-                    '" AND a.duedate < ass.timemodified
-                    ORDER BY ass.timecreated DESC';
-            $sql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
-
-            $submissions = $DB->get_records_sql($sql);
+            list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+            list($statussql, $statusparams) = $DB->get_in_or_equal(ASSIGN_SUBMISSION_STATUS_SUBMITTED, SQL_PARAMS_NAMED);
+            $sql = "SELECT ass.id, ass.userid, ass.assignment, ass.timemodified, a.duedate, co.fullname as coursename
+                      FROM {assign_submission} ass
+                      JOIN {assign} a ON ass.assignment = a.id
+                      JOIN {course} co ON co.id = a.course
+                     WHERE a.course $coursessql AND ass.status $statussql
+                           AND a.duedate < ass.timemodified
+                  ORDER BY ass.timecreated DESC
+                     LIMIT :limitnumber";
+            $sqlparams = array_merge($coursesparams, $statusparams, ['limitnumber' => self::DEFAULT_LIMIT_NUMBER]);
+            $submissions = $DB->get_records_sql($sql, $sqlparams);
         } else {
             $submissions = [];
         }
@@ -83,8 +86,8 @@ class latesubmissions implements \local_o365\bot\intents\intentinterface {
                 $subtitledata = new \stdClass();
                 $subtitledata->course = $submission->coursename;
                 $subtitledata->assignment = $cm->name;
-                $subtitledata->submittedon = date('d/mY', $submission->timemodified);
-                $subtitledata->duedate = date('d/m/Y', $submission->duedate);
+                $subtitledata->submittedon = \local_o365\bot\intents\intentshelper::formatdate($submission->timemodified);
+                $subtitledata->duedate = \local_o365\bot\intents\intentshelper::formatdate($submission->duedate);
                 $record = array(
                         'title' => $user->firstname . ' ' . $user->lastname,
                         'subtitle' => get_string_manager()->get_string('course_assignment_submitted_due', 'local_o365',
