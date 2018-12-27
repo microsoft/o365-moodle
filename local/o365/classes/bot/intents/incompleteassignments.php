@@ -25,7 +25,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class incompleteassignments implements bot intent interface for teacher-incomplete-assignments
+ * @package local_o365\bot\intents
+ */
 class incompleteassignments implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message with details about incomplete assignments in teacher courses
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities (optional and not used at the moment)
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $OUTPUT;
         $listitems = [];
@@ -33,22 +44,14 @@ class incompleteassignments implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-        $teachercourses = [];
-        foreach ($courses as $course) {
-            $context = \context_course::instance($course, IGNORE_MISSING);
-            if (!has_capability('moodle/grade:edit', $context)) {
-                continue;
-            }
-            $teachercourses[] = $course;
-        }
-        $courses = $teachercourses;
+        $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
         if (!empty($courses)) {
-            $coursessqlparam = join(',', $courses);
+            list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
             $sql = "SELECT id, duedate FROM {assign}
-                    WHERE course IN ($coursessqlparam) AND duedate > UNIX_TIMESTAMP()
+                    WHERE course $coursessql AND duedate > :timenow
                     ORDER BY duedate ASC";
-            $assignments = $DB->get_records_sql($sql);
+            $coursesparams['timenow'] = time();
+            $assignments = $DB->get_records_sql($sql, $coursesparams);
         } else {
             $assignments = [];
         }
@@ -84,7 +87,7 @@ class incompleteassignments implements \local_o365\bot\intents\intentinterface {
                 $subtitledata = new \stdClass();
                 $subtitledata->incomplete = $incomplete;
                 $subtitledata->total = $total;
-                $subtitledata->duedate = date('d/m/Y', $assign->duedate);
+                $subtitledata->duedate = \local_o365\bot\intents\intentshelper::formatdate($assign->duedate);
                 $assignment = array(
                         'title' => $cm->name,
                         'subtitle' => get_string_manager()->get_string('pending_submissions_due_date', 'local_o365', $subtitledata,

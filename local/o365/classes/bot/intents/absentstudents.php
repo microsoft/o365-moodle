@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/accesslib.php');
 
 /**
- * Class absentstudents implements bot intent interface
+ * Class absentstudents implements bot intent interface for teacher-absent-students intent
  * @package local_o365\bot\intents
  */
 class absentstudents implements \local_o365\bot\intents\intentinterface {
@@ -45,16 +45,7 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
         $courses = [];
 
         if (!is_siteadmin()) {
-            $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-            $teachercourses = [];
-            foreach ($courses as $course) {
-                $context = \context_course::instance($course, IGNORE_MISSING);
-                if (!has_capability('moodle/grade:edit', $context)) {
-                    continue;
-                }
-                $teachercourses[] = $course;
-            }
-            $courses = $teachercourses;
+            $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
         }
         if (!empty($courses) || is_siteadmin()) {
             $monthstart = mktime(0, 0, 0, date("n"), 1);

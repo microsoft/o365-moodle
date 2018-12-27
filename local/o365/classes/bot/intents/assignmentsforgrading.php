@@ -27,7 +27,18 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
+/**
+ * Class assignmentsforgrading implements bot intent interface for teacher-assignments-for-grading intent
+ * @package local_o365\bot\intents
+ */
 class assignmentsforgrading implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message with details about assignments that needs teacher grading
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities (optional and not used at the moment)
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $OUTPUT;
         $listitems = [];
@@ -35,23 +46,14 @@ class assignmentsforgrading implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-        $teachercourses = [];
-        foreach ($courses as $course) {
-            $context = \context_course::instance($course, IGNORE_MISSING);
-            if (!has_capability('moodle/grade:edit', $context)) {
-                continue;
-            }
-            $teachercourses[] = $course;
-        }
-        $courses = $teachercourses;
+        $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
 
         if (!empty($courses)) {
-            $coursessqlparam = join(',', $courses);
-            $sql = 'SELECT assign.id FROM
-                    (SELECT a.id FROM {assign} a JOIN {assign_submission} asub ON asub.assignment = a.id WHERE a.course IN ('
-                    . $coursessqlparam . ') ORDER BY asub.timecreated DESC) assign GROUP BY assign.id';
-            $assignments = $DB->get_fieldset_sql($sql);
+            list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+            $sql = "SELECT assign.id FROM
+                    (SELECT a.id FROM {assign} a JOIN {assign_submission} asub ON asub.assignment = a.id WHERE a.course $coursessql
+                     ORDER BY asub.timecreated DESC) assign GROUP BY assign.id";
+            $assignments = $DB->get_fieldset_sql($sql, $coursesparams);
         } else {
             $assignments = [];
         }

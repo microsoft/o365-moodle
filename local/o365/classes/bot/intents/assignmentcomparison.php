@@ -26,7 +26,7 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Class assignmentcomparison implements bot intent interface
+ * Class assignmentcomparison implements bot intent interface for student-assignment-comparison-results intent
  * @package local_o365\bot\intents
  */
 class assignmentcomparison implements \local_o365\bot\intents\intentinterface {

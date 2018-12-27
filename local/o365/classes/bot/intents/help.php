@@ -25,7 +25,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class help implements bot intent interface for get-help intent
+ * @package local_o365\bot\intents
+ */
 class help implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message with the welcome text and available questions
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities (optional and not used at the moment)
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $CFG, $USER, $DB;
         $listitems = [];
