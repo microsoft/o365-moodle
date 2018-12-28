@@ -44,8 +44,8 @@ class recentstudents implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $lastloggedsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess
-                            FROM {user} u
+        $lastloggedsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess".
+                           "FROM {user} u
                            WHERE u.suspended = 0 AND u.deleted = 0 AND u.lastaccess > 0";
         $lastloggedparams = [];
         if (!is_siteadmin()) {
@@ -61,10 +61,8 @@ class recentstudents implements \local_o365\bot\intents\intentinterface {
                 $lastloggedparams['userid'] = $USER->id;
             }
         }
-        $lastloggedsql .= ' ORDER BY u.lastaccess DESC
-                               LIMIT :limitnumber';
-        $lastloggedparams['limitnumber'] = self::DEFAULT_LIMIT_NUMBER;
-        $users = $DB->get_records_sql($lastloggedsql, $lastloggedparams);
+        $lastloggedsql .= ' ORDER BY u.lastaccess DESC';
+        $users = $DB->get_records_sql($lastloggedsql, $lastloggedparams, 0, self::DEFAULT_LIMIT_NUMBER);
 
         if (empty($users)) {
             $message = get_string_manager()->get_string('no_users_found', 'local_o365', null, $language);

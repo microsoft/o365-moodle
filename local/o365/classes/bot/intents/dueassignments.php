@@ -48,7 +48,7 @@ class dueassignments implements \local_o365\bot\intents\intentinterface {
 
         // We need to check for enrolments.
         $courses = enrol_get_users_courses($USER->id, true, $fields);
-
+        $courses = array_keys($courses);
         if (!empty($courses)) {
             $message = get_string_manager()->get_string('list_of_due_assignments', 'local_o365', null, $language);
             list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);

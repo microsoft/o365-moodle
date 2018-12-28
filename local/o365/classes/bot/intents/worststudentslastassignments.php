@@ -73,10 +73,8 @@ class worststudentslastassignments implements \local_o365\bot\intents\intentinte
                       FROM {assign_grades}
                      WHERE assignment = :aid AND grade != :gradenotgraded
                   ORDER BY grade ASC';
-            $sql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
-
             $params = ['aid' => $assignment, 'gradenotgraded' => ASSIGN_GRADE_NOT_SET];
-            $grades = $DB->get_records_sql($sql, $params);
+            $grades = $DB->get_records_sql($sql, $params, 0, self::DEFAULT_LIMIT_NUMBER);
             $usersids = array_map(function($grade){return $grade->userid;}, $grades);
             if(!empty($usersids)){
                 list($userssql, $usersparams) = $DB->get_in_or_equal($usersids, SQL_PARAMS_NAMED);

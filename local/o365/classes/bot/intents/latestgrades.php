@@ -54,9 +54,8 @@ class latestgrades implements \local_o365\bot\intents\intentinterface {
                   JOIN {grade_items} gi ON gi.id = g.itemid
                  WHERE g.userid = :userid AND gi.itemmodule $activitiessql AND g.finalgrade IS NOT NULL
               ORDER BY g.timemodified DESC";
-        $sql .= " LIMIT " . self::DEFAULT_LIMIT_NUMBER;
         $sqlparams = array_merge(['userid' => $USER->id], $activitiesparams);
-        $grades = $DB->get_records_sql($sql, $sqlparams);
+        $grades = $DB->get_records_sql($sql, $sqlparams, 0, self::DEFAULT_LIMIT_NUMBER);
         if (empty($grades)) {
             $message = get_string_manager()->get_string('no_grades_found', 'local_o365', null, $language);
             $warnings[] = array(

@@ -57,10 +57,9 @@ class latesubmissions implements \local_o365\bot\intents\intentinterface {
                       JOIN {course} co ON co.id = a.course
                      WHERE a.course $coursessql AND ass.status $statussql
                            AND a.duedate < ass.timemodified
-                  ORDER BY ass.timecreated DESC
-                     LIMIT :limitnumber";
-            $sqlparams = array_merge($coursesparams, $statusparams, ['limitnumber' => self::DEFAULT_LIMIT_NUMBER]);
-            $submissions = $DB->get_records_sql($sql, $sqlparams);
+                  ORDER BY ass.timecreated DESC";
+            $sqlparams = array_merge($coursesparams, $statusparams);
+            $submissions = $DB->get_records_sql($sql, $sqlparams, 0, self::DEFAULT_LIMIT_NUMBER);
         } else {
             $submissions = [];
         }

@@ -50,10 +50,8 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
                  WHERE g.userid = :userid AND gi.itemmodule LIKE :assignstr AND g.finalgrade IS NOT NULL
               ORDER BY g.timemodified DESC";
 
-        $sql .= " LIMIT " . self::DEFAULT_LIMIT_NUMBER;
-
         $sqlparams = ['assignstr' => 'assign', 'userid' => $USER->id];
-        $assignments = $DB->get_records_sql($sql, $sqlparams);
+        $assignments = $DB->get_records_sql($sql, $sqlparams, 0, self::DEFAULT_LIMIT_NUMBER);
 
         if (empty($assignments)) {
             $message = get_string_manager()->get_string('no_assignments_found', 'local_o365', null, $language);

@@ -50,7 +50,7 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
             list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,
                         'u.id, u.username, u.firstname, u.lastname, u.lastaccess, u.picture',
                         'u.lastaccess < :monthstart', ['monthstart' => $monthstart], true);
-            $userslist = $DB->get_records($userssql, $userssqlparams);
+            $userslist = $DB->get_records_sql($userssql, $userssqlparams);
         }
         if (empty($userslist)) {
             $message = get_string_manager()->get_string('no_absent_users_found', 'local_o365', null, $language);

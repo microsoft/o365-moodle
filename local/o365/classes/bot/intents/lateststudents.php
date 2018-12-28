@@ -62,9 +62,7 @@ class lateststudents implements \local_o365\bot\intents\intentinterface {
             }
         }
         $lastloggedsql .= ' ORDER BY u.lastaccess ASC';
-        $lastloggedsql .= ' LIMIT :limitnumber';
-        $lastloggedparams['limitnumber'] = self::DEFAULT_LIMIT_NUMBER;
-        $users = $DB->get_records_sql($lastloggedsql, $lastloggedparams);
+        $users = $DB->get_records_sql($lastloggedsql, $lastloggedparams, 0, self::DEFAULT_LIMIT_NUMBER);
 
         if (empty($users)) {
             $message = get_string_manager()->get_string('no_users_found', 'local_o365', null, $language);
