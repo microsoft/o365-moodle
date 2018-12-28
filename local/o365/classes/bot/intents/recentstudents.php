@@ -44,9 +44,9 @@ class recentstudents implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $lastloggedsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess".
-                           "FROM {user} u
-                           WHERE u.suspended = 0 AND u.deleted = 0 AND u.lastaccess > 0";
+        $lastloggedsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess ".
+                           "FROM {user} u ".
+                          "WHERE u.suspended = 0 AND u.deleted = 0 AND u.lastaccess > 0 ";
         $lastloggedparams = [];
         if (!is_siteadmin()) {
             $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
