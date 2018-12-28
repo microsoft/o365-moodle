@@ -25,6 +25,8 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once ($CFG->dirroot.'/mod/assign/locallib.php');
+
 /**
  * Class worststudentslastassignments implements bot intent interface for teacher-worst-students-last-assignment intent
  * @package local_o365\bot\intents

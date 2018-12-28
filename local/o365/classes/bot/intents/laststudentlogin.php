@@ -48,18 +48,18 @@ class laststudentlogin implements \local_o365\bot\intents\intentinterface {
 
         if ($name) {
             $concat = $DB->sql_concat("u.firstname", "' '", "u.lastname");
-            $where = $DB->sql_like($concat, ":name", false, false);
-            $lastloginsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess
-                               FROM {user} u
-                              WHERE CONCAT(u.firstname, ' ', u.lastname) LIKE $where AND u.suspended = 0 AND u.deleted = 0";
-            $lastloginparams = ['name' => '%'.$name.'%'];
+            $where = $DB->sql_like($concat, ":name", false);
+            $lastloginsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess 
+                               FROM {user} u 
+                              WHERE $where AND u.suspended = 0 AND u.deleted = 0";
+            $lastloginparams = ['name' => '%'.$DB->sql_like_escape($name).'%'];
             if (!is_siteadmin()) {
                 $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
                 if (!empty($courses)) {
                     list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,'u.id');
                     $userslist = $DB->get_fieldset_sql($userssql, $userssqlparams);
                     list($usersloginsql, $usersloginparams) = $DB->get_in_or_equal($userslist, SQL_PARAMS_NAMED);
-                    $lastloginsql .= " AND u.id IN $usersloginsql";
+                    $lastloginsql .= " AND u.id $usersloginsql";
                     $lastloginparams = array_merge($lastloginparams, $usersloginparams);
                 } else {
                     $lastloginsql .= ' AND u.id = :userid ';
