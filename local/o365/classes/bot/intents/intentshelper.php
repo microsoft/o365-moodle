@@ -25,23 +25,36 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
-define("INTENTDATEFORMAT", "d/m/Y");
-define("INTENTTIMEFORMAT", "H:i");
+define("INTENTDATEFORMAT", "d/m/Y"); //Date format used in bot messages
+define("INTENTTIMEFORMAT", "H:i"); //Time format used in bot messages
 
 require_once($CFG->libdir . '/accesslib.php');
 
+/**
+ * Class intentshelper to store intents general functions to reduce code duplication
+ * @package local_o365\bot\intents
+ */
 class intentshelper {
 
-    public function getcoursesstudentslistsql($courses, $fields = 'u.id', $where = '', $whereparams = [], $limit = false){
+    /**
+     * Returns sql string and sql params to get students in courses (if no courses given then all users returned)
+     * @param array $courses - array of courses ids which students to return
+     * @param string $fields - fields of users table to return
+     * @param string $where - custom where clause to add
+     * @param array $whereparams - cutom where clause params
+     * @param bool $limit - limit output to standard intents limit (true/false)
+     * @return array - array containing sql string and sql params for DB manipulation functions
+     */
+    public function getcoursesstudentslistsql($courses = [], $fields = 'u.id', $where = '', $whereparams = [], $limit = false){
         global $DB;
         $userssql = "SELECT $fields FROM {user} u ";
         $sqlparams = [];
         if (!empty($courses)) {
             list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
             $userssql .= " JOIN {role_assignments} ra ON u.id = ra.userid
-                    JOIN {role} r ON ra.roleid = r.id AND r.shortname = :studentstr
-                    JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = :contextcourse AND c.instanceid $coursessql
-                ";
+                           JOIN {role} r ON ra.roleid = r.id AND r.shortname = :studentstr
+                           JOIN {context} c ON c.id = ra.contextid AND c.contextlevel = :contextcourse
+                                AND c.instanceid $coursessql";
             $sqlparams['studentstr'] = 'student';
             $sqlparams['contextcourse'] = CONTEXT_COURSE;
             $sqlparams = array_merge($sqlparams, $coursesparams);
@@ -58,6 +71,11 @@ class intentshelper {
         return [$userssql, $sqlparams];
     }
 
+    /**
+     * Gets array of teacher courses
+     * @param $teacherid - teacher user id in Moodle
+     * @return array - list of teacher courses ids
+     */
     public function getteachercourses($teacherid){
         $courses = array_keys(enrol_get_users_courses($teacherid, true, 'id'));
         $teachercourses = [];
@@ -71,6 +89,12 @@ class intentshelper {
         return $teachercourses;
     }
 
+    /**
+     * Formats timestamp to default bot messages date format
+     * @param $timestamp - unix time stamp to be formatted
+     * @param bool $time - should time be showed beside date (true/false)
+     * @return false|string - formatted date
+     */
     public function formatdate($timestamp, $time = false){
         $format = ($time ? INTENTDATEFORMAT.' '.INTENTTIMEFORMAT : INTENTDATEFORMAT);
         return date($format, $timestamp);

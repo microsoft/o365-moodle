@@ -24,6 +24,10 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Interface intentinterface defines constants default for all intents and  methods that all intents must implement
+ * @package local_o365\bot\intents
+ */
 interface intentinterface {
     /**
      * Default list items maximum limit number
@@ -32,8 +36,9 @@ interface intentinterface {
 
     /**
      * Get bot ready message.
-     *
-     * @return string A name for the health check.
+     * @param $language - message language code
+     * @param mixed $entities - intent entities (optional)
+     * @return array - structured message with all details for bot
      */
     public function get_message($language, $entities = null);
 }

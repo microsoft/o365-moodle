@@ -54,7 +54,7 @@ class lateststudents implements \local_o365\bot\intents\intentinterface {
                 list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,'u.id');
                 $userslist = $DB->get_fieldset_sql($userssql, $userssqlparams);
                 list($userslastlogedsql, $userslastloggedparams) = $DB->get_in_or_equal($userslist, SQL_PARAMS_NAMED);
-                $lastloggedsql .= " AND u.id IN $userslastlogedsql";
+                $lastloggedsql .= " AND u.id $userslastlogedsql";
                 $lastloggedparams = array_merge($lastloggedparams, $userslastloggedparams);
             } else {
                 $lastloggedsql .= ' AND u.id = :userid ';
@@ -62,8 +62,8 @@ class lateststudents implements \local_o365\bot\intents\intentinterface {
             }
         }
         $lastloggedsql .= ' ORDER BY u.lastaccess ASC';
-        $lastloggedsql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
-
+        $lastloggedsql .= ' LIMIT :limitnumber';
+        $lastloggedparams['limitnumber'] = self::DEFAULT_LIMIT_NUMBER;
         $users = $DB->get_records_sql($lastloggedsql, $lastloggedparams);
 
         if (empty($users)) {

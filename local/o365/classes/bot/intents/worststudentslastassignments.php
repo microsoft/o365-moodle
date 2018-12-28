@@ -25,7 +25,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class worststudentslastassignments implements bot intent interface for teacher-worst-students-last-assignment intent
+ * @package local_o365\bot\intents
+ */
 class worststudentslastassignments implements \local_o365\bot\intents\intentinterface {
+
+    /**
+     * Gets a message for teachers with the list of students who did the worst in last assignment
+     * @param $language - Message language
+     * @param mixed $entities - Intent entities. Gives student name.
+     * @return array|string - Bot message structure with data
+     */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
@@ -33,25 +44,17 @@ class worststudentslastassignments implements \local_o365\bot\intents\intentinte
         $listtitle = '';
         $message = '';
 
-        $courses = array_keys(enrol_get_users_courses($USER->id, true, 'id'));
-        $teachercourses = [];
-        foreach ($courses as $course) {
-            $context = \context_course::instance($course, IGNORE_MISSING);
-            if (!has_capability('moodle/grade:edit', $context)) {
-                continue;
-            }
-            $teachercourses[] = $course;
-        }
-        $courses = $teachercourses;
+        $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
 
         if (!empty($courses)) {
-            $coursessqlparam = join(',', $courses);
-            $sql = 'SELECT ag.assignment FROM {assign_grades} ag
-                    JOIN {assign} a ON a.id = ag.assignment
-                    WHERE a.course IN (' . $coursessqlparam . ')
-                    ORDER BY ag.timemodified DESC
-                    LIMIT 1';
-            $assignment = $DB->get_field_sql($sql);
+            list($coursessql, $coursesparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+            $sql = "SELECT ag.assignment
+                      FROM {assign_grades} ag
+                      JOIN {assign} a ON a.id = ag.assignment
+                     WHERE a.course $coursessql
+                  ORDER BY ag.timemodified DESC
+                     LIMIT 1";
+            $assignment = $DB->get_field_sql($sql, $coursesparams);
         }
 
         if (empty($assignment)) {
@@ -66,29 +69,38 @@ class worststudentslastassignments implements \local_o365\bot\intents\intentinte
             $cm = get_coursemodule_from_instance('assign', $assignment);
             $listtitle = get_string_manager()->get_string('assignment', 'local_o365', null, $language) . ' - ' . $cm->name;
             $message = get_string_manager()->get_string('list_of_students_with_least_score', 'local_o365', null, $language);
-            $sql = 'SELECT * FROM {assign_grades} WHERE assignment = :aid AND grade != :gradenotgraded ORDER BY grade ASC';
+            $sql = 'SELECT *
+                      FROM {assign_grades}
+                     WHERE assignment = :aid AND grade != :gradenotgraded
+                  ORDER BY grade ASC';
             $sql .= ' LIMIT ' . self::DEFAULT_LIMIT_NUMBER;
 
             $params = ['aid' => $assignment, 'gradenotgraded' => ASSIGN_GRADE_NOT_SET];
             $grades = $DB->get_records_sql($sql, $params);
-            foreach ($grades as $g) {
-                $user = $DB->get_record('user', ['id' => $g->userid], 'id, username, firstname, lastname');
-                $userpicture = new \user_picture($user);
-                $userpicture->size = 1;
-                $pictureurl = $userpicture->get_url($PAGE)->out(false);
-                $subtitledata = new \stdClass();
-                $subtitledata->grade = $g->grade;
-                $subtitledata->date = date('d/m/Y', $g->timemodified);
-                $grade = array(
+            $usersids = array_map(function($grade){return $grade->userid;}, $grades);
+            if(!empty($usersids)){
+                list($userssql, $usersparams) = $DB->get_in_or_equal($usersids, SQL_PARAMS_NAMED);
+                $users = $DB->get_records_sql("SELECT id, username, firstname, lastname
+                                                 FROM {user}
+                                                WHERE $userssql", $usersparams);
+                foreach ($grades as $g) {
+                    $user = $users[$g->userid];
+                    $userpicture = new \user_picture($user);
+                    $userpicture->size = 1;
+                    $pictureurl = $userpicture->get_url($PAGE)->out(false);
+                    $subtitledata = new \stdClass();
+                    $subtitledata->grade = $g->grade;
+                    $subtitledata->date = \local_o365\bot\intents\intentshelper::formatdate($g->timemodified);
+                    $grade = array(
                         'title' => $user->firstname . ' ' . $user->lastname,
                         'subtitle' => get_string_manager()->get_string('grade_date', 'local_o365', $subtitledata, $language),
                         'icon' => $pictureurl,
                         'action' => null,
                         'actionType' => null
-                );
-                $listitems[] = $grade;
+                    );
+                    $listitems[] = $grade;
+                }
             }
-
             if (empty($listitems)) {
                 $message = get_string_manager()->get_string('no_grades_found', 'local_o365', null, $language);
                 $warnings[] = array(
