@@ -158,8 +158,8 @@ function local_o365_create_manifest_file() {
         'developer' => array(
             'name' => 'Enovation Solutions',
             'websiteUrl' => 'https://enovation.ie',
-            'privacyUrl' => 'https://enovation.ie/moodleteamsapp/privacy.html',
-            'termsOfUseUrl' => 'https://enovation.ie/moodleteamsapp/termsofuse.html',
+            'privacyUrl' => 'https://enovation.ie/moodleteamsapp-privacy',
+            'termsOfUseUrl' => 'https://enovation.ie/moodleteamsapp-termsofuse',
         ),
         'icons' => array(
             'color' => 'color.png',
