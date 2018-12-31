@@ -174,7 +174,29 @@ function local_o365_create_manifest_file() {
             'full' => 'The Moodle app for Microsoft Teams allows you to easily access and collaborate around your Moodle courses from within your teams through tabs. You can also get regular notifications from Moodle and ask questions about your courses, assignments, grades and students using the Moodle Assistant bot.',
         ),
         'accentColor' => '#FF7A00',
-        'bots' => array(
+        'configurableTabs' => array(
+            array(
+                'configurationUrl' => $CFG->wwwroot . '/local/o365/teams_tab_configuration.php',
+                'canUpdateConfiguration' => false,
+                'scopes' => array(
+                    'team',
+                ),
+            ),
+        ),
+        'permissions' => array(
+            'identity',
+            'messageTeamMembers',
+        ),
+        'validDomains' => array(
+            parse_url($CFG->wwwroot, PHP_URL_HOST),
+            'token.botframework.com',
+        ),
+    );
+
+    // Check if bot feature is enabled, and add bot part to manifest if enabled.
+    $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
+    if ($botfeatureenabled) {
+        $manifest['bots'] = array(
             array(
                 'botId' => $appid,
                 'needsChannelSelector' => false,
@@ -202,25 +224,8 @@ function local_o365_create_manifest_file() {
                     ),
                 ),
             ),
-        ),
-        'configurableTabs' => array(
-            array(
-                'configurationUrl' => $CFG->wwwroot . '/local/o365/teams_tab_configuration.php',
-                'canUpdateConfiguration' => false,
-                'scopes' => array(
-                    'team',
-                ),
-            ),
-        ),
-        'permissions' => array(
-            'identity',
-            'messageTeamMembers',
-        ),
-        'validDomains' => array(
-            parse_url($CFG->wwwroot, PHP_URL_HOST),
-            'token.botframework.com',
-        ),
-    );
+        );
+    }
 
     $file = $pathtomanifestfolder . '/manifest.json';
     file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));

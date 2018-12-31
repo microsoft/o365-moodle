@@ -370,6 +370,12 @@ if ($hassiteconfig) {
     }
 
     if ($tab == LOCAL_O365_TAB_TEAMS || !empty($install)) {
+        // bot_feature_enabled
+        $settings->add(new admin_setting_configcheckbox_with_advanced('local_o365/bot_feature_enabled',
+            get_string('settings_bot_feature_enabled', 'local_o365'),
+            get_string('settings_bot_feature_enabled_decs', 'local_o365'),
+            '0'));
+
         // bot_app_id
         $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
             get_string('settings_bot_app_id', 'local_o365'),
