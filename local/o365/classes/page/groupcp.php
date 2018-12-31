@@ -137,7 +137,7 @@ class groupcp extends base {
         $row .= \html_writer::tag('td', \html_writer::tag('strong', get_string('groups_columnname', 'local_o365')));
         $columncount = 0;
         // Unable to test this code.
-        foreach (['notebook', 'team'] as $feature) {
+        foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
             $attr = ['class' => 'local_o365_groupcp_managegroups_header'];
             $strresourcename = get_string('groups_'.$feature, 'local_o365');
             $row .= \html_writer::tag('td', \html_writer::tag('strong', $strresourcename), $attr);
@@ -176,7 +176,7 @@ class groupcp extends base {
                     $row .= \html_writer::tag('td', $strpending, ['colspan' => $columncount]);
                 } else {
                     // Unable to test this code.
-                    foreach (['notebook', 'team'] as $feature) {
+                    foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
                         $enabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($group->courseid, $feature);
                         if ($enabled === true) {
                             $url = new \moodle_url($groupscache['urls'][$feature]);
@@ -421,7 +421,7 @@ class groupcp extends base {
             $links = [
                 \html_writer::tag('h5', 'Group Resources:'),
             ];
-            foreach (['notebook', 'team'] as $feature) {
+            foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
                 if (!isset($groupscache['urls'][$feature])) {
                     continue;
                 }

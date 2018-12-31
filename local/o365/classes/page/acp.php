@@ -501,7 +501,7 @@ class acp extends base {
                 }
                 if ($feature === 'enabled') {
                     \local_o365\feature\usergroups\utils::set_course_group_enabled($courseid, $value);
-                } else if (in_array($feature, ['notebook', 'team'])) {
+                } else if (in_array($feature, ['team', 'onedrive', 'calendar', 'conversations', 'notebook'])) {
                     \local_o365\feature\usergroups\utils::set_course_group_feature_enabled($courseid, [$feature], $value);
                 }
             }
@@ -560,6 +560,9 @@ class acp extends base {
         }
         $table->head[] = get_string('acp_usergroupcustom_enabled', 'local_o365');
         $table->head[] = get_string('groups_team', 'local_o365');
+        $table->head[] = get_string('groups_onedrive', 'local_o365');
+        $table->head[] = get_string('groups_calendar', 'local_o365');
+        $table->head[] = get_string('groups_conversations', 'local_o365');
         $table->head[] = get_string('groups_notebook', 'local_o365');
 
         $limitfrom = $curpage * $perpage;
@@ -581,6 +584,12 @@ class acp extends base {
             $enabledname = 'course_'.$course->id.'_enabled';
             $teamenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team');
             $teamname = 'course_team_' . $course->id . '_enabled';
+            $onedriveenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'onedrive');
+            $onedrivename = 'course_onedrive_'.$course->id.'_enabled';
+            $calendarenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'calendar');
+            $calendarname = 'course_calendar_'.$course->id.'_enabled';
+            $convenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'conversations');
+            $convname = 'course_conversations_'.$course->id.'_enabled';
             $notebookenabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'notebook');
             $notebookname = 'course_notebook_'.$course->id.'_enabled';
 
@@ -590,12 +599,24 @@ class acp extends base {
             $teamcheckboxattrs = [
                 'class' => 'feature feature_teams',
             ];
+            $onedrivecheckboxattrs = [
+                'class' => 'feature feature_onedrive',
+            ];
+            $calendarcheckboxattrs = [
+                'class' => 'feature feature_calendar',
+            ];
+            $convcheckboxattrs = [
+                'class' => 'feature feature_conversations',
+            ];
             $notebookcheckboxattrs = [
                 'class' => 'feature feature_notebook',
             ];
 
             if ($isenabled !== true) {
                 $teamcheckboxattrs['disabled'] = '';
+                $onedrivecheckboxattrs['disabled'] = '';
+                $calendarcheckboxattrs['disabled'] = '';
+                $convcheckboxattrs['disabled'] = '';
                 $notebookcheckboxattrs['disabled'] = '';
             }
 
@@ -604,6 +625,9 @@ class acp extends base {
                 $course->fullname,
                 \html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
                 \html_writer::checkbox($teamname, 1, $teamenabled, '', $teamcheckboxattrs),
+                \html_writer::checkbox($onedrivename, 1, $onedriveenabled, '', $onedrivecheckboxattrs),
+                \html_writer::checkbox($calendarname, 1, $calendarenabled, '', $calendarcheckboxattrs),
+                \html_writer::checkbox($convname, 1, $convenabled, '', $convcheckboxattrs),
                 \html_writer::checkbox($notebookname, 1, $notebookenabled, '', $notebookcheckboxattrs),
             ];
             $table->data[] = $rowdata;
@@ -630,7 +654,7 @@ class acp extends base {
         $js .= '$("input.feature_"+feature+":not(:disabled)").prop("checked", enabled); ';
         $js .= '}; ';
         $js .= 'var local_o365_usergroup_coursesid = '.json_encode($coursesid).'; ';
-        $js .= 'var local_o365_usergroup_features = ["notebook", "team"]; ';
+        $js .= 'var local_o365_usergroup_features = ["team", "onedrive", "calendar", "conversations", "notebook"]; ';
 
         $js .= 'var local_o365_usergroup_save = function() { '."\n";
         $js .= 'var coursedata = {}; '."\n";
@@ -673,6 +697,24 @@ class acp extends base {
         echo \html_writer::tag('span', get_string('groups_team', 'local_o365').': ');
         echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'teams\', 1)']);
         echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'teams\', 0)']);
+        echo \html_writer::end_tag('div');
+
+        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo \html_writer::tag('span', get_string('groups_onedrive', 'local_o365').': ');
+        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'onedrive\', 1)']);
+        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'onedrive\', 0)']);
+        echo \html_writer::end_tag('div');
+
+        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo \html_writer::tag('span', get_string('groups_calendar', 'local_o365').': ');
+        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'calendar\', 1)']);
+        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'calendar\', 0)']);
+        echo \html_writer::end_tag('div');
+
+        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo \html_writer::tag('span', get_string('groups_conversations', 'local_o365').': ');
+        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'conversations\', 1)']);
+        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'conversations\', 0)']);
         echo \html_writer::end_tag('div');
 
         echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
