@@ -373,7 +373,7 @@ if ($hassiteconfig) {
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox_with_advanced('local_o365/bot_feature_enabled',
             get_string('settings_bot_feature_enabled', 'local_o365'),
-            get_string('settings_bot_feature_enabled_decs', 'local_o365'),
+            get_string('settings_bot_feature_enabled_desc', 'local_o365'),
             '0'));
 
         // bot_app_id
