@@ -212,7 +212,7 @@ class coursegroups {
         $now = time();
         $groupname = $course->fullname;
         if (!empty($groupprefix)) {
-            $groupname = $groupprefix.': '.$groupname;
+            //$groupname = $groupprefix.': '.$groupname;
         }
 
         $groupshortname = $course->shortname;
