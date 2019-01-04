@@ -29,9 +29,15 @@ define('NO_MOODLE_COOKIES', true);
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot.'/lib/authlib.php');
 require_once($CFG->libdir . '/externallib.php');
+require_once('lib.php');
 
 $username = required_param('username', PARAM_USERNAME);
 $serviceshortname = required_param('service', PARAM_TEXT);
+
+if (!local_o365_ip_in_domains_whitelist($_SERVER['REMOTE_ADDR'])) {
+    http_response_code(404);
+    throw new moodle_exception('invalidrequest');
+}
 
 $headers = apache_request_headers();
 if (!isset($headers['Authorization'])) {

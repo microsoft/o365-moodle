@@ -246,3 +246,29 @@ function local_o365_create_manifest_file() {
 
     return $zipfilename;
 }
+
+/**
+ * Checks if IP is in domains whitelist
+ * @param $ip - ip address
+ * @return bool - true if ip is in domains whitelist or whitelist is empty
+ */
+function local_o365_ip_in_domains_whitelist($ip){
+    $whitelistdomains = get_config('local_o365', 'bot_domains_whitelist');
+    if(!empty($whitelistdomains)){
+        $whitelistdomains = explode("\n", $whitelistdomains);
+        foreach($whitelistdomains as $domain){
+            $parseddomain = parse_url($domain, PHP_URL_HOST);
+            if(is_null($parseddomain)){
+                $domainip = gethostbyname($domain);
+            }else{
+                $domainip = gethostbyname($parseddomain);
+            }
+            if(!empty($domainip) && $ip == $domainip){
+                return true;
+            }
+        }
+        return false;
+    } else{
+        return true;
+    }
+}

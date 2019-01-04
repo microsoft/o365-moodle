@@ -394,6 +394,12 @@ if ($hassiteconfig) {
             get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
             ''));
 
+        // bot_domains_whitelist
+        $settings->add(new admin_setting_configtextarea('local_o365/bot_domains_whitelist',
+            get_string('settings_bot_domain_whitelist', 'local_o365'),
+            get_string('settings_bot_domain_whitelist_desc', 'local_o365'),
+            ''));
+
         // manifest download link
         $html = html_writer::start_tag('p');
         $manifesturl = new moodle_url('/local/o365/export_manifest.php');
