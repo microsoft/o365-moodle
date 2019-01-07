@@ -26,16 +26,16 @@ You can find informations on how to install Moodle plugins [here](https://docs.m
 
 Alternatively you might choose to manually install the plugins from Github. If doing so please note the following:
 
-1. The file structure of this repository mimics that of a Moodle install, so the /auth/oidc folder in this repository would go in the /auth/oidc folder of your Moodle install, for example. Place each folder of this repository in your Moodle install according to the folder structure of this repository.
+1. The file structure of this repository mimics that of a Moodle install, so the `/auth/oidc` folder in this repository would go in the `/auth/oidc` folder of your Moodle install, for example. Place each folder of this repository in your Moodle install according to the folder structure of this repository.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
-3. Follow the on-screen instuctions to install each plugin.
+3. Follow the on-screen instructions to install each plugin.
 
 *Don't have a Moodle site already?* You might want to check out our Moodle on Azure repo (https://github.com/azure/moodle) where you can quickly deploy a Moodle instance on Azure and customize it to your needs.
 
 ## Documentation
 The documentation for installing, configuring, and using these plugins is available on Moodle.org [here.](https://docs.moodle.org/34/en/Office365)
 
-Like any open source project, documentation can sometimes be out of date, especially as their are UI changes to Azure Active Directory. You can submit pull requests modify or contribute to the to the documentation at any time [here.](https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs) Note that these changes are then merged back periodically with the plugin documentation on Moodle.org.
+Like any open source project, documentation can sometimes be out of date, especially as their are UI changes to Azure Active Directory. You can submit pull requests modify or contribute to the documentation at any time [here.](https://github.com/Microsoft/o365-moodle/tree/master/local/o365docs) Note that these changes are then merged back periodically with the plugin documentation on Moodle.org.
 
 ## Support
 We do not provide any SLA on the use of these plugins.  If you are experiencing problems, have a feature request, or have a question, please open an issue on Github on our [issue tracker.](https://github.com/Microsoft/o365-moodle)
@@ -51,7 +51,7 @@ Please note that without this information it is often impossible for us to fully
 ## Contributing
 We're looking for community contributions! Feel free to submit pull requests, but please do so against the development repository at https://github.com/Microsoft/o365-moodle. Pull requests submitted to individual plugin repositories cannot be accepted.
 
-Please be sure to submit an issue via the Github Issue Tracker before working on any pull requests.  Pull requests adding new features are much appreciated but note that they may be rejected (even if technically sound) if they do not match the direction of the project. If you want to add a new feature, it's best to open an issue outlining your idea first, and get feedback from the the maintainers and the community at large.  Issues that we have no plan address will be labeled with "Help Wanted" in our issue tracker. These tend to be features that are requested but are beyond the scope of the intitial project.
+Please be sure to submit an issue via the Github Issue Tracker before working on any pull requests.  Pull requests adding new features are much appreciated but note that they may be rejected (even if technically sound) if they do not match the direction of the project. If you want to add a new feature, it's best to open an issue outlining your idea first, and get feedback from the the maintainers and the community at large.  Issues that we have no plan address will be labeled with "Help Wanted" in our issue tracker. These tend to be features that are requested but are beyond the scope of the initial project.
 
 ### Code Review
 All pull requests go through a thorough examination from maintainers before they are merged. Please read our [development guide](https://github.com/Microsoft/o365-moodle/blob/master/local/o365docs/devguide.md) and ensure your code adheres to the coding standard before submitting. A maintainer may respond with changes that are needed before a pull request can be accepted and it is up to the submitter to make those changes. If accepted, your commit will remain as-is to ensure you get credit, but maintainers may modify solutions slightly in subsequent commits.
