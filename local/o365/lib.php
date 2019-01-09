@@ -125,30 +125,35 @@ function local_o365_get_manifest_file_content() {
 }
 
 /**
- * Create manifest zip file.
+ * Attempt to create manifest file. Return error details and/or path to the manifest file.
  *
- * @return bool|string
+ * @return string
+ * @throws coding_exception
  * @throws dml_exception
  */
 function local_o365_create_manifest_file() {
     global $CFG;
     require_once($CFG->libdir . '/filestorage/zip_archive.php');
 
-    // task 1 : check if app ID has been set, and exit if missing
+    $error = '';
+    $zipfilename = '';
+
+    // Task 1 : check if app ID has been set, and exit if missing.
     $appid = get_config('local_o365', 'bot_app_id');
     if (!$appid || $appid == '00000000-0000-0000-0000-000000000000') {
         // bot id not configured, cannot create manifest file
-        return false;
+        $error = get_string('error_missing_app_id', 'local_o365');
+        return [$error, $zipfilename];
     }
 
-    // task 2 : prepare manifest folder
+    // Task 2 : prepare manifest folder.
     $pathtomanifestfolder = $CFG->dataroot . '/temp/ms_teams_manifest';
     if (file_exists($pathtomanifestfolder)) {
         local_o365_rmdir($pathtomanifestfolder);
     }
     mkdir($pathtomanifestfolder, 0777, true);
 
-    // task 3 : prepare manifest file
+    // Task 3 : prepare manifest file.
     $manifest = array(
         '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.3/MicrosoftTeams.schema.json',
         'manifestVersion' => '1.3',
@@ -230,11 +235,11 @@ function local_o365_create_manifest_file() {
     $file = $pathtomanifestfolder . '/manifest.json';
     file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-    // task 4 : prepare icons
+    // Task 4 : prepare icons.
     copy($CFG->dirroot . '/local/o365/pix/color.png', $pathtomanifestfolder . '/color.png');
     copy($CFG->dirroot . '/local/o365/pix/outline.png', $pathtomanifestfolder . '/outline.png');
 
-    // task 5 : compress the folder
+    // Task 5 : compress the folder.
     $ziparchive = new zip_archive();
     $zipfilename = $pathtomanifestfolder . '/manifest.zip';
     $ziparchive->open($zipfilename);
@@ -244,7 +249,7 @@ function local_o365_create_manifest_file() {
     }
     $ziparchive->close();
 
-    return $zipfilename;
+    return [$error, $zipfilename];
 }
 
 /**

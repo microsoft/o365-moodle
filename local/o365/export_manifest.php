@@ -27,7 +27,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
-$manifestfilepath = local_o365_create_manifest_file();
+list($error, $manifestfilepath) = local_o365_create_manifest_file();
 
 if ($manifestfilepath) {
     // Download manifest file.
@@ -38,5 +38,5 @@ if ($manifestfilepath) {
     header("Expires: 0");
     readfile($manifestfilepath);
 } else {
-    print_error('errorcreatingmanifestfile', 'local_o365');
+    print_error($error);
 }
