@@ -109,7 +109,8 @@ function local_o365_rmdir($path) {
 /**
  * Create manifest file and return its contents in string.
  *
- * @return bool|string
+ * @return false|string
+ * @throws coding_exception
  * @throws dml_exception
  */
 function local_o365_get_manifest_file_content() {
@@ -138,7 +139,7 @@ function local_o365_create_manifest_file() {
     $error = '';
     $zipfilename = '';
 
-    // Task 1 : check if app ID has been set, and exit if missing.
+    // Task 1: check if app ID has been set, and exit if missing.
     $appid = get_config('local_o365', 'bot_app_id');
     if (!$appid || $appid == '00000000-0000-0000-0000-000000000000') {
         // bot id not configured, cannot create manifest file
@@ -146,14 +147,25 @@ function local_o365_create_manifest_file() {
         return [$error, $zipfilename];
     }
 
-    // Task 2 : prepare manifest folder.
+    // Task 2: check if bot settings are consistent.
+    $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
+    if ($botfeatureenabled) {
+        $botapppassword = get_config('local_o365', 'bot_app_password');
+        $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
+        if (!$botapppassword || !$botwebhookendpoint) {
+            $error = get_string('error_missing_bot_settings', 'local_o365');
+            return [$error, $zipfilename];
+        }
+    }
+
+    // Task 3: prepare manifest folder.
     $pathtomanifestfolder = $CFG->dataroot . '/temp/ms_teams_manifest';
     if (file_exists($pathtomanifestfolder)) {
         local_o365_rmdir($pathtomanifestfolder);
     }
     mkdir($pathtomanifestfolder, 0777, true);
 
-    // Task 3 : prepare manifest file.
+    // Task 4: prepare manifest file.
     $manifest = array(
         '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.3/MicrosoftTeams.schema.json',
         'manifestVersion' => '1.3',
@@ -198,8 +210,7 @@ function local_o365_create_manifest_file() {
         ),
     );
 
-    // Check if bot feature is enabled, and add bot part to manifest if enabled.
-    $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
+    // Task 5: add bot part to manifest if enabled.
     if ($botfeatureenabled) {
         $manifest['bots'] = array(
             array(
@@ -235,11 +246,11 @@ function local_o365_create_manifest_file() {
     $file = $pathtomanifestfolder . '/manifest.json';
     file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-    // Task 4 : prepare icons.
+    // Task 6: prepare icons.
     copy($CFG->dirroot . '/local/o365/pix/color.png', $pathtomanifestfolder . '/color.png');
     copy($CFG->dirroot . '/local/o365/pix/outline.png', $pathtomanifestfolder . '/outline.png');
 
-    // Task 5 : compress the folder.
+    // Task 7: compress the folder.
     $ziparchive = new zip_archive();
     $zipfilename = $pathtomanifestfolder . '/manifest.zip';
     $ziparchive->open($zipfilename);
@@ -254,8 +265,11 @@ function local_o365_create_manifest_file() {
 
 /**
  * Checks if IP is in domains whitelist
- * @param $ip - ip address
- * @return bool - true if ip is in domains whitelist or whitelist is empty
+ *
+ * @param $ip
+ *
+ * @return bool
+ * @throws dml_exception
  */
 function local_o365_ip_in_domains_whitelist($ip){
     $whitelistdomains = get_config('local_o365', 'bot_domains_whitelist');
