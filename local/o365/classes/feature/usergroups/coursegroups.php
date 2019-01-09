@@ -57,8 +57,7 @@ class coursegroups {
      */
     public function create_groups_for_new_courses() {
         $this->replace_group_notebook_job();
-        $siterec = $this->DB->get_record('course', ['id' => SITEID]);
-        $groupprefix = (!empty($siterec)) ? $siterec->shortname : '';
+        $groupprefix = '';
 
         $createteams = get_config('local_o365', 'createteams');
         if ($createteams === 'onall' || $createteams === 'oncustom') {
@@ -212,7 +211,7 @@ class coursegroups {
         $now = time();
         $groupname = $course->fullname;
         if (!empty($groupprefix)) {
-            //$groupname = $groupprefix.': '.$groupname;
+            $groupname = $groupprefix.': '.$groupname;
         }
 
         $groupshortname = $course->shortname;

@@ -761,8 +761,7 @@ class acp extends base {
         $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
         $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
         $groupids = $coursegroups->get_all_group_ids();
-        $siterec = $DB->get_record('course', ['id' => SITEID]);
-        $groupprefix = (!empty($siterec)) ? $siterec->shortname : '';
+        $groupprefix = '';
         $objects = $DB->get_recordset_sql("SELECT *
                                              FROM {local_o365_objects}
                                             WHERE type = 'group' AND
