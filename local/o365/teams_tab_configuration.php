@@ -215,12 +215,15 @@ function inIframe() {
 }
 
 function setTitles() {
-   var text;
-   var x = document.getElementById("id_course").options.length;
-   for (i = 0; i < x; i++ ) {
-      text = document.getElementById("id_course").options[i].text;
-      document.getElementById("id_course").options[i].title=text;
-   }
+    var text;
+    var id_course = document.getElementById("id_course");
+    if (id_course) {
+        var x = id_course.options.length;
+        for (i = 0; i < x; i++ ) {
+            text = id_course.options[i].text;
+            id_course.options[i].title=text;
+        }
+    }
 }
 
 function sleep(ms) {
