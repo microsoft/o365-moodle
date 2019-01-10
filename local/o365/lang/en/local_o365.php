@@ -676,7 +676,7 @@ $string['error_missing_app_id'] = 'Missing App ID setting.';
 $string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['settings_header_teams'] = 'Teams Settings';
-$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_teams_settings_spacer local_o365_teams_settings_vertical_spacer">Required Moodle Settings for the Moodle Teams app:</h4>
+$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_teams_settings_h4_spacer">Required Moodle Settings for the Moodle Teams app:</h4>
 <ul class="local_o365_teams_settings_spacer">
 <li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
 <li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>

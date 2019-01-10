@@ -303,6 +303,6 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
   margin-left: 80px;
 }
 
-.local_o365_teams_settings_vertical_spacer {
-  margin: 30px 0;
+.local_o365_teams_settings_h4_spacer {
+  margin: 30px 0 30px 80px;
 }
