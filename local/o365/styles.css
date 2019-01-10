@@ -282,7 +282,7 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
 }
 
 .local_o365_settings_manifest_container {
-  text-align: center;
+  margin: 40px 0px;
 }
 
 .local_o365_settings_manifest_download_button {
