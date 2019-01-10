@@ -439,6 +439,9 @@ if ($hassiteconfig) {
             ['class' => 'btn btn-primary']);
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::start_tag('p');
+        $downloadmanifesthtml .= get_string('settings_download_teams_tab_app_manifest_reminder', 'local_o365');
+        $downloadmanifesthtml .= html_writer::end_tag('p');
+        $downloadmanifesthtml .= html_writer::start_tag('p');
         $downloadmanifesthtml .= get_string('settings_publish_manifest_instruction', 'local_o365');
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::end_div();
