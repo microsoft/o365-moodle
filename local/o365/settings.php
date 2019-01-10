@@ -387,7 +387,7 @@ if ($hassiteconfig) {
         $bannerhtml .= get_string('settings_teams_banner_3', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::empty_tag('br');
-        $bannerhtml .= html_writer::link('https://github.com/Microsoft/moodle-local_o365/blob/master/scripts/README.md',
+        $bannerhtml .= html_writer::link('https://github.com/microsoft/Moodle-Teams-Bot',
             get_string('settings_teams_link_deploy', 'local_o365'),
             ['class' => 'btn btn-primary', 'target' => '_blank']);
         $bannerhtml .= html_writer::empty_tag('br');
