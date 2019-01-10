@@ -371,7 +371,7 @@ if ($hassiteconfig) {
 
     if ($tab == LOCAL_O365_TAB_TEAMS || !empty($install)) {
         // banner
-        $bannerhtml = html_writer::start_div('settingsteamsbanner', ['id' => 'admin-teams-banner']);
+        $bannerhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1', ['id' => 'admin-teams-banner']);
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
             ['class' => 'x-hidden-focus force-vertical-align']);
         $bannerhtml .= html_writer::start_tag('p');
@@ -392,7 +392,8 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::end_tag('p');
         $bannerhtml .= html_writer::end_div();
-        $bannerhtml .= html_writer::start_div('form-item row settingsteamsbanner2', ['id' => 'admin-teams-bot-deploy']);
+        $bannerhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
+            ['id' => 'admin-teams-bot-deploy']);
         $bannerhtml .= html_writer::start_tag('p');
         $bannerhtml .= get_string('settings_teams_banner_3', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
@@ -436,11 +437,12 @@ if ($hassiteconfig) {
             ''));
 
         // manifest download link
-        $downloadmanifesthtml = html_writer::start_div('settingsmanifestcontainer');
+        $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');
         $downloadmanifesthtml .= html_writer::start_tag('p');
         $manifesturl = new moodle_url('/local/o365/export_manifest.php');
         $downloadmanifesthtml .= html_writer::link($manifesturl,
-            get_string('settings_download_teams_tab_app_manifest', 'local_o365'), ['class' => 'settingsmanifestbutton']);
+            get_string('settings_download_teams_tab_app_manifest', 'local_o365'),
+            ['class' => 'local_o365_settings_manifest_download_button']);
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::start_tag('p');
         $maniestinstructionurl = 'https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload';

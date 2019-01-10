@@ -47,13 +47,13 @@ $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
 
 // Output login pages.
-echo html_writer::start_div('manuallogin');
+echo html_writer::start_div('local_o365_manual_login');
 // Azure AD login box.
 echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
-    array('onclick' => 'login()', 'class' => 'manualloginbutton'));
+    array('onclick' => 'login()', 'class' => 'local_o365_manual_login_button'));
 // Manual login link.
 echo html_writer::tag('button', get_string('other_login', 'local_o365'),
-    array('onclick' => 'otherLogin()', 'class' => 'manualloginbutton'));
+    array('onclick' => 'otherLogin()', 'class' => 'local_o365_manual_login_button'));
 echo html_writer::end_div();
 
 $SESSION->wantsurl = $coursepageurl;
@@ -118,7 +118,7 @@ function loadData(upn) {
                 console.log("Renewal failed: " + err);
 
                 // Failed to get the token silently; need to show the login button
-                $(".manuallogin").css("display", "block");
+                $(".local_o365_manual_login").css("display", "block");
             } else {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out() . '";

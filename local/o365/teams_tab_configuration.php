@@ -63,13 +63,13 @@ if ($USER->id == 0) {
 }
 
 // Output login pages.
-echo html_writer::start_div('manuallogin');
+echo html_writer::start_div('local_o365_manual_login');
 // Azure AD login box.
 echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
-    array('onclick' => 'login()', 'class' => 'manualloginbutton'));
+    array('onclick' => 'login()', 'class' => 'local_o365_manual_login_button'));
 // Manual login link.
 echo html_writer::tag('button', get_string('other_login', 'local_o365'),
-    array('onclick' => 'otherLogin()', 'class' => 'manualloginbutton'));
+    array('onclick' => 'otherLogin()', 'class' => 'local_o365_manual_login_button'));
 echo html_writer::end_div();
 
 $js = '
@@ -123,8 +123,8 @@ function loadData(upn) {
                 console.log("Renewal failed: " + err);
 
                 // Failed to get the token silently; redirect to manual login page
-                $("#courselist").css("display", "none");
-                $(".manuallogin").css("display", "block");
+                $("#local_o365_course_list").css("display", "none");
+                $(".local_o365_manual_login").css("display", "block");
             } else {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out() . '";
@@ -243,5 +243,5 @@ microsoftTeams.getContext(function (context) {
 
 echo html_writer::script($js);
 
-$form = new \local_o365\form\teamstabconfiguration(null, null, 'post', '', array('id' => 'courselist'));
+$form = new \local_o365\form\teamstabconfiguration(null, null, 'post', '', array('id' => 'local_o365_course_list'));
 $form->display();

@@ -72,7 +72,7 @@ class usergroups extends \admin_setting {
                 'name' => $this->get_full_name(),
                 'value' => $key,
                 'onchange' => 'teams_togglecustom()',
-                'class' => 'acpoption',
+                'class' => 'local_o365_acp_option',
             ];
             if ($curval === $key) {
                 $radioattrs['checked'] = 'checked';
