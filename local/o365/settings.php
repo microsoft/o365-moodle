@@ -394,8 +394,11 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
 
         // instructions
+        $userrole = $DB->get_record('role', ['shortname' => 'user'], '*', MUST_EXIST);
+        $edituserroleurl = new moodle_url('/admin/role/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
-            get_string('settings_teams_additional_instructions', 'local_o365', $CFG->wwwroot)));
+            get_string('settings_teams_additional_instructions', 'local_o365',
+                ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
 
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',

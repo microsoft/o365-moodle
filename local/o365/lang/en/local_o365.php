@@ -676,16 +676,13 @@ $string['error_missing_app_id'] = 'Missing App ID setting.';
 $string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['settings_header_teams'] = 'Teams Settings';
-$string['settings_teams_additional_instructions'] = '<ul class="local_o365_teams_settings_spacer">
-<li>Go to <a href="{$a}/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
-<li>Go to <a href="{$a}/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
-<li>Go to <a href="{$a}/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
-<li>Go to <a href="{$a}/admin/settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
-<li>Give "Authenticated user" role permission to create web server token.
-<ul>
-<li>Go to <a href="{$a}/admin/roles/manage.php" target="_blank">Manage roles</a> page and edit "Authenticated user" role.</li>
-<li>Set "Create a web service token" permission for the role to "Allow".</li>
-</ul>
+$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_teams_settings_spacer local_o365_teams_settings_vertical_spacer">Required Moodle Settings for the Moodle Teams app:</h4>
+<ul class="local_o365_teams_settings_spacer">
+<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
+<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
+<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
+<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
+<li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
 $string['settings_bot_feature_enabled_desc'] = 'If this is checked, the teams manifest file generated will contain information about the bot app, besides teams tab. Use bot app ID for the "App ID" field below, and enter bot app password and webhook end point in the fields. If this is unchecked, the manifest file generated will only contain information about teams tab, use teams app ID generated from the Microsoft Application Registration Portal (<a href="https://apps.dev.microsoft.com/">My Applications</a>) for the "App ID" field, and leave the "Bot app password" and "Bot webhook end point" fields empty.';

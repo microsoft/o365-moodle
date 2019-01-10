@@ -296,8 +296,13 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
 
 .local_o365_teams_app_img {
   width: 100%;
+  margin-bottom: 30px;
 }
 
 .local_o365_teams_settings_spacer {
   margin-left: 80px;
+}
+
+.local_o365_teams_settings_vertical_spacer {
+  margin: 30px 0;
 }
