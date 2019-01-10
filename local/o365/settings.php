@@ -394,7 +394,7 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
 
         // instructions
-        $instructionshtml = html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_spacer'])
+        $instructionshtml = html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_spacer']);
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365')));
 
