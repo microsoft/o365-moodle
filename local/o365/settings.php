@@ -435,12 +435,6 @@ if ($hassiteconfig) {
             get_string('settings_bot_domain_whitelist_desc', 'local_o365'),
             ''));
 
-        // externalId in manifest file
-        $settings->add(new admin_setting_configtext('local_o365/manifest_external_id',
-            get_string('settings_manifest_external_id', 'local_o365'),
-            get_string('settings_manifest_external_id_desc', 'local_o365'),
-            '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95', PARAM_TEXT, 38, 36));
-
         // manifest download link
         $downloadmanifesthtml = html_writer::start_div('settingsmanifestcontainer');
         $downloadmanifesthtml .= html_writer::start_tag('p');
