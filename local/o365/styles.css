@@ -285,14 +285,6 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
   margin: 40px 0px;
 }
 
-.local_o365_settings_manifest_download_button {
-  color: white;
-  background-color: #1177d1;
-  padding: 10px;
-  font-size: 1.2rem;
-  border-radius: 5px;
-}
-
 .local_o365_settings_teams_banner_part_1 {
   margin: 30px 40px 0px 40px;
   text-align: center;
@@ -300,4 +292,12 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
 
 .local_o365_settings_teams_banner_part_2 {
   margin: 0px 40px 10px 40px;
+}
+
+.local_o365_teams_app_img {
+  width: 100%;
+}
+
+.local_o365_teams_settings_button {
+  margin-left: 80px;
 }

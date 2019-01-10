@@ -97,9 +97,6 @@ if ($hassiteconfig) {
         $configdesc = new \lang_string('settings_setup_step1_credentials_end', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
         $settings->add(new admin_setting_heading('local_o365_setup_step1_credentialsend', '', $configdesc));
 
-        $configdesc = new \lang_string('settings_setup_step1_perms', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
-        $settings->add(new admin_setting_heading('local_o365_setup_step1_perms', '', $configdesc));
-
         // STEP 2: Connection Method.
         $clientid = get_config('auth_oidc', 'clientid');
         $clientsecret = get_config('auth_oidc', 'clientsecret');
@@ -369,7 +366,7 @@ if ($hassiteconfig) {
         // banner
         $bannerhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1', ['id' => 'admin-teams-banner']);
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
-            ['class' => 'x-hidden-focus force-vertical-align']);
+            ['class' => 'x-hidden-focus force-vertical-align local_o365_teams_app_img']);
         $bannerhtml .= html_writer::start_tag('p');
         $bannerhtml .= get_string('settings_teams_banner_1', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
@@ -383,7 +380,7 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::end_div();
         $bannerhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
-        $bannerhtml .= html_writer::start_tag('p');
+        $bannerhtml .= html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_button']);
         $bannerhtml .= get_string('settings_teams_banner_3', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::empty_tag('br');
@@ -395,6 +392,10 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::end_div();
 
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
+
+        // instructions
+        $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
+            get_string('settings_teams_additional_instructions', 'local_o365')));
 
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
@@ -428,11 +429,11 @@ if ($hassiteconfig) {
 
         // manifest download link
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');
-        $downloadmanifesthtml .= html_writer::start_tag('p');
+        $downloadmanifesthtml .= html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_button']);
         $manifesturl = new moodle_url('/local/o365/export_manifest.php');
         $downloadmanifesthtml .= html_writer::link($manifesturl,
             get_string('settings_download_teams_tab_app_manifest', 'local_o365'),
-            ['class' => 'local_o365_settings_manifest_download_button']);
+            ['class' => 'btn btn-primary']);
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::start_tag('p');
         $downloadmanifesthtml .= get_string('settings_publish_manifest_instruction', 'local_o365');

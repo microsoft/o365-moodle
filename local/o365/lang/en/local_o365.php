@@ -477,7 +477,6 @@ $string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for y
 
 <p style="margin-top:10px"><a href="https://github.com/Microsoft/o365-moodle/tree/master/scripts/README.md" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Application Key returned by script into the fields below:';
-$string['settings_setup_step1_perms'] = '<b>Permissions:</b> Once you have the Application ID and key, you will need to enable the <a href="https://docs.moodle.org/34/en/Office365#Configure_your_Application_Permissions">Permissions</a> listed in the integration documentation.<br /><br /><br />';
 $string['settings_setup_step1_credentials_end'] = 'Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step2'] = 'Step 2/3: Choose connection method';
@@ -677,6 +676,17 @@ $string['error_missing_app_id'] = 'Missing App ID setting.';
 $string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['settings_header_teams'] = 'Teams Settings';
+$string['settings_teams_additional_instructions'] = '<ul>
+<li>Go to <a href="{$a}/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
+<li>Go to <a href="{$a}/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
+<li>Go to <a href="{$a}/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
+<li>Go to <a href="{$a}/admin/settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
+<li>Give "Authenticated user" role permission to create web server token.
+<ul>
+<li>Go to <a href="{$a}/admin/roles/manage.php" target="_blank">Manage roles</a> page and edit "Authenticated user" role.</li>
+<li>Set "Create a web service token" permission for the role to "Allow".</li>
+</ul>
+</ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
 $string['settings_bot_feature_enabled_desc'] = 'If this is checked, the teams manifest file generated will contain information about the bot app, besides teams tab. Use bot app ID for the "App ID" field below, and enter bot app password and webhook end point in the fields. If this is unchecked, the manifest file generated will only contain information about teams tab, use teams app ID generated from the Microsoft Application Registration Portal (<a href="https://apps.dev.microsoft.com/">My Applications</a>) for the "App ID" field, and leave the "Bot app password" and "Bot webhook end point" fields empty.';
 $string['settings_bot_app_id'] = 'App ID';
@@ -690,7 +700,7 @@ $string['settings_bot_domain_whitelist_desc'] = 'Enter one domain per row (e.g. 
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank" id="yui_3_17_2_1_1547047995242_64">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://www.microsoft.com/en-us/education/products/teams/default.aspx">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
-$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://azure.microsoft.com/" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://azure.microsoft.com/" target="_blank">get one for free</a> today!';
+$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://azure.microsoft.com/" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://azure.microsoft.com/free" target="_blank">get one for free</a> today!';
 $string['settings_teams_banner_3'] = 'Once you have an active Azure subscription, follow the instructions here to setup the bot:';
 $string['settings_teams_link_deploy'] = 'Deploy Moodle Assistant to Azure';
 $string['teams_no_course'] = 'You don\'t have any course to add.';
