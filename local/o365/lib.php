@@ -208,6 +208,7 @@ function local_o365_create_manifest_file() {
             parse_url($CFG->wwwroot, PHP_URL_HOST),
             'token.botframework.com',
         ),
+        'externalId' => get_config('local_o365', 'manifest_external_id'),
     );
 
     // Task 5: add bot part to manifest if enabled.
