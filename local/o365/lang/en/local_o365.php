@@ -328,9 +328,9 @@ $string['settings_usergroups_details'] = 'If enabled, this will create and maint
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_clientid'] = 'Application ID';
-$string['settings_clientid_desc'] = 'Your Azure AD application ID. This is shown in the Azure after to click on your registered applicatin.';
-$string['settings_clientsecret'] = 'Key';
-$string['settings_clientsecret_desc'] = 'Your Azure AD application key. Create a key by clicking "Settings", then "Keys" under the "API Access" section. Copy the value here.';
+$string['settings_clientid_desc'] = '';
+$string['settings_clientsecret'] = 'Application Key';
+$string['settings_clientsecret_desc'] = '';
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_detectoidc'] = 'Application Credentials';
@@ -471,12 +471,12 @@ $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem 
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
 $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or click "Detect" to attempt to detect correct value.';
 $string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Azure AD';
-$string['settings_setup_step1_desc'] = 'Head over to Azure (<a href="https://portal.azure.com">https://portal.azure.com</a>), go to "Azure Active Directory", then "App Registrations", and register an application for Moodle using the following information. Please ensure this information is entered in Azure exactly as it appears here as small differences may break functionality.';
-$string['settings_setup_step1clientcreds'] = '<br />Once registered, create a key for the application in Azure. One you have the key, copy the application ID and key from Azure into the fields below.';
-$string['settings_setup_step1_signonurl'] = 'Sign-On URL';
-$string['settings_setup_step1_signonurl_desc'] = '';
-$string['settings_setup_step1_replyurl'] = 'Reply URL';
-$string['settings_setup_step1_replyurl_desc'] = '';
+$string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for your Office 365 tenant by using Windows PowerShell:
+
+<button type="submit" onclick=\'{$a}/local/o365/scripts/Moodle-AzureAD-PS.zip\' class="btn btn-primary">Download PowerShell Script</button>
+
+<p style="margin-top:10px"><a href="https://github.com/Microsoft/o365-moodle/tree/master/scripts/README.md" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
+$string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Application Key returned by script into the fields below:';
 $string['settings_setup_step1_perms'] = '<b>Permissions:</b> Once you have the Application ID and key, you will need to enable the <a href="https://docs.moodle.org/34/en/Office365#Configure_your_Application_Permissions">Permissions</a> listed in the integration documentation.<br /><br /><br />';
 $string['settings_setup_step1_credentials_end'] = 'Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';

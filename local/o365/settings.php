@@ -80,12 +80,8 @@ if ($hassiteconfig) {
         // STEP 1: Registration.
         $oidcsettings = new \moodle_url('/admin/settings.php?section=authsettingoidc');
         $label = new lang_string('settings_setup_step1', 'local_o365');
-        $desc = new lang_string('settings_setup_step1_desc', 'local_o365');
+        $desc = new lang_string('settings_setup_step1_desc', 'local_o365', $CFG->wwwroot);
         $settings->add(new admin_setting_heading('local_o365_setup_step1', $label, $desc));
-
-        $configkey = new \lang_string('settings_setup_step1_signonurl', 'local_o365');
-        $configdesc = new \lang_string('settings_setup_step1_signonurl_desc', 'local_o365');
-        $settings->add(new \auth_oidc\form\adminsetting\redirecturi('local_o365/signonurl', $configkey, $configdesc));
 
         $configdesc = new \lang_string('settings_setup_step1clientcreds', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_setup_step1clientcreds', '', $configdesc));
