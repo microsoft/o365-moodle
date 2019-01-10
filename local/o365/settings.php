@@ -394,11 +394,8 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
 
         // instructions
-        $instructionshtml = html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_spacer']);
-        $instructionshtml .= get_string('settings_teams_additional_instructions', 'local_o365', $CFG->wwwroot);
-        $instructionshtml .= html_writer::end_tag('p');
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
-            $instructionshtml));
+            get_string('settings_teams_additional_instructions', 'local_o365', $CFG->wwwroot)));
 
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',

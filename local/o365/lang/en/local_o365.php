@@ -676,7 +676,7 @@ $string['error_missing_app_id'] = 'Missing App ID setting.';
 $string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['settings_header_teams'] = 'Teams Settings';
-$string['settings_teams_additional_instructions'] = '<ul>
+$string['settings_teams_additional_instructions'] = '<ul class="local_o365_teams_settings_spacer">
 <li>Go to <a href="{$a}/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
 <li>Go to <a href="{$a}/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
 <li>Go to <a href="{$a}/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
