@@ -375,19 +375,12 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
             ['class' => 'x-hidden-focus force-vertical-align']);
         $bannerhtml .= html_writer::start_tag('p');
-        $msteamslink = html_writer::link('https://www.microsoft.com/en-us/education/products/teams/default.aspx',
-            get_string('settings_teams_link_teams', 'local_o365'));
-        $bannerhtml .= get_string('settings_teams_banner_1', 'local_o365', $msteamslink);
+        $bannerhtml .= get_string('settings_teams_banner_1', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::end_tag('p');
         $bannerhtml .= html_writer::start_tag('p');
-        $azurelink1 = html_writer::link('https://azure.microsoft.com/',
-            get_string('settings_teams_link_azure_1', 'local_o365'), ['target' => '_blank']);
-        $azurelink2 = html_writer::link('https://azure.microsoft.com/',
-            get_string('settings_teams_link_azure_2', 'local_o365'), ['target' => '_blank']);
-        $bannerhtml .= get_string('settings_teams_banner_2', 'local_o365', ['link1' => $azurelink1,
-            'link2' => $azurelink2]);
+        $bannerhtml .= get_string('settings_teams_banner_2', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::end_tag('p');
@@ -399,7 +392,8 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::link('https://github.com/microsoft/Moodle-Teams-Bot',
-            get_string('settings_teams_link_deploy', 'local_o365'));
+            get_string('settings_teams_link_deploy', 'local_o365'),
+            ['class' => 'btn btn-primary', 'target' => '_blank']);
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::end_tag('p');
         $bannerhtml .= html_writer::end_div();
