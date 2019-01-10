@@ -678,10 +678,10 @@ $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['settings_header_teams'] = 'Teams Settings';
 $string['settings_teams_additional_instructions'] = '<h4 class="local_o365_teams_settings_h4_spacer">Required Moodle Settings for the Moodle Teams app:</h4>
 <ul class="local_o365_teams_settings_spacer">
-<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
-<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
-<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
-<li>Go to <a href="{$a->wwwroot}/admin/settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
+<li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
+<li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
+<li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
+<li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
 <li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
