@@ -395,7 +395,7 @@ if ($hassiteconfig) {
 
         // instructions
         $userrole = $DB->get_record('role', ['shortname' => 'user'], '*', MUST_EXIST);
-        $edituserroleurl = new moodle_url('/admin/role/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
+        $edituserroleurl = new moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365',
                 ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
