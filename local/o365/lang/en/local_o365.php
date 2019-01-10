@@ -473,7 +473,7 @@ $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or cli
 $string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Azure AD';
 $string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for your Office 365 tenant by using Windows PowerShell:
 
-<button type="submit" onclick="location.href=\'{$a}/local/o365/scripts/Moodle-AzureAD-PS.zip\'" class="btn btn-primary">Download PowerShell Script</button>
+<a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download PowerShell Script</a>
 
 <p style="margin-top:10px"><a href="https://github.com/Microsoft/o365-moodle/tree/master/scripts/README.md" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Application Key returned by script into the fields below:';
