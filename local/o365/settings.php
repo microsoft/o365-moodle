@@ -432,13 +432,13 @@ if ($hassiteconfig) {
 
         // manifest download link
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');
-        $downloadmanifesthtml .= html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_spacer']);
+        $downloadmanifesthtml .= html_writer::start_tag('p');
         $manifesturl = new moodle_url('/local/o365/export_manifest.php');
         $downloadmanifesthtml .= html_writer::link($manifesturl,
             get_string('settings_download_teams_tab_app_manifest', 'local_o365'),
             ['class' => 'btn btn-primary']);
         $downloadmanifesthtml .= html_writer::end_tag('p');
-        $downloadmanifesthtml .= html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_spacer']);
+        $downloadmanifesthtml .= html_writer::start_tag('p');
         $downloadmanifesthtml .= get_string('settings_publish_manifest_instruction', 'local_o365');
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::end_div();

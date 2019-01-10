@@ -304,5 +304,7 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
 }
 
 .local_o365_teams_settings_h4_spacer {
-  margin: 30px 0 30px 80px;
+  margin: 20px 0 30px 0;
+  border-top: 1px solid #e9ecef;
+  padding-top: 10px;
 }

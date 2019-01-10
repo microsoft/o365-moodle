@@ -693,7 +693,7 @@ $string['settings_bot_app_password_desc'] = 'Password of the bot app ID';
 $string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
 $string['settings_bot_webhook_endpoint_desc'] = 'e.g. https://sample.azurewebsites.net/api/webhook';
 $string['settings_bot_domain_whitelist'] = 'Bot domains whitelist';
-$string['settings_bot_domain_whitelist_desc'] = 'Enter one domain per row (e.g. azure.com)';
+$string['settings_bot_domain_whitelist_desc'] = 'The whitelist authorizes your bot to connect with Moodle. Please enter the domain name of your provisioned bot (e.g. mymoodlebotname.azurewebsites.net)';
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank" id="yui_3_17_2_1_1547047995242_64">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://www.microsoft.com/en-us/education/products/teams/default.aspx">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
