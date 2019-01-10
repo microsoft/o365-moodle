@@ -442,13 +442,10 @@ if ($hassiteconfig) {
         $manifesturl = new moodle_url('/local/o365/export_manifest.php');
         $downloadmanifesthtml .= html_writer::link($manifesturl,
             get_string('settings_download_teams_tab_app_manifest', 'local_o365'),
-            ['class' => 'local_o365_settings_manifest_download_button', 'target' => '_blank']);
+            ['class' => 'local_o365_settings_manifest_download_button']);
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::start_tag('p');
-        $maniestinstructionurl = 'https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload';
-        $downloadmanifesthtml .= html_writer::link($maniestinstructionurl,
-            get_string('settings_publish_manifest_instruction_1', 'local_o365')) .
-            get_string('settings_publish_manifest_instruction_2', 'local_o365');
+        $downloadmanifesthtml .= get_string('settings_publish_manifest_instruction', 'local_o365');
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::end_div();
 
