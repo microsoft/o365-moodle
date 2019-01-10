@@ -280,3 +280,24 @@ button.manualloginbutton:focus, button.manualloginbutton:focus:enabled {
   vertical-align: top;
   margin-right: 10px;
 }
+
+.settingsmanifestcontainer {
+  text-align: center;
+}
+
+.settingsmanifestbutton {
+  color: white;
+  background-color: #1177d1;
+  padding: 10px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+}
+
+.settingsteamsbanner {
+  margin: 30px 40px 0px 40px;
+  text-align: center;
+}
+
+.settingsteamsbanner2 {
+  margin: 0px 40px 10px 40px;
+}

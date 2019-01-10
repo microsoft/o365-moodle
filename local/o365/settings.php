@@ -370,6 +370,41 @@ if ($hassiteconfig) {
     }
 
     if ($tab == LOCAL_O365_TAB_TEAMS || !empty($install)) {
+        // banner
+        $bannerhtml = html_writer::start_div('settingsteamsbanner', ['id' => 'admin-teams-banner']);
+        $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
+            ['class' => 'x-hidden-focus force-vertical-align']);
+        $bannerhtml .= html_writer::start_tag('p');
+        $msteamslink = html_writer::link('https://www.microsoft.com/en-us/education/products/teams/default.aspx',
+            get_string('settings_teams_link_teams', 'local_o365'));
+        $bannerhtml .= get_string('settings_teams_banner_1', 'local_o365', $msteamslink);
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::end_tag('p');
+        $bannerhtml .= html_writer::start_tag('p');
+        $azurelink1 = html_writer::link('https://azure.microsoft.com/',
+            get_string('settings_teams_link_azure_1', 'local_o365'), ['target' => '_blank']);
+        $azurelink2 = html_writer::link('https://azure.microsoft.com/',
+            get_string('settings_teams_link_azure_2', 'local_o365'), ['target' => '_blank']);
+        $bannerhtml .= get_string('settings_teams_banner_2', 'local_o365', ['link1' => $azurelink1,
+            'link2' => $azurelink2]);
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::end_tag('p');
+        $bannerhtml .= html_writer::end_div();
+        $bannerhtml .= html_writer::start_div('form-item row settingsteamsbanner2', ['id' => 'admin-teams-bot-deploy']);
+        $bannerhtml .= html_writer::start_tag('p');
+        $bannerhtml .= get_string('settings_teams_banner_3', 'local_o365');
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::link('https://github.com/microsoft/Moodle-Teams-Bot',
+            get_string('settings_teams_link_deploy', 'local_o365'));
+        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= html_writer::end_tag('p');
+        $bannerhtml .= html_writer::end_div();
+
+        $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
+
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
             get_string('settings_bot_feature_enabled', 'local_o365'),
@@ -400,13 +435,27 @@ if ($hassiteconfig) {
             get_string('settings_bot_domain_whitelist_desc', 'local_o365'),
             ''));
 
-        // manifest download link
-        $html = html_writer::start_tag('p');
-        $manifesturl = new moodle_url('/local/o365/export_manifest.php');
-        $html .= html_writer::link($manifesturl, get_string('settings_download_teams_tab_app_manifest', 'local_o365'));
-        $html .= html_writer::end_tag('p');
+        // externalId in manifest file
+        $settings->add(new admin_setting_configtext('local_o365/manifest_external_id',
+            get_string('settings_manifest_external_id', 'local_o365'),
+            get_string('settings_manifest_external_id_desc', 'local_o365'),
+            '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95', PARAM_TEXT, 38, 36));
 
-        $settings->add(new admin_setting_heading('download_manifest_header',
-            get_string('settings_download_teams_tab_app_manifest', 'local_o365'), $html));
+        // manifest download link
+        $downloadmanifesthtml = html_writer::start_div('settingsmanifestcontainer');
+        $downloadmanifesthtml .= html_writer::start_tag('p');
+        $manifesturl = new moodle_url('/local/o365/export_manifest.php');
+        $downloadmanifesthtml .= html_writer::link($manifesturl,
+            get_string('settings_download_teams_tab_app_manifest', 'local_o365'), ['class' => 'settingsmanifestbutton']);
+        $downloadmanifesthtml .= html_writer::end_tag('p');
+        $downloadmanifesthtml .= html_writer::start_tag('p');
+        $maniestinstructionurl = 'https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload';
+        $downloadmanifesthtml .= html_writer::link($maniestinstructionurl,
+            get_string('settings_publish_manifest_instruction_1', 'local_o365')) .
+            get_string('settings_publish_manifest_instruction_2', 'local_o365');
+        $downloadmanifesthtml .= html_writer::end_tag('p');
+        $downloadmanifesthtml .= html_writer::end_div();
+
+        $settings->add(new admin_setting_heading('download_manifest_header', '', $downloadmanifesthtml));
     }
 }
