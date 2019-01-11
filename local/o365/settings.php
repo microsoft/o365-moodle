@@ -428,7 +428,7 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_configtextarea('local_o365/bot_domains_whitelist',
             get_string('settings_bot_domain_whitelist', 'local_o365'),
             get_string('settings_bot_domain_whitelist_desc', 'local_o365'),
-            ''));
+            '', PARAM_RAW, 60, 1));
 
         // manifest download link
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');
