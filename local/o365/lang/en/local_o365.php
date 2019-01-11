@@ -694,7 +694,7 @@ $string['settings_bot_app_password_desc'] = 'Password of the bot application ID'
 $string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
 $string['settings_bot_webhook_endpoint_desc'] = 'e.g. https://sample.azurewebsites.net/api/webhook';
 $string['settings_bot_domain_whitelist'] = 'Bot domains whitelist';
-$string['settings_bot_domain_whitelist_desc'] = 'The whitelist authorizes your bot to connect with Moodle. Please enter the domain name of your bot to authorize it with the Moodle server (ex: https://\<moodlebotname\>.azurewebsites.net).';
+$string['settings_bot_domain_whitelist_desc'] = 'The whitelist authorizes your bot to connect with Moodle. Please enter the domain name of your bot to authorize it with the Moodle server (ex: https://<moodlebotname\>.azurewebsites.net).';
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank" id="yui_3_17_2_1_1547047995242_64">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
