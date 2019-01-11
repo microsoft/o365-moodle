@@ -672,24 +672,25 @@ $string['question_teacher_least_scored_in_assignment'] = "Which students scored 
 $string['question_teacher_student_last_logged'] = "When did Firstname Lastname last log into moodle?";
 $string['your_grade'] = 'Your grade - {$a}';
 $string['your_grade_class_grade'] = 'Your grade - {$a->usergrade} &nbsp; |  &nbsp; Class average grade - {$a->classgrade}';
-$string['error_missing_app_id'] = 'Missing App ID setting.';
+$string['error_missing_app_id'] = 'Missing Application ID setting.';
 $string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['settings_header_teams'] = 'Teams Settings';
-$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_teams_settings_h4_spacer">Required Moodle Settings for the Moodle Teams app:</h4>
-<ul class="local_o365_teams_settings_spacer">
+$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_settings_teams_h4_spacer">Setup your Moodle app for Microsoft Teams</h4>
+<ul class="local_o365_settings_teams_horizontal_spacer">
 <li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
 <li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
 <li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
 <li>Go to <a href="' . $a->wwwroot . '/admin/settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
 <li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
+<li>Go to the <a href="https://apps.dev.microsoft.com/portal/register-app" target="_blank">Microsoft Application Registration Portal</a> and register a new app. Enter the Application ID and Secret below:</li>
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
-$string['settings_bot_feature_enabled_desc'] = 'If this is checked, the teams manifest file generated will contain information about the bot app, besides teams tab. Use bot app ID for the "App ID" field below, and enter bot app password and webhook end point in the fields. If this is unchecked, the manifest file generated will only contain information about teams tab, use teams app ID generated from the Microsoft Application Registration Portal (<a href="https://apps.dev.microsoft.com/">My Applications</a>) for the "App ID" field, and leave the "Bot app password" and "Bot webhook end point" fields empty.';
-$string['settings_bot_app_id'] = 'App ID';
-$string['settings_bot_app_id_desc'] = 'The unique Microsoft-generated identifier for this app. If you have registered a bot via the Microsoft Bot Framework, or your tab\'s web app already signs in with Microsoft, you should already have an ID and should enter it here. Otherwise, you should generate a new ID at the Microsoft Application Registration Portal (<a href="https://apps.dev.microsoft.com/">My Applications</a>), enter it here, and then reuse it when you add a bot.';
-$string['settings_bot_app_password'] = 'Bot app password';
-$string['settings_bot_app_password_desc'] = 'Password of the bot app ID';
+$string['settings_bot_feature_enabled_desc'] = '';
+$string['settings_bot_app_id'] = 'Application ID';
+$string['settings_bot_app_id_desc'] = '';
+$string['settings_bot_app_password'] = 'Application secret';
+$string['settings_bot_app_password_desc'] = 'Password of the bot application ID';
 $string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
 $string['settings_bot_webhook_endpoint_desc'] = 'e.g. https://sample.azurewebsites.net/api/webhook';
 $string['settings_bot_domain_whitelist'] = 'Bot domains whitelist';

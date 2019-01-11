@@ -366,7 +366,7 @@ if ($hassiteconfig) {
         // banner
         $bannerhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1', ['id' => 'admin-teams-banner']);
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
-            ['class' => 'x-hidden-focus force-vertical-align local_o365_teams_app_img']);
+            ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_teams_app_img']);
         $bannerhtml .= html_writer::start_tag('p');
         $bannerhtml .= get_string('settings_teams_banner_1', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
@@ -380,7 +380,7 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::end_div();
         $bannerhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
-        $bannerhtml .= html_writer::start_tag('p', ['class' => 'local_o365_teams_settings_spacer']);
+        $bannerhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
         $bannerhtml .= get_string('settings_teams_banner_3', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::empty_tag('br');
@@ -396,39 +396,57 @@ if ($hassiteconfig) {
         // instructions
         $userrole = $DB->get_record('role', ['shortname' => 'user'], '*', MUST_EXIST);
         $edituserroleurl = new moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
-        $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
+        $instructionshtml = html_writer::start_div('local_o365_settings_teams_vertical_spacer');
+        $instructionshtml .= new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365',
-                ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
+                ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()]));
+        $instructionshtml .= html_writer::end_div();
+        $settings->add($instructionshtml);
 
-        // bot_feature_enabled
-        $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
-            get_string('settings_bot_feature_enabled', 'local_o365'),
-            get_string('settings_bot_feature_enabled_desc', 'local_o365'),
-            '0'));
-
-        // bot_app_id
-        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
+        // applicationid
+        $applicationidhtml = html_writer::start_div('local_o365_settings_teams_vertical_spacer');
+        $applicationidhtml .= new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
             get_string('settings_bot_app_id', 'local_o365'),
             get_string('settings_bot_app_id_desc', 'local_o365'),
-            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
+            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36);
+        $applicationidhtml .= html_writer::end_div();
+        $settings->add($applicationidhtml);
 
         // bot_app_password
-        $settings->add(new admin_setting_configpasswordunmask('local_o365/bot_app_password',
+        $applicationsecrethtml = html_writer::start_div('local_o365_settings_teams_vertical_spacer');
+        $applicationsecrethtml .= new admin_setting_configpasswordunmask('local_o365/bot_app_password',
             get_string('settings_bot_app_password', 'local_o365'),
             get_string('settings_bot_app_password_desc', 'local_o365'),
-            ''));
+            '');
+        $applicationsecrethtml .= html_writer::end_div();
+        $settings->add($applicationsecrethtml);
+
+        // bot_feature_enabled
+        $botfeaturetogglehtml = html_writer::start_div('local_o365_settings_teams_vertical_spacer');
+        $botfeaturetogglehtml .= new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
+            get_string('settings_bot_feature_enabled', 'local_o365'),
+            get_string('settings_bot_feature_enabled_desc', 'local_o365'),
+            '0');
+        $botfeaturetogglehtml .= html_writer::end_div();
+        $settings->add($botfeaturetogglehtml);
 
         // bot_webhook_endpoint
-        $settings->add(new admin_setting_configtext('local_o365/bot_webhook_endpoint',
+        $botwebhookendpointhtml = html_writer::start_div('local_o365_settings_teams_vertical_spacer');
+        $botwebhookendpointhtml .= new admin_setting_configtext('local_o365/bot_webhook_endpoint',
             get_string('settings_bot_webhook_endpoint', 'local_o365'),
             get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
-            ''));
+            '');
+        $botwebhookendpointhtml .= html_writer::end_div();
+        $settings->add($botwebhookendpointhtml);
 
         // bot_domains_whitelist
-        $settings->add(new admin_setting_configtextarea('local_o365/bot_domains_whitelist',
+        $botdomainswhitelisthtml = html_writer::start_div('local_o365_settings_teams_vertical_spacer');
+        $botdomainswhitelisthtml .= new admin_setting_configtextarea('local_o365/bot_domains_whitelist',
             get_string('settings_bot_domain_whitelist', 'local_o365'),
             get_string('settings_bot_domain_whitelist_desc', 'local_o365'),
-            ''));
+            '');
+        $botdomainswhitelisthtml .= html_writer::end_div();
+        $settings->add($botdomainswhitelisthtml);
 
         // manifest download link
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');

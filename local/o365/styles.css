@@ -282,7 +282,7 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
 }
 
 .local_o365_settings_manifest_container {
-  margin: 40px 0px;
+  margin: 40px 0px 20px 0px;
 }
 
 .local_o365_settings_teams_banner_part_1 {
@@ -294,17 +294,21 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
   margin: 0px 40px 10px 40px;
 }
 
-.local_o365_teams_app_img {
+.local_o365_settings_teams_app_img {
   width: 100%;
   margin-bottom: 30px;
 }
 
-.local_o365_teams_settings_spacer {
+.local_o365_settings_teams_horizontal_spacer {
   margin-left: 80px;
 }
 
-.local_o365_teams_settings_h4_spacer {
-  margin: 20px 0 30px 0;
+.local_o365_settings_teams_h4_spacer {
+  margin: 20px 0px 30px 0px;
   border-top: 1px solid #e9ecef;
   padding-top: 10px;
+}
+
+.local_o365_settings_teams_vertical_spacer {
+  margin-bottom: 20px;
 }
