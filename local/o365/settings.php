@@ -387,6 +387,18 @@ if ($hassiteconfig) {
             get_string('settings_teams_additional_instructions', 'local_o365',
                 ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
 
+        // bot_app_id
+        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
+            get_string('settings_bot_app_id', 'local_o365'),
+            get_string('settings_bot_app_id_desc', 'local_o365'),
+            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
+
+        // bot_app_password
+        $settings->add(new admin_setting_configpasswordunmask('local_o365/bot_app_password',
+            get_string('settings_bot_app_password', 'local_o365'),
+            get_string('settings_bot_app_password_desc', 'local_o365'),
+            ''));
+
         // deploy button
         $deploybuttonhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
@@ -402,18 +414,6 @@ if ($hassiteconfig) {
         $deploybuttonhtml .= html_writer::end_tag('p');
         $deploybuttonhtml .= html_writer::end_div();
         $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
-
-        // bot_app_id
-        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
-            get_string('settings_bot_app_id', 'local_o365'),
-            get_string('settings_bot_app_id_desc', 'local_o365'),
-            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
-
-        // bot_app_password
-        $settings->add(new admin_setting_configpasswordunmask('local_o365/bot_app_password',
-            get_string('settings_bot_app_password', 'local_o365'),
-            get_string('settings_bot_app_password_desc', 'local_o365'),
-            ''));
 
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
