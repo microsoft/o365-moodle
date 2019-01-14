@@ -385,7 +385,7 @@ if ($hassiteconfig) {
         $edituserroleurl = new moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365',
-                ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
+                ['edituserroleurl' => $edituserroleurl->out()])));
 
         // bot_app_id
         $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
