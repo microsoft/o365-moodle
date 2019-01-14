@@ -687,9 +687,9 @@ $string['settings_teams_additional_instructions'] = '<h4 class="local_o365_setti
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
 $string['settings_bot_feature_enabled_desc'] = '';
-$string['settings_bot_app_id'] = 'Application ID';
+$string['settings_bot_app_id'] = 'Bot Application ID';
 $string['settings_bot_app_id_desc'] = '';
-$string['settings_bot_app_password'] = 'Application secret';
+$string['settings_bot_app_password'] = 'Bot Application Password';
 $string['settings_bot_app_password_desc'] = 'Click on \'Generate New Password\' in the app page and paste the one-time password';
 $string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
 $string['settings_bot_webhook_endpoint_desc'] = 'Format: https://<moodlebotname\>.azurewebsites.net/api/webhook';
@@ -700,8 +700,8 @@ $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all 
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank" id="yui_3_17_2_1_1547047995242_64">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://www.microsoft.com/en-us/education/products/teams/default.aspx">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
 $string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://azure.microsoft.com/" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://azure.microsoft.com/free" target="_blank">get one for free</a> today!';
-$string['settings_teams_banner_3'] = 'Once you have an active Azure subscription, follow the instructions here to setup the bot:';
-$string['settings_teams_link_deploy'] = 'Deploy Moodle Assistant to Azure';
+$string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
+$string['settings_teams_deploy_bot_2'] = 'Need help?';
 $string['teams_no_course'] = 'You don\'t have any course to add.';
 $string['tab_name'] = 'Tab name';
 $string['tab_moodle'] = 'Moodle';

@@ -380,15 +380,6 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::end_div();
         $bannerhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
-        $bannerhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
-        $bannerhtml .= get_string('settings_teams_banner_3', 'local_o365');
-        $bannerhtml .= html_writer::empty_tag('br');
-        $bannerhtml .= html_writer::empty_tag('br');
-        $bannerhtml .= html_writer::link('https://github.com/microsoft/Moodle-Teams-Bot',
-            get_string('settings_teams_link_deploy', 'local_o365'),
-            ['class' => 'btn btn-primary', 'target' => '_blank']);
-        $bannerhtml .= html_writer::empty_tag('br');
-        $bannerhtml .= html_writer::end_tag('p');
         $bannerhtml .= html_writer::end_div();
 
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
@@ -399,6 +390,21 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365',
                 ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
+
+        // deploy button
+        $deploybuttonhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1');
+        $deploybuttonhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
+        $deploybuttonhtml .= get_string('settings_teams_deploy_bot_1', 'local_o365');
+        $deploybuttonhtml .= html_writer::empty_tag('br');
+        $deploybuttonhtml .= html_writer::empty_tag('br');
+        $deploybuttonhtml .= html_writer::link('https://aka.ms/DeployMoodleTeamsBot',
+            html_writer::img('http://azuredeploy.net/deploybutton.png'), ['target' => '_blank']);
+        $deploybuttonhtml .= html_writer::empty_tag('br');
+        $deploybuttonhtml .= html_writer::link('https://aka.ms/MoodleTeamsBotHelp',
+            get_string('settings_teams_deploy_bot_2', 'local_o365'), ['target' => '_blank']);
+        $deploybuttonhtml .= html_writer::end_tag('p');
+        $deploybuttonhtml .= html_writer::end_div();
+        $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
 
         // bot_app_id
         $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
