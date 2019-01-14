@@ -214,10 +214,10 @@ div.local_o365_teams_course select option {
   padding-bottom: 10px;
   font-size: 15px;
 }
-form.local_o365_course_list label {
+form#local_o365_course_list label {
   font-size: 13px;
 }
-form.local_o365_course_list {
+form#local_o365_course_list {
   font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif;
 }
 
