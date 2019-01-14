@@ -378,10 +378,6 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::end_tag('p');
         $bannerhtml .= html_writer::end_div();
-        $bannerhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
-            ['id' => 'admin-teams-bot-deploy']);
-        $bannerhtml .= html_writer::end_div();
-
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
 
         // instructions
@@ -392,7 +388,8 @@ if ($hassiteconfig) {
                 ['wwwroot ' => $CFG->wwwroot, 'edituserroleurl' => $edituserroleurl->out()])));
 
         // deploy button
-        $deploybuttonhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1');
+        $deploybuttonhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
+            ['id' => 'admin-teams-bot-deploy']);
         $deploybuttonhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
         $deploybuttonhtml .= get_string('settings_teams_deploy_bot_1', 'local_o365');
         $deploybuttonhtml .= html_writer::empty_tag('br');
