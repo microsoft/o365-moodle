@@ -179,7 +179,7 @@ function onCourseChange() {
         }
     }
 
-    var tabname =  document.getElementsByName("tab_name")[0];
+    var tabname =  document.getElementsByName("local_o365_teams_tab_name")[0];
     var tabnamevalue = tabname.value;
 
     microsoftTeams.settings.setSettings({
@@ -195,7 +195,7 @@ function onTabNameChange() {
     var course = document.getElementsByName("local_o365_teams_course[]")[0];
     var courseid = course.value;
 
-    var tabname =  document.getElementsByName("tab_name")[0];
+    var tabname =  document.getElementsByName("local_o365_teams_tab_name")[0];
     var tabnamevalue = tabname.value;
 
     microsoftTeams.settings.setSettings({

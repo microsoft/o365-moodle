@@ -222,7 +222,7 @@ form#local_o365_course_list {
 }
 
 /* Teams tab page. */
-.local_o365_teams_tab_name {
+#id_local_o365_teams_tab_name {
   background-color: #f0f2f4;
   border: 0px;
   padding: 8px 8px 8px 12px;
