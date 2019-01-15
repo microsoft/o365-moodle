@@ -26,7 +26,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-$courseid = required_param('id');
+$courseid = required_param('id', PARAM_INT);
 $courseurl = new moodle_url('/course/view.php', ['id' => $courseid]);
 
 unset($SESSION->theme);
