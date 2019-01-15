@@ -475,9 +475,11 @@ $string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for y
 
 <a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download PowerShell Script</a>
 
-<p style="margin-top:10px"><a href="https://github.com/Microsoft/o365-moodle/tree/master/scripts/README.md" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
+<p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Application Key returned by script into the fields below:';
-$string['settings_setup_step1_credentials_end'] = 'Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
+$string['settings_setup_step1_credentials_end'] = 'If you are unable to setup the AzureAD app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.
+
+Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step2'] = 'Step 2/3: Choose connection method';
 $string['settings_setup_step2_desc'] = 'This section allows you to choose how the Office 365 integration suite connects to Azure. Communication can be made using "Application Access", or on behalf of a user you have dedicated as the "system" user.';
@@ -683,7 +685,7 @@ $string['settings_teams_additional_instructions'] = '<h4 class="local_o365_setti
 <li>Go to <a href="settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
 <li>Go to <a href="settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
 <li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
-<li>Go to the <a href="https://apps.dev.microsoft.com/portal/register-app" target="_blank">Microsoft Application Registration Portal</a> and register a new app. Enter the Application ID and Secret below:</li>
+<li>Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">Microsoft Application Registration Portal</a> and register a new app. Enter the Bot Application ID and Password below:</li>
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
 $string['settings_bot_feature_enabled_desc'] = '';
@@ -697,9 +699,9 @@ $string['settings_bot_domain_whitelist'] = 'Bot domains whitelist';
 $string['settings_bot_domain_whitelist_desc'] = 'The whitelist authorizes your bot to connect with Moodle. Please enter the domain name of your bot to authorize it with the Moodle server (ex: https://<moodlebotname\>.azurewebsites.net).';
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
-$string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank" id="yui_3_17_2_1_1547047995242_64">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
-$string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://www.microsoft.com/en-us/education/products/teams/default.aspx">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
-$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://azure.microsoft.com/" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://azure.microsoft.com/free" target="_blank">get one for free</a> today!';
+$string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
+$string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
+$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
 $string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
 $string['settings_teams_deploy_bot_2'] = 'Need help?';
 $string['teams_no_course'] = 'You don\'t have any course to add.';
