@@ -54,8 +54,9 @@ class teamstabconfiguration extends \moodleform {
             $mform->setType('tab_name', PARAM_TEXT);
             $mform->setDefault('tab_name', get_string('tab_moodle', 'local_o365'));
 
-            $courseselector = $mform->createElement('select', 'course', get_string('course_selector_label', 'local_o365'),
-                    $courseoptions, array('onchange' => 'onCourseChange()', 'class' => 'local_o365_teams_course'));
+            $courseselector = $mform->createElement('select', 'local_o365_teams_course',
+                get_string('course_selector_label', 'local_o365'),
+                $courseoptions, array('onchange' => 'onCourseChange()'));
             $courseselector->setSize(100);
             $courseselector->setMultiple(true);
 

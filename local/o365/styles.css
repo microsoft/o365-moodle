@@ -174,29 +174,29 @@ table.local_o365_matchqueue {
   display: none; }
 
 /* Teams tab configuration page. */
-div.local_o365_teams_course select::-webkit-scrollbar {
+select#id_local_o365_teams_course select::-webkit-scrollbar {
     width: 6px;
 }
-div.local_o365_teams_course select::-webkit-scrollbar-track {
+select#id_local_o365_teams_course::-webkit-scrollbar-track {
     box-shadow: inset 0 0 0px grey;
     border-radius: 0px;
 }
-div.local_o365_teams_course select::-webkit-scrollbar-thumb {
+select#id_local_o365_teams_course::-webkit-scrollbar-thumb {
     background: rgba(50,50,50,.3);
     border-radius: 10px;
 }
-div.local_o365_teams_course select::-webkit-scrollbar-thumb:hover {
+select#id_local_o365_teams_course::-webkit-scrollbar-thumb:hover {
     background: rgba(100,100,100,.5);
 }
-div.local_o365_teams_course select > option:hover {
+select#id_local_o365_teams_course > option:hover {
   background-color: #6264a7;
   color: white;
 }
-div.local_o365_teams_course select:focus option:checked {
+select#id_local_o365_teams_course:focus option:checked {
   background: #6264a7 linear-gradient(0deg, #6264a7 0%, #6264a7 100%);
   color: white;
 }
-div.local_o365_teams_course select {
+select#id_local_o365_teams_course {
   overflow: auto;
   width: 100%;
   max-height: 270px;
@@ -204,11 +204,11 @@ div.local_o365_teams_course select {
   border-color: #f1f1f1;
   color: #484644;
 }
-div.local_o365_teams_course select:focus {
+select#id_local_o365_teams_course:focus {
   outline-offset: 0px !important;
   outline: none !important;
 }
-div.local_o365_teams_course select option {
+select#id_local_o365_teams_course option {
   padding-top: 10px;
   padding-left: 20px;
   padding-bottom: 10px;

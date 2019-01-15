@@ -168,7 +168,7 @@ function login() {
 }
 
 function onCourseChange() {
-    var course = document.getElementsByName("course[]")[0];
+    var course = document.getElementsByName("local_o365_teams_course[]")[0];
     var courseid = course.value;
     course.removeAttribute("multiple");
 
@@ -192,7 +192,7 @@ function onCourseChange() {
 }
 
 function onTabNameChange() {
-    var course = document.getElementsByName("course[]")[0];
+    var course = document.getElementsByName("local_o365_teams_course[]")[0];
     var courseid = course.value;
 
     var tabname =  document.getElementsByName("tab_name")[0];
@@ -216,7 +216,7 @@ function inIframe() {
 
 function setTitles() {
     var text;
-    var id_course = document.getElementById("id_course");
+    var id_course = document.getElementById("id_local_o365_teams_course");
     if (id_course) {
         var x = id_course.options.length;
         for (i = 0; i < x; i++ ) {
