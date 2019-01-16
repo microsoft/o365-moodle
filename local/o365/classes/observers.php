@@ -771,7 +771,7 @@ class observers {
      * @throws \dml_exception
      */
     public static function handle_notification_sent(\core\event\notification_sent $event) {
-        global $DB, $OUTPUT, $PAGE;
+        global $CFG, $DB, $PAGE;
 
         // check if we have the configuration to send proactive notifications
         $aadtenant = get_config('local_o365', 'aadtenant');
@@ -855,11 +855,10 @@ class observers {
         $listItems = [];
         if ((strpos($notification->component, 'mod_') !== FALSE) && !empty($notification->contexturl)) {
             $PAGE->theme->force_svg_use(null);
-            $modname = str_replace('mod_', '', $notification->component);
             $listItems[] = [
                 'title' => $notification->contexturlname,
                 'subtitle' => '',
-                'icon' => $OUTPUT->image_url('icon', $modname)->out(),
+                'icon' => $CFG->wwwroot . '/local/o365/pix/moodle.png',
                 'action' => $notification->contexturl,
                 'actionType' => 'openUrl'
             ];
