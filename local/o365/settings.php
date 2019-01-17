@@ -427,11 +427,11 @@ if ($hassiteconfig) {
             get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
             ''));
 
-        // bot_domains_whitelist
-        $settings->add(new admin_setting_configtextarea('local_o365/bot_domains_whitelist',
-            get_string('settings_bot_domain_whitelist', 'local_o365'),
-            get_string('settings_bot_domain_whitelist_desc', 'local_o365'),
-            '', PARAM_RAW, 60, 1));
+        // bot_shared_secret
+        $settings->add(new admin_setting_configtext('local_o365/bot_sharedsecret',
+            get_string('settings_bot_sharedsecret', 'local_o365'),
+            get_string('ssettings_bot_sharedsecret_desc', 'local_o365'),
+            ''));
 
         // manifest download link
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');

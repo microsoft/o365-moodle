@@ -263,30 +263,13 @@ function local_o365_create_manifest_file() {
 }
 
 /**
- * Checks if IP is in domains whitelist
+ * Decodes JWT token elements
  *
- * @param $ip
- *
- * @return bool
- * @throws dml_exception
+ * @param string $data - encoded string
+ * @return string - decoded string
  */
-function local_o365_ip_in_domains_whitelist($ip){
-    $whitelistdomains = get_config('local_o365', 'bot_domains_whitelist');
-    if(!empty($whitelistdomains)){
-        $whitelistdomains = explode("\n", $whitelistdomains);
-        foreach($whitelistdomains as $domain){
-            $parseddomain = parse_url($domain, PHP_URL_HOST);
-            if(is_null($parseddomain)){
-                $domainip = gethostbyname($domain);
-            }else{
-                $domainip = gethostbyname($parseddomain);
-            }
-            if(!empty($domainip) && $ip == $domainip){
-                return true;
-            }
-        }
-        return false;
-    } else{
-        return true;
-    }
+function base64UrlDecode($data){
+    $urlUnsafeData = strtr($data, '-_', '+/');
+    $paddedData = str_pad($urlUnsafeData, strlen($data) % 4, '=', STR_PAD_RIGHT);
+    return base64_decode($paddedData);
 }

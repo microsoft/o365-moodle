@@ -34,20 +34,27 @@ require_once('lib.php');
 $username = required_param('username', PARAM_USERNAME);
 $serviceshortname = required_param('service', PARAM_TEXT);
 
-if (!local_o365_ip_in_domains_whitelist($_SERVER['REMOTE_ADDR'])) {
-    http_response_code(404);
-    throw new moodle_exception('invalidrequest');
-}
-
 $headers = apache_request_headers();
 if (!isset($headers['Authorization'])) {
     http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
+$authtoken = substr($headers['Authorization'], 7);
+list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
+$dataEncoded = "$headerEncoded.$payloadEncoded";
+$signature = base64UrlDecode($signatureEncoded);
+$rawSignature = hash_hmac($algo, $dataEncoded, $secret, true);
+if(!hash_equals($rawSignature, $signature)){
+    http_response_code(401);
+    throw new moodle_exception('invalidlogin');
+}
+
+$payload = base64UrlDecode($payloadEncoded);
+
 $headr = array();
 $headr[] = 'Content-length: 0';
 $headr[] = 'Content-type: application/json';
-$headr[] = 'Authorization: '.$headers['Authorization'];
+$headr[] = 'Authorization: Bearer '.$payload->token;
 $curl = curl_init();
 curl_setopt_array($curl, array(
     CURLOPT_RETURNTRANSFER => 1,
