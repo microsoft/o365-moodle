@@ -35,12 +35,9 @@ echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTea
 echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anonymous\"></script>";
 
-$id = required_param('id', PARAM_INT);
-
 $USER->editing = false; // Turn off editing if the page is opened in iframe.
 
 $redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
-$coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
 $ssostarturl = new moodle_url('/local/o365/sso_start.php');
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
@@ -57,11 +54,8 @@ echo html_writer::tag('button', get_string('other_login', 'local_o365'),
     array('onclick' => 'otherLogin()', 'class' => 'local_o365_manual_login_button'));
 echo html_writer::end_div();
 
-$SESSION->wantsurl = $coursepageurl;
-
-//if ($USER->id != 0) {
-//    redirect($coursepageurl);
-//}
+// Log out user.
+require_logout();
 
 $js = '
 microsoftTeams.initialize();
@@ -71,73 +65,6 @@ if (!inIframe()) {
     sleep(20);
 }
 
-// ADAL.js configuration
-let config = {
-    clientId: "' . get_config('auth_oidc', 'clientid') . '",
-    redirectUri: "' . $ssoendurl->out() . '",
-    cacheLocation: "localStorage",
-    navigateToLoginRequestUrl: false,
-};
-
-let currentuser = "' . $USER->username . '";
-
-let upn = undefined;
-microsoftTeams.getContext(function (context) {
-    theme = context.theme;
-    setPageTheme(theme);
-
-    upn = context.upn;
-    loadData(upn);
-});
-
-// Loads data for the given user
-function loadData(upn) {
-    // Setup extra query parameters for ADAL
-    // - openid and profile scope adds profile information to the id_token
-    // - login_hint provides the expected user name
-    if (upn) {
-        config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
-    } else {
-        config.extraQueryParameters = "scope=openid+profile";
-    }
-
-    let authContext = new AuthenticationContext(config);
-
-    // See if there is a cached user and it matches the expected user
-    let user = authContext.getCachedUser();
-    if (user) {
-        if (currentuser) {
-            if (currentuser != user.userName) {
-                window.location.href = "' . $forcelogout->out() . '";
-            }
-        }
-        if (user.userName !== upn) {
-            // User does not match, clear the cache
-            authContext.clearCache();
-        }
-    }
-
-    // Get the id token (which is the access token for resource = clientId)
-    let token = authContext.getCachedToken(config.clientId);
-    if (!token) {
-        // No token, or token is expired
-        authContext._renewIdToken(function (err, idToken) {
-            if (err) {
-                console.log("Renewal failed: " + err);
-
-                // Failed to get the token silently; need to show the login button
-                $(".local_o365_manual_login").css("display", "block");
-            } else {
-                // login using the token
-                window.location.href = "' . $oidcloginurl->out() . '";
-            }
-        });
-    } else {
-        // login using the token
-        window.location.href = "' . $oidcloginurl->out() . '";
-        sleep(20);
-    }
-}
 
 function login() {
     microsoftTeams.authentication.authenticate({
