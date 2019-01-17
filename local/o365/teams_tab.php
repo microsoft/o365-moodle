@@ -46,12 +46,10 @@ $USER->editing = false; // Turn off editing if the page is opened in iframe.
 
 $redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
 $coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
-$ssostarturl = new moodle_url('/local/o365/sso_start.php', ['redirect' => $coursepageurl->out()]);
+$ssostarturl = new moodle_url('/local/o365/sso_start.php');
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
-$bypasschecksurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'bypass' => '1']);
-$oidcloginurl = new moodle_url('/auth/oidc/index.php', ['redirect' => $bypasschecksurl->out()]);
+$oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
-$forcelogouturl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'logout' => 1]);
 
 // Output login pages.
 echo html_writer::start_div('local_o365_manual_login');
@@ -65,11 +63,8 @@ echo html_writer::end_div();
 
 $SESSION->wantsurl = $coursepageurl;
 
-$bypasschecks = optional_param('bypass', 0, PARAM_INT);
-if ($bypasschecks) {
-    if ($USER->id) {
-        redirect($coursepageurl);
-    }
+if ($USER->id) {
+    redirect($coursepageurl);
 }
 
 $js = '
@@ -87,8 +82,6 @@ let config = {
     cacheLocation: "localStorage",
     navigateToLoginRequestUrl: false,
 };
-
-let currentuser = "' . $USER->username . '";
 
 let upn = undefined;
 microsoftTeams.getContext(function (context) {
@@ -115,17 +108,10 @@ function loadData(upn) {
     // See if there is a cached user and it matches the expected user
     let user = authContext.getCachedUser();
     if (user) {
-        if (currentuser && currentuser != user.userName) {
-            window.location.href = "' . $forcelogouturl->out(false) . '";
-            exit();
-        }
         if (user.userName !== upn) {
             // User does not match, clear the cache
             authContext.clearCache();
         }
-    } else if (currentuser) {
-        window.location.href = "' . $forcelogouturl->out(false) . '";
-        exit();
     }
 
     // Get the id token (which is the access token for resource = clientId)
