@@ -77,7 +77,7 @@ microsoftTeams.initialize();
 
 if (!inIframe()) {
     window.location.href = "' . $redirecturl->out() . '";
-    sleep(20);
+    exit();
 }
 
 // ADAL.js configuration
@@ -128,12 +128,13 @@ function loadData(upn) {
             } else {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out() . '";
+                exit();
             }
         });
     } else {
         // login using the token
         window.location.href = "' . $oidcloginurl->out() . '";
-        sleep(20);
+        exit();
     }
 }
 
@@ -149,11 +150,12 @@ function login() {
             if (idToken) {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out() . '";
-                sleep(20);
+                exit();
             } else {
                 console.error("Error getting cached id token. This should never happen.");
                 // At this point we have to get the user involved, so show the login button
                 window.location.href = "' . $oidcloginurl->out() . '";
+                exit();
             };
         },
         failureCallback: function (reason) {
@@ -163,6 +165,7 @@ function login() {
             }
             // At this point we have to get the user involved, so show the login button
             window.location.href = "' . $externalloginurl->out() . '";
+            exit();
         }
     });
 }
@@ -224,10 +227,6 @@ function setTitles() {
             id_course.options[i].title=text;
         }
     }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 ';
