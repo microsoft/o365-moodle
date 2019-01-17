@@ -46,7 +46,7 @@ $USER->editing = false; // Turn off editing if the page is opened in iframe.
 
 $redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
 $coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
-$ssostarturl = new moodle_url('/local/o365/sso_start.php');
+$ssostarturl = new moodle_url('/local/o365/sso_start.php', ['redirect' => $coursepageurl->out()]);
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
