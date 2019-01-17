@@ -27,15 +27,11 @@ require_once(__DIR__ . '/../../config.php');
 
 require_logout();
 
-$redirect = required_param('redirect', PARAM_TEXT);
+$redirect = required_param('redirect', PARAM_URL);
 $SESSION->wantsurl = $redirect;
 
-echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js\"
-    integrity=\"sha384-SNENyRfvDvybst1u0LawETYF6L5yMx5Ya1dIqWoG4UDTZ/5UAMB15h37ktdBbyFh\"
-    crossorigin=\"anonymous\"></script>";
-echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\"
-    integrity=\"sha384-lIk8T3uMxKqXQVVfFbiw0K/Nq+kt1P3NtGt/pNexiDby2rKU6xnDY8p16gIwKqgI\"
-    crossorigin=\"anonymous\"></script>";
+echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
+echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
 
 $js = '
 microsoftTeams.initialize();

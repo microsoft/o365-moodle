@@ -25,6 +25,9 @@
 
 require_once(__DIR__ . '/../../config.php');
 
+$redirect = required_param('redirect', PARAM_URL);
+$SESSION->wantsurl = $redirect;
+
 echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
 
