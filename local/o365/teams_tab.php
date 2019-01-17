@@ -51,7 +51,6 @@ $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
 $selfurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id]);
-//$forcelogouturl = new moodle_url('/local/o365/teams_tab_force_logout.php', ['redirect' => $selfurl->out()]);
 $forcelogouturl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'logout' => 1]);
 
 // Output login pages.
@@ -66,22 +65,18 @@ echo html_writer::end_div();
 
 $SESSION->wantsurl = $coursepageurl;
 
-if ($USER->id != 0) {
-    redirect($coursepageurl);
-}
-
 $js = '
 microsoftTeams.initialize();
 
 if (!inIframe()) {
-    window.location.href = "' . $redirecturl->out() . '";
-    sleep(20);
+    window.location.href = "' . $redirecturl->out(false) . '";
+    exit()
 }
 
 // ADAL.js configuration
 let config = {
     clientId: "' . get_config('auth_oidc', 'clientid') . '",
-    redirectUri: "' . $ssoendurl->out() . '",
+    redirectUri: "' . $ssoendurl->out(false) . '",
     cacheLocation: "localStorage",
     navigateToLoginRequestUrl: false,
 };
@@ -113,11 +108,9 @@ function loadData(upn) {
     // See if there is a cached user and it matches the expected user
     let user = authContext.getCachedUser();
     if (user) {
-        if (currentuser) {
-            if (currentuser != user.userName) {
-                window.location.href = "' . $forcelogouturl->out() . '";
-                sleep(20);
-            }
+        if (currentuser && currentuser != user.userName) {
+            window.location.href = "' . $forcelogouturl->out(false) . '";
+            exit();
         }
         if (user.userName !== upn) {
             // User does not match, clear the cache
@@ -137,19 +130,20 @@ function loadData(upn) {
                 $(".local_o365_manual_login").css("display", "block");
             } else {
                 // login using the token
-                window.location.href = "' . $oidcloginurl->out() . '";
+                window.location.href = "' . $oidcloginurl->out(false) . '";
+                exit();
             }
         });
     } else {
         // login using the token
-        window.location.href = "' . $oidcloginurl->out() . '";
-        sleep(20);
+        window.location.href = "' . $oidcloginurl->out(false) . '";
+        exit();
     }
 }
 
 function login() {
     microsoftTeams.authentication.authenticate({
-        url: "' . $ssostarturl->out() . '",
+        url: "' . $ssostarturl->out(false) . '",
         width: 600,
         height: 400,
         successCallback: function (result) {
@@ -158,12 +152,13 @@ function login() {
             let idToken = authContext.getCachedToken(config.clientId);
             if (idToken) {
                 // login using the token
-                window.location.href = "' . $oidcloginurl->out() . '";
-                sleep(20);
+                window.location.href = "' . $oidcloginurl->out(false) . '";
+                exit();
             } else {
                 console.error("Error getting cached id token. This should never happen.");
                 // At this point sso login does not work. redirect to normal Moodle login page.
-                window.location.href = "' . $externalloginurl->out() . '";
+                window.location.href = "' . $externalloginurl->out(false) . '";
+                exit();
             };
         },
         failureCallback: function (reason) {
@@ -172,13 +167,15 @@ function login() {
                 console.log("Login was blocked by popup blocker or canceled by user.");
             }
             // At this point sso login does not work. redirect to normal Moodle login page.
-            window.location.href = "' . $externalloginurl->out() . '";
+            window.location.href = "' . $externalloginurl->out(false) . '";
+            exit();
         }
     });
 }
 
 function otherLogin() {
-    window.location.href = "' . $externalloginurl->out() . '";
+    window.location.href = "' . $externalloginurl->out(false) . '";
+    exit();
 }
 
 function inIframe () {
@@ -187,10 +184,6 @@ function inIframe () {
     } catch (e) {
         return true;
     }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function setPageTheme(theme) {
