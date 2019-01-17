@@ -65,7 +65,7 @@ curl_setopt_array($curl, array(
 $data = json_decode(curl_exec($curl));
 curl_close($curl);
 
-if ($data->mail !== $username) {
+if (strtolower($data->mail) !== strtolower($username)) {
     http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
