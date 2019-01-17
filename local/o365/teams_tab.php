@@ -48,7 +48,7 @@ $redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
 $coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
 $ssostarturl = new moodle_url('/local/o365/sso_start.php', ['redirect' => $coursepageurl->out()]);
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
-$selfurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id]);
+$bypasschecksurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'bypass' => '1']);
 $oidcloginurl = new moodle_url('/auth/oidc/index.php', ['redirect' => $selfurl->out()]);
 $externalloginurl = new moodle_url('/login/index.php');
 $forcelogouturl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'logout' => 1]);
@@ -64,6 +64,13 @@ echo html_writer::tag('button', get_string('other_login', 'local_o365'),
 echo html_writer::end_div();
 
 $SESSION->wantsurl = $coursepageurl;
+
+$bypasschecks = optional_param('bypass', 0, PARAM_INT);
+if ($bypasschecks) {
+    if ($USER->id) {
+        redirect($coursepageurl);
+    }
+}
 
 $js = '
 microsoftTeams.initialize();
