@@ -123,6 +123,9 @@ function loadData(upn) {
             // User does not match, clear the cache
             authContext.clearCache();
         }
+    } else if (currentuser) {
+        window.location.href = "' . $forcelogouturl->out(false) . '";
+        exit();
     }
 
     // Get the id token (which is the access token for resource = clientId)
