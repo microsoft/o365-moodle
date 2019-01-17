@@ -45,7 +45,8 @@ $ssostarturl = new moodle_url('/local/o365/sso_start.php');
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
-$forcelogouturl = new moodle_url('/local/o365/teams_tab_force_logout.php');
+$selfurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id]);
+$forcelogouturl = new moodle_url('/local/o365/teams_tab_force_logout.php', ['redirect' => $selfurl->out()]);
 
 // Output login pages.
 echo html_writer::start_div('local_o365_manual_login');
@@ -108,7 +109,7 @@ function loadData(upn) {
     if (user) {
         if (currentuser) {
             if (currentuser != user.userName) {
-                window.location.href = "' . $forcelogout->out() . '";
+                window.location.href = "' . $forcelogouturl->out() . '";
             }
         }
         if (user.userName !== upn) {

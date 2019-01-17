@@ -25,17 +25,12 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-// Force theme.
-if (get_config('theme_boost_o365teams', 'version')) {
-    $SESSION->theme = 'boost_o365teams';
-}
-
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"styles.css\">";
 echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anonymous\"></script>";
 
-$USER->editing = false; // Turn off editing if the page is opened in iframe.
+$teamsredirecturl = required_param('redirect', PARAM_TEXT);
 
 $redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
 $ssostarturl = new moodle_url('/local/o365/sso_start.php');
@@ -56,6 +51,8 @@ echo html_writer::end_div();
 
 // Log out user.
 require_logout();
+
+$SESSION->wantsurl = $teamsredirecturl;
 
 $js = '
 microsoftTeams.initialize();
