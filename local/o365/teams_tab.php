@@ -36,6 +36,11 @@ echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/ad
 echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anonymous\"></script>";
 
 $id = required_param('id', PARAM_INT);
+$logout = optional_param('logout', 0, PARAM_INT);
+
+if ($logout) {
+    require_logout();
+}
 
 $USER->editing = false; // Turn off editing if the page is opened in iframe.
 
@@ -46,7 +51,8 @@ $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $oidcloginurl = new moodle_url('/auth/oidc/index.php');
 $externalloginurl = new moodle_url('/login/index.php');
 $selfurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id]);
-$forcelogouturl = new moodle_url('/local/o365/teams_tab_force_logout.php', ['redirect' => $selfurl->out()]);
+//$forcelogouturl = new moodle_url('/local/o365/teams_tab_force_logout.php', ['redirect' => $selfurl->out()]);
+$forcelogouturl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'logout' => 1]);
 
 // Output login pages.
 echo html_writer::start_div('local_o365_manual_login');
@@ -60,9 +66,9 @@ echo html_writer::end_div();
 
 $SESSION->wantsurl = $coursepageurl;
 
-//if ($USER->id != 0) {
-//    redirect($coursepageurl);
-//}
+if ($USER->id != 0) {
+    redirect($coursepageurl);
+}
 
 $js = '
 microsoftTeams.initialize();
@@ -110,6 +116,7 @@ function loadData(upn) {
         if (currentuser) {
             if (currentuser != user.userName) {
                 window.location.href = "' . $forcelogouturl->out() . '";
+                sleep(20);
             }
         }
         if (user.userName !== upn) {

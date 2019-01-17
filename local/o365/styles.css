@@ -244,7 +244,7 @@ div.local_o365_manual_login {
   right: 0;
 }
 button.local_o365_manual_login_button {
-  font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif;;
+  font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif !important;
   display: block;
   width: 200px;
   background: #6264A7;

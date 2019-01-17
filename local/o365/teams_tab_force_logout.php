@@ -62,7 +62,6 @@ if (!inIframe()) {
     sleep(20);
 }
 
-
 function login() {
     microsoftTeams.authentication.authenticate({
         url: "' . $ssostarturl->out() . '",
