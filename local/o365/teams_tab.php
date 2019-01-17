@@ -49,7 +49,7 @@ $coursepageurl = new moodle_url('/course/view.php', array('id' => $id));
 $ssostarturl = new moodle_url('/local/o365/sso_start.php', ['redirect' => $coursepageurl->out()]);
 $ssoendurl = new moodle_url('/local/o365/sso_end.php');
 $bypasschecksurl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'bypass' => '1']);
-$oidcloginurl = new moodle_url('/auth/oidc/index.php', ['redirect' => $selfurl->out()]);
+$oidcloginurl = new moodle_url('/auth/oidc/index.php', ['redirect' => $bypasschecksurl->out()]);
 $externalloginurl = new moodle_url('/login/index.php');
 $forcelogouturl = new moodle_url('/local/o365/teams_tab.php', ['id' => $id, 'logout' => 1]);
 
