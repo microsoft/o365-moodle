@@ -43,13 +43,14 @@ $authtoken = substr($headers['Authorization'], 7);
 list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
 $dataEncoded = "$headerEncoded.$payloadEncoded";
 $signature = base64UrlDecode($signatureEncoded);
-$rawSignature = hash_hmac($algo, $dataEncoded, $secret, true);
+$secret = get_config('local_o365', 'bot_sharedsecret');
+$rawSignature = hash_hmac('sha256', $dataEncoded, $secret, true);
 if(!hash_equals($rawSignature, $signature)){
     http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
 
-$payload = base64UrlDecode($payloadEncoded);
+$payload = json_decode(base64UrlDecode($payloadEncoded));
 
 $headr = array();
 $headr[] = 'Content-length: 0';

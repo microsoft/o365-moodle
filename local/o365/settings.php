@@ -430,7 +430,7 @@ if ($hassiteconfig) {
         // bot_shared_secret
         $settings->add(new admin_setting_configtext('local_o365/bot_sharedsecret',
             get_string('settings_bot_sharedsecret', 'local_o365'),
-            get_string('ssettings_bot_sharedsecret_desc', 'local_o365'),
+            get_string('settings_bot_sharedsecret_desc', 'local_o365'),
             ''));
 
         // manifest download link
