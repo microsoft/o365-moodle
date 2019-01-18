@@ -31,4 +31,4 @@ if ($USER->id) {
     }
 }
 
-exit();
+redirect($CFG->wwwroot);
