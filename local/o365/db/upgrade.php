@@ -21,6 +21,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+require_once ($CFG->dirroot.'/local/o365/lib.php');
+
 /**
  * Update plugin.
  *
@@ -605,7 +607,6 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($result && $oldversion < 2018051705) {
-        require_once ('../lib.php');
         check_sharedsecret();
         upgrade_plugin_savepoint($result, '2018051705', 'local', 'o365');
     }
