@@ -84,8 +84,8 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
                 $sqlparams = ['assignstr' => 'assign', 'assignmentid' => $assign->iteminstance];
                 $average = $DB->get_record_sql($sql, $sqlparams);
                 $subtitledata = new \stdClass();
-                $subtitledata->usergrade = $assign->finalgrade;
-                $subtitledata->classgrade = $average->sum / $average->amount;
+                $subtitledata->usergrade = number_format((float)$assign->finalgrade, 1, '.', '');
+                $subtitledata->classgrade = number_format((float)($average->sum / $average->amount), 1, '.', '');
                 $assignment = array(
                         'title' => $cm->name,
                         'subtitle' => get_string_manager()->get_string('your_grade_class_grade', 'local_o365', $subtitledata,

@@ -89,7 +89,7 @@ class worststudentslastassignments implements \local_o365\bot\intents\intentinte
                     $userpicture->size = 1;
                     $pictureurl = $userpicture->get_url($PAGE)->out(false);
                     $subtitledata = new \stdClass();
-                    $subtitledata->grade = $g->grade;
+                    $subtitledata->grade = number_format((float)$g->grade, 1, '.', '');
                     $subtitledata->date = \local_o365\bot\intents\intentshelper::formatdate($g->timemodified);
                     $grade = array(
                         'title' => $user->firstname . ' ' . $user->lastname,
