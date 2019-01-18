@@ -82,7 +82,7 @@ class worststudentslastassignments implements \local_o365\bot\intents\intentinte
                 list($userssql, $usersparams) = $DB->get_in_or_equal($usersids, SQL_PARAMS_NAMED);
                 $users = $DB->get_records_sql("SELECT id, username, firstname, lastname
                                                  FROM {user}
-                                                WHERE $userssql", $usersparams);
+                                                WHERE id $userssql", $usersparams);
                 foreach ($grades as $g) {
                     $user = $users[$g->userid];
                     $userpicture = new \user_picture($user);

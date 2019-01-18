@@ -96,7 +96,7 @@ class incompleteassignments implements \local_o365\bot\intents\intentinterface {
                         'subtitle' => get_string_manager()->get_string('pending_submissions_due_date', 'local_o365', $subtitledata,
                                 $language),
                         'icon' => $OUTPUT->image_url('icon', 'assign')->out(),
-                        'action' => $url->out(),
+                        'action' => $url->out(false),
                         'actionType' => 'openUrl'
                 );
                 $listitems[] = $assignment;

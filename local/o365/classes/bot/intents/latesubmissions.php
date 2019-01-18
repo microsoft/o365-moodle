@@ -92,7 +92,7 @@ class latesubmissions implements \local_o365\bot\intents\intentinterface {
                         'subtitle' => get_string_manager()->get_string('course_assignment_submitted_due', 'local_o365',
                                 $subtitledata, $language),
                         'icon' => $pictureurl,
-                        'action' => $url->out(),
+                        'action' => $url->out(false),
                         'actionType' => 'openUrl'
                 );
                 $listitems[] = $record;

@@ -67,7 +67,7 @@ class dueassignments implements \local_o365\bot\intents\intentinterface {
                         'title' => $assignment->name,
                         'subtitle' => get_string_manager()->get_string('due_date', 'local_o365', $subtitledata, $language),
                         'icon' => $OUTPUT->image_url('icon', 'assign')->out(),
-                        'action' => $url->out(),
+                        'action' => $url->out(false),
                         'actionType' => 'openUrl'
                 );
                 $listitems[] = $assignment;

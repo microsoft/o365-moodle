@@ -87,7 +87,7 @@ class assignmentsforgrading implements \local_o365\bot\intents\intentinterface {
                         'subtitle' => get_string_manager()->get_string('participants_submitted_needs_grading', 'local_o365',
                                 $subtitledata, $language),
                         'icon' => $OUTPUT->image_url('icon', 'assign')->out(),
-                        'action' => $url->out(),
+                        'action' => $url->out(false),
                         'actionType' => 'openUrl'
                 );
                 $listitems[] = $assignment;

@@ -74,7 +74,7 @@ class latestgrades implements \local_o365\bot\intents\intentinterface {
                         'title' => $cm->name,
                         'subtitle' => get_string_manager()->get_string('your_grade', 'local_o365', $subtitledata, $language),
                         'icon' => $OUTPUT->image_url('icon', $grade->itemmodule)->out(),
-                        'action' => $url->out(),
+                        'action' => $url->out(false),
                         'actionType' => 'openUrl'
                 );
                 $listitems[] = $grade;
