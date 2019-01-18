@@ -39,6 +39,7 @@ if (!isset($headers['Authorization'])) {
     http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
+check_sharedsecret();
 $authtoken = substr($headers['Authorization'], 7);
 list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
 $dataEncoded = "$headerEncoded.$payloadEncoded";

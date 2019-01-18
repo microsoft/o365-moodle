@@ -604,5 +604,11 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2018051704', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2018051705) {
+        require_once ('../lib.php');
+        check_sharedsecret();
+        upgrade_plugin_savepoint($result, '2018051705', 'local', 'o365');
+    }
+
     return $result;
 }

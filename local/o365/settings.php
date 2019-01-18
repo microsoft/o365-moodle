@@ -415,6 +415,12 @@ if ($hassiteconfig) {
         $deploybuttonhtml .= html_writer::end_div();
         $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
 
+        // bot_shared_secret
+        $settings->add(new admin_setting_configtext('local_o365/bot_sharedsecret',
+            get_string('settings_bot_sharedsecret', 'local_o365'),
+            get_string('settings_bot_sharedsecret_desc', 'local_o365'),
+            ''));
+
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
             get_string('settings_bot_feature_enabled', 'local_o365'),
@@ -425,12 +431,6 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_configtext('local_o365/bot_webhook_endpoint',
             get_string('settings_bot_webhook_endpoint', 'local_o365'),
             get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
-            ''));
-
-        // bot_shared_secret
-        $settings->add(new admin_setting_configtext('local_o365/bot_sharedsecret',
-            get_string('settings_bot_sharedsecret', 'local_o365'),
-            get_string('settings_bot_sharedsecret_desc', 'local_o365'),
             ''));
 
         // manifest download link

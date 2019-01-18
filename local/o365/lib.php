@@ -273,3 +273,30 @@ function base64UrlDecode($data){
     $paddedData = str_pad($urlUnsafeData, strlen($data) % 4, '=', STR_PAD_RIGHT);
     return base64_decode($paddedData);
 }
+
+/**
+ *  Checks if bot shared secret is set and if not generates new secret
+ */
+function check_sharedsecret(){
+    $sharedsecret = get_config('local_o365', 'bot_sharedsecret');
+    if(empty($sharedsecret)){
+        $secret = generate_sharedsecret();
+        set_config('bot_sharedsecret', $secret, 'local_o365');
+    }
+}
+
+/**
+ * Generates shared secret of random symbols
+ *
+ * @param int $length
+ * @return string
+ */
+function generate_sharedsecret($length = 12){
+    $chars =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
+    $sharedsecret = '';
+    $max = strlen($chars) - 1;
+    for ($i=0; $i < $length; $i++){
+        $sharedsecret .= $chars[random_int(0, $max)];
+    }
+    return $sharedsecret;
+}

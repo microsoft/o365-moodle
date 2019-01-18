@@ -23,11 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2018051705;
-$plugin->requires = 2018051700;
-$plugin->release = '3.5.0.1';
-$plugin->component = 'local_o365';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = [
-    'auth_oidc' => 2018051701,
-];
+require_once ('../lib.php');
+
+function xmldb_local_o365_install() {
+    check_sharedsecret();
+}
