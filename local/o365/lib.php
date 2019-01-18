@@ -291,7 +291,7 @@ function check_sharedsecret(){
  * @param int $length
  * @return string
  */
-function generate_sharedsecret($length = 12){
+function generate_sharedsecret($length = 36){
     $chars =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
     $sharedsecret = '';
     $max = strlen($chars) - 1;

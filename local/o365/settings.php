@@ -416,10 +416,12 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
 
         // bot_shared_secret
-        $settings->add(new admin_setting_configtext('local_o365/bot_sharedsecret',
+        $sharedsecretsetting = new admin_setting_configtext('local_o365/bot_sharedsecret',
             get_string('settings_bot_sharedsecret', 'local_o365'),
             get_string('settings_bot_sharedsecret_desc', 'local_o365'),
-            ''));
+            '');
+        $sharedsecretsetting->nosave = true;
+        $settings->add($sharedsecretsetting);
 
         // bot_feature_enabled
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
