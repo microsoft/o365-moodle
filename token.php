@@ -39,11 +39,11 @@ if (!isset($headers['Authorization'])) {
     http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
-check_sharedsecret();
+local_o365_check_sharedsecret();
 $authtoken = substr($headers['Authorization'], 7);
 list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
 $dataEncoded = "$headerEncoded.$payloadEncoded";
-$signature = base64UrlDecode($signatureEncoded);
+$signature = local_o365_base64UrlDecode($signatureEncoded);
 $secret = get_config('local_o365', 'bot_sharedsecret');
 $rawSignature = hash_hmac('sha256', $dataEncoded, $secret, true);
 if(!hash_equals($rawSignature, $signature)){
@@ -51,7 +51,7 @@ if(!hash_equals($rawSignature, $signature)){
     throw new moodle_exception('invalidlogin');
 }
 
-$payload = json_decode(base64UrlDecode($payloadEncoded));
+$payload = json_decode(local_o365_base64UrlDecode($payloadEncoded));
 
 $headr = array();
 $headr[] = 'Content-length: 0';
