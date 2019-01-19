@@ -605,7 +605,7 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($result && $oldversion < 2018051705) {
-        check_sharedsecret();
+        local_o365_check_sharedsecret();
         upgrade_plugin_savepoint($result, '2018051705', 'local', 'o365');
     }
 

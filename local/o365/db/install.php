@@ -26,5 +26,5 @@ defined('MOODLE_INTERNAL') || die();
 require_once ($CFG->dirroot.'/local/o365/lib.php');
 
 function xmldb_local_o365_install() {
-    check_sharedsecret();
+    local_o365_check_sharedsecret();
 }

@@ -268,7 +268,7 @@ function local_o365_create_manifest_file() {
  * @param string $data - encoded string
  * @return string - decoded string
  */
-function base64UrlDecode($data){
+function local_o365_base64UrlDecode($data) {
     $urlUnsafeData = strtr($data, '-_', '+/');
     $paddedData = str_pad($urlUnsafeData, strlen($data) % 4, '=', STR_PAD_RIGHT);
     return base64_decode($paddedData);
@@ -277,10 +277,10 @@ function base64UrlDecode($data){
 /**
  *  Checks if bot shared secret is set and if not generates new secret
  */
-function check_sharedsecret(){
+function local_o365_check_sharedsecret() {
     $sharedsecret = get_config('local_o365', 'bot_sharedsecret');
     if(empty($sharedsecret)){
-        $secret = generate_sharedsecret();
+        $secret = local_o365_generate_sharedsecret();
         set_config('bot_sharedsecret', $secret, 'local_o365');
     }
 }
@@ -291,7 +291,7 @@ function check_sharedsecret(){
  * @param int $length
  * @return string
  */
-function generate_sharedsecret($length = 36){
+function local_o365_generate_sharedsecret($length = 36) {
     $chars =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
     $sharedsecret = '';
     $max = strlen($chars) - 1;
