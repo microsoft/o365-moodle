@@ -400,7 +400,7 @@ if ($hassiteconfig) {
             ''));
 
         // deploy button
-        $deploybuttonhtml .= html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
+        $deploybuttonhtml = html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
         $deploybuttonhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
         $deploybuttonhtml .= get_string('settings_teams_deploy_bot_1', 'local_o365');
