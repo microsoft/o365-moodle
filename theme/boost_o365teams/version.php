@@ -29,3 +29,6 @@ $plugin->requires = 2017111300;
 $plugin->component = 'theme_boost_o365teams';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '3.4.0.0';
+$plugin->dependencies = [
+    'local_o365' => 2017111309,
+];
