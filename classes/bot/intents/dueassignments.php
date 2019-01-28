@@ -25,6 +25,8 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/mod/assign/lib.php');
+
 /**
  * Class dueassignments implements bot intent interface for student-due-assignments
  * @package local_o365\bot\intents
