@@ -44,8 +44,14 @@ class usersyncfieldmap extends fieldmap {
      * @param array $localfields Array of local fields (ignored + overridden in this child class)
      * @param array $syncbehav Array of sync behaviours. (ignored + overridden in this child class)
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = []) {
+    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = [], $lockoptions = []) {
         global $DB;
+
+        $lockoptions = [
+            'unlocked' => get_string('unlocked', 'auth'),
+            'unlockedifempty' => get_string('unlockedifempty', 'auth'),
+            'locked'          => get_string('locked', 'auth'),
+        ];
 
         $syncbehav = [
             'oncreate' => get_string('update_oncreate', 'auth'),
@@ -90,6 +96,6 @@ class usersyncfieldmap extends fieldmap {
             $localfields['profile_field_'.$field->shortname] = $field->name;
         }
 
-        return parent::__construct($name, $visiblename, $description, $defaultsetting, $remotefields, $localfields, $syncbehav);
+        return parent::__construct($name, $visiblename, $description, $defaultsetting, $remotefields, $localfields, $syncbehav, $lockoptions);
     }
 }

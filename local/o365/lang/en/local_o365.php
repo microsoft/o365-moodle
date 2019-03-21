@@ -309,6 +309,7 @@ $string['settings_fieldmap_addmapping'] = 'Add Mapping';
 $string['settings_fieldmap_details'] = 'Configure mapping between user fields in Office 365 and Moodle.';
 $string['settings_fieldmap_header_behavior'] = 'Updates';
 $string['settings_fieldmap_header_local'] = 'Moodle Field';
+$string['settings_fieldmap_header_locking'] = 'Locking';
 $string['settings_fieldmap_header_remote'] = 'Active Directory Field';
 $string['settings_fieldmap_field_city'] = 'City';
 $string['settings_fieldmap_field_companyName'] = 'Company Name';

@@ -336,10 +336,10 @@ class main {
 
         foreach ($fieldmaps as $fieldmap) {
             $fieldmap = explode('/', $fieldmap);
-            if (count($fieldmap) !== 3) {
+            if (count($fieldmap) !== 4) {
                 continue;
             }
-            list($remotefield, $localfield, $behavior) = $fieldmap;
+            list($remotefield, $localfield, $behavior, $locking) = $fieldmap;
             if ($behavior !== 'on'.$eventtype && $behavior !== 'always') {
                 // Field mapping doesn't apply to this event type.
                 continue;

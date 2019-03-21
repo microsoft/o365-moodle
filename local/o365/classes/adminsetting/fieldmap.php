@@ -31,7 +31,7 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
  */
 class fieldmap extends \admin_setting {
     /** @var bool Whether to use the update behavior column. */
-    protected $showbehavcolumn = false;
+    protected $showbehavcolumn = true;
 
     /** @var str The string ID fron local_o365 to use as the heading for the remote field column. */
     protected $remotefieldstrid = 'settings_fieldmap_header_remote';
@@ -44,10 +44,11 @@ class fieldmap extends \admin_setting {
      * @param string $description localised long description
      * @param mixed $defaultsetting string or array depending on implementation
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = []) {
+    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = [], $lockoptions = []) {
         global $DB;
 
         $this->syncbehavopts = $syncbehav;
+        $this->synclockopts = $lockoptions;
         $this->remotefields = $remotefields;
         $this->localfields = $localfields;
 
@@ -96,18 +97,31 @@ class fieldmap extends \admin_setting {
                 $this->config_write($this->name, serialize($newconfig));
                 return '';
             }
+            if (!isset($data['locking']) || !is_array($data['locking'])) {
+                // Broken data, wipe setting.
+                $this->config_write($this->name, serialize($newconfig));
+                return '';
+            }
         }
 
         foreach ($data['remotefield'] as $i => $fieldname) {
             if (!isset($data['localfield'][$i])) {
                 continue;
             }
+
             $configentry = $data['remotefield'][$i].'/'.$data['localfield'][$i];
+
             if ($this->showbehavcolumn === true) {
                 if (!isset($data['behavior'][$i])) {
                     continue;
                 } else {
                     $configentry .= '/'.$data['behavior'][$i];
+                }
+
+                if (!isset($data['locking'][$i])) {
+                    continue;
+                } else {
+                    $configentry .= '/'.$data['locking'][$i];
                 }
             }
 
@@ -142,6 +156,7 @@ class fieldmap extends \admin_setting {
         ];
         if ($this->showbehavcolumn === true) {
             $fieldlist->head[] = get_string('settings_fieldmap_header_behavior', 'local_o365');
+            $fieldlist->head[] = get_string('settings_fieldmap_header_locking', 'local_o365');
         }
         $fieldlist->data = [];
 
@@ -155,10 +170,10 @@ class fieldmap extends \admin_setting {
             $fieldmap = explode('/', $fieldmap);
 
             if ($this->showbehavcolumn === true) {
-                if (count($fieldmap) !== 3) {
+                if (count($fieldmap) !== 4) {
                     continue;
                 }
-                list($remotefield, $localfield, $behavior) = $fieldmap;
+                list($remotefield, $localfield, $behavior, $locking) = $fieldmap;
                 if (!isset($this->syncbehavopts[$behavior])) {
                     continue;
                 }
@@ -180,6 +195,7 @@ class fieldmap extends \admin_setting {
             ];
             if ($this->showbehavcolumn === true) {
                 $row[] = \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', $behavior, false);
+                $row[] = \html_writer::select($this->synclockopts, $this->get_full_name().'[locking][]', $locking, false);
             }
             $row [] = \html_writer::tag('button', 'X', ['class' => 'removerow']);
 
@@ -196,6 +212,7 @@ class fieldmap extends \admin_setting {
         $maptpl .= \html_writer::tag('td', \html_writer::select($this->localfields, $this->get_full_name().'[localfield][]', ''));
         if ($this->showbehavcolumn === true) {
             $maptpl .= \html_writer::tag('td', \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', '', false));
+            $maptpl .= \html_writer::tag('td', \html_writer::select($this->synclockopts, $this->get_full_name().'[locking][]', '', false));
         }
         $maptpl .= \html_writer::tag('td', \html_writer::tag('button', 'X', ['class' => 'removerow']));
         $maptpl .= \html_writer::end_tag('tr');

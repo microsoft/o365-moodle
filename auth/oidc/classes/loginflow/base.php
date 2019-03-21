@@ -30,25 +30,39 @@ class base {
     /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
     protected $httpclient;
 
+   public $optionalconfig;
+
     public function __construct() {
         $default = [
             'opname' => get_string('pluginname', 'auth_oidc')
         ];
         $storedconfig = (array)get_config('auth_oidc');
+
+        $overrideconfig = get_config('local_o365', 'fieldmap');
+        $overrideconfig = (!empty($overrideconfig)) ? @unserialize($overrideconfig) : [];
+
+        if (empty($overrideconfig) || !is_array($overrideconfig)) {
+            $overrideconfig = [];
+        }
+
+        foreach($overrideconfig as $overrides) {
+            $override = explode('/', $overrides);
+            $key = $override[1];
+            $value = $override[3];
+            $optionalconfig['field_lock_' . $key] = $value;
+        }
+
         $forcedconfig = [
             'field_updatelocal_idnumber' => 'oncreate',
             'field_lock_idnumber' => 'locked',
             'field_updatelocal_lang' => 'oncreate',
             'field_lock_lang' => 'locked',
             'field_updatelocal_firstname' => 'onlogin',
-            'field_lock_firstname' => 'unlocked',
             'field_updatelocal_lastname' => 'onlogin',
-            'field_lock_lastname' => 'unlocked',
             'field_updatelocal_email' => 'onlogin',
-            'field_lock_email' => 'unlocked',
         ];
 
-        $this->config = (object)array_merge($default, $storedconfig, $forcedconfig);
+        $this->config = (object)array_merge($default, $storedconfig, $forcedconfig, $optionalconfig);
     }
 
     /**
