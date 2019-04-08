@@ -235,8 +235,12 @@ abstract class o365api {
         if ($this->httpclient->info['http_code'] == 429) {
             // We are being throttled.
             $ratelimitlevel++;
-            set_config('ratelimit', $ratelimitlevel.':'.time(), 'local_o365');
+            set_config('ratelimit', $ratelimitlevel . ':' . time(), 'local_o365');
+
             return $this->apicall($origparam['httpmethod'], $origparam['apimethod'], $origparam['params'], $origparam['options']);
+        } else if ($this->httpclient->info['http_code'] == 202) {
+            // If response is 202 Accepted, return response.
+            return $this->httpclient->response;
         } else {
             return $result;
         }

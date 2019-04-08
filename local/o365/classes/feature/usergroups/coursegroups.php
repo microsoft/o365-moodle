@@ -115,13 +115,37 @@ class coursegroups {
         $courses = $this->DB->get_recordset_sql($sql, $params, 0, 5);
         $coursesprocessed = 0;
         foreach ($courses as $course) {
-
             $coursesprocessed++;
-            try {
-                $objectrec = $this->create_group($course, $groupprefix);
-            } catch (\Exception $e) {
-                $this->mtrace('Could not create group for course #'.$course->id.'. Reason: '.$e->getMessage());
-                continue;
+            $createclassteam = false;
+            $ownerids = [];
+
+            if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
+                $teacherids = $this->get_teacher_ids_of_course($course->id);
+                foreach ($teacherids as $teacherid) {
+                    if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
+                        ['type' => 'user', 'moodleid' => $teacherid])) {
+                        $ownerids[] = $ownerid;
+                        $createclassteam = true;
+                    }
+                }
+            }
+
+            if ($createclassteam) {
+                // Create class team directly.
+                try {
+                    $objectrec = $this->create_class_team($course, $ownerids, $groupprefix);
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not create class team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                    continue;
+                }
+            } else {
+                // Create group.
+                try {
+                    $objectrec = $this->create_group($course, $groupprefix);
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not create group for course #'.$course->id.'. Reason: '.$e->getMessage());
+                    continue;
+                }
             }
 
             try {
@@ -256,6 +280,93 @@ class coursegroups {
     }
 
     /**
+     * Create an Office 365 class team for a Moodle course.
+     *
+     * @param stdClass $course
+     * @param array $ownerids
+     * @param string|null $groupprefix
+     * @return array|bool
+     */
+    public function create_class_team($course, $ownerids, $groupprefix = null) {
+        $now = time();
+        $displayname = $course->fullname;
+        if (!empty($groupprefix)) {
+            $displayname = $groupprefix . ': ' . $displayname;
+        }
+
+        $description = $course->summary;
+
+        $extra = null;
+
+        try {
+            $response = $this->graphclient->create_class_team($displayname, $description, $ownerids, $extra);
+        } catch (\Exception $e) {
+            $this->mtrace('Could not create class team for #' . $course->id . '. Reason: ' . $e->getMessage());
+            return false;
+        }
+
+        $this->mtrace('Created class team ' . $response['id'] . ' for course #' . $course->id);
+
+        // Record group object.
+        $groupobjectrec = [
+            'type' => 'group',
+            'subtype' => 'course',
+            'objectid' => $response['id'],
+            'moodleid' => $course->id,
+            'o365name' => $displayname,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $groupobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$groupobjectrec);
+        $this->mtrace('Recorded group object (' . $groupobjectrec['objectid'] . ') into object table with record id ' .
+            $groupobjectrec['id']);
+
+        // Record team object.
+        $teamobjectrec = [
+            'type' => 'group',
+            'subtype' => 'courseteam',
+            'objectid' => $response['id'],
+            'moodleid' => $course->id,
+            'o365name' => $displayname,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
+        $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id ' .
+            $teamobjectrec['id']);
+
+        $moodleappid = get_config('local_o365', 'moodle_app_id');
+        if (!empty($moodleappid)) {
+            // Provision app to the newly created team.
+            try {
+                $response = $this->graphclient->provision_app($teamobjectrec['objectid'], $moodleappid);
+            } catch (\Exception $e) {
+                $this->mtrace('Could not add app to team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+            }
+
+            // List all channels.
+            try {
+                $generalchanelid = $this->graphclient->get_general_channel_id($teamobjectrec['objectid']);
+            } catch (\Exception $e) {
+                $this->mtrace('Could not list channels in team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+            }
+
+            if ($generalchanelid) {
+                // Add tab to channel.
+                try {
+                    $this->graphclient->add_moodle_tab_to_channel($teamobjectrec['objectid'], $generalchanelid, $moodleappid,
+                        $course->id);
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not add Moodle tab to channel in team for course #' . $course->id .
+                        '. Reason : '. $e->getMessage());
+                }
+            }
+        }
+
+        return $teamobjectrec;
+    }
+
+    /**
      * Get the IDs of all present groups.
      *
      * @return array An array of group IDs.
@@ -370,12 +481,26 @@ class coursegroups {
         $this->mtrace('Users to add: '.count($toadd));
         foreach ($toadd as $userobjectid => $moodleuserid) {
             $this->mtrace('... Adding '.$userobjectid.' (muserid: '.$moodleuserid.')...', '');
-            $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
-            if ($result === true) {
-                $this->mtrace('Success!');
-            } else {
-                $this->mtrace('Error!');
-                $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
+
+            $retrycounter = 0;
+            while ($retrycounter <= 3) {
+                $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
+                if ($retrycounter) {
+                    $this->mtrace('...... Retry #' . $retrycounter);
+                    sleep(10);
+                }
+                if ($result === true) {
+                    $this->mtrace('Success!');
+                    break;
+                } else {
+                    $this->mtrace('Error!');
+                    $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
+                    $retrycounter++;
+
+                    if (strpos($result, 'Request_ResourceNotFound') === false) {
+                        break;
+                    }
+                }
             }
 
             // Add teacher as owner of O365 group.
@@ -828,47 +953,47 @@ class coursegroups {
                 return false;
             }
 
-            $this->mtrace('Created team ' . $response['id']  . ' for course #' . $courseid);
-            $teamobjectrec = [
-                'type' => 'group',
-                'subtype' => 'courseteam',
-                'objectid' => $response['id'],
-                'moodleid' => $courseid,
-                'o365name' => $groupobjectrec->o365name,
-                'timecreated' => $now,
-                'timemodified' => $now,
-            ];
-            $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
-            $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id '
-                . $teamobjectrec['id']);
+            if ($response) {
+                $this->mtrace('Created team ' . $groupobjectid . ' for course #' . $courseid);
+                $teamobjectrec = [
+                    'type' => 'group',
+                    'subtype' => 'courseteam',
+                    'objectid' => $groupobjectid,
+                    'moodleid' => $courseid,
+                    'o365name' => $groupobjectrec->o365name,
+                    'timecreated' => $now,
+                    'timemodified' => $now,
+                ];
+                $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
+                $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id '
+                    . $teamobjectrec['id']);
 
-            if (!empty($moodleappid)) {
-                // Provision app to the newly created team.
-                try {
-                    $response = $this->graphclient->provision_app($groupobjectid, $moodleappid);
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' .
-                        $e->getMessage());
-                }
-
-                // List all channels.
-                try {
-                    $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not list channels in team for course #' . $courseid . '. Reason: ' .
-                        $e->getMessage());
-                }
-
-                if ($generalchanelid) {
-                    // Add tab to channel.
+                if (!empty($moodleappid)) {
+                    // Provision app to the newly created team.
                     try {
-                        $this->graphclient->add_moodle_tab_to_channel($groupobjectid, $generalchanelid, $moodleappid,
-                            $courseid);
+                        $response = $this->graphclient->provision_app($groupobjectid, $moodleappid);
                     } catch (\Exception $e) {
-                        $this->mtrace('Could not add Moodle tab to channel in team for course #' . $courseid .
-                            '. Reason : '. $e->getMessage());
+                        $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' . $e->getMessage());
                     }
 
+                    // List all channels.
+                    try {
+                        $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
+                    } catch (\Exception $e) {
+                        $generalchanelid = null;
+                        $this->mtrace('Could not list channels in team for course #' . $courseid . '. Reason: ' . $e->getMessage());
+                    }
+
+                    if ($generalchanelid) {
+                        // Add tab to channel.
+                        try {
+                            $this->graphclient->add_moodle_tab_to_channel($groupobjectid, $generalchanelid, $moodleappid,
+                                $courseid);
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not add Moodle tab to channel in team for course #' . $courseid .
+                                '. Reason : '. $e->getMessage());
+                        }
+                    }
                 }
             }
 
