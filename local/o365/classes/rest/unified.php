@@ -1894,43 +1894,24 @@ class unified extends \local_o365\rest\o365api {
      * Create a team.
      *
      * @param $groupobjectid
-     *
      * @return array|null|string
-     * @throws \moodle_exception
      */
     public function create_team($groupobjectid) {
         $teamdata = [
-            'funSettings' => [
-                'allowGiphy' => true,
-                'giphyContentRating' => 'strict',
-                'allowStickersAndMemes' => true,
-                'allowCustomMemes' => true,
-            ],
-            'guestSettings' => [
-                'allowCreateUpdateChannels' => true,
-                'allowDeleteChannels' => true,
-            ],
-            'memberSettings' => [
-                'allowCreateUpdateChannels' => true,
-                'allowDeleteChannels' => true,
-                'allowAddRemoveApps' => true,
-                'allowCreateUpdateRemoveTabs' => true,
-                'allowCreateUpdateRemoveConnectors' => true,
-            ],
-            'messagingSettings' => [
-                'allowUserEditMessages' => true,
-                'allowUserDeleteMessages' => true,
-                'allowOwnerDeleteMessages' => true,
-                'allowTeamMentions' => true,
-                'allowChannelMentions' => true,
-            ],
+            'template@odata.bind' => "https://graph.microsoft.com/beta/teamsTemplates('standard')",
+            'group@odata.bind' => "https://graph.microsoft.com/v1.0/groups('{$groupobjectid}')",
         ];
 
-        $response = $this->betaapicall('put', '/groups/' . $groupobjectid . '/team',
-            ['file' => json_encode($teamdata)]);
-        $expectedparams = ['id' => null];
-        $response = $this->process_apicall_response($response, $expectedparams);
-        return $response;
+        // Create a group first.
+        $this->betaapicall('post', '/teams', json_encode($teamdata));
+
+        if ($this->httpclient->info['http_code'] == 202) {
+            // If response is 202 Accepted, return response.
+            return $this->httpclient->response;
+        } else {
+            // Error.
+            return false;
+        }
     }
 
     /**
@@ -2046,6 +2027,55 @@ class unified extends \local_o365\rest\o365api {
         $response = $this->betaapicall('post', $endpoint, json_encode($requestparams));
         $expectedresponse = ['id' => null];
         $response = $this->process_apicall_response($response, $expectedresponse);
+
+        return $response;
+    }
+
+
+    /**
+     * Create a class team.
+     *
+     * @param string $displayname
+     * @param string $description
+     * @param array $ownerids
+     * @param null $extra
+     * @return array|string|null
+     */
+    public function create_class_team($displayname, $description, $ownerids, $extra = null) {
+        $owneridparam = [];
+        foreach ($ownerids as $ownerid) {
+            $owneridparam[] = "https://graph.microsoft.com/beta/users/{$ownerid}";
+        }
+        $teamdata = [
+            'template@odata.bind' => "https://graph.microsoft.com/beta/teamsTemplates('educationClass')",
+            'displayName' => $displayname,
+            'description' => $description,
+            'owners@odata.bind' => $owneridparam,
+        ];
+
+        if (!empty($extra) && is_array($extra)) {
+            foreach ($extra as $name => $value) {
+                $teamdata[$name] = $value;
+            }
+        }
+
+        if (empty($teamdata['description'])) {
+            unset($teamdata['description']);
+        }
+
+        $response = $this->betaapicall('post', '/teams', json_encode($teamdata));
+
+        if (array_key_exists('Location', $response)) {
+            $location = $response['Location'];
+            $locationparts = explode('/', $location);
+            foreach ($locationparts as $locationpart) {
+                if (substr($locationpart, 0, 5) == 'teams') {
+                    $response = [];
+                    $response['id'] = substr($locationpart, 7, 36);
+                    return $response;
+                }
+            }
+        }
 
         return $response;
     }
