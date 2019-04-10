@@ -21,6 +21,13 @@
  * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * TEAMS_MOODLE_APP_EXTERNAL_ID - app ID used to create Teams Moodle app.
+ */
+define('TEAMS_MOODLE_APP_EXTERNAL_ID', '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95');
+
 /**
  * Retrieve icon image and send to the browser for display.
  *
@@ -169,7 +176,7 @@ function local_o365_create_manifest_file() {
         '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.3/MicrosoftTeams.schema.json',
         'manifestVersion' => '1.3',
         'version' => '1.2.1',
-        'id' => '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95',
+        'id' => TEAMS_MOODLE_APP_EXTERNAL_ID,
         'packageName' => 'ie.enovation.microsoft.o365',
         'developer' => array(
             'name' => 'Enovation Solutions',
@@ -299,4 +306,13 @@ function local_o365_generate_sharedsecret($length = 36) {
         $sharedsecret .= $chars[random_int(0, $max)];
     }
     return $sharedsecret;
+}
+
+/**
+ * Determine if "Teams Moodle app ID" tab needs to appear.
+ *
+ * @return bool
+ */
+function local_o365_show_teams_moodle_app_id_tab() {
+    return (get_config('local_o365', 'manifest_downloaded'));
 }

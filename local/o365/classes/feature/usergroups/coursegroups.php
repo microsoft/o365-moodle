@@ -150,6 +150,12 @@ class coursegroups {
         }
         $courses = $this->DB->get_recordset_sql($sql, $params);
         $coursesprocessed = 0;
+
+        // Get app ID.
+        if (!empty($courses)) {
+            $appid = get_config('local_o365', 'moodle_app_id');
+        }
+
         foreach ($courses as $course) {
             if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
                 $this->mtrace('Attempting to create team for course #' . $course->id . '...');
@@ -163,7 +169,7 @@ class coursegroups {
                     continue;
                 }
                 try {
-                    $this->create_team($course->id, $groupobjectrec->objectid);
+                    $this->create_team($course->id, $groupobjectrec->objectid, $appid);
                 } catch (\Exception $e) {
                     $this->mtrace('Could not create team for course #' . $course->id . '. Reason: ' . $e->getMessage());
                 }
@@ -774,11 +780,12 @@ class coursegroups {
      *
      * @param $courseid
      * @param null $groupobjectid
+     * @param null $moodleappid
      *
      * @return array|bool|mixed
      * @throws \dml_exception
      */
-    public function create_team($courseid, $groupobjectid = null) {
+    public function create_team($courseid, $groupobjectid = null, $moodleappid = null) {
         $this->mtrace('Create team for course #' . $courseid);
 
         // Get group object and id, if needed.
@@ -834,6 +841,37 @@ class coursegroups {
             $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
             $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id '
                 . $teamobjectrec['id']);
+
+            if (!empty($moodleappid)) {
+                // Provision app to the newly created team.
+                try {
+                    $response = $this->graphclient->provision_app($groupobjectid, $moodleappid);
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' .
+                        $e->getMessage());
+                }
+
+                // List all channels.
+                try {
+                    $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not list channels in team for course #' . $courseid . '. Reason: ' .
+                        $e->getMessage());
+                }
+
+                if ($generalchanelid) {
+                    // Add tab to channel.
+                    try {
+                        $this->graphclient->add_moodle_tab_to_channel($groupobjectid, $generalchanelid, $moodleappid,
+                            $courseid);
+                    } catch (\Exception $e) {
+                        $this->mtrace('Could not add Moodle tab to channel in team for course #' . $courseid .
+                            '. Reason : '. $e->getMessage());
+                    }
+
+                }
+            }
+
             return $teamobjectrec;
         } else {
             // team already exists
@@ -841,5 +879,14 @@ class coursegroups {
                 $teamobjectrec['id']);
             return true;
         }
+    }
+
+    /**
+     * Return the ID of the Moodle app in catalog.
+     */
+    public function get_moodle_app_id() {
+        $this->mtrace('Get moodle app ID.');
+
+        $this->graphclient->get_catalog_app_id('2e43119b-fcfe-44f8-b3e5-996ffcb7fb95');
     }
 }

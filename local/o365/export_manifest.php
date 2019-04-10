@@ -27,6 +27,10 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
+// Mark manifest file as downloaded.
+set_config('manifest_downloaded', true, 'local_o365');
+purge_all_caches();
+
 list($error, $manifestfilepath) = local_o365_create_manifest_file();
 
 if ($manifestfilepath) {
