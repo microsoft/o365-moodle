@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->dirroot . '/local/o365/lib.php');
+
 if (!$PAGE->requires->is_head_done()) {
     $PAGE->requires->jquery();
 }
@@ -55,6 +57,10 @@ if (!defined('LOCAL_O365_TAB_SETUP')) {
      * LOCAL_O365_TAB_TEAMS - Teams tab.
      */
     define('LOCAL_O365_TAB_TEAMS', 5);
+    /**
+     * LOCAL_O365_TAB_MOODLE_APP - Teams Moodle app.
+     */
+    define('LOCAL_O365_TAB_MOODLE_APP', 6);
 }
 
 if ($hassiteconfig) {
@@ -67,6 +73,9 @@ if ($hassiteconfig) {
     $tabs->addtab(LOCAL_O365_TAB_ADVANCED, new lang_string('settings_header_advanced', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_SDS, new lang_string('settings_header_sds', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_TEAMS, new lang_string('settings_header_teams', 'local_o365'));
+    if (local_o365_show_teams_moodle_app_id_tab()) {
+        $tabs->addtab(LOCAL_O365_TAB_MOODLE_APP, new lang_string('settings_header_moodle_app', 'local_o365'));
+    }
     $settings->add($tabs);
 
     $tab = $tabs->get_setting();
@@ -360,7 +369,7 @@ if ($hassiteconfig) {
     }
 
     if ($tab == LOCAL_O365_TAB_TEAMS || !empty($install)) {
-        // banner
+        // Banner.
         $bannerhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1', ['id' => 'admin-teams-banner']);
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
             ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_teams_app_img']);
@@ -377,26 +386,26 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::end_div();
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
 
-        // instructions
+        // Instructions.
         $userrole = $DB->get_record('role', ['shortname' => 'user'], '*', MUST_EXIST);
         $edituserroleurl = new moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
         $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365',
                 ['edituserroleurl' => $edituserroleurl->out()])));
 
-        // bot_app_id
+        // Setting bot_app_id.
         $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
             get_string('settings_bot_app_id', 'local_o365'),
             get_string('settings_bot_app_id_desc', 'local_o365'),
             '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
 
-        // bot_app_password
+        // Setting bot_app_password.
         $settings->add(new admin_setting_configpasswordunmask('local_o365/bot_app_password',
             get_string('settings_bot_app_password', 'local_o365'),
             get_string('settings_bot_app_password_desc', 'local_o365'),
             ''));
 
-        // deploy button
+        // Deploy button.
         $deploybuttonhtml = html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
         $deploybuttonhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
@@ -412,7 +421,7 @@ if ($hassiteconfig) {
         $deploybuttonhtml .= html_writer::end_div();
         $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
 
-        // bot_shared_secret
+        // Setting bot_shared_secret.
         $sharedsecretsetting = new admin_setting_configtext('local_o365/bot_sharedsecret',
             get_string('settings_bot_sharedsecret', 'local_o365'),
             get_string('settings_bot_sharedsecret_desc', 'local_o365'),
@@ -420,19 +429,19 @@ if ($hassiteconfig) {
         $sharedsecretsetting->nosave = true;
         $settings->add($sharedsecretsetting);
 
-        // bot_feature_enabled
+        // Setting bot_feature_enabled.
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
             get_string('settings_bot_feature_enabled', 'local_o365'),
             get_string('settings_bot_feature_enabled_desc', 'local_o365'),
             '0'));
 
-        // bot_webhook_endpoint
+        // Setting bot_webhook_endpoint.
         $settings->add(new admin_setting_configtext('local_o365/bot_webhook_endpoint',
             get_string('settings_bot_webhook_endpoint', 'local_o365'),
             get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
             ''));
 
-        // manifest download link
+        // Manifest download link.
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');
         $downloadmanifesthtml .= html_writer::start_tag('p');
         $manifesturl = new moodle_url('/local/o365/export_manifest.php');
@@ -448,6 +457,53 @@ if ($hassiteconfig) {
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::end_div();
 
+        // Moodle app ID.
+        $settings->add(new admin_setting_configtext('local_o365/moodle_app_id',
+            get_string('settings_moodle_app_id', 'local_o365'),
+            get_string('settings_moodle_app_id_desc', 'local_o365'),
+            ''));
+
         $settings->add(new admin_setting_heading('download_manifest_header', '', $downloadmanifesthtml));
+    }
+
+    if (($tab == LOCAL_O365_TAB_MOODLE_APP || !empty($install)) && local_o365_show_teams_moodle_app_id_tab()) {
+        // Moodle app ID.
+        $moodleappiddescription = get_string('settings_moodle_app_id_desc', 'local_o365');
+        if (\local_o365\utils::is_configured() === true) {
+            if (\local_o365\utils::is_configured_apponlyaccess() !== true) {
+                $httpclient = new \local_o365\httpclient();
+                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+                $unifiedresource = \local_o365\rest\unified::get_resource();
+                $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
+
+                if (!empty($unifiedtoken)) {
+                    $graphclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
+
+                    // Check Moodle app ID using default externalId provided in Moodle application.
+                    $moodleappid = $graphclient->get_catalog_app_id(TEAMS_MOODLE_APP_EXTERNAL_ID);
+
+                    if ($moodleappid) {
+                        $moodleappiddescription .= get_string('settings_moodle_app_id_desc_auto_id', 'local_o365', $moodleappid);
+                    }
+                }
+            }
+        }
+
+        $settings->add(new admin_setting_configtext('local_o365/moodle_app_id',
+            get_string('settings_moodle_app_id', 'local_o365'),
+            $moodleappiddescription,
+            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
+
+        // Set Moodle App ID instructions.
+        if (\local_o365\utils::is_configured() === true && \local_o365\utils::is_configured_apponlyaccess() === true) {
+            $setmoodleappidinstructionhtml = html_writer::start_tag('p');
+            $setmoodleappidinstructionhtml .= get_string('settings_set_moodle_app_id_instruction', 'local_o365');
+            $setmoodleappidinstructionhtml .= html_writer::end_tag('p');
+            $setmoodleappidinstructionhtml .= html_writer::empty_tag('br');
+            $setmoodleappidinstructionhtml .= html_writer::img(new moodle_url('/local/o365/pix/moodle_app_id.png'), '',
+                ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_moodle_app_id_img']);
+
+            $settings->add(new admin_setting_heading('set_moodle_app_id_instruction_header', '', $setmoodleappidinstructionhtml));
+        }
     }
 }
