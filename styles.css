@@ -270,6 +270,16 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
   margin-bottom: 30px;
 }
 
+.local_o365_settings_moodle_app_id_img {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.local_o365_settings_moodle_app_id {
+  background-color: yellow;
+}
+
 .local_o365_settings_teams_horizontal_spacer {
   margin-left: 80px;
 }
