@@ -342,6 +342,7 @@ $string['settings_header_syncsettings'] = 'Sync Settings';
 $string['settings_header_tools'] = 'Tools';
 $string['settings_header_advanced'] = 'Advanced';
 $string['settings_header_sds'] = 'School Data Sync (preview)';
+$string['settings_header_moodle_app'] = 'Teams Moodle app';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
@@ -652,11 +653,22 @@ $string['settings_bot_sharedsecret'] = 'Shared Moodle Secret';
 $string['settings_bot_sharedsecret_desc'] = 'Please paste this secret to the \'Shared Moodle Secret\' field in the Azure Bot template';
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
+$string['settings_moodle_app_id'] = 'Moodle app ID';
+$string['settings_moodle_app_id_desc'] = 'ID of uploaded Moodle app in Teams app catalogs';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
 $string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Office 365 tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
 $string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
 $string['settings_teams_deploy_bot_2'] = 'Need help?';
+$string['settings_set_moodle_app_id_instruction'] = 'To find the Moodle app ID manually, follow these steps:
+<ol>
+<li>Upload the downloaded manifest file to Teams app catalog of your tenant.</li>
+<li>In Teams app catalog, find the app.</li>
+<li>Click the option icon of the app, which is located at the top right corner of the app image.</li>
+<li>Click "Copy link".</li>
+<li>In a text editor, paste the copied content. It should contain an URL such as https://teams.microsoft.com/l/app/00112233-4455-6677-8899-aabbccddeeff.</li>
+</ol>
+The last part of the URL, i.e. <span class="local_o365_settings_moodle_app_id">00112233-4455-6677-8899-aabbccddeeff</span>, is the app ID.';
 $string['teams_no_course'] = 'You don\'t have any course to add.';
 $string['tab_name'] = 'Tab name';
 $string['tab_moodle'] = 'Moodle';
