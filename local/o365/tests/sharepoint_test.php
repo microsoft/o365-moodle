@@ -226,6 +226,20 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
         ];
         $testtoken->id = $DB->insert_record('local_o365_token', $testtoken);
 
+        $testoidctoken = (object)[
+            'oidcuniqid' => 'user1',
+            'resource' => 'https://graph.windows.net',
+            'username' => $user1->username,
+            'userid' => $user1->id,
+            'scope' => 'User.Read',
+            'authcode' => '000',
+            'token' => '111',
+            'refreshtoken' => '222',
+            'idtoken' => '333',
+            'expiry' => time() + 9999,
+        ];
+        $testoidctoken->id = $DB->insert_record('auth_oidc_token', $testoidctoken);
+
         $aaduserdata = (object)[
             'type' => 'user',
             'subtype' => '',
