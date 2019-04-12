@@ -146,7 +146,7 @@ class local_o365_sdssync_testcase extends \advanced_testcase {
     public function test_get_or_section_course() {
         global $DB;
 
-        $schoolcat = \coursecat::create(['name' => 'TestCat']);
+        $schoolcat = \core_course_category::create(['name' => 'TestCat']);
 
         $objectid = '111111a1-2222-bbbb-3333-01234567890a';
         $shortname = '101_MA502 Section 1';

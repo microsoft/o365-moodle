@@ -304,13 +304,12 @@ class sync extends \core\task\scheduled_task {
      */
     public static function get_or_create_school_coursecategory($schoolobjectid, $schoolname) {
         global $DB, $CFG;
-        require_once($CFG->dirroot.'/lib/coursecatlib.php');
 
         // Look for existing category.
         $params = ['type' => 'sdsschool', 'subtype' => 'coursecat', 'objectid' => $schoolobjectid];
         $existingobject = $DB->get_record('local_o365_objects', $params);
         if (!empty($existingobject)) {
-            $coursecat = \coursecat::get($existingobject->moodleid, IGNORE_MISSING, true);
+            $coursecat = \core_course_category::get($existingobject->moodleid, IGNORE_MISSING, true);
             if (!empty($coursecat)) {
                 return $coursecat;
             } else {
@@ -332,7 +331,7 @@ class sync extends \core\task\scheduled_task {
             $data['name'] = substr($data['name'], 0, 255);
         }
 
-        $coursecat = \coursecat::create($data);
+        $coursecat = \core_course_category::create($data);
 
         $now = time();
         $objectrec = [
