@@ -23,8 +23,6 @@
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
-require_once($CFG->libdir.'/eventslib.php');
-
 defined('MOODLE_INTERNAL') || die();
 
 /**
