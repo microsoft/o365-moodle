@@ -214,6 +214,7 @@ $string['healthcheck_ratelimit_result_warning'] = 'Increased throttling has been
 $string['healthcheck_ratelimit_result_disabled'] = 'Rate limiting features have been disabled.';
 $string['healthcheck_ratelimit_result_passed'] = 'Office 365 API calls are executing at full speed.';
 
+$string['privacy:metadata:local_o365'] = 'Microsoft Office 365 Local Plugin';
 $string['privacy:metadata:local_o365_calidmap'] = 'Information about links between Office 365 calendar events and Moodle calendar events.';
 $string['privacy:metadata:local_o365_calidmap:userid'] = 'The ID of the user who owns the event.';
 $string['privacy:metadata:local_o365_calidmap:origin'] = 'Where the event originated. Either Moodle or Office 365.';
