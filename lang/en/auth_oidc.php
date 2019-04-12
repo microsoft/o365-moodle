@@ -125,11 +125,12 @@ $string['oidc:manageconnection'] = 'Allow OpenID Connection and Disconnection';
 $string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
 $string['oidc:manageconnectiondisconnect'] = 'Allow OpenID Disconnection';
 
-$string['privacy:metadata:auth_oidc_prevlogin'] = 'Information about users previous login methods to undo Office 365 connections';
+$string['privacy:metadata:auth_oidc'] = 'OpenID Connect Authentication';
+$string['privacy:metadata:auth_oidc_prevlogin'] = 'Previous login methods to undo Office 365 connections';
 $string['privacy:metadata:auth_oidc_prevlogin:userid'] = 'The ID of the Moodle user';
 $string['privacy:metadata:auth_oidc_prevlogin:method'] = 'The previous login method';
 $string['privacy:metadata:auth_oidc_prevlogin:password'] = 'The previous (encrypted) user password field.';
-$string['privacy:metadata:auth_oidc_token'] = 'Information about OpenID Connect tokens for users';
+$string['privacy:metadata:auth_oidc_token'] = 'OpenID Connect tokens';
 $string['privacy:metadata:auth_oidc_token:oidcuniqid'] = 'The OIDC unique user identifier.';
 $string['privacy:metadata:auth_oidc_token:username'] = 'The username of the Moodle user';
 $string['privacy:metadata:auth_oidc_token:userid'] = 'The user ID of the Moodle user';

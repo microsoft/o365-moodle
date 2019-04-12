@@ -28,9 +28,16 @@ use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\writer;
 
+if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
+    interface auth_oidc_userlist extends \core_privacy\local\request\core_userlist_provider {}
+} else {
+    interface auth_oidc_userlist {};
+}
+
 class provider implements
     \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\metadata\provider {
+    \core_privacy\local\metadata\provider,
+    auth_oidc_userlist {
 
     /**
      * Returns meta data about this system.
@@ -84,8 +91,56 @@ class provider implements
      */
     public static function get_contexts_for_userid(int $userid) : contextlist {
         $contextlist = new \core_privacy\local\request\contextlist();
-        $contextlist->add_system_context();
+
+        $sql = "SELECT ctx.id
+                  FROM {auth_oidc_token} tk
+                  JOIN {context} ctx ON ctx.instanceid = tk.userid AND ctx.contextlevel = :contextlevel
+                 WHERE tk.userid = :userid";
+        $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
+        $contextlist->add_from_sql($sql, $params);
+
+        $sql = "SELECT ctx.id
+                  FROM {auth_oidc_prevlogin} pv
+                  JOIN {context} ctx ON ctx.instanceid = pv.userid AND ctx.contextlevel = :contextlevel
+                 WHERE pv.userid = :userid";
+        $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
+        $contextlist->add_from_sql($sql, $params);
+
         return $contextlist;
+    }
+
+    /**
+     * Get the list of users who have data within a context.
+     *
+     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(\core_privacy\local\request\userlist $userlist) {
+        $context = $userlist->get_context();
+
+        if (!$context instanceof \context_user) {
+            return;
+        }
+
+        $params = [
+            'contextuser' => CONTEXT_USER,
+            'contextid' => $context->id
+        ];
+
+        $sql = "SELECT ctx.instanceid as userid
+                  FROM {auth_oidc_prevlogin} pl
+                  JOIN {context} ctx
+                       ON ctx.instanceid = pl.userid
+                       AND ctx.contextlevel = :contextuser
+                 WHERE ctx.id = :contextid";
+        $userlist->add_from_sql('userid', $sql, $params);
+
+        $sql = "SELECT ctx.instanceid as userid
+                  FROM {auth_oidc_token} tk
+                  JOIN {context} ctx
+                       ON ctx.instanceid = tk.userid
+                       AND ctx.contextlevel = :contextuser
+                 WHERE ctx.id = :contextid";
+        $userlist->add_from_sql('userid', $sql, $params);
     }
 
     /**
@@ -96,36 +151,16 @@ class provider implements
     public static function export_user_data(approved_contextlist $contextlist) {
         global $DB;
         $user = $contextlist->get_user();
-        $context = \context_system::instance();
+        $context = \context_user::instance($contextlist->get_user()->id);
         $tables = static::get_table_user_map($user);
         foreach ($tables as $table => $filterparams) {
             $records = $DB->get_recordset($table, $filterparams);
             foreach ($records as $record) {
-                writer::with_context($context)->export_data([], $record);
+                writer::with_context($context)->export_data([
+                    get_string('privacy:metadata:auth_oidc', 'auth_oidc'),
+                    get_string('privacy:metadata:'.$table, 'auth_oidc')
+                ], $record);
             }
-        }
-    }
-
-    /**
-     * Delete all data for all users in the specified context.
-     *
-     * @param   context                 $context   The specific context to delete data for.
-     */
-    public static function delete_data_for_all_users_in_context(\context $context) {
-        // We only have data at the system context.
-    }
-
-    /**
-     * Delete all user data for the specified user, in the specified contexts.
-     *
-     * @param   approved_contextlist    $contextlist    The approved contexts and user information to delete information for.
-     */
-    public static function delete_data_for_user(approved_contextlist $contextlist) {
-        global $DB;
-        $user = $contextlist->get_user();
-        $tables = static::get_table_user_map($user);
-        foreach ($tables as $table => $filterparams) {
-            $DB->delete_records($table, $filterparams);
         }
     }
 
@@ -141,5 +176,57 @@ class provider implements
             'auth_oidc_token' => ['userid' => $user->id],
         ];
         return $tables;
+    }
+
+    /**
+     * Delete all data for all users in the specified context.
+     *
+     * @param context $context The specific context to delete data for.
+     */
+    public static function delete_data_for_all_users_in_context(\context $context) {
+        if ($context->contextlevel == CONTEXT_USER) {
+            self::delete_user_data($context->instanceid);
+        }
+    }
+
+    /**
+     * Delete all user data for the specified user, in the specified contexts.
+     *
+     * @param approved_contextlist $contextlist The approved contexts and user information to delete information for.
+     */
+    public static function delete_data_for_user(approved_contextlist $contextlist) {
+        if (empty($contextlist->count())) {
+            return;
+        }
+        foreach ($contextlist->get_contexts() as $context) {
+            if ($context->contextlevel == CONTEXT_USER) {
+                self::delete_user_data($context->instanceid);
+            }
+        }
+    }
+
+    /**
+     * This does the deletion of user data given a userid.
+     *
+     * @param  int $userid The user ID
+     */
+    private static function delete_user_data(int $userid) {
+        global $DB;
+        $DB->delete_records('auth_oidc_prevlogin', ['userid' => $userid]);
+        $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+    }
+
+    /**
+     * Delete multiple users within a single context.
+     *
+     * @param \core_privacy\local\request\approved_userlist $userlist The approved context and user information to delete
+     * information for.
+     */
+    public static function delete_data_for_users(\core_privacy\local\request\approved_userlist $userlist) {
+        $context = $userlist->get_context();
+        // Because we only use user contexts the instance ID is the user ID.
+        if ($context instanceof \context_user) {
+            self::delete_user_data($context->instanceid);
+        }
     }
 }
