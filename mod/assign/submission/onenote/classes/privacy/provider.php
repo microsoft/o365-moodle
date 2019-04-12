@@ -33,7 +33,10 @@ use \core_privacy\local\request\writer;
 use \core_privacy\local\request\contextlist;
 use \mod_assign\privacy\assign_plugin_request_data;
 
-class provider implements metadataprovider, \mod_assign\privacy\assignsubmission_provider {
+class provider implements
+        metadataprovider,
+        \mod_assign\privacy\assignsubmission_provider,
+        \mod_assign\privacy\assignsubmission_user_provider {
     /**
      * Return meta data about this plugin.
      *
@@ -57,6 +60,7 @@ class provider implements metadataprovider, \mod_assign\privacy\assignsubmission
      * @param \core_privacy\local\request\contextlist $contextlist Use add_from_sql with this object to add your context IDs.
      */
     public static function get_context_for_userid_within_submission(int $userid, contextlist $contextlist) {
+        // This is already fetched from mod_assign.
     }
 
     /**
@@ -65,6 +69,17 @@ class provider implements metadataprovider, \mod_assign\privacy\assignsubmission
      * @param  useridlist $useridlist A user ID list object that you can append your user IDs to.
      */
     public static function get_student_user_ids(\mod_assign\privacy\useridlist $useridlist) {
+        // No need.
+    }
+
+    /**
+     * If you have tables that contain userids and you can generate entries in your tables without creating an
+     * entry in the assign_submission table then please fill in this method.
+     *
+     * @param  \core_privacy\local\request\userlist $userlist The userlist object
+     */
+    public static function get_userids_from_context(\core_privacy\local\request\userlist $userlist) {
+        // Not required.
     }
 
     /**
@@ -86,7 +101,6 @@ class provider implements metadataprovider, \mod_assign\privacy\assignsubmission
 
         $currentpath = $exportdata->get_subcontext();
         $currentpath[] = get_string('privacy:path', 'assignsubmission_onenote');
-
         $context = $exportdata->get_context();
         $submissionid = $exportdata->get_pluginobject()->id;
         $assignmentid = $exportdata->get_assign()->get_instance()->id;
@@ -95,6 +109,9 @@ class provider implements metadataprovider, \mod_assign\privacy\assignsubmission
         foreach ($records as $record) {
             writer::with_context($context)
                 ->export_data($currentpath, $record);
+            writer::with_context($exportdata->get_context())->export_area_files($currentpath,
+                'assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
+
         }
     }
 
@@ -108,6 +125,11 @@ class provider implements metadataprovider, \mod_assign\privacy\assignsubmission
      */
     public static function delete_submission_for_context(assign_plugin_request_data $requestdata) {
         global $DB;
+
+        $fs = get_file_storage();
+        $fs->delete_area_files($requestdata->get_context()->id, 'assignsubmission_onenote',
+            \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+
         $filters = ['assignment' => $requestdata->get_assign()->get_instance()->id];
         $DB->delete_records('assignsubmission_onenote', $filters);
     }
@@ -125,11 +147,46 @@ class provider implements metadataprovider, \mod_assign\privacy\assignsubmission
     public static function delete_submission_for_userid(assign_plugin_request_data $deletedata) {
         global $DB;
 
-        $submissionid = $deletedata->get_pluginobject()->id;
         $assignmentid = $deletedata->get_assign()->get_instance()->id;
-        $filters = ['assignment' => $assignmentid, 'submission' => $submissionid];
+        $submissionid = $deletedata->get_pluginobject()->id;
+
+        // Delete files.
+        $fs = get_file_storage();
+        $fs->delete_area_files($deletedata->get_context()->id, 'assignsubmission_onenote',
+            \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
 
         // Delete the records in the table.
+        $filters = ['assignment' => $assignmentid, 'submission' => $submissionid];
         $DB->delete_records('assignsubmission_onenote', $filters);
+    }
+
+    /**
+     * Deletes all submissions for the submission ids / userids provided in a context.
+     * assign_plugin_request_data contains:
+     * - context
+     * - assign object
+     * - submission ids (pluginids)
+     * - user ids
+     * @param  assign_plugin_request_data $deletedata A class that contains the relevant information required for deletion.
+     */
+    public static function delete_submissions(assign_plugin_request_data $deletedata) {
+        global $DB;
+        if (empty($deletedata->get_submissionids())) {
+            return;
+        }
+
+        list($sql, $params) = $DB->get_in_or_equal($deletedata->get_submissionids(), SQL_PARAMS_NAMED);
+
+        $fs = get_file_storage();
+        $fs->delete_area_files_select(
+            $deletedata->get_context()->id,
+            'assignsubmission_onenote',
+            \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            $sql,
+            $params
+        );
+
+        $params['assignid'] = $deletedata->get_assignid();
+        $DB->delete_records_select('assignsubmission_onenote', "assignment = :assignid AND submission $sql", $params);
     }
 }
