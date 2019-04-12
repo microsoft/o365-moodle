@@ -222,7 +222,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
 
             // Remove request.
             [
-                'url' => 'https://graph.microsoft.com/v1.0/groups/testgroupobjectid/members/user2/$ref',
+                'url' => 'https://graph.microsoft.com/beta/groups/testgroupobjectid/members/user2/$ref',
                 'options' => [
                     'CURLOPT_CUSTOMREQUEST' => 'DELETE',
                     'CURLOPT_USERPWD' => 'anonymous: noreply@moodle.org',
@@ -232,7 +232,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
 
             // Add request.
             [
-                'url' => 'https://graph.microsoft.com/v1.0/groups/testgroupobjectid/members/$ref',
+                'url' => 'https://graph.microsoft.com/beta/groups/testgroupobjectid/members/$ref',
                 'options' => [
                     'CURLOPT_POST' => '1',
                     'CURLOPT_POSTFIELDS' => '{"@odata.id":"https:\/\/graph.microsoft.com\/v1.0\/directoryObjects\/user0"}',
