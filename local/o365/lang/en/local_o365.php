@@ -381,6 +381,7 @@ $string['settings_fieldmap_field_postalCode'] = 'Postal Code';
 $string['settings_fieldmap_field_preferredLanguage'] = 'Language';
 $string['settings_fieldmap_field_state'] = 'State';
 $string['settings_fieldmap_field_streetAddress'] = 'Street Address';
+$string['settings_fieldmap_field_employeeId'] = 'Employee ID';
 $string['settings_fieldmap_update_always'] = 'On login & creation';
 $string['settings_header_connections'] = 'Connections';
 $string['settings_header_setup'] = 'Setup';
