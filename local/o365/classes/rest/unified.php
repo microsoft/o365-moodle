@@ -630,6 +630,7 @@ class unified extends \local_o365\rest\o365api {
             'department',
             'companyName',
             'preferredLanguage',
+            'employeeId',
         ];
     }
 
@@ -1731,6 +1732,7 @@ class unified extends \local_o365\rest\o365api {
                 'businessPhones',
                 'facsimileTelephoneNumber',
                 'mobilePhone',
+                'employeeId',
             ];
             $context = 'https://graph.microsoft.com/v1.0/$metadata#users(';
             $context = $context.join(',', $params).')/$entity';
