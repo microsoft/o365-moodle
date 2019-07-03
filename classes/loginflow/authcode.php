@@ -416,15 +416,18 @@ class authcode extends \auth_oidc\loginflow\base {
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
         if (!empty($tokenrec)) {
             // Already connected user.
-
             if (empty($tokenrec->userid)) {
-                // ERROR.
-                echo 'ERROR1';die();
+                // ERROR1
+                throw new \moodle_exception('exception_tokenemptyuserid', 'auth_oidc');
             }
             $user = $DB->get_record('user', ['id' => $tokenrec->userid]);
             if (empty($user)) {
-                // ERROR.
-                echo 'ERROR2';die();
+                // ERROR2
+                $failurereason = AUTH_LOGIN_NOUSER;
+                $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
+                $event = \core\event\user_login_failed::create($eventdata);
+                $event->trigger();
+                throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
             }
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
@@ -473,14 +476,22 @@ class authcode extends \auth_oidc\loginflow\base {
             $user = authenticate_user_login($username, null, true);
 
             if (!empty($user)) {
+                $tokenrec = $DB->get_record('auth_oidc_token', ['id' => $tokenrec->id]);
+                // This should be already done in auth_plugin_oidc::user_authenticated_hook, but just in case...
+                if (!empty($tokenrec) && empty($tokenrec->userid)) {
+                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec->id = $tokenrec->id;
+                    $updatedtokenrec->userid = $user->id;
+                    $DB->update_record('auth_oidc_token', $updatedtokenrec);
+                }
                 complete_user_login($user);
                 return true;
             } else {
+                // There was a problem in authenticate_user_login. Clean up incomplete token record.
                 if (!empty($tokenrec)) {
-                    throw new \moodle_exception('errorlogintoconnectedaccount', 'auth_oidc', null, null, '2');
-                } else {
-                    throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '2');
+                    $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
                 }
+                throw new \moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
             }
 
             return true;
