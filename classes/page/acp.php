@@ -1260,7 +1260,58 @@ class acp extends base {
             echo \html_writer::div(get_string('acp_maintenance_debugdata_desc', 'local_o365'));
         }
 
+        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_cleanoidctokens']);
+        $toolname = get_string('acp_maintenance_cleanoidctokens', 'local_o365');
+        echo \html_writer::empty_tag('br');
+        echo \html_writer::link($toolurl, $toolname);
+        echo \html_writer::div(get_string('acp_maintenance_cleanoidctokens_desc', 'local_o365'));
+
         $this->standard_footer();
+    }
+
+    /**
+     * Clean up OpenID Connect tokens.
+     */
+    public function mode_maintenance_deleteoidctoken() {
+        global $DB;
+        $tokenid = required_param('id', PARAM_INT);
+        require_sesskey();
+        $DB->delete_records('auth_oidc_token', ['id' => $tokenid]);
+        mtrace("Token deleted.");
+    }
+
+    /**
+     * Clean up OpenID Connect tokens.
+     */
+    public function mode_maintenance_cleanoidctokens() {
+        global $DB;
+        $records = $DB->get_recordset('auth_oidc_token', ['userid' => 0]);
+        foreach ($records as $token) {
+            $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'sesskey' => sesskey()]);
+            $toolname = 'Delete Token';
+            $str = $token->id.': Moodle user '.$token->username.' as a token for OIDC username '.$token->oidcusername.' but no recorded userid.';
+            $deletelink = \html_writer::link($toolurl, $toolname);
+            mtrace($str.' '.$deletelink);
+        }
+
+        $sql = 'SELECT tok.id AS id,
+                       u.id AS muserid,
+                       u.username AS musername,
+                       u.auth,
+                       u.deleted,
+                       u.suspended,
+                       tok.oidcuniqid,
+                       tok.username AS tokusername,
+                       tok.userid AS tokuserid,
+                       tok.oidcusername
+                  FROM {auth_oidc_token} tok
+                  JOIN {user} u
+                       ON u.id = tok.userid
+                 WHERE tok.userid != 0 AND u.username != tok.username';
+        $tokens = $DB->get_recordset_sql($sql);
+        foreach ($tokens as $token) {
+            mtrace($token->id.': Mismatch between usernames and userids. Userid "'.$token->tokuserid.'" references Moodle user "'.$token->musername.'" but token references "'.$token->tokusername.'"');
+        }
     }
 
     /**
