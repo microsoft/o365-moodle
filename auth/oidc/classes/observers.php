@@ -37,8 +37,8 @@ class observers {
      */
     public static function handle_user_deleted(\core\event\user_deleted $event) {
         global $DB;
-        $eventdata = $event->get_data();
-        $DB->delete_records('auth_oidc_token', ['username' => $eventdata['other']['username']]);
+        $userid = $event->objectid;
+        $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
         return true;
     }
 }
