@@ -274,6 +274,21 @@ class main {
     }
 
     /**
+     * Get AAD data for a single user.
+     *
+     * @param string|array $params Requested user parameters.
+     * @return array|null Array of user information, or null if failure.
+     */
+    public function get_user($objectid, $params = 'default') {
+        $apiclient = $this->construct_user_api(false);
+        $result = $apiclient->get_user($objectid);
+        if (!empty($result) && is_array($result)) {
+            return [$result];
+        }
+        return [];
+    }
+
+    /**
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
