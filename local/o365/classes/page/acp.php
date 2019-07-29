@@ -1351,6 +1351,36 @@ class acp extends base {
     }
 
     /**
+     * Resync action from the userconnections tool.
+     */
+    public function mode_userconnections_resync() {
+        global $DB;
+        $userid = required_param('userid', PARAM_INT);
+        confirm_sesskey();
+
+        if (\local_o365\utils::is_configured() !== true) {
+            mtrace('Office 365 not configured');
+            return false;
+        }
+
+        // Perform prechecks.
+        $userrec = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+
+        $params = ['type' => 'user', 'moodleid' => $userid];
+        $objectrecord = $DB->get_record('local_o365_objects', $params);
+        if (empty($objectrecord) || empty($objectrecord->objectid)) {
+            throw new \moodle_exception('acp_userconnections_resync_nodata', 'local_o365');
+        }
+
+        // Get aad data.
+        $usersync = new \local_o365\feature\usersync\main();
+        $userdata = $usersync->get_user($objectrecord->objectid);
+        echo '<pre>';
+        $usersync->sync_users($userdata);
+        echo '</pre>';
+    }
+
+    /**
      * Manual match action from the userconnections tool.
      */
     public function mode_userconnections_manualmatch() {
