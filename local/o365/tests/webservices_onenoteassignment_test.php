@@ -185,7 +185,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     'coursemodule' => $assign->cmid,
                     'course' => -1,
                 ],
-                'expectedexception' => ['dml_missing_record_exception', 'Can not find data record in database table course'],
+                'expectedexception' => ['dml_missing_record_exception', new lang_string('invalidrecord', 'error', 'course')],
             ],
             'Course not found (different id)' => [
                 'dbstate' => [],
@@ -193,7 +193,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     'coursemodule' => $assign->cmid,
                     'course' => $fakecourseid,
                 ],
-                'expectedexception' => ['dml_missing_record_exception', 'Can not find data record in database table course'],
+                'expectedexception' => ['dml_missing_record_exception', new lang_string('invalidrecord', 'error', 'course')],
             ],
             'Module not found (no record)' => [
                 'dbstate' => [],
