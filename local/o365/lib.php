@@ -183,6 +183,7 @@ function local_o365_create_manifest_file() {
             'websiteUrl' => 'https://enovation.ie',
             'privacyUrl' => 'https://enovation.ie/moodleteamsapp-privacy',
             'termsOfUseUrl' => 'https://enovation.ie/moodleteamsapp-termsofuse',
+            'mpnId' => '1718735',
         ),
         'icons' => array(
             'color' => 'color.png',
