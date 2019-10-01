@@ -104,7 +104,7 @@ class authcode extends \auth_oidc\loginflow\base {
             // Response from OP.
             $this->handleauthresponse($requestparams);
         } else {
-            if (isloggedin() && empty($justauth) && empty($promptaconsent)) {
+            if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent)) {
                 redirect(new \moodle_url('/'));
                 die();
             }
