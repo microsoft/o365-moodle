@@ -106,7 +106,7 @@ class authcode extends \auth_oidc\loginflow\base {
             // Response from OP.
             $this->handleauthresponse($requestparams);
         } else {
-            if (isloggedin() && empty($justauth) && empty($promptaconsent)) {
+            if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent)) {
                 if (isset($SESSION->wantsurl) and (strpos($SESSION->wantsurl, $CFG->wwwroot) === 0)) {
                     $urltogo = $SESSION->wantsurl;
                     unset($SESSION->wantsurl);
