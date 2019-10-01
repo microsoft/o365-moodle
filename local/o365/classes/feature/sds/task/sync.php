@@ -117,6 +117,7 @@ class sync extends \core\task\scheduled_task {
                         $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $member['objectId']]);
                         if (!empty($objectrec)) {
                             if (!empty($enrolenabled)) {
+                                $role = null;
                                 $type = $member[$apiclient::PREFIX.'_ObjectType'];
                                 switch ($type) {
                                     case 'Student':
@@ -125,8 +126,10 @@ class sync extends \core\task\scheduled_task {
                                     case 'Teacher':
                                         $role = $teacherrole;
                                         break;
-                                    default:
-                                        continue;
+                                }
+
+                                if (empty($role)) {
+                                    continue;
                                 }
 
                                 $roleparams = [
