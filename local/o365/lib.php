@@ -175,7 +175,7 @@ function local_o365_create_manifest_file() {
     $manifest = array(
         '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json',
         'manifestVersion' => '1.5',
-        'version' => '1.2.1',
+        'version' => '1.2.2',
         'id' => TEAMS_MOODLE_APP_EXTERNAL_ID,
         'packageName' => 'ie.enovation.microsoft.o365',
         'developer' => array(
