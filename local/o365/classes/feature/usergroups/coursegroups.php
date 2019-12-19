@@ -56,7 +56,6 @@ class coursegroups {
      * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
     public function create_groups_for_new_courses() {
-        $this->replace_group_notebook_job();
         $groupprefix = '';
 
         $createteams = get_config('local_o365', 'createteams');

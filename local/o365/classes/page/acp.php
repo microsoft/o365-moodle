@@ -1266,7 +1266,43 @@ class acp extends base {
         echo \html_writer::link($toolurl, $toolname);
         echo \html_writer::div(get_string('acp_maintenance_cleanoidctokens_desc', 'local_o365'));
 
+        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_createclassnotebooks']);
+        $toolname = get_string('acp_maintenance_createclassnotebooks', 'local_o365');
+        echo \html_writer::empty_tag('br');
+        echo \html_writer::link($toolurl, $toolname);
+        echo \html_writer::div(get_string('acp_maintenance_createclassnotebooks_desc', 'local_o365'));
+
         $this->standard_footer();
+    }
+
+    /**
+     * Replace group notebooks with class notebooks.
+     */
+    public function mode_maintenance_createclassnotebooks() {
+        global $DB;
+
+        if (\local_o365\utils::is_configured() !== true) {
+            mtrace("Plugins not configured");
+            return false;
+        }
+
+        if (\local_o365\feature\usergroups\utils::is_enabled() !== true) {
+            mtrace('Groups not enabled, skipping...');
+            return true;
+        }
+
+        $httpclient = new \local_o365\httpclient();
+        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+
+        $unifiedresource = \local_o365\rest\unified::get_resource();
+        $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
+        if (empty($unifiedtoken)) {
+            mtrace('Could not get graph API token.');
+            return true;
+        }
+        $graphclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
+        $coursegroups->replace_group_notebook_job();
     }
 
     /**
