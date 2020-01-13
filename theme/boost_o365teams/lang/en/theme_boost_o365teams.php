@@ -30,8 +30,6 @@ $string['region-side-pre'] = 'Right';
 
 $string['placementfrontpage'] = 'Front page';
 $string['editcourse'] = 'Edit course';
-$string['footer_stamp_title'] = "Tabs Footer Stamp";
-$string['footer_stamp_desc'] = "Displays Image or logo at bottom right of tabs.<br/>(Max-Height: 60px)";
 
 $string['share_feedback'] = 'Share feedback';
 $string['feedback'] = 'Feedback';
@@ -39,3 +37,11 @@ $string['edit_course'] = 'Edit course in browser window';
 $string['open_course'] = 'Open course in browser window';
 
 $string['navigatereturn'] = 'Return to quiz menu';
+
+$string['configtitle'] = 'Boost Office365 Teams';
+$string['generalsettings'] = 'General settings';
+$string['showteamfeedbacklink'] = 'Show feedback link';
+$string['showteamfeedbacklink_desc'] = 'If enabled, a link to leave feedback to Moodle Office 365 integration will be shown when a Moodle tab is opened in Teams.';
+$string['advancedsettings'] = 'Advanced settings';
+$string['footer_stamp_title'] = "Tabs Footer Stamp";
+$string['footer_stamp_desc'] = "Displays Image or logo at bottom right of tabs.<br/>(Max-Height: 60px)";

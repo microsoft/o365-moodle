@@ -39,6 +39,7 @@ if ($navdraweropen) {
 $bodyattributes = $OUTPUT->body_attributes($extraclasses);
 $blockshtml = $OUTPUT->blocks('side-pre');
 $hasblocks = strpos($blockshtml, 'data-block=') !== false;
+$showfeedback = get_config('theme_boost_o365teams', 'showteamfeedbacklink');
 $regionmainsettingsmenu = $OUTPUT->region_main_settings_menu();
 $coursepage = $CFG->wwwroot . '/course/view.php?id=' . $PAGE->course->id;
 $url = $PAGE->url;
@@ -53,6 +54,7 @@ $templatecontext = [
         'output' => $OUTPUT,
         'sidepreblocks' => $blockshtml,
         'hasblocks' => $hasblocks,
+        'showfeedback' => $showfeedback,
         'bodyattributes' => $bodyattributes,
         'navdraweropen' => $navdraweropen,
         'regionmainsettingsmenu' => $regionmainsettingsmenu,
