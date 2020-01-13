@@ -780,7 +780,7 @@ class observers {
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
             // incomplete settings, exit.
-            mtrace('ERROR: handle_notification_sent - incomplete settings');
+            debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
             return true;
         }
 
@@ -788,20 +788,20 @@ class observers {
         $notification = $DB->get_record('notifications', ['id' => $notificationid]);
         if (!$notification) {
             // notification cannot be found, exit.
-            mtrace('ERROR: handle_notification_sent - notification cannot be found');
+            debugging('SKIPPED: handle_notification_sent - notification cannot be found', DEBUG_DEVELOPER);
             return true;
         }
 
         $user = $DB->get_record('user', ['id' => $notification->useridto]);
         if (!$user) {
             // recipient user invalid, exit.
-            mtrace('ERROR: handle_notification_sent - recipient user invalid');
+            debugging('SKIPPED: handle_notification_sent - recipient user invalid', DEBUG_DEVELOPER);
             return true;
         }
 
         if ($user->auth != 'oidc') {
             // recipient user is not office 365 user, exit.
-            mtrace('ERROR: handle_notification_sent - recipient user is not office 365 user');
+            debugging('SKIPPED: handle_notification_sent - recipient user is not office 365 user', DEBUG_DEVELOPER);
             return true;
         }
 
@@ -809,26 +809,26 @@ class observers {
         $userrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
         if (!$userrecord) {
             // recipient user doesn't have an object ID, exit.
-            mtrace('ERROR: handle_notification_sent - recipient user doesn\'t have an object ID');
+            debugging('SKIPPED: handle_notification_sent - recipient user doesn\'t have an object ID', DEBUG_DEVELOPER);
             return true;
         }
 
         // get course object record
         if (!array_key_exists('courseid', $event->other)) {
             // course doesn't exist, exit.
-            mtrace('ERROR: handle_notification_sent - course doesn\'t exist');
+            debugging('SKIPPED: handle_notification_sent - course doesn\'t exist', DEBUG_DEVELOPER);
             return true;
         }
         $courseid = $event->other['courseid'];
         if (!$courseid || $courseid == SITEID) {
             // invalid course id, exit.
-            mtrace('ERROR: handle_notification_sent - invalid course id');
+            debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
             return true;
         }
         $course = $DB->get_record('course', ['id' => $courseid]);
         if (!$course) {
             // invalid course, exit.
-            mtrace('ERROR: handle_notification_sent - invalid course id');
+            debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
             return true;
         }
 
@@ -837,7 +837,7 @@ class observers {
             ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
         if (!$courserecord) {
             // course record doesn't have an object ID, exit.
-            mtrace('ERROR: handle_notification_sent - course record doesn\'t have an object ID');
+            debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
             return true;
         }else{
             $courseobjectid = $courserecord->objectid;
@@ -847,7 +847,7 @@ class observers {
         $botframework = new \local_o365\rest\botframework();
         if (!$botframework->has_token()) {
             // cannot get token, exit.
-            mtrace('ERROR: handle_notification_sent - cannot get token from bot framework');
+            debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
             return true;
         }
 
