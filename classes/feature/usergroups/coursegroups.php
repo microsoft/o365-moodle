@@ -23,6 +23,8 @@
 
 namespace local_o365\feature\usergroups;
 
+define('API_CALL_RETRY_LIMIT', 3);
+
 class coursegroups {
     protected $graphclient;
     protected $DB;
@@ -299,8 +301,24 @@ class coursegroups {
         $extra = null;
 
         try {
+            $teamid = null;
             $response = $this->graphclient->create_class_team($displayname, $description, $ownerids, $extra);
+
+            if (is_array($response) && array_key_exists('Location', $response)) {
+                $location = $response['Location'];
+                $locationparts = explode('/', $location);
+                foreach ($locationparts as $locationpart) {
+                    if (substr($locationpart, 0, 5) == 'teams') {
+                        $teamid = substr($locationpart, 7, 36);
+                    }
+                }
+            }
         } catch (\Exception $e) {
+            $this->mtrace('Could not create class team for #' . $course->id . '. Reason: ' . $e->getMessage());
+            return false;
+        }
+
+        if (is_null($teamid)) {
             $this->mtrace('Could not create class team for #' . $course->id . '. Reason: ' . $e->getMessage());
             return false;
         }
@@ -338,27 +356,40 @@ class coursegroups {
         $moodleappid = get_config('local_o365', 'moodle_app_id');
         if (!empty($moodleappid)) {
             // Provision app to the newly created team.
-            try {
-                $response = $this->graphclient->provision_app($teamobjectrec['objectid'], $moodleappid);
-            } catch (\Exception $e) {
-                $this->mtrace('Could not add app to team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+            $retrycounter = 0;
+            $moodleappprovisioned = false;
+            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+                if ($retrycounter) {
+                    $this->mtrace('..... Retry #' . $retrycounter);
+                    sleep(10);
+                }
+                try {
+                    $this->graphclient->provision_app($teamobjectrec['objectid'], $moodleappid);
+                    $moodleappprovisioned = true;
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not add app to team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                    $retrycounter++;
+                }
             }
 
             // List all channels.
-            try {
-                $generalchanelid = $this->graphclient->get_general_channel_id($teamobjectrec['objectid']);
-            } catch (\Exception $e) {
-                $this->mtrace('Could not list channels in team for course #' . $course->id . '. Reason: ' . $e->getMessage());
-            }
-
-            if ($generalchanelid) {
-                // Add tab to channel.
+            if ($moodleappprovisioned) {
                 try {
-                    $this->graphclient->add_moodle_tab_to_channel($teamobjectrec['objectid'], $generalchanelid, $moodleappid,
-                        $course->id);
+                    $generalchanelid = $this->graphclient->get_general_channel_id($teamobjectrec['objectid']);
                 } catch (\Exception $e) {
-                    $this->mtrace('Could not add Moodle tab to channel in team for course #' . $course->id .
-                        '. Reason : '. $e->getMessage());
+                    $this->mtrace('Could not list channels in team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                    $generalchanelid = false;
+                }
+
+                if ($generalchanelid) {
+                    // Add tab to channel.
+                    try {
+                        $this->graphclient->add_moodle_tab_to_channel($teamobjectrec['objectid'], $generalchanelid, $moodleappid,
+                            $course->id);
+                    } catch (\Exception $e) {
+                        $this->mtrace('Could not add Moodle tab to channel in team for course #' . $course->id .
+                            '. Reason : '. $e->getMessage());
+                    }
                 }
             }
         }
@@ -483,7 +514,7 @@ class coursegroups {
             $this->mtrace('... Adding '.$userobjectid.' (muserid: '.$moodleuserid.')...', '');
 
             $retrycounter = 0;
-            while ($retrycounter <= 3) {
+            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
                 $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
                 if ($retrycounter) {
                     $this->mtrace('...... Retry #' . $retrycounter);
