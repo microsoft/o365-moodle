@@ -569,7 +569,18 @@ class acp extends base {
         $coursesid = [];
 
         if (empty($search)) {
-            $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+            $sortdir = 1;
+            if ($sortdir == 'desc') {
+                $sortdir = -1;
+            }
+            $options = [
+                'recursive' => true,
+                'sort' => [$sort => $sortdir],
+                'offset' => $limitfrom,
+                'limit' => $perpage,
+            ];
+            $topcat = \core_course_category::get(0);
+            $courses = $topcat->get_courses($options);
         } else {
             $searchar = explode(' ', $search);
             $courses = get_courses_search($searchar, 'c.'.$sort.' '.$sortdir, $curpage, $perpage, $totalcount);
@@ -1100,7 +1111,18 @@ class acp extends base {
 
         $limitfrom = $curpage * $perpage;
         if (empty($search)) {
-            $courses = get_courses_page('all', 'c.'.$sort.' '.$sortdir, 'c.*', $totalcount, $limitfrom, $perpage);
+            $sortdir = 1;
+            if ($sortdir == 'desc') {
+                $sortdir = -1;
+            }
+            $options = [
+                'recursive' => true,
+                'sort' => [$sort => $sortdir],
+                'offset' => $limitfrom,
+                'limit' => $perpage,
+            ];
+            $topcat = \core_course_category::get(0);
+            $courses = $topcat->get_courses($options);
         } else {
             $searchar = explode(' ', $search);
             $courses = get_courses_search($searchar, 'c.'.$sort.' '.$sortdir, $curpage, $perpage, $totalcount);
