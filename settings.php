@@ -457,12 +457,6 @@ if ($hassiteconfig) {
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::end_div();
 
-        // Moodle app ID.
-        $settings->add(new admin_setting_configtext('local_o365/moodle_app_id',
-            get_string('settings_moodle_app_id', 'local_o365'),
-            get_string('settings_moodle_app_id_desc', 'local_o365'),
-            ''));
-
         $settings->add(new admin_setting_heading('download_manifest_header', '', $downloadmanifesthtml));
     }
 
