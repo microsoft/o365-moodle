@@ -64,14 +64,14 @@ class bot extends \core\task\scheduled_task {
         $botframework = new \local_o365\rest\botframework();
         if (!$botframework->has_token()) {
             // Cannot get token, exit.
-            mtrace('ERROR: handle_notification_sent - cannot get token from bot framework');
+            debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
             return true;
         }
         $this->botframework = $botframework;
 
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (empty($notificationendpoint)) {
-            mtrace('ERROR: handle_notification_sent - incomplete settings, bot_webhook_endpoint empty');
+            debugging('SKIPPED: handle_notification_sent - incomplete settings, bot_webhook_endpoint empty', DEBUG_DEVELOPER);
             return true;
         }
 
@@ -116,7 +116,7 @@ class bot extends \core\task\scheduled_task {
                     ['type' => 'group', 'subtype' => 'course', 'moodleid' => $course->id]);
             if (!$o365course) {
                 // Course record doesn't have an object ID can't send for this assignment.
-                mtrace('ERROR: handle_notification_sent - course record doesn\'t have an object ID');
+                debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
                 continue;
             }
 
@@ -138,7 +138,8 @@ class bot extends \core\task\scheduled_task {
             foreach ($tonotify as $iduser) {
                 $o365user = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $iduser]);
                 if (!$o365user) {
-                    mtrace("ERROR: handle_notification_sent - recipient user ID:$iduser doesn\'t have an object ID");
+                    debugging("SKIPPED: handle_notification_sent - recipient user ID:$iduser doesn\'t have an object ID",
+                        DEBUG_DEVELOPER);
                     continue;
                 }
 
