@@ -2043,7 +2043,6 @@ class unified extends \local_o365\rest\o365api {
         return $response;
     }
 
-
     /**
      * Create a class team.
      *
@@ -2051,7 +2050,9 @@ class unified extends \local_o365\rest\o365api {
      * @param string $description
      * @param array $ownerids
      * @param null $extra
-     * @return array|string|null
+     *
+     * @return array|null
+     * @throws \moodle_exception
      */
     public function create_class_team($displayname, $description, $ownerids, $extra = null) {
         $owneridparam = [];
@@ -2076,19 +2077,6 @@ class unified extends \local_o365\rest\o365api {
         }
 
         $response = $this->betaapicall('post', '/teams', json_encode($teamdata));
-
-        if (array_key_exists('Location', $response)) {
-            $location = $response['Location'];
-            $locationparts = explode('/', $location);
-            foreach ($locationparts as $locationpart) {
-                if (substr($locationpart, 0, 5) == 'teams') {
-                    $response = [];
-                    $response['id'] = substr($locationpart, 7, 36);
-                    return $response;
-                }
-            }
-        }
-
-        return $response;
+        return $this->process_apicall_response($response, ['value' => null]);
     }
 }
