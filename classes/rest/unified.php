@@ -297,7 +297,19 @@ class unified extends \local_o365\rest\o365api {
 
         $response = $this->apicall('post', '/groups', json_encode($groupdata));
         $expectedparams = ['id' => null];
-        $response = $this->process_apicall_response($response, $expectedparams);
+        try {
+            $response = $this->process_apicall_response($response, $expectedparams);
+        } catch (\Exception $e) {
+            if ($e->getMessage() ==
+                'Error in API call: Another object with the same value for property mailNickname already exists.') {
+                $groupdata['mailNickname'] = $groupdata['mailNickname'] . '_' . preg_replace('/[^a-z0-9]+/iu', '', $name);
+                $response = $this->apicall('post', '/groups', json_encode($groupdata));
+                $response = $this->process_apicall_response($response, $expectedparams);
+            } else {
+                throw $e;
+            }
+        }
+
         return $response;
     }
 
