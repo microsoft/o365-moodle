@@ -27,6 +27,7 @@
     * bodyattributes - attributes for the body tag as a string of html attributes
     * sidepreblocks - HTML for the blocks
     * hasblocks - true if there are blocks on this page
+    * showfeedback - true if feedback link needs to show
     * navdraweropen - true if the nav drawer should be open on page load
     * regionmainsettingsmenu - HTML for the region main settings menu
     * hasregionmainsettingsmenu - There is a region main settings menu on this page.
@@ -43,6 +44,7 @@
         "bodyattributes":"",
         "sidepreblocks": "<h2>Blocks html goes here</h2>",
         "hasblocks":true,
+        "showfeedback":true,
         "navdraweropen":true,
         "regionmainsettingsmenu": "",
         "hasregionmainsettingsmenu": false
@@ -111,7 +113,9 @@
         {{{ output.user_link }}}
     </div>
     <div class="footerright">
-        {{{ output.feedback_link }}}
+        {{#showfeedback}}
+            {{{ output.feedback_link }}}
+        {{/showfeedback}}
         {{{ output.get_footer_stamp }}}
     </div>
 </div>
