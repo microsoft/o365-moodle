@@ -581,6 +581,7 @@ class acp extends base {
             ];
             $topcat = \core_course_category::get(0);
             $courses = $topcat->get_courses($options);
+            $totalcount = $topcat->get_courses_count($options);
         } else {
             $searchar = explode(' ', $search);
             $courses = get_courses_search($searchar, 'c.'.$sort.' '.$sortdir, $curpage, $perpage, $totalcount);
@@ -1123,6 +1124,7 @@ class acp extends base {
             ];
             $topcat = \core_course_category::get(0);
             $courses = $topcat->get_courses($options);
+            $totalcount = $topcat->get_courses_count($options);
         } else {
             $searchar = explode(' ', $search);
             $courses = get_courses_search($searchar, 'c.'.$sort.' '.$sortdir, $curpage, $perpage, $totalcount);
