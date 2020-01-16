@@ -77,7 +77,7 @@ microsoftTeams.initialize();
 
 if (!inIframe()) {
     window.location.href = "' . $redirecturl->out() . '";
-    exit();
+    return;
 }
 
 // ADAL.js configuration
@@ -128,13 +128,13 @@ function loadData(upn) {
             } else {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out() . '";
-                exit();
+                return;
             }
         });
     } else {
         // login using the token
         window.location.href = "' . $oidcloginurl->out() . '";
-        exit();
+        return;
     }
 }
 
@@ -150,12 +150,12 @@ function login() {
             if (idToken) {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out() . '";
-                exit();
+                return;
             } else {
                 console.error("Error getting cached id token. This should never happen.");
                 // At this point we have to get the user involved, so show the login button
                 window.location.href = "' . $oidcloginurl->out() . '";
-                exit();
+                return;
             };
         },
         failureCallback: function (reason) {
@@ -165,7 +165,7 @@ function login() {
             }
             // At this point we have to get the user involved, so show the login button
             window.location.href = "' . $externalloginurl->out() . '";
-            exit();
+            return;
         }
     });
 }
