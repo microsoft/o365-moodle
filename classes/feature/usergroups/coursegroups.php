@@ -326,17 +326,17 @@ class coursegroups {
         }
 
         if (is_null($teamid)) {
-            $this->mtrace('Could not create class team for #' . $course->id . '. Reason: ' . $e->getMessage());
+            $this->mtrace('Could not create class team for #' . $course->id . '. Reason: invalid team ID');
             return false;
         }
 
-        $this->mtrace('Created class team ' . $response['id'] . ' for course #' . $course->id);
+        $this->mtrace('Created class team ' . $teamid . ' for course #' . $course->id);
 
         // Record group object.
         $groupobjectrec = [
             'type' => 'group',
             'subtype' => 'course',
-            'objectid' => $response['id'],
+            'objectid' => $teamid,
             'moodleid' => $course->id,
             'o365name' => $displayname,
             'timecreated' => $now,
@@ -350,7 +350,7 @@ class coursegroups {
         $teamobjectrec = [
             'type' => 'group',
             'subtype' => 'courseteam',
-            'objectid' => $response['id'],
+            'objectid' => $teamid,
             'moodleid' => $course->id,
             'o365name' => $displayname,
             'timecreated' => $now,
