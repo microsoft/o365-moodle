@@ -322,7 +322,7 @@ class coursegroups {
         }
 
         if (is_null($teamid)) {
-            $this->mtrace('Could not create class team for #' . $course->id . '. Reason: ' . $e->getMessage());
+            $this->mtrace('Could not create class team for #' . $course->id . '. Reason: invalid team ID');
             return false;
         }
 
