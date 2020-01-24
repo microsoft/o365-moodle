@@ -2064,7 +2064,6 @@ class unified extends \local_o365\rest\o365api {
             unset($teamdata['description']);
         }
 
-        $response = $this->betaapicall('post', '/teams', json_encode($teamdata));
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->betaapicall('post', '/teams', json_encode($teamdata));
     }
 }
