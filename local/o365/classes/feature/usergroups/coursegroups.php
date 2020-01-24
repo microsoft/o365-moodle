@@ -167,14 +167,17 @@ class coursegroups {
         // Process team sync changes
         $sql = 'SELECT crs.*
                   FROM {course} crs
-             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
-                 WHERE obj.id IS NULL AND crs.id != ?';
-        $params = ['group', 'courseteam', SITEID];
+             LEFT JOIN {local_o365_objects} obj_g ON obj_g.type = ? AND obj_g.subtype = ? AND obj_g.moodleid = crs.id
+             LEFT JOIN {local_o365_objects} obj_t ON obj_t.type = ? AND obj_t.subtype = ? AND obj_t.moodleid = crs.id
+                 WHERE obj_g.id IS NOT NULL
+                   AND obj_t.id IS NULL
+                   AND crs.id != ?';
+        $params = ['group', 'course', 'group', 'courseteam', SITEID];
         if (!empty($coursesinsql)) {
             $sql .= ' AND crs.id ' . $coursesinsql;
             $params = array_merge($params, $coursesparams);
         }
-        $courses = $this->DB->get_recordset_sql($sql, $params);
+        $courses = $this->DB->get_recordset_sql($sql, $params, 0, 5);
         $coursesprocessed = 0;
 
         // Get app ID.
