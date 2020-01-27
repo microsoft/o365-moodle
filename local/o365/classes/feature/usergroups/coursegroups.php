@@ -177,7 +177,7 @@ class coursegroups {
             $sql .= ' AND crs.id ' . $coursesinsql;
             $params = array_merge($params, $coursesparams);
         }
-        $courses = $this->DB->get_recordset_sql($sql, $params, 0, 5);
+        $courses = $this->DB->get_recordset_sql($sql, $params);
         $coursesprocessed = 0;
 
         // Get app ID.
