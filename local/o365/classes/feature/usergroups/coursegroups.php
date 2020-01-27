@@ -369,6 +369,7 @@ class coursegroups {
                 try {
                     $this->graphclient->provision_app($teamobjectrec['objectid'], $moodleappid);
                     $moodleappprovisioned = true;
+                    break;
                 } catch (\Exception $e) {
                     $this->mtrace('Could not add app to team for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     $retrycounter++;
