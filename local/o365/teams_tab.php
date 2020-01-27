@@ -72,7 +72,6 @@ microsoftTeams.initialize();
 
 if (!inIframe()) {
     window.location.href = "' . $redirecturl->out(false) . '";
-    return;
 }
 
 // ADAL.js configuration
@@ -127,13 +126,11 @@ function loadData(upn) {
             } else {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out(false) . '";
-                return;
             }
         });
     } else {
         // login using the token
         window.location.href = "' . $oidcloginurl->out(false) . '";
-        return;
     }
 }
 
@@ -149,12 +146,10 @@ function login() {
             if (idToken) {
                 // login using the token
                 window.location.href = "' . $oidcloginurl->out(false) . '";
-                return;
             } else {
                 console.error("Error getting cached id token. This should never happen.");
                 // At this point sso login does not work. redirect to normal Moodle login page.
                 window.location.href = "' . $externalloginurl->out(false) . '";
-                return;
             };
         },
         failureCallback: function (reason) {
@@ -164,14 +159,12 @@ function login() {
             }
             // At this point sso login does not work. redirect to normal Moodle login page.
             window.location.href = "' . $externalloginurl->out(false) . '";
-            return;
         }
     });
 }
 
 function otherLogin() {
     window.location.href = "' . $externalloginurl->out(false) . '";
-    return;
 }
 
 function inIframe () {
