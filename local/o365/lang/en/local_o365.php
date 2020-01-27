@@ -186,8 +186,9 @@ $string['errorhttpclientnofileinput'] = 'No file parameter in httpclient::put';
 $string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
 $string['errorcreatingsharepointclient'] = 'Could not get SharePoint api client';
 $string['errorchecksystemapiuser'] = 'Could not get a system API user token, please run the health check, ensure that your Moodle cron is running, and refresh the system API user if necessary.';
-$string['erroracpcantgettenant'] = 'Could not get Azure AD tenant, please enter manually.';
+$string['erroracpapcantgettenant'] = 'Could not get Azure AD tenant, please enter manually.';
 $string['erroracpcantgettenant'] = 'Could not get OneDrive URL, please enter manually.';
+$string['errorcreatingteamfromgroup'] = 'Could not create team from group. Please check group exists and group has owner.';
 $string['erroro365apibadcall'] = 'Error in API call.';
 $string['erroro365apibadcall_message'] = 'Error in API call: {$a}';
 $string['erroro365apibadpermission'] = 'Permission not found';
@@ -695,14 +696,14 @@ $string['settings_teams_additional_instructions'] = '<h4 class="local_o365_setti
 <li>Go to <a href="settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
 <li>Go to <a href="settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
 <li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
-<li>Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">Microsoft Application Registration Portal</a> and register a new app. Enter the Bot Application ID and Password below:</li>
+<li>Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">App registrations section of Azure Portal</a> and register a new app. Enter the application ID and client secret below:</li>
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
 $string['settings_bot_feature_enabled_desc'] = '';
-$string['settings_bot_app_id'] = 'Bot Application ID';
+$string['settings_bot_app_id'] = 'Application ID';
 $string['settings_bot_app_id_desc'] = '';
-$string['settings_bot_app_password'] = 'Bot Application Password';
-$string['settings_bot_app_password_desc'] = 'Click on \'Generate New Password\' in the app page and paste the one-time password';
+$string['settings_bot_app_password'] = 'Client Secret';
+$string['settings_bot_app_password_desc'] = 'Go to \'Certificates & secrets\' section under \'Manage\' in application settings, and click \'New client secret\', and paste the one-time secret';
 $string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
 $string['settings_bot_webhook_endpoint_desc'] = 'Format: https://<moodlebotname\>.azurewebsites.net/api/webhook';
 $string['settings_bot_sharedsecret'] = 'Shared Moodle Secret';
