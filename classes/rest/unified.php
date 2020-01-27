@@ -163,7 +163,7 @@ class unified extends \local_o365\rest\o365api {
                 return $domain['id'];
             }
         }
-        throw new \moodle_exception('erroracpcantgettenant', 'local_o365');
+        throw new \moodle_exception('erroracpapcantgettenant', 'local_o365');
     }
 
     /**
@@ -1903,10 +1903,12 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Create a team.
+     * Create a team from group.
      *
      * @param $groupobjectid
-     * @return array|null|string
+     *
+     * @return mixed
+     * @throws \moodle_exception
      */
     public function create_team($groupobjectid) {
         $teamdata = [
@@ -1922,7 +1924,7 @@ class unified extends \local_o365\rest\o365api {
             return $this->httpclient->response;
         } else {
             // Error.
-            return false;
+            throw new \moodle_exception('errorcreatingteamfromgroup', 'local_o365');
         }
     }
 
