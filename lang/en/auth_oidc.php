@@ -141,8 +141,8 @@ $string['privacy:metadata:auth_oidc_token:resource'] = 'The resource of the toke
 $string['privacy:metadata:auth_oidc_token:authcode'] = 'The auth code for the token';
 $string['privacy:metadata:auth_oidc_token:token'] = 'The token';
 $string['privacy:metadata:auth_oidc_token:expiry'] = 'The token expiry';
-$string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'The token refresh token';
-$string['privacy:metadata:auth_oidc_token:idtoken'] = 'The token id token';
+$string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'The refresh token';
+$string['privacy:metadata:auth_oidc_token:idtoken'] = 'The ID token';
 
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
 // "Office 365", "OpenID Connect", etc.
