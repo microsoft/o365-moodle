@@ -388,10 +388,8 @@ class ajax extends base {
 
         // Check reply url.
         $replyurls = [];
-        if (isset($appinfo['value'][0]['replyUrls'])) {
-            $replyurls = $appinfo['value'][0]['replyUrls'];
-        } else if (isset($appinfo['value'][0]['web']) && isset($appinfo['value'][0]['web']['redirectUrls'])) {
-            $replyurls = $appinfo['value'][0]['web']['redirectUrls'];
+        if (isset($appinfo['value'][0]['web']) && isset($appinfo['value'][0]['web']['redirectUris'])) {
+            $replyurls = $appinfo['value'][0]['web']['redirectUris'];
         }
         if (!empty($replyurls)) {
             $redirecturls = (array)$replyurls;
