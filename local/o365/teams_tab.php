@@ -70,7 +70,7 @@ if ($USER->id) {
 $js = '
 microsoftTeams.initialize();
 
-if (!inIframe()) {
+if (!inIframe() && !isMobileApp()) {
     window.location.href = "' . $redirecturl->out(false) . '";
 }
 
@@ -167,11 +167,27 @@ function otherLogin() {
     window.location.href = "' . $externalloginurl->out(false) . '";
 }
 
-function inIframe () {
+function inIframe() {
     try {
         return window.self !== window.top;
     } catch (e) {
         return true;
+    }
+}
+
+/**
+ * This is hacky check for access from Teams mobile app.
+ * It only tells if the userAgent contains the key words.
+ * Providing userAgent is not modified, this will tell if the visit is from a mobile device.
+ * If a visitor visits teams web site from mobile browser, Teams will tell the visitor to download mobile app and prevent access
+ * by default.
+ * However, if the visitor enables "mobile mode" or equivalent, the message can be bypassed, thus this check may fail.
+ */  
+function isMobileApp() {
+    if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        return true;
+    } else {
+        return false;
     }
 }
 
