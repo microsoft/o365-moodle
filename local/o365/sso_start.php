@@ -25,8 +25,8 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
-echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
+echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.6.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
+echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
 
 $js = '
 microsoftTeams.initialize();
