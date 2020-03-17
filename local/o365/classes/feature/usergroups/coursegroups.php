@@ -304,6 +304,9 @@ class coursegroups {
         }
 
         $description = $course->summary;
+        if (strlen($description) > 1024) {
+            $description = substr($description, 0, 1020) . ' ...';
+        }
 
         $extra = null;
 
