@@ -155,6 +155,9 @@ $string['calendar_site'] = 'Sitewide Calendar';
 $string['personal_calendar'] = 'Personal';
 $string['calendar_event'] = 'View details';
 
+$string['customtheme'] = 'Custom theme';
+$string['customthemedesc'] = 'Choose a custom theme to use in the teams tab instead of boost_o365teams';
+
 $string['groups'] = 'Office 365 Groups';
 $string['groups_edit_name'] = 'Group name';
 $string['groups_edit_nameexists'] = 'The group with the {$a} currently exists, please choose another name.';
