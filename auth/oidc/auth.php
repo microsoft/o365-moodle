@@ -36,6 +36,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
     /** @var object Plugin config. */
     public $config;
 
+    /** @var object extending \auth_oidc\loginflow\base */
+    public $loginflow;
     /**
      * Constructor.
      */
@@ -77,8 +79,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
     /**
      * Set an HTTP client to use.
      *
-     * @param auth_oidchttpclientinterface $httpclient [description]
-     */
+     * @param auth_oidc\httpclientinterface $httpclient [description]     */
     public function set_httpclient(\auth_oidc\httpclientinterface $httpclient) {
         return $this->loginflow->set_httpclient($httpclient);
     }
@@ -87,10 +88,14 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Hook for overriding behaviour of login page.
      * This method is called from login/index.php page for all enabled auth plugins.
      *
+     * @return bool|void if redirecting
      * @global object
      * @global object
      */
     public function loginpage_hook() {
+        if ($this->should_login_redirect()) {
+            $this->loginflow->handleredirect();
+        }
         global $frm;  // can be used to override submitted login form
         global $user; // can be used to replace authenticate_user_login()
         return $this->loginflow->loginpage_hook($frm, $user);
@@ -103,6 +108,60 @@ class auth_plugin_oidc extends \auth_plugin_base {
      */
     public function handleredirect() {
         return $this->loginflow->handleredirect();
+    }
+    /**
+     * Determines if we will redirect to the redirecturi
+     *
+     * @return bool If this returns true then redirect
+     * @throws \coding_exception
+     */
+    public function should_login_redirect() {
+        global $SESSION;
+        $oidc = optional_param('oidc', null, PARAM_BOOL);
+        // Also support noredirect param - used by other auth plugins.
+        $noredirect = optional_param('noredirect', 0, PARAM_BOOL);
+        if (!empty($noredirect)) {
+            $oidc = 0;
+        }
+
+        if (!$this->config->forceredirect) {
+            return false; // Never redirect if we haven't enabled the forceredirect setting
+        }
+        // Never redirect on POST.
+        if (isset($_SERVER['REQUEST_METHOD']) && ($_SERVER['REQUEST_METHOD'] == 'POST')) {
+            return false;
+        }
+
+        // Check whether we've skipped the login page already.
+        // This is here because loginpage_hook is called again during form
+        // submission (all of login.php is processed) and ?oidc=off is not
+        // preserved forcing us to the IdP.
+        //
+        // This isn't needed when duallogin is on because $oidc will default to 0
+        // and duallogin is not part of the request.
+        if ((isset($SESSION->oidc) && $SESSION->oidc == 0)) {
+            return false;
+        }
+
+        // Never redirect if requested so.
+        if ($oidc === 0) {
+            $SESSION->oidc = $oidc;
+            return false;
+        }
+        // We are off to OIDC land so reset the force in SESSION.
+        if (isset($SESSION->oidc)) {
+            unset($SESSION->oidc);
+        }
+        return true;
+    }
+
+    /**
+     * Will check if we have to redirect before going to login page
+     */
+    public function pre_loginpage_hook() {
+        if ($this->should_login_redirect()) {
+            $this->loginflow->handleredirect();
+        }
     }
 
     /**

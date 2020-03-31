@@ -70,6 +70,8 @@ $string['cfg_opname_key'] = 'Provider Name';
 $string['cfg_opname_desc'] = 'This is an end-user-facing label that identifies the type of credentials the user must use to login. This label is used throughout the user-facing portions of this plugin to identify your provider.';
 $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI". Your OpenID Connect identity provider should ask for this when registering Moodle as a client. <br /><b>NOTE:</b> You must enter this in your OpenID Connect provider *exactly* as it appears here. Any difference will prevent logins using OpenID Connect.';
+$string['cfg_forceredirect_key'] = 'Force redirect';
+$string['cfg_forceredirect_desc'] = 'If enabled, will skip the login index page and redirect to the OpenID Connect page. Can be bypassed with ?noredirect=1 URL param';
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
 $string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
