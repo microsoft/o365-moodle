@@ -632,10 +632,25 @@ class observers {
                     if (empty($userid) || empty($courseid)) {
                         \local_o365\utils::debug("handle_role_assigned no userid $userid or course $courseid", $caller);
                     } else {
-                        $roleteacher = $DB->get_record('role', array('shortname' => 'editingteacher'));
-                        $rolenoneditingteacher = $DB->get_record('role', array('shortname' => 'teacher'));
+                        $teacherrole = get_config('local_o365', 'rolemappingteacher');
+                        if (!$teacherrole || $teacherrole == 'teacher') {
+                            // Fall back to the default role.
+                            $teacherrole = 'teacher';
+                            $rolenoneditingteacher = $DB->get_record('role', array('shortname' => $teacherrole))->id;
+                        } else {
+                            $rolenoneditingteacher = explode(',', $teacherrole);
+                        }
+                        $editingteacherrole = get_config('local_o365', 'rolemappingeditingteacher');
+                        if (!$editingteacherrole || $teacherrole == 'editingteacher') {
+                            // Fall back to the default role.
+                            $editingteacherrole = 'editingteacher';
+                            $roleteacher = $DB->get_record('role', array('shortname' => $editingteacherrole))->id;
+                        } else {
+                            $roleteacher = explode(',', $editingteacherrole);
+                        }
+                        $allroles = array_merge($rolenoneditingteacher, $roleteacher);
                         $apiclient = \local_o365\utils::get_api();
-                        if (in_array($roleid, array($roleteacher->id, $rolenoneditingteacher->id))) {
+                        if (in_array($roleid, $allroles)) {
                             $response = $apiclient->add_owner_to_course_group($courseid, $userid);
                         } else {
                             $response = $apiclient->add_user_to_course_group($courseid, $userid);
@@ -682,9 +697,24 @@ class observers {
                         \local_o365\utils::debug("handle_role_unassigned no userid $userid or course $courseid",
                             $caller);
                     } else {
-                        $roleteacher = $DB->get_record('role', array('shortname' => 'editingteacher'));
-                        $rolenoneditingteacher = $DB->get_record('role', array('shortname' => 'teacher'));
-                        if (in_array($roleid, array($roleteacher->id, $rolenoneditingteacher->id))) {
+                        $teacherrole = get_config('local_o365', 'rolemappingteacher');
+                        if (!$teacherrole || $teacherrole == 'teacher') {
+                            // Fall back to the default role.
+                            $teacherrole = 'teacher';
+                            $rolenoneditingteacher = $DB->get_record('role', array('shortname' => $teacherrole))->id;
+                        } else {
+                            $rolenoneditingteacher = explode(',', $teacherrole);
+                        }
+                        $editingteacherrole = get_config('local_o365', 'rolemappingeditingteacher');
+                        if (!$editingteacherrole || $teacherrole == 'editingteacher') {
+                            // Fall back to the default role.
+                            $editingteacherrole = 'editingteacher';
+                            $roleteacher = $DB->get_record('role', array('shortname' => $editingteacherrole))->id;
+                        } else {
+                            $roleteacher = explode(',', $editingteacherrole);
+                        }
+                        $allroles = array_merge($rolenoneditingteacher, $roleteacher);
+                        if (in_array($roleid, $allroles)) {
                             $apiclient = \local_o365\utils::get_api();
                             $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
                             // add the user back to the group as member
