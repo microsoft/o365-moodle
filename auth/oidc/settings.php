@@ -51,6 +51,11 @@ $configdesc = new lang_string('cfg_oidcresource_desc', 'auth_oidc');
 $configdefault = 'https://graph.windows.net';
 $settings->add(new admin_setting_configtext('auth_oidc/oidcresource', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
+$configkey = new lang_string('cfg_oidcscope_key', 'auth_oidc');
+$configdesc = new lang_string('cfg_oidcscope_desc', 'auth_oidc');
+$configdefault = 'openid profile email';
+$settings->add(new admin_setting_configtext('auth_oidc/oidcscope', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
 $configkey = new lang_string('cfg_redirecturi_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_redirecturi_desc', 'auth_oidc');
 $settings->add(new \auth_oidc\form\adminsetting\redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
