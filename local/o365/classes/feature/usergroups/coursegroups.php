@@ -309,6 +309,14 @@ class coursegroups {
 
         try {
             $teamid = null;
+
+            // workaround:
+            // Creating team with multiple owners using beta endpoint is not allowed at a moment.
+            // Graph API will return error if a course have multiple owners.
+            // To avoid the error, assign only the first user of `$ownerids` as a owner at this point.
+            // The remaining owners will be added by `resync_group_membership`.
+            $ownerids = array($ownerids[0])
+
             $response = $this->graphclient->create_class_team($displayname, $description, $ownerids, $extra);
 
             if (is_array($response) && array_key_exists('Location', $response)) {
