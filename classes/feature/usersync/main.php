@@ -723,38 +723,6 @@ class main {
                 $userobjectid = $user['objectId'];
             }
 
-            if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
-                if (isset($aadsync['delete'])) {
-                    // Check for synced user.
-                    $sql = 'SELECT u.*
-                              FROM {user} u
-                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
-                              JOIN {auth_oidc_token} tok ON tok.userid = u.id
-                             WHERE u.username = ?
-                                   AND u.mnethostid = ?
-                                   AND u.deleted = ?
-                                   AND u.suspended = ?
-                                   AND u.auth = ?';
-                    $params = [
-                        trim(\core_text::strtolower($user['userPrincipalName'])),
-                        $CFG->mnet_localhost_id,
-                        '0',
-                        '0',
-                        'oidc',
-                        time()
-                    ];
-                    $synceduser = $DB->get_record_sql($sql, $params);
-                    if (!empty($synceduser)) {
-                        $synceduser->suspended = 1;
-                        user_update_user($synceduser, false);
-                        $this->mtrace($synceduser->username.' was marked deleted in Azure.');
-                    }
-                } else {
-                    $this->mtrace('User is deleted. Skipping.');
-                }
-                continue;
-            }
-
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
                 $newmuser = $this->sync_new_user($aadsync, $user);
             } else {
@@ -951,6 +919,57 @@ class main {
             $DB->insert_record('local_o365_connections', $matchrec);
             $this->mtrace('Matched user, but did not switch them to OpenID.');
             return true;
+        }
+    }
+
+    public function delete_users() {
+        global $CFG, $DB;
+        try {
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $resource = \local_o365\rest\unified::get_resource();
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $apiclient = new \local_o365\rest\unified($token, $httpclient);
+        } catch (\Exception $e) {
+            \local_o365\utils::debug('Could not construct graph api', 'delete_users', $e);
+            return false;
+        }
+
+        try {
+            $deletedusers = $apiclient->list_deleted_users();
+            if (is_array($deletedusers) && !empty($deletedusers['value'])) {
+                foreach ($deletedusers['value'] as $deleteduser) {
+                    if (!empty($deleteduser) && isset($deleteduser['id'])) {
+                        // Check for synced user.
+                        $sql = 'SELECT u.*
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
+                             WHERE u.mnethostid = ?
+                                   AND u.deleted = ?
+                                   AND u.suspended = ?
+                                   AND u.auth = ?
+                                   AND obj.objectid = ? ';
+                        $params = [trim(\core_text::strtolower($CFG->mnet_localhost_id)),
+                            '0',
+                            '0',
+                            'oidc',
+                            $deleteduser['id'],
+                            time()
+                        ];
+                        $synceduser = $DB->get_record_sql($sql, $params);
+                        if (!empty($synceduser)) {
+                            $synceduser->suspended = 1;
+                            user_update_user($synceduser, false);
+                            $this->mtrace($synceduser->username . ' was deleted in Azure.');
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+        } catch (\Exception $e) {
+            \local_o365\utils::debug('Could not delete users', 'delete_users', $e);
+            return false;
         }
     }
 }
