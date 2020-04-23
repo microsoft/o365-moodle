@@ -161,6 +161,11 @@ class usersync extends \core\task\scheduled_task {
             $this->mtrace('No users received to sync.');
         }
 
+        if ($usersync->sync_option_enabled('delete')) {
+            $this->mtrace('Checking deleted users list...');
+            $usersync->delete_users();
+        }
+
         $this->mtrace('Sync process finished.');
         return true;
     }
