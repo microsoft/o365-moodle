@@ -748,6 +748,18 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a list of recently deleted users.
+     *
+     * @return array Array of returned information.
+     */
+    public function list_deleted_users() {
+        $response = $this->betaapicall('get', '/directory/deleteditems/Microsoft.Graph.User');
+        $response = $this->process_apicall_response($response);
+        return $response;
+    }
+
+
+    /**
      * Get a user by the user's userPrincipalName
      *
      * @param string $upn The user's userPrincipalName
