@@ -780,7 +780,9 @@ class observers {
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
             // incomplete settings, exit.
-            debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
+            if (!PHPUNIT_TEST) {
+                debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
