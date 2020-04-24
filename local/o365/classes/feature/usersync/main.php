@@ -724,6 +724,12 @@ class main {
 
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
+
+            if (empty($user['upnlower'])) {
+                $this->mtrace('Azure AD user missing UPN (' . $user['objectId'] . '); skipping...');
+                continue;
+            }
+
             $this->mtrace('Syncing user '.$user['upnlower']);
 
             if (\local_o365\rest\unified::is_configured()) {
