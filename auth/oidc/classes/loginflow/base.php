@@ -332,9 +332,10 @@ class base {
         $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
         $redirecturi .= '/auth/oidc/';
         $resource = (isset($this->config->oidcresource)) ? $this->config->oidcresource : null;
+        $scope = (isset($this->config->oidcscope)) ? $this->config->oidcscope : null;
 
         $client = new \auth_oidc\oidcclient($this->httpclient);
-        $client->setcreds($clientid, $clientsecret, $redirecturi, $resource);
+        $client->setcreds($clientid, $clientsecret, $redirecturi, $resource, $scope);
 
         $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
         return $client;
@@ -456,6 +457,7 @@ class base {
         $tokenrec->oidcusername = $oidcusername;
         $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : 'openid profile email';
         $tokenrec->resource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : $this->config->oidcresource;
+        $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : $this->config->oidcscope;
         $tokenrec->authcode = $authparams['code'];
         $tokenrec->token = $tokenparams['access_token'];
         if (!empty($tokenparams['expires_on'])) {
