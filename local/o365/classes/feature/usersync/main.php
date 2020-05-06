@@ -669,8 +669,17 @@ class main {
             }
         }
 
+        if ($aadsync['emailsync']) {
+            $select = 'SELECT u.email,
+                       u.username,';
+            $where = ' WHERE u.email';
+        } else {
+            $select = 'SELECT u.username,';
+            $where = ' WHERE u.username';
+        }
+
         list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames);
-        $sql = 'SELECT u.username,
+        $sql = "$select
                        u.id as muserid,
                        u.auth,
                        tok.id as tokid,
@@ -684,8 +693,8 @@ class main {
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                 WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ?
-              ORDER BY CONCAT(u.username, \'~\')'; // Sort john.smith@example.org before john.smith.
+                 $where $usernamesql AND u.mnethostid = ? AND u.deleted = ?
+              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@example.org before john.smith.
         $params = array_merge(['user'], $usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
@@ -715,6 +724,12 @@ class main {
 
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
+
+            if (empty($user['upnlower'])) {
+                $this->mtrace('Azure AD user missing UPN (' . $user['objectId'] . '); skipping...');
+                continue;
+            }
+
             $this->mtrace('Syncing user '.$user['upnlower']);
 
             if (\local_o365\rest\unified::is_configured()) {

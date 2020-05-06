@@ -155,6 +155,10 @@ $string['calendar_site'] = 'Sitewide Calendar';
 $string['personal_calendar'] = 'Personal';
 $string['calendar_event'] = 'View details';
 
+$string['customtheme'] = 'Custom theme (Advanced)';
+$string['customthemedesc'] = 'Recommended theme is boost_o365teams. However, you can select different theme if you have 
+a custom theme which is adapted to be used in the Teams tab.';
+
 $string['groups'] = 'Office 365 Groups';
 $string['groups_edit_name'] = 'Group name';
 $string['groups_edit_nameexists'] = 'The group with the {$a} currently exists, please choose another name.';
@@ -288,6 +292,7 @@ $string['settings_aadsync_appassign'] = 'Assign users to application during sync
 $string['settings_aadsync_photosync'] = 'Sync Office 365 profile photos to Moodle in cron job';
 $string['settings_aadsync_photosynconlogin'] = 'Sync Office 365 profile photos to Moodle on login';
 $string['settings_aadsync_nodelta'] = 'Perform a full sync each run';
+$string['settings_aadsync_emailsync'] = 'Match Azure usernames to moodle emails instead of moodle usernames during the sync';
 $string['settings_previewfeatures'] = 'Enable preview features';
 $string['settings_previewfeatures_details'] = 'Enable features provided on a "preview" basis. These features use brand new APIs, or are experimental in some way. These features may be more prone to break, but will give you a sneak peak at what\'s coming in the near future.';
 $string['settings_photoexpire'] = 'Profile photo refresh time';
@@ -638,6 +643,8 @@ $string['help_user_photosynconlogin'] = 'Sync Office 365 Profile Photos (Login) 
 $string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle profile photo to get synced with their Office 365 profile photo when that user logs in.';
 $string['help_user_nodelta'] = 'Perform a full sync help';
 $string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Azure AD. Checking this option will force a full user sync each time.';
+$string['help_user_emailsync'] = 'Sync azure usernames to moodle emails Help';
+$string['help_user_emailsync_help'] = 'Enabling this option will match azure usernames to moodle emails, instead of the default behaviour which is azure usernames to moodle usernames.';
 
 $string['assignment'] = 'Assignment';
 $string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />

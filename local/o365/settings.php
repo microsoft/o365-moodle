@@ -196,6 +196,7 @@ if ($hassiteconfig) {
             'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
             'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
             'nodelta' => new lang_string('settings_aadsync_nodelta', 'local_o365'),
+            'emailsync' => new lang_string('settings_aadsync_emailsync', 'local_o365'),
         ];
         $default = [];
         $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));
@@ -278,6 +279,16 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_photoexpire', 'local_o365');
         $desc = new lang_string('settings_photoexpire_details', 'local_o365');
         $settings->add(new \admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
+
+        // Custom theme
+        $themes = get_list_of_themes();
+        foreach ($themes as $theme) {
+            $name = $theme->name;
+            $options[$name] = $name;
+        }
+        $label = new lang_string('customtheme', 'local_o365');
+        $desc = new lang_string('customthemedesc', 'local_o365');
+        $settings->add(new admin_setting_configselect('local_o365/customtheme', $label, $desc, 'boost_o365teams', $options));
 
         // Legacy settings.
         $label = new lang_string('settings_secthead_legacy', 'local_o365');
