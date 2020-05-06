@@ -260,7 +260,7 @@ class coursegroups {
         if (!empty($course->summary)) {
             $description = strip_tags($course->summary);
             if (strlen($description) > 1024) {
-                $description = substr($description, 0, 1020) . ' ...';
+                $description = shorten_text($description, 1024, true, ' ...');
             }
             $extra = [
                 'description' => $description,
