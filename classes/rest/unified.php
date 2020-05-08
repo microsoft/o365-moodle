@@ -58,7 +58,12 @@ class unified extends \local_o365\rest\o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-        return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        $oidcresource = get_config('auth_oidc', 'oidcresource');
+        if (!empty($oidcresource)) {
+            return $oidcresource;
+        } else {
+            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        }
     }
 
     /**

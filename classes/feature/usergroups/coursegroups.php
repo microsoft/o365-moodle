@@ -483,7 +483,6 @@ class coursegroups {
                   JOIN ($esql) je ON je.id = u.id
                   JOIN {local_o365_objects} objs ON objs.moodleid = u.id
                  WHERE u.deleted = 0 AND objs.type = :user";
-        $params['tokresource'] = 'https://graph.windows.net';
         $params['user'] = 'user';
         $enrolled = $this->DB->get_recordset_sql($sql, $params);
         foreach ($enrolled as $user) {
@@ -622,7 +621,7 @@ class coursegroups {
                               JOIN ($esql) je ON je.id = u.id
                               JOIN {auth_oidc_token} tok ON tok.userid = u.id AND tok.resource = :tokresource
                              WHERE u.deleted = 0";
-                    $params['tokresource'] = 'https://graph.windows.net';
+                    $params['tokresource'] = \local_o365\rest\unified::get_resource();
                     $enrolled = $this->DB->get_recordset_sql($sql, $params);
                     foreach ($enrolled as $user) {
                         if (in_array($user->id, $teacherids)) {

@@ -166,7 +166,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         foreach ($users as $i => $user) {
             $tokenrec = [
                 'oidcuniqid' => 'user'.$i,
-                'resource' => 'https://graph.windows.net',
+                'resource' => 'https://graph.microsoft.com',
                 'username' => $user->username,
                 'userid' => $user->id,
                 'scope' => 'User.Read',
