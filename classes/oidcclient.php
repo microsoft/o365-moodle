@@ -62,7 +62,11 @@ class oidcclient {
         $this->clientid = $id;
         $this->clientsecret = $secret;
         $this->redirecturi = $redirecturi;
-        $this->resource = (!empty($resource)) ? $resource : 'https://graph.windows.net';
+        if (!empty($resource)) {
+            $this->resource = $resource;
+        } else {
+            $this->resource = (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        }
         $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
     }
 

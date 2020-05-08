@@ -270,7 +270,7 @@ class auth_oidc_privacy_testcase extends \core_privacy\tests\provider_testcase {
         $record->userid = $userid;
         $record->oidcusername = "user@example.com";
         $record->scope = "All";
-        $record->resource = "https://graph.windows.net";
+        $record->resource = "https://graph.microsoft.com";
         $record->authcode = "authcode123";
         $record->token = "token123";
         $record->expiry = 12345;

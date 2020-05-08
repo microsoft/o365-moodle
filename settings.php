@@ -48,7 +48,7 @@ $settings->add(new admin_setting_configtext('auth_oidc/tokenendpoint', $configke
 
 $configkey = new lang_string('cfg_oidcresource_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_oidcresource_desc', 'auth_oidc');
-$configdefault = 'https://graph.windows.net';
+$configdefault = 'https://graph.microsoft.com';
 $settings->add(new admin_setting_configtext('auth_oidc/oidcresource', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
 $configkey = new lang_string('cfg_oidcscope_key', 'auth_oidc');
