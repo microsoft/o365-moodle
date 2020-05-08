@@ -610,7 +610,7 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($result && $oldversion < 2019052006) {
-        if (!$dbman->table_exists('auth_oidc_token')) {
+        if ($dbman->table_exists('auth_oidc_token')) {
             $oldgraphtokens = $DB->get_records('auth_oidc_token', ['resource' => 'https://graph.windows.net']);
             foreach ($oldgraphtokens as $graphtoken) {
                 $graphtoken->resource = 'https://graph.microsoft.com';
