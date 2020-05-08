@@ -617,6 +617,7 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $DB->update_record('auth_oidc_token', $graphtoken);
             }
         }
+        upgrade_plugin_savepoint($result, '2019052006', 'local', 'o365');
     }
 
     return $result;
