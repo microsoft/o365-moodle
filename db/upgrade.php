@@ -616,6 +616,11 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $graphtoken->resource = 'https://graph.microsoft.com';
                 $DB->update_record('auth_oidc_token', $graphtoken);
             }
+            $oidcresource = $DB->get_record('config_plugins', ['plugin' => 'auth_oidc', 'name' => 'oidcresource']);
+            if (strpos($oidcresource, 'windows') !== FALSE) {
+                $oidcresource->value = 'https://graph.microsoft.com';
+                $DB->update_record('config_plugins', $oidcresource);
+            }
         }
         upgrade_plugin_savepoint($result, '2019052006', 'local', 'o365');
     }
