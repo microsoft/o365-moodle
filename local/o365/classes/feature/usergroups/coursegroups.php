@@ -23,6 +23,8 @@
 
 namespace local_o365\feature\usergroups;
 
+use WebDriver\Exception;
+
 define('API_CALL_RETRY_LIMIT', 3);
 
 class coursegroups {
@@ -515,6 +517,33 @@ class coursegroups {
 
         $teacherids = $this->get_teacher_ids_of_course($courseid);
 
+        //Check if group object is created
+        $this->mtrace('... Checking if group is setup ...', '');
+        $retrycounter = 0;
+        while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+            try {
+                if ($retrycounter) {
+                    $this->mtrace('...... Retry #' . $retrycounter);
+                    sleep(10);
+                }
+
+                $result = $this->graphclient->get_group($groupobjectid);
+
+                if (!empty($result['id'])) {
+                    $this->mtrace('Success!');
+                    break;
+                } else {
+                    $this->mtrace('Error!');
+                    $this->mtrace('...... Received: ' . \local_o365\utils::tostring($result));
+                    $retrycounter++;
+                }
+            } catch (\Exception $e) {
+                $this->mtrace('Error!');
+                $this->mtrace('...... Received: ' . $e->getMessage());
+                $retrycounter++;
+            }
+        }
+
         // Add users.
         $this->mtrace('Users to add: '.count($toadd));
         foreach ($toadd as $userobjectid => $moodleuserid) {
@@ -525,7 +554,10 @@ class coursegroups {
                 // Add teacher as owner of O365 group.
                 if (in_array($moodleuserid, $teacherids)) {
                     $this->mtrace('... Adding teacher as owner, Teacher Id: ' . $userobjectid . ' (muserid: ' . $moodleuserid . ')...', '');
-
+                    if ($retrycounter) {
+                        $this->mtrace('...... Retry #' . $retrycounter);
+                        sleep(10);
+                    }
                     $result = $this->graphclient->add_owner_to_group($groupobjectid, $userobjectid);
                     if ($result === true) {
                         $this->mtrace('Success!');
@@ -540,11 +572,11 @@ class coursegroups {
                         }
                     }
                 } else {
-                    $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
                     if ($retrycounter) {
                         $this->mtrace('...... Retry #' . $retrycounter);
                         sleep(10);
                     }
+                    $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
                     if ($result === true) {
                         $this->mtrace('Success!');
                         break;
