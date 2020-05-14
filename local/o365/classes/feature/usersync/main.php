@@ -951,6 +951,7 @@ class main {
         }
 
         try {
+            $deletedusersids = [];
             $deletedusers = $apiclient->list_deleted_users();
             if (is_array($deletedusers) && !empty($deletedusers['value'])) {
                 foreach ($deletedusers['value'] as $deleteduser) {
@@ -977,11 +978,48 @@ class main {
                             user_update_user($synceduser, false);
                             $this->mtrace($synceduser->username . ' was deleted in Azure.');
                         }
+                        $deletedusersids[] = $deleteduser['id'];
                     }
                 }
-                return true;
             }
-            return false;
+            // Check if all Moodle users with oidc authentication are still existing users in Azure
+            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM,'param', false);
+            $existingsql = $sql = 'SELECT u.*, obj.objectid
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
+                             WHERE u.mnethostid = ?
+                                   AND u.deleted = ?
+                                   AND u.auth = ?
+                                   AND obj.objectid '.$objectidsql;
+            $existingsqlparams = array_merge([trim(\core_text::strtolower($CFG->mnet_localhost_id)),
+                '0',
+                'oidc',
+                $deleteduser['id'],
+                time()
+            ], $objectidparams);
+            $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
+            $now = time();
+            $yesterday = strtotime('-1 day');
+            foreach ($existingusers as $existinguser) {
+                try {
+                    $user = $apiclient->get_user($existinguser->objectid);
+                } catch (\Exception $e) {
+                    // Do safe delete for missing users - first suspend, then delete after 24 hours
+                    if ($existinguser->suspended && $existinguser->timemodified <= $yesterday) {
+                        $this->mtrace('Could not find suspended user '.$existinguser->username.' in Azure AD. Deleting user...');
+                        $objectid = $existinguser->objectid;
+                        if (delete_user($existinguser)) {
+                            $DB->delete_records('local_o365_objects', ['objectid' => $objectid]);
+                        }
+                    } else if (!$existinguser->suspended) {
+                        $this->mtrace('Could not find user '.$existinguser->username.' in Azure AD. Suspending user...');
+                        $existinguser->suspended = 1;
+                        $existinguser->timemodified = $now;
+                        $DB->update_record('user', $existinguser);
+                    }
+                }
+            }
+            return true;
         } catch (\Exception $e) {
             \local_o365\utils::debug('Could not delete users', 'delete_users', $e);
             return false;
