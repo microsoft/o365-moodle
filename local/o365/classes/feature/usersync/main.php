@@ -975,7 +975,7 @@ class main {
                         $synceduser = $DB->get_record_sql($sql, $params);
                         if (!empty($synceduser)) {
                             $synceduser->suspended = 1;
-                            user_update_user($synceduser, false);
+                            $DB->update_record('user', $synceduser);
                             $this->mtrace($synceduser->username . ' was deleted in Azure.');
                         }
                         $deletedusersids[] = $deleteduser['id'];
@@ -993,28 +993,25 @@ class main {
                                    AND obj.objectid '.$objectidsql;
             $existingsqlparams = array_merge([trim(\core_text::strtolower($CFG->mnet_localhost_id)),
                 '0',
-                'oidc',
-                $deleteduser['id'],
-                time()
+                'oidc'
             ], $objectidparams);
             $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
-            $now = time();
-            $yesterday = strtotime('-1 day');
             foreach ($existingusers as $existinguser) {
                 try {
                     $user = $apiclient->get_user($existinguser->objectid);
                 } catch (\Exception $e) {
-                    // Do safe delete for missing users - first suspend, then delete after 24 hours
-                    if ($existinguser->suspended && $existinguser->timemodified <= $yesterday) {
+                    // Do safe delete for missing users - first suspend, on second run delete
+                    if ($existinguser->suspended) {
                         $this->mtrace('Could not find suspended user '.$existinguser->username.' in Azure AD. Deleting user...');
+                        $userid = $existinguser->id;
                         $objectid = $existinguser->objectid;
                         if (delete_user($existinguser)) {
                             $DB->delete_records('local_o365_objects', ['objectid' => $objectid]);
+                            $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
                         }
                     } else if (!$existinguser->suspended) {
                         $this->mtrace('Could not find user '.$existinguser->username.' in Azure AD. Suspending user...');
                         $existinguser->suspended = 1;
-                        $existinguser->timemodified = $now;
                         $DB->update_record('user', $existinguser);
                     }
                 }
