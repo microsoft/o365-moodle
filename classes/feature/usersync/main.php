@@ -635,7 +635,7 @@ class main {
      */
     public static function sync_option_enabled($option) {
         $options = static::get_sync_options();
-        return (!empty($options[$option])) ? true : false;
+        return isset($options[$option]);
     }
 
     /**
