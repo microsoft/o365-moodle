@@ -156,9 +156,8 @@ $string['personal_calendar'] = 'Personal';
 $string['calendar_event'] = 'View details';
 
 $string['customtheme'] = 'Custom theme (Advanced)';
-$string['customthemedesc'] = 'Recommended theme is boost_o365teams. However, you can select different theme if you have 
+$string['customthemedesc'] = 'Recommended theme is boost_o365teams. However, you can select different theme if you have
 a custom theme which is adapted to be used in the Teams tab.';
-
 $string['groups'] = 'Office 365 Groups';
 $string['groups_edit_name'] = 'Group name';
 $string['groups_edit_nameexists'] = 'The group with the {$a} currently exists, please choose another name.';

@@ -627,7 +627,7 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $DB->update_record('config_plugins', $aadsyncsetting);
             } else if (strpos($aadsyncsetting->value, 'nodelta') === 0) {
                 $aadsyncsetting->value = substr($aadsyncsetting->value, 8);
-                $DB->update_record('config_plugins', $aadsyncsetting);                
+                $DB->update_record('config_plugins', $aadsyncsetting);
             }
         }
         upgrade_plugin_savepoint($result, '2019052006', 'local', 'o365');
