@@ -617,9 +617,17 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $DB->update_record('auth_oidc_token', $graphtoken);
             }
             $oidcresource = $DB->get_record('config_plugins', ['plugin' => 'auth_oidc', 'name' => 'oidcresource']);
-            if (strpos($oidcresource, 'windows') !== FALSE) {
+            if (strpos($oidcresource->value, 'windows') !== FALSE) {
                 $oidcresource->value = 'https://graph.microsoft.com';
                 $DB->update_record('config_plugins', $oidcresource);
+            }
+	    $aadsyncsetting = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'aadsync']);
+            if (strpos($aadsyncsetting->value, 'delete') === 0) {
+                $aadsyncsetting->value = substr($aadsyncsetting->value, 7);
+                $DB->update_record('config_plugins', $aadsyncsetting);
+            } else if (strpos($aadsyncsetting->value, 'nodelta') === 0) {
+                $aadsyncsetting->value = substr($aadsyncsetting->value, 8);
+                $DB->update_record('config_plugins', $aadsyncsetting);                
             }
         }
         upgrade_plugin_savepoint($result, '2019052006', 'local', 'o365');
