@@ -178,6 +178,8 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
         $fakecourseid = $course->id + 1;
         $fakecmid = $assign->cmid + 1;
 
+        $invalidrecord = new lang_string('invalidrecord', 'error', 'course');
+
         return [
             'Course not found (no course)' => [
                 'dbstate' => [],
@@ -185,7 +187,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     'coursemodule' => $assign->cmid,
                     'course' => -1,
                 ],
-                'expectedexception' => ['dml_missing_record_exception', new lang_string('invalidrecord', 'error', 'course')],
+                'expectedexception' => ['dml_missing_record_exception', $invalidrecord->out()],
             ],
             'Course not found (different id)' => [
                 'dbstate' => [],
@@ -193,7 +195,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                     'coursemodule' => $assign->cmid,
                     'course' => $fakecourseid,
                 ],
-                'expectedexception' => ['dml_missing_record_exception', new lang_string('invalidrecord', 'error', 'course')],
+                'expectedexception' => ['dml_missing_record_exception', $invalidrecord->out()],
             ],
             'Module not found (no record)' => [
                 'dbstate' => [],

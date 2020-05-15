@@ -40,7 +40,7 @@ class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
         // Check that the system API user has a graph resource.
         $tokens = get_config('local_o365', 'systemtokens');
         $tokens = unserialize($tokens);
-        $graphresource = 'https://graph.windows.net';
+        $graphresource = \local_o365\rest\unified::get_resource();
         if (!isset($tokens[$graphresource])) {
             return [
                 'result' => false,

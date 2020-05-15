@@ -152,7 +152,7 @@ class token {
                     $token['user_id'], $clientdata, $httpclient);
             return $token;
         } else {
-            if ($resource === 'https://graph.windows.net') {
+            if ($resource === 'https://graph.microsoft.com') {
                 $backtrace = debug_backtrace(0);
                 $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
                 $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
@@ -231,7 +231,7 @@ class token {
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
     public static function get_for_new_resource($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $aadgraphtoken = static::instance($userid, 'https://graph.windows.net', $clientdata, $httpclient);
+        $aadgraphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
         if (!empty($aadgraphtoken)) {
             $params = [
                 'client_id' => $clientdata->get_clientid(),
@@ -284,7 +284,7 @@ class token {
      */
     protected static function get_stored_token($userid, $resource) {
         global $DB;
-        if ($resource === 'https://graph.windows.net') {
+        if ($resource === 'https://graph.microsoft.com') {
             $sql = 'SELECT tok.id,
                            tok.scope,
                            tok.resource,
