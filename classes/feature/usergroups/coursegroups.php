@@ -23,6 +23,8 @@
 
 namespace local_o365\feature\usergroups;
 
+use WebDriver\Exception;
+
 define('API_CALL_RETRY_LIMIT', 3);
 
 class coursegroups {
@@ -119,15 +121,15 @@ class coursegroups {
         foreach ($courses as $course) {
             $coursesprocessed++;
             $createclassteam = false;
-            $ownerids = [];
+            $ownerid = null;
 
             if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
                 $teacherids = $this->get_teacher_ids_of_course($course->id);
                 foreach ($teacherids as $teacherid) {
                     if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
                         ['type' => 'user', 'moodleid' => $teacherid])) {
-                        $ownerids[] = $ownerid;
                         $createclassteam = true;
+                        break;
                     }
                 }
             }
@@ -135,7 +137,7 @@ class coursegroups {
             if ($createclassteam) {
                 // Create class team directly.
                 try {
-                    $objectrec = $this->create_class_team($course, $ownerids, $groupprefix);
+                    $objectrec = $this->create_class_team($course, $ownerid, $groupprefix);
                 } catch (\Exception $e) {
                     $this->mtrace('Could not create class team for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     continue;
@@ -260,7 +262,7 @@ class coursegroups {
         if (!empty($course->summary)) {
             $description = strip_tags($course->summary);
             if (strlen($description) > 1024) {
-                $description = substr($description, 0, 1020) . ' ...';
+                $description = shorten_text($description, 1024, true, ' ...');
             }
             $extra = [
                 'description' => $description,
@@ -292,11 +294,11 @@ class coursegroups {
      * Create an Office 365 class team for a Moodle course.
      *
      * @param stdClass $course
-     * @param array $ownerids
+     * @param array $ownerid
      * @param string|null $groupprefix
      * @return array|bool
      */
-    public function create_class_team($course, $ownerids, $groupprefix = null) {
+    public function create_class_team($course, $ownerid, $groupprefix = null) {
         $now = time();
         $displayname = $course->fullname;
         if (!empty($groupprefix)) {
@@ -309,7 +311,7 @@ class coursegroups {
 
         try {
             $teamid = null;
-            $response = $this->graphclient->create_class_team($displayname, $description, $ownerids, $extra);
+            $response = $this->graphclient->create_class_team($displayname, $description, $ownerid, $extra);
 
             if (is_array($response) && array_key_exists('Location', $response)) {
                 $location = $response['Location'];
@@ -483,7 +485,6 @@ class coursegroups {
                   JOIN ($esql) je ON je.id = u.id
                   JOIN {local_o365_objects} objs ON objs.moodleid = u.id
                  WHERE u.deleted = 0 AND objs.type = :user";
-        $params['tokresource'] = 'https://graph.windows.net';
         $params['user'] = 'user';
         $enrolled = $this->DB->get_recordset_sql($sql, $params);
         foreach ($enrolled as $user) {
@@ -516,45 +517,75 @@ class coursegroups {
 
         $teacherids = $this->get_teacher_ids_of_course($courseid);
 
-        // Add users.
-        $this->mtrace('Users to add: '.count($toadd));
-        foreach ($toadd as $userobjectid => $moodleuserid) {
-            $this->mtrace('... Adding '.$userobjectid.' (muserid: '.$moodleuserid.')...', '');
-
-            $retrycounter = 0;
-            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
-                $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
+        //Check if group object is created
+        $this->mtrace('... Checking if group is setup ...', '');
+        $retrycounter = 0;
+        while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+            try {
                 if ($retrycounter) {
                     $this->mtrace('...... Retry #' . $retrycounter);
                     sleep(10);
                 }
-                if ($result === true) {
+                $result = $this->graphclient->get_group($groupobjectid);
+                if (!empty($result['id'])) {
                     $this->mtrace('Success!');
                     break;
                 } else {
                     $this->mtrace('Error!');
-                    $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
+                    $this->mtrace('...... Received: ' . \local_o365\utils::tostring($result));
                     $retrycounter++;
-
-                    if (strpos($result, 'Request_ResourceNotFound') === false) {
-                        break;
-                    }
                 }
+            } catch (\Exception $e) {
+                $this->mtrace('Error!');
+                $this->mtrace('...... Received: ' . $e->getMessage());
+                $retrycounter++;
             }
+        }
 
-            // Add teacher as owner of O365 group.
-            if (in_array($moodleuserid, $teacherids)) {
-                $this->mtrace('... Adding teacher as owner, Teacher Id: '.$userobjectid.' (muserid: '.$moodleuserid.')...', '');
-                try {
+        // Add users.
+        $this->mtrace('Users to add: '.count($toadd));
+        foreach ($toadd as $userobjectid => $moodleuserid) {
+            $this->mtrace('... Adding '.$userobjectid.' (muserid: '.$moodleuserid.')...', '');
+            $retrycounter = 0;
+            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+                // Add teacher as owner of O365 group.
+                if (in_array($moodleuserid, $teacherids)) {
+                    $this->mtrace('... Adding teacher as owner, Teacher Id: ' . $userobjectid . ' (muserid: ' . $moodleuserid . ')...', '');
+                    if ($retrycounter) {
+                        $this->mtrace('...... Retry #' . $retrycounter);
+                        sleep(10);
+                    }
                     $result = $this->graphclient->add_owner_to_group($groupobjectid, $userobjectid);
                     if ($result === true) {
                         $this->mtrace('Success!');
+                        break;
+                    } else {
+                        $this->mtrace('Error!');
+                        $this->mtrace('...... Received: ' . \local_o365\utils::tostring($result));
+                        $retrycounter++;
+
+                        if (strpos($result, 'Request_ResourceNotFound') === false) {
+                            break;
+                        }
+                    }
+                } else {
+                    if ($retrycounter) {
+                        $this->mtrace('...... Retry #' . $retrycounter);
+                        sleep(10);
+                    }
+                    $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
+                    if ($result === true) {
+                        $this->mtrace('Success!');
+                        break;
                     } else {
                         $this->mtrace('Error!');
                         $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
+                        $retrycounter++;
+
+                        if (strpos($result, 'Request_ResourceNotFound') === false) {
+                            break;
+                        }
                     }
-                } catch (\Exception $e) {
-                    $this->mtrace('Error!');
                 }
             }
         }
@@ -619,7 +650,7 @@ class coursegroups {
                               JOIN ($esql) je ON je.id = u.id
                               JOIN {auth_oidc_token} tok ON tok.userid = u.id AND tok.resource = :tokresource
                              WHERE u.deleted = 0";
-                    $params['tokresource'] = 'https://graph.windows.net';
+                    $params['tokresource'] = \local_o365\rest\unified::get_resource();
                     $enrolled = $this->DB->get_recordset_sql($sql, $params);
                     foreach ($enrolled as $user) {
                         if (in_array($user->id, $teacherids)) {

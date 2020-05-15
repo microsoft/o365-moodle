@@ -94,13 +94,13 @@ class local_o365_azuread_testcase extends \advanced_testcase {
         $httpclient = new \local_o365\tests\mockhttpclient();
         $apiclient = new azuread_mock($this->get_mock_token(), $httpclient);
 
-        $requesturi = 'https://graph.windows.net/users';
-        $expecteduri = 'https://graph.windows.net/users?api-version=1.5';
+        $requesturi = 'https://graph.microsoft.com/users';
+        $expecteduri = 'https://graph.microsoft.com/users?api-version=1.5';
         $actualuri = $apiclient->transform_full_request_uri($requesturi);
         $this->assertEquals($expecteduri, $actualuri);
 
-        $requesturi = 'https://graph.windows.net/users?something';
-        $expecteduri = 'https://graph.windows.net/users?something&api-version=1.5';
+        $requesturi = 'https://graph.microsoft.com/users?something';
+        $expecteduri = 'https://graph.microsoft.com/users?something&api-version=1.5';
         $actualuri = $apiclient->transform_full_request_uri($requesturi);
         $this->assertEquals($expecteduri, $actualuri);
     }

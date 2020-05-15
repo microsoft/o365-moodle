@@ -123,6 +123,10 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         $requests = $httpclient->get_requests();
         $pluginversion = get_config('local_o365', 'version');
         $expecteduseragent = 'Moodle-groups-'.$pluginversion;
+        $description = strip_tags($course->summary);
+        if (strlen($description) > 1024) {
+            $description = shorten_text($description, 1024, true, ' ...');
+        }
         $expectedrequests = [
             [
                 'url' => 'https://graph.microsoft.com/v1.0/groups',
@@ -135,7 +139,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                         'securityEnabled' => false,
                         'mailNickname' => 'prefix1_tc_1',
                         'visibility' => 'Private',
-                        'description' => $course->summary,
+                        'description' => $description,
                     ]),
                     'CURLOPT_USERAGENT' => $expecteduseragent,
                 ],
@@ -162,7 +166,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         foreach ($users as $i => $user) {
             $tokenrec = [
                 'oidcuniqid' => 'user'.$i,
-                'resource' => 'https://graph.windows.net',
+                'resource' => 'https://graph.microsoft.com',
                 'username' => $user->username,
                 'userid' => $user->id,
                 'scope' => 'User.Read',
