@@ -788,6 +788,7 @@ class main {
     }
 
     protected function sync_new_user($syncoptions, $aaduserdata) {
+        global $DB;
         $this->mtrace('User doesn\'t exist in Moodle');
 
         $userobjectid = (\local_o365\rest\unified::is_configured())
@@ -805,7 +806,15 @@ class main {
                 $this->mtrace('Created user #'.$newmuser->id);
             }
         } catch (\Exception $e) {
-            $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+            if ($syncoptions['emailsync']) {
+                if ($DB->record_exists('user', ['username' => $aaduserdata['userPrincipalName']])) {
+                    $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: user with same username, but different email already exists.');
+                } else {
+                    $this->mtrace('Could not create user with email "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
+            } else {
+                $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+            }
         }
 
         // User app assignment.
