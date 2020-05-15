@@ -635,7 +635,7 @@ class main {
      */
     public static function sync_option_enabled($option) {
         $options = static::get_sync_options();
-        return (!empty($options[$option])) ? true : false;
+        return isset($options[$option]);
     }
 
     /**
@@ -669,8 +669,17 @@ class main {
             }
         }
 
+        if ($aadsync['emailsync']) {
+            $select = 'SELECT u.email,
+                       u.username,';
+            $where = ' WHERE u.email';
+        } else {
+            $select = 'SELECT u.username,';
+            $where = ' WHERE u.username';
+        }
+
         list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames);
-        $sql = 'SELECT u.username,
+        $sql = "$select
                        u.id as muserid,
                        u.auth,
                        tok.id as tokid,
@@ -684,8 +693,8 @@ class main {
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                 WHERE u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ?
-              ORDER BY CONCAT(u.username, \'~\')'; // Sort john.smith@example.org before john.smith.
+                 $where $usernamesql AND u.mnethostid = ? AND u.deleted = ?
+              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@example.org before john.smith.
         $params = array_merge(['user'], $usernameparams, [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
@@ -715,44 +724,18 @@ class main {
 
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
+
+            if (empty($user['upnlower'])) {
+                $this->mtrace('Azure AD user missing UPN (' . $user['objectId'] . '); skipping...');
+                continue;
+            }
+
             $this->mtrace('Syncing user '.$user['upnlower']);
 
             if (\local_o365\rest\unified::is_configured()) {
                 $userobjectid = $user['id'];
             } else {
                 $userobjectid = $user['objectId'];
-            }
-
-            if (isset($user['aad.isDeleted']) && $user['aad.isDeleted'] == '1') {
-                if (isset($aadsync['delete'])) {
-                    // Check for synced user.
-                    $sql = 'SELECT u.*
-                              FROM {user} u
-                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
-                              JOIN {auth_oidc_token} tok ON tok.userid = u.id
-                             WHERE u.username = ?
-                                   AND u.mnethostid = ?
-                                   AND u.deleted = ?
-                                   AND u.suspended = ?
-                                   AND u.auth = ?';
-                    $params = [
-                        trim(\core_text::strtolower($user['userPrincipalName'])),
-                        $CFG->mnet_localhost_id,
-                        '0',
-                        '0',
-                        'oidc',
-                        time()
-                    ];
-                    $synceduser = $DB->get_record_sql($sql, $params);
-                    if (!empty($synceduser)) {
-                        $synceduser->suspended = 1;
-                        user_update_user($synceduser, false);
-                        $this->mtrace($synceduser->username.' was marked deleted in Azure.');
-                    }
-                } else {
-                    $this->mtrace('User is deleted. Skipping.');
-                }
-                continue;
             }
 
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
@@ -805,6 +788,7 @@ class main {
     }
 
     protected function sync_new_user($syncoptions, $aaduserdata) {
+        global $DB;
         $this->mtrace('User doesn\'t exist in Moodle');
 
         $userobjectid = (\local_o365\rest\unified::is_configured())
@@ -822,7 +806,15 @@ class main {
                 $this->mtrace('Created user #'.$newmuser->id);
             }
         } catch (\Exception $e) {
-            $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+            if ($syncoptions['emailsync']) {
+                if ($DB->record_exists('user', ['username' => $aaduserdata['userPrincipalName']])) {
+                    $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: user with same username, but different email already exists.');
+                } else {
+                    $this->mtrace('Could not create user with email "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                }
+            } else {
+                $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+            }
         }
 
         // User app assignment.
@@ -951,6 +943,92 @@ class main {
             $DB->insert_record('local_o365_connections', $matchrec);
             $this->mtrace('Matched user, but did not switch them to OpenID.');
             return true;
+        }
+    }
+
+    public function delete_users() {
+        global $CFG, $DB;
+        try {
+            $httpclient = new \local_o365\httpclient();
+            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
+            $resource = \local_o365\rest\unified::get_resource();
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $apiclient = new \local_o365\rest\unified($token, $httpclient);
+        } catch (\Exception $e) {
+            \local_o365\utils::debug('Could not construct graph api', 'delete_users', $e);
+            return false;
+        }
+
+        try {
+            $deletedusersids = [];
+            $deletedusers = $apiclient->list_deleted_users();
+            if (is_array($deletedusers) && !empty($deletedusers['value'])) {
+                foreach ($deletedusers['value'] as $deleteduser) {
+                    if (!empty($deleteduser) && isset($deleteduser['id'])) {
+                        // Check for synced user.
+                        $sql = 'SELECT u.*
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
+                             WHERE u.mnethostid = ?
+                                   AND u.deleted = ?
+                                   AND u.suspended = ?
+                                   AND u.auth = ?
+                                   AND obj.objectid = ? ';
+                        $params = [trim(\core_text::strtolower($CFG->mnet_localhost_id)),
+                            '0',
+                            '0',
+                            'oidc',
+                            $deleteduser['id'],
+                            time()
+                        ];
+                        $synceduser = $DB->get_record_sql($sql, $params);
+                        if (!empty($synceduser)) {
+                            $synceduser->suspended = 1;
+                            $DB->update_record('user', $synceduser);
+                            $this->mtrace($synceduser->username . ' was deleted in Azure.');
+                        }
+                        $deletedusersids[] = $deleteduser['id'];
+                    }
+                }
+            }
+            // Check if all Moodle users with oidc authentication are still existing users in Azure
+            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM,'param', false);
+            $existingsql = $sql = 'SELECT u.*, obj.objectid
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
+                             WHERE u.mnethostid = ?
+                                   AND u.deleted = ?
+                                   AND u.auth = ?
+                                   AND obj.objectid '.$objectidsql;
+            $existingsqlparams = array_merge([trim(\core_text::strtolower($CFG->mnet_localhost_id)),
+                '0',
+                'oidc'
+            ], $objectidparams);
+            $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
+            foreach ($existingusers as $existinguser) {
+                try {
+                    $user = $apiclient->get_user($existinguser->objectid);
+                } catch (\Exception $e) {
+                    // Do safe delete for missing users - first suspend, on second run delete
+                    if ($existinguser->suspended) {
+                        $this->mtrace('Could not find suspended user '.$existinguser->username.' in Azure AD. Deleting user...');
+                        $userid = $existinguser->id;
+                        $objectid = $existinguser->objectid;
+                        if (delete_user($existinguser)) {
+                            $DB->delete_records('local_o365_objects', ['objectid' => $objectid]);
+                            $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+                        }
+                    } else if (!$existinguser->suspended) {
+                        $this->mtrace('Could not find user '.$existinguser->username.' in Azure AD. Suspending user...');
+                        $existinguser->suspended = 1;
+                        $DB->update_record('user', $existinguser);
+                    }
+                }
+            }
+            return true;
+        } catch (\Exception $e) {
+            \local_o365\utils::debug('Could not delete users', 'delete_users', $e);
+            return false;
         }
     }
 }

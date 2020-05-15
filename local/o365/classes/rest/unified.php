@@ -58,7 +58,12 @@ class unified extends \local_o365\rest\o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_resource() {
-        return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        $oidcresource = get_config('auth_oidc', 'oidcresource');
+        if (!empty($oidcresource)) {
+            return $oidcresource;
+        } else {
+            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        }
     }
 
     /**
@@ -67,9 +72,12 @@ class unified extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        return (static::use_chinese_api() === true)
-            ? 'https://microsoftgraph.chinacloudapi.cn'
-            : 'https://graph.microsoft.com';
+        $oidcresource = get_config('auth_oidc', 'oidcresource');
+        if (!empty($oidcresource)) {
+            return $oidcresource;
+        } else {
+            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+        }
     }
 
     /**
@@ -745,6 +753,17 @@ class unified extends \local_o365\rest\o365api {
             }
         }
         return null;
+    }
+
+    /**
+     * Get a list of recently deleted users.
+     *
+     * @return array Array of returned information.
+     */
+    public function list_deleted_users() {
+        $response = $this->betaapicall('get', '/directory/deleteditems/Microsoft.Graph.User');
+        $response = $this->process_apicall_response($response);
+        return $response;
     }
 
     /**
@@ -2056,11 +2075,9 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null
      * @throws \moodle_exception
      */
-    public function create_class_team($displayname, $description, $ownerids, $extra = null) {
-        $owneridparam = [];
-        foreach ($ownerids as $ownerid) {
-            $owneridparam[] = "https://graph.microsoft.com/beta/users/{$ownerid}";
-        }
+    public function create_class_team($displayname, $description, $ownerid, $extra = null) {
+        $owneridparam = ["https://graph.microsoft.com/beta/users/{$ownerid}"];
+        $description = substr($description,0,1024); // API restricts length to 1024 chars
         $teamdata = [
             'template@odata.bind' => "https://graph.microsoft.com/beta/teamsTemplates('educationClass')",
             'displayName' => $displayname,

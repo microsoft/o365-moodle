@@ -228,7 +228,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
 
         $testoidctoken = (object)[
             'oidcuniqid' => 'user1',
-            'resource' => 'https://graph.windows.net',
+            'resource' => 'https://graph.microsoft.com',
             'username' => $user1->username,
             'userid' => $user1->id,
             'scope' => 'User.Read',

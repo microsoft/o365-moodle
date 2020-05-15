@@ -125,8 +125,14 @@ class usersync extends \core\task\scheduled_task {
 
             $this->mtrace('Using delta sync.');
             $this->mtrace('Contacting Azure AD...');
+            $users = [];
             try {
-                list($users, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+                $continue = true;
+                while ($continue) {
+                    list($returnedusers, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+                    $users = array_merge($users, $returnedusers);
+                    $continue = (empty($deltatoken) && !empty($skiptoken));
+                }
             } catch (\Exception $e) {
                 $this->mtrace('Error in delta usersync: '.$e->getMessage());
                 \local_o365\utils::debug($e->getMessage(), 'usersync task', $e);
@@ -159,6 +165,11 @@ class usersync extends \core\task\scheduled_task {
             $usersync->sync_users($users);
         } else {
             $this->mtrace('No users received to sync.');
+        }
+
+        if ($usersync->sync_option_enabled('delete')) {
+            $this->mtrace('Checking deleted users list...');
+            $usersync->delete_users();
         }
 
         $this->mtrace('Sync process finished.');
