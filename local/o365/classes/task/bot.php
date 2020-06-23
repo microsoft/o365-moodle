@@ -48,6 +48,13 @@ class bot extends \core\task\scheduled_task {
             return false;
         }
 
+        $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
+
+        if (empty($botfeatureenabled)) {
+            mtrace('Office 365 bot feature is disabled');
+            return false;
+        }
+
         // Get all courses to be included.
         $sql = 'SELECT crs.id, crs.id AS id2
         			  FROM {course} crs
