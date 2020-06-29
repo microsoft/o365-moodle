@@ -199,10 +199,23 @@ class coursegroups {
                     $this->mtrace($errmsg);
                     continue;
                 }
-                try {
-                    $this->create_team($course->id, $groupobjectrec->objectid, $appid);
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not create team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                $teacherids = $this->get_teacher_ids_of_course($course->id);
+                $hasowner = false;
+                foreach ($teacherids as $teacherid) {
+                    if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
+                        ['type' => 'user', 'moodleid' => $teacherid])) {
+                        $hasowner = true;
+                        break;
+                    }
+                }
+                if ($hasowner) {
+                    try {
+                        $this->create_team($course->id, $groupobjectrec->objectid, $appid);
+                    } catch (\Exception $e) {
+                        $this->mtrace('Could not create team for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                    }
+                } else {
+                    $this->mtrace('Skip creating team for course #' . $course->id . '. Reason: No owner');
                 }
             }
         }
@@ -1018,6 +1031,20 @@ class coursegroups {
         if (empty($teamobjectrec)) {
             // Create team.
             $now = time();
+
+            $teacherids = $this->get_teacher_ids_of_course($courseid);
+            $hasowner = false;
+            foreach ($teacherids as $teacherid) {
+                if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
+                    ['type' => 'user', 'moodleid' => $teacherid])) {
+                    $hasowner = true;
+                    break;
+                }
+            }
+            if (!$hasowner) {
+                $this->mtrace('Skip creating team for course #' . $courseid . '. Reason: No owner');
+                return false;
+            }
 
             try {
                 $response = $this->graphclient->create_team($groupobjectid);
