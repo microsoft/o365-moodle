@@ -700,8 +700,10 @@ $string['settings_teams_additional_instructions'] = '<h4 class="local_o365_setti
 <li>Go to <a href="settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
 <li>Go to <a href="settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
 <li>Go to <a href="settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
+<li>Go to <a href="settings.php?section=webserviceprotocols" target="_blank">Manage protocols</a> and Enable Rest protocol.</li>
 <li>Go to <a href="settings.php?section=externalservices" target="_blank">External Services</a> to enable Office 365 Webservices.</li>
 <li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
+<li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set "Use Rest Protocol" to "Allow".</li>
 <li>Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">App registrations section of Azure Portal</a> and register a new app. Enter the application ID and client secret below:</li>
 </ul>';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
