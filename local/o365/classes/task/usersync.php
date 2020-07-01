@@ -91,8 +91,14 @@ class usersync extends \core\task\scheduled_task {
 
             $this->mtrace('Forcing full sync.');
             $this->mtrace('Contacting Azure AD...');
+            $users = [];
             try {
-                list($users, $skiptoken) = $usersync->get_users('default', $skiptoken);
+                $continue = true;
+                while ($continue) {
+                    list($returnedusers, $skiptoken) = $usersync->get_users('default', $skiptoken);
+                    $users = array_merge($users, $returnedusers);
+                    $continue = (!empty($skiptoken));
+                }
             } catch (\Exception $e) {
                 $this->mtrace('Error in full usersync: '.$e->getMessage());
                 \local_o365\utils::debug($e->getMessage(), 'usersync task', $e);
