@@ -1290,6 +1290,13 @@ class acp extends base {
         echo \html_writer::link($toolurl, $toolname);
         echo \html_writer::div(get_string('acp_maintenance_cleanoidctokens_desc', 'local_o365'));
 
+        // Clear delta token.
+        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_cleandeltatoken']);
+        $toolname = get_string('acp_maintenance_cleandeltatoken', 'local_o365');
+        echo \html_writer::empty_tag('br');
+        echo \html_writer::link($toolurl, $toolname);
+        echo \html_writer::div(get_string('acp_maintenance_cleandeltatoken_desc', 'local_o365'));
+
         $this->standard_footer();
     }
 
@@ -1336,6 +1343,17 @@ class acp extends base {
         foreach ($tokens as $token) {
             mtrace($token->id.': Mismatch between usernames and userids. Userid "'.$token->tokuserid.'" references Moodle user "'.$token->musername.'" but token references "'.$token->tokusername.'"');
         }
+    }
+
+    /**
+     * Clean up user sync delta token.
+     */
+    public function mode_maintenance_cleandeltatoken() {
+        set_config('task_usersync_lastdeltatoken', '', 'local_o365');
+        mtrace("Cleaned up last delta token.");
+
+        set_config('task_usersync_lastskiptokendelta', '', 'local_o365');
+        mtrace("Cleaned up last skip delta token.");
     }
 
     /**
