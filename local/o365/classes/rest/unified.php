@@ -1939,6 +1939,9 @@ class unified extends \local_o365\rest\o365api {
         if ($this->httpclient->info['http_code'] == 202) {
             // If response is 202 Accepted, return response.
             return $this->httpclient->response;
+        } else if ($this->httpclient->info['http_code'] == 409) {
+            // If response is 409, conflict is found, i.e. Team has already been created from the group.
+            return true;
         } else {
             // Error.
             throw new \moodle_exception('errorcreatingteamfromgroup', 'local_o365');
