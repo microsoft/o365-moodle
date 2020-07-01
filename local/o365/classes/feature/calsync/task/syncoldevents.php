@@ -214,7 +214,7 @@ class syncoldevents extends \core\task\adhoc_task {
                 if (!empty($event->groupid)) {
                     $sql = 'SELECT userid
                               FROM {groups_members}
-                             WHERE grpmbr.groupid = ?';
+                             WHERE groupid = ?';
                     $params = [$event->groupid];
                     $grouplimit = $DB->get_records_sql($sql, $params);
                 }
