@@ -425,6 +425,63 @@ class observers {
     }
 
     /**
+     * Handle user_enrolment_updated event
+     *
+     * Tasks
+     *     - remove user from microsoft team when they are suspended but still enrolled.
+     *     - add user to microsoft team when they are unsuspended.
+     * @param \core\event\user_enrolment_updated $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_user_enrolment_updated(\core\event\user_enrolment_updated $event) {
+        if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
+            return false;
+        }
+
+        $userid = $event->relateduserid;
+        $courseid = $event->courseid;
+
+        if (empty($userid) || empty($courseid)) {
+            return false;
+        }
+
+        // Check if the user was suspended, or unsuspended. Add or remove them from the teams course group as appropriate.
+        $suspendedusers = get_suspended_userids(\context_course::instance($courseid));
+        if (isset($suspendedusers[$userid])) {
+            // We need to remove the user.
+            try {
+                // Remove user from course usergroup.
+                $apiclient = \local_o365\utils::get_api();
+                $apiclient->remove_user_from_course_group($courseid, $userid);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_updated', $e);
+            }
+
+            try {
+                // Remove owner from course usergroup.
+                $apiclient = \local_o365\utils::get_api();
+                $apiclient->remove_owner_from_course_group($courseid, $userid);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_updated', $e);
+            }
+        } else {
+            // We need to add the user.
+            try {
+                // Add user from course usergroup.
+                $apiclient = \local_o365\utils::get_api();
+                $apiclient->add_user_to_course_group($courseid, $userid);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Exception: '.$e->getMessage(), $e);
+            }
+        }
+        if (!empty($e)) {
+            // We had some exception that will have been logged if debugmode is turned on in local_o365.
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Construct a sharepoint API client using the system API user.
      *
      * @return \local_o365\rest\sharepoint|bool A constructed sharepoint API client, or false if error.
