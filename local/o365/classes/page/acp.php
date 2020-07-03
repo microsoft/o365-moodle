@@ -1313,9 +1313,9 @@ class acp extends base {
         foreach ($records as $token) {
             $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'sesskey' => sesskey()]);
             $toolname = 'Delete Token';
-            $str = $token->id.': Moodle user '.$token->username.' as a token for OIDC username '.$token->oidcusername.' but no recorded userid.';
+            $str = $token->id.': Moodle user '.$token->username.' has a token for OIDC username '.$token->oidcusername.' but no recorded userid.';
             $deletelink = \html_writer::link($toolurl, $toolname);
-            mtrace($str.' '.$deletelink);
+            echo $str . ' ' . $deletelink . "<br>";
         }
 
         $sql = 'SELECT tok.id AS id,
@@ -1334,7 +1334,7 @@ class acp extends base {
                  WHERE tok.userid != 0 AND u.username != tok.username';
         $tokens = $DB->get_recordset_sql($sql);
         foreach ($tokens as $token) {
-            mtrace($token->id.': Mismatch between usernames and userids. Userid "'.$token->tokuserid.'" references Moodle user "'.$token->musername.'" but token references "'.$token->tokusername.'"');
+            echo $token->id.': Mismatch between usernames and userids. Userid "'.$token->tokuserid.'" references Moodle user "'.$token->musername.'" but token references "'.$token->tokusername.'"' . "<br>";
         }
     }
 
