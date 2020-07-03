@@ -144,6 +144,12 @@ $observers = [
         'internal'    => false,
     ],
     [
+        'eventname'   => '\core\event\user_enrolment_updated',
+        'callback'    => '\local_o365\observers::handle_user_enrolment_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
         'eventname'   => '\core\event\role_assigned',
         'callback'    => '\local_o365\observers::handle_role_assigned',
         'priority'    => 200,
