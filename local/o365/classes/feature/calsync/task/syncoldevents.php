@@ -113,7 +113,8 @@ class syncoldevents extends \core\task\adhoc_task {
                     try {
                         // If there's a stored outlookeventid we've already synced to o365 so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
-                            $calsync->update_event_raw($event->outlookeventid, ['attendees' => $subscribersprimary]);
+                            $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
+                                ['attendees' => $subscribersprimary]);
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
@@ -214,7 +215,7 @@ class syncoldevents extends \core\task\adhoc_task {
                 if (!empty($event->groupid)) {
                     $sql = 'SELECT userid
                               FROM {groups_members}
-                             WHERE grpmbr.groupid = ?';
+                             WHERE groupid = ?';
                     $params = [$event->groupid];
                     $grouplimit = $DB->get_records_sql($sql, $params);
                 }
