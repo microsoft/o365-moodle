@@ -153,6 +153,13 @@ class token {
             return $token;
         } else {
             if ($resource === 'https://graph.microsoft.com') {
+                // If the app token is missing, try to create it.
+                if ($userid == 0) {
+                    $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
+                    if (!empty($token)) {
+                        return $token;
+                    }
+                }
                 $backtrace = debug_backtrace(0);
                 $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
                 $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
