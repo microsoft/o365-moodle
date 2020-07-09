@@ -146,7 +146,8 @@ class token {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient,
+                                    $forcecreate = false) {
         $token = static::get_stored_token($userid, $resource);
         if (!empty($token)) {
             $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['resource'],
@@ -154,6 +155,12 @@ class token {
             return $token;
         } else {
             if ($resource === 'https://graph.microsoft.com') {
+                if ($userid == 0 && $forcecreate) {
+                    $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
+                    if (!empty($token)) {
+                        return $token;
+                    }
+                }
                 $backtrace = debug_backtrace(0);
                 $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
                 $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
