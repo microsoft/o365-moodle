@@ -409,7 +409,7 @@ class block_microsoft extends block_base {
         }
 
         if (!class_exists('\local_onenote\api\base')) {
-            $url = new \moodle_url('http://portal.office.com/onenote');
+            $url = new \moodle_url('https://www.office.com/launch/onenote');
             $stropennotebook = get_string('linkonenote', 'block_microsoft');
             $linkattrs = [
                 'onclick' => 'window.open(this.href,\'_blank\'); return false;',
