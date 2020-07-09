@@ -218,7 +218,7 @@ class ajax extends base {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         try {
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient, true);
         } catch (\Exception $e) {
             $err = 'Could not get App or System API User token. If you have not yet provided admin consent, please do that first.';
             throw new \Exception($err);
@@ -335,7 +335,7 @@ class ajax extends base {
         if (\local_o365\rest\unified::is_enabled() === true) {
             // Microsoft Graph API.
             try {
-                $token = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
+                $token = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient, true);
                 if (empty($token)) {
                     throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
                 }

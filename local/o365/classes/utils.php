@@ -72,11 +72,11 @@ class utils {
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @return \local_o365\oauth2\apptoken|\local_o365\oauth2\systemapiusertoken An app or system token.
      */
-    public static function get_app_or_system_token($resource, $clientdata, $httpclient) {
+    public static function get_app_or_system_token($resource, $clientdata, $httpclient, $forcecreate = false) {
         $token = null;
         try {
             if (static::is_configured_apponlyaccess() === true) {
-                $token = \local_o365\oauth2\apptoken::instance(null, $resource, $clientdata, $httpclient);
+                $token = \local_o365\oauth2\apptoken::instance(null, $resource, $clientdata, $httpclient, $forcecreate);
             }
         } catch (\Exception $e) {
             static::debug($e->getMessage(), 'get_app_or_system_token (app)', $e);
