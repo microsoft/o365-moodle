@@ -131,7 +131,7 @@ class base {
         // O365 provides custom field mapping. Perform that mapping now if it's installed.
         $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
         if (!empty($o365installed)) {
-            $apiclient = \local_o365\utils::get_api($userid);
+            $apiclient = \local_o365\utils::get_api($tokenrec->userid);
             $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
             $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, (object)$userinfo, 'login');
             $userinfo = (array)$updateduser;
