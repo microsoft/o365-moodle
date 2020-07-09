@@ -147,35 +147,25 @@ class token {
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
     public static function instance($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        if ($userid == 0 && $resource === 'https://graph.microsoft.com') {
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
-            if (empty($token)) {
+        $token = static::get_stored_token($userid, $resource);
+        if (!empty($token)) {
+            $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['resource'],
+                $token['user_id'], $clientdata, $httpclient);
+            return $token;
+        } else {
+            if ($resource === 'https://graph.microsoft.com') {
+                $backtrace = debug_backtrace(0);
+                $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
+                $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
+                $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
+                $caller = $callingclass.'::'.$callingfunc.':'.$callingline;
+                // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
+                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', 'local_o365\oauth2\token::instance '.$caller);
+                return null;
+            } else {
                 $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
                 if (!empty($token)) {
                     return $token;
-                }
-            }
-        } else {
-            $token = static::get_stored_token($userid, $resource);
-            if (!empty($token)) {
-                $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['resource'],
-                    $token['user_id'], $clientdata, $httpclient);
-                return $token;
-            } else {
-                if ($resource === 'https://graph.microsoft.com') {
-                    $backtrace = debug_backtrace(0);
-                    $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
-                    $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
-                    $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-                    $caller = $callingclass.'::'.$callingfunc.':'.$callingline;
-                    // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
-                    \local_o365\utils::debug('Cannot retrieve a token for the base resource.', 'local_o365\oauth2\token::instance '.$caller);
-                    return null;
-                } else {
-                    $token = static::get_for_new_resource($userid, $resource, $clientdata, $httpclient);
-                    if (!empty($token)) {
-                        return $token;
-                    }
                 }
             }
         }
