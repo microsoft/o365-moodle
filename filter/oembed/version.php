@@ -18,17 +18,16 @@
  * Filter for component 'filter_oembed'
  *
  * @package   filter_oembed
- * @copyright 2012 Matthew Cannings, Sandwell College; modified 2015 by Microsoft, Inc.
+ * @copyright Erich M. Wappis / Guy Thomas 2016
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters...
- * Screencast (Mark Schall)
- * Soundcloud (Troy Williams)
+ * code based on the following filter
+ * oEmbed filter ( Mike Churchward, James McQuillan, Vinayak (Vin) Bhalerao, Josh Gavant and Rob Dolin)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2016062002;
-$plugin->requires = 2016052300;
+$plugin->version   = 2017051202;
+$plugin->requires  = 2017051500;
 $plugin->component = 'filter_oembed';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '3.1.0.2';
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release   = '3.3.2 (Build - 2018120300)';
