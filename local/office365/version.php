@@ -33,7 +33,7 @@ $plugin->dependencies = [
     'block_microsoft' => 2019052007,
     'local_o365' => 2019052007,
     'repository_office365' => 2019052000,
-    'filter_oembed' => 2016062002,
+    'filter_oembed' => 2017051202,
     'theme_boost_o365teams' => 2019052007,
 ];
 
