@@ -25,12 +25,15 @@
  * Soundcloud (Troy Williams)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+use filter_oembed\service\oembed;
 /**
  * Installs the OEmbed filter.
  */
 function xmldb_filter_oembed_install() {
-    global $CFG;
-
     filter_set_global_state('filter/oembed', TEXTFILTER_ON);
-}
 
+    // Insert the initial data elements from the instance's providers.
+    oembed::update_provider_data();
+}

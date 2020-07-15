@@ -1,0 +1,45 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template filter_oembed/managementpagerow
+
+    oembed managementpagerow template.
+
+    Renders a single oembed managementpagerow. See template filter_oembed/managementpage for details.
+
+    Example context (json):
+    {
+        "pid": "72",
+        "extraclass": "testclass",
+        "editing": "1",
+        "providerurl": "https://theprovider.com/",
+        "providername": "The Provider",
+        "enableaction": "http://enableaction.com/",
+        "editaction": "http://editaction.com/",
+        "deleteaction": "http://deleteaction.com/"
+    }
+}}
+<tr id="oembed-display-providers_{{pid}}" class="{{extraclass}}{{#editing}} oembed-provider-editing{{/editing}}" data-pid="{{pid}}">
+    <td id="oembed-display-providers_{{pid}}_c0" class="cell c0 provider">
+        <a href="{{providerurl}}" target="_blank" class="list-providername">{{providername}}</a>
+            <div class="oembed-provider-details">
+            </div>
+        <div class="oembed-provider-actions">
+            {{{enableaction}}} {{{editaction}}} {{{deleteaction}}}
+        </div>
+    </td>
+</tr>

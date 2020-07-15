@@ -15,25 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for component 'filter_oembed'
+ * Filter for component 'filter_oembed'
  *
  * @package   filter_oembed
- * @copyright 2012 Matthew Cannings; modified 2015 by Microsoft Inc.
+ * @copyright Erich M. Wappis / Guy Thomas 2016
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * code based on the following filters...
- * Screencast (Mark Schall)
- * Soundcloud (Troy Williams)
+ * code based on the following filter
+ * oEmbed filter ( Mike Churchward, James McQuillan, Vinayak (Vin) Bhalerao, Josh Gavant and Rob Dolin)
  */
 
-$string['filtername'] = 'oEmbed-Filter';
-$string['youtube'] = 'YouTube';
-$string['vimeo'] = 'Vimeo';
-$string['ted'] = 'Ted Talks';
-$string['slideshare'] = 'SlideShare';
-$string['officemix'] = 'Office Mix';
-$string['issuu'] = 'Issuu';
-$string['screenr'] = 'Screenr';
-$string['soundcloud'] = 'SoundCloud';
-$string['pollev'] = 'Poll Everywhere';
-$string['lazyload'] = 'Delay Embed Loading (Lazyload)';
+$string['filtername'] = 'Embed Remote Content Filter';
+$string['cachelifespan_disabled'] = 'Cache Lebensdauer deaktiviert';
+$string['cachelifespan'] = 'Cache Lebensdauer';
+$string['cachelifespan_desc'] = 'Zeitabstand nach dem die Providerliste aktualisiert wird.';
+$string['cachelifespan_daily'] = '1 Tag';
+$string['cachelifespan_weekly'] = '1 Woche';
+$string['atag'] = 'Filtere &lt; a &gt; tags';
+$string['divtag'] = 'Filtere &lt; div &gt; tags';
+$string['targettag'] = 'Ziel tag';
+$string['targettag_desc'] = 'Welche Art von tag soll gefiltert werden? Links oder divs mit der oembed Klasse.';
+$string['providersrestrict'] = 'Providerbeschränkung';
+$string['providersrestrict_desc'] = 'Beschränke Provider mit einer List zugelassener Provider';
+$string['providersallowed'] = 'Zugelassene Provider.';
+$string['providersallowed_desc'] = 'Die Provider die vor diese Moodleinstallation verfügbar sind.';
 $string['connection_error'] = 'Fehler beim Zugriff auf die integrierten Medien. Versuchen Sie, die Seite zu aktualisieren.';

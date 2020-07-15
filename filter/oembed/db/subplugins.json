@@ -1,0 +1,5 @@
+{
+    "plugintypes": {
+        "oembedprovider": "filter\/oembed\/provider"
+    }
+}
