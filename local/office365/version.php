@@ -36,4 +36,3 @@ $plugin->dependencies = [
     'filter_oembed' => 2019112600,
     'theme_boost_o365teams' => 2020071500,
 ];
-
