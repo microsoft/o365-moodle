@@ -160,8 +160,7 @@ class main {
                 : $appinfo['value'][0]['objectId'];
         }
 
-        // Force using legacy api. Legacy assign user does not support app only access.
-        $apiclient = $this->construct_user_api(true);
+        $apiclient = $this->construct_user_api();
         $result = $apiclient->assign_user($muserid, $userobjectid, $appobjectid);
         if (!empty($result['odata.error'])) {
             $error = '';
