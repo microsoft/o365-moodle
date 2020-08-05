@@ -65,6 +65,10 @@ $configdesc = new lang_string('cfg_forceredirect_desc', 'auth_oidc');
 $configdefault = 0;
 $settings->add(new admin_setting_configcheckbox('auth_oidc/forceredirect', $configkey, $configdesc, $configdefault));
 
+$configkey = new lang_string('cfg_alterlogout', 'auth_oidc');
+$configdesc = new lang_string('cfg_alterlogout_desc', 'auth_oidc');
+$settings->add(new admin_setting_configtext('auth_oidc/alterlogout', $configkey, $configdesc, '', PARAM_URL));
+
 $configkey = new lang_string('cfg_autoappend_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_autoappend_desc', 'auth_oidc');
 $configdefault = '';

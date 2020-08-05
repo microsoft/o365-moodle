@@ -24,6 +24,8 @@
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect plugin provides single-sign-on functionality using configurable identity providers.';
 
+$string['cfg_alterlogout'] = 'Alternative Logout URL';
+$string['cfg_alterlogout_desc'] = 'The URL to redirect a user after all internal logout mechanisms are run';
 $string['cfg_authendpoint_key'] = 'Authorization Endpoint';
 $string['cfg_authendpoint_desc'] = 'The URI of the Authorization endpoint from your identity provider to use.';
 $string['cfg_autoappend_key'] = 'Auto-Append';
