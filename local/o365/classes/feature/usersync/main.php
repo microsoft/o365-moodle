@@ -720,7 +720,7 @@ class main {
         $params = array_merge(['user'], $upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
         $linkedexistingusers = $DB->get_records_sql($sql, $params);
 
-        $existingusers = array_merge($existingusers, $linkedexistingusers);
+        $existingusers = $existingusers + $linkedexistingusers;
 
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
