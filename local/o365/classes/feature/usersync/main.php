@@ -670,11 +670,11 @@ class main {
         }
 
         if ($aadsync['emailsync']) {
-            $select = 'SELECT u.email,
-                       u.username,';
+            $select = 'SELECT LOWER(u.email) AS email,
+                       LOWER(u.username) AS username,';
             $where = ' WHERE u.email';
         } else {
-            $select = 'SELECT u.username,';
+            $select = 'SELECT LOWER(u.username) AS username,';
             $where = ' WHERE u.username';
         }
 
