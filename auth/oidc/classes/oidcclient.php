@@ -56,10 +56,11 @@ class oidcclient {
      *
      * @param string $id The registered client ID.
      * @param string $secret The registered client secret.
-     * @param string $scope The requested OID scope.
      * @param string $redirecturi The registered client redirect URI.
+     * @param string $resource The API URL
+     * @param string $scope The requested OID scope.
      */
-    public function setcreds($id, $secret, $redirecturi, $resource, $scope) {
+    public function setcreds($id, $secret, $redirecturi, $resource = null, $scope = null) {
         $this->clientid = $id;
         $this->clientsecret = $secret;
         $this->redirecturi = $redirecturi;
