@@ -23,7 +23,7 @@
  * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 $url = new moodle_url('/local/o365/sso_login.php');

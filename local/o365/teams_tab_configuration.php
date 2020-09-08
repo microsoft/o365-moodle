@@ -106,6 +106,30 @@ function isMobileApp() {
     }
 }
 
+function onCourseChange() {
+    var course = document.getElementsByName('local_o365_teams_course[]')[0];
+    var courseid = course.value;
+    course.removeAttribute('multiple');
+
+    var options = course.options;
+    for (var i = 0; i < options.length; i++) {
+        if (options[i].value != courseid) {
+            options[i].selected = false;
+        }
+    }
+
+    var tabname =  document.getElementsByName('local_o365_teams_tab_name')[0];
+    var tabnamevalue = tabname.value;
+
+    microsoftTeams.settings.setSettings({
+        entityId: 'course_' + courseid,
+        contentUrl: '" . $CFG->wwwroot . "/local/o365/teams_tab.php?id=' + courseid,
+        websiteUrl: '" . $CFG->wwwroot . "/course/view.php?id=' + courseid,
+        suggestedTabName: tabnamevalue,
+    });
+    microsoftTeams.settings.setValidityState(true);
+}
+
 function onTabNameChange() {
     var course = document.getElementsByName('local_o365_teams_course[]')[0];
     var courseid = course.value;
@@ -115,8 +139,8 @@ function onTabNameChange() {
 
     microsoftTeams.settings.setSettings({
         entityId: 'course_' + courseid,
-        contentUrl: '" . $CFG->wwwroot . "'/local/o365/teams_tab.php?id=' + courseid,
-        websiteUrl: '" . $CFG->wwwroot . "'/course/view.php?id=' + courseid,
+        contentUrl: '" . $CFG->wwwroot . "/local/o365/teams_tab.php?id=' + courseid,
+        websiteUrl: '" . $CFG->wwwroot . "/course/view.php?id=' + courseid,
         suggestedTabName: tabnamevalue,
     });
 }
@@ -170,15 +194,21 @@ function ssoLogin() {
             }).then((response) => {
                 if (response.status == 200) {
                     // Nothing to do here.
+                    if (!window.location.hash) {
+                        window.location = window.location + '#loaded';
+                        window.location.reload();
+                    }
                 } else {
                     // Manual login.
                     $('.local_o365_manual_login').css('display', 'block');
+                    $('#local_o365_course_list).css('display', 'none');
                 }
             });
         },
         failureCallback: function (error) {
             // Manual login.
             $('.local_o365_manual_login').css('display', 'block');
+            $('#local_o365_course_list).css('display', 'none');
         }
     });
 }
