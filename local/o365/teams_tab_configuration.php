@@ -201,14 +201,14 @@ function ssoLogin() {
                 } else {
                     // Manual login.
                     $('.local_o365_manual_login').css('display', 'block');
-                    $('#local_o365_course_list).css('display', 'none');
+                    $('#local_o365_course_list').css('display', 'none');
                 }
             });
         },
         failureCallback: function (error) {
             // Manual login.
             $('.local_o365_manual_login').css('display', 'block');
-            $('#local_o365_course_list).css('display', 'none');
+            $('#local_o365_course_list').css('display', 'none');
         }
     });
 }
