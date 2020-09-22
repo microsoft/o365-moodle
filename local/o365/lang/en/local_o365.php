@@ -338,6 +338,10 @@ $string['settings_azuresetup_legacyerror'] = 'There was an error checking Office
 
 $string['settings_usergroups'] = 'Teams';
 $string['settings_usergroups_details'] = 'If enabled, this will create and maintain a Team for every course on the site (Default: Disabled). This will create any needed Teams each cron run (and add all current members). After that, Team membership will be maintained as users are enrolled or unenrolled from Moodle courses.';
+$string['settings_sign_off_integration'] = 'Sign sign off';
+$string['settings_sign_off_integration_details'] = 'If enabled, when a Moodle user using OIDC authentication method signs off from Moodle, Moodle will attempt to log the user off from Office 365 as well.
+
+Note the URL of Moodle site ({$a}) needs to be added as an redirect URI in the Azure app created for Moodle Office 365 integration.';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_clientid'] = 'Application ID';
