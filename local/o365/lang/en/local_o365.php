@@ -618,6 +618,8 @@ $string['ucp_o365accountconnected'] = 'This Office 365 account is already connec
 $string['o365:manageconnectionlink'] = 'Manage Connection Link';
 $string['o365:manageconnectionunlink'] = 'Manage Connection Unlink';
 $string['o365:managegroups'] = 'Manage Groups';
+$string['o365:teammember'] = 'Team member';
+$string['o365:teamowner'] = 'Team owner';
 $string['o365:viewgroups'] = 'View Groups';
 
 $string['webservices_error_assignnotfound'] = 'The received module\'s assignment record could not be found.';
