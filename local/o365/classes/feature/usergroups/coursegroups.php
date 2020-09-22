@@ -618,12 +618,8 @@ class coursegroups {
      * @return array $teacher_ids array containing ids of teachers.
      */
     public function get_teacher_ids_of_course($courseid) {
-        $roleteacher = $this->DB->get_record('role', array('shortname' => 'editingteacher'));
-        $rolenoneditingteacher = $this->DB->get_record('role', array('shortname' => 'teacher'));
         $context = \context_course::instance($courseid);
-        $teachers = get_role_users($roleteacher->id, $context);
-        $noneditingteachers = get_role_users($rolenoneditingteacher->id, $context);
-        $allteachers = array_merge($teachers, $noneditingteachers);
+        $allteachers = get_users_by_capability($context, 'local/o365:teamowner', 'u.id');
         $teacherids = array();
         foreach ($allteachers as $teacher) {
             array_push($teacherids, $teacher->id);
