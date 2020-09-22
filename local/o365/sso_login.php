@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page log an auth_oidc user out.
+ * This page logs in user using SSO.
  *
  * @package local_o365
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -24,11 +24,33 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
-if ($USER->id) {
-    if ($USER->auth == 'oidc') {
-        require_logout();
+$url = new moodle_url('/local/o365/sso_login.php');
+
+$PAGE->set_context(context_system::instance());
+
+$headers = apache_request_headers();
+
+$authtoken = substr($headers['Authorization'], 7);
+list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
+
+$payload = json_decode(local_o365_base64UrlDecode($payloadEncoded));
+
+$loginsuccess = false;
+if ($authoidctoken = $DB->get_record('auth_oidc_token', ['oidcusername' => $payload->upn])) {
+    if ($user = core_user::get_user($authoidctoken->userid)) {
+        $_POST['code'] = $authoidctoken->authcode;
+        $user = authenticate_user_login($user->username, $user->password, true);
+        if ($user) {
+            complete_user_login($user);
+            $loginsuccess = true;
+        }
     }
 }
 
-redirect($CFG->wwwroot);
+if ($loginsuccess) {
+    http_response_code(200);
+} else {
+    http_response_code(401);
+}
