@@ -228,7 +228,7 @@ function local_o365_create_manifest_file() {
         ),
         'webApplicationInfo' => array(
             'id' => get_config('auth_oidc', 'clientid'),
-            'resource' => 'api://' . $CFG->wwwroot . '/' . get_config('auth_oidc', 'clientid'),
+            'resource' => 'api://' . preg_replace("(^https?://)", "", $CFG->wwwroot) . '/' . get_config('auth_oidc', 'clientid'),
         )
     );
 
