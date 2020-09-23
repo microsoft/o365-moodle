@@ -436,6 +436,18 @@ if ($hassiteconfig) {
         $deploybuttonhtml .= html_writer::end_div();
         $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
 
+        // Setting teams_moodle_app_external_id.
+        $settings->add(new admin_setting_configtext('local_o365/teams_moodle_app_external_id',
+            get_string('settings_teams_moodle_app_external_id', 'local_o365'),
+            get_string('settings_teams_moodle_app_external_id_desc', 'local_o365'),
+            TEAMS_MOODLE_APP_EXTERNAL_ID));
+
+        // Setting teams_moodle_app_short_name.
+        $settings->add(new admin_setting_configtext('local_o365/teams_moodle_app_short_name',
+            get_string('settings_teams_moodle_app_short_name', 'local_o365'),
+            get_string('settings_teams_moodle_app_short_name_desc', 'local_o365'),
+            'Moodle'));
+
         // Setting bot_shared_secret.
         $sharedsecretsetting = new admin_setting_configtext('local_o365/bot_sharedsecret',
             get_string('settings_bot_sharedsecret', 'local_o365'),
