@@ -171,12 +171,23 @@ function local_o365_create_manifest_file() {
     }
     mkdir($pathtomanifestfolder, 0777, true);
 
+    // Task 2.1: prepare manifest params.
+    $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
+    if (!$teamsmoodleappexternalid) {
+        $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
+    }
+
+    $teamsmoodleappnameshortname = get_config('local_o365', 'teams_moodle_app_short_name');
+    if (!$teamsmoodleappnameshortname) {
+        $teamsmoodleappnameshortname = 'Moodle';
+    }
+
     // Task 3: prepare manifest file.
     $manifest = array(
-        '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json',
-        'manifestVersion' => '1.5',
-        'version' => '1.2.2',
-        'id' => TEAMS_MOODLE_APP_EXTERNAL_ID,
+        '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.7/MicrosoftTeams.schema.json',
+        'manifestVersion' => '1.7',
+        'version' => '1.3',
+        'id' => $teamsmoodleappexternalid,
         'packageName' => 'ie.enovation.microsoft.o365',
         'developer' => array(
             'name' => 'Enovation Solutions',
@@ -190,8 +201,8 @@ function local_o365_create_manifest_file() {
             'outline' => 'outline.png',
         ),
         'name' => array(
-            'short' => 'Moodle',
-            'full' => 'Moodle integration with Microsoft Teams',
+            'short' => $teamsmoodleappnameshortname,
+            'full' => 'Moodle integration with Microsoft Teams for ' . $CFG->wwwroot,
         ),
         'description' => array(
             'short' => 'Access your Moodle courses and ask questions to your Moodle Assistant in Teams.',
@@ -215,6 +226,10 @@ function local_o365_create_manifest_file() {
             parse_url($CFG->wwwroot, PHP_URL_HOST),
             'token.botframework.com',
         ),
+        'webApplicationInfo' => array(
+            'id' => get_config('auth_oidc', 'clientid'),
+            'resource' => 'api://' . $CFG->wwwroot . '/' . get_config('auth_oidc', 'clientid'),
+        )
     );
 
     // Task 4: add bot part to manifest if enabled.
