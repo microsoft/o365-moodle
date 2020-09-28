@@ -341,7 +341,7 @@ $string['settings_usergroups_details'] = 'If enabled, this will create and maint
 $string['settings_sign_off_integration'] = 'Single sign off';
 $string['settings_sign_off_integration_details'] = 'If enabled, when a Moodle user using OIDC authentication method signs off from Moodle, Moodle will attempt to log the user off from Office 365 as well.
 
-Note the URL of Moodle site ({$a}) needs to be added as an redirect URI in the Azure app created for Moodle Office 365 integration.';
+Note the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle Office 365 integration.';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_clientid'] = 'Application ID';
@@ -529,7 +529,7 @@ $string['settings_tools_tenants'] = 'Tenants';
 $string['settings_tools_tenants_linktext'] = 'Configure additional tenants';
 $string['settings_tools_tenants_details'] = 'Manage access to additional Office 365 tenants.';
 $string['settings_usermatch'] = 'User Matching';
-$string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Office 365 users based on an custom uploaded data file.';
+$string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Office 365 users based on a custom uploaded data file.';
 $string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only users that have the specified value for the specified Azure AD field will be created during user sync.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Field value';
@@ -743,7 +743,7 @@ $string['settings_set_moodle_app_id_instruction'] = 'To find the Moodle app ID m
 <li>In Teams app catalog, find the app.</li>
 <li>Click the option icon of the app, which is located at the top right corner of the app image.</li>
 <li>Click "Copy link".</li>
-<li>In a text editor, paste the copied content. It should contain an URL such as https://teams.microsoft.com/l/app/00112233-4455-6677-8899-aabbccddeeff.</li>
+<li>In a text editor, paste the copied content. It should contain a URL such as https://teams.microsoft.com/l/app/00112233-4455-6677-8899-aabbccddeeff.</li>
 </ol>
 The last part of the URL, i.e. <span class="local_o365_settings_moodle_app_id">00112233-4455-6677-8899-aabbccddeeff</span>, is the app ID.';
 $string['teams_no_course'] = 'You don\'t have any course to add.';
