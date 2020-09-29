@@ -691,7 +691,7 @@ class observers {
                     } else {
                         $apiclient = \local_o365\utils::get_api();
                         $context = \context_course::instance($courseid);
-                        $roles = get_roles_with_capability('local/o365:teamowner', 'CAP_ALLOW', $context);
+                        $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
                         if (!empty($roles)) {
                             $roles = array_keys($roles);
                             if (in_array($roleid, $roles)) {
@@ -745,7 +745,7 @@ class observers {
                             $caller);
                     } else {
                         $context = \context_course::instance($courseid);
-                        $roles = get_roles_with_capability('local/o365:teamowner', 'CAP_ALLOW', $context);
+                        $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
                         if (!empty($roles)) {
                             $roles = array_keys($roles);
                             if (in_array($roleid, $roles)) {
