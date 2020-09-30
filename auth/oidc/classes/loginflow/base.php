@@ -393,6 +393,7 @@ class base {
             if (empty($tomatch)) {
                 $tomatch = $idtoken->claim('sub');
             }
+            $tomatch= strtolower($tomatch);
             foreach ($restrictions as $restriction) {
                 $restriction = trim($restriction);
                 if ($restriction !== '') {
