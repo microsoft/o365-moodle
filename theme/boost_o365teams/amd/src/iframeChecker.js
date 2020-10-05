@@ -37,6 +37,7 @@ define(['jquery'], function ($) {
                 });
                 $('.quizattempt .singlebutton form').click(function() {
                     $(this).attr('target', '_blank');
+                    $(this).attr('method', 'get');
                 });
             }
             $("body").fadeIn(150);
