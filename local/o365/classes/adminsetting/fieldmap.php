@@ -219,6 +219,7 @@ class fieldmap extends \admin_setting {
             'givenName/firstname/always',
             'surname/lastname/always',
             'mail/email/always',
+            'userPrincipalName/idnumber/always',
             'city/city/always',
             'country/country/always',
             'department/department/always',

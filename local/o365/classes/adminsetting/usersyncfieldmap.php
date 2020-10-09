@@ -55,6 +55,7 @@ class usersyncfieldmap extends fieldmap {
 
         $remotefields = [
             'objectId' => get_string('settings_fieldmap_field_objectId', 'local_o365'),
+            'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'local_o365'),
             'displayName' => get_string('settings_fieldmap_field_displayName', 'local_o365'),
             'givenName' => get_string('settings_fieldmap_field_givenName', 'local_o365'),
             'surname' => get_string('settings_fieldmap_field_surname', 'local_o365'),
