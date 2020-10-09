@@ -633,5 +633,16 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2020020302', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2020020303) {
+        $fieldmapsettings = get_config('local_o365', 'fieldmap');
+        $fieldmapsettings = unserialize($fieldmapsettings);
+        foreach ($fieldmapsettings as $key => $setting) {
+            $fieldmapsettings[$key] = str_replace('facsimileTelephoneNumber', 'faxNumber', $setting);
+        }
+        set_config('fieldmap', serialize($fieldmapsettings), 'local_o365');
+
+        upgrade_plugin_savepoint($result, '2020020303', 'local', 'o365');
+    }
+
     return $result;
 }
