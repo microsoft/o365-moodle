@@ -1761,6 +1761,7 @@ class unified extends \local_o365\rest\o365api {
                 'companyName',
                 'preferredLanguage',
                 'businessPhones',
+                'facsimileTelephoneNumber',
                 'mobilePhone',
                 'employeeId',
             ];
