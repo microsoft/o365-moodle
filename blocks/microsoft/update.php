@@ -26,9 +26,16 @@ require_login();
 $aadsync = get_config('local_o365', 'aadsync');
 $aadsync = array_flip(explode(',', $aadsync));
 // Only profile sync once for each session.
-if (empty($SESSION->block_microsoft_profilesync) && isset($aadsync['photosynconlogin'])) {
-    $PAGE->requires->jquery();
-    $usersync = new \local_o365\feature\usersync\main();
-    $usersync->assign_photo($USER->id, null);
-    $SESSION->block_microsoft_profilesync = true;
+if (empty($SESSION->block_microsoft_profilesync)) {
+    if (isset($aadsync['photosynconlogin']) || isset($aadsync['tzsynconlogin'])) {
+        $PAGE->requires->jquery();
+        $usersync = new \local_o365\feature\usersync\main();
+        if (isset($aadsync['photosynconlogin'])) {
+            $usersync->assign_photo($USER->id, null);
+        }
+        if (isset($aadsync['tzsynconlogin'])) {
+            $usersync->sync_timezone($USER->id, null);
+        }
+        $SESSION->block_microsoft_profilesync = true;
+    }
 }

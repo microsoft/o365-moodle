@@ -77,7 +77,7 @@ class configmulticheckboxchoiceshelp extends \admin_setting_configmulticheckbox 
             }
             $helphtml = $OUTPUT->help_icon('help_user_'.$key, 'local_o365');
             $options[] = '<input type="checkbox" id="'.$this->get_id().'_'.$key.'" name="'.$this->get_full_name()
-                .'['.$key.']" value="1" '.$checked.' />'.'<label for="'.$this->get_id().'_'.$key.'">'
+                .'['.$key.']" value="1" '.$checked.' />'.'<label for="'.$this->get_id().'_'.$key.'"> '
                 .highlightfast($query, $description).'</label>'.$helphtml;
         }
         if (is_null($default)) {

@@ -163,7 +163,8 @@ class block_microsoft extends block_base {
         $aadsync = get_config('local_o365', 'aadsync');
         $aadsync = array_flip(explode(',', $aadsync));
         // Only profile sync once for each session.
-        if (empty($SESSION->block_microsoft_profilesync) && isset($aadsync['photosynconlogin'])) {
+        if (empty($SESSION->block_microsoft_profilesync) &&
+            (isset($aadsync['photosynconlogin']) || isset($aadsync['tzsynconlogin']))) {
             $PAGE->requires->jquery();
             $PAGE->requires->js('/blocks/microsoft/js/microsoft.js');
             $PAGE->requires->js_init_call('microsoft_update_profile', array($CFG->wwwroot));

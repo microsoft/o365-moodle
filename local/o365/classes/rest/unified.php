@@ -2100,4 +2100,18 @@ class unified extends \local_o365\rest\o365api {
 
         return $this->betaapicall('post', '/teams', json_encode($teamdata));
     }
+
+    /**
+     * Get user timezone in Outlook settings.
+     *
+     * @param $upn
+     *
+     * @return array|null
+     */
+    public function get_user_timezone_by_upn($upn) {
+        $endpoint = '/users/' . $upn . '/mailboxSettings/timeZone';
+        $response = $this->betaapicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
 }
