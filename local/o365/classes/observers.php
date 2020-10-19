@@ -272,6 +272,18 @@ class observers {
                 return false;
             }
 
+            if (!$existinguserdata = \core_user::get_user($userid)) {
+                // Moodle user doesn't exist, nothing to do.
+                return false;
+            }
+
+            // Skip field mapping if the user uses auth_oidc, and matching record is stored in local_o365_objects table.
+            if ($existinguserdata->auth == 'oidc') {
+                if ($DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $userid])) {
+                    return true;
+                }
+            }
+            
             $idtoken = \auth_oidc\jwt::instance_from_encoded($o365user->get_idtoken());
             $apiclient = \local_o365\utils::get_api($userid);
             $userdata = $apiclient->get_user($o365user->objectid);
