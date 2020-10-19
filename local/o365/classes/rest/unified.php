@@ -1734,6 +1734,37 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Update a course group's name
+     *
+     * @param int $courseid The ID of the Moodle group.
+     * @param string $fullname The new name of the course / group
+     *
+     * @return bool|null|string True if successful, null if not applicable, string if other API error.
+     * @throws \dml_exception
+     */
+    public function update_course_group_name($courseid, $fullname) {
+        global $DB;
+
+        if (empty($fullname)) {
+            return null;
+        }
+
+        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
+        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
+        if (empty($coursegroupobject)) {
+            return null;
+        }
+
+        $groupdata = [
+            'id'          => $coursegroupobject->objectid,
+            'displayName' => $fullname,
+        ];
+
+        $response = $this->update_group($groupdata);
+        return $response;
+    }
+
+    /**
      * Get a specific user's information.
      *
      * @param string $oid The user's object id.

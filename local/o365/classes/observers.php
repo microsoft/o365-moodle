@@ -533,15 +533,32 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_updated(\core\event\course_updated $event) {
-        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
         $courseid = $event->objectid;
         $eventdata = $event->get_data();
         if (!empty($eventdata['other'])) {
-            $sharepoint = static::construct_sharepoint_api_with_system_user();
-            if (!empty($sharepoint)) {
-                $sharepoint->update_course_site($courseid, $eventdata['other']['shortname'], $eventdata['other']['fullname']);
+            $shortname = $eventdata['other']['shortname'];
+            $fullname = $eventdata['other']['fullname'];
+
+            if (\local_o365\feature\usergroups\utils::is_enabled() === true &&
+                \local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+
+                try {
+                    // Update the course group's name
+                    $apiclient = \local_o365\utils::get_api();
+                    $apiclient->update_course_group_name($courseid, $fullname);
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug($e->getMessage(), 'handle_course_updated', $e);
+                }
+            }
+
+            if (\local_o365\rest\sharepoint::is_configured() === true) {
+                $sharepoint = static::construct_sharepoint_api_with_system_user();
+                if (!empty($sharepoint)) {
+                    $sharepoint->update_course_site($courseid, $shortname, $fullname);
+                }
             }
         }
     }
