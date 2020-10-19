@@ -571,21 +571,48 @@ class observers {
      * Handle course_updated event.
      *
      * Does the following:
-     *     - update associated sharepoint sites and associated groups.
+     *  - update Teams or group names, if the options are enabled.
+     *  - update associated sharepoint sites.
      *
      * @param \core\event\course_updated $event The triggered event.
      * @return bool Success/Failure.
      */
     public static function handle_course_updated(\core\event\course_updated $event) {
-        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
+        global $DB;
+
+        if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
         $courseid = $event->objectid;
         $eventdata = $event->get_data();
         if (!empty($eventdata['other'])) {
-            $sharepoint = static::construct_sharepoint_api_with_system_user();
-            if (!empty($sharepoint)) {
-                $sharepoint->update_course_site($courseid, $eventdata['other']['shortname'], $eventdata['other']['fullname']);
+            // Update Teams/group names.
+            $teamsyncenabled = get_config('local_o365', 'team_name_sync');
+            $groupsyncenabled = get_config('local_o365', 'group_name_sync');
+
+            $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
+            $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, true);
+
+            if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
+                if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
+                    if ($teamsyncenabled) {
+                        $coursegroups->update_team_name($courseid);
+                    }
+                } else if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+                    if ($groupsyncenabled) {
+                        $coursegroups->update_group_name($courseid);
+                    }
+                }
+            }
+
+            // Update sharepoint sites.
+            $shortname = $eventdata['other']['shortname'];
+            $fullname = $eventdata['other']['fullname'];
+            if (\local_o365\rest\sharepoint::is_configured() === true) {
+                $sharepoint = static::construct_sharepoint_api_with_system_user();
+                if (!empty($sharepoint)) {
+                    $sharepoint->update_course_site($courseid, $shortname, $fullname);
+                }
             }
         }
     }

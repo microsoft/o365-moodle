@@ -248,6 +248,8 @@ $string['settings_main_name_option_full_name'] = 'Full name';
 $string['settings_main_name_option_short_name'] = 'Short name';
 $string['settings_main_name_option_id'] = 'Moodle created ID';
 $string['settings_main_name_option_id_number'] = 'ID number';
+$string['settings_team_name_sync'] = 'Update Teams name on course update';
+$string['settings_team_name_sync_desc'] = 'If enabled, when Moodle course is updated, the name of the Team will be updated according to the latest Teams name settings.';
 
 // Settings in the "Group name" section of the "Sync settings" tab.
 $string['settings_secthead_group_name'] = 'Group name';
@@ -281,6 +283,8 @@ $string['settings_group_names_sample'] = 'Assume a course has:
 <li>ID number: <b>Sample ID 15</b></li>
 </ul>
 Your current setting will use display name "<b>{$a->displayname}</b>" and mail alias "<b>{$a->mailalias}</b>" to create a group. Click "Save changes" button below to see how your settings will change this.';
+$string['settings_group_name_sync'] = 'Update group name on course update';
+$string['settings_group_name_sync_desc'] = 'If enabled, when Moodle course is updated, the name of the group will be updated according to the latest group name settings. Note group email alias will not be updated.';
 
 // Settings section headings of the "Advanced" tab.
 $string['settings_header_tools'] = 'Tools';
