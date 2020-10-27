@@ -273,42 +273,53 @@ class observers {
             }
 
             $idtoken = \auth_oidc\jwt::instance_from_encoded($o365user->get_idtoken());
-            $apiclient = \local_o365\utils::get_api($userid);
-            $userdata = $apiclient->get_user($o365user->objectid);
-            // Azuread users objectid, unified uses id.
-            if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
-                $userdata['objectId'] = $userdata['id'];
-            }
 
-            // Extract basic information from the IDToken.
-            $updateduser = new \stdClass;
-            $firstname = $idtoken->claim('given_name');
-            if (!empty($firstname)) {
-                $updateduser->firstname = $firstname;
-            }
+            $userdata = [];
 
-            $lastname = $idtoken->claim('family_name');
-            if (!empty($lastname)) {
-                $updateduser->lastname = $lastname;
-            }
+            if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
+                $apiclient = \local_o365\utils::get_api($userid);
+                $userdata = $apiclient->get_user($o365user->objectid);
+                // Azuread users objectid, unified uses id.
+                if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
+                    $userdata['objectId'] = $userdata['id'];
+                }
+            } else {
+                // Extract basic information from the IDToken.
+                $oid = $idtoken->claim('oid');
+                if (!empty($oid)) {
+                    $userdata['objectId'] = $oid;
+                }
 
-            $email = $idtoken->claim('email');
-            if (!empty($email)) {
-                $updateduser->email = $email;
-            }
+                $upn = $idtoken->claim('upn');
+                if (!empty($upn)) {
+                    $userdata['userPrincipalName'] = $upn;
+                }
 
-            if (empty($updateduser->email)) {
-                $aademail = $idtoken->claim('upn');
-                if (!empty($aademail)) {
-                    $aademailvalidateresult = filter_var($aademail, FILTER_VALIDATE_EMAIL);
-                    if (!empty($aademailvalidateresult)) {
-                        $updateduser->email = $aademail;
+                $firstname = $idtoken->claim('given_name');
+                if (!empty($firstname)) {
+                    $userdata['givenName'] = $firstname;
+                }
+
+                $lastname = $idtoken->claim('family_name');
+                if (!empty($lastname)) {
+                    $userdata['surname'] = $lastname;
+                }
+
+                $email = $idtoken->claim('email');
+                if (!empty($email)) {
+                    $userdata['mail'] = $email;
+                } else {
+                    if (!empty($upn)) {
+                        $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                        if (!empty($aademailvalidateresult)) {
+                            $userdata['mail'] = $aademailvalidateresult;
+                        }
                     }
                 }
             }
 
             // Then apply the custom field map.
-            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, $updateduser, $eventtype);
+            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), $eventtype);
 
             // Save profile data.
             if (!empty($updateduser)) {
