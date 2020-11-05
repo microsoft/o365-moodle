@@ -96,46 +96,54 @@ class base {
             return false;
         }
 
-        $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
-
-        $userinfo = [
-            'lang' => 'en',
-            'idnumber' => $username,
-        ];
-
-        $firstname = $idtoken->claim('given_name');
-        if (!empty($firstname)) {
-            $userinfo['firstname'] = $firstname;
+        if ($userrecord = $DB->get_record('user', ['username' => $username])) {
+            $eventtype = 'login';
+        } else {
+            $eventtype = 'create';
         }
 
-        $lastname = $idtoken->claim('family_name');
-        if (!empty($lastname)) {
-            $userinfo['lastname'] = $lastname;
-        }
+        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
+        if (!empty($o365installed) && \local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
+            $apiclient = \local_o365\utils::get_api($tokenrec->userid);
+            $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+        } else {
+            $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
 
-        $email = $idtoken->claim('email');
-        if (!empty($email)) {
-            $userinfo['email'] = $email;
-        }
+            $oid = $idtoken->claim('oid');
+            if (!empty($oid)) {
+                $userdata['objectId'] = $oid;
+            }
 
-        if (empty($userinfo['email'])) {
-            $aademail = $idtoken->claim('upn');
-            if (!empty($aademail)) {
-                $aademailvalidateresult = filter_var($aademail, FILTER_VALIDATE_EMAIL);
-                if (!empty($aademailvalidateresult)) {
-                    $userinfo['email'] = $aademail;
+            $upn = $idtoken->claim('upn');
+            if (!empty($upn)) {
+                $userdata['userPrincipalName'] = $upn;
+            }
+
+            $firstname = $idtoken->claim('given_name');
+            if (!empty($firstname)) {
+                $userdata['givenName'] = $firstname;
+            }
+
+            $lastname = $idtoken->claim('family_name');
+            if (!empty($lastname)) {
+                $userdata['surname'] = $lastname;
+            }
+
+            $email = $idtoken->claim('email');
+            if (!empty($email)) {
+                $userdata['mail'] = $email;
+            } else {
+                if (!empty($upn)) {
+                    $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                    if (!empty($aademailvalidateresult)) {
+                        $userdata['mail'] = $aademailvalidateresult;
+                    }
                 }
             }
         }
 
-        // O365 provides custom field mapping. Perform that mapping now if it's installed.
-        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
-        if (!empty($o365installed)) {
-            $apiclient = \local_o365\utils::get_api($tokenrec->userid);
-            $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
-            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, (object)$userinfo, 'login');
-            $userinfo = (array)$updateduser;
-        }
+        $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
+        $userinfo = (array)$updateduser;
 
         return $userinfo;
     }
