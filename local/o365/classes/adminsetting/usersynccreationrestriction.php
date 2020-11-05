@@ -58,7 +58,7 @@ class usersynccreationrestriction extends \admin_setting {
             'department' => get_string('settings_fieldmap_field_department', 'local_o365'),
             'companyName' => get_string('settings_fieldmap_field_companyName', 'local_o365'),
             'telephoneNumber' => get_string('settings_fieldmap_field_telephoneNumber', 'local_o365'),
-            'facsimileTelephoneNumber' => get_string('settings_fieldmap_field_facsimileTelephoneNumber', 'local_o365'),
+            'faxNumber' => get_string('settings_fieldmap_field_faxNumber', 'local_o365'),
             'mobile' => get_string('settings_fieldmap_field_mobile', 'local_o365'),
             'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'local_o365'),
             'employeeId' => get_string('settings_fieldmap_field_employeeId', 'local_o365'),
