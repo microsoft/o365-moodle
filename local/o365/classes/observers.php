@@ -752,7 +752,11 @@ class observers {
                         $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
                         if (!empty($roles)) {
                             $roles = array_keys($roles);
-                            if (in_array($roleid, $roles)) {
+                            $userroles = get_user_roles($context, $userid, false);
+                            $userroleids = array_column($userroles, 'roleid');
+                            unset($userroleids[$roleid]);
+
+                            if (empty(array_intersect($roles, $userroleids))) {
                                 $apiclient = \local_o365\utils::get_api();
                                 $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
                                 // add the user back to the group as member
