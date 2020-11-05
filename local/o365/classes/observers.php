@@ -446,8 +446,7 @@ class observers {
         }
 
         // Check if the user was suspended, or unsuspended. Add or remove them from the teams course group as appropriate.
-        $suspendedusers = get_suspended_userids(\context_course::instance($courseid));
-        if (isset($suspendedusers[$userid])) {
+        if (!is_enrolled(\context_course::instance($courseid), $userid, null, true)) {
             // We need to remove the user.
             try {
                 // Remove user from course usergroup.
