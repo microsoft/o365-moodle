@@ -33,34 +33,13 @@ global $install;
 
 // Define tab constants
 if (!defined('LOCAL_O365_TAB_SETUP')) {
-    /**
-     * LOCAL_O365_TAB_SETUP - Setup settings.
-     */
-    define('LOCAL_O365_TAB_SETUP', 0);
-    /**
-     * LOCAL_O365_TAB_OPTIONS - Options to customize the plugins.
-     */
-    define('LOCAL_O365_TAB_OPTIONS', 1);
-    /**
-     * LOCAL_O365_TAB_ADVANCED - Admin tools + advanced settings.
-     */
-    define('LOCAL_O365_TAB_ADVANCED', 2);
-    /**
-     * LOCAL_O365_TAB_CONNECTIONS - User connections table.
-     */
-    define('LOCAL_O365_TAB_CONNECTIONS', 4);
-    /**
-     * LOCAL_O365_TAB_SDS - School data sync
-     */
-    define('LOCAL_O365_TAB_SDS', 3);
-    /**
-     * LOCAL_O365_TAB_TEAMS - Teams tab.
-     */
-    define('LOCAL_O365_TAB_TEAMS', 5);
-    /**
-     * LOCAL_O365_TAB_MOODLE_APP - Teams Moodle app.
-     */
-    define('LOCAL_O365_TAB_MOODLE_APP', 6);
+    define('LOCAL_O365_TAB_SETUP', 0); // Setup settings.
+    define('LOCAL_O365_TAB_SYNC', 1); // Sync settings.
+    define('LOCAL_O365_TAB_ADVANCED', 2); // Admin tools + advanced settings.
+    define('LOCAL_O365_TAB_SDS', 3); // School data sync.
+    define('LOCAL_O365_TAB_CONNECTIONS', 4); // User connections table.
+    define('LOCAL_O365_TAB_TEAMS', 5); // Teams integration settings.
+    define('LOCAL_O365_TAB_MOODLE_APP', 6); // Teams Moodle app.
 }
 
 if ($hassiteconfig) {
@@ -69,7 +48,7 @@ if ($hassiteconfig) {
 
     $tabs = new \local_o365\adminsetting\tabs('local_o365/tabs', $settings->name, false);
     $tabs->addtab(LOCAL_O365_TAB_SETUP, new lang_string('settings_header_setup', 'local_o365'));
-    $tabs->addtab(LOCAL_O365_TAB_OPTIONS, new lang_string('settings_header_syncsettings', 'local_o365'));
+    $tabs->addtab(LOCAL_O365_TAB_SYNC, new lang_string('settings_header_syncsettings', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_ADVANCED, new lang_string('settings_header_advanced', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_SDS, new lang_string('settings_header_sds', 'local_o365'));
     $tabs->addtab(LOCAL_O365_TAB_TEAMS, new lang_string('settings_header_teams', 'local_o365'));
@@ -83,7 +62,7 @@ if ($hassiteconfig) {
     if ($tab == LOCAL_O365_TAB_SETUP || !empty($install)) {
         $stepsenabled = 1;
 
-        // STEP 1: Registration.
+        // Step 1: Registration.
         $oidcsettings = new \moodle_url('/admin/settings.php?section=authsettingoidc');
         $label = new lang_string('settings_setup_step1', 'local_o365');
         $desc = new lang_string('settings_setup_step1_desc', 'local_o365', $CFG->wwwroot);
@@ -100,10 +79,11 @@ if ($hassiteconfig) {
         $configdesc = new lang_string('settings_clientsecret_desc', 'local_o365');
         $settings->add(new admin_setting_configtext('auth_oidc/clientsecret', $configkey, $configdesc, '', PARAM_TEXT));
 
-        $configdesc = new \lang_string('settings_setup_step1_credentials_end', 'local_o365', (object)['oidcsettings' => $oidcsettings->out()]);
+        $configdesc = new \lang_string('settings_setup_step1_credentials_end', 'local_o365',
+            (object)['oidcsettings' => $oidcsettings->out()]);
         $settings->add(new admin_setting_heading('local_o365_setup_step1_credentialsend', '', $configdesc));
 
-        // STEP 2: Connection Method.
+        // Step 2: Connection Method.
         $clientid = get_config('auth_oidc', 'clientid');
         $clientsecret = get_config('auth_oidc', 'clientsecret');
         if (!empty($clientid) && !empty($clientsecret)) {
@@ -136,7 +116,7 @@ if ($hassiteconfig) {
             }
         }
 
-        // STEP 3: Consent and additional information.
+        // Step 3: Consent and additional information.
         if ($stepsenabled === 3) {
             $label = new lang_string('settings_setup_step3', 'local_o365');
             $desc = new lang_string('settings_setup_step3_desc', 'local_o365');
@@ -150,7 +130,8 @@ if ($hassiteconfig) {
             $desc = new lang_string('settings_aadtenant_details', 'local_o365');
             $default = '';
             $paramtype = PARAM_URL;
-            $settings->add(new \local_o365\adminsetting\serviceresource('local_o365/aadtenant', $label, $desc, $default, $paramtype));
+            $settings->add(new \local_o365\adminsetting\serviceresource('local_o365/aadtenant', $label, $desc, $default,
+                $paramtype));
 
             $label = new lang_string('settings_odburl', 'local_o365');
             $desc = new lang_string('settings_odburl_details', 'local_o365');
@@ -177,8 +158,7 @@ if ($hassiteconfig) {
         }
     }
 
-    if ($tab == LOCAL_O365_TAB_OPTIONS || !empty($install)) {
-
+    if ($tab == LOCAL_O365_TAB_SYNC || !empty($install)) {
         $label = new lang_string('settings_options_usersync', 'local_o365');
         $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
@@ -195,11 +175,14 @@ if ($hassiteconfig) {
             'appassign' => new lang_string('settings_aadsync_appassign', 'local_o365'),
             'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
             'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
+            'tzsync' => new lang_string('settings_addsync_tzsync', 'local_o365'),
+            'tzsynconlogin' => new lang_string('settings_addsync_tzsynconlogin', 'local_o365'),
             'nodelta' => new lang_string('settings_aadsync_nodelta', 'local_o365'),
             'emailsync' => new lang_string('settings_aadsync_emailsync', 'local_o365'),
         ];
         $default = [];
-        $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default, $choices));
+        $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default,
+            $choices));
 
         $key = 'local_o365/usersynccreationrestriction';
         $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');

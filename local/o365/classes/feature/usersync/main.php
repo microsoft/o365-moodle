@@ -26,6 +26,8 @@ namespace local_o365\feature\usersync;
 use \local_o365\oauth2\clientdata;
 use \local_o365\httpclient;
 
+require_once($CFG->dirroot . '/user/lib.php');
+
 class main {
     protected $clientdata = null;
     protected $httpclient = null;
@@ -53,7 +55,7 @@ class main {
      */
     public static function is_enabled() {
         $aadsyncenabled = get_config('local_o365', 'aadsync');
-        if (empty($aadsyncenabled) || $aadsyncenabled === 'photosynconlogin') {
+        if (empty($aadsyncenabled) || $aadsyncenabled === 'photosynconlogin' || $aadsyncenabled === 'tzsynconlogin') {
             return false;
         }
         return true;
@@ -251,6 +253,30 @@ class main {
             $DB->update_record('local_o365_appassign', $record);
         }
         return $result;
+    }
+
+    /**
+     * Sync timezone of user from Outlook to Moodle.
+     *
+     * @param $muserid
+     * @param $user
+     */
+    public function sync_timezone($muserid, $user) {
+        $apiclient = $this->construct_outlook_api($muserid, true);
+        if (empty($user)) {
+            $o365user = \local_o365\obj\o365user::instance_from_muserid($muserid);
+            $user = $o365user->upn;
+        }
+        $remotetimezone = $apiclient->get_user_timezone_by_upn($user);
+        if (is_array($remotetimezone) && !empty($remotetimezone['value'])) {
+            $remotetimezonesetting = $remotetimezone['value'];
+            $moodletimezone = \core_date::normalise_timezone($remotetimezonesetting);
+            if ($moodletimezone) {
+                $existinguser = \core_user::get_user($muserid);
+                $existinguser->timezone = $moodletimezone;
+                user_update_user($existinguser, false, true);
+            }
+        }
     }
 
     /**
@@ -839,6 +865,21 @@ class main {
                 }
             }
         }
+
+        // User timezone.
+        if (!empty($syncoptions['tzsync'])) {
+            if (!PHPUNIT_TEST) {
+                try {
+                    if (!empty($newmuser)) {
+                        $this->sync_timezone($newmuser->id, $aaduserdata['upnlower']);
+                    }
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not sync timezone for user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
+                        $e->getMessage());
+                }
+            }
+        }
+
         return $newmuser;
     }
 
@@ -876,6 +917,18 @@ class main {
                 } catch (\Exception $e) {
                     $this->mtrace('Could not assign profile photo to user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
+            }
+        }
+
+        // Perform timezone sync.
+        if (isset($syncoptions['tzsync'])) {
+            try {
+                if (!PHPUNIT_TEST) {
+                    $this->sync_timezone($existinguser->muserid, $aaduserdata['upnlower']);
+                }
+            } catch (\Exception $e) {
+                $this->mtrace('Could not sync timezone for user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
+                    $e->getMessage());
             }
         }
 
