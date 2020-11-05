@@ -417,17 +417,23 @@ class authcode extends \auth_oidc\loginflow\base {
         if (!empty($tokenrec)) {
             // Already connected user.
             if (empty($tokenrec->userid)) {
-                // ERROR1
-                throw new \moodle_exception('exception_tokenemptyuserid', 'auth_oidc');
-            }
-            $user = $DB->get_record('user', ['id' => $tokenrec->userid]);
-            if (empty($user)) {
-                // ERROR2
-                $failurereason = AUTH_LOGIN_NOUSER;
-                $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
-                $event = \core\event\user_login_failed::create($eventdata);
-                $event->trigger();
-                throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
+                // Existing token record, but missing the user ID.
+                $user = $DB->get_record('user', ['username' => $tokenrec->username]);
+                if (empty($user)) {
+                    throw new \moodle_exception('exception_tokenemptyuserid', 'auth_oidc', null, null, 3);
+                }
+                $tokenrec->userid = $user->id;
+                $DB->update_record('auth_oidc_token', $tokenrec);
+            } else {
+                // Existing token with a user ID.
+                $user = $DB->get_record('user', ['id' => $tokenrec->userid]);
+                if (empty($user)) {
+                    $failurereason = AUTH_LOGIN_NOUSER;
+                    $eventdata = ['other' => ['username' => $user->username, 'reason' => $failurereason]];
+                    $event = \core\event\user_login_failed::create($eventdata);
+                    $event->trigger();
+                    throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
+                }
             }
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
