@@ -359,9 +359,9 @@ class main {
      * Apply the configured field map.
      *
      * @param array $aaddata User data from Azure AD.
-     * @param array $user Moodle user data.
+     * @param \stdClass $user Moodle user data.
      * @param string $eventtype 'login', or 'create'
-     * @return array Modified Moodle user data.
+     * @return \stdClass Modified Moodle user data.
      */
     public static function apply_configured_fieldmap(array $aaddata, \stdClass $user, $eventtype) {
         $fieldmaps = get_config('local_o365', 'fieldmap');
@@ -407,6 +407,44 @@ class main {
         }
 
         return $user;
+    }
+
+    /**
+     * Check if any of the fields in the field map configuration would require calling Graph API function to get user details.
+     *
+     * @param $eventtype
+     *
+     * @return bool
+     */
+    public static function fieldmap_require_graph_api_call($eventtype) {
+        $requireapicall = false;
+
+        $fieldmaps = get_config('local_o365', 'fieldmap');
+        if ($fieldmaps !== false) {
+            $fieldmaps = @unserialize($fieldmaps);
+            if (!is_array($fieldmaps)) {
+                $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
+            }
+        }
+
+        $idtokenfields = ['givenName', 'surname', 'mail', 'objectId', 'userPrincipalName'];
+
+        foreach ($fieldmaps as $fieldmap) {
+            $fieldmap = explode('/', $fieldmap);
+
+            if (count($fieldmap) !== 3) {
+                continue;
+            }
+
+            if (!in_array($fieldmap[0], $idtokenfields)) {
+                if ($fieldmap[2] == 'always' || $fieldmap[2] == 'on' . $eventtype) {
+                    $requireapicall = true;
+                    break;
+                }
+            }
+        }
+
+        return $requireapicall;
     }
 
     /**
