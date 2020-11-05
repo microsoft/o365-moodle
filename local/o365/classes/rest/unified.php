@@ -651,6 +651,14 @@ class unified extends \local_o365\rest\o365api {
             'companyName',
             'preferredLanguage',
             'employeeId',
+            'businessPhones',
+            'faxNumber',
+            'mobilePhone',
+            'officeLocation',
+            'preferredName',
+            'manager',
+            'teams',
+            'groups',
         ];
     }
 
@@ -734,6 +742,27 @@ class unified extends \local_o365\rest\o365api {
         }
 
         return [$users, $skiptoken, $deltatoken];
+    }
+
+    public function get_user_manager($userobjectid) {
+        $endpoint = "users/$userobjectid/manager";
+        $response = $this->apicall('get', $endpoint);
+        $result = $this->process_apicall_response($response, ['value' => null]);
+        return $result['value'];
+    }
+
+    public function get_user_groups($userobjectid) {
+        $endpoint = "users/$userobjectid/memberOf";
+        $response = $this->apicall('get', $endpoint);
+        $result = $this->process_apicall_response($response, ['value' => null]);
+        return $result['value'];
+    }
+
+    public function get_user_teams($userobjectid) {
+        $endpoint = "users/$userobjectid/joinedTeams";
+        $response = $this->apicall('get', $endpoint);
+        $result = $this->process_apicall_response($response, ['value' => null]);
+        return $result['value'];
     }
 
     /**
@@ -1744,27 +1773,7 @@ class unified extends \local_o365\rest\o365api {
         $odataqueries = [];
         $context = 'https://graph.microsoft.com/v1.0/$metadata#users/$entity';
         if ($params === 'default') {
-            $params = [
-                'id',
-                'userPrincipalName',
-                'displayName',
-                'givenName',
-                'surname',
-                'mail',
-                'streetAddress',
-                'city',
-                'postalCode',
-                'state',
-                'country',
-                'jobTitle',
-                'department',
-                'companyName',
-                'preferredLanguage',
-                'businessPhones',
-                'faxNumber',
-                'mobilePhone',
-                'employeeId',
-            ];
+            $params = $this->get_default_user_fields();
             $context = 'https://graph.microsoft.com/v1.0/$metadata#users(';
             $context = $context.join(',', $params).')/$entity';
             $odataqueries[] = '$select='.implode(',', $params);
