@@ -329,6 +329,32 @@ class main {
         return $apiclient->get_users_delta($params, $skiptoken, $deltatoken);
     }
 
+    public function get_user_manager($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $result = $apiclient->get_user_manager($userobjectid);
+        return $result->displayName;
+    }
+
+    public function get_user_groups($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $results = $apiclient->get_user_groups($userobjectid);
+        $groups = [];
+        foreach ($results as $result) {
+            $groups[] = $result['displayName'];
+        }
+        return join(',', $groups);
+    }
+
+    public function get_user_teams($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $results = $apiclient->get_users_teams($userobjectid);
+        $teams = [];
+        foreach ($results as $result) {
+            $teams[] = $result['displayName'];
+        }
+        return join(',', $teams);
+    }
+
     /**
      * Apply the configured field map.
      *
@@ -347,7 +373,11 @@ class main {
                 $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
             }
         }
-
+        if (\local_o365\rest\unified::is_configured()) {
+            $userobjectid = $aaddata['id'];
+        } else {
+            $userobjectid = $aaddata['objectId'];
+        }
         foreach ($fieldmaps as $fieldmap) {
             $fieldmap = explode('/', $fieldmap);
             if (count($fieldmap) !== 3) {
@@ -359,9 +389,7 @@ class main {
                 continue;
             }
             if (isset($aaddata[$remotefield])) {
-                if ($localfield !== "country") {
-                    $user->$localfield = $aaddata[$remotefield];
-                } else {
+                if ($localfield == "country") {
                     // Update country with two letter country code.
                     $incoming = strtoupper($aaddata[$remotefield]);
                     $countrymap = get_string_manager()->get_list_of_countries();
@@ -371,6 +399,17 @@ class main {
                         $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
                     }
                     $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
+                } else if ($localfield !== "manager") {
+                    $usermanager = \local_o365\feature\usersync\main::get_user_manager($userobjectid);
+                    $user->$localfield = join(',', $usermanager);
+                } else if ($localfield !== "teams") {
+                    $userteams = \local_o365\feature\usersync\main::get_user_teams($userobjectid);
+                    $user->$localfield = join(',', $userteams);
+                } else if ($localfield !== "groups") {
+                    $usergroups = \local_o365\feature\usersync\main::get_user_groups($userobjectid);
+                    $user->$localfield = join(',', $usergroups);
+                } else {
+                    $user->$localfield = $aaddata[$remotefield];
                 }
             }
         }
