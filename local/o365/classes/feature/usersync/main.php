@@ -1036,8 +1036,29 @@ class main {
         }
     }
 
+    /**
+     * Delete users that have been deleted from Office 365.
+     * This function will get the list of recently deleted users in the last 30 days first, and suspend their accounts.
+     * It will then try to find all remaining users matched with Office 365, and check if a valid user can be found.
+     * If a valid user cannot be found, it will suspend the user in the first run, and delete the user in the second run.
+     *
+     * So in a normal use case, where the option is enabled and not changed, and an Office 365 account is deleted:
+     *  - Their matching Moodle account will be suspended on the first task run after Office 365 account deletion;
+     *  - The Moodle account will be deleted on the first run 30 days after their Office 365 account deletion.
+     *
+     * In case the option to delete Moodle users is changed from disabled to enabled:
+     *  - If the deletion of the Office 365 account happened before 30 days:
+     *    - The matching Moodle account will be suspended on the first task run after the configuration change is made.
+     *    - The Moodle account will be deleted on the second task run after the configuration change is made.
+     *  - If the deletion of the Office 365 account happened within 30 days:
+     *    - The matching Moodle account will be suspended on the first task run after the configuration change is made.
+     *    - The Moodle account will be deleted on the first run 30 days after their Office 365 account deletion.
+     *
+     * @return bool
+     */
     public function delete_users() {
         global $CFG, $DB;
+
         try {
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
@@ -1046,6 +1067,7 @@ class main {
             $apiclient = new \local_o365\rest\unified($token, $httpclient);
         } catch (\Exception $e) {
             \local_o365\utils::debug('Could not construct graph api', 'delete_users', $e);
+
             return false;
         }
 
@@ -1064,13 +1086,7 @@ class main {
                                    AND u.suspended = ?
                                    AND u.auth = ?
                                    AND obj.objectid = ? ';
-                        $params = [trim(\core_text::strtolower($CFG->mnet_localhost_id)),
-                            '0',
-                            '0',
-                            'oidc',
-                            $deleteduser['id'],
-                            time()
-                        ];
+                        $params = [trim(\core_text::strtolower($CFG->mnet_localhost_id)), '0', '0', 'oidc', $deleteduser['id']];
                         $synceduser = $DB->get_record_sql($sql, $params);
                         if (!empty($synceduser)) {
                             $synceduser->suspended = 1;
@@ -1081,43 +1097,49 @@ class main {
                     }
                 }
             }
-            // Check if all Moodle users with oidc authentication are still existing users in Azure
-            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM,'param', false);
+
+            // Check if all Moodle users with oidc authentication are still existing users in Azure.
+            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM, 'param', false);
             $existingsql = $sql = 'SELECT u.*, obj.objectid
                               FROM {user} u
                               JOIN {local_o365_objects} obj ON obj.type = \'user\' AND obj.moodleid = u.id
                              WHERE u.mnethostid = ?
                                    AND u.deleted = ?
                                    AND u.auth = ?
-                                   AND obj.objectid '.$objectidsql;
-            $existingsqlparams = array_merge([trim(\core_text::strtolower($CFG->mnet_localhost_id)),
-                '0',
-                'oidc'
-            ], $objectidparams);
+                                   AND obj.objectid ' . $objectidsql;
+            $existingsqlparams = array_merge([trim(\core_text::strtolower($CFG->mnet_localhost_id)), '0', 'oidc'], $objectidparams);
             $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
             foreach ($existingusers as $existinguser) {
                 try {
                     $user = $apiclient->get_user($existinguser->objectid);
                 } catch (\Exception $e) {
-                    // Do safe delete for missing users - first suspend, on second run delete
-                    if ($existinguser->suspended) {
-                        $this->mtrace('Could not find suspended user '.$existinguser->username.' in Azure AD. Deleting user...');
-                        $userid = $existinguser->id;
-                        $objectid = $existinguser->objectid;
-                        if (delete_user($existinguser)) {
-                            $DB->delete_records('local_o365_objects', ['objectid' => $objectid]);
-                            $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+                    // Only respond to resource does not exist exception, and ignore other exceptions.
+                    $usernotexisterrormessage = "Resource '{$existinguser->objectid}' " .
+                        "does not exist or one of its queried reference-property objects are not present.";
+                    if ($e->getMessage() == $usernotexisterrormessage) {
+                        // Do safe delete for missing users - first suspend, on second run delete
+                        if ($existinguser->suspended) {
+                            $this->mtrace('Could not find suspended user ' . $existinguser->username .
+                                ' in Azure AD. Deleting user...');
+                            $userid = $existinguser->id;
+                            $objectid = $existinguser->objectid;
+                            if (delete_user($existinguser)) {
+                                $DB->delete_records('local_o365_objects', ['objectid' => $objectid]);
+                                $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+                            }
+                        } else if (!$existinguser->suspended) {
+                            $this->mtrace('Could not find user ' . $existinguser->username . ' in Azure AD. Suspending user...');
+                            $existinguser->suspended = 1;
+                            $DB->update_record('user', $existinguser);
                         }
-                    } else if (!$existinguser->suspended) {
-                        $this->mtrace('Could not find user '.$existinguser->username.' in Azure AD. Suspending user...');
-                        $existinguser->suspended = 1;
-                        $DB->update_record('user', $existinguser);
                     }
                 }
             }
+
             return true;
         } catch (\Exception $e) {
             \local_o365\utils::debug('Could not delete users', 'delete_users', $e);
+
             return false;
         }
     }
