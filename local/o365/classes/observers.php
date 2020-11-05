@@ -557,13 +557,17 @@ class observers {
      */
     public static function handle_course_deleted(\core\event\course_deleted $event) {
         global $DB;
-        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
         $courseid = $event->objectid;
 
         // delete course group
         \local_o365\feature\usergroups\utils::delete_course_group($courseid);
+
+        if (\local_o365\rest\sharepoint::is_configured() !== true) {
+            return false;
+        }
 
         $sharepoint = static::construct_sharepoint_api_with_system_user();
         if (!empty($sharepoint)) {
