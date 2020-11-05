@@ -559,7 +559,7 @@ abstract class base {
 
         foreach ($courses as $course) {
             // OneNote sections have character and length restrictions. Ensure course name complies.
-            $coursename = $course->fullname;
+            $coursename = trim($course->fullname);
             $restricted = ['?', '*', '\\', '/', ':', '<', '>', '|', '&', '#', '"', '\'', '%', '~'];
             $coursename = str_replace($restricted, '', $coursename);
             if (strlen($coursename) >= 50) {
