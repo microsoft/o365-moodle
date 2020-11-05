@@ -802,7 +802,7 @@ class main {
                 if ($existinguser->auth === 'oidc') {
                     if(isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
-                        $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                        $fullexistinguser = \core_user::get_user_by_username($existinguser->username);
                         $this->update_user_from_aaddata($user, $fullexistinguser);
                         $this->mtrace('User is now updated.');
                     }
