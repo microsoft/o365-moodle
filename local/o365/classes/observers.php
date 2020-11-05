@@ -964,4 +964,33 @@ class observers {
 
         return true;
     }
+
+    /**
+     * If "clientid" value of "auth_oidc" is changed, clear all tokens reported to user.
+     *
+     * @param \core\event\config_log_created $event
+     *
+     * @return bool
+     */
+    public static function handle_config_log_created(\core\event\config_log_created $event) {
+        global $DB;
+
+        $eventdata = $event->get_data();
+
+        if ($eventdata['other']['plugin'] == 'auth_oidc' && $eventdata['other']['name'] == 'clientid') {
+            // Clear local_o365_token table.
+            $DB->delete_records('local_o365_token');
+
+            // Clear auth_oidc_token table.
+            $DB->delete_records('auth_oidc_token');
+
+            // Clear local_o365_connections table.
+            $DB->delete_records('local_o365_connections');
+
+            // Clear user records in local_o365_objects table.
+            $DB->delete_records('local_o365_objects', ['type' => 'user']);
+        }
+
+        return true;
+    }
 }
