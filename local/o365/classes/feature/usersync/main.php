@@ -404,6 +404,7 @@ class main {
         } else {
             $userobjectid = $aaddata['objectId'];
         }
+        $usersync = new \local_o365\feature\usersync\main();
         foreach ($fieldmaps as $fieldmap) {
             $fieldmap = explode('/', $fieldmap);
             if (count($fieldmap) !== 3) {
@@ -425,14 +426,14 @@ class main {
                         $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
                     }
                     $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
-                } else if ($localfield !== "manager") {
-                    $usermanager = \local_o365\feature\usersync\main::get_user_manager($userobjectid);
+                } else if ($localfield == "manager") {
+                    $usermanager = $usersync->get_user_manager($userobjectid);
                     $user->$localfield = join(',', $usermanager);
-                } else if ($localfield !== "teams") {
-                    $userteams = \local_o365\feature\usersync\main::get_user_teams($userobjectid);
+                } else if ($localfield == "teams") {
+                    $userteams = $usersync->get_user_teams($userobjectid);
                     $user->$localfield = join(',', $userteams);
-                } else if ($localfield !== "groups") {
-                    $usergroups = \local_o365\feature\usersync\main::get_user_groups($userobjectid);
+                } else if ($localfield == "groups") {
+                    $usergroups = $usersync->get_user_groups($userobjectid);
                     $user->$localfield = join(',', $usergroups);
                 } else {
                     $user->$localfield = $aaddata[$remotefield];
