@@ -399,7 +399,7 @@ class main {
                 $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
             }
         }
-        if (\local_o365\rest\unified::is_configured()) {
+        if (\local_o365\rest\unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
             $userobjectid = $aaddata['id'];
         } else {
             $userobjectid = $aaddata['objectId'];
