@@ -31,6 +31,8 @@ class base {
     protected $httpclient;
 
     public function __construct() {
+        global $DB;
+
         $default = [
             'opname' => get_string('pluginname', 'auth_oidc')
         ];
@@ -47,6 +49,32 @@ class base {
             'field_updatelocal_email' => 'oncreate',
             'field_lock_email' => 'unlocked',
         ];
+
+        // If local_o365 plugin is installed, use its settings for the core fields.
+        if ($DB->record_exists('config_plugins', ['plugin' => 'local_o365', 'name' => 'version'])) {
+            $fieldmaps = get_config('local_o365', 'fieldmap');
+            if ($fieldmaps === false) {
+                $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
+            } else {
+                $fieldmaps = @unserialize($fieldmaps);
+                if (!is_array($fieldmaps)) {
+                    $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
+                }
+            }
+
+            foreach ($fieldmaps as $fieldmap) {
+                $fieldmap = explode('/', $fieldmap);
+                if (count($fieldmap) !== 3) {
+                    continue;
+                }
+                list($remotefield, $localfield, $behavior) = $fieldmap;
+                if (in_array($localfield, ['idnumber', 'firstname', 'lastname', 'email', 'lang'])) {
+                    if (in_array($behavior, ['onlogin', 'always'])) {
+                        $forcedconfig['field_updatelocal_' . $localfield] = 'onlogin';
+                    }
+                }
+            }
+        }
 
         $this->config = (object)array_merge($default, $storedconfig, $forcedconfig);
     }
