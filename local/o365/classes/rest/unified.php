@@ -725,7 +725,7 @@ class unified extends \local_o365\rest\o365api {
 
         $response = $this->apicall('get', $endpoint);
         $result = $this->process_apicall_response($response, ['value' => null]);
-        $users = null;
+        $users = [];
         $skiptoken = null;
         $deltatoken = null;
 
