@@ -329,12 +329,28 @@ class main {
         return $apiclient->get_users_delta($params, $skiptoken, $deltatoken);
     }
 
+    /**
+     * Return the name of the manager of the Office 365 user with the given oid.
+     *
+     * @param $userobjectid
+     *
+     * @return mixed
+     */
     public function get_user_manager($userobjectid) {
         $apiclient = $this->construct_user_api(false);
         $result = $apiclient->get_user_manager($userobjectid);
-        return $result->displayName;
+        if ($result && isset($result['displayName'])) {
+            return $result['displayName'];
+        }
     }
 
+    /**
+     * Return the names of groups that the Office 365 user with the given oid are in, joined by comma.
+     *
+     * @param $userobjectid
+     *
+     * @return string
+     */
     public function get_user_groups($userobjectid) {
         $apiclient = $this->construct_user_api(false);
         $results = $apiclient->get_user_groups($userobjectid);
@@ -345,9 +361,16 @@ class main {
         return join(',', $groups);
     }
 
+    /**
+     * Return the names of teams that the Office 365 user with the given oid are in, joined by comma.
+     *
+     * @param $userobjectid
+     *
+     * @return string
+     */
     public function get_user_teams($userobjectid) {
         $apiclient = $this->construct_user_api(false);
-        $results = $apiclient->get_users_teams($userobjectid);
+        $results = $apiclient->get_user_teams($userobjectid);
         $teams = [];
         foreach ($results as $result) {
             $teams[] = $result['displayName'];
@@ -356,12 +379,27 @@ class main {
     }
 
     /**
+     * Return the preferred name of the Office 365 user with the given oid.
+     *
+     * @param $userobjectid
+     *
+     * @return mixed
+     */
+    public function get_preferred_name($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $result = $apiclient->get_user($userobjectid);
+        if (isset($result['preferredName'])) {
+            return $result['preferredName'];
+        }
+    }
+
+    /**
      * Apply the configured field map.
      *
      * @param array $aaddata User data from Azure AD.
-     * @param array $user Moodle user data.
+     * @param \stdClass $user Moodle user data.
      * @param string $eventtype 'login', or 'create'
-     * @return array Modified Moodle user data.
+     * @return \stdClass Modified Moodle user data.
      */
     public static function apply_configured_fieldmap(array $aaddata, \stdClass $user, $eventtype) {
         $fieldmaps = get_config('local_o365', 'fieldmap');
@@ -400,18 +438,18 @@ class main {
                         $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
                     }
                     $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
-                } else if ($localfield == "manager") {
-                    $usermanager = $usersync->get_user_manager($userobjectid);
-                    $user->$localfield = join(',', $usermanager);
-                } else if ($localfield == "teams") {
-                    $userteams = $usersync->get_user_teams($userobjectid);
-                    $user->$localfield = join(',', $userteams);
-                } else if ($localfield == "groups") {
-                    $usergroups = $usersync->get_user_groups($userobjectid);
-                    $user->$localfield = join(',', $usergroups);
                 } else {
                     $user->$localfield = $aaddata[$remotefield];
                 }
+            }
+            if ($remotefield == "manager") {
+                $user->$localfield = $usersync->get_user_manager($userobjectid);
+            } else if ($remotefield == "groups") {
+                $user->$localfield = $usersync->get_user_groups($userobjectid);
+            } else if ($remotefield == "teams") {
+                $user->$localfield = $usersync->get_user_teams($userobjectid);
+            } else if ($remotefield == "preferredName") {
+                $user->$localfield = $usersync->get_preferred_name($userobjectid);
             }
         }
 
@@ -708,7 +746,7 @@ class main {
             }
         }
 
-        if ($aadsync['emailsync']) {
+        if (isset($aadsync['emailsync'])) {
             $select = 'SELECT LOWER(u.email) AS email,
                        LOWER(u.username) AS username,';
             $where = ' WHERE u.email';
@@ -817,6 +855,8 @@ class main {
                     if(isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                        $existingusercopy = \core_user::get_user_by_username($existinguser->username);
+                        $fullexistinguser->description = $existingusercopy->description;
                         $this->update_user_from_aaddata($user, $fullexistinguser);
                         $this->mtrace('User is now updated.');
                     }
@@ -845,11 +885,13 @@ class main {
                 $this->mtrace('Created user #'.$newmuser->id);
             }
         } catch (\Exception $e) {
-            if ($syncoptions['emailsync']) {
+            if (isset($syncoptions['emailsync'])) {
                 if ($DB->record_exists('user', ['username' => $aaduserdata['userPrincipalName']])) {
-                    $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: user with same username, but different email already exists.');
+                    $this->mtrace('Could not create user "' . $aaduserdata['userPrincipalName'] .
+                        '" Reason: user with same username, but different email already exists.');
                 } else {
-                    $this->mtrace('Could not create user with email "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                    $this->mtrace('Could not create user with email "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
+                        $e->getMessage());
                 }
             } else {
                 $this->mtrace('Could not create user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
