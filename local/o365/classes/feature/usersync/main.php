@@ -334,13 +334,15 @@ class main {
      *
      * @param $userobjectid
      *
-     * @return mixed
+     * @return mixed|string
      */
     public function get_user_manager($userobjectid) {
         $apiclient = $this->construct_user_api(false);
         $result = $apiclient->get_user_manager($userobjectid);
         if ($result && isset($result['displayName'])) {
             return $result['displayName'];
+        } else {
+            return '';
         }
     }
 
