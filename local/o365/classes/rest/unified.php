@@ -678,6 +678,9 @@ class unified extends \local_o365\rest\o365api {
             $params = $this->get_default_user_fields();
         }
         if (is_array($params)) {
+            if (($key = array_search('preferredName', $params)) !== false) {
+                unset($params[$key]);
+            }
             $odataqueries[] = '$select='.implode(',', $params);
         }
 
@@ -747,8 +750,13 @@ class unified extends \local_o365\rest\o365api {
     public function get_user_manager($userobjectid) {
         $endpoint = "users/$userobjectid/manager";
         $response = $this->apicall('get', $endpoint);
-        $result = $this->process_apicall_response($response, ['value' => null]);
-        return $result['value'];
+        try {
+            $result = $this->process_apicall_response($response);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return $result;
     }
 
     public function get_user_groups($userobjectid) {
