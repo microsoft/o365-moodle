@@ -707,6 +707,12 @@ class unified extends \local_o365\rest\o365api {
             $params = $this->get_default_user_fields();
         }
         if (is_array($params) && empty($skiptoken) && empty($deltatoken)) {
+            $excludedfields = ['preferredName', 'teams', 'groups'];
+            foreach ($excludedfields as $excludedfield) {
+                if (($key = array_search($excludedfield, $params)) !== false) {
+                    unset($params[$key]);
+                }
+            }
             $odataqueries[] = '$select='.implode(',', $params);
         }
 
