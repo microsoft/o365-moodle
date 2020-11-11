@@ -262,7 +262,12 @@ class main {
      * @param $user
      */
     public function sync_timezone($muserid, $user) {
-        $apiclient = $this->construct_outlook_api($muserid, true);
+        $resource = \local_o365\rest\unified::get_resource();
+        $token = \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
+        if (empty($token)) {
+            throw new \Exception('No token available for usersync');
+        }
+        $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
         if (empty($user)) {
             $o365user = \local_o365\obj\o365user::instance_from_muserid($muserid);
             $user = $o365user->upn;
