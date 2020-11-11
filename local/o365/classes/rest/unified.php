@@ -2133,8 +2133,12 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_user_timezone_by_upn($upn) {
         $endpoint = '/users/' . $upn . '/mailboxSettings/timeZone';
-        $response = $this->betaapicall('get', $endpoint);
-        $expectedparams = ['value' => null];
-        return $this->process_apicall_response($response, $expectedparams);
+        try {
+            $response = $this->betaapicall('get', $endpoint);
+            $expectedparams = ['value' => null];
+            return $this->process_apicall_response($response, $expectedparams);
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }
