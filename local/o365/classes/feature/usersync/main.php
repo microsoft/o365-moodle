@@ -412,6 +412,21 @@ class main {
     }
 
     /**
+     * Return the preferred name of the Office 365 user with the given oid.
+     *
+     * @param $userobjectid
+     *
+     * @return mixed
+     */
+    public function get_preferred_name($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $result = $apiclient->get_user($userobjectid);
+        if (isset($result['preferredName'])) {
+            return $result['preferredName'];
+        }
+    }
+
+    /**
      * Apply the configured field map.
      *
      * @param array $aaddata User data from Azure AD.
@@ -441,7 +456,7 @@ class main {
                 continue;
             }
             list($remotefield, $localfield, $behavior) = $fieldmap;
-            if ($behavior !== 'on'.$eventtype && $behavior !== 'always') {
+            if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
                 // Field mapping doesn't apply to this event type.
                 continue;
             }
@@ -466,6 +481,10 @@ class main {
                 $user->$localfield = $usersync->get_user_groups($userobjectid);
             } else if ($remotefield == "teams") {
                 $user->$localfield = $usersync->get_user_teams($userobjectid);
+            } else if ($remotefield == "preferredName") {
+                if (!isset($aaddata[$remotefield])) {
+                    $user->$localfield = $usersync->get_preferred_name($userobjectid);
+                }
             }
         }
 
