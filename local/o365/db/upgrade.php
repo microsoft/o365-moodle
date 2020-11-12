@@ -633,5 +633,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2020020302', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2020071504) {
+        // Delete delta token, purge cache.
+        $DB->delete_records('config_plugins', ['plugin' => 'local_o365', 'name' => 'task_usersync_lastdeltatoken']);
+        purge_all_caches();
+
+        upgrade_plugin_savepoint($result, '2020071504', 'local', 'o365');
+    }
+
     return $result;
 }
