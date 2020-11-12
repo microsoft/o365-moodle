@@ -649,7 +649,7 @@ $string['help_user_appassign_help'] = 'This will cause all the Azure AD accounts
 $string['help_user_photosync'] = 'Sync Office 365 Profile Photos (Cron) Help';
 $string['help_user_photosync_help'] = 'This will cause all users\' Moodle profile photos to get synced with their Office 365 profile photos.';
 $string['help_user_photosynconlogin'] = 'Sync Office 365 Profile Photos (Login) Help';
-$string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle profile photo to get synced with their Office 365 profile photo when that user logs in.';
+$string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle profile photo to get synced with their Office 365 profile photo when that user logs in. Note this requires user visiting a page containing the Microsoft block in Moodle.';
 $string['help_user_nodelta'] = 'Perform a full sync help';
 $string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Azure AD. Checking this option will force a full user sync each time.';
 $string['help_user_emailsync'] = 'Sync azure usernames to moodle emails Help';
@@ -657,7 +657,7 @@ $string['help_user_emailsync_help'] = 'Enabling this option will match azure use
 $string['help_user_tzsync'] = 'Sync Outlook timezone (Cron) Help';
 $string['help_user_tzsync_help'] = 'This will cause all users\' Moodle timezone to get synced with their Outlook timezone preference.';
 $string['help_user_tzsynconlogin'] = 'Sync Outlook timezone (Login) Help';
-$string['help_user_tzsynconlogin_help'] = 'This will cause a user\'s Moodle timezone to get synced with their Outlook timezone preference.';
+$string['help_user_tzsynconlogin_help'] = 'This will cause a user\'s Moodle timezone to get synced with their Outlook timezone preference. Note this requires user visiting a page containing the Microsoft block in Moodle.';
 
 $string['assignment'] = 'Assignment';
 $string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />
