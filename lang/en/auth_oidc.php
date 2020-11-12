@@ -78,6 +78,8 @@ $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
 $string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect provider will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
+$string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
+$string['cfg_userrestrictioncasesensitive_desc'] = 'This controls if the "/i" option in regular expression is used in the user restriction match.<br/>If enabled, all user restriction checks will be performed as with case sensitive. Note if this is disabled, any patterns on letter cases will be ignored.';
 $string['event_debug'] = 'Debug message';
 
 $string['errorauthdisconnectemptypassword'] = 'Password cannot be empty';

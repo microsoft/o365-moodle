@@ -393,14 +393,17 @@ class base {
             if (empty($tomatch)) {
                 $tomatch = $idtoken->claim('sub');
             }
-            $tomatch= strtolower($tomatch);
             foreach ($restrictions as $restriction) {
                 $restriction = trim($restriction);
                 if ($restriction !== '') {
                     $hasrestrictions = true;
                     ob_start();
                     try {
-                        $count = @preg_match('/'.$restriction.'/', $tomatch, $matches);
+                        $pattern = '/'.$restriction.'/';
+                        if (isset($this->config->userrestrictionscasesensitive) && $this->config->userrestrictionscasesensitive) {
+                            $pattern .= 'i';
+                        }
+                        $count = @preg_match($pattern, $tomatch, $matches);
                         if (!empty($count)) {
                             $userpassed = true;
                             break;
