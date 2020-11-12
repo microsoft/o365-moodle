@@ -400,7 +400,7 @@ class base {
                     ob_start();
                     try {
                         $pattern = '/'.$restriction.'/';
-                        if (isset($this->config->userrestrictionscasesensitive) && $this->config->userrestrictionscasesensitive) {
+                        if (isset($this->config->userrestrictionscasesensitive) && !$this->config->userrestrictionscasesensitive) {
                             $pattern .= 'i';
                         }
                         $count = @preg_match($pattern, $tomatch, $matches);
