@@ -29,5 +29,5 @@ $plugin->release = '3.8.0.5';
 $plugin->component = 'block_microsoft';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'local_o365' => 2020020303,
+    'local_o365' => 2020020308,
 ];
