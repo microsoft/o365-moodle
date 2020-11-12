@@ -29,5 +29,5 @@ $plugin->release = '3.9.2';
 $plugin->component = 'repository_office365';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-   'local_o365' => 2020071504,
+    'local_o365' => 2020071504,
 ];
