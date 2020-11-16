@@ -1305,10 +1305,42 @@ class acp extends base {
      */
     public function mode_maintenance_deleteoidctoken() {
         global $DB;
+        $tokenstr = '';
         $tokenid = required_param('id', PARAM_INT);
         require_sesskey();
+        $params = [
+            'tokenid' => $tokenid,
+            'type' => 'user',
+        ];
+
+        // Delete the object first.
+        $existingobject = $DB->get_record_sql("SELECT obj.id, obj.objectid, tok.token, u.id as userid, u.email
+                                                 FROM {local_o365_objects} obj
+                                                 JOIN {auth_oidc_token} tok ON obj.o365name = tok.username
+                                                 JOIN {user} u ON obj.moodleid = u.id
+                                                WHERE type = :type AND tok.id = :tokenid", $params);
+        if (!empty($existingobject)) {
+            // Delete record for local_o365_objects.
+            $DB->delete_records('local_o365_objects', ['id' => $existingobject->id]);
+            mtrace("Object ".$existingobject->objectid." deleted.");
+            echo "<br>";
+            $tokenstr = substr($existingobject->token,0, 16).'...';
+        }
+
+        // Delete record from local_o365_token.
+        $DB->delete_records('local_o365_token', ['user_id' => $existingobject->userid]);
+
+        // Delete record from local_o365_connections.
+        $DB->delete_records_select(
+            'local_o365_connections',
+            'muserid = :userid  OR lower(aadupn) = :email', [
+                'userid' => $existingobject->userid,
+                'email' => $existingobject->email
+            ]);
+
+        // Finally delete the token.
         $DB->delete_records('auth_oidc_token', ['id' => $tokenid]);
-        mtrace("Token deleted.");
+        mtrace("Token ".$tokenstr." deleted.");
     }
 
     /**
@@ -1316,11 +1348,17 @@ class acp extends base {
      */
     public function mode_maintenance_cleanoidctokens() {
         global $DB;
-        $records = $DB->get_recordset('auth_oidc_token', ['userid' => 0]);
+        $sql = 'SELECT tok.*, obj.objectid
+                 FROM {auth_oidc_token} tok
+                 LEFT JOIN {local_o365_objects} obj
+                        ON tok.username = obj.o365name
+                WHERE tok.userid = 0';
+        $records = $DB->get_recordset_sql($sql);
         foreach ($records as $token) {
             $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'sesskey' => sesskey()]);
             $toolname = 'Delete Token';
-            $str = $token->id.': Moodle user '.$token->username.' as a token for OIDC username '.$token->oidcusername.' but no recorded userid.';
+            $objectstr = ($token->objectid) ? ' with objectid '.$token->objectid : '';
+            $str = $token->id.': Moodle user '.$token->username.' has a token for OIDC username '.$token->oidcusername.$objectstr.' but no recorded userid.';
             $deletelink = \html_writer::link($toolurl, $toolname);
             mtrace($str.' '.$deletelink);
         }
