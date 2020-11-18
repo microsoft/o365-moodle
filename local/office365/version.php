@@ -32,7 +32,7 @@ $plugin->dependencies = [
     'auth_oidc' => 2020020304,
     'block_microsoft' => 2020020304,
     'local_o365' => 2020020308,
-    'repository_office365' => 2020020300,
+    'repository_office365' => 2020020301,
     'filter_oembed' => 2019112600,
     'theme_boost_o365teams' => 2020020304,
 ];
