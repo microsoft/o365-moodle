@@ -134,44 +134,46 @@ class base {
         if (!empty($o365installed) && \local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
             $apiclient = \local_o365\utils::get_api($tokenrec->userid);
             $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+
+            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
+            $userinfo = (array)$updateduser;
         } else {
+            $userinfo = [];
+
             $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
 
             $oid = $idtoken->claim('oid');
             if (!empty($oid)) {
-                $userdata['objectId'] = $oid;
+                $userinfo['objectId'] = $oid;
             }
 
             $upn = $idtoken->claim('upn');
             if (!empty($upn)) {
-                $userdata['userPrincipalName'] = $upn;
+                $userinfo['userPrincipalName'] = $upn;
             }
 
             $firstname = $idtoken->claim('given_name');
             if (!empty($firstname)) {
-                $userdata['givenName'] = $firstname;
+                $userinfo['givenName'] = $firstname;
             }
 
             $lastname = $idtoken->claim('family_name');
             if (!empty($lastname)) {
-                $userdata['surname'] = $lastname;
+                $userinfo['surname'] = $lastname;
             }
 
             $email = $idtoken->claim('email');
             if (!empty($email)) {
-                $userdata['mail'] = $email;
+                $userinfo['mail'] = $email;
             } else {
                 if (!empty($upn)) {
                     $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
                     if (!empty($aademailvalidateresult)) {
-                        $userdata['mail'] = $aademailvalidateresult;
+                        $userinfo['mail'] = $aademailvalidateresult;
                     }
                 }
             }
         }
-
-        $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
-        $userinfo = (array)$updateduser;
 
         return $userinfo;
     }
