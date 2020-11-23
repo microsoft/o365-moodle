@@ -416,7 +416,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
-        global $DB;
+        global $CFG;
+
+        require_once($CFG->libdir . '/enrollib.php');
 
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
@@ -426,6 +428,12 @@ class observers {
         $courseid = $event->courseid;
 
         if (empty($userid) || empty($courseid)) {
+            return true;
+        }
+
+        // If the user is still enrolled in the course, through other enrolment method, don't remove the user from the course group.
+        $coursecontext = \context_course::instance($courseid);
+        if (is_enrolled($coursecontext, $userid)) {
             return true;
         }
 
@@ -444,7 +452,8 @@ class observers {
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
         }
-        return false;
+
+        return true;
     }
 
     /**
