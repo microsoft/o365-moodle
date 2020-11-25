@@ -1982,7 +1982,7 @@ class unified extends \local_o365\rest\o365api {
      * @param $groupobjectid
      * @param $appid
      *
-     * @return array|string|null
+     * @return bool
      * @throws \moodle_exception
      */
     public function provision_app($groupobjectid, $appid) {
@@ -1990,9 +1990,13 @@ class unified extends \local_o365\rest\o365api {
         $data = [
             'teamsApp@odata.bind' => $this->get_apiuri() . '/beta/appCatalogs/teamsApps/' . $appid,
         ];
-        $response = $this->betaapicall('post', $endpoint, json_encode($data));
+        $this->betaapicall('post', $endpoint, json_encode($data));
 
-        return $response;
+        if ($this->httpclient->info['http_code'] == 201) {
+            return true;
+        } else {
+            throw new \moodle_exception('errorprovisioningapp', 'local_o365');
+        }
     }
 
     /**
