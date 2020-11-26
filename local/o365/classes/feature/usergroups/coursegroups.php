@@ -121,9 +121,11 @@ class coursegroups {
         foreach ($courses as $course) {
             $coursesprocessed++;
             $createclassteam = false;
+            $creategrouponly = true;
             $ownerid = null;
 
             if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
+                $creategrouponly = false;
                 $teacherids = $this->get_teacher_ids_of_course($course->id);
                 foreach ($teacherids as $teacherid) {
                     if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
@@ -142,14 +144,18 @@ class coursegroups {
                     $this->mtrace('Could not create class team for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     continue;
                 }
-            } else {
+            } else if ($creategrouponly || get_config('local_o365', 'group_creation_fallback') == true) {
                 // Create group.
                 try {
                     $objectrec = $this->create_group($course, $groupprefix);
                 } catch (\Exception $e) {
-                    $this->mtrace('Could not create group for course #'.$course->id.'. Reason: '.$e->getMessage());
+                    $this->mtrace('Could not create group for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     continue;
                 }
+            } else {
+                // Option to fall back to group is disabled, and Team owner is not found.
+                $this->mtrace('Skip creating class team for course #' . $course->id . '. Reason: missing Team owner');
+                continue;
             }
 
             try {
