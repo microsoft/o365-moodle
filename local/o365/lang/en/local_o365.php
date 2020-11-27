@@ -216,6 +216,66 @@ $string['groups_calendar'] = 'Calendar';
 $string['groups_conversations'] = 'Conversations';
 $string['groups_notebook'] = 'Class Notebook';
 
+// Settings in the "Teams name" section of the "Sync settings" tab.
+$string['settings_secthead_team_name'] = 'Teams name';
+$string['settings_secthead_team_name_desc'] = 'If a course is configured to create Microsoft Teams, the name of the Team will be constructed as follows.<br/>
+<ul>
+<li>Only Team display names can be defined. Associated group short names will be automatically generated.</li>
+<li>Group naming policies are not applied when creating Teams.</li>
+<li>Changes made here will only affect future Team creation, and not existing ones.</li>
+</ul>';
+$string['settings_team_name_prefix'] = 'Teams name prefix';
+$string['settings_team_name_prefix_desc'] = '';
+$string['settings_team_name_course'] = 'Course part of the Teams name';
+$string['settings_team_name_course_desc'] = '';
+$string['settings_team_name_suffix'] = 'Teams name suffix';
+$string['settings_team_name_suffix_desc'] = '';
+$string['settings_team_name_sample'] = 'Assume a course has:
+<ul>
+<li>Full name: <b>Sample course</b> 
+<li>Short name: <b>sample 15</b></li>
+<li>Moodle created ID: <b>2</b></li>
+<li>ID number: <b>Sample ID 15</b></li>
+</ul>
+Your current setting will use name "<b>{$a}</b>" to create a Team. Click "Save changes" button below to see how your settings will change this.';
+
+$string['settings_main_name_option_full_name'] = 'Full name';
+$string['settings_main_name_option_short_name'] = 'Short name';
+$string['settings_main_name_option_id'] = 'Moodle created ID';
+$string['settings_main_name_option_id_number'] = 'ID number';
+
+// Settings in the "Group name" section of the "Sync settings" tab.
+$string['settings_secthead_group_name'] = 'Group name';
+$string['settings_secthead_group_name_desc'] = 'If a course is configured to create Outlook group instead of Microsoft Teams, the display name and short name of the group will be constructed as follows.<br/>
+<ul>
+<li>Both display name (displayName) and mail alias (mailNickname) of the group can be defined, and they can be different.</li>
+<li>Group naming policy applies to mail alias settings; attempting to create a group with mail alias not matching the group naming policy as defined in your organisation will fail.</li>
+<li>Mail alias of the group needs to be unique, otherwise group creation will fail.</li>
+<li>Changes made here will only affect future groups creation, and not existing ones.</li>
+<li>All spaces will be removed from the group mail alias.</li>
+<li>Only upper and lower case letters, numbers, - and _ are allowed in the group mail alias.</li>
+<li>Group mail alias, including prefix and suffix cannot exceed 64 characters.</li>
+</ul>';
+$string['settings_group_display_name_prefix'] = 'Group display name prefix';
+$string['settings_group_display_name_prefix_desc'] = '';
+$string['settings_group_display_name_course'] = 'Course part of the group display name';
+$string['settings_group_display_name_course_desc'] = '';
+$string['settings_group_display_name_suffix'] = 'Group display name suffix';
+$string['settings_group_short_name_prefix'] = 'Group mail alias prefix';
+$string['settings_group_short_name_prefix_desc'] = '';
+$string['settings_group_mail_alias_course'] = 'Course part of the group mail alias';
+$string['settings_group_mail_alias_course_desc'] = '';
+$string['settings_group_mail_alias_suffix'] = 'Group mail alias suffix';
+$string['settings_group_mail_alias_suffix_desc'] = '';
+$string['settings_group_names_sample'] = 'Assume a course has:
+<ul>
+<li>Full name: <b>Sample course 15</b> 
+<li>Short name: <b>sample 15</b></li>
+<li>Moodle created ID: <b>2</b></li>
+<li>ID number: <b>Sample ID 15</b></li>
+</ul>
+Your current setting will use display name "<b>{$a->displayname}</b>" and mail alias "<b>{$a->mailalias}</b>" to create a group. Click "Save changes" button below to see how your settings will change this.';
+
 // Settings section headings of the "Advanced" tab.
 $string['settings_header_tools'] = 'Tools';
 $string['settings_secthead_advanced'] = 'Advanced Settings';

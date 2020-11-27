@@ -22,6 +22,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use local_o365\feature\usergroups\coursegroups;
+
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/local/o365/lib.php');
@@ -195,6 +197,7 @@ if ($hassiteconfig) {
         $default = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
         $settings->add(new \local_o365\adminsetting\usersyncfieldmap('local_o365/fieldmap', $label, $desc, $default));
 
+        // Course sync section.
         $label = new lang_string('settings_secthead_coursesync', 'local_o365');
         $desc = new lang_string('settings_secthead_coursesync_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_section_coursesync', $label, $desc));
@@ -203,6 +206,85 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_usergroups_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\usergroups('local_o365/createteams', $label, $desc, 'off'));
 
+        // Team name section.
+        $settings->add(new admin_setting_heading('local_o365_section_team_name',
+            new lang_string('settings_secthead_team_name', 'local_o365'),
+            new lang_string('settings_secthead_team_name_desc', 'local_o365')));
+
+        // Team naming convention - prefix.
+        $settings->add(new admin_setting_configtext('local_o365/team_name_prefix',
+            get_string('settings_team_name_prefix', 'local_o365'),
+            get_string('settings_team_name_prefix_desc', 'local_o365'),
+            ''));
+
+        // Team naming convention - course.
+        $teamgroupnamemainpartoptions = [
+            coursegroups::NAME_OPTION_FULL_NAME => get_string('settings_main_name_option_full_name', 'local_o365'),
+            coursegroups::NAME_OPTION_SHORT_NAME => get_string('settings_main_name_option_short_name', 'local_o365'),
+            coursegroups::NAME_OPTION_ID => get_string('settings_main_name_option_id', 'local_o365'),
+            coursegroups::NAME_OPTION_ID_NUMBER => get_string('settings_main_name_option_id_number', 'local_o365'),
+        ];
+        $settings->add(new admin_setting_configselect('local_o365/team_name_course',
+            get_string('settings_team_name_course', 'local_o365'),
+            get_string('settings_team_name_course_desc', 'local_o365'),
+            coursegroups::NAME_OPTION_FULL_NAME, $teamgroupnamemainpartoptions));
+
+        // Team naming convention - suffix.
+        $settings->add(new admin_setting_configtext('local_o365/team_name_suffix',
+            get_string('settings_team_name_suffix', 'local_o365'),
+            get_string('settings_team_name_suffix_desc', 'local_o365'),
+            ''));
+
+        // Sample Team name.
+        $sampleteamname = coursegroups::get_sample_team_display_name();
+        $settings->add(new admin_setting_heading('local_o365_section_team_name_sample', '',
+            get_string('settings_team_name_sample', 'local_o365', $sampleteamname)));
+
+        // Group name section.
+        $settings->add(new admin_setting_heading('local_o365_section_group_name',
+            new lang_string('settings_secthead_group_name', 'local_o365'),
+            new lang_string('settings_secthead_group_name_desc', 'local_o365')));
+
+        // Group display name naming convention - prefix.
+        $settings->add(new admin_setting_configtext('local_o365/group_display_name_prefix',
+            get_string('settings_group_display_name_prefix', 'local_o365'),
+            get_string('settings_group_display_name_prefix_desc', 'local_o365'),
+            ''));
+
+        // Group display name naming convention - course.
+        $settings->add(new admin_setting_configselect('local_o365/group_display_name_course',
+            get_string('settings_group_display_name_course', 'local_o365'),
+            get_string('settings_group_display_name_course_desc', 'local_o365'),
+            coursegroups::NAME_OPTION_FULL_NAME, $teamgroupnamemainpartoptions));
+
+        // Group display name naming convention - suffix.
+        $settings->add(new admin_setting_configtext('local_o365/group_display_name_suffix',
+            get_string('settings_group_display_name_suffix', 'local_o365'),
+            get_string('settings_group_display_name_suffix_desc', 'local_o365'),
+            ''));
+
+        // Group mail alias naming convention - prefix.
+        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/group_mail_alias_prefix',
+            get_string('settings_group_short_name_prefix', 'local_o365'),
+            get_string('settings_group_short_name_prefix_desc', 'local_o365'),
+            '', PARAM_TEXT, null, 15));
+
+        // Group mail alias naming convention - course.
+        $settings->add(new admin_setting_configselect('local_o365/group_mail_alias_course',
+            get_string('settings_group_mail_alias_course', 'local_o365'),
+            get_string('settings_group_mail_alias_course_desc', 'local_o365'),
+            coursegroups::NAME_OPTION_FULL_NAME, $teamgroupnamemainpartoptions));
+
+        // Group mail alias naming convention - suffix.
+        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/group_mail_alias_suffix',
+            get_string('settings_group_mail_alias_suffix', 'local_o365'),
+            get_string('settings_group_mail_alias_suffix_desc', 'local_o365'),
+            '', PARAM_TEXT, null, 15));
+
+        // Sample group names.
+        $samplegroupnames = coursegroups::get_sample_group_names();
+        $settings->add(new admin_setting_heading('local_o365_section_group_names_sample', '',
+            get_string('settings_group_names_sample', 'local_o365', $samplegroupnames)));
     }
 
     if ($tab === LOCAL_O365_TAB_ADVANCED || !empty($install)) {
@@ -273,8 +355,8 @@ if ($hassiteconfig) {
             $name = $theme->name;
             $options[$name] = $name;
         }
-        $label = new lang_string('customtheme', 'local_o365');
-        $desc = new lang_string('customthemedesc', 'local_o365');
+        $label = new lang_string('settings_customtheme', 'local_o365');
+        $desc = new lang_string('settings_customtheme_desc', 'local_o365');
         $settings->add(new admin_setting_configselect('local_o365/customtheme', $label, $desc, 'boost_o365teams', $options));
 
         // Legacy settings.
