@@ -205,7 +205,9 @@ $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course
 // Settings in the "Teams customization" page in the "Course sync" section of the "Sync settings" tab.
 $string['acp_usergroupcustom'] = 'Teams Customization';
 $string['acp_usergroupcustom_enabled'] = 'Enabled';
+$string['acp_usrgroupcustom_enable_all'] = 'Enable course sync on all courses';
 $string['acp_usergroupcustom_bulk'] = 'Bulk Operations';
+$string['acp_usergroupcustom_bulk_help'] = 'The feature toggles only work on courses on the current page.';
 $string['acp_usergroupcustom_bulk_enable'] = 'Enable All';
 $string['acp_usergroupcustom_bulk_disable'] = 'Disable All';
 $string['acp_usergroupcustom_savemessage'] = 'Your changes have been saved.';
