@@ -179,5 +179,15 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint($result, '2018051700.01', 'auth', 'oidc');
     }
+
+    if ($result && $oldversion < 2020071503) {
+        $localo365singlesignoffsetting = get_config('local_o365', 'single_sign_off');
+        if ($localo365singlesignoffsetting) {
+            set_config('single_sign_off', true, 'auth_oidc');
+        }
+
+        upgrade_plugin_savepoint($result, 2020071503, 'auth', 'oidc');
+    }
+
     return $result;
 }

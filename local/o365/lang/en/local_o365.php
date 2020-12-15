@@ -359,10 +359,6 @@ $string['acp_maintenance_cleandeltatoken'] = 'Cleanup User Sync Delta Tokens';
 $string['acp_maintenance_cleandeltatoken_desc'] = 'If user synchronisation is not fully working after updating it user sync settings, it may be caused by an old delta sync token. Cleaning up the token will remove force a complete re-sync the next time when the user sync is run.';
 
 // Settings "Advanced settings" section of the "Advanced" tab.
-$string['settings_sign_off_integration'] = 'Single sign off';
-$string['settings_sign_off_integration_details'] = 'If enabled, when a Moodle user using OIDC authentication method signs off from Moodle, Moodle will attempt to log the user off from Office 365 as well.
-
-Note the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle Office 365 integration.';
 $string['settings_o365china'] = 'Office&nbsp;365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
