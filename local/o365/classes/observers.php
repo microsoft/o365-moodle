@@ -968,34 +968,6 @@ class observers {
     }
 
     /**
-     * Log out user from Office 365 if the user is using auth_oidc.
-     *
-     * @param \core\event\user_loggedout $event
-     *
-     * @return bool
-     */
-    public static function handle_user_loggedout(\core\event\user_loggedout $event) {
-        global $CFG;
-
-        $singlesignoffsetting = get_config('local_o365', 'single_sign_off');
-
-        if ($singlesignoffsetting) {
-            $eventdata = $event->get_data();
-
-            $user = \core_user::get_user($eventdata['userid']);
-
-            if ($user && $user->auth == 'oidc') {
-                $ssologouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
-                    urlencode($CFG->wwwroot);
-
-                redirect($ssologouturl);
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * If "clientid" value of "auth_oidc" is changed, clear all tokens reported to user.
      *
      * @param \core\event\config_log_created $event
