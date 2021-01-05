@@ -1066,10 +1066,26 @@ class coursegroups {
 
                 if (!empty($moodleappid)) {
                     // Provision app to the newly created team.
-                    try {
-                        $response = $this->graphclient->provision_app($groupobjectid, $moodleappid);
-                    } catch (\Exception $e) {
-                        $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' . $e->getMessage());
+                    $retrycounter = 0;
+                    $moodleappprovisioned = false;
+                    while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+                        if ($retrycounter) {
+                            $this->mtrace('..... Retry #' . $retrycounter);
+                            sleep(10);
+                        }
+                        try {
+                            $this->graphclient->provision_app($groupobjectid, $moodleappid);
+                            $moodleappprovisioned = true;
+                            break;
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' .
+                                $e->getMessage());
+                            $retrycounter++;
+                        }
+                    }
+
+                    if (!$moodleappprovisioned) {
+                        return true;
                     }
 
                     // List all channels.
