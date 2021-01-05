@@ -1991,6 +1991,9 @@ class unified extends \local_o365\rest\o365api {
             'teamsApp@odata.bind' => $this->get_apiuri() . '/beta/appCatalogs/teamsApps/' . $appid,
         ];
         $response = $this->betaapicall('post', $endpoint, json_encode($data));
+        if ($response) {
+            $response = $this->process_apicall_response($response);
+        }
 
         return $response;
     }
@@ -2014,7 +2017,6 @@ class unified extends \local_o365\rest\o365api {
             $moodleapp = array_shift($response['value']);
             $moodleappid = $moodleapp['id'];
         }
-
 
         return $moodleappid;
     }
