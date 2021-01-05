@@ -68,10 +68,9 @@ class base {
                     continue;
                 }
                 list($remotefield, $localfield, $behavior) = $fieldmap;
-                if (in_array($localfield, ['idnumber', 'firstname', 'lastname', 'email', 'lang'])) {
-                    if (in_array($behavior, ['onlogin', 'always'])) {
-                        $forcedconfig['field_updatelocal_' . $localfield] = 'onlogin';
-                    }
+                if (in_array($behavior, ['onlogin', 'always'])) {
+                    $forcedconfig['field_updatelocal_' . $localfield] = 'onlogin';
+                    $forcedconfig['field_lock_' . $localfield] = 'unlocked';
                 }
             }
         }
