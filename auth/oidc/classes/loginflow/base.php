@@ -131,45 +131,78 @@ class base {
         }
 
         $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
-        if (!empty($o365installed) && \local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
-            $apiclient = \local_o365\utils::get_api($tokenrec->userid);
-            $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+        if (!empty($o365installed)) {
+            if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
+                // If local_o365 is installed, and field mapping uses fields not covered by token,
+                // then call Graph API function to get user details.
+                $apiclient = \local_o365\utils::get_api($tokenrec->userid);
+                $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+            } else {
+                // If local_o365 is installed, but all field mapping fields are in token, then use token.
+                $userdata = [];
 
+                $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
+
+                $oid = $idtoken->claim('oid');
+                if (!empty($oid)) {
+                    $userdata['objectId'] = $oid;
+                }
+
+                $upn = $idtoken->claim('upn');
+                if (!empty($upn)) {
+                    $userdata['userPrincipalName'] = $upn;
+                }
+
+                $firstname = $idtoken->claim('given_name');
+                if (!empty($firstname)) {
+                    $userdata['firstname'] = $firstname;
+                }
+
+                $lastname = $idtoken->claim('family_name');
+                if (!empty($lastname)) {
+                    $userdata['surname'] = $lastname;
+                }
+
+                $email = $idtoken->claim('email');
+                if (!empty($email)) {
+                    $userdata['mail'] = $email;
+                } else {
+                    if (!empty($upn)) {
+                        $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                        if (!empty($aademailvalidateresult)) {
+                            $userdata['mail'] = $aademailvalidateresult;
+                        }
+                    }
+                }
+            }
+
+            // Call function in local_o365 to map fields.
             $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
             $userinfo = (array)$updateduser;
         } else {
+            // If local_o365 is not installed, use default mapping.
             $userinfo = [];
 
             $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
 
-            $oid = $idtoken->claim('oid');
-            if (!empty($oid)) {
-                $userinfo['objectId'] = $oid;
-            }
-
-            $upn = $idtoken->claim('upn');
-            if (!empty($upn)) {
-                $userinfo['userPrincipalName'] = $upn;
-            }
-
             $firstname = $idtoken->claim('given_name');
             if (!empty($firstname)) {
-                $userinfo['givenName'] = $firstname;
+                $userinfo['firstname'] = $firstname;
             }
 
             $lastname = $idtoken->claim('family_name');
             if (!empty($lastname)) {
-                $userinfo['surname'] = $lastname;
+                $userinfo['lastname'] = $lastname;
             }
 
             $email = $idtoken->claim('email');
             if (!empty($email)) {
-                $userinfo['mail'] = $email;
+                $userinfo['email'] = $email;
             } else {
                 if (!empty($upn)) {
                     $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
                     if (!empty($aademailvalidateresult)) {
-                        $userinfo['mail'] = $aademailvalidateresult;
+                        $userinfo['email'] = $aademailvalidateresult;
                     }
                 }
             }
