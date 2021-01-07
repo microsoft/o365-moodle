@@ -495,6 +495,14 @@ class base {
             throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
+        // Handle "The existing token for this user does not contain a valid user ID" error.
+        if ($userid == 0) {
+            $userrec = $DB->get_record('user', ['username' => $username]);
+            if ($userrec) {
+                $userid = $userrec->id;
+            }
+        }
+
         $tokenrec = new \stdClass;
         $tokenrec->oidcuniqid = $oidcuniqid;
         $tokenrec->username = $username;
