@@ -136,10 +136,10 @@ class groupcp extends base {
         $row = \html_writer::tag('td', '');
         $row .= \html_writer::tag('td', \html_writer::tag('strong', get_string('groups_columnname', 'local_o365')));
         $columncount = 0;
-        // Unable to test this code.
-        foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
+
+        foreach (['team'] as $feature) {
             $attr = ['class' => 'local_o365_groupcp_managegroups_header'];
-            $strresourcename = get_string('groups_'.$feature, 'local_o365');
+            $strresourcename = get_string('groups_' . $feature, 'local_o365');
             $row .= \html_writer::tag('td', \html_writer::tag('strong', $strresourcename), $attr);
             $columncount++;
         }
@@ -175,14 +175,14 @@ class groupcp extends base {
                 if ($groupscache == null) {
                     $row .= \html_writer::tag('td', $strpending, ['colspan' => $columncount]);
                 } else {
-                    // Unable to test this code.
-                    foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
-                        $enabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($group->courseid, $feature);
+                    foreach (['team'] as $feature) {
+                        $enabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($group->courseid,
+                            $feature);
                         if ($enabled === true) {
                             $url = new \moodle_url($groupscache['urls'][$feature]);
-                            $strresourcename = get_string('groups_'.$feature, 'local_o365');
+                            $strresourcename = get_string('groups_' . $feature, 'local_o365');
                             $pixattrs = ['style' => 'width:2rem;height:2rem'];
-                            $icon = $OUTPUT->pix_icon('groups'.$feature, $strresourcename, 'local_o365', $pixattrs);
+                            $icon = $OUTPUT->pix_icon('groups' . $feature, $strresourcename, 'local_o365', $pixattrs);
                             $tdattrs = ['style' => 'text-align:center'];
                             $row .= \html_writer::tag('td', \html_writer::link($url, $icon, ['target' => '_blank']), $tdattrs);
                         } else {
@@ -389,7 +389,7 @@ class groupcp extends base {
             $group = $DB->get_record('local_o365_coursegroupdata', ['courseid' => $courseid, 'groupid' => $groupid]);
         }
 
-        $this->set_title($course->fullname.': '.get_string('groups', 'local_o365'));
+        $this->set_title($course->fullname . ': ' . get_string('groups', 'local_o365'));
         $PAGE->set_pagelayout('course');
         $this->set_url(new \moodle_url($this->url, ['courseid' => $group->courseid, 'groupid' => $group->groupid]));
         $this->set_context(\context_course::instance($course->id));
@@ -423,9 +423,6 @@ class groupcp extends base {
             ];
             foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
                 if (!isset($groupscache['urls'][$feature])) {
-                    continue;
-                }
-                if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, $feature) !== true) {
                     continue;
                 }
 
