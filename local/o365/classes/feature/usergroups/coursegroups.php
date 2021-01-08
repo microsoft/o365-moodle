@@ -60,7 +60,6 @@ class coursegroups {
      * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
     public function create_groups_for_new_courses() {
-        $this->replace_group_notebook_job();
         $groupprefix = '';
 
         $createteams = get_config('local_o365', 'createteams');
@@ -625,109 +624,6 @@ class coursegroups {
             array_push($teacherids, $teacher->id);
         }
         return $teacherids;
-    }
-
-    /**
-     * The function will replace the simple notebook of a office 365 group with class notebook.
-     * If o365 notebook is already present i.e. o365 group notebook setup is already done.
-     */
-    public function replace_group_notebook_job() {
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $notebookresource = \local_o365\rest\notebook::get_resource();
-        $notebooktoken = \local_o365\utils::get_app_or_system_token($notebookresource, $clientdata, $httpclient);
-        $notebookclient = new \local_o365\rest\notebook($notebooktoken, $httpclient);
-        $groups = $this->get_all_officegroupids_classnotebook_notpresent();
-
-        if (empty($groups)) {
-            $this->mtrace('No groups waiting to have class notebook created.');
-            return true;
-        }
-
-        foreach ($groups as $group) {
-            $o365groupid = $group->objectid;
-            $dbcoursegroupid = $group->id;
-            try {
-                $teachers = $students = array();
-                if ($group->groupid === '0') {
-                    $teacherids = $this->get_teacher_ids_of_course($group->moodleid);
-
-                    // Get list of users enrolled in the course. These are our intended group members.
-                    $intendedmembers = [];
-                    $coursecontext = \context_course::instance($group->moodleid);
-                    list($esql, $params) = get_enrolled_sql($coursecontext);
-                    $sql = "SELECT u.id, u.email,
-                                   tok.oidcuniqid as userobjectidd
-                              FROM {user} u
-                              JOIN ($esql) je ON je.id = u.id
-                              JOIN {auth_oidc_token} tok ON tok.userid = u.id AND tok.resource = :tokresource
-                             WHERE u.deleted = 0";
-                    $params['tokresource'] = \local_o365\rest\unified::get_resource();
-                    $enrolled = $this->DB->get_recordset_sql($sql, $params);
-                    foreach ($enrolled as $user) {
-                        if (in_array($user->id, $teacherids)) {
-                            array_push($teachers, $user->email);
-                        } else {
-                            array_push($students, $user->email);
-                        }
-                    }
-                    $enrolled->close();
-                }
-                $classnotebook = $notebookclient->create_class_notebook($o365groupid, $teachers, $students);
-                $this->mtrace('... Replaced notebook with class notebook for o365 groupid '.$o365groupid);
-                $sql = 'UPDATE {local_o365_coursegroupdata} SET classnotebook = 1 WHERE id = ?';
-                $params = [$dbcoursegroupid];
-                $this->DB->execute($sql, $params);
-            } catch (\Exception $e) {
-                /* Ignore if can't replace */
-            }
-        }
-    }
-
-    /**
-     * The function will fetch and return all the o365 groups for whom notebook is not replaced with class notebook.
-     */
-    public function get_all_officegroupids_classnotebook_notpresent() {
-        $notebookcourses = \local_o365\feature\usergroups\utils::get_enabled_courses_with_feature('notebook');
-        if (empty($notebookcourses)) {
-            return [];
-        }
-
-        $allgroups = [];
-
-        $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
-                  FROM {local_o365_objects} obj
-            INNER JOIN {local_o365_coursegroupdata} cg ON obj.moodleid = cg.courseid
-                 WHERE obj.type = ? AND obj.subtype = ? AND cg.classnotebook = 0 AND cg.groupid = 0';
-        $params = ['group', 'course'];
-        if (is_array($notebookcourses)) {
-            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($notebookcourses);
-            $sql .= ' AND cg.courseid '.$coursesinsql;
-            $params = array_merge($params, $coursesparams);
-        }
-        $coursegroups = $this->DB->get_recordset_sql($sql, $params);
-        foreach ($coursegroups as $group) {
-            array_push($allgroups, $group);
-        }
-        $coursegroups->close();
-
-        $sql = 'SELECT cg.id, cg.groupid, obj.objectid, obj.moodleid
-                  FROM {local_o365_objects} obj
-            INNER JOIN {local_o365_coursegroupdata} cg ON obj.moodleid = cg.groupid
-                 WHERE obj.type = ? AND obj.subtype = ? AND cg.classnotebook = 0';
-        $params = ['group', 'usergroup'];
-        if (is_array($notebookcourses)) {
-            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($notebookcourses);
-            $sql .= ' AND cg.courseid '.$coursesinsql;
-            $params = array_merge($params, $coursesparams);
-        }
-        $incourseusergroups = $this->DB->get_recordset_sql($sql, $params);
-        foreach ($incourseusergroups as $group) {
-            array_push($allgroups, $group);
-        }
-        $incourseusergroups->close();
-
-        return $allgroups;
     }
 
     /**
