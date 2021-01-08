@@ -60,13 +60,25 @@ class oidcclient {
      * @param string $redirecturi The registered client redirect URI.
      */
     public function setcreds($id, $secret, $redirecturi, $resource, $scope) {
+        global $DB;
+
         $this->clientid = $id;
         $this->clientsecret = $secret;
         $this->redirecturi = $redirecturi;
         if (!empty($resource)) {
             $this->resource = $resource;
         } else {
-            $this->resource = (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
+            $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
+            if (!empty($o365installed)) {
+                if (\local_o365\rest\o365api::use_chinese_api() === true) {
+                    $this->resource = 'https://microsoftgraph.chinacloudapi.cn';
+                } else {
+                    $this->resource = 'https://graph.microsoft.com';
+                }
+            } else {
+                $this->resource = 'https://graph.microsoft.com';
+            }
+
         }
         $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
     }
