@@ -68,7 +68,7 @@ class local_o365_observers_testcase extends \advanced_testcase {
     }
 
     /**
-     * Create office 365 entities.
+     * Create Microsoft 365 entities.
      */
     function create_member_entities($userid) {
         global $DB;
@@ -104,7 +104,7 @@ class local_o365_observers_testcase extends \advanced_testcase {
     /**
      * Test if user has any entities.
      *
-     * @param int $userid User id to check for office 365 entities.
+     * @param int $userid User id to check for Microsoft 365 entities.
      * @return boolean Returns true if any entities exist for user.
      */
     function has_member_entities($userid) {

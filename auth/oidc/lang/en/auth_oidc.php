@@ -42,7 +42,7 @@ $string['cfg_forceredirect_key'] = 'Force redirect';
 $string['cfg_forceredirect_desc'] = 'If enabled, will skip the login index page and redirect to the OpenID Connect page. Can be bypassed with ?noredirect=1 URL param';
 $string['cfg_icon_key'] = 'Icon';
 $string['cfg_icon_desc'] = 'An icon to display next to the provider name on the login page.';
-$string['cfg_iconalt_o365'] = 'Office 365 icon';
+$string['cfg_iconalt_o365'] = 'Microsoft 365 icon';
 $string['cfg_iconalt_locked'] = 'Locked icon';
 $string['cfg_iconalt_lock'] = 'Lock icon';
 $string['cfg_iconalt_go'] = 'Green circle';
@@ -65,7 +65,7 @@ $string['cfg_loginflow_key'] = 'Authentication Method';
 $string['cfg_loginflow_authcode'] = 'Authorization Code Flow (recommended)';
 $string['cfg_loginflow_authcode_desc'] = 'Using this flow, the user clicks the name of the identity provider (See "Provider Name" above) on the Moodle login page and is redirected to the provider to log in. Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently. This is the most standardized, secure way for the user log in.';
 $string['cfg_loginflow_rocreds'] = 'Resource Owner Password Credentials Grant';
-$string['cfg_loginflow_rocreds_desc'] = 'Using this flow, the user enters their username and password into the Moodle login form like they would with a manual login. This will authorize the user with the identity provider, but will not create a session on the identity provider\'s site. For example, if using Office 365 with OpenID Connect, the user will be logged in to Moodle but not the Office 365 web applications. Using the authorization request is recommended if you want users to be logged in to both Moodle and the identity provider.  Note that not all identity providers support this flow. This option should only be used when other authorization grant types are not available.';
+$string['cfg_loginflow_rocreds_desc'] = 'Using this flow, the user enters their username and password into the Moodle login form like they would with a manual login. This will authorize the user with the identity provider, but will not create a session on the identity provider\'s site. For example, if using Microsoft 365 with OpenID Connect, the user will be logged in to Moodle but not the Microsoft 365 web applications. Using the authorization request is recommended if you want users to be logged in to both Moodle and the identity provider.  Note that not all identity providers support this flow. This option should only be used when other authorization grant types are not available.';
 $string['cfg_oidcresource_key'] = 'Resource';
 $string['cfg_oidcresource_desc'] = 'The OpenID Connect resource for which to send the request.';
 $string['cfg_oidcscope_key'] = 'Scope';
@@ -107,7 +107,7 @@ $string['errorjwtempty'] = 'Empty or non-string JWT received.';
 $string['errorjwtinvalidheader'] = 'Invalid JWT header';
 $string['errorjwtmalformed'] = 'Malformed JWT received.';
 $string['errorjwtunsupportedalg'] = 'JWS Alg or JWE not supported';
-$string['errorlogintoconnectedaccount'] = 'This Office 365 user is connected to a Moodle account, but OpenID Connect login is not enabled for this Moodle account. Please log in to the Moodle account using the account\'s defined authentication method to use Office 365 features';
+$string['errorlogintoconnectedaccount'] = 'This Microsoft 365 user is connected to a Moodle account, but OpenID Connect login is not enabled for this Moodle account. Please log in to the Moodle account using the account\'s defined authentication method to use Microsoft 365 features';
 $string['erroroidcnotenabled'] = 'The OpenID Connect authentication plugin is not enabled.';
 $string['errornodisconnectionauthmethod'] = 'Cannot disconnect because there is no enabled authentication plugin to fall back to. (either user\'s previous login method or the manual login method).';
 $string['erroroidcclientinvalidendpoint'] = 'Invalid Endpoint URI received.';
@@ -133,7 +133,7 @@ $string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
 $string['oidc:manageconnectiondisconnect'] = 'Allow OpenID Disconnection';
 
 $string['privacy:metadata:auth_oidc'] = 'OpenID Connect Authentication';
-$string['privacy:metadata:auth_oidc_prevlogin'] = 'Previous login methods to undo Office 365 connections';
+$string['privacy:metadata:auth_oidc_prevlogin'] = 'Previous login methods to undo Microsoft 365 connections';
 $string['privacy:metadata:auth_oidc_prevlogin:userid'] = 'The ID of the Moodle user';
 $string['privacy:metadata:auth_oidc_prevlogin:method'] = 'The previous login method';
 $string['privacy:metadata:auth_oidc_prevlogin:password'] = 'The previous (encrypted) user password field.';
@@ -151,7 +151,7 @@ $string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'The refresh token';
 $string['privacy:metadata:auth_oidc_token:idtoken'] = 'The ID token';
 
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
-// "Office 365", "OpenID Connect", etc.
+// "Microsoft 365", "OpenID Connect", etc.
 $string['ucp_general_intro'] = 'Here you can manage your connection to {$a}. If enabled, you will be able to use your {$a} account to log in to Moodle instead of a separate username and password. Once connected, you\'ll no longer have to remember a username and password for Moodle, all log-ins will be handled by {$a}.';
 $string['ucp_login_start'] = 'Start using {$a} to log in to Moodle';
 $string['ucp_login_start_desc'] = 'This will switch your account to use {$a} to log in to Moodle. Once enabled, you will log in using your {$a} credentials - your current Moodle username and password will not work. You can disconnect your account at any time and return to logging in normally.';
@@ -163,4 +163,4 @@ $string['ucp_status_disabled'] = 'Disabled';
 $string['ucp_disconnect_title'] = '{$a} Disconnection';
 $string['ucp_disconnect_details'] = 'This will disconnect your Moodle account from {$a}. You\'ll need to create a username and password to log in to Moodle.';
 $string['ucp_title'] = '{$a} Management';
-$string['ucp_o365accountconnected'] = 'This Office 365 account is already connected with another Moodle account.';
+$string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already connected with another Moodle account.';

@@ -24,7 +24,7 @@
 namespace local_o365\healthcheck;
 
 /**
- * Checks that the system API user can communicate with Office 365
+ * Checks that the system API user can communicate with Microsoft 365
  */
 class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
     /**

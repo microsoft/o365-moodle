@@ -69,7 +69,7 @@ class usersync extends \core\task\scheduled_task {
      */
     public function execute() {
         if (\local_o365\utils::is_configured() !== true) {
-            $this->mtrace('Office 365 not configured');
+            $this->mtrace('Microsoft 365 not configured');
             return false;
         }
 

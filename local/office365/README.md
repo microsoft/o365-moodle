@@ -1,11 +1,11 @@
 # Moodle Plugins for Microsoft Services
-*including* **Office 365** *and other Microsoft services*
+*including* **Microsoft 365** *and other Microsoft services*
 
-## Office 365 Local Plugin
+## Microsoft 365 Local Plugin
 
-This plugin is a shell plugin that has dependencies on all Office 365 plugins. This helps keep related plugins together.
+This plugin is a shell plugin that has dependencies on all Microsoft 365 plugins. This helps keep related plugins together.
 
-This plugin requires all Office 365 plugins:
+This plugin requires all Microsoft 365 plugins:
   - [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
   - [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
   - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
@@ -13,7 +13,7 @@ This plugin requires all Office 365 plugins:
   - [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
 
 
-This is part of the suite of Office 365 plugins for Moodle.
+This is part of the suite of Microsoft 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 

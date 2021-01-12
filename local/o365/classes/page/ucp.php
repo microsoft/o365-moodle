@@ -261,7 +261,7 @@ class ucp extends base {
     }
 
     /**
-     * Office 365 connection management page.
+     * Microsoft 365 connection management page.
      */
     public function mode_connection() {
         global $OUTPUT, $USER, $PAGE, $CFG;

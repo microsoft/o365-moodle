@@ -24,7 +24,7 @@
 namespace local_o365\obj;
 
 /**
- * Class representing Office 365 user information.
+ * Class representing Microsoft 365 user information.
  */
 class o365user {
     protected $muserid = null;

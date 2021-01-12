@@ -897,8 +897,8 @@ class observers {
         }
 
         if ($user->auth != 'oidc') {
-            // recipient user is not office 365 user, exit.
-            debugging('SKIPPED: handle_notification_sent - recipient user is not office 365 user', DEBUG_DEVELOPER);
+            // recipient user is not Microsoft 365 user, exit.
+            debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
             return true;
         }
 
@@ -968,7 +968,7 @@ class observers {
     }
 
     /**
-     * Log out user from Office 365 if the user is using auth_oidc.
+     * Log out user from Microsoft 365 if the user is using auth_oidc.
      *
      * @param \core\event\user_loggedout $event
      *

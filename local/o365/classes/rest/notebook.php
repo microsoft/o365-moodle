@@ -49,8 +49,9 @@ class notebook extends \local_o365\rest\o365api {
     }
 
     /**
-     * Creates class notebook for office365 group.
-     * @param string $groupid O365 group id for which the class notebook should be created.
+     * Creates class notebook for Microsoft 365 group.
+     *
+     * @param string $groupid Microsoft group id for which the class notebook should be created.
      *
      * @return string $url url of created class notebook.
      */

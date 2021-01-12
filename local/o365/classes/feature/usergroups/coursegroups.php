@@ -251,7 +251,7 @@ class coursegroups {
     }
 
     /**
-     * Create an Office 365 unified group for a Moodle course.
+     * Create a Microsoft 365 unified group for a Moodle course.
      *
      * @param stdClass $course A course record.
      * @param string $groupprefix A string to prefix group names and mailNicknames.
@@ -304,7 +304,7 @@ class coursegroups {
     }
 
     /**
-     * Create an Office 365 class team for a Moodle course.
+     * Create a Microsoft 365 class team for a Moodle course.
      *
      * @param stdClass $course
      * @param array $ownerid
@@ -456,7 +456,7 @@ class coursegroups {
      * Resync the membership of a course group based on the users enrolled in the associated course.
      *
      * @param int $courseid The ID of the course.
-     * @param string $groupobjectid The object ID of the office 365 group.
+     * @param string $groupobjectid The object ID of the Microsoft 365 group.
      */
     public function resync_group_membership($courseid, $groupobjectid = null, $currentmembers = null) {
         $this->mtrace('Syncing group membership for course #'.$courseid);
@@ -628,7 +628,7 @@ class coursegroups {
     }
 
     /**
-     * The function will replace the simple notebook of a office 365 group with class notebook.
+     * The function will replace the simple notebook of a Microsoft 365 group with class notebook.
      * If o365 notebook is already present i.e. o365 group notebook setup is already done.
      */
     public function replace_group_notebook_job() {
@@ -831,7 +831,7 @@ class coursegroups {
      * Update study group photo.
      *
      * @param object $group Moodle group object.
-     * @param string $o365groupid Office 365 object id for group to update.
+     * @param string $o365groupid Microsoft 365 object id for group to update.
      * @return boolean True on success.
      */
     public function update_study_group_photo($group, $o365groupid) {
@@ -929,7 +929,7 @@ class coursegroups {
         $data->descriptionformat = $grouprec->descriptionformat;
         $data->groupid = $grouprec->id;
         $data->courseid = $grouprec->courseid;
-        // Pictures will be synced on a cron job after the group is provisioned on office 365.
+        // Pictures will be synced on a cron job after the group is provisioned on Microsoft 365.
         $data->picture = 0;
         $data->timecreated = $now;
         $data->timemodified = $now;
@@ -983,7 +983,7 @@ class coursegroups {
     }
 
     /**
-     * Create an Office 365 team for a Moodle course.
+     * Create a Microsoft 365 team for a Moodle course.
      *
      * @param $courseid
      * @param null $groupobjectid

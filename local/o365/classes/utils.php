@@ -184,10 +184,10 @@ class utils {
     }
 
     /**
-     * Get the UPN of the connected Office 365 account.
+     * Get the UPN of the connected Microsoft 365 account.
      *
      * @param int $userid The Moodle user id.
-     * @return string|null The UPN of the connected Office 365 account, or null if none found.
+     * @return string|null The UPN of the connected Microsoft 365 account, or null if none found.
      */
     public static function get_o365_upn($userid) {
         $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
@@ -195,7 +195,7 @@ class utils {
     }
 
     /**
-     * Determine if a user is connected to Office 365.
+     * Determine if a user is connected to Microsoft 365.
      *
      * @param int $userid The user's ID.
      * @return bool Whether they are connected (true) or not (false).
@@ -292,7 +292,7 @@ class utils {
     }
 
     /**
-     * Enable an additional Office 365 tenant/
+     * Enable an additional Microsoft 365 tenant/
      */
     public static function enableadditionaltenant($tenant) {
         $configuredtenants = get_config('local_o365', 'multitenants');
@@ -325,7 +325,7 @@ class utils {
     }
 
     /**
-     * Disable an additional Office 365 tenant.
+     * Disable an additional Microsoft 365 tenant.
      */
     public static function disableadditionaltenant($tenant) {
         $o365config = get_config('local_o365');

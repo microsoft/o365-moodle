@@ -309,7 +309,7 @@ class utils {
     }
 
     /**
-     * Return image tag to display office 365 group picture.
+     * Return image tag to display Microsoft 365 group picture.
      *
      * @param object $o365group Course group record.
      * @param string $image File name to use for image, ie f1.png, f2.png.

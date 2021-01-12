@@ -22,7 +22,7 @@
  */
 
 /**
- * Office 365 repository.
+ * Microsoft 365 repository.
  */
 class repository_office365 extends \repository {
 
@@ -1512,7 +1512,7 @@ class repository_office365 extends \repository {
         // Do embedding if relevant.
         if ($doembed === true) {
             if (\local_o365\utils::is_o365_connected($USER->id) !== true) {
-                // Embedding currently only supported for logged-in Office 365 users.
+                // Embedding currently only supported for logged-in Microsoft 365 users.
                 echo get_string('erroro365required', 'repository_office365');
                 die();
             }
