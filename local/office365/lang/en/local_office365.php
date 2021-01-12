@@ -21,5 +21,5 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-$string['pluginname'] = 'Office 365 Integration';
+$string['pluginname'] = 'Microsoft 365 Integration';
 $string['privacy:metadata'] = 'This plugin is just a shell plugin.';

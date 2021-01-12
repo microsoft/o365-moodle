@@ -54,7 +54,7 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
     // Make sure the user is logged in and has access to the module (plugins that are not course modules should leave out the 'cm' part).
     require_login($course, true, $cm);
 
-    // Item id is the office 365 group id in local_o365_coursegroupdata.
+    // Item id is the Microsoft 365 group id in local_o365_coursegroupdata.
     $itemid = array_shift($args); // The first item in the $args array.
 
     // Extract the filename / filepath from the $args array.

@@ -757,7 +757,7 @@ class acp extends base {
     }
 
     /**
-     * Resync deleted office 365 groups for courses and Moodle groups.
+     * Resync deleted Microsoft 365 groups for courses and Moodle groups.
      */
     public function mode_maintenance_coursegroupscheck() {
         global $DB;
@@ -801,7 +801,7 @@ class acp extends base {
                             continue;
                         }
                     } else {
-                        echo "Cleaning up object for Moodle group {$object->moodleid} Office 365 object id {$object->objectid}\n";
+                        echo "Cleaning up object for Moodle group {$object->moodleid} Microsoft 365 object id {$object->objectid}\n";
                     }
                 } else {
                     if (is_array($coursesenabled) && !in_array($object->moodleid, $coursesenabled)) {
@@ -830,7 +830,7 @@ class acp extends base {
                             continue;
                         }
                     } else {
-                        echo "Cleaning up object for Moodle course {$object->moodleid} Office 365 object id {$object->objectid}\n";
+                        echo "Cleaning up object for Moodle course {$object->moodleid} Microsoft 365 object id {$object->objectid}\n";
                     }
                 }
             } else {
@@ -1401,7 +1401,7 @@ class acp extends base {
         confirm_sesskey();
 
         if (\local_o365\utils::is_configured() !== true) {
-            mtrace('Office 365 not configured');
+            mtrace('Microsoft 365 not configured');
             return false;
         }
 
@@ -1451,13 +1451,13 @@ class acp extends base {
         if ($fromform = $mform->get_data()) {
             $o365username = trim($fromform->o365username);
 
-            // Check existing matches for Office user.
+            // Check existing matches for Microsoft user.
             $existingmatchforo365user = $DB->get_record('local_o365_connections', ['aadupn' => $o365username]);
             if (!empty($existingmatchforo365user)) {
                 throw new \moodle_exception('acp_userconnections_manualmatch_error_o365usermatched', 'local_o365');
             }
 
-            // Check existing tokens for Office 365 user (indicates o365 user is already connected to someone).
+            // Check existing tokens for Microsoft 365 user (indicates o365 user is already connected to someone).
             $existingtokenforo365user = $DB->get_record('auth_oidc_token', ['oidcusername' => $o365username]);
             if (!empty($existingtokenforo365user)) {
                 throw new \moodle_exception('acp_userconnections_manualmatch_error_o365userconnected', 'local_o365');

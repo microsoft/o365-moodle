@@ -38,7 +38,7 @@ $string['cfg_err_invalidclientid'] = 'ID client non valide';
 $string['cfg_err_invalidclientsecret'] = 'Secret client non valide';
 $string['cfg_icon_key'] = 'Icône';
 $string['cfg_icon_desc'] = 'Icône à afficher près du nom de fournisseur sur la page de connexion.';
-$string['cfg_iconalt_o365'] = 'Icône Office 365';
+$string['cfg_iconalt_o365'] = 'Icône Microsoft 365';
 $string['cfg_iconalt_locked'] = 'Icône verrouillée';
 $string['cfg_iconalt_lock'] = 'Icône de verrouillage';
 $string['cfg_iconalt_go'] = 'Cercle vert';
@@ -100,7 +100,7 @@ $string['errorjwtempty'] = 'JWT vide ou sans chaîne reçu.';
 $string['errorjwtinvalidheader'] = 'En-tête JWT non valide';
 $string['errorjwtmalformed'] = 'JWT malformé reçu.';
 $string['errorjwtunsupportedalg'] = 'JWS Alg ou JWE non pris en charge';
-$string['errorlogintoconnectedaccount'] = 'Cet utilisateur Office 365 est associé à un utilisateur Moodle, mais la connexion via OpenID Connect n\'est pas activée pour cet utilisateur Moodle. Veuillez vous connecter à Moodle en utilisant la méthode d\'authentification définie dans le compte de l\'utilisateur afin d\'utiliser les fonctionnalités Office 365';
+$string['errorlogintoconnectedaccount'] = 'Cet utilisateur Microsoft 365 est associé à un utilisateur Moodle, mais la connexion via OpenID Connect n\'est pas activée pour cet utilisateur Moodle. Veuillez vous connecter à Moodle en utilisant la méthode d\'authentification définie dans le compte de l\'utilisateur afin d\'utiliser les fonctionnalités Microsoft 365';
 $string['erroroidcnotenabled'] = 'Le plug-in d\'authentification OpenID Connect n\'est pas activé.';
 $string['errornodisconnectionauthmethod'] = 'Déconnexion impossible en l\'absence de plug-in d\'autorisation activé vers lequel se rabattre (soit la méthode de connexion précédente de l\'utilisateur, soit la méthode de connexion manuelle).';
 $string['erroroidcclientinvalidendpoint'] = 'URI du point d\'accès non valide reçu.';
@@ -126,7 +126,7 @@ $string['oidc:manageconnectionconnect'] = 'Permettre la connexion OpenID';
 $string['oidc:manageconnectiondisconnect'] = 'Permettre la déconnexion OpenID';
 
 $string['privacy:metadata:auth_oidc'] = 'Authentification OpenID Connect';
-$string['privacy:metadata:auth_oidc_prevlogin'] = 'Méthodes de connexion précédentes pour annuler les connexions Office 365';
+$string['privacy:metadata:auth_oidc_prevlogin'] = 'Méthodes de connexion précédentes pour annuler les connexions Microsoft 365';
 $string['privacy:metadata:auth_oidc_prevlogin:userid'] = 'L\'identifiant de l\'utilisateur Moodle';
 $string['privacy:metadata:auth_oidc_prevlogin:method'] = 'La méthode de connexion précédente';
 $string['privacy:metadata:auth_oidc_prevlogin:password'] = 'Le mot de passe précédent de l\'utilisateur (chiffré)';
@@ -144,7 +144,7 @@ $string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'Le jeton de rafraîc
 $string['privacy:metadata:auth_oidc_token:idtoken'] = 'Le jeton ID';
 
 // Dans les chaînes suivantes, $a réfère à un nom personnalisable pour le gestionnaire d'identité. Par exemple, ce pourrait être
-// "Office 365", "OpenID Connect", etc.
+// "Microsoft 365", "OpenID Connect", etc.
 $string['ucp_general_intro'] = 'Vous pouvez gérer votre connexion à {$a} ici. Si ce réglage est activé, vous pourrez voir votre compte {$a} pour vous connecter à Moodle au lieu d\'un nom d\'utilisateur et d\'un mot de passe distincts. Une fois connecté, vous n\'aurez plus à mémoriser votre nom d\'utilisateur et votre mot de passe pour Moodle ; toutes les connexions seront gérées par {$a}.';
 $string['ucp_login_start'] = 'Commencer à utiliser {$a} pour se connecter à Moodle';
 $string['ucp_login_start_desc'] = 'Votre compte passera à {$a} pour la connexion à Moodle. Une fois ce réglage activé, vous vous connecterez à l\'aide de vos informations d\'identification {$a} (votre mot de passe et votre nom d\'utilisateur Moodle actuels ne fonctionneront pas). Vous pouvez vous déconnecter de votre compte à tout moment et utiliser de nouveau la méthode d\'authentification habituelle Moodle.';
@@ -156,4 +156,4 @@ $string['ucp_status_disabled'] = 'Désactivé';
 $string['ucp_disconnect_title'] = 'Déconnexion {$a}';
 $string['ucp_disconnect_details'] = 'Cette opération déconnectera votre compte Moodle de {$a}. Vous aurez besoin de créer un nom d\'utilisateur et un mot de passe pour vous connecter à Moodle.';
 $string['ucp_title'] = 'Gestion de {$a}';
-$string['ucp_o365accountconnected'] = 'Ce compte Office 365 est déjà associé à un autre compte Moodle.';
+$string['ucp_o365accountconnected'] = 'Ce compte Microsoft 365 est déjà associé à un autre compte Moodle.';

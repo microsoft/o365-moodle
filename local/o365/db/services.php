@@ -89,7 +89,7 @@ $functions = [
 
 // Pre-built service.
 $services = [
-    'Moodle Office 365 Webservices' => [
+    'Moodle Microsoft 365 Webservices' => [
         'functions' => [
             'local_o365_create_onenoteassignment',
             'local_o365_get_onenoteassignment',
