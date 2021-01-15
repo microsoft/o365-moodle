@@ -442,16 +442,45 @@ $string['settings_options_usersync_desc'] = 'The following settings control user
 
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';
-$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br /><br />The school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
+$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD (Office 365 Groups) from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br /><br />The school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page. When students are removed from a Team/Office 365 Group, the student will be suspended from the Course or deleted from the Cohort.</a><br/><br/>';
 $string['settings_sds_coursecreation'] = 'Course Creation';
 $string['settings_sds_coursecreation_desc'] = 'These options control course creation in Moodle based on information in SDS.';
-$string['settings_sds_coursecreation_enabled'] = 'Create Courses';
-$string['settings_sds_coursecreation_enabled_desc'] = 'Create courses for these schools.';
-$string['settings_sds_enrolment_enabled'] = 'Enrol users';
-$string['settings_sds_enrolment_enabled_desc'] = 'Enrol students and teachers into courses created from SDS.';
+$string['settings_sds_coursecreation_enabled'] = 'Select School';
+$string['settings_sds_coursecreation_enabled_desc'] = 'Include Schools in sync.';
+
+$string['settings_sds_onlycurrent'] = 'Limit Current Courses';
+$string['settings_sds_onlycurrent_desc'] = 'Limit tasks to Courses with an TermEndDate. You would need to ensure the date coming from the SIS into SDS includes a course end date.';
+
+$string['settings_sds_createcourses'] = 'Create Courses';
+$string['settings_sds_createcourses_desc'] = 'Create Courses for all Office 365 Groups (classes) created by SDS.';
+
+$string['settings_sds_enrolment_enabled'] = 'Enrol Users in Courses';
+$string['settings_sds_enrolment_enabled_desc'] = 'Enrol students and teachers into Courses.';
+
+$string['settings_sds_createcohorts'] = 'Create Cohorts';
+$string['settings_sds_createcohorts_desc'] = 'Create Cohorts for all Office 365 Groups (classes) created by SDS. Ignores teachers.';
+
+$string['settings_sds_cohortincludeteacher'] = 'Include Teacher in Cohorts';
+$string['settings_sds_cohortincludeteacher_desc'] = 'Include Teachers in the Cohort creation, but if a Cohort is enrolled, the Teacher will need to be manually assigned a Teacher role.';
+
+$string['settings_sds_categorize'] = 'Categorise Courses or Cohorts';
+$string['settings_sds_categorize_desc'] = 'Courses will be created in Categories for subjects. To organise into Subjects, ensure that the SDS SIS information is populating the Subject the field in Azure.';
+
+$string['settings_sds_deletion'] = 'Clean Up';
+$string['settings_sds_deletion_desc'] = 'WARNING: This is only to be used if you wish to clean up synced courses in the case of an error. This is under development, eventually it will be moved into Maintenance to allow you to archive past courses created by the School Data Sync. All clean up activites will be executed first and then the sync task will exit.';
+
+$string['settings_sds_deletecourses'] = 'Delete SDS Courses';
+$string['settings_sds_deletecourses_desc'] = 'Delete any courses created by the SDS task. This will first remove any syncing between Moodle and Teams so that Teams will not be deleted as well. If this is checked, the rest of the task is ignored. This needs to be moved into Maintenance.';
+
+$string['settings_sds_deletecohorts'] = 'Delete SDS Cohorts';
+$string['settings_sds_deletecohorts_desc'] = 'Deletes any Cohorts created by the SDS task. Any cohort enrolments will also be deleted. This needs to be moved into Maintenance.';
+
+$string['settings_sds_twowaysync'] = 'Two Way Syncing';
+$string['settings_sds_twowaysync_desc'] = 'If two way sync is enabled, any changes to SDS enrolment will be reflected in changes to the Office 365 Group or Team. Manual changes to an Office 365 group will be ignored by the SDS process of incoming data from the SIS. In other words, with this on, if you delete a user in an SDS moodle course, the user will be deleted in the Office 365 group and will never come back in unless manually added. If off, any and all two way sync entries for SDS courses will be deleted.';
+
 $string['settings_sds_profilesync'] = 'Profile Data Sync';
 $string['settings_sds_profilesync_desc'] = 'These options control profile data syncing between SDS data and Moodle.';
-$string['settings_sds_profilesync_enabled'] = 'Enable';
+$string['settings_sds_profilesync_enabled'] = 'Profile Data Syncing';
 $string['settings_sds_profilesync_enabled_desc'] = 'Enable profile data syncing when we sync with SDS';
 $string['settings_sds_fieldmap'] = 'Field Mapping';
 $string['settings_sds_fieldmap_details'] = 'This controls how fields are mapped between SDS and Moodle.';

@@ -302,6 +302,7 @@ if ($hassiteconfig) {
     }
 
     if ($tab == LOCAL_O365_TAB_SDS || !empty($install)) {
+
         $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_sds_intro_previewwarning', 'local_o365');
         $desc .= new lang_string('settings_sds_intro_desc', 'local_o365', $scheduledtasks->out());
@@ -344,22 +345,55 @@ if ($hassiteconfig) {
             ];
             $settings->add(new \local_o365\adminsetting\sdsfieldmap('local_o365/sdsfieldmap', $label, $desc, $default));
 
-            $label = new lang_string('settings_sds_coursecreation', 'local_o365');
-            $desc = new lang_string('settings_sds_coursecreation_desc', 'local_o365');
-            $settings->add(new admin_setting_heading('local_o365_sds_coursecreation', $label, $desc));
-
             $label = new \lang_string('settings_sds_coursecreation_enabled', 'local_o365');
             $desc = new \lang_string('settings_sds_coursecreation_enabled_desc', 'local_o365');
             $default = [];
             $choices = [];
             foreach ($schools as $school) {
-                $choices[$school['objectId']] = $school['displayName'];
+                $choices[$school['id']] = $school['displayName'];
             }
             $settings->add(new admin_setting_configmulticheckbox('local_o365/sdsschools', $label, $desc, $default, $choices));
+
+            $label = new lang_string('settings_sds_onlycurrent', 'local_o365');
+            $desc = new lang_string('settings_sds_onlycurrent_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdsonlycurrent', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_createcourses', 'local_o365');
+            $desc = new lang_string('settings_sds_createcourses_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdscreatecourses', $label, $desc, '0'));
 
             $label = new lang_string('settings_sds_enrolment_enabled', 'local_o365');
             $desc = new lang_string('settings_sds_enrolment_enabled_desc', 'local_o365');
             $settings->add(new \admin_setting_configcheckbox('local_o365/sdsenrolmentenabled', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_twowaysync', 'local_o365');
+            $desc = new lang_string('settings_sds_twowaysync_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdstwowaysync', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_createcohorts', 'local_o365');
+            $desc = new lang_string('settings_sds_createcohorts_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdscreatecohorts', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_cohortincludeteacher', 'local_o365');
+            $desc = new lang_string('settings_sds_cohortincludeteacher_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdscohortincludeteacher', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_categorize', 'local_o365');
+            $desc = new lang_string('settings_sds_categorize_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdscategorize', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_deletion', 'local_o365');
+            $desc = new lang_string('settings_sds_deletion_desc', 'local_o365');
+            $settings->add(new admin_setting_heading('local_o365_sds_deletion', $label, $desc));
+
+            $label = new lang_string('settings_sds_deletecourses', 'local_o365');
+            $desc = new lang_string('settings_sds_deletecourses_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdsdeletecourses', $label, $desc, '0'));
+
+            $label = new lang_string('settings_sds_deletecohorts', 'local_o365');
+            $desc = new lang_string('settings_sds_deletecohorts_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/sdsdeletecohorts', $label, $desc, '0'));
+
         } else {
             $desc = new lang_string('settings_sds_noschools', 'local_o365');
             $settings->add(new admin_setting_heading('local_o365_sds_noschools', '', $desc));
