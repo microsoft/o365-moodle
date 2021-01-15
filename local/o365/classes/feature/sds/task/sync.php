@@ -178,7 +178,7 @@ class sync extends \core\task\scheduled_task {
                 //Get or create a class Course
                 if ($sdscreatecourses) {
                     $course = static::get_or_create_class_course($classofficegroupid, $classcode, $classname, $classstartdate, $classenddate, $coursecat->id, $sdstwowaysync);
-                    if (!empty($sdsenrolenabled)
+                    if (!empty($sdsenrolenabled))
                     {
                         static::enrol_members_in_course($course, $members, $apiclient, $teacherrole, $studentrole);
                     }
@@ -359,16 +359,16 @@ class sync extends \core\task\scheduled_task {
         $course = $DB->get_record('course', $params);
         if (!empty($course)) {
             $params['moodleid'] = $course->id;
-            if (!empty($sdsrecord) //Check that the SDS record is correct
+            if (!empty($sdsrecord)) //Check that the SDS record is correct
             {
                 if ($sdsrecord->moodleid != $course->id) //Update record
                 {
-                    $params['timemodified'] => $now;
+                    $params['timemodified'] = $now;
                     $DB->update_record('local_o365_objects',$params);
                 }
             } else { //record doesnt exist but course is found?? insert record
-                $params['timecreated'] => $now;
-                $params['timemodified'] => $now;
+                $params['timecreated'] = $now;
+                $params['timemodified'] = $now;
                 $DB->insert_record('local_o365_objects',$params);
             }
             static::mtrace('.........Found Course for '.$classname);
@@ -389,8 +389,8 @@ class sync extends \core\task\scheduled_task {
 
         //create SDS entry in local o365 objects
         $params['moodleid'] = $course->id;
-        $params['timecreated'] => $now;
-        $params['timemodified'] => $now;
+        $params['timecreated'] = $now;
+        $params['timemodified'] = $now;
         $DB->insert_record('local_o365_objects',$params);
 
         //if not two way syncing, finish here...
