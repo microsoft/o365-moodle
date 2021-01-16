@@ -442,7 +442,7 @@ $string['settings_options_usersync_desc'] = 'The following settings control user
 
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';
-$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD (Office 365 Groups) from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br /><br />The school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page. When students are removed from a Team/Office 365 Group, the student will be suspended from the Course or deleted from the Cohort.</a><br/><br/>';
+$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD (Office 365 Groups) from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br /><br />The school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page</a>. When students are removed from a Team/Office 365 Group, the student will be suspended from the Course or deleted from the Cohort.<br/><br/>';
 $string['settings_sds_coursecreation'] = 'Course Creation';
 $string['settings_sds_coursecreation_desc'] = 'These options control course creation in Moodle based on information in SDS.';
 $string['settings_sds_coursecreation_enabled'] = 'Select School';
@@ -476,7 +476,10 @@ $string['settings_sds_deletecohorts'] = 'Delete SDS Cohorts';
 $string['settings_sds_deletecohorts_desc'] = 'Deletes any Cohorts created by the SDS task. Any cohort enrolments will also be deleted. This needs to be moved into Maintenance.';
 
 $string['settings_sds_twowaysync'] = 'Two Way Syncing';
-$string['settings_sds_twowaysync_desc'] = 'If two way sync is enabled, any changes to SDS enrolment will be reflected in changes to the Office 365 Group or Team. Manual changes to an Office 365 group will be ignored by the SDS process of incoming data from the SIS. In other words, with this on, if you delete a user in an SDS moodle course, the user will be deleted in the Office 365 group and will never come back in unless manually added. If off, any and all two way sync entries for SDS courses will be deleted.';
+$string['settings_sds_twowaysync_desc'] = 'If two way sync is enabled, any changes to SDS enrolment will be reflected in changes to the Office 365 Group or Team. WARNING: Manual changes to an Office 365 group will be ignored by the SDS process of incoming data from the SIS. In other words, with this on, if you delete a user in an SDS moodle course, the user will be deleted in the Office 365 group and will never come back in unless manually added, or the SDS is reset. ';
+
+$string['settings_sds_deletetwowaysync'] = 'Delete Two Way Syncing';
+$string['settings_sds_deletetwowaysync_desc'] = 'Will remove all Two Way Syncing from SDS Moodle Courses. If checked, it will run this task and ignore all others.This needs to be moved into Maintenance.';
 
 $string['settings_sds_profilesync'] = 'Profile Data Sync';
 $string['settings_sds_profilesync_desc'] = 'These options control profile data syncing between SDS data and Moodle.';

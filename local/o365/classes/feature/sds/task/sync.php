@@ -56,6 +56,7 @@ class sync extends \core\task\scheduled_task {
         $sdsenrolementenabled = get_config('local_o365', 'sdsenrolmentenabled');
         $profilesyncenabled = get_config('local_o365', 'sdsprofilesyncenabled');
         $sdsonlycurrent = get_config('local_o365', 'sdsonlycurrent');
+        $deletetwowaysync = get_config('local_o365', '$deletetwowaysync');
 
         //deletion tasks - this needs to be moved under maintenance activites at some point and should be an archive process
         if ($sdsdeletecourses) {
@@ -67,8 +68,9 @@ class sync extends \core\task\scheduled_task {
             return; //do not continue when delete cohorts is chosen
         }
         //this is very simple delete operation for any two way syncs established.
-        if (!$sdstwowaysync) {
+        if ($deletetwowaysync) {
             static::remove_all_SDS_syncing();
+            return;
         } // continue
 
     
@@ -147,7 +149,7 @@ class sync extends \core\task\scheduled_task {
                 //Limit to only current courses
                 if ($sdsonlycurrent) {
                     if  (substr($classname, 0, 3 ) === "Exp"){
-                        static::mtrace('......... Skipping enrolments for course because of Expiry');
+                        static::mtrace('......... Skipping enrolments because of Expiry');
                         continue;
                     }
                     $now = time();
@@ -160,12 +162,13 @@ class sync extends \core\task\scheduled_task {
                 }
 
                 //Get or create a course category else current course category is School name
+                $coursecat = $schoolcat;
                 if ($sdscategorize) {
                     $coursecat = static::get_or_create_category($subjectname, $schoolcat->id);
                 }
 
                 //Get class members
-                $members = $apiclient->get_section_members($classofficegroup);
+                $members = $apiclient->get_section_members($classofficegroupid);
 
                 //Get or create a class Cohort
                 if ($sdscreatecohorts) {
@@ -301,11 +304,40 @@ class sync extends \core\task\scheduled_task {
         foreach ($sdsrecords as $sdsrecord) {
             $courseid = $sdsrecord->moodleid;
             $params['moodleid'] = $courseid;
-            $DB->delete_record('local_o365_objects',$params);
+            $DB->delete_records('local_o365_objects',$params); //delete sds entry
             $params['type'] = 'subtype';
             $params['group'] = 'course';
-            $DB->delete_record('local_o365_objects',$params);
-            delete_course($courseid); // only delete course after syncing is turned off
+            $DB->delete_records('local_o365_objects',$params); //delete sds syncing
+            delete_course($courseid); // only delete course after syncing is removed, else obervers are triggered.
+        }
+        return;
+    }
+
+    /**
+     * Remove all SDS cohorts - probably should be changed to an archive at some point
+     * Clears all SDS entries from the database
+     * Clears all Course Syncing related to SDS
+    */
+    public static function remove_all_SDS_cohorts()
+    {
+        static::mtrace('...Remove all SDS cohorts ');
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/cohort/lib.php');
+        //Check that SDS tracking is correct, e.g. moodle id = courseid
+        $params = ['type' => 'sdssection', 'subtype' => 'cohort'];
+        //get all sds records
+        $sdsrecords = $DB->get_records('local_o365_objects', $params);
+
+        if (empty($sdsrecords)) { 
+            return;
+        }
+        foreach ($sdsrecords as $sdsrecord) {
+            $cohortid = $sdsrecord->moodleid;
+            static::mtrace('...Remove cohort: '.$cohortid);
+            $params['moodleid'] = $cohortid;
+            $DB->delete_records('local_o365_objects',$params); //deletes cohort entry
+            $cohort = $DB->get_record('cohort', array('id'=>$cohortid));
+            cohort_delete_cohort($cohort);
         }
         return;
     }
@@ -329,7 +361,7 @@ class sync extends \core\task\scheduled_task {
             $params['type'] = 'sds';
             $params['group'] = 'course';
             $params['moodleid'] = $courseid;
-            $DB->delete_record('local_o365_objects',$params);
+            $DB->delete_records('local_o365_objects',$params);
         }
 
         return;
@@ -355,8 +387,9 @@ class sync extends \core\task\scheduled_task {
         $sdsrecord = $DB->get_record('local_o365_objects', $params);
 
         // Look for existing Course with idnumber (officegroupid) (you can switch syncing onto another course)
-        $params = ['idnumber'=>$classofficegroupid];
-        $course = $DB->get_record('course', $params);
+        $courseparams = [];
+        $courseparams['idnumber'] = $classofficegroupid;
+        $course = $DB->get_record('course', $courseparams);
         if (!empty($course)) {
             $params['moodleid'] = $course->id;
             if (!empty($sdsrecord)) //Check that the SDS record is correct
@@ -429,15 +462,51 @@ class sync extends \core\task\scheduled_task {
     public static function get_or_create_class_cohort($classofficegroupid, $classcode, $classname, $coursecat) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/cohort/lib.php');
-        //try to get existing cohort with office365 id
-        $cohort = $DB->get_record('cohort', ['idnumber' => $classofficegroupid]);
-        // Cohort was not found. Create a new one using lib function
-        if (empty($cohort)) { 
-            static::mtrace('.........Creating Cohort for '.$classname);
-            $catcontext = \context_coursecat::instance($coursecat);
-            $cohortid = cohort_add_cohort((object)array('idnumber' => $classofficegroupid,'name' => $classname, 'contextid' => $catcontext->id));
-            $cohort = $DB->get_record('cohort', ['id' => $cohortid]);
-        } else { static::mtrace('.........Found Cohort for '.$classname); }
+        $now = time();
+
+        //Check that SDS tracking is correct, e.g. moodle id = courseid
+        $params = ['type' => 'sdssection', 'subtype' => 'cohort', 'objectid' => $classofficegroupid];
+        $sdsrecord = $DB->get_record('local_o365_objects', $params);
+
+        $cohortparams = [];
+        $cohortparams['idnumber'] = $classofficegroupid;
+        $cohort = $DB->get_record('cohort', $cohortparams);
+        $catcontext = \context_coursecat::instance($coursecat);
+
+        if (!empty($cohort)) {
+
+            if ($cohort->contextid != $catcontext->id) //check if category is correct, else fix
+            {
+                static::mtrace('.........Updating category for '.$classname);
+                $cohortparams['id'] = $cohort->id;
+                $cohortparams['timemodified'] = $now;
+                $cohortparams['contextid'] = $catcontext->id;
+                $DB->update_record('cohort',$cohortparams);
+            }
+
+            $params['moodleid'] = $cohort->id;
+            if (!empty($sdsrecord)) //Check that the SDS record is correct else fix
+            {
+                if ($sdsrecord->moodleid != $cohort->id) //Update record
+                {
+                    static::mtrace('.........Updating sds record for '.$classname);
+                    $params['timemodified'] = $now;
+                    $DB->update_record('local_o365_objects',$params);
+                }
+            } else { //record doesnt exist but cohort is found?? insert record
+                static::mtrace('.........Inserting sds record for '.$classname);
+                $params['timecreated'] = $now;
+                $params['timemodified'] = $now;
+                $params['o365name'] = $classcode;
+                $DB->insert_record('local_o365_objects',$params);
+            }
+            static::mtrace('.........Found Cohort for '.$classname);
+            return $cohort;
+        }
+
+        static::mtrace('.........Creating Cohort for '.$classname);
+        $cohortid = cohort_add_cohort((object)array('idnumber' => $classofficegroupid,'name' => $classname, 'contextid' => $catcontext->id));
+        $cohort = $DB->get_record('cohort', ['id' => $cohortid]);
         return $cohort;
     }
 
@@ -498,7 +567,6 @@ class sync extends \core\task\scheduled_task {
 
             if (!empty($objectrec)) {
                 
-                /* THERE IS AN ERROR HERE???? */
                 $role = null;
                 $type = isset($member[$apiclient::PREFIX.'_ObjectType']) ? $member[$apiclient::PREFIX.'_ObjectType'] : '';
                 switch ($type) {
@@ -590,27 +658,34 @@ class sync extends \core\task\scheduled_task {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/cohort/lib.php');
 
-        //get current cohort members to keep track off any extra
+        //static::mtrace('.........Enrolling users in cohort......');
+        //get current cohort members checklist to ensure correct membership
         $cohortmembers = [];
-        $sql = "SELECT userid FROM {cohort_members}";
-        $cohortmembers = $DB->get_records_sql($sql, array('cohortid'=>$cohort->id));
+        $sql = "SELECT userid FROM {cohort_members} WHERE cohortid = ?";
+        $cohortmembers = $DB->get_records_sql($sql, array($cohort->id));
+        //static::mtrace('.........Cohort Membership: '.var_dump($cohortmembers));
 
+        //for each member from o365 group
         foreach ($members['value'] as $member) {
             $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $member['id']]); //need to get userid (moodleid) from Office 365 ID
-
             //check to see if Teacher if so skip -- not sure what to do with teachers??
             $type = isset($member[$apiclient::PREFIX.'_ObjectType']) ? $member[$apiclient::PREFIX.'_ObjectType'] : '';
-            if (($type == 'Teacher') && (!$cohortincludeteacher)) {
-                continue;
+            if ($type == 'Teacher') {
+                if (!$cohortincludeteacher)
+                {
+                    continue;
+                }
+                //static::mtrace('............Teacher: '.$objectrec->moodleid." is placed in cohort");
             }
-
+            
             //user exists in office 365 Moodle
             if (!empty($objectrec)) {
                 //check to see if user from Office Group, if so remove from checklist
                 if (isset($cohortmembers[$objectrec->moodleid])) {
+                    //static::mtrace('............User: '.$objectrec->moodleid.' already found in cohort: '.$cohort->id);
                     unset($cohortmembers[$objectrec->moodleid]);
-                } else { //user does not exist in cohort therefore add
-                    static::mtrace('.........Adding user to cohort. User id:'.$cohortmembers[$objectrec->moodleid]->userid);
+                } else { //user does not exist in cohort, therefore add to cohort
+                    static::mtrace('............Adding user: '.$objectrec->moodleid.' to cohort: '.$cohort->id);
                     cohort_add_member($cohort->id, $objectrec->moodleid);
                 }
             }
@@ -619,7 +694,7 @@ class sync extends \core\task\scheduled_task {
         //remaining users are enrolled but not in the SDS, therefore remove member from cohort
         if (!empty($cohortmembers)) {
             foreach ($cohortmembers as $user) {
-                static::mtrace('.........Removing user from cohort. User id: '.$user->userid);
+                static::mtrace('............Removing user from cohort. User id: '.var_dump($user));
                 cohort_remove_member($cohort->id,$user->userid);
             }
         }

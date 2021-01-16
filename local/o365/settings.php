@@ -390,6 +390,10 @@ if ($hassiteconfig) {
             $desc = new lang_string('settings_sds_deletecourses_desc', 'local_o365');
             $settings->add(new \admin_setting_configcheckbox('local_o365/sdsdeletecourses', $label, $desc, '0'));
 
+            $label = new lang_string('settings_sds_deletetwowaysync', 'local_o365');
+            $desc = new lang_string('settings_sds_deletetwowaysync_desc', 'local_o365');
+            $settings->add(new \admin_setting_configcheckbox('local_o365/deletesdstwowaysync', $label, $desc, '0'));
+
             $label = new lang_string('settings_sds_deletecohorts', 'local_o365');
             $desc = new lang_string('settings_sds_deletecohorts_desc', 'local_o365');
             $settings->add(new \admin_setting_configcheckbox('local_o365/sdsdeletecohorts', $label, $desc, '0'));
