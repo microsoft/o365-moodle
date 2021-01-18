@@ -514,7 +514,7 @@ class ajax extends base {
             $data->info[] = get_string('settings_notice_restalreadyenabled', 'local_o365');
         }
 
-        // Enable Office 365 Webservices.
+        // Enable Microsoft 365 Webservices.
         $webservicemanager = new \webservice();
         $o365service = $webservicemanager->get_external_service_by_shortname('o365_webservices');
         if (!$o365service->enabled) {
