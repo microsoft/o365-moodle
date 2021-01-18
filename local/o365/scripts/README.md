@@ -1,6 +1,6 @@
 # Register Moodle with Azure AD using Windows PowerShell
 
-This PowerShell Script provisions a new Azure AD application for your Office 365 tenant, which will be used by the [Office 365 Moodle Plugin](https://github.com/Microsoft/o365-moodle/). The script will provision the app for your O365 tenant, set up all the required Reply URLs and Permissions for the provisioned app and return the AppID and Key. You can use the generated AppID and Key in your O365 Moodle Plugin Setup Page to configure your Moodle server with Azure AD.
+This PowerShell Script provisions a new Azure AD application for your Microsoft 365 tenant, which will be used by the [Microsoft 365 Moodle Plugin](https://github.com/Microsoft/o365-moodle/). The script will provision the app for your O365 tenant, set up all the required Reply URLs and Permissions for the provisioned app and return the AppID and Key. You can use the generated AppID and Key in your O365 Moodle Plugin Setup Page to configure your Moodle server with Azure AD.
 
 ## Requirements
 
@@ -49,11 +49,11 @@ _From Start Menu_:
 ### 5. Paste the App Credentials to the O365 Moodle Plugin Setup page
 
 * Login to your Moodle server as an adminstratror.
-* Go to *Site Administration -> Plugins -> Microsoft Office 365 Integration*.
+* Go to *Site Administration -> Plugins -> Microsoft 365 Integration*.
 * Paste the *Application ID* returned by the script into the `Application ID` field.
 * Paste the *Application Key* returned by the script into the `Key` field.
 * Click on "Save changes".
-* Follow the next steps in the Setup page to successfully configure your Moodle Server with your Office 365 tenant.
+* Follow the next steps in the Setup page to successfully configure your Moodle Server with your Microsoft 365 tenant.
 
 ## Code of Conduct
 

@@ -301,7 +301,7 @@ class sync extends \core\task\scheduled_task {
     /**
      * Get or create the course category for a school.
      *
-     * @param string $schoolobjectid The Office 365 object ID of the school.
+     * @param string $schoolobjectid The Microsoft 365 object ID of the school.
      * @param string $schoolname The name of the school.
      * @return \coursecat A coursecat object for the retrieved or created course category.
      */

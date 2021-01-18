@@ -1,5 +1,5 @@
 # Moodle Plugins for Microsoft Services
-*including* **Office 365** *and other Microsoft services*
+*including* **Microsoft 365** *and other Microsoft services*
 
 ## Microsoft OneNote Assignment Submission Plugin
 

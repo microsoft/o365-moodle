@@ -31,6 +31,6 @@ $string['errorwhiledownload'] = 'ファイルのダウンロード中にエラ�
 $string['file'] = 'ファイル';
 $string['myfiles'] = 'マイファイル';
 $string['office365:view'] = 'OneDrive for Businessリポジトリを表示する';
-$string['pluginname'] = 'Office 365';
+$string['pluginname'] = 'Microsoft 365';
 $string['pluginname_help'] = 'OneDrive for Businessリポジトリ';
 $string['upload'] = '新しいファイルをアップロードする';

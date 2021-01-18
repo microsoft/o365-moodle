@@ -1,2 +1,2 @@
 <?php
-$string['pluginname'] = 'Integrace Office 365';
+$string['pluginname'] = 'Integrace Microsoft 365';
