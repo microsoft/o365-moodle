@@ -486,9 +486,14 @@ class acp extends base {
      * Endpoint to change Teams customization.
      */
     public function mode_usergroupcustom_change() {
-        $coursedata = json_decode(required_param('coursedata', PARAM_RAW), true);
         require_sesskey();
 
+        // Save enabled by default on new course settings.
+        $enabledfornewcourse = required_param('newcourse', PARAM_BOOL);
+        set_config('sync_new_course', $enabledfornewcourse, 'local_o365');
+
+        // Save course settings.
+        $coursedata = json_decode(required_param('coursedata', PARAM_RAW), true);
         foreach ($coursedata as $courseid => $course) {
             if (!is_scalar($courseid) || ((string)$courseid !== (string)(int)$courseid)) {
                 // Non-intlike courseid value. Invalid. Skip.
@@ -542,7 +547,7 @@ class acp extends base {
      * Teams customization.
      */
     public function mode_usergroupcustom() {
-        global $OUTPUT, $PAGE;
+        global $CFG, $OUTPUT, $PAGE;
 
         $PAGE->navbar->add(get_string('acp_usergroupcustom', 'local_o365'), new \moodle_url($this->url, ['mode' => 'usergroupcustom']));
 
@@ -691,7 +696,10 @@ class acp extends base {
         $js .= ' // Send data to server. '."\n";
         $js .= '$.ajax({
             url: \''.$endpoint->out(false).'\',
-            data: {coursedata: JSON.stringify(coursedata)},
+            data: {
+                coursedata: JSON.stringify(coursedata),
+                newcourse: $("input#id_s_local_o365_sync_new_course").prop("checked"),
+            },
             type: "POST",
             success: function(data) {
                 console.log(data);
@@ -706,6 +714,13 @@ class acp extends base {
         // Option to enable all sync features on all pages.
         echo \html_writer::tag('button', get_string('acp_usrgroupcustom_enable_all', 'local_o365'),
             ['onclick' => 'local_o365_usergroup_all_set_feature(1)']);
+
+        // Option to enable sync by default for new courses.
+        require_once($CFG->libdir . '/adminlib.php');
+        $enablefornewcourse = new \admin_setting_configcheckbox('local_o365/sync_new_course',
+            get_string('acp_usergroupcustom_new_course', 'local_o365'),
+            get_string('acp_usergroupcustom_new_course_desc', 'local_o365'), '0');
+        echo $enablefornewcourse->output_html(get_config('local_o365', 'sync_new_course'));
 
         // Bulk Operations
         $strbulkenable = get_string('acp_usergroupcustom_bulk_enable', 'local_o365');
