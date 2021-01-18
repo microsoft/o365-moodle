@@ -378,13 +378,32 @@ class unified extends \local_o365\rest\o365api {
         $url = preg_replace("/-my.sharepoint.com/", ".sharepoint.com", $config->odburl);
         $o365urls = [
             // First time visiting the onedrive or notebook urls will result in a please wait while we provision onedrive message.
-            'onedrive' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=documents',
-            'notebook' => 'https://'.$url.'/_layouts/groupstatus.aspx?id='.$objectid.'&target=notebook',
-            'conversations' => 'https://outlook.office.com/owa/?path=/group/'.$group['mail'].'/mail',
-            'calendar' => 'https://outlook.office365.com/owa/?path=/group/'.$group['mail'].'/calendar',
-            'team' => 'https://teams.microsoft.com',
+            'onedrive' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=documents',
+            'notebook' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=notebook',
+            'conversations' => 'https://outlook.office.com/owa/?path=/group/' . $group['mail'] . '/mail',
+            'calendar' => 'https://outlook.office365.com/owa/?path=/group/' . $group['mail'] . '/calendar',
+            'team' => $this->get_teams_url($objectid),
         ];
         return $o365urls;
+    }
+
+    /**
+     * Return the URL to the team for the group/Team with the given ID.
+     *
+     * @param $objectid
+     *
+     * @return mixed|string
+     */
+    public function get_teams_url($objectid) {
+        $response = $this->apicall('get', '/teams/' . $objectid);
+        $response = $this->process_apicall_response($response);
+        if (array_key_exists('webUrl', $response) && $response['webUrl']) {
+            $teamsurl = $response['webUrl'];
+        } else {
+            $teamsurl = 'https://teams.microsoft.com';
+        }
+
+        return $teamsurl;
     }
 
     /**
