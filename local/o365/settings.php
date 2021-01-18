@@ -462,12 +462,18 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::end_div();
         $settings->add(new admin_setting_heading('local_o365/teams_setting_banner', '', $bannerhtml));
 
-        // Instructions.
-        $userrole = $DB->get_record('role', ['shortname' => 'user'], '*', MUST_EXIST);
-        $edituserroleurl = new moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $userrole->id]);
-        $settings->add(new admin_setting_heading('local_o365/teams_setting_additional_instructions', '',
-            get_string('settings_teams_additional_instructions', 'local_o365',
-                ['edituserroleurl' => $edituserroleurl->out()])));
+        // Moodle set up header.
+        $settings->add(new admin_setting_heading('local_o365/teams_setting_moodle_setup_heading', '',
+            get_string('settings_teams_moodle_setup_heading', 'local_o365')));
+
+        //Setup Moodle Settings for Teams
+        $label = new lang_string('settings_moodlesettingssetup', 'local_o365');
+        $desc = new lang_string('settings_moodlesettingssetup_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\moodlesetup('local_o365/moodlesetup', $label, $desc));
+
+        //Instructions.
+        $settings->add(new admin_setting_heading('local_o365/teams_setting_instructions', '',
+            get_string('settings_teams_additional_instructions', 'local_o365')));
 
         // Setting bot_app_id.
         $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
