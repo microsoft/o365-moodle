@@ -740,7 +740,8 @@ class acp extends base {
         echo  \html_writer::tag('button', get_string('savechanges'),
             ['class'=>'buttonsbar', 'onclick' => 'local_o365_usergroup_save()']);
 
-        $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom']);
+        $searchtext = optional_param('search', '', PARAM_TEXT);
+        $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom', 'search' => $searchtext]);
         echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
         $this->standard_footer();
     }
