@@ -621,6 +621,7 @@ $string['errorchecksystemapiuser'] = 'Could not get a system API user token, ple
 $string['erroracpapcantgettenant'] = 'Could not get Azure AD tenant, please enter manually.';
 $string['erroracpcantgettenant'] = 'Could not get OneDrive URL, please enter manually.';
 $string['errorcreatingteamfromgroup'] = 'Could not create team from group. Please check group exists and group has owner.';
+$string['errorprovisioningapp'] = 'Could not provision the Moodle app in the Team.';
 $string['erroro365apibadcall'] = 'Error in API call.';
 $string['erroro365apibadcall_message'] = 'Error in API call: {$a}';
 $string['erroro365apibadpermission'] = 'Permission not found';
