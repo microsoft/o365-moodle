@@ -89,6 +89,15 @@ $configkey = new lang_string('cfg_userrestrictionscasesensitive_key', 'auth_oidc
 $configdesc = new lang_string('cfg_userrestrictioncasesensitive_desc', 'auth_oidc');
 $settings->add(new admin_setting_configcheckbox('auth_oidc/userrestrictionscasesensitive', $configkey, $configdesc, '1'));
 
+$configkey = new lang_string('cfg_signoffintegration_key', 'auth_oidc');
+$configdesc = new lang_string('cfg_signoffintegration_desc', 'auth_oidc', $CFG->wwwroot);
+$settings->add(new admin_setting_configcheckbox('auth_oidc/single_sign_off', $configkey, $configdesc, '0'));
+
+$configkey = new lang_string('cfg_logoutendpoint_key', 'auth_oidc');
+$configdesc = new lang_string('cfg_logoutendpoint_desc', 'auth_oidc');
+$configdefault = 'https://login.microsoftonline.com/common/oauth2/logout';
+$settings->add(new admin_setting_configtext('auth_oidc/logouturi', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
 $label = new lang_string('cfg_debugmode_key', 'auth_oidc');
 $desc = new lang_string('cfg_debugmode_desc', 'auth_oidc');
 $settings->add(new \admin_setting_configcheckbox('auth_oidc/debugmode', $label, $desc, '0'));

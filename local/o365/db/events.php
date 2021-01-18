@@ -210,12 +210,6 @@ $observers = [
         'internal'    => false,
     ],
     [
-        'eventname'   => '\core\event\user_loggedout',
-        'callback'    => '\local_o365\observers::handle_user_loggedout',
-        'priority'    => 200,
-        'internal'    => true,
-    ],
-    [
         'eventname'   => '\core\event\config_log_created',
         'callback'    => '\local_o365\observers::handle_config_log_created',
         'priority'    => 200,
