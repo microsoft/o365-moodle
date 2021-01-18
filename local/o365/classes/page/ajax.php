@@ -447,4 +447,117 @@ class ajax extends base {
 
         echo $this->ajax_response($data, $success);
     }
+
+    /**
+     * Check setup in Moodle.
+     */
+    public function mode_checkteamsmoodlesetup() {
+        global $CFG;
+        require_once($CFG->libdir.'/adminlib.php');
+        require_once($CFG->dirroot . '/webservice/lib.php');
+        require_once($CFG->dirroot . '/lib/classes/component.php');
+
+        $systemcontext = \context_system::instance();
+
+        $data = new \stdClass;
+        $data->success = [];
+        $data->errormessages = [];
+        $data->info = [];
+        $success = true;
+
+        // Check and enable Open ID authentication.
+        $auth = 'oidc';
+        $enabledauths = get_enabled_auth_plugins(true);
+        if (!in_array($auth, $enabledauths)) {
+            $enabledauths[] = $auth;
+            $enabledauths = array_unique($enabledauths);
+            if (set_config('auth', implode(',', $enabledauths))) {
+                $data->success[] = get_string('settings_notice_oidcenabled', 'local_o365');
+            } else {
+                $data->errormessages[] = get_string('settings_notice_oidcnotenabled', 'local_o365');
+                $success = false;
+            }
+        } else {
+            $data->info[] = get_string('settings_notice_oidcalreadyenabled', 'local_o365');
+        }
+
+        // Enabling admin settings.
+        $count = admin_write_settings([
+            's__allowframembedding' => 1, // Allow frame embedding
+            's__enablewebservices' => 1,  // Enable webservices
+            ]);
+        if ($count == 0) {
+            $data->info[] = get_string('settings_notice_webservicesframealreadyenabled', 'local_o365');
+        } else {
+            $data->success[] = get_string('settings_notice_webservicesframeenabled', 'local_o365');
+        }
+
+        // Enable REST protocol.
+        $webservice = 'rest';
+        $available_webservices = \core_component::get_plugin_list('webservice');
+        $active_webservices = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
+        foreach ($active_webservices as $key=>$active) {
+            if (empty($available_webservices[$active])) {
+                unset($active_webservices[$key]);
+            }
+        }
+        if (!in_array($webservice, $active_webservices)) {
+            $active_webservices[] = $webservice;
+            $active_webservices = array_unique($active_webservices);
+            if (set_config('webserviceprotocols', implode(',', $active_webservices))) {
+                $data->success[] = get_string('settings_notice_restenabled', 'local_o365');
+            } else {
+                $data->errormessages[] = get_string('settings_notice_restnotenabled', 'local_o365');
+                $success = false;
+            }
+        } else {
+            $data->info[] = get_string('settings_notice_restalreadyenabled', 'local_o365');
+        }
+
+        // Enable Office 365 Webservices.
+        $webservicemanager = new \webservice();
+        $o365service = $webservicemanager->get_external_service_by_shortname('o365_webservices');
+        if (!$o365service->enabled) {
+            $o365service->enabled = 1;
+            $webservicemanager->update_external_service($o365service);
+            $params = array(
+                'objectid' => $o365service->id
+            );
+            $event = \core\event\webservice_service_updated::create($params);
+            $event->trigger();
+            $data->success[] = get_string('settings_notice_o365serviceenabled', 'local_o365');
+        } else {
+            $data->info[] = get_string('settings_notice_o365servicealreadyenabled', 'local_o365');
+        }
+
+        // Enable permission to create Webservice token.
+        $caproles = array_keys(get_roles_with_capability('moodle/webservice:createtoken', CAP_ALLOW, $systemcontext));
+        if (in_array($CFG->defaultuserroleid, $caproles)) {
+            $data->info[] = get_string('settings_notice_createtokenalreadyallowed', 'local_o365');
+        } else {
+            if (assign_capability('moodle/webservice:createtoken', CAP_ALLOW, $CFG->defaultuserroleid, $systemcontext->id, true)) {
+                $data->success[] = get_string('settings_notice_createtokenallowed', 'local_o365');
+            } else {
+                $data->error[] = get_string('settings_notice_createtokennotallowed', 'local_o365');
+            }
+        }
+
+
+        // Enable permission to use REST Protocol.
+        $caproles = array_keys(get_roles_with_capability('webservice/rest:use', CAP_ALLOW, $systemcontext));
+        if (in_array($CFG->defaultuserroleid, $caproles)) {
+            $data->info[] = get_string('settings_notice_restusagealreadyallowed', 'local_o365');
+        } else {
+            if (assign_capability('webservice/rest:use', CAP_ALLOW, $CFG->defaultuserroleid, $systemcontext->id, true)) {
+                $data->success[] = get_string('settings_notice_restusageallowed', 'local_o365');
+            } else {
+                $data->error[] = get_string('settings_notice_restusagenotallowed', 'local_o365');
+            }
+        }
+
+        \core\session\manager::gc(); // Remove stale sessions.
+        \core_plugin_manager::reset_caches();
+
+        echo $this->ajax_response($data, $success);
+    }
 }

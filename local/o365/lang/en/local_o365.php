@@ -530,17 +530,39 @@ $string['settings_sds_noschools'] = '<div class="alert alert-info">You do not ha
 // Settings in the "Teams Settings" tab.
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
 $string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Microsoft 365 tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
-$string['settings_teams_additional_instructions'] = '<h4 class="local_o365_settings_teams_h4_spacer">Setup your Moodle app for Microsoft Teams</h4>
+$string['settings_teams_moodle_setup_heading'] = '<h4 class="local_o365_settings_teams_h4_spacer">Setup your Moodle app for Microsoft Teams</h4>';
+$string['settings_moodlesettingssetup'] = 'Configure Moodle';
+$string['settings_check_moodle_settings'] = 'Check Moodle settings';
+$string['settings_moodlesetup_checking'] = 'Checking...';
+$string['settings_notice_oidcenabled'] = 'Open ID Connect enabled successfully';
+$string['settings_notice_oidcnotenabled'] = 'Open ID Connect could not be enabled';
+$string['settings_notice_oidcalreadyenabled'] = 'Open ID Connect was already enabled';
+$string['settings_notice_webservicesframealreadyenabled'] = 'Webservices were already enabled and frame embedding is also allowed';
+$string['settings_notice_webservicesframeenabled'] = 'Webservices enabled successfully and frame embedding is also allowed now';
+$string['settings_notice_restenabled'] = 'REST Protocol enabled successfully';
+$string['settings_notice_restnotenabled'] = 'REST Protocol could not be enabled';
+$string['settings_notice_restalreadyenabled'] = 'REST Protocol was already enabled';
+$string['settings_notice_o365serviceenabled'] = 'O365 Webservices enabled successfully';
+$string['settings_notice_o365servicealreadyenabled'] = 'O365 Webservices were already enabled';
+$string['settings_notice_createtokenallowed'] = 'Permission to create a web service token granted';
+$string['settings_notice_createtokenalreadyallowed'] = 'Permission to create a web service token was already granted';
+$string['settings_notice_createtokennotallowed'] = 'There was an issue giving permission to create a web service token';
+$string['settings_notice_restusageallowed'] = 'Permission to use REST Protocol granted';
+$string['settings_notice_restusagealreadyallowed'] = 'Permission to use REST Protocol was already granted';
+$string['settings_notice_restusagenotallowed'] = 'There was an issue giving permission to use REST Protocol';
+$string['settings_moodlesettingssetup_details'] = 'This will make sure that:
 <ul class="local_o365_settings_teams_horizontal_spacer">
-<li>Go to <a href="settings.php?section=manageauths" target="_blank">Manage authentication</a> and enable OpenID Connect.</li>
-<li>Go to <a href="settings.php?section=httpsecurity" target="_blank">HTTP security</a> and enable Frame Embedding.</li>
-<li>Go to <a href="settings.php?section=optionalsubsystems" target="_blank">Advanced features</a> and Enable Web Services.</li>
-<li>Go to <a href="settings.php?section=webserviceprotocols" target="_blank">Manage protocols</a> and Enable Rest protocol.</li>
-<li>Go to <a href="settings.php?section=externalservices" target="_blank">External Services</a> to enable Microsoft 365 Webservices.</li>
-<li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set  "Create a web service token" to "Allow".</li>
-<li>Go to <a href="{$a->edituserroleurl}" target="_blank">Editing role \'Authenticated user\'</a> to set "Use Rest Protocol" to "Allow".</li>
-<li>Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">App registrations section of Azure Portal</a> and register a new app. Enter the application ID and client secret below:</li>
+<li>Open ID is enabled.</li>
+<li>Frame Embedding is enabled.</li>
+<li>Web Services is enabled.</li>
+<li>Rest Protocol is enabled.</li>
+<li>Microsoft 365 Webservices is enabled.</li>
+<li>Authenticated user has permission to create a web service token.</li>
+<li>Authenticated user has permission to use Rest Protocol.</li>
 </ul>';
+$string['settings_teams_additional_instructions'] = '<p class="local_o365_settings_teams_horizontal_spacer">
+Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">App registrations section of Azure Portal</a> and register a new app. Enter the application ID and client secret below:
+</p>';
 $string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
 $string['settings_teams_deploy_bot_2'] = 'Need help?';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
