@@ -458,8 +458,10 @@ class authcode extends \auth_oidc\loginflow\base {
             $username = $this->check_objects($oidcuniqid, $username);
             $matchedwith = $this->check_for_matched($username);
             if (!empty($matchedwith)) {
-                $matchedwith->aadupn = $username;
-                throw new \moodle_exception('errorusermatched', 'local_o365', null, $matchedwith);
+                if ($matchedwith->auth != 'oidc') {
+                    $matchedwith->aadupn = $username;
+                    throw new \moodle_exception('errorusermatched', 'local_o365', null, $matchedwith);
+                }
             }
             $username = trim(\core_text::strtolower($username));
             $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
