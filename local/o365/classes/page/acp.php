@@ -763,7 +763,7 @@ class acp extends base {
         $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
         $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
         $groupids = $coursegroups->get_all_group_ids();
-        $groupprefix = '';
+
         $objects = $DB->get_recordset_sql("SELECT *
                                              FROM {local_o365_objects}
                                             WHERE type = 'group' AND
@@ -806,7 +806,7 @@ class acp extends base {
                     $DB->delete_records('local_o365_objects', ['id' => $object->id]);
                     if (!empty($course)) {
                         try {
-                            $objectrec = $coursegroups->create_group($course, $groupprefix);
+                            $objectrec = $coursegroups->create_group($course);
                             echo "Created object for Moodle course: {$course->fullname}\n";
                         } catch (\Exception $e) {
                             $this->mtrace('Could not create group for course #'.$course->id.'. Reason: '.$e->getMessage());

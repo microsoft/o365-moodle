@@ -23,11 +23,14 @@
 
 namespace local_o365\feature\usergroups;
 
-use WebDriver\Exception;
-
 define('API_CALL_RETRY_LIMIT', 3);
 
 class coursegroups {
+    const NAME_OPTION_FULL_NAME = 1;
+    const NAME_OPTION_SHORT_NAME = 2;
+    const NAME_OPTION_ID = 3;
+    const NAME_OPTION_ID_NUMBER = 4;
+
     protected $graphclient;
     protected $DB;
     protected $debug = false;
@@ -136,7 +139,7 @@ class coursegroups {
             if ($createclassteam) {
                 // Create class team directly.
                 try {
-                    $objectrec = $this->create_class_team($course, $ownerid, $groupprefix);
+                    $objectrec = $this->create_class_team($course, $ownerid);
                 } catch (\Exception $e) {
                     $this->mtrace('Could not create class team for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     continue;
@@ -253,22 +256,14 @@ class coursegroups {
      * Create an Office 365 unified group for a Moodle course.
      *
      * @param stdClass $course A course record.
-     * @param string $groupprefix A string to prefix group names and mailNicknames.
+     *
      * @return array Array form of the created local_o365_objects record.
      */
-    public function create_group($course, $groupprefix = null) {
+    public function create_group($course) {
         $now = time();
-        $groupname = $course->fullname;
-        if (!empty($groupprefix)) {
-            $groupname = $groupprefix.': '.$groupname;
-        }
 
-        $groupshortname = $course->shortname;
-        if (!empty($groupprefix)) {
-            $mailnickprefix = \core_text::strtolower($groupprefix);
-            $mailnickprefix = preg_replace('/[^a-z0-9]+/iu', '', $mailnickprefix);
-            $groupshortname = $mailnickprefix.'_'.$groupshortname;
-        }
+        $groupname = static::get_group_display_name($course);
+        $groupshortname = static::get_group_mail_alias($course);
 
         $extra = null;
         if (!empty($course->summary)) {
@@ -305,25 +300,21 @@ class coursegroups {
     /**
      * Create an Office 365 class team for a Moodle course.
      *
-     * @param stdClass $course
-     * @param array $ownerid
-     * @param string|null $groupprefix
-     * @return array|bool
+     * @param \stdClass $course
+     * @param int $ownerid
+     *
+     * @return array|false
+     * @throws \dml_exception
      */
-    public function create_class_team($course, $ownerid, $groupprefix = null) {
+    public function create_class_team(\stdClass $course, $ownerid) {
         $now = time();
-        $displayname = $course->fullname;
-        if (!empty($groupprefix)) {
-            $displayname = $groupprefix . ': ' . $displayname;
-        }
-
+        $displayname = $this->get_team_display_name($course);
         $description = $course->summary;
-
         $extra = null;
 
         try {
             $teamid = null;
-            $response = $this->graphclient->create_class_team($displayname, $description, $ownerid, $extra);
+            $response = $this->graphclient->create_class_team($displayname, $description, $ownerid);
 
             if (is_array($response) && array_key_exists('Location', $response)) {
                 $location = $response['Location'];
@@ -417,6 +408,203 @@ class coursegroups {
         }
 
         return $teamobjectrec;
+    }
+
+    /**
+     * Return the display name of Team for the given course according to configuration.
+     *
+     * @param \stdClass $course
+     *
+     * @return string
+     */
+    public static function get_team_display_name(\stdClass $course) {
+        $teamdisplayname = '';
+        
+        $teamnameprefix = get_config('local_o365', 'team_name_prefix');
+        if ($teamnameprefix) {
+            $teamdisplayname = $teamnameprefix;
+        }
+
+        $teamnamecourse = get_config('local_o365', 'team_name_course');
+        switch ($teamnamecourse) {
+            case static::NAME_OPTION_FULL_NAME:
+                $teamdisplayname .= $course->fullname;
+                break;
+            case static::NAME_OPTION_SHORT_NAME:
+                $teamdisplayname .= $course->shortname;
+                break;
+            case static::NAME_OPTION_ID:
+                $teamdisplayname .= $course->id;
+                break;
+            case static::NAME_OPTION_ID_NUMBER:
+                $teamdisplayname .= $course->idnumber;
+                break;
+            default:
+                $teamdisplayname .= $course->fullname;
+        }
+
+        $teamnamesuffix = get_config('local_o365', 'team_name_suffix');
+        if ($teamnamesuffix) {
+            $teamdisplayname .= $teamnamesuffix;
+        }
+
+        return $teamdisplayname;
+    }
+
+    /**
+     * Return the team display name to be used on the sample course according to the current settings.
+     *
+     * @return string
+     */
+    public static function get_sample_team_display_name() {
+        $teamgroupamesamplecourse = static::get_team_group_name_sample_course();
+        
+        return static::get_team_display_name($teamgroupamesamplecourse);
+    }
+
+    /**
+     * Return the display name of group for the given course according to configuration.
+     *
+     * @param \stdClass $course
+     * @param \stdClass|null $group
+     *
+     * @return string
+     */
+    public static function get_group_display_name(\stdClass $course, \stdClass $group = null) {
+        $groupdisplayname = '';
+
+        $groupdisplaynameprefix = get_config('local_o365', 'group_display_name_prefix');
+        if ($groupdisplaynameprefix) {
+            $groupdisplayname = $groupdisplaynameprefix;
+        }
+
+        $groupdisplaynamecourse = get_config('local_o365', 'group_display_name_course');
+        switch ($groupdisplaynamecourse) {
+            case static::NAME_OPTION_FULL_NAME:
+                $groupdisplayname .= $course->fullname;
+                break;
+            case static::NAME_OPTION_SHORT_NAME:
+                $groupdisplayname .= $course->shortname;
+                break;
+            case static::NAME_OPTION_ID:
+                $groupdisplayname .= $course->id;
+                break;
+            case static::NAME_OPTION_ID_NUMBER:
+                $groupdisplayname .= $course->idnumber;
+                break;
+            default:
+                $groupdisplayname .= $course->fullname;
+        }
+
+        if ($group) {
+            $groupdisplayname .= $group->name;
+        }
+
+        $groupdisplaynamesuffix = get_config('local_o365', 'group_display_name_suffix');
+        if ($groupdisplaynamesuffix) {
+            $groupdisplayname .= $groupdisplaynamesuffix;
+        }
+
+        return $groupdisplayname;
+    }
+
+    /**
+     * Return the email alias of group for the given course according to configuration.
+     *
+     * @param \stdClass $course
+     * @param \stdClass|null $group
+     *
+     * @return string
+     */
+    public static function get_group_mail_alias(\stdClass $course, \stdClass $group = null) {
+        $groupmailaliasprefix = get_config('local_o365', 'group_mail_alias_prefix');
+        if ($groupmailaliasprefix) {
+            $groupmailaliasprefix = static::clean_up_group_mail_alias($groupmailaliasprefix);
+        }
+
+        $groupmailaliassuffix = get_config('local_o365', 'group_mail_alias_suffix');
+        if ($groupmailaliassuffix) {
+            $groupmailaliassuffix = static::clean_up_group_mail_alias($groupmailaliassuffix);
+        }
+
+        $groupmailaliascourse = get_config('local_o365', 'group_mail_alias_course');
+        switch ($groupmailaliascourse) {
+            case static::NAME_OPTION_FULL_NAME:
+                $coursepart = $course->fullname;
+                break;
+            case static::NAME_OPTION_SHORT_NAME:
+                $coursepart = $course->shortname;
+                break;
+            case static::NAME_OPTION_ID:
+                $coursepart = $course->id;
+                break;
+            case static::NAME_OPTION_ID_NUMBER:
+                $coursepart = $course->idnumber;
+                break;
+            default:
+                $coursepart = $course->shortname;
+        }
+        
+        if ($group) {
+            $grouppart = $group->id . '_' . $group->name;
+            $grouppart = static::clean_up_group_mail_alias($grouppart);
+            if (strlen($grouppart) > 16) {
+                $grouppart = substr($grouppart, 0, 16);
+            }
+            $grouppart = '-' . $grouppart;
+        } else {
+            $grouppart = '';
+        }
+
+        $coursepart = static::clean_up_group_mail_alias($coursepart);
+
+        $coursepartmaxlength = 64 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix) - strlen($grouppart);
+        if (strlen($coursepart) > $coursepartmaxlength) {
+            $coursepart = substr($coursepart, 0, $coursepartmaxlength);
+        }
+
+        return $groupmailaliasprefix . $coursepart . $grouppart . $groupmailaliassuffix;
+    }
+
+    /**
+     * Remove unsupported characters from the mail alias parts, and return the result.
+     *
+     * @param string $mailalias
+     *
+     * @return string|string[]|null
+     */
+    public static function clean_up_group_mail_alias($mailalias) {
+        return preg_replace('/[^a-z0-9-_]+/iu', '', $mailalias);
+    }
+
+    /**
+     * Return the display name and the mail alias of the group of the sample course.
+     *
+     * @return array
+     */
+    public static function get_sample_group_names() {
+        $samplegroupnames = [];
+
+        $samplecourse = static::get_team_group_name_sample_course();
+        $samplegroupnames['displayname'] = static::get_group_display_name($samplecourse);
+        $samplegroupnames['mailalias'] = static::get_group_mail_alias($samplecourse);
+
+        return $samplegroupnames;
+    }
+
+    /**
+     * Return a stdClass object representing a course object to be used for Team / group naming convention example.
+     *
+     * @return \stdClass
+     */
+    public static function get_team_group_name_sample_course() {
+        $samplecourse = new \stdClass();
+        $samplecourse->fullname = 'Sample course 15';
+        $samplecourse->shortname = 'sample 15';
+        $samplecourse->id = 2;
+        $samplecourse->idnumber = 'Sample ID 15';
+
+        return $samplecourse;
     }
 
     /**
@@ -652,7 +840,7 @@ class coursegroups {
      * @param int $moodlegroupid Id of Moodle course group.
      * @return boolean True on success.
      */
-    public function update_study_group($moodegroupid) {
+    public function update_study_group($moodlegroupid) {
         global $DB;
         $caller = 'update_study_group';
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
@@ -663,23 +851,25 @@ class coursegroups {
             return false;
         }
 
-        $grouprec = $DB->get_record('groups', ['id' => $moodegroupid]);
+        $grouprec = $DB->get_record('groups', ['id' => $moodlegroupid]);
         if (empty($grouprec)) {
-            \local_o365\utils::debug('Could not find group with id "'.$usergroupid.'"', $caller);
+            \local_o365\utils::debug('Could not find group with id "' . $moodlegroupid . '"', $caller);
             return false;
         }
 
         $courserec = $DB->get_record('course', ['id' => $grouprec->courseid]);
         if (empty($courserec)) {
-            $msg = 'Could not find course with id "'.$grouprec->courseid.'" for group with id "'.$moodegroupid.'"';
+            $msg = 'Could not find course with id "' . $grouprec->courseid . '" for group with id "' . $moodlegroupid . '"';
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
 
         // Keep local_o365_coursegroupdata in sync with groups table.
-        $o365grouprec = $DB->get_record('local_o365_coursegroupdata', ['groupid' => $moodegroupid, 'courseid' => $grouprec->courseid]);
+        $o365grouprec = $DB->get_record('local_o365_coursegroupdata',
+            ['groupid' => $moodlegroupid, 'courseid' => $grouprec->courseid]);
         if (empty($o365grouprec)) {
-            $msg = 'Could not find local_o365_coursegroupdata record with with course "'.$grouprec->courseid.'" for group with id "'.$moodegroupid.'"';
+            $msg = 'Could not find local_o365_coursegroupdata record with with course "' . $grouprec->courseid .
+                '" for group with id "' . $moodlegroupid . '"';
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
@@ -697,9 +887,9 @@ class coursegroups {
 
         $o365groupname = $courserec->shortname.': '.$grouprec->name;
 
-        $object = self::get_study_group_object($moodegroupid);
+        $object = self::get_study_group_object($moodlegroupid);
         if (empty($object->objectid)) {
-            \local_o365\utils::debug('Could not find o365 object for moodle group with id "'.$usergroupid.'"', $caller);
+            \local_o365\utils::debug('Could not find o365 object for moodle group with id "' . $moodlegroupid . '"', $caller);
             return false;
         }
 
@@ -713,7 +903,8 @@ class coursegroups {
         try {
             $o365group = $this->graphclient->update_group($groupdata);
         } catch (\Exception $e) {
-            \local_o365\utils::debug('Updating of study group for Moodle group "'.$usergroupid.'" failed: '.$e->getMessage(), $caller);
+            \local_o365\utils::debug('Updating of study group for Moodle group "' . $moodlegroupid . '" failed: ' .
+                $e->getMessage(), $caller);
             return false;
         }
 
@@ -778,10 +969,12 @@ class coursegroups {
      * Create a study group from a Moodle group.
      *
      * @param int $moodlegroupid Id of Moodle course group.
+     *
      * @return object|boolean False on failure, o365 object on success.
      */
-    public function create_study_group($moodegroupid) {
+    public function create_study_group($moodlegroupid) {
         global $DB;
+
         $caller = 'create_study_group';
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
@@ -791,20 +984,21 @@ class coursegroups {
             return false;
         }
 
-        $grouprec = $DB->get_record('groups', ['id' => $moodegroupid]);
+        $grouprec = $DB->get_record('groups', ['id' => $moodlegroupid]);
         if (empty($grouprec)) {
-            \local_o365\utils::debug('Could not find group with id "'.$usergroupid.'"', $caller);
+            \local_o365\utils::debug('Could not find group with id "' . $moodlegroupid . '"', $caller);
             return false;
         }
 
         $courserec = $DB->get_record('course', ['id' => $grouprec->courseid]);
         if (empty($courserec)) {
-            $msg = 'Could not find course with id "'.$grouprec->courseid.'" for group with id "'.$usergroupid.'"';
+            $msg = 'Could not find course with id "' . $grouprec->courseid . '" for group with id "' . $moodlegroupid . '"';
             \local_o365\utils::debug($msg, $caller);
             return false;
         }
 
-        $o365groupname = $courserec->shortname.': '.$grouprec->name;
+        $o365groupdisplayname = self::get_group_display_name($courserec, $grouprec);
+        $o365groupmailalias = self::get_group_mail_alias($courserec, $grouprec);
 
         $extra = [
             'description' => $grouprec->description
@@ -812,15 +1006,17 @@ class coursegroups {
 
         // Create o365 group.
         try {
-            $o365group = $this->graphclient->create_group($o365groupname, null, $extra);
+            $o365group = $this->graphclient->create_group($o365groupdisplayname, $o365groupmailalias, $extra);
         } catch (\Exception $e) {
+            $this->mtrace('Could not create group for course group #' . $moodlegroupid.' in course #' . $courserec->id . '. ' .
+                'Reason: '.$e->getMessage());
             return false;
         }
 
         // Create course group data.
         $data = new \stdClass();
         $now = time();
-        $data->displayname = $grouprec->name;
+        $data->displayname = $o365groupdisplayname;
         $data->description = $grouprec->description;
         $data->descriptionformat = $grouprec->descriptionformat;
         $data->groupid = $grouprec->id;
@@ -836,7 +1032,7 @@ class coursegroups {
         $rec = [
             'type' => 'group',
             'subtype' => 'usergroup',
-            'moodleid' => $moodegroupid,
+            'moodleid' => $moodlegroupid,
             'objectid' => $o365group['id'],
             'o365name' => '',
             'timecreated' => $now,

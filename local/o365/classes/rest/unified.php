@@ -264,6 +264,7 @@ class unified extends \local_o365\rest\o365api {
      * @param string $name The name of the group.
      * @param string $mailnickname The mailnickname.
      * @param array $extra Extra options for creation, ie description for Description of the group.
+     *
      * @return array Array of returned o365 group data.
      */
     public function create_group($name, $mailnickname = null, $extra = null) {
@@ -279,7 +280,7 @@ class unified extends \local_o365\rest\o365api {
 
         if (empty($mailnickname)) {
             // Cannot generate a good mailnickname because there's nothing but non-alphanum chars to work with. So generate one.
-            $mailnickname = 'group'.uniqid();
+            $mailnickname = 'group' . uniqid();
         }
 
         $groupdata = [
@@ -2119,7 +2120,7 @@ class unified extends \local_o365\rest\o365api {
      *
      * @param string $displayname
      * @param string $description
-     * @param array $ownerids
+     * @param int $ownerid
      * @param null $extra
      *
      * @return array|null
