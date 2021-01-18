@@ -168,7 +168,7 @@ class usersync extends \core\task\scheduled_task {
 
         if (!empty($users)) {
             $this->mtrace(count($users).' users received. Syncing...');
-            $usersync->sync_users($users);
+            $this->sync_users($usersync, $users);
         } else {
             $this->mtrace('No users received to sync.');
         }
@@ -180,5 +180,18 @@ class usersync extends \core\task\scheduled_task {
 
         $this->mtrace('Sync process finished.');
         return true;
+    }
+
+    /**
+     * Process users in chunks of 20000 at a time.
+     * @param $usersync
+     * @param $users
+     */
+    protected function sync_users($usersync, $users) {
+        $chunk = array_chunk($users, 20000);
+        foreach ($chunk as $u) {
+            $this->mtrace(count($u).' users in chunk. Syncing...');
+            $usersync->sync_users($u);
+        }
     }
 }
