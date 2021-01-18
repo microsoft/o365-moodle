@@ -24,7 +24,7 @@
 namespace local_o365\rest;
 
 /**
- * Client for unified Office 365 API.
+ * Client for unified Microsoft 365 API.
  */
 class unified extends \local_o365\rest\o365api {
     /** The general API area of the class. */

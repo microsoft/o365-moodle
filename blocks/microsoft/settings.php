@@ -75,12 +75,12 @@ $label = new lang_string('settings_showpreferences', 'block_microsoft');
 $desc = new lang_string('settings_showpreferences_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showpreferences', $label, $desc, 1));
 
-// Settings to show Office 365 Connect link in the block.
+// Settings to show Microsoft 365 Connect link in the block.
 $label = new lang_string('settings_showo365connect', 'block_microsoft');
 $desc = new lang_string('settings_showo365connect_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showo365connect', $label, $desc, 1));
 
-// Settings to show Office 365 connection settings link in the block.
+// Settings to show Microsoft 365 connection settings link in the block.
 $label = new lang_string('settings_showmanageo365conection', 'block_microsoft');
 $desc = new lang_string('settings_showmanageo365conection_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showmanageo365conection', $label, $desc, 0));
@@ -90,12 +90,12 @@ $label = new lang_string('settings_showcoursespsite', 'block_microsoft');
 $desc = new lang_string('settings_showcoursespsite_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursespsite', $label, $desc, 1));
 
-// Settings to show Office 365 download links in block.
+// Settings to show Microsoft 365 download links in block.
 $label = new lang_string('settings_showo365download', 'block_microsoft');
 $desc = new lang_string('settings_showo365download_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/showo365download', $label, $desc, 1));
 
-// Settings to customize "Get Office 365" URL.
+// Settings to customize "Get Microsoft 365" URL.
 $label = new lang_string('settings_geto365link', 'block_microsoft');
 $desc = new lang_string('settings_geto365link_desc', 'block_microsoft');
 $default = new lang_string('settings_geto365link_default', 'block_microsoft');

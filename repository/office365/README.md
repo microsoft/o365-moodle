@@ -1,12 +1,12 @@
 # Moodle Plugins for Microsoft Services
-*including* **Office 365** *and other Microsoft services*
+*including* **Microsoft 365** *and other Microsoft services*
 
 ## OneDrive for Business Repository
 
 This plugin provides access to OneDrive for business as a repository. It can also access SharePoint sites set up by local_o365 for each Moodle course, which serve as a shared repository for teachers.
 
 
-This is part of the suite of Office 365 plugins for Moodle.
+This is part of the suite of Microsoft 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 

@@ -31,6 +31,6 @@ $string['errorwhiledownload'] = 'Ocurrió un error al descargar el archivo';
 $string['file'] = 'Archivo';
 $string['myfiles'] = 'Mis archivos';
 $string['office365:view'] = 'Ver repositorio de OneDrive for Business';
-$string['pluginname'] = 'Office 365';
+$string['pluginname'] = 'Microsoft 365';
 $string['pluginname_help'] = 'Un repositorio de OneDrive for Business';
 $string['upload'] = 'Subir nuevo archivo';

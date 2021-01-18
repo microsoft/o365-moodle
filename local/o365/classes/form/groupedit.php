@@ -17,7 +17,7 @@
 namespace local_o365\form;
 
 /**
- * A form for editing of groups office 365 groups.
+ * A form for editing of Microsoft 365 groups.
  *
  * @copyright 2016 Remote-leaner Inc.
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

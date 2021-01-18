@@ -1,2 +1,2 @@
 <?php
-$string['pluginname'] = 'Office 365の統合';
+$string['pluginname'] = 'Microsoft 365の統合';

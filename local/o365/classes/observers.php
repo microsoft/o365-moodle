@@ -919,8 +919,8 @@ class observers {
         }
 
         if ($user->auth != 'oidc') {
-            // recipient user is not office 365 user, exit.
-            debugging('SKIPPED: handle_notification_sent - recipient user is not office 365 user', DEBUG_DEVELOPER);
+            // recipient user is not Microsoft 365 user, exit.
+            debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
             return true;
         }
 
