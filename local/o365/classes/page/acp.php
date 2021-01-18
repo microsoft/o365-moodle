@@ -521,6 +521,24 @@ class acp extends base {
     }
 
     /**
+     * Enable / disable all sync features on all course when using custom settings.
+     */
+    public function mode_usergroupcustom_allchange() {
+        global $DB;
+
+        $enabled = (bool)required_param('state', PARAM_BOOL);
+        require_sesskey();
+
+        $courses = $DB->get_records('course');
+        foreach ($courses as $course) {
+            if ($course->id == SITEID) {
+                continue;
+            }
+            \local_o365\feature\usergroups\utils::set_course_group_enabled($course->id, $enabled);
+        }
+    }
+
+    /**
      * Teams customization.
      */
     public function mode_usergroupcustom() {
@@ -650,6 +668,9 @@ class acp extends base {
 
         $endpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom_change', 'sesskey' => sesskey()]);
         $bulkendpoint = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom_bulkchange', 'sesskey' => sesskey()]);
+        $custompageurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom']);
+        $allchangeendpoint = new \moodle_url('/local/o365/acp.php',
+            ['mode' => 'usergroupcustom_allchange', 'sesskey' => sesskey()]);
 
         $js = 'var local_o365_set_usergroup = function(courseid, state, checkbox) { ';
         $js .= 'data = {courseid: courseid, state: state}; ';
@@ -667,6 +688,20 @@ class acp extends base {
         $js .= '}; ';
         $js .= 'var local_o365_usergroup_coursesid = '.json_encode($coursesid).'; ';
         $js .= 'var local_o365_usergroup_features = ["team", "onedrive", "calendar", "conversations", "notebook"]; ';
+
+        $js .= 'var local_o365_usergroup_all_set_feature = function(state) {';
+        $js .= 'var enabled = (state == 1) ? true : false; ';
+        $js .= ' // Send data to server. ' . "\n";
+        $js .= '$.ajax({
+            url: \'' . $allchangeendpoint->out(false) . '\',
+            data: {state: enabled},
+            type: "POST",
+            success: function(data) {
+                console.log(data);
+                window.location.href = "' . $custompageurl->out(false) . '";
+            }
+        });' . "\n";
+        $js .= '}; ' . "\n";
 
         $js .= 'var local_o365_usergroup_save = function() { '."\n";
         $js .= 'var coursedata = {}; '."\n";
@@ -700,10 +735,15 @@ class acp extends base {
         echo \html_writer::script($js);
         echo \html_writer::tag('h2', get_string('acp_usergroupcustom', 'local_o365'));
 
+        // Option to enable all sync features on all pages.
+        echo \html_writer::tag('button', get_string('acp_usrgroupcustom_enable_all', 'local_o365'),
+            ['onclick' => 'local_o365_usergroup_all_set_feature(1)']);
+
         // Bulk Operations
         $strbulkenable = get_string('acp_usergroupcustom_bulk_enable', 'local_o365');
         $strbulkdisable = get_string('acp_usergroupcustom_bulk_disable', 'local_o365');
         echo \html_writer::tag('h5', get_string('acp_usergroupcustom_bulk', 'local_o365'));
+        echo \html_writer::tag('h6', get_string('acp_usergroupcustom_bulk_help', 'local_o365'));
 
         echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
         echo \html_writer::tag('span', get_string('groups_team', 'local_o365').': ');
