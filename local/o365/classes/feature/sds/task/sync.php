@@ -56,7 +56,7 @@ class sync extends \core\task\scheduled_task {
         $sdsenrolementenabled = get_config('local_o365', 'sdsenrolmentenabled');
         $profilesyncenabled = get_config('local_o365', 'sdsprofilesyncenabled');
         $sdsonlycurrent = get_config('local_o365', 'sdsonlycurrent');
-        $deletetwowaysync = get_config('local_o365', '$deletetwowaysync');
+        $deletetwowaysync = get_config('local_o365', 'sdsdeletetwowaysync');
 
         //deletion tasks - this needs to be moved under maintenance activites at some point and should be an archive process
         if ($sdsdeletecourses) {
@@ -69,10 +69,9 @@ class sync extends \core\task\scheduled_task {
         }
         //this is very simple delete operation for any two way syncs established.
         if ($deletetwowaysync) {
-            static::remove_all_SDS_syncing();
+            static::remove_all_twowaysyncing();
             return;
         } // continue
-
     
         //get which schools have been selected 
         $schools = get_config('local_o365', 'sdsschools'); 
@@ -181,7 +180,7 @@ class sync extends \core\task\scheduled_task {
                 //Get or create a class Course
                 if ($sdscreatecourses) {
                     $course = static::get_or_create_class_course($classofficegroupid, $classcode, $classname, $classstartdate, $classenddate, $coursecat->id, $sdstwowaysync);
-                    if (!empty($sdsenrolenabled))
+                    if (!empty($members) && $sdsenrolementenabled)
                     {
                         static::enrol_members_in_course($course, $members, $apiclient, $teacherrole, $studentrole);
                     }
@@ -304,11 +303,12 @@ class sync extends \core\task\scheduled_task {
         foreach ($sdsrecords as $sdsrecord) {
             $courseid = $sdsrecord->moodleid;
             $params['moodleid'] = $courseid;
+            $params['type'] = 'sdssection';
             $DB->delete_records('local_o365_objects',$params); //delete sds entry
-            $params['type'] = 'subtype';
-            $params['group'] = 'course';
+            $params['type'] = 'group';
             $DB->delete_records('local_o365_objects',$params); //delete sds syncing
             delete_course($courseid); // only delete course after syncing is removed, else obervers are triggered.
+            static::mtrace('...Deleting Course: '.$courseid);
         }
         return;
     }
@@ -345,7 +345,7 @@ class sync extends \core\task\scheduled_task {
     /**
      * Clears all SDS course syncing. To resync, the Custom Course tab will need to be used
     */
-    public static function remove_all_SDS_syncing()
+    public static function remove_all_twowaysyncing()
     {
         static::mtrace('...Remove all SDS syncing ');
         global $DB, $CFG;
@@ -358,8 +358,8 @@ class sync extends \core\task\scheduled_task {
         //now delete local objects sync record
         foreach ($sdsrecords as $sdsrecord) {
             $courseid = $sdsrecord->moodleid;
-            $params['type'] = 'sds';
-            $params['group'] = 'course';
+            $params['type'] = 'group';
+            $params['subtype'] = 'course';
             $params['moodleid'] = $courseid;
             $DB->delete_records('local_o365_objects',$params);
         }
@@ -369,7 +369,7 @@ class sync extends \core\task\scheduled_task {
 
     /**
      * Retrieve or create a course for a section.
-     * @param string $classofficegroup - The group ID of the class
+     * @param string $classofficegroupid - The group ID of the class
      * @param string $classcode - The shortname of the class
      * @param string $classname The fullname of the class
      * @param int $categoryid The ID of the category to move the class to.
@@ -377,7 +377,7 @@ class sync extends \core\task\scheduled_task {
      * @param string $classenddate - The enddate of the class '6/30/2018'
      * @return object The course object.
      */
-    public static function get_or_create_class_course($classofficegroupid, $classcode, $classname, $classstartdate, $classenddate, $coursecat) {
+    public static function get_or_create_class_course($classofficegroupid, $classcode, $classname, $classstartdate, $classenddate, $coursecatid, $sdstwowaysync) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/course/lib.php');
         $now = time();
@@ -390,18 +390,35 @@ class sync extends \core\task\scheduled_task {
         $courseparams = [];
         $courseparams['idnumber'] = $classofficegroupid;
         $course = $DB->get_record('course', $courseparams);
+
         if (!empty($course)) {
+            static::mtrace('.........Course already exists with that ID number....');
             $params['moodleid'] = $course->id;
+
+            //check to see category is correct, if not update
+            if ($course->category != $coursecatid){
+                static::mtrace('.........Updating category for course for '.$classname);
+                // Create new course
+                $data = [
+                    'id' => $course->id,
+                    'shortname' => $course->shortname,
+                    'category' => $coursecatid
+                ];
+                $DB->update_record('course',$data);
+            }
+
             if (!empty($sdsrecord)) //Check that the SDS record is correct
             {
                 if ($sdsrecord->moodleid != $course->id) //Update record
                 {
+                    $params['id'] = $sdsrecord->id; //update query requires key
                     $params['timemodified'] = $now;
-                    $DB->update_record('local_o365_objects',$params);
+                    $DB->update_record('local_o365_objects',$params); //how does it know
                 }
-            } else { //record doesnt exist but course is found?? insert record
+            } else { //record doesnt exist but course is found?? insert sds record
                 $params['timecreated'] = $now;
                 $params['timemodified'] = $now;
+                $params['o365name'] = $classcode;
                 $DB->insert_record('local_o365_objects',$params);
             }
             static::mtrace('.........Found Course for '.$classname);
@@ -410,10 +427,10 @@ class sync extends \core\task\scheduled_task {
 
         // Create new course
         $data = [
-            'category' => $coursecat,
+            'category' => $coursecatid,
             'shortname' => $classcode,
             'fullname' => $classname,
-            'idnumber' => $classofficegroup,
+            'idnumber' => $classofficegroupid,
             'startdate' => $classstartdate,
             'enddate' => $classenddate
         ];
@@ -424,6 +441,7 @@ class sync extends \core\task\scheduled_task {
         $params['moodleid'] = $course->id;
         $params['timecreated'] = $now;
         $params['timemodified'] = $now;
+        $params['o365name'] = $classcode;
         $DB->insert_record('local_o365_objects',$params);
 
         //if not two way syncing, finish here...
@@ -453,7 +471,7 @@ class sync extends \core\task\scheduled_task {
 
     /** 
     * Retrieve or create a cohort for a section
-    * @param string $classofficegroup - The group ID of the class
+    * @param string $classofficegroupid - The group ID of the class
     * @param string $classcode - The shortname of the class
     * @param string $classname The fullname of the class
     * @param int $categoryid The ID of the category to move the class to.
@@ -490,6 +508,7 @@ class sync extends \core\task\scheduled_task {
                 if ($sdsrecord->moodleid != $cohort->id) //Update record
                 {
                     static::mtrace('.........Updating sds record for '.$classname);
+                    $params['id'] = $sdsrecord->id;
                     $params['timemodified'] = $now;
                     $DB->update_record('local_o365_objects',$params);
                 }
@@ -648,8 +667,7 @@ class sync extends \core\task\scheduled_task {
     }
 
     /**
-     * Enrol members in cohort (unenrol them if user leaves group). Teachers are not included
-     * in the cohorts
+     * Enrol members in cohort (unenrol them if user leaves group). 
      * @param string $cohort object (include cohort fields)
      * @param string $members - Membership from the Office 365 Group
      */
