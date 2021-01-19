@@ -234,14 +234,14 @@ $string['settings_team_name_course'] = 'Course part of the Teams name';
 $string['settings_team_name_course_desc'] = '';
 $string['settings_team_name_suffix'] = 'Teams name suffix';
 $string['settings_team_name_suffix_desc'] = '';
-$string['settings_team_name_sample'] = 'For a course with
+$string['settings_team_name_sample'] = 'Assume a course has:
 <ul>
 <li>Full name: <b>Sample course</b> 
 <li>Short name: <b>sample 15</b></li>
 <li>Moodle created ID: <b>2</b></li>
 <li>ID number: <b>Sample ID 15</b></li>
 </ul>
-Your current setting will create use "<b>{$a}</b>" to create a Team.';
+Your current setting will use name "<b>{$a}</b>" to create a Team. Click "Save changes" button below to see how your settings will change this.';
 
 $string['settings_main_name_option_full_name'] = 'Full name';
 $string['settings_main_name_option_short_name'] = 'Short name';
@@ -272,16 +272,14 @@ $string['settings_group_mail_alias_course'] = 'Course part of the group mail ali
 $string['settings_group_mail_alias_course_desc'] = '';
 $string['settings_group_mail_alias_suffix'] = 'Group mail alias suffix';
 $string['settings_group_mail_alias_suffix_desc'] = '';
-$string['settings_group_names_sample'] = '
-For a course with
+$string['settings_group_names_sample'] = 'Assume a course has:
 <ul>
 <li>Full name: <b>Sample course 15</b> 
 <li>Short name: <b>sample 15</b></li>
 <li>Moodle created ID: <b>2</b></li>
 <li>ID number: <b>Sample ID 15</b></li>
 </ul>
-Your current setting will create use display name "<b>{$a->displayname}</b>" and mail alias "<b>{$a->mailalias}</b>" to create a group.
-';
+Your current setting will use display name "<b>{$a->displayname}</b>" and mail alias "<b>{$a->mailalias}</b>" to create a group. Click "Save changes" button below to see how your settings will change this.';
 
 // Settings section headings of the "Advanced" tab.
 $string['settings_header_tools'] = 'Tools';
