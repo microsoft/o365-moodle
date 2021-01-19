@@ -265,6 +265,7 @@ $string['settings_group_display_name_prefix_desc'] = '';
 $string['settings_group_display_name_course'] = 'Course part of the group display name';
 $string['settings_group_display_name_course_desc'] = '';
 $string['settings_group_display_name_suffix'] = 'Group display name suffix';
+$string['settings_group_display_name_suffix_desc'] = '';
 $string['settings_group_short_name_prefix'] = 'Group mail alias prefix';
 $string['settings_group_short_name_prefix_desc'] = '';
 $string['settings_group_mail_alias_course'] = 'Course part of the group mail alias';
