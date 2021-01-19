@@ -328,6 +328,10 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_secthead_advanced_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_section_advanced', $label, $desc));
 
+        $label = new lang_string('settings_group_creation_fallback', 'local_o365');
+        $desc = new lang_string('settings_group_creation_fallback_details', 'local_o365');
+        $settings->add(new \admin_setting_configcheckbox('local_o365/group_creation_fallback', $label, $desc, '1'));
+
         $label = new lang_string('settings_o365china', 'local_o365');
         $desc = new lang_string('settings_o365china_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
