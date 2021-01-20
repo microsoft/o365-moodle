@@ -478,8 +478,8 @@ class main {
                 continue;
             }
             list($remotefield, $localfield, $behavior) = $fieldmap;
-            if ($localfield == 'objectId') {
-                $localfield = $objectidfieldname;
+            if ($remotefield == 'objectId') {
+                $remotefield = $objectidfieldname;
             }
             if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
                 // Field mapping doesn't apply to this event type.
