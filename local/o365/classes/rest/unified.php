@@ -692,6 +692,7 @@ class unified extends \local_o365\rest\o365api {
             'preferredName',
             'manager',
             'teams',
+            'roles',
             'groups',
         ];
     }
@@ -790,6 +791,11 @@ class unified extends \local_o365\rest\o365api {
         return [$users, $skiptoken, $deltatoken];
     }
 
+    /**
+     * Get user manager by passing user AD id
+     * @param $userobjectid - user AD id
+     * @return array|null
+     */
     public function get_user_manager($userobjectid) {
         $endpoint = "users/$userobjectid/manager";
         $response = $this->apicall('get', $endpoint);
@@ -802,6 +808,11 @@ class unified extends \local_o365\rest\o365api {
         return $result;
     }
 
+    /**
+     * Get user groups by passing user AD id
+     * @param $userobjectid - user AD id
+     * @return array|null
+     */
     public function get_user_groups($userobjectid) {
         $endpoint = "users/$userobjectid/memberOf";
         $response = $this->apicall('get', $endpoint);
@@ -809,9 +820,49 @@ class unified extends \local_o365\rest\o365api {
         return $result['value'];
     }
 
+    /**
+     * Get user teams by passing user AD id
+     * @param $userobjectid - user AD id
+     * @return array|null
+     */
     public function get_user_teams($userobjectid) {
         $endpoint = "users/$userobjectid/joinedTeams";
         $response = $this->apicall('get', $endpoint);
+        $result = $this->process_apicall_response($response, ['value' => null]);
+        return $result['value'];
+    }
+
+    /**
+     * Get user objects by passing user AD id
+     * @param $userobjectid - user AD id
+     * @param $securityEnabledOnly - return only secure groups
+     * @return array|null
+     */
+    public function get_user_objects($userobjectid, $securityEnabledOnly = true) {
+        $endpoint = "users/$userobjectid/getMemberObjects";
+        $data = [
+            'securityEnabledOnly' => $securityEnabledOnly
+        ];
+        $response = $this->apicall('post', $endpoint, json_encode($data));
+        $result = $this->process_apicall_response($response, ['value' => null]);
+        return $result['value'];
+    }
+
+    /**
+     * Get directory objects by passing objects ids
+     * @param $ids - objects ids which data should be returned
+     * @param $types - collection of resource types that specifies the set of resource collections to search (optional).
+     * @return array|null
+     */
+    public function get_directory_objects($ids, $types = null) {
+        $endpoint = "directoryObjects/getByIds";
+        $data = [
+            'ids' => $ids
+        ];
+        if (!empty($types)) {
+            $data['types'] = $types;
+        }
+        $response = $this->apicall('post', $endpoint, json_encode($data));
         $result = $this->process_apicall_response($response, ['value' => null]);
         return $result['value'];
     }
