@@ -78,6 +78,7 @@ class usersyncfieldmap extends fieldmap {
             'manager' => get_string('settings_fieldmap_field_manager', 'local_o365'),
             'teams' => get_string('settings_fieldmap_field_teams', 'local_o365'),
             'groups' => get_string('settings_fieldmap_field_groups', 'local_o365'),
+            'roles' => get_string('settings_fieldmap_field_roles', 'local_o365'),
         ];
 
         $localfields = [
