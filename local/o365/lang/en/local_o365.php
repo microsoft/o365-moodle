@@ -191,6 +191,7 @@ $string['settings_fieldmap_field_preferredName'] = 'Preferred Name';
 $string['settings_fieldmap_field_manager'] = 'Manager';
 $string['settings_fieldmap_field_teams'] = 'Teams';
 $string['settings_fieldmap_field_groups'] = 'Groups';
+$string['settings_fieldmap_field_roles'] = 'Roles';
 $string['settings_fieldmap_update_always'] = 'On login & creation';
 
 // Settings in the "Course sync" section of the "Sync settings" tab.

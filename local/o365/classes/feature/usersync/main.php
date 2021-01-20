@@ -361,7 +361,7 @@ class main {
     }
 
     /**
-     * Return the name of the manager of the Office 365 user with the given oid.
+     * Return the name of the manager of the Microsoft 365 user with the given oid.
      *
      * @param $userobjectid
      *
@@ -412,7 +412,30 @@ class main {
     }
 
     /**
-     * Return the preferred name of the Office 365 user with the given oid.
+     * Return the names of roles that the Microsoft 365 user with the given oid has, joined by comma.
+     *
+     * @param $userobjectid
+     *
+     * @return string
+     */
+    public function get_user_roles($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $objectsids = $apiclient->get_user_objects($userobjectid);
+        $roles = [];
+        if ($objectsids) {
+            $results = $apiclient->get_directory_objects($objectsids);
+            foreach ($results as $result) {
+                if (stripos($result['@odata.type'], 'role') !== FALSE) {
+                    $roles[] = $result['displayName'];
+                }
+            }
+        }
+
+        return join(',', $roles);
+    }
+
+    /**
+     * Return the preferred name of the Microsoft 365 user with the given oid.
      *
      * @param $userobjectid
      *
@@ -481,6 +504,8 @@ class main {
                 $user->$localfield = $usersync->get_user_groups($userobjectid);
             } else if ($remotefield == "teams") {
                 $user->$localfield = $usersync->get_user_teams($userobjectid);
+            } else if ($remotefield == "roles") {
+                $user->$localfield = $usersync->get_user_roles($userobjectid);
             } else if ($remotefield == "preferredName") {
                 if (!isset($aaddata[$remotefield])) {
                     $user->$localfield = $usersync->get_preferred_name($userobjectid);
