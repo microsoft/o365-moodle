@@ -465,8 +465,10 @@ class main {
             }
         }
         if (\local_o365\rest\unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
+            $objectidfieldname = 'id';
             $userobjectid = $aaddata['id'];
         } else {
+            $objectidfieldname = 'objectId';
             $userobjectid = $aaddata['objectId'];
         }
         $usersync = new \local_o365\feature\usersync\main();
@@ -476,6 +478,9 @@ class main {
                 continue;
             }
             list($remotefield, $localfield, $behavior) = $fieldmap;
+            if ($localfield == 'objectId') {
+                $localfield = $objectidfieldname;
+            }
             if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
                 // Field mapping doesn't apply to this event type.
                 continue;
