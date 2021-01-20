@@ -153,7 +153,11 @@ class coursegroups {
             }
 
             try {
-                $this->resync_group_membership($course->id, $objectrec['objectid'], []);
+                $existingmembers = [];
+                if ($createclassteam) {
+                    $existingmembers = [$ownerid];
+                }
+                $this->resync_group_membership($course->id, $objectrec['objectid'], $existingmembers);
             } catch (\Exception $e) {
                 $this->mtrace('Could not sync users to group for course #'.$course->id.'. Reason: '.$e->getMessage());
                 continue;
@@ -482,9 +486,13 @@ class coursegroups {
         // Get current group membership (if not already provided).
         if ($currentmembers === null || !is_array($currentmembers)) {
             $members = $this->graphclient->get_group_members($groupobjectid);
+            $owners = $this->graphclient->get_group_owners($groupobjectid);
             $currentmembers = [];
             foreach ($members['value'] as $member) {
                 $currentmembers[$member['id']] = $member['id'];
+            }
+            foreach ($owners['value'] as $owner) {
+                $currentmembers[$owner['id']] = $owner['id'];
             }
         }
 
