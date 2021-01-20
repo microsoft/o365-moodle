@@ -497,6 +497,20 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
+     * Get a list of group owners.
+     *
+     * @param $groupobjectid The object ID of the group.
+     *
+     * @return array|null
+     */
+    public function get_group_owners($groupobjectid) {
+        $endpoint = '/groups/' . $groupobjectid . '/owners';
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
      * Get a file by it's file id.
      *
      * @param string $parentid The parent id to use.
