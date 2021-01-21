@@ -412,7 +412,7 @@ class main {
     }
 
     /**
-     * Return the names of roles that the Microsoft 365 user with the given oid has, joined by comma.
+     * Return the names of roles that the Office 365 user with the given oid has, joined by comma.
      *
      * @param $userobjectid
      *
@@ -421,18 +421,21 @@ class main {
     public function get_user_roles($userobjectid) {
         $apiclient = $this->construct_user_api(false);
         $objectsids = $apiclient->get_user_objects($userobjectid);
-        $results = $apiclient->get_directory_objects($objectsids);
         $roles = [];
-        foreach ($results as $result) {
-            if (strpos('role', $result['@odata.type']) !== FALSE) {
-                $roles[] = $result['displayName'];
+        if ($objectsids) {
+            $results = $apiclient->get_directory_objects($objectsids);
+            foreach ($results as $result) {
+                if (strpos('role', $result['@odata.type']) !== FALSE) {
+                    $roles[] = $result['displayName'];
+                }
             }
         }
+
         return join(',', $roles);
     }
 
     /**
-     * Return the preferred name of the Microsoft 365 user with the given oid.
+     * Return the preferred name of the Office 365 user with the given oid.
      *
      * @param $userobjectid
      *
