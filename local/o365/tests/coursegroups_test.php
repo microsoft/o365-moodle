@@ -246,9 +246,9 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         ];
         $this->assertEquals($expectedrequests, $requests);
 
-        $expectedtoadd = ['user0' => $users[0]->id];
+        $expectedtoadd = [$users[0]->id];
         $this->assertEquals($expectedtoadd, $toadd);
-        $expectedtoremove = ['user2' => 'user2'];
+        $expectedtoremove = [$users[2]->id];
         $this->assertEquals($expectedtoremove, $toremove);
     }
 }

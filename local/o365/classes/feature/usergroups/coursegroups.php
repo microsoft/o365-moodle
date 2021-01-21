@@ -23,6 +23,8 @@
 
 namespace local_o365\feature\usergroups;
 
+use context_course;
+
 define('API_CALL_RETRY_LIMIT', 3);
 
 class coursegroups {
@@ -125,10 +127,11 @@ class coursegroups {
             $createclassteam = false;
             $creategrouponly = true;
             $ownerid = null;
+            $teacherid = null;
 
             if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
                 $creategrouponly = false;
-                $teacherids = $this->get_teacher_ids_of_course($course->id);
+                $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
                 foreach ($teacherids as $teacherid) {
                     if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
                         ['type' => 'user', 'moodleid' => $teacherid])) {
@@ -161,11 +164,7 @@ class coursegroups {
             }
 
             try {
-                $existingmembers = [];
-                if ($createclassteam) {
-                    $existingmembers = [$ownerid];
-                }
-                $this->resync_group_membership($course->id, $objectrec['objectid'], $existingmembers);
+                $this->resync_group_membership($course->id, $objectrec['objectid']);
             } catch (\Exception $e) {
                 $this->mtrace('Could not sync users to group for course #'.$course->id.'. Reason: '.$e->getMessage());
                 continue;
@@ -211,7 +210,7 @@ class coursegroups {
                     $this->mtrace($errmsg);
                     continue;
                 }
-                $teacherids = $this->get_teacher_ids_of_course($course->id);
+                $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
                 $hasowner = false;
                 foreach ($teacherids as $teacherid) {
                     if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
@@ -655,8 +654,10 @@ class coursegroups {
      *
      * @param int $courseid The ID of the course.
      * @param string $groupobjectid The object ID of the Microsoft 365 group.
+     *
+     * @return array|false
      */
-    public function resync_group_membership($courseid, $groupobjectid = null, $currentmembers = null) {
+    public function resync_group_membership($courseid, $groupobjectid = null) {
         $this->mtrace('Syncing group membership for course #'.$courseid);
 
         if ($groupobjectid === null) {
@@ -677,65 +678,42 @@ class coursegroups {
 
         $this->mtrace('Syncing to group "'.$groupobjectid.'"');
 
-        // Get current group membership (if not already provided).
-        if ($currentmembers === null || !is_array($currentmembers)) {
-            $members = $this->graphclient->get_group_members($groupobjectid);
-            $owners = $this->graphclient->get_group_owners($groupobjectid);
-            $currentmembers = [];
-            foreach ($members['value'] as $member) {
-                $currentmembers[$member['id']] = $member['id'];
-            }
-            foreach ($owners['value'] as $owner) {
-                $currentmembers[$owner['id']] = $owner['id'];
-            }
+        // Get current group membership.
+        $members = $this->graphclient->get_group_members($groupobjectid);
+        $owners = $this->graphclient->get_group_owners($groupobjectid);
+        $currentmembers = [];
+        $currentowners = [];
+        foreach ($members['value'] as $member) {
+            $currentmembers[] = $member['id'];
+        }
+        foreach ($owners['value'] as $owner) {
+            $currentowners[] = $owner['id'];
         }
 
-        // Get list of users enrolled in the course. These are our intended group members.
-        $intendedmembers = [];
-        $coursecontext = \context_course::instance($courseid);
-        // Only get non suspended students here.
-        $this->mtrace('Getting active students only to sync to team..');
-        list($esql, $params) = get_enrolled_sql($coursecontext, '', 0, true);
-        $sql = "SELECT u.id,
-                       objs.objectid as userobjectid
-                  FROM {user} u
-                  JOIN ($esql) je ON je.id = u.id
-                  JOIN {local_o365_objects} objs ON objs.moodleid = u.id
-                  JOIN {user_enrolments} ue ON ue.userid = u.id
-                 WHERE u.deleted = 0 AND objs.type = :user";
-        $params['user'] = 'user';
-        $enrolled = $this->DB->get_recordset_sql($sql, $params);
-        foreach ($enrolled as $user) {
-            $intendedmembers[$user->userobjectid] = $user->id;
+        // Get intended group members.
+        $intendedteamownerids = $this->get_team_owner_ids_by_course_id($courseid);
+        $intendedteammemberuserids = $this->get_team_member_ids_by_course_id($courseid);
+
+        $intendedteamowners = static::get_user_object_ids_by_user_ids($intendedteamownerids);
+        $intendedteammembers = static::get_user_object_ids_by_user_ids($intendedteammemberuserids);
+
+        if (!empty($currentowners)) {
+            $toaddowners = array_diff($intendedteamowners, $currentowners);
+            $toremoveowners = array_diff($currentowners, $intendedteamowners);
+        } else {
+            $toaddowners = $intendedteamowners;
+            $toremoveowners = [];
         }
-        $enrolled->close();
 
         if (!empty($currentmembers)) {
-            // Diff current and intended members in each direction to determine toadd and toremove lists.
-            $toadd = array_diff_key($intendedmembers, $currentmembers);
-            $toremove = array_diff_key($currentmembers, $intendedmembers);
+            $toaddmembers = array_diff($intendedteammembers, $currentmembers);
+            $toremovemembers = array_diff($currentmembers, $intendedteammembers);
         } else {
-            // No current group members. Add all intended members, no need to remove anyone.
-            $toadd = $intendedmembers;
-            $toremove = [];
+            $toaddmembers = $intendedteammembers;
+            $toremovemembers = [];
         }
 
-        // Remove users.
-        $this->mtrace('Users to remove: '.count($toremove));
-        foreach ($toremove as $userobjectid) {
-            $this->mtrace('... Removing '.$userobjectid.'...', '');
-            $result = $this->graphclient->remove_member_from_group($groupobjectid, $userobjectid);
-            if ($result === true) {
-                $this->mtrace('Success!');
-            } else {
-                $this->mtrace('Error!');
-                $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
-            }
-        }
-
-        $teacherids = $this->get_teacher_ids_of_course($courseid);
-
-        //Check if group object is created
+        // Check if group object is created
         $this->mtrace('... Checking if group is setup ...', '');
         $retrycounter = 0;
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
@@ -760,49 +738,84 @@ class coursegroups {
             }
         }
 
-        // Add users.
-        $this->mtrace('Users to add: '.count($toadd));
-        foreach ($toadd as $userobjectid => $moodleuserid) {
-            $this->mtrace('... Adding '.$userobjectid.' (muserid: '.$moodleuserid.')...', '');
+        // Remove owners.
+        $this->mtrace('Owners to remove: ' . count($toremoveowners));
+        foreach ($toremoveowners as $userobjectid) {
+            $this->mtrace('... Removing ' . $userobjectid . '...', '');
+            $result = $this->graphclient->remove_owner_from_group($groupobjectid, $userobjectid);
+            if ($result === true) {
+                $this->mtrace('Success!');
+            } else {
+                $this->mtrace('Error!');
+                $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
+            }
+        }
+
+        // Remove members.
+        foreach ($toremovemembers as $key => $userobjectid) {
+            if (in_array($userobjectid, $intendedteamowners)) {
+                unset($toremovemembers[$key]);
+            }
+        }
+        $this->mtrace('Members to remove: ' . count($toremovemembers));
+        foreach ($toremovemembers as $userobjectid) {
+            $this->mtrace('... Removing ' . $userobjectid . '...', '');
+            $result = $this->graphclient->remove_member_from_group($groupobjectid, $userobjectid);
+            if ($result === true) {
+                $this->mtrace('Success!');
+            } else {
+                $this->mtrace('Error!');
+                $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
+            }
+        }
+
+        // Add owners.
+        $this->mtrace('Owners to add: ' . count($toaddowners));
+        foreach ($toaddowners as $userobjectid) {
+            $this->mtrace('... Adding ' . $userobjectid . '...', '');
             $retrycounter = 0;
             while ($retrycounter <= API_CALL_RETRY_LIMIT) {
-                // Add teacher as owner of O365 group.
-                if (in_array($moodleuserid, $teacherids)) {
-                    $this->mtrace('... Adding teacher as owner, Teacher Id: ' . $userobjectid . ' (muserid: ' . $moodleuserid . ')...', '');
-                    if ($retrycounter) {
-                        $this->mtrace('...... Retry #' . $retrycounter);
-                        sleep(10);
-                    }
-                    $result = $this->graphclient->add_owner_to_group($groupobjectid, $userobjectid);
-                    if ($result === true) {
-                        $this->mtrace('Success!');
-                        break;
-                    } else {
-                        $this->mtrace('Error!');
-                        $this->mtrace('...... Received: ' . \local_o365\utils::tostring($result));
-                        $retrycounter++;
-
-                        if (strpos($result, 'Request_ResourceNotFound') === false) {
-                            break;
-                        }
-                    }
+                if ($retrycounter) {
+                    $this->mtrace('...... Retry #' . $retrycounter);
+                    sleep(10);
+                }
+                $result = $this->graphclient->add_owner_to_group($groupobjectid, $userobjectid);
+                if ($result === true) {
+                    $this->mtrace('Success!');
+                    break;
                 } else {
-                    if ($retrycounter) {
-                        $this->mtrace('...... Retry #' . $retrycounter);
-                        sleep(10);
-                    }
-                    $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
-                    if ($result === true) {
-                        $this->mtrace('Success!');
-                        break;
-                    } else {
-                        $this->mtrace('Error!');
-                        $this->mtrace('...... Received: '.\local_o365\utils::tostring($result));
-                        $retrycounter++;
+                    $this->mtrace('Error!');
+                    $this->mtrace('...... Received: ' . \local_o365\utils::tostring($result));
+                    $retrycounter++;
 
-                        if (strpos($result, 'Request_ResourceNotFound') === false) {
-                            break;
-                        }
+                    if (strpos($result, 'Request_ResourceNotFound') === false) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Add members.
+        $this->mtrace('Members to add: ' . count($toaddmembers));
+        foreach ($toaddmembers as $userobjectid) {
+            $this->mtrace('... Adding ' . $userobjectid . '...', '');
+            $retrycounter = 0;
+            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+                if ($retrycounter) {
+                    $this->mtrace('...... Retry #' . $retrycounter);
+                    sleep(10);
+                }
+                $result = $this->graphclient->add_member_to_group($groupobjectid, $userobjectid);
+                if ($result === true) {
+                    $this->mtrace('Success!');
+                    break;
+                } else {
+                    $this->mtrace('Error!');
+                    $this->mtrace('...... Received: ' . \local_o365\utils::tostring($result));
+                    $retrycounter++;
+
+                    if (strpos($result, 'Request_ResourceNotFound') === false) {
+                        break;
                     }
                 }
             }
@@ -810,23 +823,68 @@ class coursegroups {
 
         $this->mtrace('Done');
 
-        return [$toadd, $toremove];
+        return [array_merge($toaddowners, $toaddmembers), array_merge($toremoveowners, $toremovemembers)];
     }
 
     /**
-     * Helper function to retrieve editing and non etiting teachers of course.
+     * Helper function to retrieve users who have Team owner capability in the course with the given ID.
      *
      * @param int $courseid Id of Moodle course.
-     * @return array $teacher_ids array containing ids of teachers.
+     *
+     * @return array array containing ids of teachers.
      */
-    public function get_teacher_ids_of_course($courseid) {
-        $context = \context_course::instance($courseid);
-        $allteachers = get_users_by_capability($context, 'local/o365:teamowner', 'u.id');
-        $teacherids = array();
-        foreach ($allteachers as $teacher) {
-            array_push($teacherids, $teacher->id);
+    public function get_team_owner_ids_by_course_id($courseid) {
+        $context = context_course::instance($courseid);
+        $teamownerusers = get_users_by_capability($context, 'local/o365:teamowner', 'u.id, u.deleted');
+        $teamowneruserids = [];
+        foreach ($teamownerusers as $user) {
+            if (!$user->deleted) {
+                array_push($teamowneruserids, $user->id);
+            }
         }
-        return $teacherids;
+
+        return $teamowneruserids;
+    }
+
+    /**
+     * Helper function to retrieve users who have Team member capability in the course with the given ID.
+     *
+     * @param $courseid
+     *
+     * @return array
+     */
+    public function get_team_member_ids_by_course_id($courseid) {
+        $context = context_course::instance($courseid);
+        $teammemberusers = get_users_by_capability($context, 'local/o365:teammember', 'u.id, u.deleted');
+        $teammemberuserids = [];
+        foreach ($teammemberusers as $user) {
+            array_push($teammemberuserids, $user->id);
+        }
+
+        return $teammemberuserids;
+    }
+
+    /**
+     * Return the list of o365_object IDs for the users with the given IDs.
+     *
+     * @param $userids
+     *
+     * @return array
+     */
+    public static function get_user_object_ids_by_user_ids($userids) {
+        global $DB;
+
+        if ($userids) {
+            list($idsql, $idparams) = $DB->get_in_or_equal($userids);
+            $sql = "SELECT objectid
+                  FROM {local_o365_objects}
+                 WHERE type = ?
+                   AND moodleid {$idsql}";
+            $params = array_merge(['user'], $idparams);
+            return $DB->get_fieldset_sql($sql, $params);
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -941,7 +999,7 @@ class coursegroups {
         // Update o365 group photo.
         try {
              // Get file.
-            $context = \context_course::instance($group->courseid);
+            $context = context_course::instance($group->courseid);
             $fs = get_file_storage();
             $fileinfo = [
                 'component' => 'group',
@@ -1135,7 +1193,7 @@ class coursegroups {
             // Create team.
             $now = time();
 
-            $teacherids = $this->get_teacher_ids_of_course($courseid);
+            $teacherids = $this->get_team_owner_ids_by_course_id($courseid);
             $hasowner = false;
             foreach ($teacherids as $teacherid) {
                 if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
