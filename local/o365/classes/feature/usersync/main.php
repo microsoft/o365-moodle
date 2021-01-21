@@ -412,7 +412,7 @@ class main {
     }
 
     /**
-     * Return the names of roles that the Office 365 user with the given oid has, joined by comma.
+     * Return the names of roles that the Microsoft 365 user with the given oid has, joined by comma.
      *
      * @param $userobjectid
      *
@@ -435,7 +435,7 @@ class main {
     }
 
     /**
-     * Return the preferred name of the Office 365 user with the given oid.
+     * Return the preferred name of the Microsoft 365 user with the given oid.
      *
      * @param $userobjectid
      *
