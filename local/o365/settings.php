@@ -276,7 +276,7 @@ if ($hassiteconfig) {
             coursegroups::NAME_OPTION_FULL_NAME, $teamgroupnamemainpartoptions));
 
         // Group mail alias naming convention - suffix.
-        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/group_mail_alia_suffix',
+        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/group_mail_alias_suffix',
             get_string('settings_group_mail_alias_suffix', 'local_o365'),
             get_string('settings_group_mail_alias_suffix_desc', 'local_o365'),
             '', PARAM_TEXT, null, 15));
