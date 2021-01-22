@@ -425,7 +425,7 @@ class main {
         if ($objectsids) {
             $results = $apiclient->get_directory_objects($objectsids);
             foreach ($results as $result) {
-                if (strpos('role', $result['@odata.type']) !== FALSE) {
+                if (stripos($result['@odata.type'], 'role') !== FALSE) {
                     $roles[] = $result['displayName'];
                 }
             }
