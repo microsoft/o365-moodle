@@ -431,8 +431,8 @@ $string['settings_group_creation_fallback_details'] = 'When enabled, if a course
 When disabled, Moodle will always try to create a class Team from a synced course. Team creation will be skipped until a suitable Team owner is enrolled in the course.
 
 A suitable Team owner is a user having "Team owner" capability (local/o365:teamowner) in the course.';
-$string['settings_o365china'] = 'Office&nbsp;365 for China';
-$string['settings_o365china_details'] = 'Check this if you are using Office&nbsp;365 for China.';
+$string['settings_o365china'] = 'Microsoft 365 for China';
+$string['settings_o365china_details'] = 'Check this if you are using Microsoft 365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_switchauthminupnsplit0'] = 'Minimum inexact username length to switch to Microsoft 365';
