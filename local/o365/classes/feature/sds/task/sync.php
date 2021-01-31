@@ -134,6 +134,7 @@ class sync extends \core\task\scheduled_task {
             //for each class office 365 group in Azure AD
             foreach ($sections['value'] as $section) {
                 static::mtrace('...... Processing '.$section['displayName'].' with Office 365 Group ID: '.$section['id']);
+                //static::mtrace("Data: ".var_dump($section));
 
                 $subjectname = $section[$apiclient::PREFIX.'_CourseSubject'];
                 $subjectcode = $section[$apiclient::PREFIX.'_CourseNumber']; //not sure this is the subject code
