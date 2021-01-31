@@ -1020,7 +1020,7 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get office video file's metadata by url.
+     * Get video file's metadata by url.
      *
      * @param string $url The file's URL.
      * @return array The file's metadata.

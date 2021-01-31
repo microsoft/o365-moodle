@@ -309,7 +309,7 @@ class block_microsoft extends block_base {
             }
         }
 
-        // Download Office 365.
+        // Download Microsoft 365.
         $downloadlinks = $this->get_content_o365download();
         foreach ($downloadlinks as $link) {
             $items[] = $link;
@@ -353,7 +353,7 @@ class block_microsoft extends block_base {
     }
 
     /**
-     * Get Office 365 download links (if enabled).
+     * Get Microsoft 365 download links (if enabled).
      *
      * @return array Array of download link HTML, or empty array if download links disabled.
      */

@@ -309,7 +309,7 @@ class utils {
     }
 
     /**
-     * Return image tag to display office 365 group picture.
+     * Return image tag to display Microsoft 365 group picture.
      *
      * @param object $o365group Course group record.
      * @param string $image File name to use for image, ie f1.png, f2.png.
@@ -605,25 +605,31 @@ class utils {
      *
      * @param int $courseid The ID of the course.
      * @param bool $enabled Whether to enable or disable.
+     * @param bool $allfeatures Whether to enable all features, or just teams.
      */
-    public static function set_course_group_enabled($courseid, $enabled = true) {
+    public static function set_course_group_enabled($courseid, $enabled = true, $allfeatures = false) {
         $usergroupconfig = get_config('local_o365', 'usergroupcustom');
         $usergroupconfig = @json_decode($usergroupconfig, true);
         if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
             $usergroupconfig = [];
         }
+
         if ($enabled === true) {
             $usergroupconfig[$courseid] = $enabled;
-            static::set_course_group_feature_enabled($courseid, ['team'],
-                $enabled);
         } else {
             if (isset($usergroupconfig[$courseid])) {
                 unset($usergroupconfig[$courseid]);
                 static::delete_course_group($courseid);
             }
-            static::set_course_group_feature_enabled($courseid, ['team'],
-                $enabled);
         }
+
+        $features = ['team', 'onedrive', 'calendar', 'conversations', 'notebook'];
+        if ($allfeatures) {
+            static::set_course_group_feature_enabled($courseid, $features, $enabled);
+        } else {
+            static::set_course_group_feature_enabled($courseid, ['team'], $enabled);
+        }
+
         set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
     }
 

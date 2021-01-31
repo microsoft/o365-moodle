@@ -31,6 +31,6 @@ $string['errorwhiledownload'] = 'Tiedoston lataamisessa tapahtui virhe';
 $string['file'] = 'Tiedosto';
 $string['myfiles'] = 'Omat tiedostot';
 $string['office365:view'] = 'Näytä OneDrive for Business -tiedostopankki';
-$string['pluginname'] = 'Office 365';
+$string['pluginname'] = 'Microsoft 365';
 $string['pluginname_help'] = 'OneDrive for Business -tiedostopankki';
 $string['upload'] = 'Lähetä uusi tiedosto';

@@ -131,7 +131,7 @@ class processmatchqueue extends \core\task\scheduled_task {
                     continue;
                 }
 
-                // Check existing matches for Office user.
+                // Check existing matches for Microsoft 365 user.
                 if (!empty($matchrec->officeuserexistingconnectionid)) {
                     $updatedrec = new \stdClass;
                     $updatedrec->id = $matchrec->id;
@@ -142,7 +142,7 @@ class processmatchqueue extends \core\task\scheduled_task {
                     continue;
                 }
 
-                // Check existing tokens for Office 365 user (indicates o365 user is already connected to someone).
+                // Check existing tokens for Microsoft 365 user (indicates o365 user is already connected to someone).
                 if (!empty($matchrec->officeuserexistingoidctoken)) {
                     $updatedrec = new \stdClass;
                     $updatedrec->id = $matchrec->id;

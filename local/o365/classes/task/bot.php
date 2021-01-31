@@ -44,14 +44,14 @@ class bot extends \core\task\scheduled_task {
         mtrace('Starting bot task.');
 
         if (\local_o365\utils::is_configured() !== true) {
-            mtrace('Office 365 not configured');
+            mtrace('Microsoft 365 not configured');
             return false;
         }
 
         $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
 
         if (empty($botfeatureenabled)) {
-            mtrace('Office 365 bot feature is disabled');
+            mtrace('Microsoft 365 bot feature is disabled');
             return false;
         }
 

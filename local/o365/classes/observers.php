@@ -416,7 +416,9 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
-        global $DB;
+        global $CFG;
+
+        require_once($CFG->libdir . '/enrollib.php');
 
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
@@ -426,6 +428,12 @@ class observers {
         $courseid = $event->courseid;
 
         if (empty($userid) || empty($courseid)) {
+            return true;
+        }
+
+        // If the user is still enrolled in the course, through other enrolment method, don't remove the user from the course group.
+        $coursecontext = \context_course::instance($courseid);
+        if (is_enrolled($coursecontext, $userid)) {
             return true;
         }
 
@@ -444,7 +452,8 @@ class observers {
         } catch (\Exception $e) {
             \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
         }
-        return false;
+
+        return true;
     }
 
     /**
@@ -530,19 +539,32 @@ class observers {
      * Handle course_created event.
      *
      * Does the following:
-     *     - create a sharepoint site and associated groups.
+     *  - enable sync on new courses if course sync is "custom", and the option to enable sync on new courses by default is set.
+     *  - create a sharepoint site and associated groups.
      *
      * @param \core\event\course_created $event The triggered event.
      * @return bool Success/Failure.
      */
     public static function handle_course_created(\core\event\course_created $event) {
-        if (\local_o365\utils::is_configured() !== true || \local_o365\rest\sharepoint::is_configured() !== true) {
+        if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
-        $sharepoint = static::construct_sharepoint_api_with_system_user();
-        if (!empty($sharepoint)) {
-            $sharepoint->create_course_site($event->objectid);
+
+        // Enable team sync for newly created courses if the create teams setting is "custom", and the option to enable sync on
+        // new courses by default is on.
+        $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
+        if ((get_config('local_o365', 'createteams') === 'oncustom') && $syncnewcoursesetting) {
+            \local_o365\feature\usergroups\utils::set_course_group_enabled($event->objectid, true, true);
         }
+        
+        if (\local_o365\rest\sharepoint::is_configured() === true) {
+            $sharepoint = static::construct_sharepoint_api_with_system_user();
+            if (!empty($sharepoint)) {
+                $sharepoint->create_course_site($event->objectid);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -897,8 +919,8 @@ class observers {
         }
 
         if ($user->auth != 'oidc') {
-            // recipient user is not office 365 user, exit.
-            debugging('SKIPPED: handle_notification_sent - recipient user is not office 365 user', DEBUG_DEVELOPER);
+            // recipient user is not Microsoft 365 user, exit.
+            debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
             return true;
         }
 
@@ -964,34 +986,6 @@ class observers {
         // send notification
         $botframework->send_notification($courseobjectid, $userrecord->objectid,
             $message, $listItems, $notificationendpoint);
-        return true;
-    }
-
-    /**
-     * Log out user from Office 365 if the user is using auth_oidc.
-     *
-     * @param \core\event\user_loggedout $event
-     *
-     * @return bool
-     */
-    public static function handle_user_loggedout(\core\event\user_loggedout $event) {
-        global $CFG;
-
-        $singlesignoffsetting = get_config('local_o365', 'single_sign_off');
-
-        if ($singlesignoffsetting) {
-            $eventdata = $event->get_data();
-
-            $user = \core_user::get_user($eventdata['userid']);
-
-            if ($user && $user->auth == 'oidc') {
-                $ssologouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
-                    urlencode($CFG->wwwroot);
-
-                redirect($ssologouturl);
-            }
-        }
-
         return true;
     }
 

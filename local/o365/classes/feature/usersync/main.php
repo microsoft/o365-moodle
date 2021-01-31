@@ -361,7 +361,7 @@ class main {
     }
 
     /**
-     * Return the name of the manager of the Office 365 user with the given oid.
+     * Return the name of the manager of the Microsoft 365 user with the given oid.
      *
      * @param $userobjectid
      *
@@ -378,7 +378,7 @@ class main {
     }
 
     /**
-     * Return the names of groups that the Office 365 user with the given oid are in, joined by comma.
+     * Return the names of groups that the Microsoft 365 user with the given oid are in, joined by comma.
      *
      * @param $userobjectid
      *
@@ -395,7 +395,7 @@ class main {
     }
 
     /**
-     * Return the names of teams that the Office 365 user with the given oid are in, joined by comma.
+     * Return the names of teams that the Microsoft 365 user with the given oid are in, joined by comma.
      *
      * @param $userobjectid
      *
@@ -412,7 +412,30 @@ class main {
     }
 
     /**
-     * Return the preferred name of the Office 365 user with the given oid.
+     * Return the names of roles that the Microsoft 365 user with the given oid has, joined by comma.
+     *
+     * @param $userobjectid
+     *
+     * @return string
+     */
+    public function get_user_roles($userobjectid) {
+        $apiclient = $this->construct_user_api(false);
+        $objectsids = $apiclient->get_user_objects($userobjectid);
+        $roles = [];
+        if ($objectsids) {
+            $results = $apiclient->get_directory_objects($objectsids);
+            foreach ($results as $result) {
+                if (stripos($result['@odata.type'], 'role') !== FALSE) {
+                    $roles[] = $result['displayName'];
+                }
+            }
+        }
+
+        return join(',', $roles);
+    }
+
+    /**
+     * Return the preferred name of the Microsoft 365 user with the given oid.
      *
      * @param $userobjectid
      *
@@ -445,8 +468,10 @@ class main {
             }
         }
         if (\local_o365\rest\unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
+            $objectidfieldname = 'id';
             $userobjectid = $aaddata['id'];
         } else {
+            $objectidfieldname = 'objectId';
             $userobjectid = $aaddata['objectId'];
         }
         $usersync = new \local_o365\feature\usersync\main();
@@ -456,6 +481,9 @@ class main {
                 continue;
             }
             list($remotefield, $localfield, $behavior) = $fieldmap;
+            if ($remotefield == 'objectId') {
+                $remotefield = $objectidfieldname;
+            }
             if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
                 // Field mapping doesn't apply to this event type.
                 continue;
@@ -481,6 +509,8 @@ class main {
                 $user->$localfield = $usersync->get_user_groups($userobjectid);
             } else if ($remotefield == "teams") {
                 $user->$localfield = $usersync->get_user_teams($userobjectid);
+            } else if ($remotefield == "roles") {
+                $user->$localfield = $usersync->get_user_roles($userobjectid);
             } else if ($remotefield == "preferredName") {
                 if (!isset($aaddata[$remotefield])) {
                     $user->$localfield = $usersync->get_preferred_name($userobjectid);
@@ -1084,7 +1114,7 @@ class main {
             // Switch the user to OpenID authentication method, but only if this setting is enabled and full username matched.
             require_once($CFG->dirroot.'/user/profile/lib.php');
             require_once($CFG->dirroot.'/user/lib.php');
-            // Do not switch Moodle user to OpenID if another Moodle user is already using same Office 365 account for logging in.
+            // Do not switch Moodle user to OpenID if another Moodle user is already using same Microsoft 365 account for logging in.
             $sql = 'SELECT u.username
                       FROM {user} u
                  LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
@@ -1128,24 +1158,24 @@ class main {
     }
 
     /**
-     * Delete users that have been deleted from Office 365.
+     * Delete users that have been deleted from Microsoft 365.
      * This function will get the list of recently deleted users in the last 30 days first, and suspend their accounts.
-     * It will then try to find all remaining users matched with Office 365, and check if a valid user can be found in Azure.
+     * It will then try to find all remaining users matched with Microsoft 365, and check if a valid user can be found in Azure.
      * If a valid user cannot be found, it will suspend the user in the first run, and delete the user in the second run.
      *
-     * So in a normal use case, where the option is enabled and not changed, and an Office 365 account is deleted:
-     *  - Their matching Moodle account will be suspended on the first task run after Office 365 account deletion;
-     *  - The Moodle account will be deleted on the first run 30 days after their Office 365 account deletion.
+     * So in a normal use case, where the option is enabled and not changed, and a Microsoft 365 account is deleted:
+     *  - Their matching Moodle account will be suspended on the first task run after Microsoft 365 account deletion;
+     *  - The Moodle account will be deleted on the first run 30 days after their Microsoft 365 account deletion.
      *
      * In case the option to delete Moodle users is changed from disabled to enabled:
-     *  - If the deletion of the Office 365 account happened before 30 days:
+     *  - If the deletion of the Microsoft 365 account happened before 30 days:
      *    - The matching Moodle account will be suspended on the first task run after the configuration change is made.
      *    - The Moodle account will be deleted on the second task run after the configuration change is made.
-     *  - If the deletion of the Office 365 account happened within 30 days:
+     *  - If the deletion of the Microsoft 365 account happened within 30 days:
      *    - The matching Moodle account will be suspended on the first task run after the configuration change is made.
-     *    - The Moodle account will be deleted on the first run 30 days after their Office 365 account deletion.
+     *    - The Moodle account will be deleted on the first run 30 days after their Microsoft 365 account deletion.
      *
-     * Note this will not catch oidc users without matching Office 365 account.
+     * Note this will not catch oidc users without matching Microsoft 365 account.
      *
      * @return bool
      */

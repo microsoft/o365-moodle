@@ -101,7 +101,7 @@
         <INDEX NAME="siteid" UNIQUE="false" FIELDS="siteid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_o365_objects" COMMENT="Stores information about Office 365 objects.">
+    <TABLE NAME="local_o365_objects" COMMENT="Stores information about Microsoft 365 objects.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="type" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the type of object this record represents"/>

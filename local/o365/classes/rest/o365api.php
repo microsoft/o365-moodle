@@ -347,6 +347,8 @@ abstract class o365api {
                     'Calendars.ReadWrite' => [],
                     'Notes.ReadWrite.All' => [],
                     'Domain.ReadWrite.All' => [],
+                    'MailboxSettings.Read' => [],
+                    'MailboxSettings.ReadWrite' => [],
                  ],
                 'requiredDelegatedPermissions' => [
                     'openid' => [],
@@ -358,6 +360,12 @@ abstract class o365api {
                     'User.ReadWrite.All' => [],
                     'Group.ReadWrite.All' => [],
                     'Sites.Read.All' => [],
+                    'User.Read' => [],
+                    'MailboxSettings.Read' => [],
+                    'MailboxSettings.ReadWrite' => [],
+                    'offline_access' => [],
+                    'email' => [],
+                    'profile' => [],
                 ],
             ],
             'azure' => [

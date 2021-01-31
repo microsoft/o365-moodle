@@ -107,7 +107,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         $httpclient->set_response(json_encode($fixedresponse));
 
         $coursegroups = $this->constructcoursegroupsinstance($httpclient);
-        $objectrec = $coursegroups->create_group($course, 'prefix 1@:-_');
+        $objectrec = $coursegroups->create_group($course); // This may need to be updated to consider the new naming settings.
 
         // Assert returned object record.
         $expectedobjectrec = [
@@ -115,7 +115,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
             'subtype' => 'course',
             'objectid' => 'group1',
             'moodleid' => $course->id,
-            'o365name' => 'prefix 1@:-_: '.$course->fullname,
+            'o365name' => $course->fullname,
         ];
         $this->assertEquals($expectedobjectrec, array_intersect_key($objectrec, $expectedobjectrec));
 
@@ -246,9 +246,9 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         ];
         $this->assertEquals($expectedrequests, $requests);
 
-        $expectedtoadd = ['user0' => $users[0]->id];
+        $expectedtoadd = [$users[0]->id];
         $this->assertEquals($expectedtoadd, $toadd);
-        $expectedtoremove = ['user2' => 'user2'];
+        $expectedtoremove = [$users[2]->id];
         $this->assertEquals($expectedtoremove, $toremove);
     }
 }
