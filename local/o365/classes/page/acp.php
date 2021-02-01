@@ -1310,7 +1310,7 @@ class acp extends base {
     }
 
     /**
-     * Clean up OpenID Connect tokens.
+     * Clean up OpenID Connect tokens for one user.
      */
     public function mode_maintenance_deleteoidctoken() {
         global $DB;
@@ -1331,65 +1331,72 @@ class acp extends base {
         if (!empty($existingobject)) {
             // Delete record for local_o365_objects.
             $DB->delete_records('local_o365_objects', ['id' => $existingobject->id]);
-            mtrace("Object ".$existingobject->objectid." deleted.");
+            mtrace("Object " . $existingobject->objectid . " deleted.");
             echo "<br>";
-            $tokenstr = substr($existingobject->token,0, 16).'...';
-        }
+            $tokenstr = substr($existingobject->token, 0, 16) . '...';
 
-        // Delete record from local_o365_token.
-        $DB->delete_records('local_o365_token', ['user_id' => $existingobject->userid]);
+            // Delete record from local_o365_token.
+            $DB->delete_records('local_o365_token', ['user_id' => $existingobject->userid]);
 
-        // Delete record from local_o365_connections.
-        $DB->delete_records_select(
-            'local_o365_connections',
-            'muserid = :userid  OR lower(aadupn) = :email', [
+            // Delete record from local_o365_connections.
+            $DB->delete_records_select(
+                'local_o365_connections',
+                'muserid = :userid  OR lower(aadupn) = :email', [
                 'userid' => $existingobject->userid,
                 'email' => $existingobject->email
             ]);
+        }
 
         // Finally delete the token.
         $DB->delete_records('auth_oidc_token', ['id' => $tokenid]);
-        mtrace("Token ".$tokenstr." deleted.");
+        mtrace("Token " . $tokenstr . " deleted.");
     }
 
     /**
      * Clean up OpenID Connect tokens.
+     * Options are provided to clean two types of tokens:
+     *  - tokens without user ID.
+     *  - tokens having a username which doesn't match the referenced users' username.
      */
     public function mode_maintenance_cleanoidctokens() {
         global $DB;
+
+        mtrace('Tokens with empty user IDs:' . PHP_EOL);
         $sql = 'SELECT tok.*, obj.objectid
-                 FROM {auth_oidc_token} tok
-                 LEFT JOIN {local_o365_objects} obj
-                        ON tok.username = obj.o365name
-                WHERE tok.userid = 0';
+                  FROM {auth_oidc_token} tok
+             LEFT JOIN {local_o365_objects} obj ON tok.username = obj.o365name
+                 WHERE tok.userid = 0';
         $records = $DB->get_recordset_sql($sql);
         foreach ($records as $token) {
-            $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'sesskey' => sesskey()]);
+            $toolurl = new \moodle_url($this->url,
+                ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'sesskey' => sesskey()]);
             $toolname = 'Delete Token';
-            $objectstr = ($token->objectid) ? ' with objectid '.$token->objectid : '';
-            $str = $token->id.': Moodle user '.$token->username.' has a token for OIDC username '.$token->oidcusername.$objectstr.' but no recorded userid.';
-            $deletelink = \html_writer::link($toolurl, $toolname);
-            mtrace($str.' '.$deletelink);
+            $objectstr = ($token->objectid) ? ' with objectid ' . $token->objectid : '';
+            $line = ' - ' . $token->id . ': Moodle user ' . $token->username . ' has a token for OIDC username ' .
+                $token->oidcusername . $objectstr . ' but no recorded userid.';
+            $line .= ' ' . \html_writer::link($toolurl, $toolname);
+            mtrace($line . PHP_EOL);
         }
+        mtrace('End of tokens with empty IDs.' . PHP_EOL . PHP_EOL);
 
-        $sql = 'SELECT tok.id AS id,
-                       u.id AS muserid,
-                       u.username AS musername,
-                       u.auth,
-                       u.deleted,
-                       u.suspended,
-                       tok.oidcuniqid,
-                       tok.username AS tokusername,
-                       tok.userid AS tokuserid,
-                       tok.oidcusername
+        mtrace('Tokens with mismatched usernames:' . PHP_EOL);
+        $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusername, tok.oidcusername AS oidcusername,
+                       u.id AS muserid, u.username AS musername
                   FROM {auth_oidc_token} tok
-                  JOIN {user} u
-                       ON u.id = tok.userid
+                  JOIN {user} u ON u.id = tok.userid
                  WHERE tok.userid != 0 AND u.username != tok.username';
         $tokens = $DB->get_recordset_sql($sql);
         foreach ($tokens as $token) {
-            mtrace($token->id.': Mismatch between usernames and userids. Userid "'.$token->tokuserid.'" references Moodle user "'.$token->musername.'" but token references "'.$token->tokusername.'"');
+            $line = ' - ' . $token->id . ': Mismatch between usernames and userids. Token ID "' . $token->id . '" has username "' .
+                $token->tokenusername . '" and oidcusername "' . $token->oidcusername . '", but references Moodle user ID "' .
+                $token->muserid . '" with username "' . $token->musername . '".';
+            $toolurl  = new \moodle_url($this->url,
+                ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'ref' => 1, 'sesskey' => sesskey()]);
+            $toolname = 'Delete token and reference record';
+            $line .= ' ' . \html_writer::link($toolurl, $toolname);
+            mtrace($line . PHP_EOL);
         }
+        mtrace('End of tokens with mismatched usernames.' . PHP_EOL);
     }
 
     /**
