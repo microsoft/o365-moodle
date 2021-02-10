@@ -311,6 +311,12 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_userconnections_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\toollink('local_o365/userconnections', $label, $linktext, $linkurl, $desc));
 
+        $label = new lang_string('settings_teamconnections', 'local_o365');
+        $linktext = new lang_string('settings_teamconnections_linktext', 'local_o365');
+        $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'teamconnections']);
+        $desc = new lang_string('settings_teamconnections_details', 'local_o365');
+        $settings->add(new \local_o365\adminsetting\toollink('local_o365/teamconnections', $label, $linktext, $linkurl, $desc));
+
         $label = new lang_string('settings_usermatch', 'local_o365');
         $linktext = new lang_string('settings_usermatch', 'local_o365');
         $linkurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatch']);

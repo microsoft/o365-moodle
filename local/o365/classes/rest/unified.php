@@ -2232,4 +2232,29 @@ class unified extends \local_o365\rest\o365api {
             return false;
         }
     }
+
+    /**
+     * Get a list of teams.
+     *
+     * @param string $skiptoken
+     *
+     * @return array|null
+     */
+    public function get_teams($skiptoken = '') {
+        $endpoint = '/groups?$filter=resourceProvisioningOptions/Any(x:x%20eq%20\'Team\')';
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '&' . implode('&', $odataqueries);
+        }
+        $response = $this->betaapicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+
+        return $this->process_apicall_response($response, $expectedparams);
+    }
 }

@@ -298,9 +298,12 @@ $string['settings_tools_tenants_details'] = 'Manage access to additional Microso
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
-$string['settings_userconnections'] = 'Connections';
+$string['settings_userconnections'] = 'User connections';
 $string['settings_userconnections_linktext'] = 'Manage User Connections';
 $string['settings_userconnections_details'] = 'Review and manage connections between Moodle and Microsoft 365 users.';
+$string['settings_teamconnections'] = 'Team connections';
+$string['settings_teamconnections_linktext'] = 'Manage Team Connections';
+$string['settings_teamconnections_details'] = 'Review and manage connections between Moodle course and Microsoft Teams.';
 $string['settings_usermatch'] = 'User Matching';
 $string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Microsoft 365 users based on a custom uploaded data file.';
 $string['settings_usersynccreationrestriction'] = 'User Creation Restriction';
@@ -383,6 +386,42 @@ $string['acp_userconnections_table_resync'] = 'Resync';
 $string['acp_userconnections_table_synced'] = 'Synced from Azure AD.<br />Awaiting initial login.';
 $string['acp_userconnections_table_unmatch'] = 'Unmatch';
 $string['acp_userconnections_table_unmatch_confirmmsg'] = 'This will unmatch the Moodle user "{$a}" from Microsoft 365. Click the link below to proceed.';
+
+// Settings in the "Manage Team Connections" feature of the "Advanced" tab.
+$string['acp_teamconnections'] = 'Team Connections';
+$string['acp_teamconnections_actions'] = 'Actions';
+$string['acp_teamconnections_cache_last_updated'] = 'Teams cache was last updated at {$a->lastupdated}. Click <a href="{$a->updateurl}">here</a> to update cache.';
+$string['acp_teamconnections_cache_never_updated'] = 'Teams cache was never updated. Click <a href="{$a->updateurl}">here</a> to update.';
+$string['acp_teamconnections_connected_team'] = 'Connected Team';
+$string['acp_teamconnections_connection_completed'] = 'The course has been successfully connected to the Team';
+$string['acp_teamconnections_course_connected'] = 'The course has been successfully connected with the Team.';
+$string['acp_teamconnections_current_connection'] = 'CURRENT CONNECTION';
+$string['acp_teamconnections_exception_course_not_connected_to_group'] = 'The course is not connected to a Group.';
+$string['acp_teamconnections_exception_course_not_exist'] = 'The course to be connected does not exist.';
+$string['acp_teamconnections_exception_invalid_team_id'] = 'Invalid Team ID';
+$string['acp_teamconnections_exception_no_unified_token'] = 'Failed to get unified token to make API calls.';
+$string['acp_teamconnections_exception_not_configured'] = 'Microsoft 365 is not fully configured.';
+$string['acp_teamconnections_exception_team_already_connected'] = 'The Team is already connected to another course';
+$string['acp_teamconnections_exception_team_creation'] = 'Error occurred when trying to create Team. Details: {$a}';
+$string['acp_teamconnections_exception_team_does_not_exist'] = 'The Team that the course attempt to connect to does not exist.';
+$string['acp_teamconnections_exception_team_no_owner'] = 'Cannot find suitable Team owner.';
+$string['acp_teamconnections_form_connect_course'] = 'Manage Team connection for course {$a}';
+$string['acp_teamconnections_form_team'] = 'Select Team';
+$string['acp_teamconnections_group_only'] = ' (Group only)';
+$string['acp_teamconnections_invalid_connection'] = 'Invalid connection';
+$string['acp_teamconnections_not_connected'] = 'Not connected';
+$string['acp_teamconnections_sync_disabled'] = 'Course sync needs to be enabled first before managing Teams connections.';
+$string['acp_teamconnections_table_complete_connection'] = 'Connect to the Team linked to the group';
+$string['acp_teamconnections_table_connect'] = 'Connect';
+$string['acp_teamconnections_table_connect_to_different_team'] = 'Connect to a different Team';
+$string['acp_teamconnections_table_create_team'] = 'Create Team';
+$string['acp_teamconnections_table_cannot_create_team_from_group'] = 'Cannot create Team from group - no owner';
+$string['acp_teamconnections_table_update'] = 'Update';
+$string['acp_teamconnections_team_already_connected'] = 'The course is already connected to a Team.';
+$string['acp_teamconnections_team_created'] = 'Team was created successfully for the course.';
+$string['acp_teamconnections_team_exists_but_not_connected'] = 'The course is configured to be connected to a Group only, however a Team connected to the Group exists.';
+$string['acp_teamconnections_teams_cache_updated'] = 'Teams cache updated successfully.';
+$string['acp_teamconnections_title'] = 'Manage Team connections ';
 
 // Settings in the "User matching" feature of the "Advanced" tab.
 $string['acp_usermatch'] = 'User Matching';
