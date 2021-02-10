@@ -633,7 +633,7 @@ class utils {
         set_config('usergroupcustom', json_encode($usergroupconfig), 'local_o365');
     }
 
-   /**
+    /**
      * Determine whether a group feature is enabled or disabled.
      *
      * @param int $courseid The ID of the course.
@@ -715,5 +715,56 @@ class utils {
             }
         }
         set_config('usergroupcustomfeatures', json_encode($usergroupconfig), 'local_o365');
+    }
+
+    /**
+     * Return a list of unmatched teams, which can be used as connecting options.
+     *
+     * @param null $currentoid
+     *
+     * @return array
+     */
+    public static function get_teams_options($currentoid = null) {
+        global $DB;
+
+        $teamsoptions = [];
+        $teamnamecache = [];
+        $matchedid = 0;
+
+        $matchedoids = $DB->get_fieldset_select('local_o365_objects', 'objectid', 'type = ? AND subtype = ?', ['group', 'course']);
+
+        $teamcacherecords = $DB->get_records('local_o365_teams_cache');
+        foreach ($teamcacherecords as $key => $teamcacherecord) {
+            if ($teamcacherecord->objectid == $currentoid || !in_array($teamcacherecord->objectid, $matchedoids)) {
+                if (!array_key_exists($teamcacherecord->name, $teamnamecache)) {
+                    $teamnamecache[$teamcacherecord->name] = [];
+                }
+                $teamnamecache[$teamcacherecord->name][] = $teamcacherecord->objectid;
+            } else {
+                unset($teamcacherecords[$key]);
+            }
+        }
+
+        foreach ($teamcacherecords as $teamcacherecord) {
+            $teamoidpart = '';
+            if (count($teamnamecache[$teamcacherecord->name]) > 1) {
+                $teamoidpart = ' [' . $teamcacherecord->objectid . '] ';
+            }
+            if ($teamcacherecord->objectid == $currentoid) {
+                $teamsoptions[$teamcacherecord->id] = $teamcacherecord->name . $teamoidpart . ' - ' .
+                    get_string('acp_teamconnections_current_connection', 'local_o365');
+                $matchedid = $teamcacherecord->id;
+            } else {
+                $teamsoptions[$teamcacherecord->id] = $teamcacherecord->name . $teamoidpart;
+            }
+        }
+
+        natcasesort($teamsoptions);
+
+        if (!$currentoid) {
+            $teamsoptions = ['0' => get_string('acp_teamconnections_not_connected', 'local_o365')] + $teamsoptions;
+        }
+
+        return [$teamsoptions, $matchedid];
     }
 }

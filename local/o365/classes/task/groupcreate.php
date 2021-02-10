@@ -65,5 +65,6 @@ class groupcreate extends \core\task\scheduled_task {
         $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
         $coursegroups->create_groups_for_new_courses();
         $coursegroups->sync_group_profile_photo();
+        $coursegroups->update_teams_cache();
     }
 }
