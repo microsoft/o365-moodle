@@ -2089,7 +2089,7 @@ class unified extends \local_o365\rest\o365api {
      *
      * @param $externalappid
      *
-     * @return |null
+     * @return string|null
      * @throws \moodle_exception
      */
     public function get_catalog_app_id($externalappid) {
@@ -2112,7 +2112,7 @@ class unified extends \local_o365\rest\o365api {
      *
      * @param $groupobjectid
      *
-     * @return |null
+     * @return string|null
      * @throws \moodle_exception
      */
     public function get_general_channel_id($groupobjectid) {
