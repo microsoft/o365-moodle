@@ -88,6 +88,8 @@ $string['cfg_logoutendpoint_key'] = 'Logout Endpoint';
 $string['cfg_logoutendpoint_desc'] = 'The URI of the logout endpoint from your identity provider to use.';
 $string['event_debug'] = 'Debug message';
 
+$string['task_cleanup_oidc_state_and_token'] = 'Clean up OIDC state and invalid token';
+
 $string['errorauthdisconnectemptypassword'] = 'Password cannot be empty';
 $string['errorauthdisconnectemptyusername'] = 'Username cannot be empty';
 $string['errorauthdisconnectusernameexists'] = 'That username is already taken. Please choose a different one.';
