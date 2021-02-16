@@ -436,7 +436,7 @@ class main {
     }
 
     /**
-     * Construct the o3654 group email.
+     * Construct the o365 group email.
      * @return string The o365 group email, or an empty string if an error occurred.
      */
     protected function construct_outlook_group_email($courseid) {
@@ -445,7 +445,6 @@ class main {
         $groupprefix = $DB->get_field('course', 'shortname', ['id' => SITEID]);
         $groupname = $DB->get_field('course', 'shortname', ['id' => $courseid]);
         $tenant = get_config('local_o365', 'aadtenant');
-        $mailnickprefix = '';
         $groupemail = '';
 
         // If the course shortname and the Azure AD tenant are not empty.

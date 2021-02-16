@@ -65,8 +65,6 @@ class coursegroups {
      * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
     public function create_groups_for_new_courses() {
-        $groupprefix = '';
-
         $createteams = get_config('local_o365', 'createteams');
         if ($createteams === 'onall' || $createteams === 'oncustom') {
             $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
@@ -152,7 +150,7 @@ class coursegroups {
             } else if ($creategrouponly || get_config('local_o365', 'group_creation_fallback') == true) {
                 // Create group.
                 try {
-                    $objectrec = $this->create_group($course, $groupprefix);
+                    $objectrec = $this->create_group($course);
                 } catch (\Exception $e) {
                     $this->mtrace('Could not create group for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     continue;
@@ -1120,8 +1118,6 @@ class coursegroups {
      */
     public function sync_group_profile_photo() {
         global $DB;
-        $siterec = $this->DB->get_record('course', ['id' => SITEID]);
-        $groupprefix = (!empty($siterec)) ? $siterec->shortname : '';
 
         $sql = 'SELECT g.*, obj.objectid, cgd.id cgdid
                   FROM {groups} g,
