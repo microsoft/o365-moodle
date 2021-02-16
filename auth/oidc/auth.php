@@ -272,15 +272,6 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
-     * Cron function.
-     */
-    public function cron() {
-        global $DB;
-        $params = [time() - (5 * 60)];
-        $DB->delete_records_select('auth_oidc_state', 'timecreated < ?', $params);
-    }
-
-    /**
      * Log out user from Office 365 if single sign off integration is enabled.
      *
      * @param stdClass $user
