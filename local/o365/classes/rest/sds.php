@@ -26,60 +26,9 @@ namespace local_o365\rest;
 /**
  * API client for school data sync.
  */
-class sds extends \local_o365\rest\o365api {
+class sds extends \local_o365\rest\unified {
     /** Prefix identifying SDS-specific attributes. */
     const PREFIX = 'extension_fe2174665583431c953114ff7268b7b3_Education';
-
-    /** The general API area of the class. */
-    public $apiarea = 'sds';
-
-    /**
-     * Determine if the API client is configured.
-     *
-     * @return bool Whether the API client is configured.
-     */
-    public static function is_configured() {
-        $config = get_config('local_o365');
-        return (!empty($config->aadtenant)) ? true : false;
-    }
-
-    /**
-     * Get the API client's oauth2 resource.
-     *
-     * @return string The resource for oauth2 tokens.
-     */
-    public static function get_resource() {
-        $oidcresource = get_config('auth_oidc', 'oidcresource');
-        if (!empty($oidcresource)) {
-            return $oidcresource;
-        } else {
-            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
-        }
-    }
-
-    /**
-     * Get the base URI that API calls should be sent to.
-     *
-     * @return string|bool The URI to send API calls to, or false if a precondition failed.
-     */
-    public function get_apiuri() {
-        $config = get_config('local_o365');
-        if (!empty($config->aadtenant)) {
-            $tenant = $config->aadtenant;
-            return static::get_resource().'/'.$tenant;
-        }
-        return false;
-    }
-
-    /**
-     * Transform the full request URL.
-     *
-     * @param string $requesturi The full request URI, includes the API uri and called endpoint.
-     * @return string The transformed full request URI.
-     */
-    protected function transform_full_request_uri($requesturi) {
-        return $requesturi;
-    }
 
     /**
      * Get schools in SDS.
@@ -89,9 +38,9 @@ class sds extends \local_o365\rest\o365api {
     public function get_schools() {
         $endpoint = '/administrativeUnits';
         $endpoint .= '?$filter='.static::PREFIX.'_ObjectType%20eq%20\'School\'';
-        $endpoint .= '&api-version=beta';
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        $response = $this->betaapicall('get', $endpoint);
+        $processed = $this->process_apicall_response($response, ['value' => null]);
+        return $processed;
     }
 
     /**
@@ -102,8 +51,7 @@ class sds extends \local_o365\rest\o365api {
     public function get_sections() {
         $endpoint = '/administrativeUnits';
         $endpoint .= '?$filter='.static::PREFIX.'_ObjectType%20eq%20\'Section\'';
-        $endpoint .= '&api-version=beta';
-        $response = $this->apicall('get', $endpoint);
+        $response = $this->betaapicall('get', $endpoint);
         return $this->process_apicall_response($response, ['value' => null]);
     }
 
@@ -115,10 +63,9 @@ class sds extends \local_o365\rest\o365api {
      */
     public function get_school($schoolobjectid) {
         $endpoint = '/administrativeUnits/'.$schoolobjectid;
-        $endpoint .= '?api-version=beta';
-        $response = $this->apicall('get', $endpoint);
+        $response = $this->betaapicall('get', $endpoint);
         $reqparams = [
-            'objectId' => null,
+            'id' => null,
             'displayName' => null,
             static::PREFIX.'_SyncSource_SchoolId' => null,
         ];
@@ -133,10 +80,9 @@ class sds extends \local_o365\rest\o365api {
      */
     public function get_school_sections($schoolid) {
         $endpoint = '/groups';
-        $endpoint .= '?api-version=1.5';
-        $endpoint .= '&$filter='.static::PREFIX.'_ObjectType%20eq%20\'Section\'';
+        $endpoint .= '?$filter='.static::PREFIX.'_ObjectType%20eq%20\'Section\'';
         $endpoint .= '%20and%20'.static::PREFIX.'_SyncSource_SchoolId%20eq%20\''.$schoolid.'\'';
-        $response = $this->apicall('get', $endpoint);
+        $response = $this->betaapicall('get', $endpoint);
         return $this->process_apicall_response($response, ['value' => null]);
     }
 
@@ -149,11 +95,10 @@ class sds extends \local_o365\rest\o365api {
      */
     public function get_school_users($schoolobjectid, $skiptoken = '') {
         $endpoint = '/administrativeUnits/'.$schoolobjectid.'/members';
-        $endpoint .= '?api-version=beta';
         if (!empty($skiptoken) && is_string($skiptoken)) {
             $endpoint .= '&$skiptoken='.$skiptoken;
         }
-        $response = $this->apicall('get', $endpoint);
+        $response = $this->betaapicall('get', $endpoint);
         return $this->process_apicall_response($response, ['value' => null]);
     }
 
@@ -199,8 +144,7 @@ class sds extends \local_o365\rest\o365api {
      */
     public function get_section_members($sectionobjectid) {
         $endpoint = '/groups/'.$sectionobjectid.'/members';
-        $endpoint .= '?api-version=1.5';
-        $response = $this->apicall('get', $endpoint);
+        $response = $this->betaapicall('get', $endpoint);
         return $this->process_apicall_response($response, ['value' => null]);
     }
 }
