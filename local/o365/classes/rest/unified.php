@@ -383,8 +383,15 @@ class unified extends \local_o365\rest\o365api {
             'notebook' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=notebook',
             'conversations' => 'https://outlook.office.com/owa/?path=/group/' . $group['mail'] . '/mail',
             'calendar' => 'https://outlook.office365.com/owa/?path=/group/' . $group['mail'] . '/calendar',
-            'team' => $this->get_teams_url($objectid),
         ];
+        try {
+            $teamurl = $this->get_teams_url($objectid);
+            if ($teamurl) {
+                $o365urls['team'] = $teamurl;
+            }
+        } catch (\Exception $e) {
+            // Do nothing.
+        }
         return $o365urls;
     }
 
@@ -2213,6 +2220,40 @@ class unified extends \local_o365\rest\o365api {
         }
 
         return $this->betaapicall('post', '/teams', json_encode($teamdata));
+    }
+
+    /**
+     * Update the name of a Team.
+     *
+     * @param $objectid
+     * @param $displayname
+     *
+     * @return array|null
+     */
+    public function update_team_name($objectid, $displayname) {
+        $endpoint = '/teams/' . $objectid;
+
+        $teamdata = [
+            'displayName' => $displayname,
+        ];
+        $response = $this->betaapicall('patch', $endpoint, json_encode($teamdata));
+
+        $expectedparams = ['id' => null];
+
+        return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Archive a Team.
+     *
+     * @param $objectid
+     *
+     * @return string
+     */
+    public function archive_team($objectid) {
+        $endpoint = '/teams/' . $objectid . '/archive';
+
+        return $this->betaapicall('post', $endpoint);
     }
 
     /**

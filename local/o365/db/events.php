@@ -215,4 +215,10 @@ $observers = [
         'priority'    => 200,
         'internal'    => true,
     ],
+    [
+        'eventname'   => '\core\event\course_reset_started',
+        'callback'    => '\local_o365\feature\usergroups\observers::handle_course_reset_started',
+        'priority'    => 200,
+        'internal'    => true,
+    ],
 ];
