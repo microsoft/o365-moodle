@@ -28,6 +28,19 @@ defined('MOODLE_INTERNAL') || die();
  */
 define('TEAMS_MOODLE_APP_EXTERNAL_ID', '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95');
 
+// Teams/group course reset site settings.
+define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DO_NOTHING', '1');
+define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE', '2');
+define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT', '3');
+
+// Teams course reset settings.
+define('TEAMS_COURSE_RESET_SETTING_DO_NOTHING', '1');
+define('TEAMS_COURSE_RESET_SETTING_DISCONNECT', '2');
+
+// Group course reset settings.
+define('GROUP_COURSE_RESET_SETTING_DO_NOTHING', '1');
+define('GROUP_COURSE_RESET_SETTING_DISCONNECT', '2');
+
 /**
  * Retrieve icon image and send to the browser for display.
  *

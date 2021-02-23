@@ -431,6 +431,15 @@ $string['settings_group_creation_fallback_details'] = 'When enabled, if a course
 When disabled, Moodle will always try to create a class Team from a synced course. Team creation will be skipped until a suitable Team owner is enrolled in the course.
 
 A suitable Team owner is a user having "Team owner" capability (local/o365:teamowner) in the course.';
+$string['settings_course_reset_teams'] = 'Course reset Team/group actions';
+$string['settings_course_reset_teams_details'] = 'Actions to be performed on a Team or group connected to a course when the course is reset.';
+$string['settings_course_reset_teams_option_do_nothing'] = 'Do nothing<br/>The Team or group is still connected to the course. User unenrolments will result in user Team or group membership removal.';
+$string['settings_course_reset_teams_option_per_course'] = 'Allow settings per course<br/>This requires the Microsoft block to be added to the course. Users with capability to reset the course can choose what to do during course reset in the block.';
+$string['settings_course_reset_teams_option_force_archive'] = 'Disconnect the course with the Team or group and create a new one<br/>The existing Team or group connected to the course will be renamed as configured. If a Team is connected, it will be archived. A new Team or group will be created and connected to the course.';
+$string['settings_reset_team_name_prefix'] = 'Reset Team name prefix';
+$string['settings_reset_team_name_prefix_details'] = 'When resetting a course that is connected to a Team, the name of the existing connected Team will be prefixed with this.';
+$string['settings_reset_group_name_prefix'] = 'Reset group name prefix';
+$string['settings_reset_group_name_prefix_details'] = 'When resetting a course that is connected to a group, the name of the existing group will be prefixed with this.';
 $string['settings_o365china'] = 'Microsoft 365 for China';
 $string['settings_o365china_details'] = 'Check this if you are using Microsoft 365 for China.';
 $string['settings_debugmode'] = 'Record debug messages';
