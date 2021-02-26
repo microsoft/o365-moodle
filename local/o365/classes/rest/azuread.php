@@ -48,7 +48,7 @@ class azuread extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if (!empty($oidcresource)) {
             return $oidcresource;
@@ -105,7 +105,7 @@ class azuread extends \local_o365\rest\o365api {
         }
 
         if (!empty($tenant)) {
-            return static::get_resource().'/'.$tenant;
+            return static::get_tokenresource().'/'.$tenant;
         } else {
             return false;
         }
@@ -456,8 +456,8 @@ class azuread extends \local_o365\rest\o365api {
                 \local_o365\utils::debug($e->getMessage(), 'rest\azuread\get_muser_upn', $e);
                 return false;
             }
-            $resource = static::get_resource();
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $tokenresource = static::get_tokenresource();
+            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
             $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
             $aaduserdata = $aadapiclient->get_user($o365user->objectid);
             $userobjectdata = (object)[

@@ -75,7 +75,7 @@ class local_o365_observers_testcase extends \advanced_testcase {
         $token = (object)[
             'user_id' => $userid,
             'scope' => 'scope',
-            'resource' => 'resource',
+            'tokenresource' => 'resource',
             'token' => rand() * 1000,
             'expiry' => time() + 1000000,
             'refreshtoken' => time() + 100000,

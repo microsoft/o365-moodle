@@ -48,7 +48,7 @@ class sds extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if (!empty($oidcresource)) {
             return $oidcresource;
@@ -66,7 +66,7 @@ class sds extends \local_o365\rest\o365api {
         $config = get_config('local_o365');
         if (!empty($config->aadtenant)) {
             $tenant = $config->aadtenant;
-            return static::get_resource().'/'.$tenant;
+            return static::get_tokenresource().'/'.$tenant;
         }
         return false;
     }

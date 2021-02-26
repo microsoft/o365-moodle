@@ -42,6 +42,8 @@ class oidcclient {
     /** @var array Array of endpoints. */
     protected $endpoints = [];
 
+    protected $tokenresource;
+
     /**
      * Constructor.
      *
@@ -56,27 +58,28 @@ class oidcclient {
      *
      * @param string $id The registered client ID.
      * @param string $secret The registered client secret.
-     * @param string $scope The requested OID scope.
      * @param string $redirecturi The registered client redirect URI.
+     * @param string $tokenresource
+     * @param string $scope The requested OID scope.
      */
-    public function setcreds($id, $secret, $redirecturi, $resource, $scope) {
+    public function setcreds($id, $secret, $redirecturi, $tokenresource, $scope) {
         global $DB;
 
         $this->clientid = $id;
         $this->clientsecret = $secret;
         $this->redirecturi = $redirecturi;
-        if (!empty($resource)) {
-            $this->resource = $resource;
+        if (!empty($tokenresource)) {
+            $this->tokenresource = $tokenresource;
         } else {
             $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
             if (!empty($o365installed)) {
                 if (\local_o365\rest\o365api::use_chinese_api() === true) {
-                    $this->resource = 'https://microsoftgraph.chinacloudapi.cn';
+                    $this->tokenresource = 'https://microsoftgraph.chinacloudapi.cn';
                 } else {
-                    $this->resource = 'https://graph.microsoft.com';
+                    $this->tokenresource = 'https://graph.microsoft.com';
                 }
             } else {
-                $this->resource = 'https://graph.microsoft.com';
+                $this->tokenresource = 'https://graph.microsoft.com';
             }
 
         }
@@ -111,12 +114,12 @@ class oidcclient {
     }
 
     /**
-     * Get the set resource.
+     * Get the set token resource.
      *
-     * @return string The set resource.
+     * @return string The set token resource.
      */
-    public function get_resource() {
-        return (isset($this->resource)) ? $this->resource : null;
+    public function get_tokenresource() {
+        return (isset($this->tokenresource)) ? $this->tokenresource : null;
     }
 
     /**
@@ -162,7 +165,7 @@ class oidcclient {
             'scope' =>  $this->scope,
             'nonce' => $nonce,
             'response_mode' => 'form_post',
-            'resource' => $this->resource,
+            'resource' => $this->tokenresource,
             'state' => $this->getnewstate($nonce, $stateparams),
             'redirect_uri' => $this->redirecturi
         ];
@@ -241,7 +244,7 @@ class oidcclient {
             'username' => $username,
             'password' => $password,
             'scope' => 'openid profile email',
-            'resource' => $this->resource,
+            'resource' => $this->tokenresource,
             'client_id' => $this->clientid,
             'client_secret' => $this->clientsecret,
         ];
@@ -258,7 +261,6 @@ class oidcclient {
     /**
      * Exchange an authorization code for an access token.
      *
-     * @param string $tokenendpoint The token endpoint URI.
      * @param string $code An authorization code.
      * @return array Received parameters.
      */

@@ -55,7 +55,7 @@ class local_o365_oauth2_token_testcase extends \advanced_testcase {
             'expires_on' => $now + 1000,
             'refresh_token' => 'newrefreshtoken',
             'scope' => 'newscope',
-            'resource' => 'newresource',
+            'tokenresource' => 'newresource',
         ];
         $newtokenresponse = json_encode($newtokenresponse);
         $httpclient->set_response($newtokenresponse);
@@ -72,7 +72,7 @@ class local_o365_oauth2_token_testcase extends \advanced_testcase {
             'expiry' => $now - 1000,
             'refreshtoken' => 'refreshtoken',
             'scope' => 'oldscope',
-            'resource' => 'oldresource',
+            'tokenresource' => 'oldresource',
             'user_id' => $USER->id,
         ];
         $tokenrec->id = $DB->insert_record('local_o365_token', $tokenrec);
@@ -80,7 +80,7 @@ class local_o365_oauth2_token_testcase extends \advanced_testcase {
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                 $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
         $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-                $tokenrec->scope, $tokenrec->resource, $tokenrec->user_id, $clientdata, $httpclient);
+                $tokenrec->scope, $tokenrec->tokenresource, $tokenrec->user_id, $clientdata, $httpclient);
         $token->refresh();
 
         $this->assertEquals(1, $DB->count_records('local_o365_token'));
@@ -89,13 +89,13 @@ class local_o365_oauth2_token_testcase extends \advanced_testcase {
         $this->assertEquals('newtoken', $tokenrec->token);
         $this->assertEquals('newrefreshtoken', $tokenrec->refreshtoken);
         $this->assertEquals('newscope', $tokenrec->scope);
-        $this->assertEquals('newresource', $tokenrec->resource);
+        $this->assertEquals('newresource', $tokenrec->tokenresource);
         $this->assertEquals($now + 1000, $tokenrec->expiry);
 
         $this->assertEquals('newtoken', $token->get_token());
         $this->assertEquals('newrefreshtoken', $token->get_refreshtoken());
         $this->assertEquals('newscope', $token->get_scope());
-        $this->assertEquals('newresource', $token->get_resource());
+        $this->assertEquals('newresource', $token->get_tokenresource());
         $this->assertEquals($now + 1000, $token->get_expiry());
     }
 }

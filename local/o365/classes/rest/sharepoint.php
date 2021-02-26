@@ -54,13 +54,13 @@ class sharepoint extends \local_o365\rest\o365api {
             return 'invalid';
         }
 
-        $token = \local_o365\utils::get_app_or_system_token($siteinfo['resource'], $clientdata, $httpclient);
+        $token = \local_o365\utils::get_app_or_system_token($siteinfo['tokenresource'], $clientdata, $httpclient);
         if (empty($token)) {
             return 'invalid';
         }
 
         $sharepoint = new \local_o365\rest\sharepoint($token, $httpclient);
-        $sharepoint->override_resource($siteinfo['resource']);
+        $sharepoint->override_tokenresource($siteinfo['tokenresource']);
 
         // Try to get the / site's info to validate we can communicate with this parent SharePoint site.
         try {
@@ -108,7 +108,7 @@ class sharepoint extends \local_o365\rest\o365api {
         }
 
         return [
-            'resource' => 'https://'.$cleanurlparts['host'],
+            'tokenresource' => 'https://'.$cleanurlparts['host'],
             'subsiteurl' => (!empty($cleanurlparts['path'])) ? $cleanurlparts['path'] : '/',
         ];
     }
@@ -128,19 +128,19 @@ class sharepoint extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         $config = get_config('local_o365');
         if (!empty($config->sharepointlink)) {
             $siteinfo = static::parse_site_url($config->sharepointlink);
             if (!empty($siteinfo)) {
-                return $siteinfo['resource'];
+                return $siteinfo['tokenresource'];
             } else {
                 $errmsg = 'SharePoint link URL was not valid';
-                \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource', $config->sharepointlink);
+                \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_tokenresource', $config->sharepointlink);
             }
         } else {
             $errmsg = 'No SharePoint link URL was found. Plugin not configured?';
-            \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_resource');
+            \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_tokenresource');
         }
         return false;
     }
@@ -148,11 +148,12 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Override the configured resource.
      *
-     * @param string $resource The new resource to set.
+     * @param string $tokenresource The new resource to set.
+     *
      * @return bool Success/Failure.
      */
-    public function override_resource($resource) {
-        $this->resource = $resource;
+    public function override_tokenresource($tokenresource) {
+        $this->tokenresource = $tokenresource;
         return true;
     }
 
@@ -162,11 +163,11 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        $resource = (!empty($this->resource)) ? $this->resource : static::get_resource();
+        $tokenresource = (!empty($this->tokenresource)) ? $this->tokenresource : static::get_tokenresource();
         if (empty($this->parentsite)) {
-            return $resource.'/_api';
+            return $tokenresource.'/_api';
         } else {
-            return $resource.'/'.$this->parentsite.'/_api';
+            return $tokenresource.'/'.$this->parentsite.'/_api';
         }
     }
 
@@ -280,7 +281,7 @@ class sharepoint extends \local_o365\rest\o365api {
         }
 
         if (!empty($fileurl)) {
-            $spurl = $this->get_resource();
+            $spurl = $this->get_tokenresource();
             if (strpos($fileurl, $spurl) === 0) {
                 $filerelative = substr($fileurl, strlen($spurl));
                 $filerelativeparts = explode('/', trim($filerelative, '/'));

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/o365/db" VERSION="20141030" COMMENT="XMLDB file for Moodle local/o365 plugin"
+<XMLDB PATH="local/o365/db" VERSION="20210225" COMMENT="XMLDB file for Moodle local/o365 plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -49,7 +49,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id,caltype,caltypeid"/>
+        <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id, caltype, caltypeid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_connections" COMMENT="Stores information on which accounts are connected.">
@@ -72,7 +72,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
         <FIELD NAME="scope" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token scope"/>
-        <FIELD NAME="resource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
+        <FIELD NAME="tokenresource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
         <FIELD NAME="token" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token"/>
         <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="token expiry"/>
         <FIELD NAME="refreshtoken" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="refresh token"/>
@@ -81,7 +81,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id,resource"/>
+        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id, tokenresource"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_coursespsite" COMMENT="Stores information about sharepoint sites created for Moodle courses.">
@@ -191,21 +191,21 @@
     <TABLE NAME="local_o365_coursegroupdata" COMMENT="Stores information about groups created for Moodle groups and courses.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle Courseid" />
-        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0" COMMENT="Moodle course group id"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle Courseid"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Moodle course group id"/>
         <FIELD NAME="displayname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle course description for o365 group title"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Moodle course description for o365 group description"/>
         <FIELD NAME="descriptionformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="picture" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Moodle file storage id for o365 group picture, only used for course."/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time group created"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time group modified"/>
-        <FIELD NAME="classnotebook" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false" DEFAULT="0" COMMENT="whether class notebook created or not"/>
+        <FIELD NAME="classnotebook" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="whether class notebook created or not"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="courseidgroupid" UNIQUE="false" FIELDS="courseid,groupid"/>
+        <INDEX NAME="courseidgroupid" UNIQUE="false" FIELDS="courseid, groupid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_calsettings" COMMENT="Tracks user level Outlook calendar sync settings">
@@ -222,7 +222,6 @@
         <INDEX NAME="usrcal" UNIQUE="true" FIELDS="user_id"/>
       </INDEXES>
     </TABLE>
-
     <TABLE NAME="local_o365_notif" COMMENT="List of processed assignment notifications.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -236,6 +235,5 @@
         <INDEX NAME="assignid" UNIQUE="false" FIELDS="assignid"/>
       </INDEXES>
     </TABLE>
-
   </TABLES>
 </XMLDB>

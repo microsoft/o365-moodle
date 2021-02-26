@@ -57,7 +57,7 @@ class unified extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if (!empty($oidcresource)) {
             return $oidcresource;
@@ -194,14 +194,14 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Validate that a given url is a valid OneDrive for Business SharePoint URL.
      *
-     * @param string $resource Uncleaned, unvalidated URL to check.
+     * @param string $tokenresource Uncleaned, unvalidated URL to check.
      * @param \local_o365\oauth2\clientdata $clientdata oAuth2 Credentials
-     * @param \local_o365\httpclientinterface $httpclient An HttpClient to use for transport.
+     *
      * @return bool Whether the received resource is valid or not.
      */
-    public function validate_resource($resource, $clientdata) {
-        $cleanresource = clean_param($resource, PARAM_URL);
-        if ($cleanresource !== $resource) {
+    public function validate_resource($tokenresource, $clientdata) {
+        $cleanresource = clean_param($tokenresource, PARAM_URL);
+        if ($cleanresource !== $tokenresource) {
             return false;
         }
         $fullcleanresource = 'https://'.$cleanresource;
@@ -1381,9 +1381,9 @@ class unified extends \local_o365\rest\o365api {
         $appinfo = $this->get_application_info();
         $appinfo = $appinfo['value'][0];
         $graphresource = null;
-        foreach ($appinfo['requiredResourceAccess'] as $resource) {
-            if ($resource['resourceAppId'] === $graphappid) {
-                $graphresource = $resource;
+        foreach ($appinfo['requiredResourceAccess'] as $requiredresource) {
+            if ($requiredresource['resourceAppId'] === $graphappid) {
+                $graphresource = $requiredresource;
                 break;
             }
         }
@@ -1393,10 +1393,10 @@ class unified extends \local_o365\rest\o365api {
 
         // Translate to permission information.
         $currentperms = [];
-        foreach ($graphresource['resourceAccess'] as $resource) {
-            if ($resource['type'] === 'Role') {
-                if (isset($graphperms[$resource['id']])) {
-                    $perminfo = $graphperms[$resource['id']];
+        foreach ($graphresource['resourceAccess'] as $requiredresource) {
+            if ($requiredresource['type'] === 'Role') {
+                if (isset($graphperms[$requiredresource['id']])) {
+                    $perminfo = $graphperms[$requiredresource['id']];
                     $currentperms[$perminfo['value']] = $perminfo;
                 }
             }

@@ -48,8 +48,8 @@ class o365user {
     public static function instance_from_muserid($userid) {
         global $DB;
 
-        $aadresource = \local_o365\rest\azuread::get_resource();
-        $params = ['userid' => $userid, 'resource' => $aadresource];
+        $aadresource = \local_o365\rest\azuread::get_tokenresource();
+        $params = ['userid' => $userid, 'tokenresource' => $aadresource];
         $oidctoken = $DB->get_record('auth_oidc_token', $params);
         if (empty($oidctoken)) {
             return null;
