@@ -745,7 +745,7 @@ class unified extends \local_o365\rest\o365api {
             $params = $this->get_default_user_fields();
         }
         if (is_array($params)) {
-            $excludedfields = ['preferredName', 'teams', 'groups'];
+            $excludedfields = ['preferredName', 'teams', 'groups', 'roles'];
             foreach ($excludedfields as $excludedfield) {
                 if (($key = array_search($excludedfield, $params)) !== false) {
                     unset($params[$key]);
