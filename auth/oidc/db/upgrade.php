@@ -189,5 +189,17 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, 2020071503, 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2020110901) {
+        // Rename field resource on table auth_oidc_token to tokenresource.
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('resource', XMLDB_TYPE_CHAR, '127', null, XMLDB_NOTNULL, null, null, 'scope');
+
+        // Launch rename field resource.
+        $dbman->rename_field($table, $field, 'tokenresource');
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2020110901, 'auth', 'oidc');
+    }
+
     return $result;
 }

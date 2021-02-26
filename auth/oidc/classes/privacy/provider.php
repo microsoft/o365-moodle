@@ -59,7 +59,7 @@ class provider implements
                 'userid',
                 'oidcusername',
                 'scope',
-                'resource',
+                'tokenresource',
                 'authcode',
                 'token',
                 'expiry',

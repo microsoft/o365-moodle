@@ -77,11 +77,11 @@ abstract class o365api {
     public static function instance_for_user($userid = null) {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $resource = static::get_resource();
+        $tokenresource = static::get_tokenresource();
         if (!empty($userid)) {
-            $token = \local_o365\oauth2\token::instance($userid, $resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\token::instance($userid, $tokenresource, $clientdata, $httpclient);
         } else {
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         }
         if (!empty($token)) {
             return new static($token, $httpclient);
@@ -95,7 +95,7 @@ abstract class o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         throw new \moodle_exception('erroro365apinotimplemented', 'local_o365');
     }
 

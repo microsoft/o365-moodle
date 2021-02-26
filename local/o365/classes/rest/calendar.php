@@ -35,7 +35,7 @@ class calendar extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         return (static::use_chinese_api() === true) ? 'https://partner.outlook.cn' : 'https://outlook.office365.com';
     }
 
@@ -45,7 +45,7 @@ class calendar extends \local_o365\rest\o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        return static::get_resource().'/api/v1.0/me';
+        return static::get_tokenresource().'/api/v1.0/me';
     }
 
     /**

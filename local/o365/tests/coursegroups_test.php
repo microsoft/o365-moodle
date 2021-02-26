@@ -72,12 +72,12 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
             'refreshtoken' => 'refreshtoken',
             'scope' => 'scope',
             'user_id' => '2',
-            'resource' => 'resource',
+            'tokenresource' => 'resource',
         ];
 
         $clientdata = $this->get_mock_clientdata();
         $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-                $tokenrec->scope, $tokenrec->resource, $tokenrec->user_id, $clientdata, $httpclient);
+                $tokenrec->scope, $tokenrec->tokenresource, $tokenrec->user_id, $clientdata, $httpclient);
         return $token;
     }
 
@@ -166,7 +166,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
         foreach ($users as $i => $user) {
             $tokenrec = [
                 'oidcuniqid' => 'user'.$i,
-                'resource' => 'https://graph.microsoft.com',
+                'tokenresource' => 'https://graph.microsoft.com',
                 'username' => $user->username,
                 'userid' => $user->id,
                 'scope' => 'User.Read',

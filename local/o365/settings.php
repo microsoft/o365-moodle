@@ -392,8 +392,8 @@ if ($hassiteconfig) {
         try {
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $resource = \local_o365\rest\sds::get_resource();
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
+            $tokenresource = \local_o365\rest\sds::get_tokenresource();
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
             $schools = null;
             if (!empty($token)) {
                 $apiclient = new \local_o365\rest\sds($token, $httpclient);
@@ -565,7 +565,7 @@ if ($hassiteconfig) {
             if (\local_o365\utils::is_configured_apponlyaccess() !== true) {
                 $httpclient = new \local_o365\httpclient();
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $unifiedresource = \local_o365\rest\unified::get_resource();
+                $unifiedresource = \local_o365\rest\unified::get_tokenresource();
                 $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
 
                 if (!empty($unifiedtoken)) {

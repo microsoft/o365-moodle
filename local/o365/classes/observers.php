@@ -57,7 +57,7 @@ class observers {
                         'token' => $eventdata['other']['tokenparams']['access_token'],
                         'scope' => $eventdata['other']['tokenparams']['scope'],
                         'refreshtoken' => $eventdata['other']['tokenparams']['refresh_token'],
-                        'resource' => $eventdata['other']['tokenparams']['resource'],
+                        'tokenresource' => $eventdata['other']['tokenparams']['resource'],
                         'expiry' => $eventdata['other']['tokenparams']['expires_on'],
                     ]
                 ];
@@ -93,10 +93,10 @@ class observers {
                 $scope = $eventdata['other']['tokenparams']['scope'];
                 $res = $eventdata['other']['tokenparams']['resource'];
                 $token = new \local_o365\oauth2\token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
-                $resource = (\local_o365\rest\unified::is_enabled() === true)
-                    ? \local_o365\rest\unified::get_resource()
-                    : \local_o365\rest\discovery::get_resource();
-                $token = \local_o365\oauth2\token::jump_resource($token, $resource, $clientdata, $httpclient);
+                $tokenresource = (\local_o365\rest\unified::is_enabled() === true)
+                    ? \local_o365\rest\unified::get_tokenresource()
+                    : \local_o365\rest\discovery::get_tokenresource();
+                $token = \local_o365\oauth2\token::jump_tokenresource($token, $tokenresource, $clientdata, $httpclient);
                 $apiclient = (\local_o365\rest\unified::is_enabled() === true)
                     ? new \local_o365\rest\unified($token, $httpclient)
                     : new \local_o365\rest\discovery($token, $httpclient);
@@ -519,13 +519,13 @@ class observers {
      */
     public static function construct_sharepoint_api_with_system_user() {
         try {
-            $spresource = \local_o365\rest\sharepoint::get_resource();
-            if (!empty($spresource)) {
+            $sharepointtokenresource = \local_o365\rest\sharepoint::get_tokenresource();
+            if (!empty($sharepointtokenresource)) {
                 $httpclient = new \local_o365\httpclient();
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
-                if (!empty($sptoken)) {
-                    $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
+                $sharepointtoken = \local_o365\utils::get_app_or_system_token($sharepointtokenresource, $clientdata, $httpclient);
+                if (!empty($sharepointtoken)) {
+                    $sharepoint = new \local_o365\rest\sharepoint($sharepointtoken, $httpclient);
                     return $sharepoint;
                 }
             }

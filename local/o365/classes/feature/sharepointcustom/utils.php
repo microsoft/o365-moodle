@@ -47,15 +47,15 @@ class utils {
                 set_config('sharepointsubsitescustom', json_encode($customsubsitesconfig), 'local_o365');
 
                 try {
-                    $spresource = \local_o365\rest\sharepoint::get_resource();
-                    if (empty($spresource)) {
+                    $sharepointtokenresource = \local_o365\rest\sharepoint::get_tokenresource();
+                    if (empty($sharepointtokenresource)) {
                         throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
                     }
 
                     $httpclient = new \local_o365\httpclient();
                     $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
 
-                    $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
+                    $sptoken = \local_o365\utils::get_app_or_system_token($sharepointtokenresource, $clientdata, $httpclient);
                     if (empty($sptoken)) {
                         throw new \moodle_exception('erroracpnosptoken', 'local_o365');
                     }
@@ -193,15 +193,15 @@ class utils {
         $subsitesconfig = $subsitesconfig ? $subsitesconfig : array();
         // Get sharepoint.
         try {
-            $spresource = \local_o365\rest\sharepoint::get_resource();
-            if (empty($spresource)) {
+            $sharepointtokenresource = \local_o365\rest\sharepoint::get_tokenresource();
+            if (empty($sharepointtokenresource)) {
                 throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
             }
 
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
 
-            $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
+            $sptoken = \local_o365\utils::get_app_or_system_token($sharepointtokenresource, $clientdata, $httpclient);
             if (empty($sptoken)) {
                 throw new \moodle_exception('erroracpnosptoken', 'local_o365');
             }
@@ -215,7 +215,7 @@ class utils {
             return false;
         }
         // Set up sharepoint access info.
-        $resource = \local_o365\rest\sharepoint::get_resource();
+        $tokenresource = \local_o365\rest\sharepoint::get_tokenresource();
         $parentsite = \local_o365\rest\sharepoint::get_moodle_parent_site_uri();
         // Check each Moodle course.
         foreach ($allcourses as $key => $value) {
@@ -226,7 +226,7 @@ class utils {
             if (array_key_exists($key, $allcourses) && $key > 1) {
                 // Look on sharepoint.
                 $siteurl = strtolower(preg_replace('/[^a-z0-9_]+/iu', '', $allcourses[$key]->shortname));
-                $fullsiteurl = $resource.'/'.$parentsite.'/'.$siteurl;
+                $fullsiteurl = $tokenresource.'/'.$parentsite.'/'.$siteurl;
                 $sitespvalid = \local_o365\rest\sharepoint::validate_site($fullsiteurl, $clientdata, $httpclient);
                 // If the course is on sharepoint already, make sure it's in the json.
                 if ($sitespvalid === 'notempty') {

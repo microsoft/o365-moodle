@@ -344,7 +344,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record = new stdClass();
         $record->user_id = $userid;
         $record->scope = "all";
-        $record->resource = "https://graph.microsoft.com";
+        $record->tokenresource = "https://graph.microsoft.com";
         $record->token = 'token12345';
         $record->expiry = 123456;
         $record->refreshtoken = 'refreshtoken1234567';

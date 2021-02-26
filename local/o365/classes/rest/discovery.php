@@ -35,7 +35,7 @@ class discovery extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         return 'https://graph.microsoft.com';
     }
 

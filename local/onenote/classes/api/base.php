@@ -141,8 +141,8 @@ abstract class base {
                     $httpclient = new \local_o365\httpclient();
                     $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
                     $onenoteresource = (\local_o365\rest\unified::is_configured() === true)
-                        ? \local_o365\rest\unified::get_resource()
-                        : \local_o365\rest\onenote::get_resource();
+                        ? \local_o365\rest\unified::get_tokenresource()
+                        : \local_o365\rest\onenote::get_tokenresource();
                     $token = \local_o365\oauth2\token::instance($USER->id, $onenoteresource, $clientdata, $httpclient);
                     if (empty($token)) {
                         $debugtracker .= '5';
