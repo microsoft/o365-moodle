@@ -120,7 +120,11 @@ class coursegroups {
             $sql .= ' AND crs.id '.$coursesinsql;
             $params = array_merge($params, $coursesparams);
         }
-        $courses = $this->DB->get_recordset_sql($sql, $params, 0, 5);
+        $courselimit = get_config('local_o365', 'courses_per_task');
+        if (!$courselimit) {
+            $courselimit = 5;
+        }
+        $courses = $this->DB->get_recordset_sql($sql, $params, 0, $courselimit);
         $coursesprocessed = 0;
         foreach ($courses as $course) {
             $coursesprocessed++;
@@ -1133,7 +1137,11 @@ class coursegroups {
                        AND cgd.groupid = g.id
                        AND cgd.picture != g.picture';
         $params = ['group', 'usergroup'];
-        $groups = $this->DB->get_recordset_sql($sql, $params, 0, 5);
+        $courselimit = get_config('local_o365', 'courses_per_task');
+        if (!$courselimit) {
+            $courselimit = 5;
+        }
+        $groups = $this->DB->get_recordset_sql($sql, $params, 0, $courselimit);
         $count = 0;
         foreach ($groups as $group) {
             // If the upload fails, it will not reattempt unless user modifies the photo.
