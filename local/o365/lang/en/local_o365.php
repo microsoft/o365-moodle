@@ -440,8 +440,8 @@ $string['settings_switchauthminupnsplit0_details'] = 'If you enable the "Switch 
 $string['settings_photoexpire'] = 'Profile photo refresh time';
 $string['settings_photoexpire_details'] = 'The number of hours to wait before refreshing profile photos. Longer times can increase performance.';
 $string['settings_customtheme'] = 'Custom theme (Advanced)';
-$string['settings_customtheme_desc'] = 'Recommended theme is boost_o365teams. However, you can select different theme if you have
-a custom theme which is adapted to be used in the Teams tab.';
+$string['settings_customtheme_desc'] = 'Recommended theme is "boost_o365teams". However, you can select different theme if you have a custom theme which is adapted to be used in the Teams tab.<br/>
+Please note that a custom theme set at either course or category level would take precedence over settings here, i.e. a course would use course or category theme in Moodle app in Teams by default. This can be fixed by updating $CFG->themeorder in config.php to be "array(\'session\', \'course\', \'category\', \'user\', \'cohort\', \'site\');".';
 
 // Settings in the "Legacy" section of the "Advanced" tab.
 $string['settings_sharepointlink'] = 'SharePoint Link';
