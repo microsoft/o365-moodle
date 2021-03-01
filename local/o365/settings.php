@@ -206,6 +206,14 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_usergroups_details', 'local_o365');
         $settings->add(new \local_o365\adminsetting\usergroups('local_o365/createteams', $label, $desc, 'off'));
 
+        // Allow course sync controlled at course level.
+        $createteams = get_config('local_o365', 'createteams');
+        if ($createteams == 'oncustom') {
+            $label = new lang_string('settings_usergroups_controlled_per_course', 'local_o365');
+            $desc = new lang_string('settings_usergroups_controlled_per_course_details', 'local_o365');
+            $settings->add(new admin_setting_configcheckbox('local_o365/createteams_per_course', $label, $desc, '0'));
+        }
+
         // Team name section.
         $settings->add(new admin_setting_heading('local_o365_section_team_name',
             new lang_string('settings_secthead_team_name', 'local_o365'),

@@ -55,6 +55,7 @@ $string['course_connected_to_team'] = 'The course is <span class="notifysuccess"
 $string['course_connected_to_team_missing'] = 'The course is configured to be connected to a <b>Team</b>, but the Team is <span class="notifyproblem">not found</span>.';
 $string['course_connected_to_group'] = 'The course is <span class="notifysuccess">connected</span> to a <b>group</b>.';
 $string['course_connected_to_group_missing'] = 'The course is configured to be connected to a <b>group</b>, but the group is <span class="notifyproblem">not found</span>.';
+$string['course_not_connected'] = 'The course is <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
 $string['cachedef_groups'] = 'Caches Microsoft 365 group information.';
 $string['msalogin'] = 'Log in with Microsoft Account';
@@ -109,6 +110,17 @@ $string['course_feature_conversations'] = 'Outlook conversations';
 $string['course_feature_onedrive'] = 'OneDrive files';
 $string['course_feature_calendar'] = 'Outlook calendar';
 $string['course_feature_notebook'] = 'Class notebook';
+
+// Course sync settings.
+$string['configure_sync'] = 'Configure course sync';
+$string['error_course_sync_not_configurable_per_course'] = 'Teams/Groups sync cannot be configured per course.';
+$string['sync_page_heading'] = 'Sync course {$a} to Microsoft 365 Teams/Groups';
+$string['configure_course_sync'] = 'Configure course sync to Microsoft 365 Teams/Groups';
+$string['course_sync_option'] = 'Sync option';
+$string['course_sync_option_not_synced'] = 'Not synced';
+$string['course_sync_option_groups'] = 'Microsoft 365 Groups only';
+$string['course_sync_option_teams'] = 'Microsoft 365 Teams';
+$string['sync_setting_saved'] = 'Course sync option is saved';
 
 // Course reset status.
 $string['course_reset_disconnect_team'] = 'When the course is reset, the Team connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
