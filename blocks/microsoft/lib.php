@@ -23,7 +23,62 @@
  * @copyright (C) 2021 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+use local_o365\feature\usergroups\utils;
+
 defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/local/o365/lib.php');
+
+/**
+ * Return the course sync option of the course with the given ID.
+ *
+ * @param int $courseid
+ *
+ * @return int
+ */
+function block_microsoft_get_course_sync_option(int $courseid) {
+    $coursesyncoption = MICROSOFT365_COURSE_SYNC_NONE;
+
+    $groupsyncenabledcourseids = utils::get_enabled_courses();
+    $teamsyncenabledcourseids = utils::get_enabled_courses_with_feature('team');
+
+    if ($teamsyncenabledcourseids === true || $groupsyncenabledcourseids === true) {
+        // Sync is enabled on all courses.
+        $coursesyncoption = MICROSOFT365_COURSE_SYNC_TEAMS;
+    } else if (in_array($courseid, $groupsyncenabledcourseids)) {
+        if (in_array($courseid, $teamsyncenabledcourseids)) {
+            $coursesyncoption = MICROSOFT365_COURSE_SYNC_TEAMS;
+        } else {
+            $coursesyncoption = MICROSOFT365_COURSE_SYNC_GROUPS;
+        }
+    }
+
+    return $coursesyncoption;
+}
+
+/**
+ * Set course sync options.
+ *
+ * @param int $courseid
+ * @param int $syncsetting
+ */
+function block_microsoft_set_course_sync_option(int $courseid, int $syncsetting) {
+    switch ($syncsetting) {
+        case MICROSOFT365_COURSE_SYNC_GROUPS:
+            utils::set_course_group_enabled($courseid);
+            utils::set_course_group_feature_enabled($courseid, ['team'], false);
+
+            break;
+        case MICROSOFT365_COURSE_SYNC_TEAMS:
+            utils::set_course_group_enabled($courseid);
+            utils::set_course_group_feature_enabled($courseid, ['team']);
+
+            break;
+        default:
+            utils::set_course_group_feature_enabled($courseid, ['team'], false);
+            utils::set_course_group_enabled($courseid, false);
+    }
+}
 
 /**
  * Return the existing course reset setting of the course with the given ID.

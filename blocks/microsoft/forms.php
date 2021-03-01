@@ -29,6 +29,33 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
+ * Class block_microsoft_course_sync_form.
+ * Form to configure course sync options.
+ */
+class block_microsoft_course_sync_form extends moodleform {
+    /**
+     * Form definition.
+     */
+    protected function definition() {
+        $mform = $this->_form;
+
+        $mform->addElement('hidden', 'course');
+        $mform->setType('course', PARAM_INT);
+
+        // Sync options.
+        $syncoptions = [
+            MICROSOFT365_COURSE_SYNC_NONE => get_string('course_sync_option_not_synced', 'block_microsoft'),
+            MICROSOFT365_COURSE_SYNC_GROUPS => get_string('course_sync_option_groups', 'block_microsoft'),
+            MICROSOFT365_COURSE_SYNC_TEAMS => get_string('course_sync_option_teams', 'block_microsoft'),
+        ];
+        $mform->addElement('select', 'sync', get_string('course_sync_option', 'block_microsoft'), $syncoptions);
+        $mform->setDefault('sync', MICROSOFT365_COURSE_SYNC_NONE);
+
+        $this->add_action_buttons();
+    }
+}
+
+/**
  * Class block_microsoft_course_configure_team_form.
  * Form to configure course Team reset actions.
  */
