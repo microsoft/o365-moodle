@@ -192,6 +192,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
         if (!empty($CFG->guestloginbutton) && $username === 'guest' && $password === 'guest') {
             return false;
         }
+        if (is_null($password)) {
+            $this->loginflow = new \auth_oidc\loginflow\authcode($this->config);
+        }
+
         return $this->loginflow->user_login($username, $password);
     }
 

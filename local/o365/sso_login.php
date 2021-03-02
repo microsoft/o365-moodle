@@ -41,7 +41,7 @@ $loginsuccess = false;
 if ($authoidctoken = $DB->get_record('auth_oidc_token', ['oidcusername' => $payload->upn])) {
     if ($user = core_user::get_user($authoidctoken->userid)) {
         $_POST['code'] = $authoidctoken->authcode;
-        $user = authenticate_user_login($user->username, $user->password, true);
+        $user = authenticate_user_login($user->username, null, true);
         if ($user) {
             complete_user_login($user);
             $loginsuccess = true;
