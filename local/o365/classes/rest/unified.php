@@ -507,10 +507,24 @@ class unified extends \local_o365\rest\o365api {
      * Get a list of group members.
      *
      * @param string $groupobjectid The object ID of the group.
+     * @param string $skiptoken
+     *
      * @return array Array of returned members.
      */
-    public function get_group_members($groupobjectid) {
-        $endpoint = '/groups/'.$groupobjectid.'/members';
+    public function get_group_members($groupobjectid, $skiptoken = '') {
+        $endpoint = '/groups/' . $groupobjectid . '/members';
+        $odataqueries = [];
+
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
