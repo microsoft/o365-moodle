@@ -420,7 +420,10 @@ class authcode extends \auth_oidc\loginflow\base {
                 // Existing token record, but missing the user ID.
                 $user = $DB->get_record('user', ['username' => $tokenrec->username]);
                 if (empty($user)) {
-                    throw new \moodle_exception('exception_tokenemptyuserid', 'auth_oidc', null, null, 3);
+                    // Token exists, but it doesn't have a valid username.
+                    // In this case, delete the token, and try to process login again.
+                    $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+                    return $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
                 }
                 $tokenrec->userid = $user->id;
                 $DB->update_record('auth_oidc_token', $tokenrec);
@@ -429,10 +432,12 @@ class authcode extends \auth_oidc\loginflow\base {
                 $user = $DB->get_record('user', ['id' => $tokenrec->userid]);
                 if (empty($user)) {
                     $failurereason = AUTH_LOGIN_NOUSER;
-                    $eventdata = ['other' => ['username' => $user->username, 'reason' => $failurereason]];
+                    $eventdata = ['other' => ['username' => $tokenrec->username, 'reason' => $failurereason]];
                     $event = \core\event\user_login_failed::create($eventdata);
                     $event->trigger();
-                    throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
+                    // Token is invalid, delete it.
+                    $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+                    return $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
                 }
             }
             $username = $user->username;
