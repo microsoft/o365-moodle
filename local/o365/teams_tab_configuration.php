@@ -68,6 +68,10 @@ if (!inIframe() && !isMobileApp()) {
     window.location.href = '" . $redirecturl->out(false) . "';
 }
 
+let config = {
+    clientId: '" . get_config('auth_oidc', 'clientid') . "',
+};
+
 window.onload = setTitles;
 
 function setTitles() {
