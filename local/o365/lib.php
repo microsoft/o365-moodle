@@ -95,6 +95,39 @@ function local_o365_connectioncapability($userid, $mode = 'link', $require = fal
 }
 
 /**
+ * Creates json data file for application deployment.
+ */
+function local_o365_create_deploy_json() {
+    global $CFG;
+    $data = new stdClass();
+    $data->{'$schema'} = 'https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#';
+    $data->contentVersion = "1.0.0.0";
+    $data->parameters = new stdClass();
+    $data->parameters->LUISPricingTier = ['value' => null];
+    $data->parameters->LUISRegion = ['value' => null];
+    $botappid = get_config('local_o365', 'bot_app_id');
+    $botappidval = (empty($botappid) ? null : $botappid);
+    $data->parameters->botApplicationID = ['value' => $botappidval];
+    $botapppass = get_config('local_o365', 'bot_app_password');
+    $botapppassval = (empty($botapppass) ? null : $botapppass);
+    $data->parameters->botApplicationPassword = ['value' => $botapppassval];
+    $data->parameters->moodleURL = ['value' => $CFG->wwwroot];
+    $appid = get_config('auth_oidc', 'clientid');
+    $appidval = (empty($appid) ? null : $appid);
+    $data->parameters->azureADApplicationID = ['value' => $appidval];
+    $appsecret = get_config('auth_oidc', 'clientsecret');
+    $appsecretval = (empty($appsecret) ? null : $appsecret);
+    $data->parameters->azureADApplicationKey = ['value' => $appsecretval];
+    $apptenant = get_config('local_o365', 'aadtenant');
+    $apptenantval = (empty($apptenant) ? null : $apptenant);
+    $data->parameters->azureADTenant = ['value' => $apptenantval];
+    $botsharedsecret = get_config('local_o365', 'bot_app_password');
+    $botsharedsecretval = (empty($botsharedsecret) ? null : $botsharedsecret);
+    $data->parameters->sharedMoodleSecret = ['value' => $botsharedsecretval];
+    return json_encode($data);
+}
+
+/**
  * Recursively delete content of the folder and all its contents.
  *
  * @param $path
