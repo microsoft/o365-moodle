@@ -973,6 +973,8 @@ class main {
         global $DB;
         $this->mtrace('User doesn\'t exist in Moodle');
 
+        $newmuser = null;
+
         $userobjectid = (\local_o365\rest\unified::is_configured())
             ? $aaduserdata['id']
             : $aaduserdata['objectId'];
