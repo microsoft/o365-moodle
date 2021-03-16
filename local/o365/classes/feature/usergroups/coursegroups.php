@@ -1385,6 +1385,11 @@ class coursegroups {
     public function get_moodle_app_id() {
         $this->mtrace('Get moodle app ID.');
 
-        $this->graphclient->get_catalog_app_id('2e43119b-fcfe-44f8-b3e5-996ffcb7fb95');
+        $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
+        if (!$teamsmoodleappexternalid) {
+            $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
+        }
+
+        $this->graphclient->get_catalog_app_id($teamsmoodleappexternalid);
     }
 }
