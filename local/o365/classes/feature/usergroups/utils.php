@@ -623,7 +623,7 @@ class utils {
             }
         }
 
-        $features = ['team', 'onedrive', 'calendar', 'conversations', 'notebook'];
+        $features = ['team'];
         if ($allfeatures) {
             static::set_course_group_feature_enabled($courseid, $features, $enabled);
         } else {
