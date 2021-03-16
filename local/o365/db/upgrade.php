@@ -652,5 +652,28 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2020071504', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2020071506) {
+        // Define table local_o365_teams_cache to be created.
+        $table = new xmldb_table('local_o365_teams_cache');
+
+        // Adding fields to table local_o365_teams_cache.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('objectid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('url', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        // Adding keys to table local_o365_teams_cache.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for local_o365_teams_cache.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020071506, 'local', 'o365');
+    }
+
     return $result;
 }
