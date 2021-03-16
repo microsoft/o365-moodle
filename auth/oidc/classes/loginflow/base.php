@@ -154,7 +154,7 @@ class base {
 
                 $firstname = $idtoken->claim('given_name');
                 if (!empty($firstname)) {
-                    $userdata['firstname'] = $firstname;
+                    $userdata['givenName'] = $firstname;
                 }
 
                 $lastname = $idtoken->claim('family_name');
