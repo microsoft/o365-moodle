@@ -131,7 +131,7 @@ class coursegroups {
 
             if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
                 $creategrouponly = false;
-                $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
+                $teacherids = static::get_team_owner_ids_by_course_id($course->id);
                 foreach ($teacherids as $teacherid) {
                     if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
                         ['type' => 'user', 'moodleid' => $teacherid])) {
@@ -210,7 +210,7 @@ class coursegroups {
                     $this->mtrace($errmsg);
                     continue;
                 }
-                $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
+                $teacherids = static::get_team_owner_ids_by_course_id($course->id);
                 $hasowner = false;
                 foreach ($teacherids as $teacherid) {
                     if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
@@ -691,7 +691,7 @@ class coursegroups {
         }
 
         // Get intended group members.
-        $intendedteamownerids = $this->get_team_owner_ids_by_course_id($courseid);
+        $intendedteamownerids = static::get_team_owner_ids_by_course_id($courseid);
         $intendedteammemberuserids = $this->get_team_member_ids_by_course_id($courseid);
 
         $intendedteamowners = static::get_user_object_ids_by_user_ids($intendedteamownerids);
@@ -833,7 +833,7 @@ class coursegroups {
      *
      * @return array array containing ids of teachers.
      */
-    public function get_team_owner_ids_by_course_id($courseid) {
+    public static function get_team_owner_ids_by_course_id($courseid) {
         $context = context_course::instance($courseid);
         $teamownerusers = get_users_by_capability($context, 'local/o365:teamowner', 'u.id, u.deleted');
         $teamowneruserids = [];
@@ -1193,7 +1193,7 @@ class coursegroups {
             // Create team.
             $now = time();
 
-            $teacherids = $this->get_team_owner_ids_by_course_id($courseid);
+            $teacherids = static::get_team_owner_ids_by_course_id($courseid);
             $hasowner = false;
             foreach ($teacherids as $teacherid) {
                 if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
@@ -1230,47 +1230,7 @@ class coursegroups {
                     . $teamobjectrec['id']);
 
                 if (!empty($moodleappid)) {
-                    // Provision app to the newly created team.
-                    $retrycounter = 0;
-                    $moodleappprovisioned = false;
-                    while ($retrycounter <= API_CALL_RETRY_LIMIT) {
-                        if ($retrycounter) {
-                            $this->mtrace('..... Retry #' . $retrycounter);
-                            sleep(10);
-                        }
-                        try {
-                            $this->graphclient->provision_app($groupobjectid, $moodleappid);
-                            $moodleappprovisioned = true;
-                            break;
-                        } catch (\Exception $e) {
-                            $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' .
-                                $e->getMessage());
-                            $retrycounter++;
-                        }
-                    }
-
-                    if (!$moodleappprovisioned) {
-                        return true;
-                    }
-
-                    // List all channels.
-                    try {
-                        $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
-                    } catch (\Exception $e) {
-                        $generalchanelid = null;
-                        $this->mtrace('Could not list channels in team for course #' . $courseid . '. Reason: ' . $e->getMessage());
-                    }
-
-                    if ($generalchanelid) {
-                        // Add tab to channel.
-                        try {
-                            $this->graphclient->add_moodle_tab_to_channel($groupobjectid, $generalchanelid, $moodleappid,
-                                $courseid);
-                        } catch (\Exception $e) {
-                            $this->mtrace('Could not add Moodle tab to channel in team for course #' . $courseid .
-                                '. Reason : '. $e->getMessage());
-                        }
-                    }
+                    $this->add_moodle_tab_in_teams($courseid, $groupobjectid, $moodleappid);
                 }
             }
 
@@ -1281,6 +1241,142 @@ class coursegroups {
                 $teamobjectrec['id']);
             return true;
         }
+    }
+
+    /**
+     * Add Moodle tab to the Teams for the course with ID provided.
+     *
+     * @param $courseid
+     * @param $groupobjectid
+     * @param $moodleappid
+     *
+     * @return bool
+     */
+    public function add_moodle_tab_in_teams($courseid, $groupobjectid, $moodleappid) {
+        // Provision app to the newly created team.
+        $retrycounter = 0;
+        $moodleappprovisioned = false;
+        while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+            if ($retrycounter) {
+                $this->mtrace('..... Retry #' . $retrycounter);
+                sleep(10);
+            }
+            try {
+                $this->graphclient->provision_app($groupobjectid, $moodleappid);
+                $moodleappprovisioned = true;
+                break;
+            } catch (\Exception $e) {
+                $this->mtrace('Could not add app to team for course #' . $courseid . '. Reason: ' . $e->getMessage());
+                $retrycounter++;
+            }
+        }
+
+        if (!$moodleappprovisioned) {
+            return true;
+        }
+
+        // List all channels.
+        try {
+            $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
+        } catch (\Exception $e) {
+            $generalchanelid = null;
+            $this->mtrace('Could not list channels in team for course #' . $courseid . '. Reason: ' . $e->getMessage());
+        }
+
+        if ($generalchanelid) {
+            // Add tab to channel.
+            try {
+                $this->graphclient->add_moodle_tab_to_channel($groupobjectid, $generalchanelid, $moodleappid, $courseid);
+            } catch (\Exception $e) {
+                $this->mtrace('Could not add Moodle tab to channel in team for course #' . $courseid . '. Reason : '.
+                    $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Update Teams cache.
+     *
+     * @return true
+     */
+    public function update_teams_cache() {
+        global $DB;
+
+        $createteamsconfig = get_config('local_o365', 'createteams');
+        if (!($createteamsconfig === 'onall' || $createteamsconfig === 'oncustom')) {
+            $this->mtrace('Teams creation is disabled.');
+            return false;
+        }
+
+        $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses_with_feature('team');
+        if (count($coursesenabled) == 0) {
+            $this->mtrace('Teams creation is disabled.');
+            return false;
+        }
+
+        // Fetch teams from Graph API.
+        $this->mtrace('Attempting to fetch teams');
+        $teams = [];
+        $teamspart = $this->graphclient->get_teams();
+        foreach ($teamspart['value'] as $teamitem) {
+            $teams[$teamitem['id']] = $teamitem;
+        }
+        while (!empty($teamspart['@odata.nextLink'])) {
+            $nextlink = parse_url($teamspart['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $teamspart = $this->graphclient->get_teams($query['$skiptoken']);
+                    foreach ($teamspart['value'] as $teamitem) {
+                        if (!array_key_exists($teamitem['id'], $teams)) {
+                            $teams[$teamitem['id']] = $teamitem;
+                        }
+                    }
+                } else {
+                    $teamspart = [];
+                }
+            }
+        }
+
+        // Build existing cache records cache.
+        $this->mtrace('Build existing cache records cache');
+        $existingcacherecords = $DB->get_records('local_o365_teams_cache');
+        $existingcachebyoid = [];
+        foreach ($existingcacherecords as $existingcacherecord) {
+            $existingcachebyoid[$existingcacherecord->objectid] = $existingcacherecord;
+        }
+
+        // Compare, then create, update, or delete cache.
+        $this->mtrace('Update cache records');
+        foreach ($teams as $team) {
+            if (array_key_exists($team['id'], $existingcachebyoid)) {
+                // Update existing cache record.
+                $cacherecord = $existingcachebyoid[$team['id']];
+                $cacherecord->name = $team['displayName'];
+                $cacherecord->description = $team['description'];
+                $DB->update_record('local_o365_teams_cache', $cacherecord);
+
+                unset($existingcachebyoid[$team['id']]);
+            } else {
+                // Create new cache record.
+                $cacherecord = new \stdClass();
+                $cacherecord->objectid = $team['id'];
+                $cacherecord->name = $team['displayName'];
+                $cacherecord->description = $team['description'];
+                $cacherecord->url = $this->graphclient->get_teams_url($team['id']);
+                $DB->insert_record('local_o365_teams_cache', $cacherecord);
+            }
+        }
+        $this->mtrace('Delete old cache records');
+        foreach ($existingcachebyoid as $oldcacherecord) {
+            $DB->delete_records('local_o365_teams_cache', ['id' => $oldcacherecord->id]);
+        }
+
+        // Set last updated timestamp.
+        set_config('teamscacheupdated', time(), 'local_o365');
+
+        return true;
     }
 
     /**
