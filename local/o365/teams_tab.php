@@ -83,6 +83,10 @@ microsoftTeams.getContext(function (context) {
     }
 });
 
+let config = {
+    clientId: '" . get_config('auth_oidc', 'clientid') . "',
+};
+
 function setTheme(theme) {
     if (theme) {
         $('body').addClass(theme);
