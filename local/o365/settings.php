@@ -241,7 +241,7 @@ if ($hassiteconfig) {
             ''));
 
         // Sample Team name.
-        $sampleteamname = coursegroups::get_sample_team_display_name();
+        $sampleteamname = \local_o365\feature\usergroups\utils::get_sample_team_display_name();
         $settings->add(new admin_setting_heading('local_o365_section_team_name_sample', '',
             get_string('settings_team_name_sample', 'local_o365', $sampleteamname)));
 
@@ -293,7 +293,7 @@ if ($hassiteconfig) {
             '', PARAM_TEXT, null, 15));
 
         // Sample group names.
-        $samplegroupnames = coursegroups::get_sample_group_names();
+        $samplegroupnames = \local_o365\feature\usergroups\utils::get_sample_group_names();
         $settings->add(new admin_setting_heading('local_o365_section_group_names_sample', '',
             get_string('settings_group_names_sample', 'local_o365', $samplegroupnames)));
 
@@ -354,6 +354,25 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_group_creation_fallback', 'local_o365');
         $desc = new lang_string('settings_group_creation_fallback_details', 'local_o365');
         $settings->add(new \admin_setting_configcheckbox('local_o365/group_creation_fallback', $label, $desc, '1'));
+
+        // Course reset Teams settings.
+        if (\local_o365\feature\usergroups\utils::is_enabled()) {
+            $label = new lang_string('settings_course_reset_teams', 'local_o365');
+            $desc = new lang_string('settings_course_reset_teams_details', 'local_o365');
+            $settings->add(new \local_o365\adminsetting\courseresetteams('local_o365/course_reset_teams', $label, $desc,
+                TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DO_NOTHING));
+        }
+
+        // Reset team name prefix.
+        $label = new lang_string('settings_reset_team_name_prefix', 'local_o365');
+        $desc = new lang_string('settings_reset_team_name_prefix_details', 'local_o365');
+        $settings->add(new \admin_setting_configtext('local_o365/reset_team_name_prefix', $label, $desc, '(archived) ', PARAM_TEXT));
+
+        // Reset group name prefix.
+        $label = new lang_string('settings_reset_group_name_prefix', 'local_o365');
+        $desc = new lang_string('settings_reset_group_name_prefix_details', 'local_o365');
+        $settings->add(new \admin_setting_configtext('local_o365/reset_group_name_prefix', $label, $desc, '(disconnected) ',
+            PARAM_TEXT));
 
         $label = new lang_string('settings_o365china', 'local_o365');
         $desc = new lang_string('settings_o365china_details', 'local_o365');
