@@ -648,4 +648,11 @@ if ($hassiteconfig) {
             $settings->add(new admin_setting_heading('set_moodle_app_id_instruction_header', '', $setmoodleappidinstructionhtml));
         }
     }
+
+    // Redirect back to the tab after configuration change.
+    if ($PAGE->has_set_url()) {
+        $taburl = $PAGE->url;
+        $taburl->param('s_local_o365_tabs', $tab);
+        $PAGE->set_url($taburl);
+    }
 }
