@@ -41,6 +41,11 @@ define('TEAMS_COURSE_RESET_SETTING_DISCONNECT', '2');
 define('GROUP_COURSE_RESET_SETTING_DO_NOTHING', '1');
 define('GROUP_COURSE_RESET_SETTING_DISCONNECT', '2');
 
+// Course sync options.
+define('MICROSOFT365_COURSE_SYNC_NONE', 0);
+define('MICROSOFT365_COURSE_SYNC_GROUPS', 1);
+define('MICROSOFT365_COURSE_SYNC_TEAMS', 2);
+
 /**
  * Retrieve icon image and send to the browser for display.
  *

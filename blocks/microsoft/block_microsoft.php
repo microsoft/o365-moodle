@@ -21,6 +21,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use local_o365\feature\usergroups\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/blocks/microsoft/lib.php');
@@ -77,7 +79,7 @@ class block_microsoft extends block_base {
                 if (!empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
                         local_o365_connectioncapability($USER->id, 'link'))) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
-                    $this->content->text .= $this->get_user_content_matche($connection->aadupn, $uselogin);
+                    $this->content->text .= $this->get_user_content_matched($connection->aadupn, $uselogin);
                 } else {
                     $this->content->text .= $this->get_user_content_not_connected();
                 }
@@ -98,22 +100,22 @@ class block_microsoft extends block_base {
      * @param bool $uselogin Whether the match includes login change.
      * @return string Block content about user.
      */
-    protected function get_user_content_matche($o365account, $uselogin = false) {
+    protected function get_user_content_matched($o365account, $uselogin = false) {
         $html = '';
 
         $langmatched = get_string('o365matched_title', 'block_microsoft');
-        $html .= '<h5>'.$langmatched.'</h5>';
+        $html .= '<h5>' . $langmatched . '</h5>';
 
         $langmatcheddesc = get_string('o365matched_desc', 'block_microsoft', $o365account);
-        $html .= '<p>'.$langmatcheddesc.'</p>';
+        $html .= '<p>' . $langmatcheddesc . '</p>';
 
         $langlogin = get_string('logintoo365', 'block_microsoft');
-        $html .= '<p>'.get_string('o365matched_complete_authreq', 'block_microsoft').'</p>';
+        $html .= '<p>' . get_string('o365matched_complete_authreq', 'block_microsoft') . '</p>';
 
         if ($uselogin === true) {
-            $html .= '<p>'. html_writer::link(new moodle_url('/local/o365/ucp.php'), $langlogin).'</p>';
+            $html .= '<p>' . html_writer::link(new moodle_url('/local/o365/ucp.php'), $langlogin) . '</p>';
         } else {
-            $html .= '<p>'. html_writer::link(new moodle_url('/local/o365/ucp.php?action=connecttoken'), $langlogin).'</p>';
+            $html .= '<p>' . html_writer::link(new moodle_url('/local/o365/ucp.php?action=connecttoken'), $langlogin) . '</p>';
         }
 
         return $html;
@@ -132,61 +134,76 @@ class block_microsoft extends block_base {
         }
 
         $courseid = $COURSE->id;
-        $groupsenabled = \local_o365\feature\usergroups\utils::is_enabled();
+        $groupsenabled = utils::is_enabled();
         $iscoursecontext = $PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID;
-        $courseisgroupenabled = \local_o365\feature\usergroups\utils::course_is_group_enabled($courseid);
+        $courseisgroupenabled = utils::course_is_group_enabled($courseid);
         $config = (array)get_config('block_microsoft');
 
         $html = '';
         $items = [];
+
+        $courseheaderdisplayed = false;
+        $o365record = null;
+
+        if (has_capability('local/o365:teamowner', $PAGE->context)) {
+
+            $courseheaderdisplayed = true;
+        }
+
+        if (!empty($config['settings_showcoursegroup'])) {
+            list($courseheader, $o365record) = $this->get_course_header_and_o365object($courseid);
+            $html .= $courseheader;
+
+            // Link to course sync options.
+            if (has_capability('local/o365:teamowner', $PAGE->context)) {
+                $createteams = get_config('local_o365', 'createteams');
+                $allowedmanageteamsyncpercourse = get_config('local_o365', 'createteams_per_course');
+                if ($createteams == 'oncustom' && $allowedmanageteamsyncpercourse) {
+                    $configuresyncurl = new moodle_url('/blocks/microsoft/configure_sync.php',
+                        ['course' => $courseid]);
+                    $items[] = html_writer::link($configuresyncurl, get_string('configure_sync', 'block_microsoft'),
+                        ['class' => 'servicelink block_microsoft_sync']);
+                }
+            }
+        }
+
         if ($iscoursecontext && $groupsenabled && $courseisgroupenabled) {
             $canmanage = (has_capability('local/o365:managegroups', $PAGE->context) === true) ? true : false;
             $canview = (is_enrolled($PAGE->context) && has_capability('local/o365:viewgroups', $PAGE->context)) ? true : false;
+
             if ($canmanage === true || $canview === true) {
                 if (!empty($config['settings_showcoursegroup'])) {
-                    if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
-                        if ($o365record = $DB->get_record('local_o365_objects',
-                            ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
-                            // The course is configured to be connected to a Team, and is connected.
-                            $html .= html_writer::tag('h5', get_string('course_connected_to_team', 'block_microsoft'));
-                        } else {
-                            // The course is configured to be connected to a Team, but the Team cannot be found.
-                            $html .= html_writer::tag('h5', get_stirng('course_connected_to_team_missing', 'block_microsoft'));
-                        }
-                    } else {
-                        if ($o365record =  $DB->get_record('local_o365_objects',
-                            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
-                            // The course is configured to be connected to a group, and is connected.
-                            $html .= html_writer::tag('h5', get_string('course_connected_to_group', 'block_microsoft'));
-                        } else {
-                            // The course is configured to be connected to a group, but the group cannot be found.
-                            $html .= html_writer::tag('h5', get_stirng('course_connected_to_group_missing', 'block_microsoft'));
-                        }
+                    if (!$courseheaderdisplayed) {
+                        list($courseheader, $o365record) = $this->get_course_header_and_o365object($courseid);
+                        $html .= $courseheader;
                     }
 
                     if ($o365record) {
                         // Links to course features.
-                        $cache = cache::make('local_o365', 'groups');
-                        $groupscache = \local_o365\feature\usergroups\utils::get_group_urls($cache, $courseid, 0);
+                        $groupurls = utils::get_group_urls($courseid, 0);
                         foreach (['team', 'conversations', 'onedrive', 'calendar', 'notebook'] as $feature) {
-                            if (!isset($groupscache['urls'][$feature])) {
+                            if (!isset($groupurls[$feature])) {
                                 continue;
                             }
 
-                            $url = new moodle_url($groupscache['urls'][$feature]);
+                            if ($feature == 'team' && !utils::course_is_group_feature_enabled($courseid, 'team')) {
+                                continue;
+                            }
+
+                            $url = new moodle_url($groupurls[$feature]);
                             $resourcename = get_string('course_feature_' . $feature, 'block_microsoft');
                             $items[] = html_writer::link($url, $resourcename,
                                 ['target' => '_blank', 'class' => 'servicelink block_microsoft_' . $feature]);
                         }
 
-                        // Link to configuration.
+                        // Link to course reset options.
                         if (has_capability('moodle/course:reset', $PAGE->context)) {
                             switch (get_config('local_o365', 'course_reset_teams')) {
                                 case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE:
                                     // Allow user to configure reset actions.
                                     $configurereseturl = new moodle_url('/blocks/microsoft/configure_reset.php',
                                         ['course' => $courseid]);
-                                    if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
+                                    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
                                         $items[] = html_writer::link($configurereseturl,
                                             get_string('configure_reset_team', 'block_microsoft'),
                                             ['class' => 'servicelink block_microsoft_reset']);
@@ -199,7 +216,7 @@ class block_microsoft extends block_base {
                                     break;
                                 case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT:
                                     // Force archive, show notification.
-                                    if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
+                                    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
                                         $items[] = html_writer::span(get_string('course_reset_disconnect_team', 'block_microsoft'),
                                             'servicelink block_microsoft_reset');
                                     } else {
@@ -210,7 +227,7 @@ class block_microsoft extends block_base {
                                     break;
                                 default:
                                     // Force do nothing, show notification.
-                                    if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
+                                    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
                                         $items[] = html_writer::span(get_string('course_reset_do_nothing_team', 'block_microsoft'),
                                             'servicelink block_microsoft_reset');
                                     } else {
@@ -225,6 +242,43 @@ class block_microsoft extends block_base {
         }
 
         return $html . html_writer::alist($items);
+    }
+
+    /**
+     * Return the course header text and o365_object record for the course with the given ID.
+     *
+     * @param int $courseid
+     *
+     * @return array
+     */
+    private function get_course_header_and_o365object(int $courseid) {
+        global $DB;
+
+        $o365record = null;
+
+        if (utils::course_is_group_feature_enabled($courseid, 'team')) {
+            if ($o365record = $DB->get_record('local_o365_objects',
+                ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
+                // The course is configured to be connected to a Team, and is connected.
+                $html = html_writer::tag('h5', get_string('course_connected_to_team', 'block_microsoft'));
+            } else {
+                // The course is configured to be connected to a Team, but the Team cannot be found.
+                $html = html_writer::tag('h5', get_string('course_connected_to_team_missing', 'block_microsoft'));
+            }
+        } else if (utils::course_is_group_enabled($courseid)) {
+            if ($o365record = $DB->get_record('local_o365_objects',
+                ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+                // The course is configured to be connected to a group, and is connected.
+                $html = html_writer::tag('h5', get_string('course_connected_to_group', 'block_microsoft'));
+            } else {
+                // The course is configured to be connected to a group, but the group cannot be found.
+                $html = html_writer::tag('h5', get_string('course_connected_to_group_missing', 'block_microsoft'));
+            }
+        } else {
+            $html = html_writer::tag('h5', get_string('course_not_connected', 'block_microsoft'));
+        }
+
+        return [$html, $o365record];
     }
 
     /**

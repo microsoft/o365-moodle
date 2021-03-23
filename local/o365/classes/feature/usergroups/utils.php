@@ -534,20 +534,14 @@ class utils {
     }
 
     /**
-     * Get urls for Moodle group from cache or by api call.
+     * Get urls for Moodle group by api call.
      *
-     * @param object $cache Moodle cache.
-     * @param int $courseid Moodle Course id.
-     * @param int $groupid Moodle Group id.
-     * @return array Array containing o365 url data.
+     * @param $courseid
+     * @param $groupid
+     *
+     * @return string[]|null
      */
-    public static function get_group_urls($cache, $courseid, $groupid) {
-        $groupscache = $cache->get($courseid.'_'.$groupid);
-
-        if (!empty($groupscache)) {
-            return $groupscache;
-        }
-
+    public static function get_group_urls($courseid, $groupid) {
         $group = new \stdClass();
         $group->groupid = $groupid;
         $group->courseid = $courseid;
@@ -558,18 +552,15 @@ class utils {
         try {
             $graphapi = static::get_graphclient();
             $urls = $graphapi->get_group_urls($object->objectid);
-            $groupscache = [
-                'object' => (array)$object,
-                'urls' => $urls,
-            ];
             if (!empty($urls)) {
-                // Set cache when urls are successfully generated.
-                $cache->set($courseid.'_'.$groupid, $groupscache);
+                return $urls;
+            } else {
+                return null;
             }
-            return $groupscache;
         } catch (\Exception $e) {
             $caller = 'groupcp.php';
-            \local_o365\utils::debug('Exception while retrieving group urls: groupid '.$object->objectid.' '.$e->getMessage(), $caller);
+            \local_o365\utils::debug('Exception while retrieving group urls: groupid ' . $object->objectid . ' ' .
+                $e->getMessage(), $caller);
             return null;
         }
     }
