@@ -112,7 +112,9 @@ class coursegroups {
         $sql = 'SELECT crs.*
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
-                 WHERE obj.id IS NULL AND crs.id != ?';
+                 WHERE obj.id IS NULL AND crs.id != ? AND crs.visible != 0';
+        // The "crs.visible != 0" is used to filter out courses in the process of copy or restore, which may contain incorrect or
+        // incomplete contents.
         $params = ['group', 'course', SITEID];
         if (!empty($coursesinsql)) {
             $sql .= ' AND crs.id '.$coursesinsql;
