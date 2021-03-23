@@ -119,7 +119,6 @@ $string['eventusercreated'] = 'Utilisateur créé avec OpenID Connect';
 $string['eventuserconnected'] = 'Utilisateur connecté à OpenID Connect';
 $string['eventuserloggedin'] = 'Utilisateur identifié avec OpenID Connect';
 $string['eventuserdisconnected'] = 'Utilisateur déconnecté d\'OpenID Connect';
-$string['exception_tokenemptyuserid'] = 'Le jeton existant pour cet utilisateur ne contient pas un ID utilisateur valide. Veuillez contacter votre administrateur.';
 
 $string['oidc:manageconnection'] = 'Permettre la connexion et la déconnexion OpenID';
 $string['oidc:manageconnectionconnect'] = 'Permettre la connexion OpenID';
