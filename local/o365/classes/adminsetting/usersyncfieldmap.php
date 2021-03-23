@@ -85,6 +85,7 @@ class usersyncfieldmap extends fieldmap {
             'idnumber' => get_string('idnumber'),
             'firstname' => get_string('firstname'),
             'lastname' => get_string('lastname'),
+            'middlename' => get_string('middlename'),
             'email' => get_string('email'),
             'address' => get_string('address'),
             'city' => get_string('city'),
