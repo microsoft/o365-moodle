@@ -23,6 +23,10 @@
 
 namespace local_o365\feature\usergroups;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/local/o365/lib.php');
+
 class observers {
     /**
      * Get a Microsoft Graph API instance.
@@ -302,6 +306,97 @@ class observers {
             \local_o365\utils::debug($msg, $caller, $result);
             return false;
         }
+        return true;
+    }
+
+    /**
+     * Observer function that listens for course_reset_started event.
+     * Perform Team/group reset actions if configured.
+     *
+     * @param \core\event\course_reset_started $event
+     *
+     * @return bool
+     */
+    public static function handle_course_reset_started(\core\event\course_reset_started $event) {
+        global $CFG, $DB;
+
+        if (!\local_o365\utils::is_configured()) {
+            return false;
+        }
+
+        if (!\local_o365\feature\usergroups\utils::is_enabled()) {
+            return false;
+        }
+
+        $eventdata = $event->get_data();
+        $courseid = $eventdata['courseid'];
+
+        if (!$course = $DB->get_record('course', ['id' => $courseid])) {
+            return false;
+        }
+
+        if (!\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+            return false;
+        }
+
+        $connectedtoteam = false;
+        if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
+            // The course is configured to be connected to Team.
+            if (!$o365object = $DB->get_record('local_o365_objects',
+                ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
+                // The team cannot be found.
+                return false;
+            }
+            $connectedtoteam = true;
+        } else {
+            // The course is configured to be connected to group.
+            if (!$o365object = $DB->get_record('local_o365_objects',
+                ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+                return false;
+            }
+        }
+
+        // Get coursegroups API.
+        $apiclient = static::get_unified_api('handle_course_reset_started');
+        if (empty($apiclient)) {
+            return false;
+        }
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
+
+        // All validation passed. Start processing.
+        $siteresetsetting = get_config('local_o365', 'course_reset_teams');
+
+        switch ($siteresetsetting) {
+            case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE:
+                // Check course settings.
+                if ($DB->record_exists('config_plugins', ['plugin' => 'block_microsoft', 'name' => 'version'])) {
+                    // Plugin found.
+                    if (file_exists($CFG->dirroot . '/blocks/microsoft/lib.php')) {
+                        require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
+                        $courseresetsetting = block_microsoft_get_course_reset_setting($courseid);
+
+                        if ($connectedtoteam) {
+                            if ($courseresetsetting == TEAMS_COURSE_RESET_SETTING_DISCONNECT) {
+                                $coursegroups->process_course_reset_team($course, $o365object);
+                            }
+                        } else {
+                            if ($courseresetsetting == GROUP_COURSE_RESET_SETTING_DISCONNECT) {
+                                $coursegroups->process_course_reset_group($course, $o365object);
+                            }
+                        }
+                    }
+                }
+
+                break;
+            case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT:
+                if ($connectedtoteam) {
+                    $coursegroups->process_course_reset_team($course, $o365object);
+                } else {
+                    $coursegroups->process_course_reset_group($course, $o365object);
+                }
+                break;
+        }
+
         return true;
     }
 }

@@ -45,6 +45,16 @@
   background-image: url([[pix:moodle|i/cohort]]); }
 .block_microsoft .block_microsoft_studygroup {
   background-image: url([[pix:moodle|i/group]]); }
+.block_microsoft .block_microsoft_team {
+  background-image: url([[pix:block_microsoft|msteams]]); }
+.block_microsoft .block_microsoft_conversations {
+  background-image: url([[pix:block_microsoft|outlookcolor]]); }
+.block_microsoft .block_microsoft_calendar {
+  background-image: url([[pix:block_microsoft|calendar]]); }
+.block_microsoft .block_microsoft_notebook {
+  background-image: url([[pix:block_microsoft|onenotecolor]]); }
+.block_microsoft .block_microsoft_reset {
+  background-image: url([[pix:moodle|t/reset]]); }
 .block_microsoft .block_microsoft_profile {
   border-radius: 50%;
   display: block;
