@@ -71,7 +71,7 @@ class provider implements
             'local_o365_token' => [
                 'user_id',
                 'scope',
-                'resource',
+                'tokenresource',
                 'token',
                 'expiry',
                 'refreshtoken',

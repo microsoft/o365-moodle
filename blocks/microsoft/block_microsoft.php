@@ -214,7 +214,7 @@ class block_microsoft extends block_base {
                 $sharepointstr = get_string('linksharepoint', 'block_microsoft');
                 $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
                 if (!empty($coursespsite)) {
-                    $spsite = \local_o365\rest\sharepoint::get_resource();
+                    $spsite = \local_o365\rest\sharepoint::get_tokenresource();
                     if (!empty($spsite)) {
                         $spurl = $spsite.'/'.$coursespsite->siteurl;
                         $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];

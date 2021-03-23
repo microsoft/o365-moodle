@@ -95,8 +95,8 @@ class ajax extends base {
         $httpclient = new \local_o365\httpclient();
 
         if (\local_o365\rest\unified::is_configured() === true) {
-            $resource = \local_o365\rest\unified::get_resource();
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $tokenresource = \local_o365\rest\unified::get_tokenresource();
+            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
             $apiclient = new \local_o365\rest\unified($token, $httpclient);
             $data->result = $apiclient->sharepoint_validate_site($uncleanurl);
         } else {
@@ -119,17 +119,17 @@ class ajax extends base {
     }
 
     /**
-     * Check is a service resource is valid using the graph API.
+     * Check if a service resource is valid using the graph API.
      */
     protected function checkserviceresource_graph() {
         $data = new \stdClass;
         $success = false;
         $setting = required_param('setting', PARAM_TEXT);
         $value = required_param('value', PARAM_TEXT);
-        $resource = \local_o365\rest\unified::get_resource();
+        $tokenresource = \local_o365\rest\unified::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
         $caller = 'checkserviceresource_graph';
         switch ($setting) {
@@ -173,8 +173,8 @@ class ajax extends base {
         $caller = 'checkserviceresource_legacy';
 
         if ($setting === 'aadtenant') {
-            $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
+            $tokenresource = \local_o365\rest\azuread::get_tokenresource();
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
             if (empty($token)) {
                 throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
@@ -214,11 +214,11 @@ class ajax extends base {
         $data = new \stdClass;
         $success = false;
         $setting = required_param('setting', PARAM_TEXT);
-        $resource = \local_o365\rest\unified::get_resource();
+        $tokenresource = \local_o365\rest\unified::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         try {
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient, true);
+            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient, true);
         } catch (\Exception $e) {
             $err = 'Could not get App or System API User token. If you have not yet provided admin consent, please do that first.';
             throw new \Exception($err);
@@ -260,11 +260,11 @@ class ajax extends base {
 
         $setting = required_param('setting', PARAM_TEXT);
 
-        $resource = \local_o365\rest\discovery::get_resource();
+        $tokenresource = \local_o365\rest\discovery::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         // Get service api currently requires system token to be used.
-        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
+        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
         }
@@ -329,7 +329,7 @@ class ajax extends base {
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $unifiedresource = \local_o365\rest\unified::get_resource();
+        $unifiedresource = \local_o365\rest\unified::get_tokenresource();
         $correctredirecturl = \auth_oidc\utils::get_redirecturl();
 
         if (\local_o365\rest\unified::is_enabled() === true) {
@@ -368,8 +368,8 @@ class ajax extends base {
             }
         } else {
             // Legacy API.
-            $resource = \local_o365\rest\azuread::get_resource();
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
+            $tokenresource = \local_o365\rest\azuread::get_tokenresource();
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
             if (empty($token)) {
                 throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
@@ -428,10 +428,10 @@ class ajax extends base {
         $data = new \stdClass;
         $success = false;
 
-        $resource = \local_o365\rest\azuread::get_resource();
+        $tokenresource = \local_o365\rest\azuread::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
+        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
         if (empty($token)) {
             throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
         }

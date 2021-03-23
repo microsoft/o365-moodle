@@ -69,7 +69,7 @@ class onedrive extends \local_o365\rest\o365api {
      *
      * @return string The resource for oauth2 tokens.
      */
-    public static function get_resource() {
+    public static function get_tokenresource() {
         $config = get_config('local_o365');
         if (!empty($config->odburl)) {
             return 'https://'.$config->odburl;
@@ -93,7 +93,7 @@ class onedrive extends \local_o365\rest\o365api {
             }
         }
         if (!empty($fileurl)) {
-            $odburl = $this->get_resource();
+            $odburl = $this->get_tokenresource();
             if (strpos($fileurl, $odburl) === 0) {
                 $filerelative = substr($fileurl, strlen($odburl));
                 $filerelativeparts = explode('/', trim($filerelative, '/'));
@@ -122,9 +122,9 @@ class onedrive extends \local_o365\rest\o365api {
             return $this->apiurioverride;
         }
         if ($this->usespapi === true) {
-            return static::get_resource().'/_api';
+            return static::get_tokenresource().'/_api';
         } else {
-            return static::get_resource().'/_api/v1.0/me/Files';
+            return static::get_tokenresource().'/_api/v1.0/me/Files';
         }
     }
 

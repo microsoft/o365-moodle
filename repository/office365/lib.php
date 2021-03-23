@@ -69,7 +69,7 @@ class repository_office365 extends \repository {
      */
     protected function get_unified_token($system = false, $userid = null) {
         global $USER;
-        $resource = \local_o365\rest\unified::get_resource();
+        $resource = \local_o365\rest\unified::get_tokenresource();
         if ($system === true) {
             return \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         } else {
@@ -87,7 +87,7 @@ class repository_office365 extends \repository {
      */
     protected function get_onedrive_token($system = false, $userid = null) {
         global $USER;
-        $resource = \local_o365\rest\onedrive::get_resource();
+        $resource = \local_o365\rest\onedrive::get_tokenresource();
         if ($system === true) {
             return \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         } else {
@@ -105,7 +105,7 @@ class repository_office365 extends \repository {
      */
     protected function get_sharepoint_token($system = false, $userid = null) {
         global $USER;
-        $resource = \local_o365\rest\sharepoint::get_resource();
+        $resource = \local_o365\rest\sharepoint::get_tokenresource();
         if ($system === true) {
             return \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         } else {
@@ -504,7 +504,7 @@ class repository_office365 extends \repository {
                 // Retrieve api url for video service.
                 $url = $sharepoint->videoservice_discover();
                 if (!empty($url)) {
-                    $sharepoint->override_resource($url);
+                    $sharepoint->override_tokenresource($url);
                     $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
                     $videoobject = $sharepoint->create_video_placeholder($parentid, '', $filename, $filename);
                     if (!empty($videoobject)) {
@@ -797,7 +797,7 @@ class repository_office365 extends \repository {
         // Retrieve api url for video service.
         $url = $sharepoint->videoservice_discover();
         if (!empty($url)) {
-            $sharepoint->override_resource($url);
+            $sharepoint->override_tokenresource($url);
             if ($this->path_is_upload($path) === true) {
                 $path = substr($path, 0, -strlen('/upload/'));
             } else if ($path === '/') {

@@ -62,13 +62,13 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
             'refreshtoken' => 'refreshtoken',
             'scope' => 'scope',
             'user_id' => '2',
-            'resource' => 'resource',
+            'tokenresource' => 'resource',
         ];
 
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
                 $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
         $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-                $tokenrec->scope, $tokenrec->resource, $tokenrec->user_id, $clientdata, $httpclient);
+                $tokenrec->scope, $tokenrec->tokenresource, $tokenrec->user_id, $clientdata, $httpclient);
         return $token;
     }
 
@@ -228,7 +228,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
 
         $testoidctoken = (object)[
             'oidcuniqid' => 'user1',
-            'resource' => 'https://graph.microsoft.com',
+            'tokenresource' => 'https://graph.microsoft.com',
             'username' => $user1->username,
             'userid' => $user1->id,
             'scope' => 'User.Read',

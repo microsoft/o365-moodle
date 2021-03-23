@@ -73,12 +73,12 @@ class local_o365_usersync_testcase extends \advanced_testcase {
             'refreshtoken' => 'refreshtoken',
             'scope' => 'scope',
             'user_id' => '2',
-            'resource' => 'resource',
+            'tokenresource' => 'resource',
         ];
 
         $clientdata = $this->get_mock_clientdata();
         $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-                $tokenrec->scope, $tokenrec->resource, $tokenrec->user_id, $clientdata, $httpclient);
+                $tokenrec->scope, $tokenrec->tokenresource, $tokenrec->user_id, $clientdata, $httpclient);
         return $token;
     }
 
@@ -279,7 +279,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
                 'username' => 'testuser'.$i.'@example.onmicrosoft.com',
                 'userid' => $muser['id'],
                 'scope' => 'test',
-                'resource' => \local_o365\rest\azuread::get_resource(),
+                'tokenresource' => \local_o365\rest\azuread::get_tokenresource(),
                 'token' => '000',
                 'expiry' => '9999999999',
                 'refreshtoken' => 'fsdfsdf'.$i,
@@ -352,7 +352,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
                 'username' => 'testuser'.$i.'@example.onmicrosoft.com',
                 'userid' => $user->id,
                 'scope' => 'test',
-                'resource' => \local_o365\rest\azuread::get_resource(),
+                'tokenresource' => \local_o365\rest\azuread::get_tokenresource(),
                 'token' => '000',
                 'expiry' => '9999999999',
                 'refreshtoken' => 'fsdfsdf'.$i,

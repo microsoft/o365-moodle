@@ -33,8 +33,8 @@ class observers {
     public static function get_unified_api($caller = 'get_unified_api') {
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $resource = \local_o365\rest\unified::get_resource();
-        $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+        $tokenresource = \local_o365\rest\unified::get_tokenresource();
+        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
             return new \local_o365\rest\unified($token, $httpclient);
         } else {

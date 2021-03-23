@@ -78,8 +78,8 @@ class o365 extends base {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $resource = (\local_o365\rest\unified::is_configured() === true)
-            ? \local_o365\rest\unified::get_resource()
-            : \local_o365\rest\onenote::get_resource();
+            ? \local_o365\rest\unified::get_tokenresource()
+            : \local_o365\rest\onenote::get_tokenresource();
         $token = \local_o365\oauth2\token::instance($USER->id, $resource, $clientdata, $httpclient);
         return (!empty($token)) ? $token->get_token() : false;
     }

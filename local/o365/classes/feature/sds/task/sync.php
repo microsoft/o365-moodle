@@ -358,10 +358,10 @@ class sync extends \core\task\scheduled_task {
      */
     public static function get_apiclient() {
         $httpclient = new \local_o365\httpclient();
-        $resource = \local_o365\rest\sds::get_resource();
+        $tokenresource = \local_o365\rest\sds::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         if (!empty($clientdata)) {
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $resource, $clientdata, $httpclient);
+            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
             if (!empty($token)) {
                 $apiclient = new \local_o365\rest\sds($token, $httpclient);
                 return $apiclient;

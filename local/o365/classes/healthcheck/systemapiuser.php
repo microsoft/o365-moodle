@@ -40,7 +40,7 @@ class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
         // Check that the system API user has a graph resource.
         $tokens = get_config('local_o365', 'systemtokens');
         $tokens = unserialize($tokens);
-        $graphresource = \local_o365\rest\unified::get_resource();
+        $graphresource = \local_o365\rest\unified::get_tokenresource();
         if (!isset($tokens[$graphresource])) {
             return [
                 'result' => false,
@@ -64,10 +64,10 @@ class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
                 $oidcconfig->tokenendpoint);
 
-        $resource = (\local_o365\rest\unified::is_configured() === true)
-            ? \local_o365\rest\unified::get_resource()
-            : \local_o365\rest\azuread::get_resource();
-        $systemtoken = \local_o365\oauth2\systemapiusertoken::get_for_new_resource(null, $resource, $clientdata, $httpclient);
+        $tokenresource = (\local_o365\rest\unified::is_configured() === true)
+            ? \local_o365\rest\unified::get_tokenresource()
+            : \local_o365\rest\azuread::get_tokenresource();
+        $systemtoken = \local_o365\oauth2\systemapiusertoken::get_for_new_resource(null, $tokenresource, $clientdata, $httpclient);
         if (empty($systemtoken)) {
             return [
                 'result' => false,

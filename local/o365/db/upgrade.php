@@ -653,6 +653,7 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($result && $oldversion < 2020071506) {
+        // Part 1: create local_o365_teams_cache table.
         // Define table local_o365_teams_cache to be created.
         $table = new xmldb_table('local_o365_teams_cache');
 
@@ -669,6 +670,59 @@ function xmldb_local_o365_upgrade($oldversion) {
         // Conditionally launch create table for local_o365_teams_cache.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
+        }
+
+        // Part 2: rename resource field.
+        $table = new xmldb_table('local_o365_token');
+
+        // Define index usrresscp (not unique) to be dropped form local_o365_token.
+        $index = new xmldb_index('usrresscp', XMLDB_INDEX_NOTUNIQUE, ['user_id', 'resource']);
+
+        // Conditionally launch drop index usrresscp.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Rename field resource on table local_o365_token to tokenresource.
+        $field = new xmldb_field('resource', XMLDB_TYPE_CHAR, '127', null, XMLDB_NOTNULL, null, null, 'scope');
+
+        // Launch rename field resource.
+        $dbman->rename_field($table, $field, 'tokenresource');
+
+        // Define index usrresscp (not unique) to be added to local_o365_token.
+        $index = new xmldb_index('usrresscp', XMLDB_INDEX_NOTUNIQUE, ['user_id', 'tokenresource']);
+
+        // Conditionally launch add index usrresscp.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Update apptokens config.
+        $apptokensconfig = get_config('local_o365', 'apptokens');
+        if ($apptokensconfig) {
+            $apptokensconfig = unserialize($apptokensconfig);
+            foreach ($apptokensconfig as $resource => $tokenconfig) {
+                if (array_key_exists('resource', $tokenconfig)) {
+                    $apptokensconfig[$resource]['tokenresource'] = $tokenconfig['resource'];
+                    unset($apptokensconfig[$resource]['resource']);
+                }
+            }
+            $apptokensconfig = serialize($apptokensconfig);
+            set_config('apptokens', $apptokensconfig, 'local_o365');
+        }
+
+        // Update systemtokens config.
+        $systemtokensconfig = get_config('local_o365', 'systemtokens');
+        if ($systemtokensconfig) {
+            $systemtokensconfig = unserialize($systemtokensconfig);
+            foreach ($systemtokensconfig as $resource => $tokenconfig) {
+                if (array_key_exists('resource', $tokenconfig)) {
+                    $systemtokensconfig[$resource]['tokenresource'] = $tokenconfig['resource'];
+                    unset($systemtokensconfig[$resource]['resource']);
+                }
+            }
+            $systemtokensconfig = serialize($systemtokensconfig);
+            set_config('systemtokens', $systemtokensconfig, 'local_o365');
         }
 
         // O365 savepoint reached.
