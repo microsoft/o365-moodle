@@ -290,6 +290,7 @@ class unified extends \local_o365\rest\o365api {
             'securityEnabled' => false,
             'mailNickname' => $mailnickname,
             'visibility' => 'Private',
+            'resourceBehaviorOptions' => ['HideGroupInOutlook', 'WelcomeEmailDisabled'],
         ];
 
         if (!empty($extra) && is_array($extra)) {
