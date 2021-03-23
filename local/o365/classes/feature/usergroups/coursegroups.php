@@ -25,7 +25,7 @@ namespace local_o365\feature\usergroups;
 
 use context_course;
 
-define('API_CALL_RETRY_LIMIT', 3);
+define('API_CALL_RETRY_LIMIT', 5);
 
 class coursegroups {
     const NAME_OPTION_FULL_NAME = 1;
@@ -178,7 +178,7 @@ class coursegroups {
                     break;
                 } catch (\Exception $e) {
                     $this->mtrace('Could not sync users to group for course #'.$course->id.'. Reason: '.$e->getMessage());
-                    continue;
+                    $retrycounter++;
                 }
             }
         }
@@ -495,13 +495,10 @@ class coursegroups {
         $this->mtrace('Syncing to group "'.$groupobjectid.'"');
 
         // Get current group membership.
-        $members = $this->graphclient->get_group_members($groupobjectid);
+        $members = $this->get_group_members($groupobjectid);
+        $currentmembers = array_keys($members);
+
         $owners = $this->graphclient->get_group_owners($groupobjectid);
-        $currentmembers = [];
-        $currentowners = [];
-        foreach ($members['value'] as $member) {
-            $currentmembers[] = $member['id'];
-        }
         foreach ($owners['value'] as $owner) {
             $currentowners[] = $owner['id'];
         }
@@ -644,6 +641,40 @@ class coursegroups {
         $this->mtrace('Done');
 
         return [array_merge($toaddowners, $toaddmembers), array_merge($toremoveowners, $toremovemembers)];
+    }
+
+    /**
+     * Return all group members for the group with the object ID.
+     *
+     * @param $objectid
+     *
+     * @return array
+     */
+    public function get_group_members($objectid) {
+        $groupmembers = [];
+
+        $memberrecords = $this->graphclient->get_group_members($objectid);
+        foreach ($memberrecords['value'] as $memberrecord) {
+            $groupmembers[$memberrecord['id']] = $memberrecord;
+        }
+
+        while (!empty($memberrecords['@odata.netxtLink'])) {
+            $nextlink = parse_url($memberrecords['@odata.netxtLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $memberrecords = $this->graphclient->get_group_members($objectid, $query['$skiptoken']);
+                    foreach ($memberrecords['value'] as $memberrecord) {
+                        if (!array_key_exists($memberrecord['id'], $groupmembers)) {
+                            $groupmembers[$memberrecord['id']] = $memberrecord;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $groupmembers;
     }
 
     /**
