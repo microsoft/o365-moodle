@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/o365/db" VERSION="20210204" COMMENT="XMLDB file for Moodle local/o365 plugin"
+<XMLDB PATH="local/o365/db" VERSION="20210225" COMMENT="XMLDB file for Moodle local/o365 plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -72,7 +72,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
         <FIELD NAME="scope" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token scope"/>
-        <FIELD NAME="resource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
+        <FIELD NAME="tokenresource" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false" COMMENT="token resource"/>
         <FIELD NAME="token" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="token"/>
         <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="token expiry"/>
         <FIELD NAME="refreshtoken" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="refresh token"/>
@@ -81,7 +81,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id, resource"/>
+        <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id, tokenresource"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_coursespsite" COMMENT="Stores information about sharepoint sites created for Moodle courses.">

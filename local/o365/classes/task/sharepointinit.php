@@ -66,8 +66,8 @@ class sharepointinit extends \core\task\adhoc_task {
         try {
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             $httpclient = new \local_o365\httpclient();
-            $resource = \local_o365\rest\unified::get_resource();
-            $token = \local_o365\utils::get_app_or_system_token($resource, $clientdata, $httpclient);
+            $tokenresource = \local_o365\rest\unified::get_tokenresource();
+            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
             if (empty($token)) {
                 throw new \moodle_exception('erroracpnosptoken', 'local_o365');
             }
@@ -174,15 +174,15 @@ class sharepointinit extends \core\task\adhoc_task {
 
         // API Setup.
         try {
-            $spresource = \local_o365\rest\sharepoint::get_resource();
-            if (empty($spresource)) {
+            $sharepointtokenpresource = \local_o365\rest\sharepoint::get_tokenresource();
+            if (empty($sharepointtokenpresource)) {
                 throw new \moodle_exception('erroracplocalo365notconfig', 'local_o365');
             }
 
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
 
-            $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
+            $sptoken = \local_o365\utils::get_app_or_system_token($sharepointtokenpresource, $clientdata, $httpclient);
             if (empty($sptoken)) {
                 throw new \moodle_exception('erroracpnosptoken', 'local_o365');
             }

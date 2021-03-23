@@ -198,11 +198,11 @@ class sharepointaccesssync extends \core\task\adhoc_task {
 
         $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
 
-        $spresource = \local_o365\rest\sharepoint::get_resource();
-        if (!empty($spresource)) {
+        $sharepointtokenresource = \local_o365\rest\sharepoint::get_tokenresource();
+        if (!empty($sharepointtokenresource)) {
             $httpclient = new \local_o365\httpclient();
             $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $sptoken = \local_o365\utils::get_app_or_system_token($spresource, $clientdata, $httpclient);
+            $sptoken = \local_o365\utils::get_app_or_system_token($sharepointtokenresource, $clientdata, $httpclient);
             if (!empty($sptoken)) {
                 $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
             } else {

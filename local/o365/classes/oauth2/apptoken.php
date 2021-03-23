@@ -31,16 +31,18 @@ class apptoken extends \local_o365\oauth2\token {
     /**
      * Get a token instance for a new resource.
      *
-     * @param string $resource The new resource.
+     * @param string $tokenresource The new resource.
      * @param \local_o365\oauth2\clientdata $clientdata Client information.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     *
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function get_for_new_resource($userid, $resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $token = static::get_app_token($resource, $clientdata, $httpclient);
+    public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+        $token = static::get_app_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
-            static::store_new_token(null, $token['access_token'], $token['expires_on'], null, $token['scope'], $token['resource']);
-            return static::instance(null, $resource, $clientdata, $httpclient);
+            static::store_new_token(null, $token['access_token'], $token['expires_on'], null, $token['scope'],
+                $token['resource']);
+            return static::instance(null, $tokenresource, $clientdata, $httpclient);
         } else {
             return false;
         }
@@ -52,17 +54,18 @@ class apptoken extends \local_o365\oauth2\token {
      * This is used by both get_for_new_resource and refresh, since refreshing an app-token is the same as
      * getting a new token.
      *
-     * @param string $resource The desired token resource.
+     * @param string $tokenresource The desired token resource.
      * @param \local_o365\oauth2\clientdata $clientdata Client credentials object.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     *
      * @return array|bool If successful, an array of token parameters. False if unsuccessful.
      */
-    public static function get_app_token($resource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function get_app_token($tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
         $params = [
             'client_id' => $clientdata->get_clientid(),
             'client_secret' => $clientdata->get_clientsecret(),
             'grant_type' => 'client_credentials',
-            'resource' => $resource,
+            'resource' => $tokenresource,
         ];
         $params = http_build_query($params, '', '&');
         $tokenendpoint = $clientdata->get_apptokenendpoint();
@@ -90,7 +93,7 @@ class apptoken extends \local_o365\oauth2\token {
             }
             $debuginfo = [
                 'tokenresult' => $tokenresult,
-                'resource' => $resource
+                'resource' => $tokenresource
             ];
             \local_o365\utils::debug($errmsg, 'local_o365\oauth2\token::get_for_new_resource', $debuginfo);
             return false;
@@ -103,25 +106,25 @@ class apptoken extends \local_o365\oauth2\token {
      * @return bool Success/Failure.
      */
     public function refresh() {
-        $result = static::get_app_token($this->resource, $this->clientdata, $this->httpclient);
+        $result = static::get_app_token($this->tokenresource, $this->clientdata, $this->httpclient);
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
-            $origresource = $this->resource;
+            $originaltokenresource = $this->tokenresource;
             $this->token = $result['access_token'];
             $this->expiry = $result['expires_on'];
             $this->refreshtoken = $result['access_token'];
             $this->scope = $result['scope'];
-            $this->resource = $result['resource'];
-            $existingtoken = static::get_stored_token(null, $origresource);
+            $this->tokenresource = $result['resource'];
+            $existingtoken = static::get_stored_token(null, $originaltokenresource);
             if (!empty($existingtoken)) {
                 $newtoken = [
                     'scope' => $this->scope,
                     'token' => $this->token,
                     'expiry' => $this->expiry,
-                    'resource' => $this->resource
+                    'tokenresource' => $this->tokenresource
                 ];
                 $this->update_stored_token($existingtoken, $newtoken);
             } else {
-                static::store_new_token(null, $this->token, $this->expiry, $this->refreshtoken, $this->scope, $this->resource);
+                static::store_new_token(null, $this->token, $this->expiry, $this->refreshtoken, $this->scope, $this->tokenresource);
             }
             return true;
         } else {
@@ -133,18 +136,19 @@ class apptoken extends \local_o365\oauth2\token {
      * Get stored token for a user and resourse.
      *
      * @param int $userid The ID of the user to get the token for.
-     * @param string $resource The resource to get the token for.
+     * @param string $tokenresource The resource to get the token for.
+     *
      * @return array Array of token data.
      */
-    protected static function get_stored_token($userid, $resource) {
+    protected static function get_stored_token($userid, $tokenresource) {
         $tokens = get_config('local_o365', 'apptokens');
         $tokens = unserialize($tokens);
-        if (isset($tokens[$resource])) {
+        if (isset($tokens[$tokenresource])) {
             // App tokens do not have a user.
-            $tokens[$resource]['user_id'] = null;
+            $tokens[$tokenresource]['user_id'] = null;
             // App tokens do not have a refresh token.
-            $tokens[$resource]['refreshtoken'] = $tokens[$resource]['token'];
-            return $tokens[$resource];
+            $tokens[$tokenresource]['refreshtoken'] = $tokens[$tokenresource]['token'];
+            return $tokens[$tokenresource];
         } else {
             return false;
         }
@@ -160,14 +164,14 @@ class apptoken extends \local_o365\oauth2\token {
     protected function update_stored_token($existingtoken, $newtoken) {
         $tokens = get_config('local_o365', 'apptokens');
         $tokens = unserialize($tokens);
-        if (isset($tokens[$existingtoken['resource']])) {
-            unset($tokens[$existingtoken['resource']]);
+        if (isset($tokens[$existingtoken['tokenresource']])) {
+            unset($tokens[$existingtoken['tokenresource']]);
         }
         // App tokens do not use refresh tokens.
         if (isset($newtoken['refreshtoken'])) {
             unset($newtoken['refreshtoken']);
         }
-        $tokens[$newtoken['resource']] = $newtoken;
+        $tokens[$newtoken['tokenresource']] = $newtoken;
         $tokens = serialize($tokens);
         set_config('apptokens', $tokens, 'local_o365');
         return true;
@@ -182,8 +186,8 @@ class apptoken extends \local_o365\oauth2\token {
     protected function delete_stored_token($existingtoken) {
         $tokens = get_config('local_o365', 'apptokens');
         $tokens = unserialize($tokens);
-        if (isset($tokens[$existingtoken['resource']])) {
-            unset($tokens[$existingtoken['resource']]);
+        if (isset($tokens[$existingtoken['tokenresource']])) {
+            unset($tokens[$existingtoken['tokenresource']]);
         }
         $tokens = serialize($tokens);
         set_config('apptokens', $tokens, 'local_o365');
@@ -197,19 +201,20 @@ class apptoken extends \local_o365\oauth2\token {
      * @param int $expiry Token expiry timestamp.
      * @param string $refreshtoken Token refresh token (unused in this token type).
      * @param string $scope Token scope.
-     * @param string $resource Token resource.
+     * @param string $tokenresource Token resource.
+     *
      * @return array Array of new token information.
      */
-    public static function store_new_token($userid, $token, $expiry, $refreshtoken, $scope, $resource) {
+    public static function store_new_token($userid, $token, $expiry, $refreshtoken, $scope, $tokenresource) {
         $tokens = get_config('local_o365', 'apptokens');
         $tokens = unserialize($tokens);
         $newtoken = [
             'token' => $token,
             'expiry' => $expiry,
             'scope' => $scope,
-            'resource' => $resource,
+            'tokenresource' => $tokenresource,
         ];
-        $tokens[$resource] = $newtoken;
+        $tokens[$tokenresource] = $newtoken;
         $tokens = serialize($tokens);
         set_config('apptokens', $tokens, 'local_o365');
         return $newtoken;
