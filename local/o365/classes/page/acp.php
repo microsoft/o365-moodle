@@ -561,17 +561,17 @@ class acp extends base {
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
 
         $headers = [
-            'shortname' => get_string('shortnamecourse'),
             'fullname' => get_string('fullnamecourse'),
+            'shortname' => get_string('shortnamecourse'),
         ];
         if (empty($sort) || !isset($headers[$sort])) {
-            $sort = 'shortname';
+            $sort = 'fullname';
         }
         if (!in_array($sortdir, ['asc', 'desc'], true)) {
             $sortdir = 'asc';
         }
 
-        $table = new \html_table;
+        $table = new \html_table();
         foreach ($headers as $hkey => $desc) {
             $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
             $linkattrs = ['mode' => 'usergroupcustom', 'sort' => $hkey, 'sortdir' => $diffsortdir];
@@ -628,9 +628,11 @@ class acp extends base {
                 $teamcheckboxattrs['disabled'] = '';
             }
 
+            $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
+
             $rowdata = [
+                \html_writer::link($courseurl, $course->fullname),
                 $course->shortname,
-                $course->fullname,
                 \html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
                 \html_writer::checkbox($teamname, 1, $teamenabled, '', $teamcheckboxattrs),
             ];
