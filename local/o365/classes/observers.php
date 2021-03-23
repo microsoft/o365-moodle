@@ -119,6 +119,7 @@ class observers {
      */
     public static function handle_oidc_user_connected(\auth_oidc\event\user_connected $event) {
         global $DB;
+
         $caller = '\local_o365\observers::handle_oidc_user_connected';
         if (\local_o365\utils::is_configured() !== true) {
             return false;
@@ -167,8 +168,34 @@ class observers {
                         $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
                     }
                 } else {
-                    \local_o365\utils::debug('no oidcuniqid received', 'handle_oidc_user_connected', $eventdata);
+                    \local_o365\utils::debug('no oidcuniqid received', $caller, $eventdata);
                 }
+
+                # Enrol user to all courses he was enrolled prior to connecting.
+                # Do not attempt to enrol the user if user groups are not enabled.
+                if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
+                    try {
+                        $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
+                        $courses = enrol_get_users_courses($userid, true);
+
+                        foreach ($courses as $courseid => $course) {
+                            if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid) !== true) {
+                                continue;
+                            }
+
+                            $coursecontext = \context_course::instance($courseid);
+
+                            if (has_capability('local/o365:teamowner', $coursecontext)) {
+                                $apiclient->add_owner_to_course_group($courseid, $userid);
+                            } else if (has_capability('local/o365:teammember', $coursecontext)) {
+                                $apiclient->add_user_to_course_group($courseid, $userid);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        \local_o365\utils::debug('Exception: ' . $e->getMessage(), $caller, $e);
+                    }
+                }
+
                 return true;
             } catch (\Exception $e) {
                 \local_o365\utils::debug($e->getMessage(), 'handle_oidc_user_connected', $e);
