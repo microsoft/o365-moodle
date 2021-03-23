@@ -1388,4 +1388,63 @@ class coursegroups {
 
         $this->graphclient->get_catalog_app_id($teamsmoodleappexternalid);
     }
+
+    /**
+     * Update team name for the course with the given ID.
+     *
+     * @param $courseid
+     *
+     * @return bool
+     */
+    public function update_team_name($courseid) {
+        if (!$course = $this->DB->get_record('course', ['id' => $courseid])) {
+            return false;
+        }
+
+        if (!$o365record = $this->DB->get_record('local_o365_objects',
+            ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
+            return false;
+        }
+
+        $teamname = \local_o365\feature\usergroups\utils::get_team_display_name($course);
+        $this->graphclient->update_team_name($o365record->objectid, $teamname);
+
+        $o365record->o365name = $teamname;
+        $o365record->timemodified = time();
+        $this->DB->update_record('local_o365_objects', $o365record);
+
+        return true;
+    }
+
+    /**
+     * Update group name for the course with the given ID.
+     *
+     * @param $courseid
+     *
+     * @return bool
+     */
+    public function update_group_name($courseid) {
+        if (!$course = $this->DB->get_record('course', ['id' => $courseid])) {
+            return false;
+        }
+
+        if (!$o365record = $this->DB->get_record('local_o365_objects',
+            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+            return false;
+        }
+
+        $groupname = static::get_group_display_name($course);
+
+        $groupdata = [
+            'id' => $o365record->objectid,
+            'displayName' => $groupname,
+        ];
+        $this->graphclient->update_group($groupdata);
+
+        $o365record->o365name = $groupname;
+        $o365record->timemodified = time();
+        $this->DB->update_record('local_o365_objects', $o365record);
+
+        return true;
+    }
 }

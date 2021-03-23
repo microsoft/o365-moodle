@@ -2194,7 +2194,7 @@ class unified extends \local_o365\rest\o365api {
      */
     public function create_class_team($displayname, $description, $ownerid, $extra = null) {
         $owneridparam = ["https://graph.microsoft.com/beta/users/{$ownerid}"];
-        $description = substr($description,0,1024); // API restricts length to 1024 chars
+        $description = substr($description, 0, 1024); // API restricts length to 1024 chars.
         $teamdata = [
             'template@odata.bind' => "https://graph.microsoft.com/beta/teamsTemplates('educationClass')",
             'displayName' => $displayname,
@@ -2213,6 +2213,24 @@ class unified extends \local_o365\rest\o365api {
         }
 
         return $this->betaapicall('post', '/teams', json_encode($teamdata));
+    }
+
+    /**
+     * Update the name of a Team.
+     *
+     * @param $objectid
+     * @param $displayname
+     *
+     * @return string
+     */
+    public function update_team_name($objectid, $displayname) {
+        $endpoint = '/teams/' . $objectid;
+
+        $teamdata = [
+            'displayName' => $displayname,
+        ];
+
+        return $this->betaapicall('patch', $endpoint, json_encode($teamdata));
     }
 
     /**

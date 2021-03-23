@@ -240,6 +240,12 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365_section_team_name_sample', '',
             get_string('settings_team_name_sample', 'local_o365', $sampleteamname)));
 
+        // Sync Team name.
+        $settings->add(new admin_setting_configcheckbox('local_o365/team_name_sync',
+            get_string('settings_team_name_sync', 'local_o365'),
+            get_string('settings_team_name_sync_desc', 'local_o365'),
+            0));
+
         // Group name section.
         $settings->add(new admin_setting_heading('local_o365_section_group_name',
             new lang_string('settings_secthead_group_name', 'local_o365'),
@@ -285,6 +291,12 @@ if ($hassiteconfig) {
         $samplegroupnames = coursegroups::get_sample_group_names();
         $settings->add(new admin_setting_heading('local_o365_section_group_names_sample', '',
             get_string('settings_group_names_sample', 'local_o365', $samplegroupnames)));
+
+        // Sync group name.
+        $settings->add(new admin_setting_configcheckbox('local_o365/group_name_sync',
+            get_string('settings_group_name_sync', 'local_o365'),
+            get_string('settings_group_name_sync_desc', 'local_o365'),
+            0));
     }
 
     if ($tab === LOCAL_O365_TAB_ADVANCED || !empty($install)) {
