@@ -652,6 +652,8 @@ class utils {
      * @param bool $enabled Whether to enable or disable.
      */
     public static function set_course_group_feature_enabled($courseid, array $features, $enabled = true) {
+        global $DB;
+
         $usergroupconfig = get_config('local_o365', 'usergroupcustomfeatures');
         $usergroupconfig = @json_decode($usergroupconfig, true);
         if (empty($usergroupconfig) || !is_array($usergroupconfig)) {
@@ -668,6 +670,10 @@ class utils {
             foreach ($features as $feature) {
                 if (isset($usergroupconfig[$courseid][$feature])) {
                     unset($usergroupconfig[$courseid][$feature]);
+                }
+                if ($feature == 'team') {
+                    $DB->delete_records('local_o365_objects',
+                        ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid]);
                 }
             }
         }
