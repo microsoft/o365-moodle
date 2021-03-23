@@ -2160,9 +2160,8 @@ class unified extends \local_o365\rest\o365api {
      * @param $appid
      * @param $moodlecourseid
      *
-     * @return array|string|null
+     * @return string
      * @throws \coding_exception
-     * @throws \moodle_exception
      */
     public function add_moodle_tab_to_channel($groupobjectid, $channelid, $appid, $moodlecourseid) {
         global $CFG;
@@ -2184,9 +2183,8 @@ class unified extends \local_o365\rest\o365api {
      * @param $appid
      * @param $tabconfiguration
      *
-     * @return array|string|null
+     * @return string
      * @throws \coding_exception
-     * @throws \moodle_exception
      */
     public function add_tab_to_channel($groupobjectid, $channelid, $appid, $tabconfiguration) {
         $endpoint = '/teams/' . $groupobjectid . '/channels/' . $channelid . '/tabs';
@@ -2196,11 +2194,7 @@ class unified extends \local_o365\rest\o365api {
             'configuration' => $tabconfiguration,
         ];
 
-        $response = $this->betaapicall('post', $endpoint, json_encode($requestparams));
-        $expectedresponse = ['id' => null];
-        $response = $this->process_apicall_response($response, $expectedresponse);
-
-        return $response;
+        return $this->betaapicall('post', $endpoint, json_encode($requestparams));
     }
 
     /**
