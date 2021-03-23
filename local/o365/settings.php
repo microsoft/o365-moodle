@@ -541,6 +541,19 @@ if ($hassiteconfig) {
             get_string('settings_bot_app_password_desc', 'local_o365'),
             ''));
 
+        // Download JSON settings file.
+        $jsondownloadhtml = $OUTPUT->box_start('form-item row local_o365_settings_teams_banner_part_2');
+        $jsondownloadhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
+        $jsondownloadhtml .= get_string('settings_teams_download_json_desc', 'local_o365');
+        $jsondownloadhtml .= html_writer::end_tag('p');
+        $jsondownloadhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
+        $jsondownloadurl = new moodle_url('/local/o365/json_download.php', ['sesskey' => sesskey()]);
+        $jsondownloadhtml .= html_writer::link($jsondownloadurl, get_string('settings_teams_download_json', 'local_o365'),
+            ['class' => 'btn btn-primary']);
+        $jsondownloadhtml .= html_writer::end_tag('p');
+        $jsondownloadhtml .= $OUTPUT->box_end();
+        $settings->add(new admin_setting_heading('local_o365/teams_json_download', '', $jsondownloadhtml));
+
         // Deploy button.
         $deploybuttonhtml = html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
             ['id' => 'admin-teams-bot-deploy']);
