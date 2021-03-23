@@ -127,8 +127,6 @@ class groupcp extends base {
 
         echo $this->standard_header();
 
-        $cache = \cache::make('local_o365', 'groups');
-
         $start = $page * 25;
         $end = $start + 25;
         $count = 0;
@@ -148,7 +146,7 @@ class groupcp extends base {
 
         foreach ($groups as $group) {
             if ($count >= $start && $count < $end) {
-                $groupscache = \local_o365\feature\usergroups\utils::get_group_urls($cache, $group->courseid, $group->id);
+                $groupurls = \local_o365\feature\usergroups\utils::get_group_urls($group->courseid, $group->id);
                 $attr = [
                     'courseid' => $group->courseid,
                     'groupid'  => $group->id,
@@ -172,14 +170,14 @@ class groupcp extends base {
                 $link = \html_writer::link($url, $group->name);
                 $row .= \html_writer::tag('td', $link);
 
-                if ($groupscache == null) {
+                if ($groupurls == null) {
                     $row .= \html_writer::tag('td', $strpending, ['colspan' => $columncount]);
                 } else {
                     foreach (['team'] as $feature) {
                         $enabled = \local_o365\feature\usergroups\utils::course_is_group_feature_enabled($group->courseid,
                             $feature);
                         if ($enabled === true) {
-                            $url = new \moodle_url($groupscache['urls'][$feature]);
+                            $url = new \moodle_url($groupurls[$feature]);
                             $strresourcename = get_string('groups_' . $feature, 'local_o365');
                             $pixattrs = ['style' => 'width:2rem;height:2rem'];
                             $icon = $OUTPUT->pix_icon('groups' . $feature, $strresourcename, 'local_o365', $pixattrs);
@@ -399,8 +397,7 @@ class groupcp extends base {
             require_capability('local/o365:viewgroups', $this->context);
         }
 
-        $cache = \cache::make('local_o365', 'groups');
-        $groupscache = \local_o365\feature\usergroups\utils::get_group_urls($cache, $courseid, $groupid);
+        $groupurls = \local_o365\feature\usergroups\utils::get_group_urls($courseid, $groupid);
 
         echo $OUTPUT->header();
 
@@ -413,7 +410,7 @@ class groupcp extends base {
         $headerhtml = $grouppicture.\html_writer::tag('h4', $group->displayname);
         echo \html_writer::div($headerhtml, 'local_o365_groupcp_header');
 
-        if ($groupscache == null) {
+        if ($groupurls == null) {
             // Group is not created yet.
             $html = \html_writer::tag('h5', get_string('groups_pending', 'local_o365'));
             echo \html_writer::tag('div', $html);
@@ -422,11 +419,11 @@ class groupcp extends base {
                 \html_writer::tag('h5', 'Group Resources:'),
             ];
             foreach (['conversations', 'onedrive', 'calendar', 'notebook', 'team'] as $feature) {
-                if (!isset($groupscache['urls'][$feature])) {
+                if (!isset($groupurls[$feature])) {
                     continue;
                 }
 
-                $url = new \moodle_url($groupscache['urls'][$feature]);
+                $url = new \moodle_url($groupurls[$feature]);
                 $strresourcename = get_string('groups_'.$feature, 'local_o365');
                 $icon = $OUTPUT->pix_icon('groups'.$feature, $strresourcename, 'local_o365');
                 $links[] = \html_writer::link($url, $icon.$strresourcename, ['target' => '_blank']);
