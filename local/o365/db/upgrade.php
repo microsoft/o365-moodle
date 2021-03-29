@@ -611,23 +611,16 @@ function xmldb_local_o365_upgrade($oldversion) {
 
     if ($result && $oldversion < 2020020302) {
         if ($dbman->table_exists('auth_oidc_token')) {
-            $oldgraphtokens = $DB->get_records('auth_oidc_token', ['resource' => 'https://graph.windows.net']);
-            foreach ($oldgraphtokens as $graphtoken) {
-                $graphtoken->resource = 'https://graph.microsoft.com';
-                $DB->update_record('auth_oidc_token', $graphtoken);
+            $oidcersourceconfig = get_config('auth_oidc', 'oidcresource');
+            if (strpos($oidcersourceconfig, 'windows') !== false) {
+                set_config('oidcresource', 'https://graph.microsoft.com', 'auth_oidc');
             }
-            $oidcresource = $DB->get_record('config_plugins', ['plugin' => 'auth_oidc', 'name' => 'oidcresource']);
-            if (strpos($oidcresource->value, 'windows') !== FALSE) {
-                $oidcresource->value = 'https://graph.microsoft.com';
-                $DB->update_record('config_plugins', $oidcresource);
-            }
-            $aadsyncsetting = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'aadsync']);
-            if (strpos($aadsyncsetting->value, 'delete') === 0) {
-                $aadsyncsetting->value = substr($aadsyncsetting->value, 7);
-                $DB->update_record('config_plugins', $aadsyncsetting);
-            } else if (strpos($aadsyncsetting->value, 'nodelta') === 0) {
-                $aadsyncsetting->value = substr($aadsyncsetting->value, 8);
-                $DB->update_record('config_plugins', $aadsyncsetting);
+
+            $aadsyncconfig = get_config('local_o365', 'aadsync');
+            if (strpos($aadsyncconfig, 'delete') === 0) {
+                set_config('aadsync', substr($aadsyncconfig, 7));
+            } else if (strpos($aadsyncconfig, 'nodelta') === 0) {
+                set_config('aadsync', substr($aadsyncconfig, 8));
             }
         }
         upgrade_plugin_savepoint($result, '2020020302', 'local', 'o365');
