@@ -180,6 +180,16 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2018051700.01', 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2020020301) {
+        $oldgraphtokens = $DB->get_records('auth_oidc_token', ['resource' => 'https://graph.windows.net']);
+        foreach ($oldgraphtokens as $graphtoken) {
+            $graphtoken->resource = 'https://graph.microsoft.com';
+            $DB->update_record('auth_oidc_token', $graphtoken);
+        }
+
+        upgrade_plugin_savepoint($result, 2020020301, 'auth', 'oidc');
+    }
+
     if ($result && $oldversion < 2020071503) {
         $localo365singlesignoffsetting = get_config('local_o365', 'single_sign_off');
         if ($localo365singlesignoffsetting) {
