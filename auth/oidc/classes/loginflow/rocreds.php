@@ -23,22 +23,27 @@
 
 namespace auth_oidc\loginflow;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * Login flow for the oauth2 resource owner credentials grant.
  */
-class rocreds extends \auth_oidc\loginflow\base {
+class rocreds extends base {
     /**
      * Check for an existing user object.
-     * @param string $oidcuniqid The user object ID to look up.
-     * @param string $username The original username.
+     *
+     * @param string $o356username
+     *
      * @return string If there is an existing user object, return the username associated with it.
      *                If there is no existing user object, return the original username.
      */
     protected function check_objects($o356username) {
         global $DB;
+
         $user = null;
-        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
-        if (!empty($o365installed)) {
+        if (auth_oidc_is_local_365_installed()) {
             $sql = 'SELECT u.username
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
@@ -46,6 +51,7 @@ class rocreds extends \auth_oidc\loginflow\base {
             $params = [$o356username, 'user'];
             $user = $DB->get_record_sql($sql, $params);
         }
+
         return (!empty($user)) ? $user->username : $o356username;
     }
 
@@ -54,6 +60,8 @@ class rocreds extends \auth_oidc\loginflow\base {
      *
      * @param object &$frm Form object.
      * @param object &$user User object.
+     *
+     * @return bool
      */
     public function loginpage_hook(&$frm, &$user) {
         global $DB;
@@ -132,7 +140,7 @@ class rocreds extends \auth_oidc\loginflow\base {
      * @return bool Authentication success or failure.
      */
     public function user_login($username, $password = null) {
-        global $CFG, $DB;
+        global $DB;
 
         $client = $this->get_oidcclient();
         $authparams = ['code' => ''];

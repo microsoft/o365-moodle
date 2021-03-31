@@ -17,11 +17,16 @@
 /**
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc\loginflow;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 class base {
     /** @var object Plugin config. */
@@ -31,8 +36,6 @@ class base {
     protected $httpclient;
 
     public function __construct() {
-        global $DB;
-
         $default = [
             'opname' => get_string('pluginname', 'auth_oidc')
         ];
@@ -51,7 +54,7 @@ class base {
         ];
 
         // If local_o365 plugin is installed, use its settings for the core fields.
-        if ($DB->record_exists('config_plugins', ['plugin' => 'local_o365', 'name' => 'version'])) {
+        if (auth_oidc_is_local_365_installed()) {
             $fieldmaps = get_config('local_o365', 'fieldmap');
             if ($fieldmaps === false) {
                 $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
@@ -129,8 +132,7 @@ class base {
             $eventtype = 'create';
         }
 
-        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
-        if (!empty($o365installed)) {
+        if (auth_oidc_is_local_365_installed()) {
             if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
                 // If local_o365 is installed, and field mapping uses fields not covered by token,
                 // then call Graph API function to get user details.
@@ -226,8 +228,9 @@ class base {
      * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
      * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account to a
      *                                "linked" account.
-     * @param \moodle_url $redirect Where to redirect if successful.
-     * @param \moodle_url $selfurl The page this is accessed from. Used for some redirects.
+     * @param \moodle_url|null $redirect Where to redirect if successful.
+     * @param \moodle_url|null $selfurl The page this is accessed from. Used for some redirects.
+     * @param  $userid
      */
     public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
                                \moodle_url $selfurl = null, $userid = null) {
@@ -270,7 +273,8 @@ class base {
 
             // Check if we have recorded the user's previous login method.
             $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $userrec->id]);
-            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) ? $prevmethodrec->method : null;
+            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) ?
+                $prevmethodrec->method : null;
             // Manual is always available, we don't need it twice.
             if ($prevauthmethod === 'manual') {
                 $prevauthmethod = null;
@@ -299,10 +303,8 @@ class base {
             if ($mform->is_cancelled()) {
                 redirect($redirect);
             } else if ($fromform = $mform->get_data()) {
-
-                $origusername = $userrec->username;
-
-                if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod && $fromform->newmethod !== 'manual')) {
+                if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod &&
+                        $fromform->newmethod !== 'manual')) {
                     throw new \moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
                 }
 

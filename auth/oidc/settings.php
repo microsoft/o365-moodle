@@ -15,13 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin settings.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once(__DIR__.'/lib.php');
+defined('MOODLE_INTERNAL') || die();
+
+use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_label;
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 $configkey = new lang_string('cfg_opname_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_opname_desc', 'auth_oidc');
@@ -58,7 +68,7 @@ $settings->add(new admin_setting_configtext('auth_oidc/oidcscope', $configkey, $
 
 $configkey = new lang_string('cfg_redirecturi_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_redirecturi_desc', 'auth_oidc');
-$settings->add(new \auth_oidc\form\adminsetting\redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
+$settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
 
 $configkey = new lang_string('cfg_forceredirect_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_forceredirect_desc', 'auth_oidc');
@@ -78,7 +88,7 @@ $settings->add(new admin_setting_configtext('auth_oidc/domainhint', $configkey, 
 $configkey = new lang_string('cfg_loginflow_key', 'auth_oidc');
 $configdesc = '';
 $configdefault = 'authcode';
-$settings->add(new \auth_oidc\form\adminsetting\loginflow('auth_oidc/loginflow', $configkey, $configdesc, $configdefault));
+$settings->add(new auth_oidc_admin_setting_loginflow('auth_oidc/loginflow', $configkey, $configdesc, $configdefault));
 
 $configkey = new lang_string('cfg_userrestrictions_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_userrestrictions_desc', 'auth_oidc');
@@ -182,10 +192,16 @@ $icons = [
         'component' => 'moodle',
     ],
 ];
-$settings->add(new \auth_oidc\form\adminsetting\iconselect('auth_oidc/icon', $configkey, $configdesc, $configdefault, $icons));
+$settings->add(new auth_oidc_admin_setting_iconselect('auth_oidc/icon', $configkey, $configdesc, $configdefault, $icons));
 
 $configkey = new lang_string('cfg_customicon_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_customicon_desc', 'auth_oidc');
 $setting = new admin_setting_configstoredfile('auth_oidc/customicon', $configkey, $configdesc, 'customicon');
 $setting->set_updatedcallback('auth_oidc_initialize_customicon');
 $settings->add($setting);
+
+// Tools to clean up tokens.
+$cleanupoidctokensurl = new moodle_url('/auth/oidc/cleanupoidctokens.php');
+$cleanupoidctokenslink = html_writer::link($cleanupoidctokensurl, get_string('cfg_cleanupoidctokens_key', 'auth_oidc'));
+$settings->add(new auth_oidc_admin_setting_label('auth_oidc/cleaniodctokens', $cleanupoidctokenslink,
+    get_string('cfg_cleanupoidctokens_desc', 'auth_oidc')));

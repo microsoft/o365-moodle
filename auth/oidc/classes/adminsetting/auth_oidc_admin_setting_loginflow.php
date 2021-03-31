@@ -21,12 +21,14 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\form\adminsetting;
+namespace auth_oidc\adminsetting;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Displays the redirect URI for easier config.
  */
-class loginflow extends \admin_setting {
+class auth_oidc_admin_setting_loginflow extends \admin_setting {
     /** @var array Array of valid login flow types. */
     protected $flowtypes = ['authcode', 'rocreds'];
 

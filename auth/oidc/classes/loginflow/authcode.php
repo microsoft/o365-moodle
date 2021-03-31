@@ -17,16 +17,23 @@
 /**
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace auth_oidc\loginflow;
 
+use auth_oidc\utils;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * Login flow for the oauth2 authorization code grant.
  */
-class authcode extends \auth_oidc\loginflow\base {
+class authcode extends base {
     /**
      * Returns a list of potential IdPs that this authentication plugin supports. Used to provide links on the login page.
      *
@@ -78,7 +85,7 @@ class authcode extends \auth_oidc\loginflow\base {
         $val = trim($val);
         $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
         if ($valclean !== $val) {
-            \auth_oidc\utils::debug('Authorization error.', 'authcode::cleanoidcparam', $name);
+            utils::debug('Authorization error.', 'authcode::cleanoidcparam', $name);
             throw new \moodle_exception('errorauthgeneral', 'auth_oidc');
         }
         return $valclean;
@@ -168,20 +175,20 @@ class authcode extends \auth_oidc\loginflow\base {
      * @param array $authparams Received parameters.
      */
     protected function handleauthresponse(array $authparams) {
-        global $DB, $CFG, $STATEADDITIONALDATA, $USER;
+        global $DB, $STATEADDITIONALDATA, $USER;
 
         if (!empty($authparams['error_description'])) {
-            \auth_oidc\utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
             throw new \moodle_exception('errorauthgeneral', 'auth_oidc');
         }
 
         if (!isset($authparams['code'])) {
-            \auth_oidc\utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
             throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
         }
 
         if (!isset($authparams['state'])) {
-            \auth_oidc\utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
             throw new \moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
@@ -215,7 +222,7 @@ class authcode extends \auth_oidc\loginflow\base {
         $passed = $this->checkrestrictions($idtoken);
         if ($passed !== true && empty($additionaldata['ignorerestrictions'])) {
             $errstr = 'User prevented from logging in due to restrictions.';
-            \auth_oidc\utils::debug($errstr, 'handleauthresponse', $idtoken);
+            utils::debug($errstr, 'handleauthresponse', $idtoken);
             throw new \moodle_exception('errorrestricted', 'auth_oidc');
         }
 
@@ -370,13 +377,14 @@ class authcode extends \auth_oidc\loginflow\base {
      */
     protected function check_for_matched($aadupn) {
         global $DB;
-        $dbman = $DB->get_manager();
-        if ($dbman->table_exists('local_o365_connections')) {
+
+        if (auth_oidc_is_local_365_installed()) {
             $match = $DB->get_record('local_o365_connections', ['aadupn' => $aadupn]);
             if (!empty($match) && \local_o365\utils::is_o365_connected($match->muserid) !== true) {
                 return $DB->get_record('user', ['id' => $match->muserid]);
             }
         }
+
         return false;
     }
 
@@ -389,9 +397,9 @@ class authcode extends \auth_oidc\loginflow\base {
      */
     protected function check_objects($oidcuniqid, $username) {
         global $DB;
+
         $user = null;
-        $o365installed = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']);
-        if (!empty($o365installed)) {
+        if (auth_oidc_is_local_365_installed()) {
             $sql = 'SELECT u.username
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
@@ -399,6 +407,7 @@ class authcode extends \auth_oidc\loginflow\base {
             $params = [$oidcuniqid, 'user'];
             $user = $DB->get_record_sql($sql, $params);
         }
+
         return (!empty($user)) ? $user->username : $username;
     }
 
@@ -465,7 +474,7 @@ class authcode extends \auth_oidc\loginflow\base {
             if (!empty($matchedwith)) {
                 if ($matchedwith->auth != 'oidc') {
                     $matchedwith->aadupn = $username;
-                    throw new \moodle_exception('errorusermatched', 'local_o365', null, $matchedwith);
+                    throw new \moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
                 }
             }
             $username = trim(\core_text::strtolower($username));
