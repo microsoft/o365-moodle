@@ -15,11 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * English language strings.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect plugin provides single-sign-on functionality using configurable identity providers.';
@@ -86,6 +91,10 @@ $string['cfg_signoffintegration_desc'] = 'If enabled, when a Moodle user using O
 Note the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle Office 365 integration.';
 $string['cfg_logoutendpoint_key'] = 'Logout Endpoint';
 $string['cfg_logoutendpoint_desc'] = 'The URI of the logout endpoint from your identity provider to use.';
+$string['cfg_tools'] = 'Tools';
+$string['cfg_cleanupoidctokens_key'] = 'Cleanup OpenID Connect Tokens';
+$string['cfg_cleanupoidctokens_desc'] = 'If your users are experiencing problems logging in using their Microsoft 365 account, trying cleaning up OpenID Connect tokens. This removes stray and incomplete tokens that can cause errors. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
+
 $string['event_debug'] = 'Debug message';
 
 $string['task_cleanup_oidc_state_and_token'] = 'Clean up OIDC state and invalid token';
@@ -171,3 +180,21 @@ $string['ucp_disconnect_title'] = '{$a} Disconnection';
 $string['ucp_disconnect_details'] = 'This will disconnect your Moodle account from {$a}. You\'ll need to create a username and password to log in to Moodle.';
 $string['ucp_title'] = '{$a} Management';
 $string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already connected with another Moodle account.';
+
+$string['cleanup_oidc_tokens'] = 'Cleanup OpenID Connect tokens';
+$string['unmatched'] = 'Unmatched';
+$string['delete_token'] = 'Delete token';
+$string['mismatched'] = 'Mismatched';
+$string['na'] = 'n/a';
+$string['mismatched_details'] = 'Token record contains username "{$a->tokenusername}"; matched Moodle user has username "{$a->moodleusername}".';
+$string['delete_token_and_reference'] = 'Delete token and reference';
+$string['table_token_id'] = 'Token record ID';
+$string['table_oidc_username'] = 'OIDC username';
+$string['table_token_unique_id'] = 'OIDC unique ID';
+$string['table_matching_status'] = 'Matching status';
+$string['table_matching_details'] = 'Details';
+$string['table_action'] = 'Action';
+$string['token_deleted'] = 'Token was deleted successfully';
+$string['no_token_to_cleanup'] = 'There are no OIDC token to cleanup.';
+
+$string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';

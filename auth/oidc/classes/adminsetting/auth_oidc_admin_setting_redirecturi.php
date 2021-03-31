@@ -21,12 +21,16 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\form\adminsetting;
+namespace auth_oidc\adminsetting;
+
+use auth_oidc\utils;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Displays the redirect URI for easier config.
  */
-class redirecturi extends \admin_setting {
+class auth_oidc_admin_setting_redirecturi extends \admin_setting {
 
     /**
      * Constructor.
@@ -75,8 +79,7 @@ class redirecturi extends \admin_setting {
      * @return string Returns an HTML string.
      */
     public function output_html($data, $query = '') {
-        global $CFG;
-        $redirecturl = \auth_oidc\utils::get_redirecturl();
+        $redirecturl = utils::get_redirecturl();
         $html = \html_writer::tag('h5', $redirecturl);
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', null, $query);
     }
