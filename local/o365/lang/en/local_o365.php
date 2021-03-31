@@ -15,8 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * English language strings.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -149,7 +152,9 @@ $string['settings_aadsync'] = 'Sync users with Azure AD';
 $string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
 $string['settings_aadsync_update'] = 'Update all accounts in Moodle for users in Azure AD';
-$string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD';
+$string['settings_aadsync_suspend'] = 'Suspend previously synced accounts in Moodle when they are deleted from Azure AD';
+$string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD (requires "suspend" option above)';
+$string['settings_aadsync_reenable'] = 'Re-enable suspended accounts for users in Azure AD';
 $string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
 $string['settings_aadsync_matchswitchauth'] = 'Switch matched users to Microsoft 365 (OpenID Connect) authentication';
 $string['settings_aadsync_appassign'] = 'Assign users to application during sync';
@@ -873,8 +878,12 @@ $string['help_user_create'] = 'Create Accounts Help';
 $string['help_user_create_help'] = 'This will create users in Moodle from each user in the linked Azure Active Directory. Only users which do not currently have Moodle accounts will have accounts created. New accounts will be set up to use their Microsoft 365 credentials to log in to Moodle (using the OpenID Connect authentication plugin), and will be able to use all Microsoft 365/Moodle integration features.';
 $string['help_user_update'] = 'Update All Accounts Help';
 $string['help_user_update_help'] = 'This will update all users in Moodle from each user in the linked Azure Active Directory.';
+$string['help_user_suspend'] = 'Suspend Accounts Help';
+$string['help_user_suspend_help'] = 'This will suspend users from Moodle if they are marked as deleted in Azure Active Directory.';
 $string['help_user_delete'] = 'Delete Accounts Help';
-$string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Azure Active Directory. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful!';
+$string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Azure Active Directory. This will only work if the suspend user option is enabled. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful!';
+$string['help_user_reenable'] = 'Re-enable Accounts Help';
+$string['help_user_reenable_help'] = 'This will re-enable suspended Moodle accounts if they are returned from Azure Active Directory.';
 $string['help_user_match'] = 'Match Accounts Help';
 $string['help_user_match_help'] = 'This will look at the each user in the linked Azure Active Directory and try to match them with a user in Moodle. This match is based on usernames in Azure AD and Moodle. Matches are case-insentitive and ignore the Microsoft 365 tenant. For example, "BoB.SmiTh" in Moodle would match "bob.smith@example.onmicrosoft.com". Users who are matched will have their Moodle and Microsoft 365 accounts connected and will be able to use all Microsoft 365/Moodle integration features. The user\'s authentication method will not change unless the setting below is enabled.';
 $string['help_user_matchswitchauth'] = 'Switch Matched Accounts Help';

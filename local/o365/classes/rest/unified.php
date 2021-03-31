@@ -15,8 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Manage all calls to the Microsoft Graph API.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -909,7 +912,7 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get a list of recently deleted users.
+     * Get a list of recently deleted users in the last 30 days.
      *
      * @return array Array of returned information.
      */
