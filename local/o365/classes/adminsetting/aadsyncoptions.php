@@ -13,18 +13,25 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
+ * Azure AD user sync options.
+ *
  * @package local_o365
  * @author Nagesh Tembhurnikar <nagesh@introp.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
 namespace local_o365\adminsetting;
-global $CFG;
-require_once($CFG->dirroot.'/lib/adminlib.php');
-class configmulticheckboxchoiceshelp extends \admin_setting_configmulticheckbox {
+
+require_once($CFG->dirroot . '/lib/adminlib.php');
+
+class aadsyncoptions extends \admin_setting_configmulticheckbox {
     /** @var array Array of choices value=>label */
     public $choices;
+
     /**
      * Constructor: uses parent::__construct
      *
@@ -32,13 +39,27 @@ class configmulticheckboxchoiceshelp extends \admin_setting_configmulticheckbox 
      * or 'myplugin/mysetting' for ones in config_plugins.
      * @param string $visiblename localised
      * @param string $description long localised info
-     * @param array $defaultsetting array of selected
-     * @param array $choices array of $value=>$label for each checkbox
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $choices) {
-        $this->choices = $choices;
-        parent::__construct($name, $visiblename, $description, $defaultsetting, $choices);
+    public function __construct($name, $visiblename, $description) {
+        $choices = [
+            'create' => new \lang_string('settings_aadsync_create', 'local_o365'),
+            'update' => new \lang_string('settings_aadsync_update', 'local_o365'),
+            'suspend' => new \lang_string('settings_aadsync_suspend', 'local_o365'),
+            'delete' => new \lang_string('settings_aadsync_delete', 'local_o365'),
+            'reenable' => new \lang_string('settings_aadsync_reenable', 'local_o365'),
+            'match' => new \lang_string('settings_aadsync_match', 'local_o365'),
+            'matchswitchauth' => new \lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
+            'appassign' => new \lang_string('settings_aadsync_appassign', 'local_o365'),
+            'photosync' => new \lang_string('settings_aadsync_photosync', 'local_o365'),
+            'photosynconlogin' => new \lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
+            'tzsync' => new \lang_string('settings_addsync_tzsync', 'local_o365'),
+            'tzsynconlogin' => new \lang_string('settings_addsync_tzsynconlogin', 'local_o365'),
+            'nodelta' => new \lang_string('settings_aadsync_nodelta', 'local_o365'),
+            'emailsync' => new \lang_string('settings_aadsync_emailsync', 'local_o365'),
+        ];
+        parent::__construct($name, $visiblename, $description, [], $choices);
     }
+
     /**
      * Returns XHTML field(s) as required by choices
      *
@@ -46,13 +67,14 @@ class configmulticheckboxchoiceshelp extends \admin_setting_configmulticheckbox 
      * acceptable value this may cause a warning/error
      * if (!is_array($data)) would fix the problem
      *
-     * @todo Add vartype handling to ensure $data is an array
-     *
      * @param array $data An array of checked values
      * @param string $query
+     *
      * @return string XHTML field
+     * @todo Add vartype handling to ensure $data is an array
+     *
      */
-    public function output_html($data, $query='') {
+    public function output_html($data, $query = '') {
         global $OUTPUT;
         if (!$this->load_choices() or empty($this->choices)) {
             return '';
@@ -75,10 +97,10 @@ class configmulticheckboxchoiceshelp extends \admin_setting_configmulticheckbox 
             if (!empty($default[$key])) {
                 $defaults[] = $description;
             }
-            $helphtml = $OUTPUT->help_icon('help_user_'.$key, 'local_o365');
-            $options[] = '<input type="checkbox" id="'.$this->get_id().'_'.$key.'" name="'.$this->get_full_name()
-                .'['.$key.']" value="1" '.$checked.' />'.'<label for="'.$this->get_id().'_'.$key.'"> '
-                .highlightfast($query, $description).'</label>'.$helphtml;
+            $helphtml = $OUTPUT->help_icon('help_user_' . $key, 'local_o365');
+            $options[] = '<input type="checkbox" id="' . $this->get_id() . '_' . $key . '" name="' . $this->get_full_name()
+                . '[' . $key . ']" value="1" ' . $checked . ' />' . ' <label for="' . $this->get_id() . '_' . $key . '">'
+                . highlightfast($query, $description) . '</label>' . $helphtml;
         }
         if (is_null($default)) {
             $defaultinfo = null;
@@ -89,15 +111,32 @@ class configmulticheckboxchoiceshelp extends \admin_setting_configmulticheckbox 
         }
         // Something must be submitted even if nothing selected.
         $return = '<div class="form-multicheckbox">';
-        $return .= '<input type="hidden" name="'.$this->get_full_name().'[xxxxx]" value="1" />';
+        $return .= '<input type="hidden" name="' . $this->get_full_name() . '[xxxxx]" value="1" />';
         if ($options) {
             $return .= '<ul>';
             foreach ($options as $option) {
-                $return .= '<li>'.$option.'</li>';
+                $return .= '<li>' . $option . '</li>';
             }
             $return .= '</ul>';
         }
         $return .= '</div>';
+
         return format_admin_setting($this, $this->visiblename, $return, $this->description, false, '', $defaultinfo, $query);
+    }
+
+    /**
+     * Data cleanup before saving.
+     *
+     * @param array $data
+     *
+     * @return mixed|string
+     */
+    public function write_setting($data) {
+        // Option 'delete' can only be set if option 'suspend' is check.
+        if (!isset($data['suspend']) && isset($data['delete'])) {
+            unset($data['delete']);
+        }
+
+        return parent::write_setting($data);
     }
 }

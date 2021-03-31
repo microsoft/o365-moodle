@@ -15,18 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Azure AD user sync scheduled task.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\task;
 
+use core\task\scheduled_task;
+use local_o365\feature\usersync\main;
+use local_o365\utils;
+
 /**
  * Scheduled task to sync users with Azure AD.
  */
-class usersync extends \core\task\scheduled_task {
+class usersync extends scheduled_task {
     /**
      * Get a descriptive name for this task (shown to admins).
      *
@@ -40,10 +47,12 @@ class usersync extends \core\task\scheduled_task {
      * Get a stored token.
      *
      * @param string $name The token name.
+     *
      * @return string|null The token, or null if empty/not found.
      */
     protected function get_token($name) {
-        $token = get_config('local_o365', 'task_usersync_last'.$name);
+        $token = get_config('local_o365', 'task_usersync_last' . $name);
+
         return (!empty($token)) ? $token : null;
     }
 
@@ -57,34 +66,36 @@ class usersync extends \core\task\scheduled_task {
         if (empty($value)) {
             $value = '';
         }
-        set_config('task_usersync_last'.$name, $value, 'local_o365');
+        set_config('task_usersync_last' . $name, $value, 'local_o365');
     }
 
     protected function mtrace($msg) {
-        mtrace('...... '.$msg);
+        mtrace('...... ' . $msg);
     }
 
     /**
      * Do the job.
      */
     public function execute() {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             $this->mtrace('Microsoft 365 not configured');
+
             return false;
         }
 
-        if (\local_o365\feature\usersync\main::is_enabled() !== true) {
+        if (main::is_enabled() !== true) {
             $this->mtrace('Azure AD cron sync disabled. Nothing to do.');
+
             return true;
         }
         $this->mtrace('Starting sync');
 
-        $usersync = new \local_o365\feature\usersync\main();
+        $usersync = new main();
 
         // Do not time out when syncing users.
         @set_time_limit();
 
-        if ($usersync->sync_option_enabled('nodelta') === true) {
+        if (main::sync_option_enabled('nodelta') === true) {
             $skiptoken = $this->get_token('skiptokenfull');
             if (!empty($skiptoken)) {
                 $this->mtrace('Using skiptoken (full)');
@@ -103,8 +114,8 @@ class usersync extends \core\task\scheduled_task {
                     $continue = (!empty($skiptoken));
                 }
             } catch (\Exception $e) {
-                $this->mtrace('Error in full usersync: '.$e->getMessage());
-                \local_o365\utils::debug($e->getMessage(), 'usersync task', $e);
+                $this->mtrace('Error in full usersync: ' . $e->getMessage());
+                utils::debug($e->getMessage(), 'usersync task', $e);
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
             }
@@ -143,8 +154,8 @@ class usersync extends \core\task\scheduled_task {
                     $continue = (empty($deltatoken) && !empty($skiptoken));
                 }
             } catch (\Exception $e) {
-                $this->mtrace('Error in delta usersync: '.$e->getMessage());
-                \local_o365\utils::debug($e->getMessage(), 'usersync task', $e);
+                $this->mtrace('Error in delta usersync: ' . $e->getMessage());
+                utils::debug($e->getMessage(), 'usersync task', $e);
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
                 $deltatoken = null;
@@ -170,30 +181,74 @@ class usersync extends \core\task\scheduled_task {
         }
 
         if (!empty($users)) {
-            $this->mtrace(count($users).' users received. Syncing...');
+            $this->mtrace(count($users) . ' users received. Syncing...');
             $this->sync_users($usersync, $users);
         } else {
             $this->mtrace('No users received to sync.');
         }
 
-        if ($usersync->sync_option_enabled('delete')) {
-            $this->mtrace('Checking deleted users list...');
-            $usersync->delete_users();
+        if (main::sync_option_enabled('suspend') || main::sync_option_enabled('reenable')) {
+            $lastruntime = get_config('local_o365', 'task_usersync_lastdelete');
+            $rundelete = true;
+            if ($lastruntime === false) {
+                $lastruntime = strtotime('today midnight');
+                set_config('task_usersync_lastdelete', $lastruntime, 'local_o365');
+            } else {
+                if ($lastruntime + 24 * 60 * 60 > time()) {
+                    $rundelete = false;
+                    $this->mtrace('Suspend/delete users feature disabled because it was run less than 1 day ago.');
+                } else {
+                    set_config('task_usersync_lastdelete', time(), 'local_o365');
+                }
+            }
+            if ($rundelete) {
+                $this->mtrace('Start suspend/delete users feature...');
+                if (main::sync_option_enabled('nodelta') !== true) {
+                    // Make sure $users contains all aad users - if delta sync was used, do a full sync.
+                    $skiptoken = '';
+                    $users = [];
+
+                    try {
+                        $continue = true;
+                        while ($continue) {
+                            list($returnedusers, $skiptoken) = $usersync->get_users('default', $skiptoken);
+                            $users = array_merge($users, $returnedusers);
+                            $continue = (!empty($skiptoken));
+                        }
+                    } catch (\Exception $e) {
+                        $this->mtrace('Error in full usersync: ' . $e->getMessage());
+                        utils::debug($e->getMessage(), 'usersync task', $e);
+                        $this->mtrace('Resetting skip and delta tokens.');
+                        $skiptoken = null;
+                    }
+                }
+
+                if (main::sync_option_enabled('suspend')) {
+                    $this->mtrace('Suspending deleted users...');
+                    $usersync->suspend_users($users, main::sync_option_enabled('delete'));
+                }
+                if (main::sync_option_enabled('reenable')) {
+                    $this->mtrace('Re-enabling suspended users...');
+                    $usersync->reenable_suspsend_users($users);
+                }
+            }
         }
 
         $this->mtrace('Sync process finished.');
+
         return true;
     }
 
     /**
      * Process users in chunks of 20000 at a time.
+     *
      * @param $usersync
      * @param $users
      */
     protected function sync_users($usersync, $users) {
         $chunk = array_chunk($users, 20000);
         foreach ($chunk as $u) {
-            $this->mtrace(count($u).' users in chunk. Syncing...');
+            $this->mtrace(count($u) . ' users in chunk. Syncing...');
             $usersync->sync_users($u);
         }
     }

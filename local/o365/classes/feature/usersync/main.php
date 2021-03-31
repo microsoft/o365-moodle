@@ -15,8 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * User sync feature.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -25,8 +28,15 @@ namespace local_o365\feature\usersync;
 
 use \local_o365\oauth2\clientdata;
 use \local_o365\httpclient;
+use local_o365\oauth2\systemapiusertoken;
+use local_o365\oauth2\token;
+use local_o365\rest\azuread;
+use local_o365\rest\outlook;
+use local_o365\rest\unified;
+use local_o365\utils;
 
 require_once($CFG->dirroot . '/user/lib.php');
+require_once($CFG->dirroot . '/user/profile/lib.php');
 
 class main {
     protected $clientdata = null;
@@ -35,8 +45,10 @@ class main {
     /**
      * Constructor
      *
-     * @param clientdata $clientdata The client data to use for API construction.
-     * @param httpclient $httpclient The HTTP client to use for API construction.
+     * @param clientdata|null $clientdata $clientdata The client data to use for API construction.
+     * @param httpclient|null $httpclient $httpclient The HTTP client to use for API construction.
+     *
+     * @throws \moodle_exception
      */
     public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
         $this->clientdata = (!empty($clientdata))
@@ -71,23 +83,23 @@ class main {
         if ($forcelegacy === true) {
             $uselegacy = true;
         } else {
-            $uselegacy = (\local_o365\rest\unified::is_configured() === true) ? false : true;
+            $uselegacy = (unified::is_configured() === true) ? false : true;
         }
 
         if ($uselegacy === true) {
-            $tokenresource = \local_o365\rest\azuread::get_tokenresource();
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
+            $tokenresource = azuread::get_tokenresource();
+            $token = systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
             if (empty($token)) {
                 throw new \Exception('No token available for usersync');
             }
-            return new \local_o365\rest\azuread($token, $this->httpclient);
+            return new azuread($token, $this->httpclient);
         } else {
-            $tokenresource = \local_o365\rest\unified::get_tokenresource();
-            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+            $tokenresource = unified::get_tokenresource();
+            $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
             if (empty($token)) {
                 throw new \Exception('No token available for usersync');
             }
-            return new \local_o365\rest\unified($token, $this->httpclient);
+            return new unified($token, $this->httpclient);
         }
     }
 
@@ -99,27 +111,27 @@ class main {
      * @return \local_o365\rest\o365api|bool A constructed calendar API client (unified or legacy), or false if error.
      */
     public function construct_outlook_api($muserid, $systemfallback = true) {
-        $unifiedconfigured = \local_o365\rest\unified::is_configured();
+        $unifiedconfigured = unified::is_configured();
         if ($unifiedconfigured === true) {
-            $tokenresource = \local_o365\rest\unified::get_tokenresource();
+            $tokenresource = unified::get_tokenresource();
         } else {
-            $tokenresource = \local_o365\rest\outlook::get_tokenresource();
+            $tokenresource = outlook::get_tokenresource();
         }
 
-        $token = \local_o365\oauth2\token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
+        $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token) && $systemfallback === true) {
             $token = ($unifiedconfigured === true)
-                ? \local_o365\utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient)
-                : \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
+                ? utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient)
+                : systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
             throw new \Exception('No token available for user #'.$muserid);
         }
 
         if ($unifiedconfigured === true) {
-            $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
+            $apiclient = new unified($token, $this->httpclient);
         } else {
-            $apiclient = new \local_o365\rest\outlook($token, $this->httpclient);
+            $apiclient = new outlook($token, $this->httpclient);
         }
         return $apiclient;
     }
@@ -142,8 +154,6 @@ class main {
      * @return array|null Array of user information, or null if failure.
      */
     public function assign_user($muserid, $userobjectid) {
-        global $DB;
-
         // Not supported in unit tests at the moment.
         if (PHPUNIT_TEST) {
             return null;
@@ -157,7 +167,7 @@ class main {
             if (empty($appinfo)) {
                 return null;
             }
-            $appobjectid = (\local_o365\rest\unified::is_configured())
+            $appobjectid = (unified::is_configured())
                 ? $appinfo['value'][0]['id']
                 : $appinfo['value'][0]['objectId'];
         }
@@ -173,7 +183,7 @@ class main {
             if (!empty($result['odata.error']['message']['value'])) {
                 $error = $result['odata.error']['message']['value'];
             }
-            $user = $DB->get_record('user', array('id' => $muserid));
+            $user = \core_user::get_user($muserid);
             $this->mtrace('Error assigning users "'.$user->username.'" Reason: '.$code.' '.$error);
         } else {
             $this->mtrace('User assigned to application.');
@@ -184,12 +194,14 @@ class main {
     /**
      * Assign photo to Moodle user account.
      *
-     * @param string|array $params Requested user parameters.
-     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
+     * @param int $muserid
+     * @param object $user
+     *
      * @return boolean True on photo updated.
      */
     public function assign_photo($muserid, $user) {
-        global $DB, $CFG, $PAGE;
+        global $DB, $CFG;
+
         require_once("$CFG->libdir/gdlib.php");
         $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
         $photoid = '';
@@ -203,7 +215,7 @@ class main {
             $user = $o365user->upn;
         }
         $size = $apiclient->get_photo_metadata($user);
-        $muser = $DB->get_record('user', array('id' => $muserid), 'id, picture', MUST_EXIST);
+        $muser = \core_user::get_user($muserid, 'id, picture', MUST_EXIST);
         $context = \context_user::instance($muserid, MUST_EXIST);
         // If there is no meta data, there is no photo.
         if (empty($size)) {
@@ -252,6 +264,7 @@ class main {
         } else {
             $DB->update_record('local_o365_appassign', $record);
         }
+
         return $result;
     }
 
@@ -262,12 +275,12 @@ class main {
      * @param $user
      */
     public function sync_timezone($muserid, $user) {
-        $tokenresource = \local_o365\rest\unified::get_tokenresource();
-        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+        $tokenresource = unified::get_tokenresource();
+        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
             throw new \Exception('No token available for usersync');
         }
-        $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
+        $apiclient = new unified($token, $this->httpclient);
         if (empty($user)) {
             $o365user = \local_o365\obj\o365user::instance_from_muserid($muserid);
             $user = $o365user->upn;
@@ -306,11 +319,13 @@ class main {
     /**
      * Get AAD data for a single user.
      *
+     * @param $objectid
      * @param string|array $params Requested user parameters.
+     *
      * @return array|null Array of user information, or null if failure.
      */
     public function get_user($objectid, $params = 'default') {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $result = $apiclient->get_user($objectid);
         if (!empty($result) && is_array($result)) {
             return [$result];
@@ -323,6 +338,7 @@ class main {
      *
      * @param string|array $params Requested user parameters.
      * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
+     *
      * @return array|null Array of user information, or null if failure.
      */
     public function get_users($params = 'default', $skiptoken = '') {
@@ -351,12 +367,12 @@ class main {
     }
 
     public function get_users_delta($params = 'default', $skiptoken = null, $deltatoken = null) {
-        $tokenresource = \local_o365\rest\unified::get_tokenresource();
-        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+        $tokenresource = unified::get_tokenresource();
+        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
             throw new \Exception('No token available for usersync');
         }
-        $apiclient = new \local_o365\rest\unified($token, $this->httpclient);
+        $apiclient = new unified($token, $this->httpclient);
         return $apiclient->get_users_delta($params, $skiptoken, $deltatoken);
     }
 
@@ -368,7 +384,7 @@ class main {
      * @return mixed|string
      */
     public function get_user_manager($userobjectid) {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $result = $apiclient->get_user_manager($userobjectid);
         if ($result && isset($result['displayName'])) {
             return $result['displayName'];
@@ -385,7 +401,7 @@ class main {
      * @return string
      */
     public function get_user_groups($userobjectid) {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $results = $apiclient->get_user_groups($userobjectid);
         $groups = [];
         foreach ($results as $result) {
@@ -402,7 +418,7 @@ class main {
      * @return string
      */
     public function get_user_teams($userobjectid) {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $results = $apiclient->get_user_teams($userobjectid);
         $teams = [];
         foreach ($results as $result) {
@@ -419,7 +435,7 @@ class main {
      * @return string
      */
     public function get_user_roles($userobjectid) {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $objectsids = $apiclient->get_user_objects($userobjectid);
         $roles = [];
         if ($objectsids) {
@@ -442,7 +458,7 @@ class main {
      * @return mixed
      */
     public function get_preferred_name($userobjectid) {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $result = $apiclient->get_user($userobjectid);
         if (isset($result['preferredName'])) {
             return $result['preferredName'];
@@ -455,6 +471,7 @@ class main {
      * @param array $aaddata User data from Azure AD.
      * @param \stdClass $user Moodle user data.
      * @param string $eventtype 'login', or 'create'
+     *
      * @return \stdClass Modified Moodle user data.
      */
     public static function apply_configured_fieldmap(array $aaddata, \stdClass $user, $eventtype) {
@@ -467,7 +484,7 @@ class main {
                 $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
             }
         }
-        if (\local_o365\rest\unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
+        if (unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
             $objectidfieldname = 'id';
             $userobjectid = $aaddata['id'];
         } else {
@@ -585,26 +602,17 @@ class main {
         $useregex = (!empty($restriction['useregex'])) ? true : false;
 
         if ($restriction['remotefield'] === 'o365group') {
-            if (\local_o365\rest\unified::is_configured() !== true) {
-                \local_o365\utils::debug('graph api is not configured.', 'check_usercreationrestriction');
+            if (unified::is_configured() !== true) {
+                utils::debug('graph api is not configured.', 'check_usercreationrestriction');
                 return false;
             }
 
-            try {
-                $httpclient = new \local_o365\httpclient();
-                $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-                $tokenresource = \local_o365\rest\unified::get_tokenresource();
-                $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
-                $apiclient = new \local_o365\rest\unified($token, $httpclient);
-            } catch (\Exception $e) {
-                \local_o365\utils::debug('Could not construct graph api', 'check_usercreationrestriction', $e);
-                return false;
-            }
+            $apiclient = $this->construct_user_api();
 
             try {
                 $group = $apiclient->get_group_by_name($restriction['value']);
                 if (empty($group) || !isset($group['id'])) {
-                    \local_o365\utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
+                    utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
                     return false;
                 }
                 $usersgroups = $apiclient->get_users_groups($group['id'],$aaddata['id']);
@@ -615,7 +623,7 @@ class main {
                 }
                 return false;
             } catch (\Exception $e) {
-                \local_o365\utils::debug('Could not find group (2)', 'check_usercreationrestriction', $e);
+                utils::debug('Could not find group (2)', 'check_usercreationrestriction', $e);
                 return false;
             }
         } else {
@@ -647,9 +655,6 @@ class main {
      */
     public function create_user_from_aaddata($aaddata) {
         global $CFG, $DB;
-
-        require_once($CFG->dirroot.'/user/profile/lib.php');
-        require_once($CFG->dirroot.'/user/lib.php');
 
         $creationallowed = $this->check_usercreationrestriction($aaddata);
         if ($creationallowed !== true) {
@@ -710,7 +715,7 @@ class main {
         update_internal_user_password($user, $password);
 
         // Add o365 object.
-        if (\local_o365\rest\unified::is_configured()) {
+        if (unified::is_configured()) {
             $userobjectid = $aaddata['id'];
         } else {
             $userobjectid = $aaddata['objectId'];
@@ -738,14 +743,11 @@ class main {
      * Updates a Moodle user from Azure AD user data.
      *
      * @param array $aaddata Array of Azure AD user data.
+     * @param $fullexistinguser
+     *
      * @return \stdClass An object representing the created Moodle user.
      */
     public function update_user_from_aaddata($aaddata, $fullexistinguser) {
-        global $CFG, $DB;
-
-        require_once($CFG->dirroot.'/user/profile/lib.php');
-        require_once($CFG->dirroot.'/user/lib.php');
-
         // Locate country code.
         if (isset($aaddata['country'])) {
             $countries = get_string_manager()->get_list_of_countries(true, 'en');
@@ -836,6 +838,11 @@ class main {
         $usernames = [];
         $upns = [];
         foreach ($aadusers as $i => $user) {
+            if (!isset($user['userPrincipalName'])) {
+                // User doesn't have userPrincipalName, should be deleted users.
+                unset($aadusers[$i]);
+                continue;
+            }
             $upnlower = \core_text::strtolower($user['userPrincipalName']);
             $aadusers[$i]['upnlower'] = $upnlower;
 
@@ -847,6 +854,10 @@ class main {
                 $aadusers[$i]['upnsplit0'] = $upnsplit[0];
                 $usernames[] = $upnsplit[0];
             }
+        }
+
+        if (!$aadusers) {
+            return true;
         }
 
         if (isset($aadsync['emailsync'])) {
@@ -912,7 +923,7 @@ class main {
 
             $this->mtrace('Syncing user '.$user['upnlower']);
 
-            if (\local_o365\rest\unified::is_configured()) {
+            if (unified::is_configured()) {
                 $userobjectid = $user['id'];
             } else {
                 $userobjectid = $user['objectId'];
@@ -975,11 +986,12 @@ class main {
 
     protected function sync_new_user($syncoptions, $aaduserdata) {
         global $DB;
+
         $this->mtrace('User doesn\'t exist in Moodle');
 
         $newmuser = null;
 
-        $userobjectid = (\local_o365\rest\unified::is_configured())
+        $userobjectid = (unified::is_configured())
             ? $aaduserdata['id']
             : $aaduserdata['objectId'];
 
@@ -1026,7 +1038,8 @@ class main {
                         $this->assign_photo($newmuser->id, $aaduserdata['upnlower']);
                     }
                 } catch (\Exception $e) {
-                    $this->mtrace('Could not assign photo to user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                    $this->mtrace('Could not assign photo to user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
+                        $e->getMessage());
                 }
             }
         }
@@ -1055,7 +1068,7 @@ class main {
         }
         $photoexpiresec = $photoexpire * 3600;
 
-        $userobjectid = (\local_o365\rest\unified::is_configured())
+        $userobjectid = (unified::is_configured())
             ? $aaduserdata['id']
             : $aaduserdata['objectId'];
 
@@ -1080,7 +1093,8 @@ class main {
                         $this->assign_photo($existinguser->muserid, $aaduserdata['upnlower']);
                     }
                 } catch (\Exception $e) {
-                    $this->mtrace('Could not assign profile photo to user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
+                    $this->mtrace('Could not assign profile photo to user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
+                        $e->getMessage());
                 }
             }
         }
@@ -1109,7 +1123,7 @@ class main {
     }
 
     protected function sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
-        global $CFG, $DB;
+        global $DB;
 
         if (!isset($syncoptions['match'])) {
             $this->mtrace('Not matching user because that sync option is disabled.');
@@ -1118,9 +1132,8 @@ class main {
 
         if (isset($syncoptions['matchswitchauth']) && $exactmatch) {
             // Switch the user to OpenID authentication method, but only if this setting is enabled and full username matched.
-            require_once($CFG->dirroot.'/user/profile/lib.php');
-            require_once($CFG->dirroot.'/user/lib.php');
-            // Do not switch Moodle user to OpenID if another Moodle user is already using same Microsoft 365 account for logging in.
+            // Do not switch Moodle user to OpenID if another Moodle user is already using same Microsoft 365 account for logging
+            // in.
             $sql = 'SELECT u.username
                       FROM {user} u
                  LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
@@ -1136,7 +1149,7 @@ class main {
             } else {
                 if (!empty($existinguser->existingconnectionid)) {
                     // Delete existing connection before linking (in case matching was performed without auth switching previously).
-                    $DB->delete_records_select ('local_o365_connections', "id = {$existinguser->existingconnectionid}");
+                    $DB->delete_records_select('local_o365_connections', "id = {$existinguser->existingconnectionid}");
                 }
                 $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                 $existinguser->id = $fullexistinguser->id;
@@ -1164,41 +1177,34 @@ class main {
     }
 
     /**
-     * Delete users that have been deleted from Microsoft 365.
+     * Suspend users that have been deleted from Microsoft 365, and optionally delete them.
      * This function will get the list of recently deleted users in the last 30 days first, and suspend their accounts.
      * It will then try to find all remaining users matched with Microsoft 365, and check if a valid user can be found in Azure.
-     * If a valid user cannot be found, it will suspend the user in the first run, and delete the user in the second run.
+     * If a valid user is not found, it will suspend the user in the first run, and delete it in the next run if the option is set.
      *
      * So in a normal use case, where the option is enabled and not changed, and a Microsoft 365 account is deleted:
      *  - Their matching Moodle account will be suspended on the first task run after Microsoft 365 account deletion;
-     *  - The Moodle account will be deleted on the first run 30 days after their Microsoft 365 account deletion.
+     *  - The account will be deleted on the first run 30 days after their Microsoft 365 account deletion, if $delete is true.
      *
      * In case the option to delete Moodle users is changed from disabled to enabled:
      *  - If the deletion of the Microsoft 365 account happened before 30 days:
      *    - The matching Moodle account will be suspended on the first task run after the configuration change is made.
-     *    - The Moodle account will be deleted on the second task run after the configuration change is made.
+     *    - The account will be deleted on the second task run after the configuration change is made, if $delete is true.
      *  - If the deletion of the Microsoft 365 account happened within 30 days:
      *    - The matching Moodle account will be suspended on the first task run after the configuration change is made.
-     *    - The Moodle account will be deleted on the first run 30 days after their Microsoft 365 account deletion.
+     *    - The account will be deleted on the first run 30 days after their Microsoft 365 account deletion, if $delete is true.
      *
      * Note this will not catch oidc users without matching Microsoft 365 account.
      *
+     * @param $aadusers
+     * @param bool $delete
+     *
      * @return bool
      */
-    public function delete_users() {
+    public function suspend_users(array $aadusers, bool $delete = false) {
         global $CFG, $DB;
 
-        try {
-            $httpclient = new \local_o365\httpclient();
-            $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-            $tokenresource = \local_o365\rest\unified::get_tokenresource();
-            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
-            $apiclient = new \local_o365\rest\unified($token, $httpclient);
-        } catch (\Exception $e) {
-            \local_o365\utils::debug('Could not construct graph api', 'delete_users', $e);
-
-            return false;
-        }
+        $apiclient = $this->construct_user_api();
 
         try {
             $deletedusersids = [];
@@ -1215,63 +1221,105 @@ class main {
                                    AND u.suspended = ?
                                    AND u.auth = ?
                                    AND obj.objectid = ? ';
-                        $params = ['user', trim(\core_text::strtolower($CFG->mnet_localhost_id)), '0', '0', 'oidc',
-                            $deleteduser['id']];
+                        $params = ['user', $CFG->mnet_localhost_id, '0', '0', 'oidc', $deleteduser['id']];
                         $synceduser = $DB->get_record_sql($sql, $params);
                         if (!empty($synceduser)) {
                             $synceduser->suspended = 1;
-                            $DB->update_record('user', $synceduser);
-                            $this->mtrace($synceduser->username . ' was deleted in Azure.');
+                            user_update_user($synceduser, false);
+                            $this->mtrace($synceduser->username . ' was deleted in Azure, the matching account is suspended.');
                         }
                         $deletedusersids[] = $deleteduser['id'];
                     }
                 }
             }
 
-            // Check if all Moodle users with oidc authentication and matching records are still existing users in Azure.
-            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM, 'param', false);
             $existingsql = 'SELECT u.*, obj.objectid
                               FROM {user} u
                               JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
                              WHERE u.mnethostid = ?
                                AND u.deleted = ?
-                               AND u.auth = ?
-                               AND obj.objectid ' . $objectidsql;
-            $existingsqlparams = array_merge(['user', trim(\core_text::strtolower($CFG->mnet_localhost_id)), '0', 'oidc'],
-                $objectidparams);
+                               AND u.auth = ? ';
+            $existingsqlparams = ['user', $CFG->mnet_localhost_id, '0', 'oidc'];
+            if ($deletedusersids) {
+                // Check if all Moodle users with oidc authentication and matching records are still existing users in Azure.
+                list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM, 'param', false);
+                $existingsql .= ' AND obj.objectid ' . $objectidsql;
+                $existingsqlparams = array_merge($existingsqlparams, $objectidparams);
+            }
+
             $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
+            $validaaduserids = [];
+            foreach ($aadusers as $aaduser) {
+                $validaaduserids[] = $aaduser['id'];
+            }
+
             foreach ($existingusers as $existinguser) {
-                try {
-                    $user = $apiclient->get_user($existinguser->objectid);
-                } catch (\Exception $e) {
-                    // Only respond to resource does not exist exception, and ignore other exceptions.
-                    $usernotexisterrormessage = "Resource '{$existinguser->objectid}' " .
-                        "does not exist or one of its queried reference-property objects are not present.";
-                    if ($e->getMessage() == $usernotexisterrormessage) {
-                        // Do safe delete for missing users - first suspend, on second run delete
-                        if ($existinguser->suspended) {
+                if (!in_array($existinguser->objectid, $validaaduserids)) {
+                    if ($existinguser->suspended) {
+                        if ($delete) {
                             $this->mtrace('Could not find suspended user ' . $existinguser->username .
                                 ' in Azure AD. Deleting user...');
-                            $userid = $existinguser->id;
-                            $objectid = $existinguser->objectid;
-                            if (delete_user($existinguser)) {
-                                $DB->delete_records('local_o365_objects', ['objectid' => $objectid]);
-                                $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
-                            }
-                        } else if (!$existinguser->suspended) {
-                            $this->mtrace('Could not find user ' . $existinguser->username . ' in Azure AD. Suspending user...');
-                            $existinguser->suspended = 1;
-                            $DB->update_record('user', $existinguser);
+                            unset($existinguser->objectid);
+                            delete_user($existinguser);
                         }
+                    } else if (!$existinguser->suspended) {
+                        $this->mtrace('Could not find user ' . $existinguser->username . ' in Azure AD. Suspending user...');
+                        $existinguser->suspended = 1;
+                        unset($existinguser->objectid);
+                        user_update_user($existinguser, false);
                     }
                 }
             }
 
             return true;
         } catch (\Exception $e) {
-            \local_o365\utils::debug('Could not delete users', 'delete_users', $e);
+            utils::debug('Could not delete users', 'suspend_users', $e);
 
             return false;
         }
+    }
+
+    /**
+     * Re-enable suspended users.
+     * This function will ensure that for all the users in the array received, if they have a Moodle account that's suspended but
+     * not deleted, the account will unsuspended.
+     *
+     * @param array $aadusers
+     *
+     * @return bool
+     */
+    public function reenable_suspsend_users(array $aadusers) {
+        global $DB;
+
+        $validaaduserids = [];
+        foreach ($aadusers as $aaduser) {
+            $validaaduserids[] = $aaduser['id'];
+        }
+
+        if ($validaaduserids) {
+            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
+            $query = 'SELECT u.*
+                        FROM {user} u
+                        JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id
+                       WHERE u.auth = :oidc
+                         AND u.deleted = :deleted
+                         AND u.suspended = :suspended
+                         AND obj.objectid ' . $objectidsql;
+            $params = [
+                'user' => 'user',
+                'oidc' => 'oidc',
+                'deleted' => 0,
+                'suspended' => 1,
+            ];
+            $params = array_merge($params, $objectidparams);
+            $suspendedusers = $DB->get_records_sql($query, $params);
+            foreach ($suspendedusers as $suspendeduser) {
+                $this->mtrace('Re-enabling user ' . $suspendeduser->username . '...');
+                $suspendeduser->suspended = 0;
+                user_update_user($suspendeduser, false);
+            }
+        }
+
+        return true;
     }
 }

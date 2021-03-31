@@ -15,8 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin upgrade script.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -727,6 +730,15 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2020110901, 'local', 'o365');
+    }
+
+    if ($result && $oldversion < 2020110902) {
+        // Update aadsync settings to replace 'delete' with 'suspend'.
+        $aadsyncsetting = get_config('local_o365', 'aadsync');
+        set_config('aadsync', str_replace('delete', 'suspend', $aadsyncsetting), 'local_o365');
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020110902, 'local', 'o365');
     }
 
     return $result;
