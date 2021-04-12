@@ -617,10 +617,10 @@ class observers {
             $teamsyncenabled = get_config('local_o365', 'team_name_sync');
             $groupsyncenabled = get_config('local_o365', 'group_name_sync');
 
-            $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
-            $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, true);
+            if (($teamsyncenabled || $groupsyncenabled) && \local_o365\feature\usergroups\utils::is_enabled() === true) {
+                $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
+                $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, true);
 
-            if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
                 if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
                     if ($teamsyncenabled) {
                         $coursegroups->update_team_name($courseid);
