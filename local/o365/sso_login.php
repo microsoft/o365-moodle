@@ -30,9 +30,8 @@ $url = new moodle_url('/local/o365/sso_login.php');
 
 $PAGE->set_context(context_system::instance());
 
-$headers = apache_request_headers();
+$authtoken = local_o365_get_auth_token();
 
-$authtoken = substr($headers['Authorization'], 7);
 list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
 
 $payload = json_decode(local_o365_base64UrlDecode($payloadEncoded));
