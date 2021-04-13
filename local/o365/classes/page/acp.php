@@ -725,10 +725,6 @@ class acp extends base {
             get_string('acp_usergroupcustom_new_course_desc', 'local_o365'), '0');
         echo $enablefornewcourse->output_html(get_config('local_o365', 'sync_new_course'));
 
-        // Option to enable all sync features on all pages.
-        echo \html_writer::tag('button', get_string('acp_usrgroupcustom_enable_all', 'local_o365'),
-            ['onclick' => 'local_o365_usergroup_all_set_feature(1)']);
-
         // Bulk Operations
         $strbulkenable = get_string('acp_usergroupcustom_bulk_enable', 'local_o365');
         $strbulkdisable = get_string('acp_usergroupcustom_bulk_disable', 'local_o365');
