@@ -57,7 +57,7 @@ define('MICROSOFT365_COURSE_SYNC_TEAMS', 2);
  * @param boolean $forcedownload True if download should be fored.
  * @param array $options Array of options.
  */
-function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
     global $DB;
     // Check the contextlevel is as expected - if your plugin is a block, this becomes CONTEXT_BLOCK, etc.
     if ($context->contextlevel != CONTEXT_COURSE) {
@@ -69,7 +69,7 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
         return false;
     }
 
-    // Make sure the user is logged in and has access to the module (plugins that are not course modules should leave out the 'cm' part).
+    // Make sure the user is logged in and has access to the module.
     require_login($course, true, $cm);
 
     // Item id is the Microsoft 365 group id in local_o365_coursegroupdata.
@@ -80,7 +80,7 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
     if (!$args) {
         $filepath = '/'; // $args is empty => the path is '/'
     } else {
-        $filepath = '/'.implode('/', $args).'/'; // $args contains elements of the filepath
+        $filepath = '/' . implode('/', $args) . '/'; // $args contains elements of the filepath
     }
 
     // Retrieve the file from the Files API.
@@ -102,6 +102,7 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
  *                     'link' to check for connect specific capability
  *                     'unlink' to check for disconnect capability.
  * @param boolean $require Use require_capability rather than has_capability.
+ *
  * @return boolean True if has capability.
  */
 function local_o365_connectioncapability($userid, $mode = 'link', $require = false) {
@@ -109,6 +110,7 @@ function local_o365_connectioncapability($userid, $mode = 'link', $require = fal
     $cap = ($mode == 'link') ? 'local/o365:manageconnectionlink' : 'local/o365:manageconnectionunlink';
     $contextsys = \context_system::instance();
     $contextuser = \context_user::instance($userid);
+
     return has_capability($cap, $contextsys) || $check($cap, $contextuser);
 }
 
@@ -142,6 +144,7 @@ function local_o365_create_deploy_json() {
     $botsharedsecret = get_config('local_o365', 'bot_app_password');
     $botsharedsecretval = (empty($botsharedsecret) ? null : $botsharedsecret);
     $data->parameters->sharedMoodleSecret = ['value' => $botsharedsecretval];
+
     return json_encode($data);
 }
 
@@ -154,8 +157,8 @@ function local_o365_rmdir($path) {
     $it = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
     $files = new RecursiveIteratorIterator($it,
         RecursiveIteratorIterator::CHILD_FIRST);
-    foreach($files as $file) {
-        if ($file->isDir()){
+    foreach ($files as $file) {
+        if ($file->isDir()) {
             rmdir($file->getRealPath());
         } else {
             unlink($file->getRealPath());
@@ -204,6 +207,7 @@ function local_o365_create_manifest_file() {
         if (!$botappid || $botappid == '00000000-0000-0000-0000-000000000000') {
             // bot id not configured, cannot create manifest file
             $error = get_string('error_missing_app_id', 'local_o365');
+
             return [$error, $zipfilename];
         }
 
@@ -211,6 +215,7 @@ function local_o365_create_manifest_file() {
         $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (!$botapppassword || !$botwebhookendpoint) {
             $error = get_string('error_missing_bot_settings', 'local_o365');
+
             return [$error, $zipfilename];
         }
     }
@@ -257,7 +262,9 @@ function local_o365_create_manifest_file() {
         ),
         'description' => array(
             'short' => 'Access your Moodle courses and ask questions to your Moodle Assistant in Teams.',
-            'full' => 'The Moodle app for Microsoft Teams allows you to easily access and collaborate around your Moodle courses from within your teams through tabs. You can also get regular notifications from Moodle and ask questions about your courses, assignments, grades and students using the Moodle Assistant bot.',
+            'full' => 'The Moodle app for Microsoft Teams allows you to easily access and collaborate around your Moodle ' .
+                'courses from within your teams through tabs. You can also get regular notifications from Moodle and ask ' .
+                'questions about your courses, assignments, grades and students using the Moodle Assistant bot.',
         ),
         'accentColor' => '#FF7A00',
         'configurableTabs' => array(
@@ -340,11 +347,13 @@ function local_o365_create_manifest_file() {
  * Decodes JWT token elements
  *
  * @param string $data - encoded string
+ *
  * @return string - decoded string
  */
 function local_o365_base64UrlDecode($data) {
     $urlUnsafeData = strtr($data, '-_', '+/');
     $paddedData = str_pad($urlUnsafeData, strlen($data) % 4, '=', STR_PAD_RIGHT);
+
     return base64_decode($paddedData);
 }
 
@@ -353,7 +362,7 @@ function local_o365_base64UrlDecode($data) {
  */
 function local_o365_check_sharedsecret() {
     $sharedsecret = get_config('local_o365', 'bot_sharedsecret');
-    if(empty($sharedsecret)){
+    if (empty($sharedsecret)) {
         $secret = local_o365_generate_sharedsecret();
         set_config('bot_sharedsecret', $secret, 'local_o365');
     }
@@ -363,15 +372,17 @@ function local_o365_check_sharedsecret() {
  * Generates shared secret of random symbols
  *
  * @param int $length
+ *
  * @return string
  */
 function local_o365_generate_sharedsecret($length = 36) {
-    $chars =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
     $sharedsecret = '';
     $max = strlen($chars) - 1;
-    for ($i=0; $i < $length; $i++){
+    for ($i = 0; $i < $length; $i++) {
         $sharedsecret .= $chars[random_int(0, $max)];
     }
+
     return $sharedsecret;
 }
 
@@ -382,4 +393,30 @@ function local_o365_generate_sharedsecret($length = 36) {
  */
 function local_o365_show_teams_moodle_app_id_tab() {
     return (get_config('local_o365', 'manifest_downloaded'));
+}
+
+/**
+ * Attempt to get authorization token from request header.
+ *
+ * @return false|string|null
+ */
+function local_o365_get_auth_token() {
+    global $_SERVER;
+
+    $authtoken = null;
+
+    if (function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        if (isset($headers['Authorization'])) {
+            $authtoken = substr($headers['Authorization'], 7);
+        }
+    }
+
+    if (!$authtoken) {
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authtoken = substr($_SERVER['HTTP_AUTHORIZATION'], 7);
+        }
+    }
+
+    return $authtoken;
 }
