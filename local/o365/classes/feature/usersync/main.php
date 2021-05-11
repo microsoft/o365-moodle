@@ -189,7 +189,7 @@ class main {
      * @return boolean True on photo updated.
      */
     public function assign_photo($muserid, $user) {
-        global $DB, $CFG, $PAGE;
+        global $DB, $CFG;
         require_once("$CFG->libdir/gdlib.php");
         $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
         $photoid = '';
@@ -221,8 +221,9 @@ class main {
             } else {
                 $image = $apiclient->get_photo($user);
             }
+
             // Check if json error message was returned.
-            if (!preg_match('/^{/', $image)) {
+            if ($image && !preg_match('/^{/', $image)) {
                 // Update profile picture.
                 $tempfile = tempnam($CFG->tempdir.'/', 'profileimage').'.jpg';
                 if (!$fp = fopen($tempfile, 'w+b')) {
@@ -607,7 +608,7 @@ class main {
                     \local_o365\utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
                     return false;
                 }
-                $usersgroups = $apiclient->get_users_groups($group['id'],$aaddata['id']);
+                $usersgroups = $apiclient->get_user_groups($aaddata['id']);
                 foreach ($usersgroups['value'] as $usergroup) {
                     if ($group['id'] === $usergroup) {
                         return true;
@@ -1018,7 +1019,7 @@ class main {
             }
         }
 
-        // User photo assignment.
+        // User photo sync.
         if (!empty($syncoptions['photosync'])) {
             if (!PHPUNIT_TEST) {
                 try {

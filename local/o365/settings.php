@@ -634,8 +634,13 @@ if ($hassiteconfig) {
                 if (!empty($unifiedtoken)) {
                     $graphclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
 
+                    $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
+                    if (!$teamsmoodleappexternalid) {
+                        $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
+                    }
+
                     // Check Moodle app ID using default externalId provided in Moodle application.
-                    $moodleappid = $graphclient->get_catalog_app_id(TEAMS_MOODLE_APP_EXTERNAL_ID);
+                    $moodleappid = $graphclient->get_catalog_app_id($teamsmoodleappexternalid);
 
                     if ($moodleappid) {
                         $moodleappiddescription .= get_string('settings_moodle_app_id_desc_auto_id', 'local_o365', $moodleappid);
@@ -646,11 +651,10 @@ if ($hassiteconfig) {
 
         $settings->add(new admin_setting_configtext('local_o365/moodle_app_id',
             get_string('settings_moodle_app_id', 'local_o365'),
-            $moodleappiddescription,
-            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
+            $moodleappiddescription, '', PARAM_TEXT, 36));
 
         // Set Moodle App ID instructions.
-        if (\local_o365\utils::is_configured() === true && \local_o365\utils::is_configured_apponlyaccess() === true) {
+        if (\local_o365\utils::is_configured() === true) {
             $setmoodleappidinstructionhtml = html_writer::start_tag('p');
             $setmoodleappidinstructionhtml .= get_string('settings_set_moodle_app_id_instruction', 'local_o365');
             $setmoodleappidinstructionhtml .= html_writer::end_tag('p');

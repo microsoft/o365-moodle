@@ -416,21 +416,6 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get group photo meta data or photo.
-     *
-     * @param string $objectid The object ID of the group.
-     * @return array Array of returned o365 group data.
-     */
-    public function get_group_photo($objectid, $metadata = true) {
-        if ($metadata) {
-            $response = $this->apicall('get', '/groups/'.$objectid.'/photo');
-            $expectedparams = ['id' => null];
-            return $this->process_apicall_response($response, $expectedparams);
-        }
-        return $this->apicall('get', '/groups/'.$objectid.'/photo/$value');
-    }
-
-    /**
      * Upload group photo meta data or photo.
      *
      * @param string $objectid The object ID of the group.
@@ -494,21 +479,6 @@ class unified extends \local_o365\rest\o365api {
         $response = $this->betaapicall('post', '/directory/deleteditems/'.$objectid.'/restore');
         $response = $this->process_apicall_response($response);
         return $response;
-    }
-
-    /**
-     * Get a list of all groups a user is member of.
-     *
-     * @param string $groupobjectid The object ID of the group.
-     * @param string $userobjecttid The user ID.
-     * @return array Array of groups user is member of.
-     */
-    public function get_users_groups($groupobjectid, $userobjectid) {
-        $endpoint = 'users/'.$userobjectid.'/getMemberGroups';
-        $postdata = '{ "securityEnabledOnly": false }';
-        $response = $this->apicall('post', $endpoint, $postdata);
-        $expectedparams = ['value' => null];
-        return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
@@ -836,7 +806,7 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null
      */
     public function get_user_groups($userobjectid) {
-        $endpoint = "users/$userobjectid/memberOf";
+        $endpoint = "users/$userobjectid/memberOf/microsoft.graph.group";
         $response = $this->apicall('get', $endpoint);
         $result = $this->process_apicall_response($response, ['value' => null]);
         return $result['value'];
@@ -1482,7 +1452,13 @@ class unified extends \local_o365\rest\o365api {
     public function get_graph_required_permissions() {
         $allperms = $this->get_required_permissions();
         if (isset($allperms['graph'])) {
-            $graphperms = $allperms['graph']['requiredDelegatedPermissions'];
+            $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
+            if (!empty($apponlyenabled)) {
+                $graphperms = $allperms['graph']['requiredDelegatedPermissionsUsingAppPermissions'];
+            } else {
+                $graphperms = $allperms['graph']['requiredDelegatedPermissions'];
+            }
+
             return array_keys($graphperms);
         }
         return [];
@@ -1614,48 +1590,40 @@ class unified extends \local_o365\rest\o365api {
 
     /**
      * Get a users photo.
+     *
      * @param $user User to retrieve photo.
-     * @param $height Height of image to retrieve.
-     * @param $width Width of image to retrieve.
-     * @return array|null Returned binary photo data, false if there is no photo.
+     *
+     * @return string|false Returned binary photo data, false if there is no photo.
      */
-    public function get_photo($user, $height = null, $width = null) {
-        if (!empty($width) && !empty($height)) {
-            return $this->betaapicall('get', "/Users('$user')/Photos('".$height."x".$width."')/\$value");
+    public function get_photo($user) {
+        $photo = $this->apicall('get', "/users/{$user}/photo/\$value");
+
+        // Check if response is binary.
+        if (preg_match('~[^\x20-\x7E\t\r\n]~', $photo) > 0) {
+            return $photo;
         } else {
-            return $this->apicall('get', "/Users('$user')/Photo/\$value");
+            return false;
         }
-        return false;
     }
 
     /**
-     * Get photo meta data.
-     * @param $user User to retrieve photo meta data for.
-     * @param $minsize Minimum size to retrieve. 0 to return all sizes.
-     * @return array|null Return array of sizes or single size if minsize is set, or false if error.
+     * Get user profile photo metadata.
+     *
+     * @param $user The UPN of the user to retrieve photo meta data for.
+     *
+     * @return false|int no photo found, or the height of the photo image.
      */
-    public function get_photo_metadata($user, $minsize = 100) {
-        $response = $this->betaapicall('get', "/Users('$user')/Photos");
+    public function get_photo_metadata($user) {
+        $response = $this->betaapicall('get', "/users/$user/photo");
         $data = json_decode($response, true);
         // Photo not found.
         if (!empty($data['error'])) {
             return false;
         }
-        $expected = array('value' => null);
+        $expected = array('id' => null);
         $photo = $this->process_apicall_response($response, $expected);
-        if (empty($minsize)) {
-            return $photo['value'];
-        }
-        $lastsize = $photo['value'];
-        if (count($photo['value'])) {
-            foreach ($photo['value'] as $size) {
-                $lastsize = $size;
-                if ($size['height'] >= $minsize) {
-                    break;
-                }
-            }
-        }
-        return $lastsize;
+
+        return $photo;
     }
 
     /**
@@ -1685,6 +1653,7 @@ class unified extends \local_o365\rest\o365api {
                 $appids[] = $api['appId'];
             }
             $filterstr = 'appId%20eq%20\''.implode('\'%20or%20appId%20eq%20\'', $appids).'\'';
+
             $endpoint = '/servicePrincipals()?$filter='.$filterstr;
         } else {
             $endpoint = '/servicePrincipals()';
