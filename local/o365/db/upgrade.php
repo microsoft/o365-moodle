@@ -737,6 +737,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         $aadsyncsetting = get_config('local_o365', 'aadsync');
         set_config('aadsync', str_replace('delete', 'suspend', $aadsyncsetting), 'local_o365');
 
+        // Force clear user sync delta token.
+        unset_config('local_o365', 'task_usersync_lastdeltatoken');
+        purge_all_caches();
+
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2020110902, 'local', 'o365');
     }
