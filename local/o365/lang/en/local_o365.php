@@ -202,6 +202,8 @@ $string['settings_usergroups_details'] = 'If enabled, this will create and maint
 $string['acp_usergroupcustom_off'] = 'Disabled<br />Disable Teams creation for all Moodle courses.';
 $string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to select which courses to create Course Groups (i.e. Teams) for, as well as select which Group features are exposed in the Microsoft block for each course.<br> <span id="adminsetting_usergroups" style="font-weight: bold"><a href="{$a}">Customize groups</a></span>';
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course Groups (i.e. Teams) for all courses and exposes all Group features in the Microsoft block for all courses.';
+$string['settings_usergroups_prefer_class_team'] = 'Create Class Teams (over standard Teams)';
+$string['settings_usergroups_prefer_class_team_details'] = 'If enabled, Teams created from Moodle will use the education template (thus resulting in a Class Team) whereas possible.';
 $string['settings_usergroups_controlled_per_course'] = 'Allow configure course sync in course';
 $string['settings_usergroups_controlled_per_course_details'] = 'If the "Teams" sync setting is set to "Customize", and this option is enabled, Moodle users who are eligible to act as Team owners will be able to control course sync from the Microsoft block in the course.';
 $string['settings_usergroups_courses_per_task'] = 'Courses to sync per task run';
