@@ -81,6 +81,12 @@ class usersyncfieldmap extends fieldmap {
             'roles' => get_string('settings_fieldmap_field_roles', 'local_o365'),
         ];
 
+        $order = 0;
+        while ($order++ < 15) {
+            $remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'local_o365',
+                $order);
+        }
+
         $localfields = [
             'idnumber' => get_string('idnumber'),
             'firstname' => get_string('firstname'),

@@ -520,6 +520,7 @@ class main {
                     $user->$localfield = $aaddata[$remotefield];
                 }
             }
+
             if ($remotefield == "manager") {
                 $user->$localfield = $usersync->get_user_manager($userobjectid);
             } else if ($remotefield == "groups") {
@@ -531,6 +532,14 @@ class main {
             } else if ($remotefield == "preferredName") {
                 if (!isset($aaddata[$remotefield])) {
                     $user->$localfield = $usersync->get_preferred_name($userobjectid);
+                }
+            } else if (substr($remotefield, 0, 18) == 'extensionAttribute') {
+                $extensionattributeid = substr($remotefield, 18);
+                if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
+                    if (isset($aaddata['onPremisesExtensionAttributes']) &&
+                        isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
+                        $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+                    }
                 }
             }
         }
