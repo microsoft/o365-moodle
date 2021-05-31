@@ -719,6 +719,7 @@ class unified extends \local_o365\rest\o365api {
             'teams',
             'roles',
             'groups',
+            'onPremisesExtensionAttributes',
         ];
     }
 
@@ -778,7 +779,6 @@ class unified extends \local_o365\rest\o365api {
             }
             $odataqueries[] = '$select='.implode(',', $params);
         }
-
         // Delta/skip tokens.
         if (!empty($skiptoken) && is_string($skiptoken)) {
             $odataqueries[] = '$skiptoken='.$skiptoken;
