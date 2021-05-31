@@ -620,6 +620,10 @@ class observers {
             $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
             $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, true);
 
+            if (!is_a($api_client, '\local_o365\rest\unified')) {
+                return false;
+            }
+
             if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
                 if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
                     if ($teamsyncenabled) {
