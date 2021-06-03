@@ -133,10 +133,15 @@ class observers {
                 // Create local_o365_objects record.
                 if (!empty($eventdata['other']['oidcuniqid'])) {
                     $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
+                    $userrecord = \core_user::get_user($userid);
+                    $isguestuser = false;
+                    if (stripos($userrecord->username, '_ext_') !== false) {
+                        $isguestuser = true;
+                    }
                     if (empty($userobject)) {
                         try {
                             $apiclient = \local_o365\utils::get_api();
-                            $userdata = $apiclient->get_user($eventdata['other']['oidcuniqid']);
+                            $userdata = $apiclient->get_user($eventdata['other']['oidcuniqid'], $isguestuser);
                         } catch (\Exception $e) {
                             \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
                             return true;
@@ -289,7 +294,7 @@ class observers {
 
         try {
             // Azure AD must be configured for us to fetch data.
-            if (\local_o365\rest\azuread::is_configured() !== true) {
+            if (\local_o365\rest\azuread::is_configured() !== true && \local_o365\rest\unified::is_configured() !== true) {
                 return true;
             }
 
@@ -310,62 +315,6 @@ class observers {
                     return true;
                 }
             }
-            
-            $idtoken = \auth_oidc\jwt::instance_from_encoded($o365user->get_idtoken());
-
-            $userdata = [];
-
-            if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
-                $apiclient = \local_o365\utils::get_api($userid);
-                $userdata = $apiclient->get_user($o365user->objectid);
-                // Azuread users objectid, unified uses id.
-                if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
-                    $userdata['objectId'] = $userdata['id'];
-                }
-            } else {
-                // Extract basic information from the IDToken.
-                $oid = $idtoken->claim('oid');
-                if (!empty($oid)) {
-                    $userdata['objectId'] = $oid;
-                }
-
-                $upn = $idtoken->claim('upn');
-                if (!empty($upn)) {
-                    $userdata['userPrincipalName'] = $upn;
-                }
-
-                $firstname = $idtoken->claim('given_name');
-                if (!empty($firstname)) {
-                    $userdata['givenName'] = $firstname;
-                }
-
-                $lastname = $idtoken->claim('family_name');
-                if (!empty($lastname)) {
-                    $userdata['surname'] = $lastname;
-                }
-
-                $email = $idtoken->claim('email');
-                if (!empty($email)) {
-                    $userdata['mail'] = $email;
-                } else {
-                    if (!empty($upn)) {
-                        $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                        if (!empty($aademailvalidateresult)) {
-                            $userdata['mail'] = $aademailvalidateresult;
-                        }
-                    }
-                }
-            }
-
-            // Then apply the custom field map.
-            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), $eventtype);
-
-            // Save profile data.
-            if (!empty($updateduser)) {
-                $updateduser->id = $userid;
-                $DB->update_record('user', $updateduser);
-                profile_save_data($updateduser);
-            }
 
             $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
             if (empty($userobject)) {
@@ -383,8 +332,8 @@ class observers {
                 $userobjectdata = (object)[
                     'type' => 'user',
                     'subtype' => '',
-                    'objectid' => $userdata['objectId'],
-                    'o365name' => $userdata['userPrincipalName'],
+                    'objectid' => $o365user->objectid,
+                    'o365name' => str_replace('#ext#', '#EXT#', $o365user->upn),
                     'moodleid' => $userid,
                     'tenant' => $tenant,
                     'metadata' => $metadata,

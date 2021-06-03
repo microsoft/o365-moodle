@@ -201,5 +201,27 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071504, 'auth', 'oidc');
     }
 
+    if ($result && $oldversion < 2020071505) {
+        // Update Authorization and token end point URL.
+        $aadtenant = get_config('local_o365', 'aadtenant');
+
+        if ($aadtenant) {
+            $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
+            if ($authorizationendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
+                $authorizationendpoint = str_replace('common', $aadtenant, $authorizationendpoint);
+                set_config('authendpoint', $authorizationendpoint, 'auth_oidc');
+            }
+
+            $tokenendpoint = get_string('auth_oidc', 'tokenendpoint');
+            if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
+                $tokenendpoint = str_replace('common', $aadtenant, $tokenendpoint);
+                set_config('tokenendpoint', $tokenendpoint, 'auth_oidc');
+            }
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2020071505, 'auth', 'oidc');
+    }
+
     return $result;
 }

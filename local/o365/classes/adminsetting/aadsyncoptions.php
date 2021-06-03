@@ -56,6 +56,7 @@ class aadsyncoptions extends \admin_setting_configmulticheckbox {
             'tzsynconlogin' => new \lang_string('settings_addsync_tzsynconlogin', 'local_o365'),
             'nodelta' => new \lang_string('settings_aadsync_nodelta', 'local_o365'),
             'emailsync' => new \lang_string('settings_aadsync_emailsync', 'local_o365'),
+            'guestsync' => new \lang_string('settings_aadsync_guestsync', 'local_o365'),
         ];
         parent::__construct($name, $visiblename, $description, [], $choices);
     }
