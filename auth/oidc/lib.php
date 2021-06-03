@@ -87,3 +87,19 @@ function auth_oidc_connectioncapability($userid, $mode = 'connect', $require = f
     }
     return $result;
 }
+
+/**
+ * Determine if local_o365 plugins is installed.
+ *
+ * @return bool
+ */
+function auth_oidc_is_local_365_installed() {
+    global $CFG, $DB;
+
+    $dbmanager = $DB->get_manager();
+
+    return file_exists($CFG->dirroot . '/local/o365/version.php') &&
+        $DB->record_exists('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']) &&
+        $dbmanager->table_exists('local_o365_objects') &&
+        $dbmanager->table_exists('local_o365_connections');
+}

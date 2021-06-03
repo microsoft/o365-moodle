@@ -37,6 +37,7 @@ use local_o365\utils;
 
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 class main {
     protected $clientdata = null;
@@ -319,16 +320,16 @@ class main {
     /**
      * Get AAD data for a single user.
      *
-     * @param $objectid
-     * @param string|array $params Requested user parameters.
+     * @param string $objectid
+     * @param bool $guestuser if the user is a guest user in Azure AD
      *
      * @return array|null Array of user information, or null if failure.
      */
-    public function get_user($objectid, $params = 'default') {
+    public function get_user(string $objectid, bool $guestuser = false) {
         $apiclient = $this->construct_user_api();
-        $result = $apiclient->get_user($objectid);
+        $result = $apiclient->get_user($objectid, $guestuser);
         if (!empty($result) && is_array($result)) {
-            return [$result];
+            return $result;
         }
         return [];
     }
@@ -530,7 +531,9 @@ class main {
                 $user->$localfield = $usersync->get_user_roles($userobjectid);
             } else if ($remotefield == "preferredName") {
                 if (!isset($aaddata[$remotefield])) {
-                    $user->$localfield = $usersync->get_preferred_name($userobjectid);
+                    if (stripos($user->username, '_ext_') !== false) {
+                        $user->$localfield = $usersync->get_preferred_name($userobjectid);
+                    }
                 }
             }
         }
@@ -676,9 +679,13 @@ class main {
             }
         }
 
+        $username = $aaddata['userPrincipalName'];
+        if (isset($aaddata['convertedupn']) && $aaddata['convertedupn']) {
+            $username = $aaddata['convertedupn'];
+        }
         $newuser = (object)[
             'auth' => 'oidc',
-            'username' => trim(\core_text::strtolower($aaddata['userPrincipalName'])),
+            'username' => trim(\core_text::strtolower($username)),
             'confirmed' => 1,
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
@@ -854,6 +861,19 @@ class main {
                 $aadusers[$i]['upnsplit0'] = $upnsplit[0];
                 $usernames[] = $upnsplit[0];
             }
+
+            // Convert upn for guest users.
+            if (stripos($upnlower, '#ext#') !== false) {
+                $upnlower = \core_text::strtolower($user['mail']);
+
+                $usernames[] = $upnlower;
+                $upns[] = $upnlower;
+
+                $upnsplit = explode('@', $upnlower);
+                if (!empty($upnsplit[0])) {
+                    $usernames[] = $upnsplit[0];
+                }
+            }
         }
 
         if (!$aadusers) {
@@ -929,8 +949,15 @@ class main {
                 $userobjectid = $user['objectId'];
             }
 
-            if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']])) {
-                $newmuser = $this->sync_new_user($aadsync, $user);
+            // Process guest users.
+            $user['convertedupn'] = $user['upnlower'];
+            if (stripos($user['userPrincipalName'], '#EXT#') !== false) {
+                $user['convertedupn'] = $user['mail'];
+            }
+
+            if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']]) &&
+                !isset($existingusers[$user['convertedupn']])) {
+                $this->sync_new_user($aadsync, $user, isset($aadsync['guestsync']));
             } else {
                 $existinguser = null;
                 if (isset($existingusers[$user['upnlower']])) {
@@ -939,9 +966,23 @@ class main {
                 } else if (isset($existingusers[$user['upnsplit0']])) {
                     $existinguser = $existingusers[$user['upnsplit0']];
                     $exactmatch = strlen($user['upnsplit0']) >= $switchauthminupnsplit0;
+                } else if (isset($existingusers[$user['convertedupn']])) {
+                    $existinguser = $existingusers[$user['convertedupn']];
+                    $exactmatch = true;
                 }
 
-                $result = $this->sync_existing_user($aadsync, $user, $existinguser, $exactmatch);
+                // Process guest users.
+                if (stripos($user['upnlower'], '_ext_') !== false) {
+                    $this->mtrace('The user is a guest user.');
+                    if (!isset($aadsync['guestsync'])) {
+                        $this->mtrace('The option to sync guest users is turned off.');
+                        $this->mtrace('User is already synced, but not updated.');
+
+                        continue;
+                    }
+                }
+
+                $this->sync_existing_user($aadsync, $user, $existinguser, $exactmatch);
 
                 if ($existinguser->auth === 'oidc' || empty($existinguser->tokid)) {
                     // Create userobject if it does not exist.
@@ -964,7 +1005,7 @@ class main {
                     $this->mtrace('User is now synced.');
                 }
 
-                // Update existing user on moodle from AD
+                // Update existing user on moodle from AD.
                 if ($existinguser->auth === 'oidc') {
                     if (isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
@@ -981,10 +1022,20 @@ class main {
                 }
             }
         }
+
         return true;
     }
 
-    protected function sync_new_user($syncoptions, $aaduserdata) {
+    /**
+     * Sync a Microsoft 365 that hasn't been synced before - create a new Moodle account.
+     *
+     * @param $syncoptions
+     * @param $aaduserdata
+     * @param $syncguestusers
+     *
+     * @return false|\stdClass|null
+     */
+    protected function sync_new_user($syncoptions, $aaduserdata, bool $syncguestusers = false) {
         global $DB;
 
         $this->mtrace('User doesn\'t exist in Moodle');
@@ -1000,6 +1051,17 @@ class main {
             $this->mtrace('Not creating a Moodle user because that sync option is disabled.');
             return null;
         }
+
+        // Process guest users.
+        if (stripos($aaduserdata['upnlower'], '_ext_') !== false) {
+            $this->mtrace('The user is a guest user.');
+            if (!$syncguestusers) {
+                $this->mtrace('The option to sync guest users is turned off.');
+                $this->mtrace('User is not created.');
+                return null;
+            }
+        }
+
         try {
             $newmuser = $this->create_user_from_aaddata($aaduserdata);
             if (!empty($newmuser)) {

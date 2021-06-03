@@ -23,6 +23,10 @@
 
 namespace auth_oidc\loginflow;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * Login flow for the oauth2 authorization code grant.
  */
@@ -455,8 +459,20 @@ class authcode extends \auth_oidc\loginflow\base {
             // Generate a Moodle username.
             // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
             $username = $idtoken->claim('upn');
+            $originalupn = null;
             if (empty($username)) {
                 $username = $oidcuniqid;
+
+                // If upn claim is missing, it can mean either the IdP is not Azure AD, or it's a guest user.
+                if (\auth_oidc_is_local_365_installed()) {
+                    $apiclient = \local_o365\utils::get_api();
+                    $userdetails = $apiclient->get_user($oidcuniqid, true);
+                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')) {
+                        $originalupn = $userdetails['userPrincipalName'];
+                        $username = $idtoken->claim('unique_name');
+                    }
+                }
             }
 
             // See if we have an object listing.
@@ -469,7 +485,7 @@ class authcode extends \auth_oidc\loginflow\base {
                 }
             }
             $username = trim(\core_text::strtolower($username));
-            $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
+            $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
 
             $existinguserparams = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id];
             if ($DB->record_exists('user', $existinguserparams) !== true) {

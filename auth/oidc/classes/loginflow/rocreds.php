@@ -23,6 +23,10 @@
 
 namespace auth_oidc\loginflow;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * Login flow for the oauth2 resource owner credentials grant.
  */
@@ -132,7 +136,7 @@ class rocreds extends \auth_oidc\loginflow\base {
      * @return bool Authentication success or failure.
      */
     public function user_login($username, $password = null) {
-        global $CFG, $DB;
+        global $DB;
 
         $client = $this->get_oidcclient();
         $authparams = ['code' => ''];
@@ -163,7 +167,16 @@ class rocreds extends \auth_oidc\loginflow\base {
             if (!empty($tokenrec)) {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             } else {
-                $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
+                $originalupn = null;
+                if (\auth_oidc_is_local_365_installed()) {
+                    $apiclient = \local_o365\utils::get_api();
+                    $userdetails = $apiclient->get_user($oidcuniqid, true);
+                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false) {
+                        $originalupn = $userdetails['userPrincipalName'];
+                    }
+                }
+                $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
             }
             return true;
         }
