@@ -17,9 +17,12 @@
 /**
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Microsoft 365 Integration';
 
@@ -468,8 +471,6 @@ $string['acp_maintenance_coursegroupscheck'] = 'Recreate deleted Microsoft 365 g
 $string['acp_maintenance_coursegroupscheck_desc'] = 'This will check for any Microsoft 365 Teams that may have been manually deleted and recreate them.';
 $string['acp_maintenance_debugdata'] = 'Generate debug data package';
 $string['acp_maintenance_debugdata_desc'] = 'This will generate a package containing various pieces of information about your Moodle and Microsoft 365 environment to assist developers in solving any issues you may have. If requested by a developer, run this tool and send the resulting file download. Note: Although this package does not contain sensitive token data, we ask that you do not post this file publicly or send it to an untrusted party.';
-$string['acp_maintenance_cleanoidctokens'] = 'Cleanup OpenID Connect Tokens';
-$string['acp_maintenance_cleanoidctokens_desc'] = 'If your users are experiencing problems logging in using their Microsoft 365 account, trying cleaning up OpenID Connect tokens. This removes stray and incomplete tokens that can cause errors. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
 $string['acp_maintenance_cleandeltatoken'] = 'Cleanup User Sync Delta Tokens';
 $string['acp_maintenance_cleandeltatoken_desc'] = 'If user synchronisation is not fully working after updating it user sync settings, it may be caused by an old delta sync token. Cleaning up the token will remove force a complete re-sync the next time when the user sync is run.';
 
