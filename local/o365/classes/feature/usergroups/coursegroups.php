@@ -1189,20 +1189,6 @@ class coursegroups {
     }
 
     /**
-     * Return the ID of the Moodle app in catalog.
-     */
-    public function get_moodle_app_id() {
-        $this->mtrace('Get moodle app ID.');
-
-        $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
-        if (!$teamsmoodleappexternalid) {
-            $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
-        }
-
-        $this->graphclient->get_catalog_app_id($teamsmoodleappexternalid);
-    }
-
-    /**
      * Update team name for the course with the given ID.
      *
      * @param $courseid

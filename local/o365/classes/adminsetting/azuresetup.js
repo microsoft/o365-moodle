@@ -31,7 +31,7 @@ $(function() {
 
             strupdate: 'Update',
             strchecking: 'Checking...',
-            strmissingperms: 'Missing Permissions:',
+            strmissingperms: 'Missing Delegated Permissions:',
             strmissingappperms: 'Missing Application Permissions:',
             strpermscorrect: 'Permissions correct.',
             strapppermscorrect: 'Application Permissions correct.',
