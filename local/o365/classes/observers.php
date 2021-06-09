@@ -1069,6 +1069,13 @@ class observers {
             $DB->delete_records('local_o365_objects', ['type' => 'user']);
         }
 
+        if ($eventdata['other']['name'] == 'enableapponlyaccess' && $eventdata['other']['oldvalue'] == '0' &&
+            $eventdata['other']['value'] == '1') {
+            unset_config('systemtokens', 'local_o365');
+
+            purge_all_caches();
+        }
+
         return true;
     }
 }

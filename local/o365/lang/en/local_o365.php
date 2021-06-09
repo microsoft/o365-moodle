@@ -100,15 +100,15 @@ $string['settings_azuresetup_appdatareplyurlgeneralerror'] = 'Could not check re
 $string['settings_azuresetup_appdatasignonurlcorrect'] = 'Sign-on URL Correct.';
 $string['settings_azuresetup_appdatasignonurlincorrect'] = 'Sign-on URL Incorrect';
 $string['settings_azuresetup_appdatasignonurlgeneralerror'] = 'Could not check sign-on url.';
-$string['settings_azuresetup_apppermscorrect'] = 'Application Permissions Correct';
+$string['settings_azuresetup_apppermscorrect'] = 'Application Permissions are correct.';
 $string['settings_azuresetup_details'] = 'This tool checks with Azure AD to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure AD can take a moment to appear here. If you have made a change in Azure AD and do not see it reflected here, wait a moment and try again.';
 $string['settings_azuresetup_correctval'] = 'Correct Value:';
 $string['settings_azuresetup_detectedval'] = 'Detected Value:';
 $string['settings_azuresetup_update'] = 'Update';
 $string['settings_azuresetup_checking'] = 'Checking...';
 $string['settings_azuresetup_missingappperms'] = 'Missing Application Permissions:';
-$string['settings_azuresetup_missingperms'] = 'Missing Permissions:';
-$string['settings_azuresetup_permscorrect'] = 'Permissions are correct.';
+$string['settings_azuresetup_missingperms'] = 'Missing Delegated Permissions:';
+$string['settings_azuresetup_permscorrect'] = 'Delegated Permissions are correct.';
 $string['settings_azuresetup_errorcheck'] = 'An error occurred trying to check Azure AD setup.';
 $string['settings_azuresetup_noinfo'] = 'We don\'t have any information about your Azure AD setup yet. Please click the Update button to check.';
 $string['settings_azuresetup_strunifiedpermerror'] = 'There was an error checking Microsoft Graph API permissions.';
@@ -652,7 +652,10 @@ $string['settings_publish_manifest_instruction'] = '<a href="https://docs.micros
 
 // Settings in the "Teams Moodle app" tab.
 $string['settings_moodle_app_id'] = 'Moodle app ID';
-$string['settings_moodle_app_id_desc'] = 'ID of uploaded Moodle app in Teams app catalogs';
+$string['settings_moodle_app_id_desc'] = 'ID of the uploaded Moodle app in Teams app catalogs.<br/>
+If configured, Moodle will try to create a Moodle tab linking to the Moodle course in the "General" channel of the created/connected Team.';
+$string['settings_moodle_app_id_desc_auto_id'] = '<br/>
+Automatically detected value is "<span class="local_o365_settings_moodle_app_id">{$a}</span>".';
 $string['settings_set_moodle_app_id_instruction'] = 'To find the Moodle app ID manually, follow these steps:
 <ol>
 <li>Upload the downloaded manifest file to Teams app catalog of your tenant.</li>
