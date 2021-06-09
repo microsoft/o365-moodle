@@ -658,8 +658,8 @@ class coursegroups {
             $groupmembers[$memberrecord['id']] = $memberrecord;
         }
 
-        while (!empty($memberrecords['@odata.netxtLink'])) {
-            $nextlink = parse_url($memberrecords['@odata.netxtLink']);
+        while (!empty($memberrecords['@odata.nextLink'])) {
+            $nextlink = parse_url($memberrecords['@odata.nextLink']);
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
