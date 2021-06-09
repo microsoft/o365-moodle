@@ -689,6 +689,7 @@ class unified extends \local_o365\rest\o365api {
             'teams',
             'roles',
             'groups',
+            'accountEnabled',
         ];
     }
 
