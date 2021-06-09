@@ -47,6 +47,7 @@ class aadsyncoptions extends \admin_setting_configmulticheckbox {
             'suspend' => new \lang_string('settings_aadsync_suspend', 'local_o365'),
             'delete' => new \lang_string('settings_aadsync_delete', 'local_o365'),
             'reenable' => new \lang_string('settings_aadsync_reenable', 'local_o365'),
+            'disabledsync' => new \lang_string('settings_aadsync_disabledsync', 'local_o365'),
             'match' => new \lang_string('settings_aadsync_match', 'local_o365'),
             'matchswitchauth' => new \lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
             'appassign' => new \lang_string('settings_aadsync_appassign', 'local_o365'),

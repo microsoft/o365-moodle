@@ -340,7 +340,7 @@ class main {
      * @param string|array $params Requested user parameters.
      * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
      *
-     * @return array|null Array of user information, or null if failure.
+     * @return array Array of user information.
      */
     public function get_users($params = 'default', $skiptoken = '') {
         if (empty($skiptoken)) {
@@ -349,7 +349,7 @@ class main {
 
         $apiclient = $this->construct_user_api(false);
         $result = $apiclient->get_users($params, $skiptoken);
-        $users = null;
+        $users = [];
         $skiptoken = null;
 
         if (!empty($result) && is_array($result)) {
@@ -652,9 +652,10 @@ class main {
      * Create a Moodle user from Azure AD user data.
      *
      * @param array $aaddata Array of Azure AD user data.
+     * @param array $syncoptions
      * @return \stdClass An object representing the created Moodle user.
      */
-    public function create_user_from_aaddata($aaddata) {
+    public function create_user_from_aaddata($aaddata, $syncoptions) {
         global $CFG, $DB;
 
         $creationallowed = $this->check_usercreationrestriction($aaddata);
@@ -684,6 +685,13 @@ class main {
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
         ];
+
+        // Determine if the newly created user needs to be suspended.
+        if ($syncoptions['disabledsync']) {
+            if (isset($aaddata['accountEnabled']) && $aaddata['accountEnabled'] == false) {
+                $newuser->suspended = 1;
+            }
+        }
 
         $newuser = static::apply_configured_fieldmap($aaddata, $newuser, 'create');
 
@@ -871,6 +879,7 @@ class main {
         $sql = "$select
                        u.id as muserid,
                        u.auth,
+                       u.suspended,
                        tok.id as tokid,
                        conn.id as existingconnectionid,
                        assign.assigned assigned,
@@ -962,7 +971,7 @@ class main {
                     $this->mtrace('User is now synced.');
                 }
 
-                // Update existing user on moodle from AD
+                // Update existing user on moodle from AD.
                 if ($existinguser->auth === 'oidc') {
                     if (isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
@@ -982,6 +991,14 @@ class main {
         return true;
     }
 
+    /**
+     * Sync a Microsoft 365 that hasn't been synced before - create a new Moodle account.
+     *
+     * @param $syncoptions
+     * @param $aaduserdata
+     *
+     * @return false|\stdClass|null
+     */
     protected function sync_new_user($syncoptions, $aaduserdata) {
         global $DB;
 
@@ -999,9 +1016,9 @@ class main {
             return null;
         }
         try {
-            $newmuser = $this->create_user_from_aaddata($aaduserdata);
+            $newmuser = $this->create_user_from_aaddata($aaduserdata, $syncoptions);
             if (!empty($newmuser)) {
-                $this->mtrace('Created user #'.$newmuser->id);
+                $this->mtrace('Created user #' . $newmuser->id);
             }
         } catch (\Exception $e) {
             if (isset($syncoptions['emailsync'])) {
@@ -1059,6 +1076,16 @@ class main {
         return $newmuser;
     }
 
+    /**
+     * Sync a Moodle user who has been previously connected to a Microsoft 365 account.
+     *
+     * @param $syncoptions
+     * @param $aaduserdata
+     * @param $existinguser
+     * @param $exactmatch
+     *
+     * @return bool
+     */
     protected function sync_existing_user($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
         $photoexpire = get_config('local_o365', 'photoexpire');
         if (empty($photoexpire) || !is_numeric($photoexpire)) {
@@ -1106,6 +1133,25 @@ class main {
             } catch (\Exception $e) {
                 $this->mtrace('Could not sync timezone for user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
                     $e->getMessage());
+            }
+        }
+
+        // Sync disabled status.
+        if (isset($syncoptions['disabledsync'])) {
+            if (isset($aaduserdata['accountEnabled'])) {
+                if ($aaduserdata['accountEnabled']) {
+                    if ($existinguser->suspended == 1) {
+                        $completeexistinguser = \core_user::get_user($existinguser->muserid);
+                        $completeexistinguser->suspended = 0;
+                        user_update_user($completeexistinguser, false);
+                    }
+                } else {
+                    if ($existinguser->suspended == 0) {
+                        $completeexistinguser = \core_user::get_user($existinguser->muserid);
+                        $completeexistinguser->suspended = 1;
+                        user_update_user($completeexistinguser, false);
+                    }
+                }
             }
         }
 
