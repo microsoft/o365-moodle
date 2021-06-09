@@ -17,11 +17,14 @@
 /**
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\page;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Admin control panel page.
@@ -1854,11 +1857,11 @@ class acp extends base {
             echo \html_writer::div(get_string('acp_maintenance_debugdata_desc', 'local_o365'));
         }
 
-        $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_cleanoidctokens']);
-        $toolname = get_string('acp_maintenance_cleanoidctokens', 'local_o365');
+        $toolurl = new \moodle_url('/auth/oidc/cleanupoidctokens.php');
+        $toolname = get_string('cfg_cleanupoidctokens_key', 'auth_oidc');
         echo \html_writer::empty_tag('br');
-        echo \html_writer::link($toolurl, $toolname);
-        echo \html_writer::div(get_string('acp_maintenance_cleanoidctokens_desc', 'local_o365'));
+        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo \html_writer::div(get_string('cfg_cleanupoidctokens_desc', 'auth_oidc'));
 
         // Clear delta token.
         $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_cleandeltatoken']);
@@ -1868,96 +1871,6 @@ class acp extends base {
         echo \html_writer::div(get_string('acp_maintenance_cleandeltatoken_desc', 'local_o365'));
 
         $this->standard_footer();
-    }
-
-    /**
-     * Clean up OpenID Connect tokens for one user.
-     */
-    public function mode_maintenance_deleteoidctoken() {
-        global $DB;
-        $tokenstr = '';
-        $tokenid = required_param('id', PARAM_INT);
-        require_sesskey();
-        $params = [
-            'tokenid' => $tokenid,
-            'type' => 'user',
-        ];
-
-        // Delete the object first.
-        $existingobject = $DB->get_record_sql("SELECT obj.id, obj.objectid, tok.token, u.id as userid, u.email
-                                                 FROM {local_o365_objects} obj
-                                                 JOIN {auth_oidc_token} tok ON obj.o365name = tok.username
-                                                 JOIN {user} u ON obj.moodleid = u.id
-                                                WHERE type = :type AND tok.id = :tokenid", $params);
-        if (!empty($existingobject)) {
-            // Delete record for local_o365_objects.
-            $DB->delete_records('local_o365_objects', ['id' => $existingobject->id]);
-            mtrace("Object " . $existingobject->objectid . " deleted.");
-            echo "<br>";
-            $tokenstr = substr($existingobject->token, 0, 16) . '...';
-
-            // Delete record from local_o365_token.
-            $DB->delete_records('local_o365_token', ['user_id' => $existingobject->userid]);
-
-            // Delete record from local_o365_connections.
-            $DB->delete_records_select(
-                'local_o365_connections',
-                'muserid = :userid  OR lower(aadupn) = :email', [
-                'userid' => $existingobject->userid,
-                'email' => $existingobject->email
-            ]);
-        }
-
-        // Finally delete the token.
-        $DB->delete_records('auth_oidc_token', ['id' => $tokenid]);
-        mtrace("Token " . $tokenstr . " deleted.");
-    }
-
-    /**
-     * Clean up OpenID Connect tokens.
-     * Options are provided to clean two types of tokens:
-     *  - tokens without user ID.
-     *  - tokens having a username which doesn't match the referenced users' username.
-     */
-    public function mode_maintenance_cleanoidctokens() {
-        global $DB;
-
-        mtrace('Tokens with empty user IDs:' . PHP_EOL);
-        $sql = 'SELECT tok.*, obj.objectid
-                  FROM {auth_oidc_token} tok
-             LEFT JOIN {local_o365_objects} obj ON tok.username = obj.o365name
-                 WHERE tok.userid = 0';
-        $records = $DB->get_recordset_sql($sql);
-        foreach ($records as $token) {
-            $toolurl = new \moodle_url($this->url,
-                ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'sesskey' => sesskey()]);
-            $toolname = 'Delete Token';
-            $objectstr = ($token->objectid) ? ' with objectid ' . $token->objectid : '';
-            $line = ' - ' . $token->id . ': Moodle user ' . $token->username . ' has a token for OIDC username ' .
-                $token->oidcusername . $objectstr . ' but no recorded userid.';
-            $line .= ' ' . \html_writer::link($toolurl, $toolname);
-            mtrace($line . PHP_EOL);
-        }
-        mtrace('End of tokens with empty IDs.' . PHP_EOL . PHP_EOL);
-
-        mtrace('Tokens with mismatched usernames:' . PHP_EOL);
-        $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusername, tok.oidcusername AS oidcusername,
-                       u.id AS muserid, u.username AS musername
-                  FROM {auth_oidc_token} tok
-                  JOIN {user} u ON u.id = tok.userid
-                 WHERE tok.userid != 0 AND u.username != tok.username';
-        $tokens = $DB->get_recordset_sql($sql);
-        foreach ($tokens as $token) {
-            $line = ' - ' . $token->id . ': Mismatch between usernames and userids. Token ID "' . $token->id . '" has username "' .
-                $token->tokenusername . '" and oidcusername "' . $token->oidcusername . '", but references Moodle user ID "' .
-                $token->muserid . '" with username "' . $token->musername . '".';
-            $toolurl  = new \moodle_url($this->url,
-                ['mode' => 'maintenance_deleteoidctoken', 'id' => $token->id, 'ref' => 1, 'sesskey' => sesskey()]);
-            $toolname = 'Delete token and reference record';
-            $line .= ' ' . \html_writer::link($toolurl, $toolname);
-            mtrace($line . PHP_EOL);
-        }
-        mtrace('End of tokens with mismatched usernames.' . PHP_EOL);
     }
 
     /**
@@ -1975,7 +1888,7 @@ class acp extends base {
      * User connection management.
      */
     public function mode_userconnections() {
-        global $DB, $OUTPUT, $PAGE, $SESSION, $CFG;
+        global $PAGE, $CFG;
         $url = new \moodle_url($this->url, ['mode' => 'userconnections']);
         $PAGE->navbar->add(get_string('acp_userconnections', 'local_o365'), $url);
         $PAGE->requires->jquery();
