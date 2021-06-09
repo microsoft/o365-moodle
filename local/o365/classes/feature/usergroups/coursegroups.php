@@ -1149,8 +1149,8 @@ class coursegroups {
             }
         }
 
-        // Build existing cache records cache.
-        $this->mtrace('Build existing cache records cache');
+        // Build existing teams records cache.
+        $this->mtrace('Build existing teams cache records');
         $existingcacherecords = $DB->get_records('local_o365_teams_cache');
         $existingcachebyoid = [];
         foreach ($existingcacherecords as $existingcacherecord) {
@@ -1158,7 +1158,7 @@ class coursegroups {
         }
 
         // Compare, then create, update, or delete cache.
-        $this->mtrace('Update cache records');
+        $this->mtrace('Update teams cache records');
         foreach ($teams as $team) {
             if (array_key_exists($team['id'], $existingcachebyoid)) {
                 // Update existing cache record.
@@ -1169,16 +1169,23 @@ class coursegroups {
 
                 unset($existingcachebyoid[$team['id']]);
             } else {
+                try {
+                    $teamurl = $this->graphclient->get_teams_url($team['id']);
+                } catch (\Exception $e) {
+                    // Cannot get Team URL, most likely an invalid Team.
+                    continue;
+                }
+
                 // Create new cache record.
                 $cacherecord = new \stdClass();
                 $cacherecord->objectid = $team['id'];
                 $cacherecord->name = $team['displayName'];
                 $cacherecord->description = $team['description'];
-                $cacherecord->url = $this->graphclient->get_teams_url($team['id']);
+                $cacherecord->url = $teamurl;
                 $DB->insert_record('local_o365_teams_cache', $cacherecord);
             }
         }
-        $this->mtrace('Delete old cache records');
+        $this->mtrace('Delete old teams cache records');
         foreach ($existingcachebyoid as $oldcacherecord) {
             $DB->delete_records('local_o365_teams_cache', ['id' => $oldcacherecord->id]);
         }
