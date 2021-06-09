@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin settings.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -22,6 +24,7 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use local_o365\adminsetting\aadsyncoptions;
 use local_o365\feature\usergroups\coursegroups;
 
 defined('MOODLE_INTERNAL') || die;
@@ -168,23 +171,8 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_aadsync', 'local_o365');
         $scheduledtasks = new \moodle_url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
-        $choices = [
-            'create' => new lang_string('settings_aadsync_create', 'local_o365'),
-            'update' => new lang_string('settings_aadsync_update', 'local_o365'),
-            'delete' => new lang_string('settings_aadsync_delete', 'local_o365'),
-            'match' => new lang_string('settings_aadsync_match', 'local_o365'),
-            'matchswitchauth' => new lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
-            'appassign' => new lang_string('settings_aadsync_appassign', 'local_o365'),
-            'photosync' => new lang_string('settings_aadsync_photosync', 'local_o365'),
-            'photosynconlogin' => new lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
-            'tzsync' => new lang_string('settings_addsync_tzsync', 'local_o365'),
-            'tzsynconlogin' => new lang_string('settings_addsync_tzsynconlogin', 'local_o365'),
-            'nodelta' => new lang_string('settings_aadsync_nodelta', 'local_o365'),
-            'emailsync' => new lang_string('settings_aadsync_emailsync', 'local_o365'),
-        ];
-        $default = [];
-        $settings->add(new \local_o365\adminsetting\configmulticheckboxchoiceshelp('local_o365/aadsync', $label, $desc, $default,
-            $choices));
+        $aadsyncsettings = new aadsyncoptions('local_o365/aadsync', $label, $desc);
+        $settings->add($aadsyncsettings);
 
         $key = 'local_o365/usersynccreationrestriction';
         $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
