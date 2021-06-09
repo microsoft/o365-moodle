@@ -703,9 +703,6 @@ class main {
         profile_save_data($newuser);
 
         $user = get_complete_user_data('id', $newuser->id);
-        if (!empty($CFG->{'auth_'.$newuser->auth.'_forcechangepassword'})) {
-            set_user_preference('auth_forcepasswordchange', 1, $user);
-        }
         // Set the password.
         update_internal_user_password($user, $password);
 
@@ -1146,6 +1143,9 @@ class main {
                 $password = null;
                 update_internal_user_password($existinguser, $password);
                 $this->mtrace('Switched user to OpenID.');
+
+                // Clear force password change preference.
+                unset_user_preference('auth_forcepasswordchange', $existinguser);
             }
         } else if (!empty($existinguser->existingconnectionid)) {
             $this->mtrace('User is already matched.');
