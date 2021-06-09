@@ -17,13 +17,14 @@
 /**
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2020071506;
+$plugin->version = 2020071507;
 $plugin->requires = 2020061500;
 $plugin->release = '3.9.4';
 $plugin->component = 'local_o365';
