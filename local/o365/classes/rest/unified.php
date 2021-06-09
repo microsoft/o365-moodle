@@ -2205,18 +2205,23 @@ class unified extends \local_o365\rest\o365api {
      * @param int $ownerid
      * @param null $extra
      *
-     * @return array|null
-     * @throws \moodle_exception
+     * @return string
      */
     public function create_class_team($displayname, $description, $ownerid, $extra = null) {
         $owneridparam = ["https://graph.microsoft.com/beta/users/{$ownerid}"];
         $description = substr($description, 0, 1024); // API restricts length to 1024 chars.
         $teamdata = [
-            'template@odata.bind' => "https://graph.microsoft.com/beta/teamsTemplates('educationClass')",
             'displayName' => $displayname,
             'description' => $description,
             'owners@odata.bind' => $owneridparam,
         ];
+
+        $classteampreference = get_config('local_o365', 'prefer_class_team');
+        if ($classteampreference === false || $classteampreference == '1') {
+            $teamdata['template@odata.bind'] = "https://graph.microsoft.com/beta/teamsTemplates('educationClass')";
+        } else {
+            $teamdata['template@odata.bind'] = "https://graph.microsoft.com/beta/teamsTemplates('standard')";
+        }
 
         if (!empty($extra) && is_array($extra)) {
             foreach ($extra as $name => $value) {

@@ -331,7 +331,6 @@ class coursegroups {
         $now = time();
         $displayname = \local_o365\feature\usergroups\utils::get_team_display_name($course);
         $description = $course->summary;
-        $extra = null;
 
         try {
             $teamid = null;
