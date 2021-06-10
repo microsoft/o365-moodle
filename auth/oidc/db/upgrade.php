@@ -223,6 +223,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2020071505) {
+        // Part 1: add index to auth_oidc_token table.
         $table = new xmldb_table('auth_oidc_token');
 
         // Define index userid (not unique) to be added to auth_oidc_token.
@@ -239,6 +240,23 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         // Conditionally launch add index username.
         if (!$dbman->index_exists($table, $usernameindex)) {
             $dbman->add_index($table, $usernameindex);
+        }
+
+        // Part 2: update Authorization and token end point URL.
+        $aadtenant = get_config('local_o365', 'aadtenant');
+
+        if ($aadtenant) {
+            $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
+            if ($authorizationendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
+                $authorizationendpoint = str_replace('common', $aadtenant, $authorizationendpoint);
+                set_config('authendpoint', $authorizationendpoint, 'auth_oidc');
+            }
+
+            $tokenendpoint = get_string('auth_oidc', 'tokenendpoint');
+            if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
+                $tokenendpoint = str_replace('common', $aadtenant, $tokenendpoint);
+                set_config('tokenendpoint', $tokenendpoint, 'auth_oidc');
+            }
         }
 
         // Oidc savepoint reached.

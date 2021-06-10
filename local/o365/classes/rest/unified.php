@@ -660,10 +660,12 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get an array of general user fields to query for.
      *
+     * @param bool $guestuser if the fields are for a guest user.
+     *
      * @return array Array of user fields.
      */
-    protected function get_default_user_fields() {
-        return [
+    protected function get_default_user_fields(bool $guestuser = false) {
+        $defaultfields = [
             'id',
             'userPrincipalName',
             'displayName',
@@ -684,7 +686,6 @@ class unified extends \local_o365\rest\o365api {
             'faxNumber',
             'mobilePhone',
             'officeLocation',
-            'preferredName',
             'manager',
             'teams',
             'roles',
@@ -692,6 +693,11 @@ class unified extends \local_o365\rest\o365api {
             'accountEnabled',
             'onPremisesExtensionAttributes',
         ];
+        if (!$guestuser) {
+            $defaultfields[] = 'preferredName';
+        }
+
+        return $defaultfields;
     }
 
     /**
@@ -1863,27 +1869,30 @@ class unified extends \local_o365\rest\o365api {
      * Get a specific user's information.
      *
      * @param string $oid The user's object id.
+     * @param bool $guestuser if the user is a guest user.
+     *
      * @return array|null Array of user information, or null if failure.
      */
-    public function get_user($oid, $params = 'default') {
+    public function get_user(string $oid, bool $guestuser = false) {
         $endpoint = "/users/{$oid}";
         $odataqueries = [];
-        $context = 'https://graph.microsoft.com/v1.0/$metadata#users/$entity';
-        if ($params === 'default') {
-            $params = $this->get_default_user_fields();
-            $context = 'https://graph.microsoft.com/v1.0/$metadata#users(';
-            $context = $context.join(',', $params).')/$entity';
-            $odataqueries[] = '$select='.implode(',', $params);
-        }
+
+        $params = $this->get_default_user_fields($guestuser);
+        $context = 'https://graph.microsoft.com/v1.0/$metadata#users(';
+        $context = $context.join(',', $params).')/$entity';
+        $odataqueries[] = '$select='.implode(',', $params);
+
         if (!empty($odataqueries)) {
             $endpoint .= '?'.implode('&', $odataqueries);
         }
+
         $response = $this->apicall('get', $endpoint);
         $expectedparams = [
             '@odata.context' => $context,
             'id' => null,
             'userPrincipalName' => null,
         ];
+
         $result = $this->process_apicall_response($response, $expectedparams);
         if (!empty($result['id'])) {
             $result['objectId'] = $result['id'];
@@ -2009,7 +2018,13 @@ class unified extends \local_o365\rest\o365api {
                 \local_o365\utils::debug($e->getMessage(), 'local_o365\rest\unified::get_muser_upn', $e);
                 return false;
             }
-            $userdata = $apiclient->get_user($o365user->objectid);
+
+            $isguestuser = false;
+            if (stripos($user->username, '_ext_') !== false) {
+                $isguestuser = true;
+            }
+            $userdata = $apiclient->get_user($o365user->objectid, $isguestuser);
+
             if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
                 $userdata['objectId'] = $userdata['id'];
             }

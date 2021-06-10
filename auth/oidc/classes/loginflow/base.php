@@ -126,7 +126,7 @@ class base {
             return false;
         }
 
-        if ($userrecord = $DB->get_record('user', ['username' => $username])) {
+        if ($DB->record_exists('user', ['username' => $username])) {
             $eventtype = 'login';
         } else {
             $eventtype = 'create';
@@ -137,11 +137,11 @@ class base {
                 // If local_o365 is installed, and field mapping uses fields not covered by token,
                 // then call Graph API function to get user details.
                 $apiclient = \local_o365\utils::get_api($tokenrec->userid);
-                $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
+                if ($apiclient) {
+                    $userdata = $apiclient->get_user($tokenrec->oidcuniqid, 'default', true);
+                }
             } else {
                 // If local_o365 is installed, but all field mapping fields are in token, then use token.
-                $userdata = [];
-
                 $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
 
                 $oid = $idtoken->claim('oid');
@@ -152,6 +152,8 @@ class base {
                 $upn = $idtoken->claim('upn');
                 if (!empty($upn)) {
                     $userdata['userPrincipalName'] = $upn;
+                } else if (isset($tokenrec->oidcusername) && $tokenrec->oidcusername) {
+                    $userdata['userPrincipalName'] = $tokenrec->oidcusername;
                 }
 
                 $firstname = $idtoken->claim('given_name');
@@ -413,7 +415,20 @@ class base {
         $client = new \auth_oidc\oidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
 
-        $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
+        $authendpoint = $this->config->authendpoint;
+        $tokenendpoint = $this->config->tokenendpoint;
+        $aadtenant = get_config('local_o365', 'aadtenant');
+        if ($aadtenant) {
+            if ($authendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
+                $authendpoint = str_replace('common', $aadtenant, $authendpoint);
+            }
+
+            if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
+                $tokenendpoint = str_replace('common', $aadtenant, $tokenendpoint);
+            }
+        }
+
+        $client->setendpoints(['auth' => $authendpoint, 'token' => $tokenendpoint]);
         return $client;
     }
 
@@ -505,7 +520,6 @@ class base {
         return ($hasrestrictions === true && $userpassed !== true) ? false : true;
     }
 
-
     /**
      * Create a token for a user, thus linking a Moodle user to an OpenID Connect user.
      *
@@ -514,15 +528,22 @@ class base {
      * @param array $authparams Parameters receieved from the auth request.
      * @param array $tokenparams Parameters received from the token request.
      * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param int $userid
+     * @param null|string $originalupn
      * @return \stdClass The created token database record.
      */
-    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, \auth_oidc\jwt $idtoken, $userid = 0) {
+    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, \auth_oidc\jwt $idtoken, $userid = 0,
+        $originalupn = null) {
         global $DB;
 
-        // Determine remote username. Use 'upn' if available (Azure-specific), or fall back to standard 'sub'.
-        $oidcusername = $idtoken->claim('upn');
-        if (empty($oidcusername)) {
-            $oidcusername = $idtoken->claim('sub');
+        if (!is_null($originalupn)) {
+            $oidcusername = $originalupn;
+        } else {
+            // Determine remote username. Use 'upn' if available (Azure-specific), or fall back to standard 'sub'.
+            $oidcusername = $idtoken->claim('upn');
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('sub');
+            }
         }
 
         // We should not fail here (idtoken was verified earlier to at least contain 'sub', but just in case...).

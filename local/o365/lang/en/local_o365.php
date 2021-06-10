@@ -167,6 +167,7 @@ $string['settings_aadsync_nodelta'] = 'Perform a full sync each run';
 $string['settings_aadsync_emailsync'] = 'Match Azure usernames to moodle emails instead of moodle usernames during the sync';
 $string['settings_addsync_tzsync'] = 'Sync Outlook timezone to Moodle in cronjob';
 $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on login';
+$string['settings_aadsync_guestsync'] = 'Sync guest users';
 $string['settings_fieldmap'] = 'User Field Mapping';
 $string['settings_fieldmap_addmapping'] = 'Add Mapping';
 $string['settings_fieldmap_details'] = 'Configure mapping between user fields in Microsoft 365 and Moodle.';
@@ -912,6 +913,8 @@ $string['help_user_tzsync'] = 'Sync Outlook timezone (Cron) Help';
 $string['help_user_tzsync_help'] = 'This will cause all users\' Moodle timezone to get synced with their Outlook timezone preference.';
 $string['help_user_tzsynconlogin'] = 'Sync Outlook timezone (Login) Help';
 $string['help_user_tzsynconlogin_help'] = 'This will cause a user\'s Moodle timezone to get synced with their Outlook timezone preference. Note this requires user visiting a page containing the Microsoft block in Moodle.';
+$string['help_user_guestsync'] = 'Sync guest users Help';
+$string['help_user_guestsync_help'] = 'If enabled, guest users in Azure AD will be synced to Moodle in the user sync task.';
 
 $string['assignment'] = 'Assignment';
 $string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />

@@ -1938,7 +1938,11 @@ class acp extends base {
         }
 
         // Perform prechecks.
-        $userrec = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+        $userrecord = \core_user::get_user($userid, '*', MUST_EXIST);
+        $isguestuser = false;
+        if (stripos($userrecord->username, '_ext_') !== false) {
+            $isguestuser = true;
+        }
 
         $params = ['type' => 'user', 'moodleid' => $userid];
         $objectrecord = $DB->get_record('local_o365_objects', $params);
@@ -1948,9 +1952,9 @@ class acp extends base {
 
         // Get aad data.
         $usersync = new \local_o365\feature\usersync\main();
-        $userdata = $usersync->get_user($objectrecord->objectid);
+        $userdata = $usersync->get_user($objectrecord->objectid, $isguestuser);
         echo '<pre>';
-        $usersync->sync_users($userdata);
+        $usersync->sync_users([$userdata]);
         echo '</pre>';
     }
 
