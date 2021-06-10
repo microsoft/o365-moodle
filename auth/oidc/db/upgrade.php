@@ -222,5 +222,28 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071504, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2020071505) {
+        $table = new xmldb_table('auth_oidc_token');
+
+        // Define index userid (not unique) to be added to auth_oidc_token.
+        $useridindex = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+
+        // Conditionally launch add index userid.
+        if (!$dbman->index_exists($table, $useridindex)) {
+            $dbman->add_index($table, $useridindex);
+        }
+
+        // Define index username (not unique) to be added to auth_oidc_token.
+        $usernameindex = new xmldb_index('username', XMLDB_INDEX_NOTUNIQUE, ['username']);
+
+        // Conditionally launch add index username.
+        if (!$dbman->index_exists($table, $usernameindex)) {
+            $dbman->add_index($table, $usernameindex);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2020071505, 'auth', 'oidc');
+    }
+
     return $result;
 }
