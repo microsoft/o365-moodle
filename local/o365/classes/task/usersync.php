@@ -93,7 +93,7 @@ class usersync extends scheduled_task {
         $usersync = new main();
 
         // Do not time out when syncing users.
-        @set_time_limit();
+        @set_time_limit(0);
 
         if (main::sync_option_enabled('nodelta') === true) {
             $skiptoken = $this->get_token('skiptokenfull');
