@@ -222,7 +222,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020110901, 'auth', 'oidc');
     }
 
-    if ($oldversion < 2020110902) {
+    if ($oldversion < 2020110903) {
         // Part 1: add index to auth_oidc_token table.
         $table = new xmldb_table('auth_oidc_token');
 
@@ -260,7 +260,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         }
 
         // Oidc savepoint reached.
-        upgrade_plugin_savepoint(true, 2020110902, 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2020110903, 'auth', 'oidc');
     }
 
     return $result;
