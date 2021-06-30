@@ -252,7 +252,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 set_config('authendpoint', $authorizationendpoint, 'auth_oidc');
             }
 
-            $tokenendpoint = get_string('auth_oidc', 'tokenendpoint');
+            $tokenendpoint = get_config('auth_oidc', 'tokenendpoint');
             if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
                 $tokenendpoint = str_replace('common', $aadtenant, $tokenendpoint);
                 set_config('tokenendpoint', $tokenendpoint, 'auth_oidc');
