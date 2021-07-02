@@ -968,7 +968,7 @@ class main {
             // Process guest users.
             $user['convertedupn'] = $user['upnlower'];
             if (stripos($user['userPrincipalName'], '#EXT#') !== false) {
-                $user['convertedupn'] = $user['mail'];
+                $user['convertedupn'] = strtolower($user['mail']);
             }
 
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']]) &&
