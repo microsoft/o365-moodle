@@ -33,7 +33,7 @@ class fieldmap extends \admin_setting {
     /** @var bool Whether to use the update behavior column. */
     protected $showbehavcolumn = false;
 
-    /** @var str The string ID fron local_o365 to use as the heading for the remote field column. */
+    /** @var str The string ID from local_o365 to use as the heading for the remote field column. */
     protected $remotefieldstrid = 'settings_fieldmap_header_remote';
 
     /**
@@ -44,9 +44,8 @@ class fieldmap extends \admin_setting {
      * @param string $description localised long description
      * @param mixed $defaultsetting string or array depending on implementation
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = []) {
-        global $DB;
-
+    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [],
+        $syncbehav = []) {
         $this->syncbehavopts = $syncbehav;
         $this->remotefields = $remotefields;
         $this->localfields = $localfields;
@@ -123,8 +122,6 @@ class fieldmap extends \admin_setting {
      * @return string Returns an XHTML string
      */
     public function output_html($data, $query = '') {
-        global $DB, $OUTPUT;
-
         $html = \html_writer::start_tag('div');
 
         $style = 'button.addmapping, .fieldlist select, .fieldlist button {vertical-align:middle;margin:0;}';
@@ -195,7 +192,8 @@ class fieldmap extends \admin_setting {
         $maptpl .= \html_writer::tag('td', \html_writer::tag('span', '&rarr;'));
         $maptpl .= \html_writer::tag('td', \html_writer::select($this->localfields, $this->get_full_name().'[localfield][]', ''));
         if ($this->showbehavcolumn === true) {
-            $maptpl .= \html_writer::tag('td', \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]', '', false));
+            $maptpl .= \html_writer::tag('td', \html_writer::select($this->syncbehavopts, $this->get_full_name().'[behavior][]',
+                '', false));
         }
         $maptpl .= \html_writer::tag('td', \html_writer::tag('button', 'X', ['class' => 'removerow']));
         $maptpl .= \html_writer::end_tag('tr');
@@ -209,22 +207,5 @@ class fieldmap extends \admin_setting {
         $html .= \html_writer::end_tag('div');
 
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', null, $query);
-    }
-
-    /**
-     * Return the default mapping.
-     */
-    public static function defaultmap() {
-        $default = [
-            'givenName/firstname/always',
-            'surname/lastname/always',
-            'mail/email/always',
-            'userPrincipalName/idnumber/always',
-            'city/city/always',
-            'country/country/always',
-            'department/department/always',
-            'preferredLanguage/lang/always',
-        ];
-        return $default;
     }
 }

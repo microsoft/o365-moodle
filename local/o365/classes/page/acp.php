@@ -1516,7 +1516,6 @@ class acp extends base {
                 'debugmode',
                 'enableunifiedapi',
                 'disablegraphapi',
-                'fieldmap',
                 'odburl',
                 'photoexpire',
                 'usersynccreationrestriction',
