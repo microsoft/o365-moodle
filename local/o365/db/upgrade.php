@@ -308,19 +308,23 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($result && $oldversion < 2015111900.01) {
-        $fieldmapconfig = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'fieldmap']);
-        if (empty($fieldmapconfig)) {
-            $fieldmapdefault = [
-                'givenName/firstname/always',
-                'surname/lastname/always',
-                'mail/email/always',
-                'city/city/always',
-                'country/country/always',
-                'department/department/always',
-                'preferredLanguage/lang/always',
-            ];
-            set_config('fieldmap', serialize($fieldmapdefault), 'local_o365');
+        $authoidcversion = get_config('auth_oidc', 'version');
+        if ($authoidcversion && $authoidcversion < 2020071507) {
+            $fieldmapconfig = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'fieldmap']);
+            if (empty($fieldmapconfig)) {
+                $fieldmapdefault = [
+                    'givenName/firstname/always',
+                    'surname/lastname/always',
+                    'mail/email/always',
+                    'city/city/always',
+                    'country/country/always',
+                    'department/department/always',
+                    'preferredLanguage/lang/always',
+                ];
+                set_config('fieldmap', serialize($fieldmapdefault), 'local_o365');
+            }
         }
+
         upgrade_plugin_savepoint($result, '2015111900.01', 'local', 'o365');
     }
 
@@ -626,13 +630,16 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($result && $oldversion < 2020071503) {
-        $fieldmapsettings = get_config('local_o365', 'fieldmap');
-        if ($fieldmapsettings !== false) {
-            $fieldmapsettings = unserialize($fieldmapsettings);
-            foreach ($fieldmapsettings as $key => $setting) {
-                $fieldmapsettings[$key] = str_replace('facsimileTelephoneNumber', 'faxNumber', $setting);
+        $authoidcversion = get_config('auth_oidc', 'version');
+        if ($authoidcversion && $authoidcversion < 2020071507) {
+            $fieldmapsettings = get_config('local_o365', 'fieldmap');
+            if ($fieldmapsettings !== false) {
+                $fieldmapsettings = unserialize($fieldmapsettings);
+                foreach ($fieldmapsettings as $key => $setting) {
+                    $fieldmapsettings[$key] = str_replace('facsimileTelephoneNumber', 'faxNumber', $setting);
+                }
+                set_config('fieldmap', serialize($fieldmapsettings), 'local_o365');
             }
-            set_config('fieldmap', serialize($fieldmapsettings), 'local_o365');
         }
 
         upgrade_plugin_savepoint(true, 2020071503, 'local', 'o365');
