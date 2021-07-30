@@ -220,7 +220,8 @@ class assign_submission_onenote extends assign_submission_plugin {
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
 
         // Create zip file containing onenote page and related files.
-        $downloadinfo = $onenoteapi->download_page($record->submission_student_page_id, $tempfile);
+        $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+        $downloadinfo = $onenoteapi->download_page($record->submission_student_page_id, $tempfile, $o365userid);
 
         if (!$downloadinfo) {
             if ($onenoteapi->is_logged_in()) {

@@ -341,30 +341,6 @@ abstract class base {
     }
 
     /**
-     * Returns the name of the OneNote item (notebook or section) given its id.
-     *
-     * @param string $itemid the id of the OneNote notebook or section
-     * @return string|bool item name or false in case of error
-     */
-    public function get_item_name($itemid) {
-        if (empty($itemid)) {
-            throw new \coding_exception('Empty item_id passed to get_item_name');
-        }
-
-        $response = json_decode($this->apicall('get', '/notebooks/'.$itemid));
-        if (empty($response) || isset($response->error)) {
-            $response = json_decode($this->apicall('get', '/sections/'.$itemid));
-            if (empty($response) || isset($response->error)) {
-                $debugdata = ['response' => $response, 'itemid' => $itemid];
-                \local_onenote\utils::debug('could not find itemid', 'onenote\api\base::get_item_name', $debugdata);
-                return false;
-            }
-        }
-
-        return $response->name.".zip";
-    }
-
-    /**
      * Returns a list of OneNote item(s) at the given path (notebooks or sections or pages).
      *
      * @param string $path The path containing notebook id / section id / page id.
@@ -498,7 +474,6 @@ abstract class base {
      * Ensure that notebook and section data in the logged-in user's OneNote account are in sync with our database tables.
      */
     public function sync_notebook_data() {
-        global $DB;
         $notebookname = get_string('notebookname', 'local_onenote');
         $courses = enrol_get_my_courses(); // Get the current user enrolled courses.
         $notebooksarray = [];
