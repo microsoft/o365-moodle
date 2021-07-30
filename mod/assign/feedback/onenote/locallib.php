@@ -203,7 +203,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return bool True on successful save, false on error.
      */
     public function save(stdClass $grade, stdClass $data) {
-        global $DB, $COURSE;
+        global $DB, $COURSE, $USER;
 
         // Get the OneNote page id corresponding to the teacher's feedback for this submission.
         $record = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $grade->assignment, 'user_id' => $grade->userid]);
@@ -222,8 +222,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $tempfolder = $onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
 
+        $o365userid = \local_o365\utils::get_o365_userid($USER->id);
         // Create zip file containing onenote page and related files.
-        $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile);
+        $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile, $o365userid);
 
         if ($downloadinfo) {
 
