@@ -915,10 +915,14 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a list of the user's o365 calendars.
      *
+     * @param string $upn The user's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function get_calendars() {
-        $response = $this->apicall('get', '/me/calendars');
+    public function get_calendars($upn) {
+        if (!$upn) {
+            return false;
+        }
+        $response = $this->apicall('get', '/users/' . $upn . '/calendars');
         $expectedparams = ['value' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
         foreach ($return['value'] as $i => $calendar) {
@@ -937,11 +941,12 @@ class unified extends \local_o365\rest\o365api {
      * Create a new calendar in the user's o365 calendars.
      *
      * @param string $name The calendar's title.
+     * @param string $upn User's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function create_calendar($name) {
+    public function create_calendar($name, $upn) {
         $calendardata = json_encode(['name' => $name]);
-        $response = $this->apicall('post', '/me/calendars', $calendardata);
+        $response = $this->apicall('post', '/users/' . $upn . '/calendars', $calendardata);
         $expectedparams = ['id' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
         if (!isset($return['Id']) && isset($return['id'])) {
@@ -958,10 +963,11 @@ class unified extends \local_o365\rest\o365api {
      *
      * @param string $calendearid The calendar's title.
      * @param array $updated Array of updated information. Keys are 'name'.
+     * @param string $upn user's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function update_calendar($outlookcalendearid, $updated) {
-        if (empty($outlookcalendearid) || empty($updated)) {
+    public function update_calendar($calendearid, $updated, $upn) {
+        if (empty($calendearid) || empty($updated)) {
             return [];
         }
         $updateddata = [];
@@ -969,7 +975,7 @@ class unified extends \local_o365\rest\o365api {
             $updateddata['name'] = $updated['name'];
         }
         $updateddata = json_encode($updateddata);
-        $response = $this->apicall('patch', '/me/calendars/'.$outlookcalendearid, $updateddata);
+        $response = $this->apicall('patch', '/users/' . $upn . '/calendars/'.$calendearid, $updateddata);
         $expectedparams = ['id' => null];
         return  $this->process_apicall_response($response, $expectedparams);
     }
@@ -984,9 +990,11 @@ class unified extends \local_o365\rest\o365api {
      * @param array $attendees Array of moodle user objects that are attending the event.
      * @param array $other Other parameters to include.
      * @param string $calendarid The o365 ID of the calendar to create the event in.
+     * @param string $upn user's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
+    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null, 
+        $upn) {
         $eventdata = [
             'subject' => $subject,
             'body' => [
@@ -1015,7 +1023,8 @@ class unified extends \local_o365\rest\o365api {
         }
         $eventdata = array_merge($eventdata, $other);
         $eventdata = json_encode($eventdata);
-        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
+        $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
+            '/users/' . $upn . '/calendar/events';
         $response = $this->apicall('post', $endpoint, $eventdata);
         $expectedparams = ['id' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
@@ -1080,11 +1089,13 @@ class unified extends \local_o365\rest\o365api {
      *
      * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
      * @param string $since datetime date('c') to get events since.
+     * @param string $upn user's userPrincipalName
      * @return array Array of events.
      */
-    public function get_events($calendarid = null, $since = null) {
+    public function get_events($calendarid, $since, $upn) {
         \core_date::set_default_server_timezone();
-        $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
+        $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
+            '/users/' . $upn . '/calendar/events';
         if (!empty($since)) {
             // Pass datetime in UTC, regardless of Moodle timezone setting.
             $sincedt = new \DateTime('@'.$since);
@@ -1131,9 +1142,10 @@ class unified extends \local_o365\rest\o365api {
      *
      * @param string $outlookeventid The event ID in o365 outlook.
      * @param array $updated Array of updated information. Keys are 'subject', 'body', 'starttime', 'endtime', and 'attendees'.
+     * @param string $upn user's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function update_event($outlookeventid, $updated) {
+    public function update_event($outlookeventid, $updated, $upn) {
         if (empty($outlookeventid) || empty($updated)) {
             return [];
         }
@@ -1172,7 +1184,7 @@ class unified extends \local_o365\rest\o365api {
             }
         }
         $updateddata = json_encode($updateddata);
-        $response = $this->apicall('patch', '/me/events/'.$outlookeventid, $updateddata);
+        $response = $this->apicall('patch', '/users/' . $upn . '/events/' . $outlookeventid, $updateddata);
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -1181,11 +1193,12 @@ class unified extends \local_o365\rest\o365api {
      * Delete an event.
      *
      * @param string $outlookeventid The event ID in o365 outlook.
+     * @param string $upn user's userPrincipalName
      * @return bool Success/Failure.
      */
-    public function delete_event($outlookeventid) {
+    public function delete_event($outlookeventid, $upn) {
         if (!empty($outlookeventid)) {
-            $this->apicall('delete', '/me/events/'.$outlookeventid);
+            $this->apicall('delete', '/users/' . $upn . '/events/' . $outlookeventid);
         }
         return true;
     }
@@ -1193,15 +1206,20 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Create a file.
      *
-     * @param string $fileid The file's ID.
-     * @return string The file's content.
+     * @param $parentid
+     * @param $filename
+     * @param $content
+     * @param string $contenttype
+     * @param $o365userid
+     *
+     * @return array|null
      */
-    public function create_file($parentid, $filename, $content, $contenttype = 'text/plain') {
+    public function create_file($parentid, $filename, $content, $contenttype = 'text/plain', $o365userid) {
         $filename = rawurlencode($filename);
         if (!empty($parentid)) {
-            $endpoint = "/me/drive/items/{$parentid}/children/{$filename}/content";
+            $endpoint = "/users/{$o365userid}/drive/items/{$parentid}:/{$filename}:/content";
         } else {
-            $endpoint = "/me/drive/root:/{$filename}:/content";
+            $endpoint = "/users/{$o365userid}/drive/items/root:/{$filename}:/content";
         }
         $fileresponse = $this->apicall('put', $endpoint, ['file' => $content], ['contenttype' => $contenttype]);
         $expectedparams = ['id' => null];
@@ -1213,13 +1231,15 @@ class unified extends \local_o365\rest\o365api {
      * Get a file by it's file id.
      *
      * @param string $parentid The parent id to use.
+     * @param string $o365userid user's Office 365 account object ID
+     *
      * @return array|null Returned response, or null if error.
      */
-    public function get_files($parentid = '') {
+    public function get_files($parentid = '', $o365userid) {
         if (!empty($parentid) && $parentid !== '/') {
-            $endpoint = "/me/drive/items/{$parentid}/children";
+            $endpoint = "/users/{$o365userid}/drive/items/{$parentid}/children";
         } else {
-            $endpoint = '/me/drive/root/children';
+            $endpoint = "/users/{$o365userid}/drive/root/children";
         }
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
@@ -1230,10 +1250,11 @@ class unified extends \local_o365\rest\o365api {
      * Get a files from trendingAround api.
      *
      * @param string $parentid The parent id to use.
+     * @param string $upn user's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function get_trending_files($parentid = '') {
-        $response = $this->betaapicall('get', '/me/trendingAround');
+    public function get_trending_files($parentid = '', $upn) {
+        $response = $this->betaapicall('get', '/users/' . $upn . '/trendingAround');
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -1264,10 +1285,12 @@ class unified extends \local_o365\rest\o365api {
      * Get a file's metadata by it's file id.
      *
      * @param string $fileid The file's ID.
+     * @param string $o365userid user's Microsoft 365 account object ID
+     *
      * @return string The file's content.
      */
-    public function get_file_metadata($fileid) {
-        $response = $this->apicall('get', "/me/drive/items/{$fileid}");
+    public function get_file_metadata($fileid, $o365userid) {
+        $response = $this->apicall('get', "/users/{$o365userid}/drive/items/{$fileid}");
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -1276,10 +1299,12 @@ class unified extends \local_o365\rest\o365api {
      * Get a file's content by it's file id.
      *
      * @param string $fileid The file's ID.
+     * @param string $o365userid user's Microsoft 365 account object ID
+     *
      * @return string The file's content.
      */
-    public function get_file_by_id($fileid) {
-        return $this->apicall('get', "/me/drive/items/{$fileid}/content");
+    public function get_file_by_id($fileid, $o365userid) {
+        return $this->apicall('get', "/users/{$o365userid}/drive/items/{$fileid}/content");
     }
 
     /**
@@ -1640,11 +1665,12 @@ class unified extends \local_o365\rest\o365api {
      * Create readonly link for onedrive file.
      *
      * @param string $fileid onedrive file id.
+     * @param string $o365userid
      * @return string Readonly file url.
      */
-    public function get_sharing_link($fileid) {
+    public function get_sharing_link($fileid, $o365userid) {
         $params = array('type' => 'view', 'scope' => 'organization');
-        $apiresponse = $this->apicall('post', "/me/drive/items/$fileid/createLink", json_encode($params));
+        $apiresponse = $this->apicall('post', "/users/{$o365userid}/drive/items/$fileid/createLink", json_encode($params));
         $response = $this->process_apicall_response($apiresponse);
         return $response['link']['webUrl'];
     }
