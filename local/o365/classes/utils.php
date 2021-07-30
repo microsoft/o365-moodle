@@ -197,6 +197,17 @@ class utils {
     }
 
     /**
+     * Get the object ID of the connected Microsoft 365 account.
+     *
+     * @param $userid
+     * @return null
+     */
+    public static function get_o365_userid($userid) {
+        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
+        return (!empty($o365user)) ? $o365user->objectid : null;
+    }
+
+    /**
      * Determine if a user is connected to Microsoft 365.
      *
      * @param int $userid The user's ID.
