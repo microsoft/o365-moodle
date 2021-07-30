@@ -147,31 +147,6 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
     }
 
     /**
-     * Test for getitemname api
-     */
-    public function test_getitemaname() {
-        return true; // Need to update test to not require config data.
-        $this->set_test_config();
-        $this->set_user(0);
-
-        $itemlist = $this->onenoteapi->get_items_list();
-
-        foreach ($itemlist as $item) {
-            if ($item['title'] == 'Moodle Notebook') {
-                $this->assertEquals($item['title'].'.zip', $this->onenoteapi->get_item_name($item['id']),
-                    'Unable to get notebook name');
-
-                $subitems = $this->onenoteapi->get_items_list($item['path']);
-                foreach ($subitems as $subitem) {
-                    $this->assertEquals($subitem['title'].'.zip', $this->onenoteapi->get_item_name($subitem['id']),
-                        'Unable to get section name');
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
      * Test for onenote action button
      */
     public function test_renderactionbutton() {

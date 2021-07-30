@@ -44,7 +44,8 @@ class o365 extends base {
         try {
             if (\local_o365\rest\unified::is_configured() === true) {
                 $apiclient = \local_o365\rest\unified::instance_for_user($USER->id);
-                $apimethod = '/me/onenote'.$apimethod;
+                $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+                $apimethod = '/users/' . $o365userid . '/onenote' .$apimethod;
             } else {
                 $apiclient = \local_o365\rest\onenote::instance_for_user($USER->id);
             }
