@@ -25,6 +25,10 @@
 
 $string['configmaxbytes'] = 'Maximum OneNote size';
 $string['countfiles'] = 'OneNotes: {$a}';
+$string['deletefeedback'] = 'Delete feedback for user';
+$string['deletefeedbackconfirm'] = 'Confirmation of onenote feedback removal';
+$string['deletefeedbackconfirmdetail'] = 'This will remove the saved onenote feedback for the user, details will still be in onenote';
+$string['deletefeedbackforuser'] = 'Delete onenote feedback for user';
 $string['default'] = 'Enabled by default';
 $string['default_help'] = 'When set, this feedback method is enabled by default for all new assignments.';
 $string['enabled'] = 'OneNote feedback';
