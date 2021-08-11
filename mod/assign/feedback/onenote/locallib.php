@@ -115,7 +115,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return bool true if elements were added to the form
      */
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {
-        global $USER;
+        global $USER, $PAGE;
 
         // Check to see if one note is disabled site wide.
         if (get_config('local_o365', 'onenote')) {
@@ -146,6 +146,14 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     $this->assignment->get_course_module()->id, true, true,
                     $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
+
+            // Show a view all link if the number of files is over this limit.
+            $count = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+            // Check if feedback is already given
+            if ($count <= \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES && $count > 0) {
+              $o .= '<button type="submit" class="btn btn-primary" gradeid="'.$grade->id.'" userid="'. $userid .'" contextid="'.$this->assignment->get_context()->id.'" id="deleteuserfeedback"  name="deleteuserfeedback">'.get_string('deletefeedbackforuser','assignfeedback_onenote').'</button>';
+            }
+
         } else {
             $o .= $onenoteapi->render_signin_widget();
             $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignfeedback_onenote') . '</p>';
@@ -154,6 +162,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $o .= '<hr/>';
 
         $mform->addElement('html', $o);
+        $PAGE->requires->js_call_amd('assignfeedback_onenote/onenotedelete', 'init');
 
         return true;
     }
@@ -333,24 +342,23 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $o = '';
 
         if ($count <= \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
-            if (($grade->grade !== null) && ($grade->grade >= 0)) {
-                if ($onenoteapi->is_logged_in()) {
-                    // Show a link to open the OneNote page.
-                    $submission = $this->assignment->get_user_submission($grade->userid, false);
-                    $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
-                    $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
-                            $this->assignment->get_course_module()->id, true, $isteacher,
-                            $grade->userid, $submission ? $submission->id : 0, $grade->id);
-                } else {
-                    $o .= $onenoteapi->render_signin_widget();
-                    $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
-                }
 
-                // Show standard link to download zip package.
-                $o .= '<p>Download:</p>';
-                $filearea = \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA;
-                $o .= $this->assignment->render_area_files('assignfeedback_onenote', $filearea, $grade->id);
+            if ($onenoteapi->is_logged_in()) {
+                // Show a link to open the OneNote page.
+                $submission = $this->assignment->get_user_submission($grade->userid, false);
+                $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
+                $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
+                        $this->assignment->get_course_module()->id, true, $isteacher,
+                        $grade->userid, $submission ? $submission->id : 0, $grade->id);
+            } else {
+                $o .= $onenoteapi->render_signin_widget();
+                $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
             }
+
+            // Show standard link to download zip package.
+            $o .= '<p>Download:</p>';
+            $filearea = \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA;
+            $o .= $this->assignment->render_area_files('assignfeedback_onenote', $filearea, $grade->id);
 
             return $o;
         } else {
