@@ -272,7 +272,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
-     * Log out user from Office 365 if single sign off integration is enabled.
+     * Log out user from Microsoft 365 if single sign off integration is enabled.
      *
      * @param stdClass $user
      *
