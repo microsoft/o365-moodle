@@ -551,4 +551,28 @@ class assign_submission_onenote extends assign_submission_plugin {
         }
         return true;
     }
+
+    /**
+     * Remove files from this submission.
+     *
+     * @param stdClass $submission The submission
+     * @return boolean
+     */
+    public function remove(stdClass $submission) {
+      global $DB;
+      $fs = get_file_storage();
+
+      $fs->delete_area_files($this->assignment->get_context()->id,
+        'assignsubmission_onenote',
+        \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+        $submission->id);
+
+      $currentsubmission = $this->get_file_submission($submission->id);
+      if ($currentsubmission) {
+        $currentsubmission->numfiles = 0;
+        $DB->update_record('assignsubmission_onenote', $currentsubmission);
+      }
+
+      return true;
+    }
 }
