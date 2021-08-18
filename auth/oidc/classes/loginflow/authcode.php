@@ -423,6 +423,12 @@ class authcode extends base {
         global $DB, $CFG;
 
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+
+        // Do not continue if auth plugin is not enabled,
+        if (!is_enabled_auth('oidc')) {
+            throw new \moodle_exception('erroroidcnotenabled', 'auth_oidc', null, null, '1');
+        }
+
         if (!empty($tokenrec)) {
             // Already connected user.
             if (empty($tokenrec->userid)) {
