@@ -180,6 +180,12 @@ $observers = [
         'internal'    => false,
     ],
     [
+        'eventname'   => '\core\event\course_restored',
+        'callback'    => '\local_o365\observers::handle_course_restored',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
         'eventname'   => '\core\event\course_updated',
         'callback'    => '\local_o365\observers::handle_course_updated',
         'priority'    => 200,
