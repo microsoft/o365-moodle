@@ -1265,10 +1265,11 @@ class coursegroups {
      *
      * @param \stdClass $course
      * @param \stdClass $o365object
+     * @param bool $createafterreset
      *
      * @return bool
      */
-    public function process_course_reset_team(\stdClass $course, \stdClass  $o365object) {
+    public function process_course_reset_team(\stdClass $course, \stdClass  $o365object, bool $createafterreset = true) {
         // Rename existing Team.
         try {
             $resetteamnameprefix = get_config('local_o365', 'reset_team_name_prefix');
@@ -1294,48 +1295,21 @@ class coursegroups {
         $this->DB->delete_records('local_o365_coursegroupdata', ['courseid' => $course->id]);
 
         // Create a new Team and connect it to the course.
-        $ownerid = null;
-        $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
-        foreach ($teacherids as $teacherid) {
-            if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
-                ['type' => 'user', 'moodleid' => $teacherid])) {
-                break;
-            }
-        }
-        if ($ownerid) {
-            // Create class team directly.
-            try {
-                $objectrec = $this->create_class_team($course, $ownerid);
-            } catch (\Exception $e) {
-                $this->mtrace('Could not create class team for course #' . $course->id . '. Reason: ' . $e->getMessage());
-                return false;
-            }
-
-            // Add owners to the Team (and not members).
-            $retrycounter = 0;
-            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
-                if ($retrycounter) {
-                    $this->mtrace('..... Retry #' . $retrycounter);
-                    sleep(10);
-                }
-                try {
-                    $this->resync_group_membership($course->id, $objectrec['objectid'], true);
+        if ($createafterreset) {
+            $ownerid = null;
+            $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
+            foreach ($teacherids as $teacherid) {
+                if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
+                    ['type' => 'user', 'moodleid' => $teacherid])) {
                     break;
-                } catch (\Exception $e) {
-                    $this->mtrace('Could not sync owners to Team for course #' . $course->id . '. Reason: ' . $e->getMessage());
-                    return false;
                 }
             }
-        } else {
-            // Check if needs to fallback to creating group.
-            if (get_config('local_o365', 'group_creation_fallback') == true) {
-                $this->mtrace('Fall back to creating group instead of Team after reset.');
-
-                // Create group.
+            if ($ownerid) {
+                // Create class team directly.
                 try {
-                    $objectrec = $this->create_group($course);
+                    $objectrec = $this->create_class_team($course, $ownerid);
                 } catch (\Exception $e) {
-                    $this->mtrace('Could not create group for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                    $this->mtrace('Could not create class team for course #' . $course->id . '. Reason: ' . $e->getMessage());
                     return false;
                 }
 
@@ -1355,9 +1329,40 @@ class coursegroups {
                     }
                 }
             } else {
-                return false;
+                // Check if it needs to fall back to creating group.
+                if (get_config('local_o365', 'group_creation_fallback') == true) {
+                    $this->mtrace('Fall back to creating group instead of Team after reset.');
+
+                    // Create group.
+                    try {
+                        $objectrec = $this->create_group($course);
+                    } catch (\Exception $e) {
+                        $this->mtrace('Could not create group for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                        return false;
+                    }
+
+                    // Add owners to the Team (and not members).
+                    $retrycounter = 0;
+                    while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+                        if ($retrycounter) {
+                            $this->mtrace('..... Retry #' . $retrycounter);
+                            sleep(10);
+                        }
+                        try {
+                            $this->resync_group_membership($course->id, $objectrec['objectid'], true);
+                            break;
+                        } catch (\Exception $e) {
+                            $this->mtrace('Could not sync owners to Team for course #' . $course->id . '. Reason: ' .
+                                $e->getMessage());
+                            return false;
+                        }
+                    }
+                } else {
+                    return false;
+                }
             }
         }
+
 
         return true;
     }
@@ -1372,10 +1377,11 @@ class coursegroups {
      *
      * @param \stdClass $course
      * @param \stdClass $o365object
+     * @param bool $createafterreset
      *
      * @return bool
      */
-    public function process_course_reset_group(\stdClass $course, \stdClass  $o365object) {
+    public function process_course_reset_group(\stdClass $course, \stdClass $o365object, bool $createafterreset = true) {
         // Rename existing group.
         try {
             $existinggroup = $this->graphclient->get_group($o365object->objectid);
@@ -1406,26 +1412,28 @@ class coursegroups {
         $this->DB->delete_records('local_o365_coursegroupdata', ['courseid' => $course->id]);
 
         // Create a new group and connect it to the course.
-        try {
-            $objectrec = $this->create_group($course);
-        } catch (\Exception $e) {
-            $this->mtrace('Could not create group for course #' . $course->id . '. Reason: ' . $e->getMessage());
-            return false;
-        }
-
-        // Add group owners (and not members).
-        $retrycounter = 0;
-        while ($retrycounter <= API_CALL_RETRY_LIMIT) {
-            if ($retrycounter) {
-                $this->mtrace('..... Retry #' . $retrycounter);
-                sleep(10);
-            }
+        if ($createafterreset) {
             try {
-                $this->resync_group_membership($course->id, $objectrec['objectid'], true);
-                break;
+                $objectrec = $this->create_group($course);
             } catch (\Exception $e) {
-                $this->mtrace('Could not sync owners to group for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                $this->mtrace('Could not create group for course #' . $course->id . '. Reason: ' . $e->getMessage());
                 return false;
+            }
+
+            // Add group owners (and not members).
+            $retrycounter = 0;
+            while ($retrycounter <= API_CALL_RETRY_LIMIT) {
+                if ($retrycounter) {
+                    $this->mtrace('..... Retry #' . $retrycounter);
+                    sleep(10);
+                }
+                try {
+                    $this->resync_group_membership($course->id, $objectrec['objectid'], true);
+                    break;
+                } catch (\Exception $e) {
+                    $this->mtrace('Could not sync owners to group for course #' . $course->id . '. Reason: ' . $e->getMessage());
+                    return false;
+                }
             }
         }
 

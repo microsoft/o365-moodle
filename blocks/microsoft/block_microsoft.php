@@ -214,7 +214,7 @@ class block_microsoft extends block_base {
                                     }
 
                                     break;
-                                case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT:
+                                case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW:
                                     // Force archive, show notification.
                                     if (utils::course_is_group_feature_enabled($courseid, 'team')) {
                                         $items[] = html_writer::span(get_string('course_reset_disconnect_team', 'block_microsoft'),
