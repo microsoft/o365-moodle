@@ -203,5 +203,10 @@ $settings->add($setting);
 // Tools to clean up tokens.
 $cleanupoidctokensurl = new moodle_url('/auth/oidc/cleanupoidctokens.php');
 $cleanupoidctokenslink = html_writer::link($cleanupoidctokensurl, get_string('cfg_cleanupoidctokens_key', 'auth_oidc'));
-$settings->add(new auth_oidc_admin_setting_label('auth_oidc/cleaniodctokens', $cleanupoidctokenslink,
-    get_string('cfg_cleanupoidctokens_desc', 'auth_oidc')));
+$settings->add(new auth_oidc_admin_setting_label('auth_oidc/cleaniodctokens', get_string('cfg_tools', 'auth_oidc'),
+    $cleanupoidctokenslink, get_string('cfg_cleanupoidctokens_desc', 'auth_oidc')));
+
+// Display locking / mapping of profile fields.
+$authplugin = get_auth_plugin('oidc');
+auth_oidc_display_auth_lock_options($settings, $authplugin->authtype, $authplugin->userfields,
+    get_string('cfg_field_mapping_desc', 'auth_oidc'), true, false, $authplugin->get_custom_user_profile_fields());
