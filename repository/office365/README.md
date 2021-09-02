@@ -3,7 +3,7 @@
 
 ## OneDrive for Business Repository
 
-This plugin provides access to OneDrive for business as a repository. It can also access SharePoint sites set up by local_o365 for each Moodle course, which serve as a shared repository for teachers.
+This plugin provides access to OneDrive for business as a repository.
 
 
 This is part of the suite of Microsoft 365 plugins for Moodle.
