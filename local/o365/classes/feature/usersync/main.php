@@ -628,7 +628,7 @@ class main {
                     utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
                     return false;
                 }
-                $usersgroups = $apiclient->get_user_groups($aaddata['id']);
+                $usersgroups = $apiclient->get_user_transitive_groups($aaddata['id']);
                 foreach ($usersgroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
                         return true;
@@ -703,7 +703,7 @@ class main {
         ];
 
         // Determine if the newly created user needs to be suspended.
-        if ($syncoptions['disabledsync']) {
+        if (isset($syncoptions['disabledsync'])) {
             if (isset($aaddata['accountEnabled']) && $aaddata['accountEnabled'] == false) {
                 $newuser->suspended = 1;
             }
