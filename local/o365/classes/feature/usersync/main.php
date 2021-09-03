@@ -291,7 +291,9 @@ class main {
         if (is_array($remotetimezone) && !empty($remotetimezone['value'])) {
             $remotetimezonesetting = $remotetimezone['value'];
             $moodletimezone = \core_date::normalise_timezone($remotetimezonesetting);
+
             if ($moodletimezone) {
+                validate_param($moodletimezone, PARAM_TIMEZONE);
                 $existinguser = \core_user::get_user($muserid);
                 $existinguser->timezone = $moodletimezone;
                 user_update_user($existinguser, false, true);
