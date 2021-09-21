@@ -663,8 +663,10 @@ if ($hassiteconfig) {
 
     // Redirect back to the tab after configuration change.
     if ($PAGE->has_set_url()) {
-        $taburl = $PAGE->url;
-        $taburl->param('s_local_o365_tabs', $tab);
-        $PAGE->set_url($taburl);
+        if ($PAGE->url->get_param('section') == 'local_o365') {
+            $taburl = $PAGE->url;
+            $taburl->param('s_local_o365_tabs', $tab);
+            $PAGE->set_url($taburl);
+        }
     }
 }
