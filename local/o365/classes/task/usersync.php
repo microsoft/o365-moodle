@@ -89,6 +89,7 @@ class usersync extends scheduled_task {
             return true;
         }
         $this->mtrace('Starting sync');
+        raise_memory_limit(MEMORY_HUGE);
 
         $usersync = new main();
 
