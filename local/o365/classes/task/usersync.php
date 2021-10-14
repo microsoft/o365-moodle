@@ -229,7 +229,7 @@ class usersync extends scheduled_task {
                 }
                 if (main::sync_option_enabled('reenable')) {
                     $this->mtrace('Re-enabling suspended users...');
-                    $usersync->reenable_suspsend_users($users);
+                    $usersync->reenable_suspsend_users($users, main::sync_option_enabled('disabledsync'));
                 }
             }
         }
