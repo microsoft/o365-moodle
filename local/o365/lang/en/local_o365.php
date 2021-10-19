@@ -627,7 +627,7 @@ $string['settings_teams_moodle_app_external_id_desc'] = 'This should be set to t
 $string['settings_teams_moodle_app_short_name'] = 'Teams app name';
 $string['settings_teams_moodle_app_short_name_desc'] = 'This can be set as default, unless multiple Moodle Teams apps are required in your tenant to connect to different Moodle sites.';
 $string['settings_bot_sharedsecret'] = 'Shared Moodle Secret';
-$string['settings_bot_sharedsecret_desc'] = 'Please paste this secret to the \'Shared Moodle Secret\' field in the Azure Bot template';
+$string['settings_bot_sharedsecret_desc'] = 'This shared secret will be also added to the \'Shared Moodle Secret\' field in the Azure Bot template to secure communication between Moodle and Bot.';
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
