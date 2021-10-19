@@ -204,3 +204,224 @@ function auth_oidc_delete_token(int $tokenid) {
 
     $DB->delete_records('auth_oidc_token', ['id' => $tokenid]);
 }
+
+/**
+ * Return the list of remote field options in field mapping.
+ *
+ * @return array
+ */
+function auth_oidc_get_remote_fields() {
+    if (auth_oidc_is_local_365_installed()) {
+        $remotefields = [
+            '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_oidc'),
+            'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_oidc'),
+            'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
+            'displayName' => get_string('settings_fieldmap_field_displayName', 'auth_oidc'),
+            'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_oidc'),
+            'surname' => get_string('settings_fieldmap_field_surname', 'auth_oidc'),
+            'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
+            'streetAddress' => get_string('settings_fieldmap_field_streetAddress', 'auth_oidc'),
+            'city' => get_string('settings_fieldmap_field_city', 'auth_oidc'),
+            'postalCode' => get_string('settings_fieldmap_field_postalCode', 'auth_oidc'),
+            'state' => get_string('settings_fieldmap_field_state', 'auth_oidc'),
+            'country' => get_string('settings_fieldmap_field_country', 'auth_oidc'),
+            'jobTitle' => get_string('settings_fieldmap_field_jobTitle', 'auth_oidc'),
+            'department' => get_string('settings_fieldmap_field_department', 'auth_oidc'),
+            'companyName' => get_string('settings_fieldmap_field_companyName', 'auth_oidc'),
+            'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'auth_oidc'),
+            'employeeId' => get_string('settings_fieldmap_field_employeeId', 'auth_oidc'),
+            'businessPhones' => get_string('settings_fieldmap_field_businessPhones', 'auth_oidc'),
+            'faxNumber' => get_string('settings_fieldmap_field_faxNumber', 'auth_oidc'),
+            'mobilePhone' => get_string('settings_fieldmap_field_mobilePhone', 'auth_oidc'),
+            'officeLocation' => get_string('settings_fieldmap_field_officeLocation', 'auth_oidc'),
+            'preferredName' => get_string('settings_fieldmap_field_preferredName', 'auth_oidc'),
+            'manager' => get_string('settings_fieldmap_field_manager', 'auth_oidc'),
+            'teams' => get_string('settings_fieldmap_field_teams', 'auth_oidc'),
+            'groups' => get_string('settings_fieldmap_field_groups', 'auth_oidc'),
+            'roles' => get_string('settings_fieldmap_field_roles', 'auth_oidc'),
+        ];
+
+        $order = 0;
+        while ($order++ < 15) {
+            $remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_oidc',
+                $order);
+        }
+    } else {
+        $remotefields = [
+            '' => '',
+            'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_oidc'),
+            'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
+            'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_oidc'),
+            'surname' => get_string('settings_fieldmap_field_surname', 'auth_oidc'),
+            'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
+        ];
+    }
+
+
+    return $remotefields;
+}
+
+/**
+ * Return the current field mapping settings in an array.
+ *
+ * @return array
+ */
+function auth_oidc_get_field_mappings() {
+    $fieldmappings = [];
+
+    $userfields = auth_oidc_get_all_user_fields();
+
+    $authoidcconfig = get_config('auth_oidc');
+
+    foreach ($userfields as $userfield) {
+        $fieldmapsettingname = 'field_map_' . $userfield;
+        if (property_exists($authoidcconfig, $fieldmapsettingname) && $authoidcconfig->$fieldmapsettingname) {
+            $fieldsetting = [];
+            $fieldsetting['field_map'] = $authoidcconfig->$fieldmapsettingname;
+
+            $fieldlocksettingname = 'field_lock_' . $userfield;
+            if (property_exists($authoidcconfig, $fieldlocksettingname)) {
+                $fieldsetting['field_lock'] = $authoidcconfig->$fieldlocksettingname;
+            } else {
+                $fieldsetting['field_lock'] = 'unlocked';
+            }
+
+            $fieldupdatelocksettignname = 'field_updatelocal_' . $userfield;
+            if (property_exists($authoidcconfig, $fieldupdatelocksettignname)) {
+                $fieldsetting['update_local'] = $authoidcconfig->$fieldupdatelocksettignname;
+            } else {
+                $fieldsetting['update_local'] = 'always';
+            }
+
+            $fieldmappings[$userfield] = $fieldsetting;
+        }
+    }
+
+    return $fieldmappings;
+}
+
+/**
+ * Helper function used to print mapping and locking for auth_oidc plugin on admin pages.
+ *
+ * @param stdclass $settings Moodle admin settings instance
+ * @param string $auth authentication plugin shortname
+ * @param array $userfields user profile fields
+ * @param string $helptext help text to be displayed at top of form
+ * @param boolean $mapremotefields Map fields or lock only.
+ * @param boolean $updateremotefields Allow remote updates
+ * @param array $customfields list of custom profile fields
+ */
+function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $helptext, $mapremotefields, $updateremotefields,
+    $customfields = array()) {
+    global $DB;
+
+    // Introductory explanation and help text.
+    if ($mapremotefields) {
+        $settings->add(new admin_setting_heading($auth.'/data_mapping', new lang_string('auth_data_mapping', 'auth'), $helptext));
+    } else {
+        $settings->add(new admin_setting_heading($auth.'/auth_fieldlocks', new lang_string('auth_fieldlocks', 'auth'), $helptext));
+    }
+
+    // Generate the list of options.
+    $lockoptions = [
+        'unlocked' => get_string('unlocked', 'auth'),
+        'unlockedifempty' => get_string('unlockedifempty', 'auth'),
+        'locked' => get_string('locked', 'auth'),
+    ];
+
+    if (auth_oidc_is_local_365_installed()) {
+        $alwaystext = get_string('update_oncreate_and_onlogin_and_usersync', 'auth_oidc');
+        $onlogintext = get_string('update_onlogin_and_usersync', 'auth_oidc');
+    } else {
+        $alwaystext = get_string('update_oncreate_and_onlogin', 'auth_oidc');
+        $onlogintext = get_string('update_onlogin', 'auth');
+    }
+    $updatelocaloptions = [
+        'always' => $alwaystext,
+        'oncreate' => get_string('update_oncreate', 'auth'),
+        'onlogin' => $onlogintext,
+    ];
+
+    $updateextoptions = [
+        '0' => get_string('update_never', 'auth'),
+        '1' => get_string('update_onupdate', 'auth'),
+    ];
+
+    // Generate the list of profile fields to allow updates / lock.
+    if (!empty($customfields)) {
+        $userfields = array_merge($userfields, $customfields);
+        $customfieldname = $DB->get_records('user_info_field', null, '', 'shortname, name');
+    }
+
+    $remotefields = auth_oidc_get_remote_fields();
+
+    foreach ($userfields as $field) {
+        // Define the fieldname we display to the  user.
+        // this includes special handling for some profile fields.
+        $fieldname = $field;
+        $fieldnametoolong = false;
+        if ($fieldname === 'lang') {
+            $fieldname = get_string('language');
+        } else if (!empty($customfields) && in_array($field, $customfields)) {
+            // If custom field then pick name from database.
+            $fieldshortname = str_replace('profile_field_', '', $fieldname);
+            $fieldname = $customfieldname[$fieldshortname]->name;
+            if (core_text::strlen($fieldshortname) > 67) {
+                // If custom profile field name is longer than 67 characters we will not be able to store the setting
+                // such as 'field_updateremote_profile_field_NOTSOSHORTSHORTNAME' in the database because the character
+                // limit for the setting name is 100.
+                $fieldnametoolong = true;
+            }
+        } else if ($fieldname == 'url') {
+            $fieldname = get_string('webpage');
+        } else {
+            $fieldname = get_string($fieldname);
+        }
+
+        // Generate the list of fields / mappings.
+        if ($fieldnametoolong) {
+            // Display a message that the field can not be mapped because it's too long.
+            $url = new moodle_url('/user/profile/index.php');
+            $a = (object)['fieldname' => s($fieldname), 'shortname' => s($field), 'charlimit' => 67, 'link' => $url->out()];
+            $settings->add(new admin_setting_heading($auth.'/field_not_mapped_'.sha1($field), '',
+                get_string('cannotmapfield', 'auth', $a)));
+        } else if ($mapremotefields) {
+            // We are mapping to a remote field here.
+            // Mapping.
+            $settings->add(new admin_setting_configselect("auth_oidc/field_map_{$field}",
+                get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $remotefields));
+
+            // Update local.
+            $settings->add(new admin_setting_configselect("auth_{$auth}/field_updatelocal_{$field}",
+                get_string('auth_updatelocalfield', 'auth', $fieldname), '', 'always', $updatelocaloptions));
+
+            // Update remote.
+            if ($updateremotefields) {
+                $settings->add(new admin_setting_configselect("auth_{$auth}/field_updateremote_{$field}",
+                    get_string('auth_updateremotefield', 'auth', $fieldname), '', 0, $updateextoptions));
+            }
+
+            // Lock fields.
+            $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}",
+                get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
+
+        } else {
+            // Lock fields Only.
+            $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}",
+                get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
+        }
+    }
+}
+
+/**
+ * Return all user profile field names in an array.
+ *
+ * @return array|string[]|null
+ */
+function auth_oidc_get_all_user_fields() {
+    $authplugin = get_auth_plugin('oidc');
+    $userfields = $authplugin->userfields;
+    $userfields = array_merge($userfields, $authplugin->get_custom_user_profile_fields());
+
+    return $userfields;
+}

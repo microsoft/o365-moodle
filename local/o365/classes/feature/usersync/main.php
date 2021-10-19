@@ -477,15 +477,12 @@ class main {
      * @return \stdClass Modified Moodle user data.
      */
     public static function apply_configured_fieldmap(array $aaddata, \stdClass $user, $eventtype) {
-        $fieldmaps = get_config('local_o365', 'fieldmap');
-        if ($fieldmaps === false) {
-            $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
-        } else {
-            $fieldmaps = @unserialize($fieldmaps);
-            if (!is_array($fieldmaps)) {
-                $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
-            }
-        }
+        global $CFG;
+
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
+        $fieldmappings = auth_oidc_get_field_mappings();
+
         if (unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
             $objectidfieldname = 'id';
             $userobjectid = $aaddata['id'];
@@ -493,13 +490,12 @@ class main {
             $objectidfieldname = 'objectId';
             $userobjectid = $aaddata['objectId'];
         }
-        $usersync = new \local_o365\feature\usersync\main();
-        foreach ($fieldmaps as $fieldmap) {
-            $fieldmap = explode('/', $fieldmap);
-            if (count($fieldmap) !== 3) {
-                continue;
-            }
-            list($remotefield, $localfield, $behavior) = $fieldmap;
+
+        $usersync = new self();
+        foreach ($fieldmappings as $localfield => $fieldmapping) {
+            $remotefield = $fieldmapping['field_map'];
+            $behavior = $fieldmapping['update_local'];
+
             if ($remotefield == 'objectId') {
                 $remotefield = $objectidfieldname;
             }
@@ -564,34 +560,24 @@ class main {
      * @return bool
      */
     public static function fieldmap_require_graph_api_call($eventtype) {
-        $requireapicall = false;
+        global $CFG;
 
-        $fieldmaps = get_config('local_o365', 'fieldmap');
-        if ($fieldmaps !== false) {
-            $fieldmaps = @unserialize($fieldmaps);
-            if (!is_array($fieldmaps)) {
-                $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
-            }
-        }
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
+        $fieldmappings = auth_oidc_get_field_mappings();
 
         $idtokenfields = ['givenName', 'surname', 'mail', 'objectId', 'userPrincipalName'];
 
-        foreach ($fieldmaps as $fieldmap) {
-            $fieldmap = explode('/', $fieldmap);
-
-            if (count($fieldmap) !== 3) {
-                continue;
-            }
-
-            if (!in_array($fieldmap[0], $idtokenfields)) {
-                if ($fieldmap[2] == 'always' || $fieldmap[2] == 'on' . $eventtype) {
-                    $requireapicall = true;
-                    break;
+        foreach ($fieldmappings as $fieldmapping) {
+            $remotefield = $fieldmapping['field_map'];
+            if (!in_array($remotefield, $idtokenfields)) {
+                if ($fieldmapping['update_local'] == 'always' || $fieldmapping['update_local'] == 'on' . $eventtype) {
+                    return true;
                 }
             }
         }
 
-        return $requireapicall;
+        return false;
     }
 
     /**
