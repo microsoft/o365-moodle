@@ -96,7 +96,8 @@ class assignfeedback_onenote_external extends external_api {
       \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, $gradeid);
 
     // Remove entry from local_onenote_assign_pages
-    $record = $DB->get_record('local_onenote_assign_pages', ['id' => $gradeid, 'user_id' => $userid], '*' ,MUST_EXIST);
+    $grade_record = $DB->get_record('assign_grades', ['id' => $gradeid], '*' ,MUST_EXIST);
+    $record = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $grade_record->assignment, 'user_id' => $userid], '*' ,MUST_EXIST);
     $record->feedback_teacher_page_id = '';
     $DB->update_record('local_onenote_assign_pages', $record);
 
