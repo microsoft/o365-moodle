@@ -175,11 +175,11 @@ class authcode extends base {
      * @param array $authparams Received parameters.
      */
     protected function handleauthresponse(array $authparams) {
-        global $DB, $STATEADDITIONALDATA, $USER;
+        global $DB, $STATEADDITIONALDATA, $USER, $CFG;
 
         if (!empty($authparams['error_description'])) {
             utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
-            throw new \moodle_exception('errorauthgeneral', 'auth_oidc');
+            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, \core\output\notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['code'])) {
@@ -531,7 +531,8 @@ class authcode extends base {
                 if (!empty($tokenrec)) {
                     $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
                 }
-                throw new \moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
+
+                redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, \core\output\notification::NOTIFY_ERROR);
             }
 
             return true;
