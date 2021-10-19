@@ -816,8 +816,26 @@ class unified extends \local_o365\rest\o365api {
      * @return array|null
      */
     public function get_user_groups($userobjectid) {
-        $endpoint = "users/$userobjectid/memberOf/microsoft.graph.group";
+        $endpoint = "users/$userobjectid/transitiveMemberOf/microsoft.graph.group";
         $response = $this->apicall('get', $endpoint);
+        if ($this->httpclient->info['http_code'] == 200) {
+            $result = $this->process_apicall_response($response, ['value' => null]);
+            return $result['value'];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Get user groups, including transitive groups, by passing user AD ID.
+     *
+     * @param $userobjectid
+     *
+     * @return mixed
+     */
+    public function get_user_transitive_groups($userobjectid) {
+        $endpoint = "users/$userobjectid/getMemberGroups";
+        $response = $this->apicall('post', $endpoint, json_encode(['securityEnabledOnly' => false]));
         $result = $this->process_apicall_response($response, ['value' => null]);
         return $result['value'];
     }
