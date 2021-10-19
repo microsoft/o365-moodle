@@ -32,9 +32,6 @@ class repository_office365 extends \repository {
     /** @var bool Whether onedrive is configured. */
     protected $onedriveconfigured = false;
 
-    /** @var bool Whether sharepoint is configured. */
-    protected $sharepointconfigured = false;
-
     /** @var bool Whether the Microsoft Graph API is configured. */
     protected $unifiedconfigured = false;
 
@@ -57,7 +54,6 @@ class repository_office365 extends \repository {
         }
         $this->onedriveconfigured = \local_o365\rest\onedrive::is_configured();
         $this->unifiedconfigured = \local_o365\rest\unified::is_configured();
-        $this->sharepointconfigured = \local_o365\rest\sharepoint::is_configured();
     }
 
     /**
@@ -97,24 +93,6 @@ class repository_office365 extends \repository {
     }
 
     /**
-     * Get a SharePoint token.
-     *
-     * @param bool $system If true, get a system API ser token instead of the user's token.
-     * @param int|null $userid The userid to get a token for. If null, the current user will be used.
-     * @return \local_o365\oauth2\token A SharePoint token object.
-     */
-    protected function get_sharepoint_token($system = false, $userid = null) {
-        global $USER;
-        $resource = \local_o365\rest\sharepoint::get_tokenresource();
-        if ($system === true) {
-            return \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
-        } else {
-            $userid = (!empty($userid)) ? $userid : $USER->id;
-            return \local_o365\oauth2\token::instance($userid, $resource, $this->clientdata, $this->httpclient);
-        }
-    }
-
-    /**
      * Get a Microsoft Graph API client.
      *
      * @param bool $system If true, get a system API ser token instead of the user's token.
@@ -143,23 +121,6 @@ class repository_office365 extends \repository {
             $token = $this->get_onedrive_token($system, $userid);
             if (!empty($token)) {
                 return new \local_o365\rest\onedrive($token, $this->httpclient);
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Get a sharepoint API client.
-     *
-     * @param bool $system If true, get a system API ser token instead of the user's token.
-     * @param int|null $userid The userid to get an API client for. If null, the current user will be used.
-     * @return \local_o365\rest\sharepoint A sharepoint API client object.
-     */
-    protected function get_sharepoint_apiclient($system = false, $userid = null) {
-        if ($this->sharepointconfigured === true) {
-            $token = $this->get_sharepoint_token($system, $userid);
-            if (!empty($token)) {
-                return new \local_o365\rest\sharepoint($token, $this->httpclient);
             }
         }
         return false;
@@ -230,15 +191,6 @@ class repository_office365 extends \repository {
             }
         }
 
-        $sharepointactive = false;
-        $sharepointgroupdisabled = get_config('office365', 'sharepointgroup');
-        if ($this->sharepointconfigured === true && empty($sharepointgroupdisabled)) {
-            $sharepointtoken = $this->get_sharepoint_token();
-            if (!empty($sharepointtoken)) {
-                $sharepointactive = true;
-            }
-        }
-
         $courses = enrol_get_users_courses($USER->id, true);
         $showgroups = false;
         $coursegroupdisabled = get_config('office365', 'coursegroup');
@@ -259,11 +211,6 @@ class repository_office365 extends \repository {
                 // Path is in my files.
                 list($list, $breadcrumb) = $this->get_listing_my(substr($path, 3));
             }
-        } else if (strpos($path, '/courses/') === 0) {
-            if ($sharepointactive === true) {
-                // Path is in course files.
-                list($list, $breadcrumb) = $this->get_listing_course(substr($path, 8));
-            }
         } else if (strpos($path, '/groups/') === 0) {
             if ($showgroups === true) {
                 // Path is in group files.
@@ -274,11 +221,6 @@ class repository_office365 extends \repository {
                 // Path is in trending files.
                 list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
             }
-        } else if (strpos($path, '/office365video/') === 0) {
-            if ($sharepointactive === true) {
-                // Path is in office365 channels/videos.
-                list($list, $breadcrumb) = $this->get_listing_videos(substr($path, 15));
-            }
         } else {
             if ($unifiedactive === true && $onedriveactive === true) {
                 $list[] = [
@@ -287,28 +229,6 @@ class repository_office365 extends \repository {
                     'thumbnail' => $OUTPUT->pix_url('onedrive', 'repository_office365')->out(false),
                     'children' => [],
                 ];
-            }
-            if ($sharepointactive === true) {
-                $list[] = [
-                    'title' => get_string('courses', 'repository_office365'),
-                    'path' => '/courses/',
-                    'thumbnail' => $OUTPUT->pix_url('sharepoint', 'repository_office365')->out(false),
-                    'children' => [],
-                ];
-                $sharepoint = $this->get_sharepoint_apiclient();
-                // Retrieve api url for video service.
-                $officevideodisabled = get_config('office365', 'officevideo');
-                if (empty($officevideodisabled)) {
-                    $url = $sharepoint->videoservice_discover();
-                    if (!empty($url)) {
-                        $list[] = [
-                            'title' => get_string('office365video', 'repository_office365'),
-                            'path' => '/office365video/',
-                            'thumbnail' => $OUTPUT->pix_url('office365video', 'repository_office365')->out(false),
-                            'children' => [],
-                        ];
-                    }
-                }
             }
             if ($showgroups === true) {
                 $list[] = [
@@ -386,12 +306,6 @@ class repository_office365 extends \repository {
                 } else if (strpos($filepath, '/groups/') === 0) {
                     $clienttype = 'onedrivegroup';
                     $filepath = substr($filepath, 7);
-                } else if (strpos($filepath, '/courses/') === 0) {
-                    $clienttype = 'sharepoint';
-                    $filepath = substr($filepath, 8);
-                } else if (strpos($filepath, '/office365video/') === 0) {
-                    $clienttype = 'office365video';
-                    $filepath = substr($filepath, 15);
                 } else {
                     $errmsg = get_string('errorbadclienttype', 'repository_office365');
                     $debugdata = [
@@ -462,61 +376,6 @@ class repository_office365 extends \repository {
                 \local_o365\utils::debug('Tried to Upload a onedrive group file while the graph api is disabled.', $caller);
                 throw new \moodle_exception('errorwhileupload', 'repository_office365');
             }
-        } else if ($clienttype === 'sharepoint') {
-            $pathtrimmed = trim($filepath, '/');
-            $pathparts = explode('/', $pathtrimmed);
-            if (!is_numeric($pathparts[0])) {
-                $errmsg = get_string('errorbadpath', 'repository_office365');
-                $debugdata = [
-                    'filepath' => $filepath,
-                ];
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
-                throw new \moodle_exception('errorbadpath', 'repository_office365');
-            }
-            $courseid = (int)$pathparts[0];
-            unset($pathparts[0]);
-            $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
-            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
-            $courses = enrol_get_users_courses($USER->id);
-            if (!isset($courses[$courseid])) {
-                $errmsg = get_string('erroraccessdenied', 'repository_office365');
-                $debugdata = [
-                    'courseid' => $courseid,
-                    'courses' => $courses,
-                    'filepath' => $filepath,
-                ];
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
-                throw new \moodle_exception('erroraccessdenied', 'repository_office365');
-            }
-            $curcourse = $courses[$courseid];
-            unset($courses);
-            $sharepoint = $this->get_sharepoint_apiclient();
-            $parentsiteuri = $sharepoint->get_course_subsite_uri($curcourse->id);
-            $sharepoint->set_site($parentsiteuri);
-            $result = $sharepoint->create_file($fullpath, $filename, $content);
-            $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'parentsiteuri' => $parentsiteuri]);
-        } else if ($clienttype === 'office365video') {
-            if ($this->sharepointconfigured == true) {
-                $sharepoint = $this->get_sharepoint_apiclient();
-                // Retrieve api url for video service.
-                $url = $sharepoint->videoservice_discover();
-                if (!empty($url)) {
-                    $sharepoint->override_tokenresource($url);
-                    $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
-                    $videoobject = $sharepoint->create_video_placeholder($parentid, '', $filename, $filename);
-                    if (!empty($videoobject)) {
-                        $result = $sharepoint->upload_video($videoobject['ChannelID'], $videoobject['ID'], $_FILES['repo_upload_file']['tmp_name']);
-                        $parseurl = explode('/', $videoobject['Url']);
-                        $downloadurl = "https://".$parseurl[2]."/_api/SP.AppContextSite(@target)/Web/"."GetFileByServerRelativeUrl('".$videoobject['ServerRelativeUrl'].
-                                "')/"."$"."value?@target='https://".$parseurl[2]."/portals/".$parseurl[4]."'";
-                        $url = "https://".$parseurl[2]."/portals/hub/_layouts/15/PointPublishing.aspx?app=video&"."p=p&chid=".$videoobject['ChannelID']."&vid=".$videoobject['ID'];
-                        $source = $this->pack_reference(['id' => $videoobject['odata.id'],
-                            'source' => 'office365video',
-                            'url' => $url,
-                            'downloadurl' => $downloadurl]);
-                    }
-                }
-            }
         } else {
             $errmsg = get_string('errorbadclienttype', 'repository_office365');
             $debugdata = [
@@ -544,9 +403,7 @@ class repository_office365 extends \repository {
         $record->sortorder = 0;
         $record->source = $this->build_source_field($source);
         $info = \repository::move_to_filepool($downloadedfile['path'], $record);
-        if ($clienttype === 'office365video') {
-            $info['url'] = $url;
-        }
+
         return $info;
     }
 
@@ -691,153 +548,6 @@ class repository_office365 extends \repository {
     }
 
     /**
-     * Get listing for a course folder.
-     *
-     * @param string $path Folder path.
-     * @return array List of $list array and $path array.
-     */
-    protected function get_listing_course($path = '') {
-        global $USER, $OUTPUT;
-
-        $caller = '\repository_office365::get_listing_course';
-        $list = [];
-        $breadcrumb = [
-            ['name' => $this->name, 'path' => '/'],
-            ['name' => get_string('courses', 'repository_office365'), 'path' => '/courses/'],
-        ];
-
-        $reqcap = \local_o365\rest\sharepoint::get_course_site_required_capability();
-        $courses = get_user_capability_course($reqcap, $USER->id, true, 'shortname');
-        // Reindex courses array using course id.
-        $coursesbyid = [];
-        foreach ($courses as $i => $course) {
-            $coursesbyid[$course->id] = $course;
-            unset($courses[$i]);
-        }
-        unset($courses);
-
-        if ($path === '/') {
-            // Show available courses.
-            foreach ($coursesbyid as $course) {
-                $list[] = [
-                    'title' => $course->shortname,
-                    'path' => '/courses/'.$course->id,
-                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                    'children' => [],
-                ];
-            }
-        } else {
-            $pathtrimmed = trim($path, '/');
-            $pathparts = explode('/', $pathtrimmed);
-            if (!is_numeric($pathparts[0])) {
-                $errmsg = get_string('errorbadpath', 'repository_office365');
-                $debugdata = [
-                    'path' => $path,
-                ];
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
-                throw new \moodle_exception('errorbadpath', 'repository_office365');
-            }
-            $courseid = (int)$pathparts[0];
-            unset($pathparts[0]);
-            $relpath = (!empty($pathparts)) ? implode('/', $pathparts) : '';
-            if (isset($coursesbyid[$courseid])) {
-                if ($this->path_is_upload($path) === false) {
-                    $sharepointclient = $this->get_sharepoint_apiclient();
-                    if (!empty($sharepointclient)) {
-                        $parentsiteuri = $sharepointclient->get_course_subsite_uri($coursesbyid[$courseid]->id);
-                        $sharepointclient->set_site($parentsiteuri);
-                        try {
-                            $fullpath = (!empty($relpath)) ? '/'.$relpath : '/';
-                            $contents = $sharepointclient->get_files($fullpath);
-                            $list = $this->contents_api_response_to_list($contents, $path, 'sharepoint', $parentsiteuri);
-                        } catch (\Exception $e) {
-                            $errmsg = 'Exception when retrieving share point files';
-                            $debugdata = [
-                                'fullpath' => (!empty($relpath)) ? '/'.$relpath : '/',
-                                'message' => $e->getMessage(),
-                            ];
-                            \local_o365\utils::debug($errmsg, $caller, $debugdata);
-                            $list = [];
-                        }
-                    }
-                }
-
-                $curpath = '/courses/'.$courseid;
-                $breadcrumb[] = ['name' => $coursesbyid[$courseid]->shortname, 'path' => $curpath];
-                foreach ($pathparts as $i => $pathpart) {
-                    if (!empty($pathpart)) {
-                        $curpath .= '/'.$pathpart;
-                        if ($i === (count($pathparts)) && $pathpart === 'upload') {
-                            $pathpart = get_string('upload', 'repository_office365');
-                        }
-                        $breadcrumb[] = ['name' => $pathpart, 'path' => $curpath];
-                    }
-                }
-            }
-        }
-
-        return [$list, $breadcrumb];
-    }
-
-    /**
-     * Get listing for a o365 video folder.
-     *
-     * @param string $path Folder path.
-     * @return array List of $list array and $path array.
-     */
-    protected function get_listing_videos($path = '') {
-        $path = (empty($path)) ? '/' : $path;
-        $list = [];
-        $sharepoint = $this->get_sharepoint_apiclient();
-        // Retrieve api url for video service.
-        $url = $sharepoint->videoservice_discover();
-        if (!empty($url)) {
-            $sharepoint->override_tokenresource($url);
-            if ($this->path_is_upload($path) === true) {
-                $path = substr($path, 0, -strlen('/upload/'));
-            } else if ($path === '/') {
-                // Get list of Channels.
-                $contents = $sharepoint->get_video_channels();
-                $list = $this->contents_api_response_to_list($contents, $path, 'office365video', null, false);
-            } else {
-                // Get videos of a Channel.
-                $contents = $sharepoint->get_all_channel_videos(substr($path, 1));
-                $list = $this->contents_api_response_to_list($contents, $path, 'office365video', null, true);
-            }
-            if ($path !== '/') {
-                $channel = $sharepoint->get_video_channel(substr($path, 1));
-            }
-        }
-        // Generate path.
-        $breadcrumb = [
-            ['name' => $this->name, 'path' => '/'],
-            ['name' => get_string('office365video', 'repository_office365'), 'path' => '/office365video/'],
-        ];
-        $pathparts = explode('/', $path);
-        $curpath = '/office365video';
-        // Remove empty paths (we do this in a separate loop for proper upload detection in the next loop.
-        foreach ($pathparts as $i => $pathpart) {
-            if (empty($pathpart)) {
-                unset($pathparts[$i]);
-            }
-        }
-        $pathparts = array_values($pathparts);
-        if (!empty($channel)) {
-            array_push($breadcrumb, ['name' => $channel['Title'], 'path' => $curpath.'/'.$pathparts[0]]);
-            array_splice($pathparts, 0, 1);
-        }
-        foreach ($pathparts as $i => $pathpart) {
-            $curpath .= '/'.$pathpart;
-            $pathname = $pathpart;
-            if ($i === (count($pathparts) - 1) && $pathpart === 'upload') {
-                $pathname = get_string('upload', 'repository_office365');
-            }
-            $breadcrumb[] = ['name' => $pathname, 'path' => $curpath];
-        }
-        return [$list, $breadcrumb];
-    }
-
-    /**
      * Get listing for a personal onedrive folder using the Microsoft Graph API.
      *
      * @param string $path Folder path.
@@ -976,15 +686,14 @@ class repository_office365 extends \repository {
      *
      * @param string $response The response from the API.
      * @param string $path The list path.
-     * @param string $clienttype The type of client that the response is from. onedrive/sharepoint.
+     * @param string $clienttype The type of client that the response is from. onedrive/unified
      * @param string $parentinfo Client type-specific parent information.
-     *                               If using the SharePoint clienttype, this is the parent site URI.
      *                               If using the unifiedgroup clienttype, this is the parent group ID.
      * @param bool $addupload Whether to add the "Upload" file item.
      * @return array A $list array to be used by the respository class in get_listing.
      */
     protected function contents_api_response_to_list($response, $path, $clienttype, $parentinfo = null, $addupload = true) {
-        global $OUTPUT, $DB;
+        global $OUTPUT;
         $list = [];
         if ($clienttype === 'onedrive') {
             $pathprefix = '/my'.$path;
@@ -992,17 +701,11 @@ class repository_office365 extends \repository {
         } else if ($clienttype === 'unified') {
             $pathprefix = '/my';
             $uploadpathprefix = $pathprefix.$path;
-        } else if ($clienttype === 'sharepoint') {
-            $pathprefix = '/courses'.$path;
-            $uploadpathprefix = $pathprefix;
         } else if ($clienttype === 'unifiedgroup') {
             $pathprefix = '/groups'.$path;
             $uploadpathprefix = $pathprefix;
         } else if ($clienttype === 'trendingaround') {
             $pathprefix = '/my';
-        } else if ($clienttype === 'office365video') {
-            $pathprefix = '/office365video';
-            $uploadpathprefix = $pathprefix.$path;
         }
 
         if ($addupload === true) {
@@ -1090,36 +793,6 @@ class repository_office365 extends \repository {
                             'source' => $this->pack_reference($source),
                         ];
                     }
-                } else if ($clienttype === 'office365video') {
-                    if ($content['odata.type'] === 'SP.Publishing.VideoChannel') {
-                        $itempath = $pathprefix.'/'.$content['Id'];
-                        $list[] = [
-                            'title' => $content['Title'],
-                            'path' => $itempath,
-                            'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false),
-                            'children' => [],
-                        ];
-                    } else if ($content['odata.type'] === 'SP.Publishing.VideoItem') {
-                        $itempath = $pathprefix.'/'.$content['ID'];
-                        $parseurl = explode('/', $content['Url']);
-                        $downloadurl = "https://".$parseurl[2]."/_api/SP.AppContextSite(@target)/Web/"."GetFileByServerRelativeUrl('".$content['ServerRelativeUrl'].
-                                "')/"."$"."value?@target='https://".$parseurl[2]."/portals/".$parseurl[4]."'";
-                        $url = "https://".$parseurl[2]."/portals/hub/_layouts/15/PointPublishing.aspx?app=video&"."p=p&chid=".$content['ChannelID']."&vid=".$content['ID'];
-                        $source = [
-                            'id' => $content['odata.id'],
-                            'source' => 'office365video',
-                            'url' => $url,
-                            'downloadurl' => $downloadurl,
-                        ];
-                        $list[] = [
-                            'title' => $content['FileName'],
-                            'date' => strtotime($content['CreatedDate']),
-                            'datecreated' => strtotime($content['CreatedDate']),
-                            'url' => $url,
-                            'thumbnail' => $OUTPUT->pix_url(file_extension_icon($content['FileName'], 90))->out(false),
-                            'source' => $this->pack_reference($source),
-                        ];
-                    }
                 } else {
                     $itempath = $pathprefix.'/'.$content['name'];
                     if ($content['type'] === 'Folder') {
@@ -1136,11 +809,8 @@ class repository_office365 extends \repository {
                         $url = $content['webUrl'].'?web=1';
                         $source = [
                             'id' => $content['id'],
-                            'source' => ($clienttype === 'sharepoint') ? 'sharepoint' : 'onedrive',
+                            'source' => 'onedrive',
                         ];
-                        if ($clienttype === 'sharepoint') {
-                            $source['parentsiteuri'] = $parentinfo;
-                        }
 
                         $author = '';
                         if (!empty($content['createdBy']['user']['displayName'])) {
@@ -1211,19 +881,6 @@ class repository_office365 extends \repository {
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             $file = $sourceclient->get_group_file_by_id($reference['groupid'], $reference['id']);
-        } else if ($reference['source'] === 'sharepoint') {
-            $sourceclient = $this->get_sharepoint_apiclient();
-            if (empty($sourceclient)) {
-                \local_o365\utils::debug('Could not construct sharepoint api.', $caller);
-                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
-            }
-            if (isset($reference['parentsiteuri'])) {
-                $parentsiteuri = $reference['parentsiteuri'];
-            } else {
-                $parentsiteuri = $sourceclient->get_moodle_parent_site_uri();
-            }
-            $sourceclient->set_site($parentsiteuri);
-            $file = $sourceclient->get_file_by_id($reference['id']);
         } else if ($reference['source'] === 'trendingaround') {
             if ($this->unifiedconfigured === true) {
                 $sourceclient = $this->get_unified_apiclient();
@@ -1233,13 +890,6 @@ class repository_office365 extends \repository {
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             $file = $sourceclient->get_file_by_url($reference['url']);
-        } else if ($reference['source'] === 'office365video') {
-            $sourceclient = $this->get_sharepoint_apiclient();
-            if (empty($sourceclient)) {
-                \local_o365\utils::debug('Could not construct sharepoint api.', $caller);
-                throw new \moodle_exception('errorwhiledownload', 'repository_office365');
-            }
-            $file = $sourceclient->get_video_file($reference['downloadurl']);
         }
 
         if (!empty($file)) {
@@ -1326,19 +976,6 @@ class repository_office365 extends \repository {
                     $sourceclient = $this->get_unified_apiclient();
                     $reference['groupid'] = $sourceunpacked['groupid'];
                     $reference['url'] = $sourceclient->get_group_file_sharing_link($sourceunpacked['groupid'], $fileid);
-                } else if ($filesource === 'sharepoint') {
-                    $sourceclient = $this->get_sharepoint_apiclient();
-                    if (isset($sourceunpacked['parentsiteuri'])) {
-                        $parentsiteuri = $sourceunpacked['parentsiteuri'];
-                    } else {
-                        $parentsiteuri = $sourceclient->get_moodle_parent_site_uri();
-                    }
-                    $sourceclient->set_site($parentsiteuri);
-                    $reference['parentsiteuri'] = $parentsiteuri;
-                    $filemetadata = $sourceclient->get_file_metadata($fileid);
-                    if (isset($filemetadata['webUrl'])) {
-                        $reference['url'] = $filemetadata['webUrl'].'?web=1';
-                    }
                 } else if ($filesource === 'trendingaround') {
                     if ($this->unifiedconfigured !== true) {
                         \local_o365\utils::debug('Tried to access a trending around me file while the graph api is disabled.', $caller);
@@ -1398,9 +1035,9 @@ class repository_office365 extends \repository {
      * @return bool True if we should do embedding, false otherwise.
      */
     public function do_embedding($reference, $forcedownload) {
-        global $PAGE, $DB, $CFG;
+        global $PAGE, $DB;
 
-        if (empty($reference['source']) || !in_array($reference['source'], ['onedrive', 'sharepoint'])) {
+        if (empty($reference['source']) || !in_array($reference['source'], ['onedrive'])) {
             return false;
         }
 
@@ -1454,23 +1091,6 @@ class repository_office365 extends \repository {
         $doembed = $this->do_embedding($reference, $forcedownload);
 
         switch ($reference['source']) {
-            case 'sharepoint':
-                $sourceclient = $this->get_sharepoint_apiclient(false, $fileuserid);
-                if (isset($reference['parentsiteuri'])) {
-                    $parentsiteuri = $reference['parentsiteuri'];
-                } else {
-                    $parentsiteuri = $sourceclient->get_moodle_parent_site_uri();
-                }
-                $sourceclient->set_site($parentsiteuri);
-                if (empty($sourceclient)) {
-                    \local_o365\utils::debug('Could not construct api client for user', 'send_file', $fileuserid);
-                    send_file_not_found();
-                    die();
-                }
-                $fileinfo = $sourceclient->get_file_metadata($reference['id']);
-                $fileurl = (isset($fileinfo['webUrl'])) ? $fileinfo['webUrl'] : '';
-                break;
-
             case 'onedrive':
                 $sourceclient = $this->get_onedrive_apiclient(false, $fileuserid);
                 if (empty($sourceclient)) {
@@ -1493,9 +1113,6 @@ class repository_office365 extends \repository {
             case 'onedrivegroup':
                 $sourceclient = $this->get_unified_apiclient();
                 $fileurl = (isset($reference['url'])) ? $reference['url'] : '';
-                break;
-
-            case 'office365video':
                 break;
 
             default:
@@ -1565,22 +1182,13 @@ class repository_office365 extends \repository {
      */
     public static function type_config_form($mform, $classname = 'repository') {
         global $CFG;
-        $a = new stdClass;
+
         if (\local_o365\utils::is_configured() !== true) {
             $mform->addElement('static', null, '', get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
         }
         parent::type_config_form($mform);
-        $coursegroup = get_config('repository_office365', 'coursegroup');
-        $officevideo = get_config('repository_office365', 'officevideo');
-        $sharepointgroup = get_config('repository_office365', 'sharepointgroup');
-        $onedrivegroup = get_config('repository_office365', 'onedrivegroup');
-        $trendinggroup = get_config('repository_office365', 'trendinggroup');
         $mform->addElement('checkbox', 'coursegroup', get_string('coursegroup', 'repository_office365'));
         $mform->setType('coursegroup', PARAM_INT);
-        $mform->addElement('checkbox', 'officevideo', get_string('officevideo', 'repository_office365'));
-        $mform->setType('officevideo', PARAM_INT);
-        $mform->addElement('checkbox', 'sharepointgroup', get_string('sharepointgroup', 'repository_office365'));
-        $mform->setType('sharepointgroup', PARAM_INT);
         $mform->addElement('checkbox', 'onedrivegroup', get_string('onedrivegroup', 'repository_office365'));
         $mform->setType('onedrivegroup', PARAM_INT);
         $mform->addElement('checkbox', 'trendinggroup', get_string('trendinggroup', 'repository_office365'));
@@ -1592,6 +1200,6 @@ class repository_office365 extends \repository {
      * @return array
      */
     public static function get_type_option_names() {
-        return array('coursegroup', 'officevideo', 'sharepointgroup', 'onedrivegroup', 'trendinggroup', 'pluginname');
+        return array('coursegroup', 'onedrivegroup', 'trendinggroup', 'pluginname');
     }
 }
