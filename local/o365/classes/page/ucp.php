@@ -330,37 +330,38 @@ class ucp extends base {
         echo \html_writer::tag('h5', get_string('ucp_connection_options', 'local_o365'));
 
         // AAD Login.
-        $options = \html_writer::start_div('local_o365_connectionoption');
-        $header = \html_writer::tag('h4', get_string('ucp_connection_aadlogin', 'local_o365'));
-        $loginflow = get_config('auth_oidc', 'loginflow');
-        switch ($loginflow) {
-            case 'authcode':
-            case 'rocreds':
-                $header .= get_string('ucp_connection_aadlogin_desc_'.$loginflow, 'local_o365', $opname);
-                break;
-        }
+        if (is_enabled_auth('oidc')) {
+            $options = \html_writer::start_div('local_o365_connectionoption');
+            $header = \html_writer::tag('h4', get_string('ucp_connection_aadlogin', 'local_o365'));
+            $loginflow = get_config('auth_oidc', 'loginflow');
+            switch ($loginflow) {
+                case 'authcode':
+                case 'rocreds':
+                    $header .= get_string('ucp_connection_aadlogin_desc_'.$loginflow, 'local_o365', $opname);
+                    break;
+            }
 
-        $linkhtml = '';
-        switch ($connectiontype) {
-            case 'aadlogin';
-                if (is_enabled_auth('manual') === true && $candisconnect) {
-                    $disconnectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnectlogin']);
-                    $strdisconnect = get_string('ucp_connection_aadlogin_stop', 'local_o365', $opname);
-                    $linkhtml = \html_writer::link($disconnectlinkurl, $strdisconnect);
-                    echo $options.$header.\html_writer::tag('h5', $linkhtml);
-                    $options = '';
-                }
-                break;
+            switch ($connectiontype) {
+                case 'aadlogin';
+                    if (is_enabled_auth('manual') === true && $candisconnect) {
+                        $disconnectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnectlogin']);
+                        $strdisconnect = get_string('ucp_connection_aadlogin_stop', 'local_o365', $opname);
+                        $linkhtml = \html_writer::link($disconnectlinkurl, $strdisconnect);
+                        echo $options.$header.\html_writer::tag('h5', $linkhtml);
+                        $options = '';
+                    }
+                    break;
 
-            default:
-                if ($canconnect && ($howconnected != 'linked' || $canunlink)) {
-                    $connectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
-                    $linkhtml = \html_writer::link($connectlinkurl, get_string('ucp_connection_aadlogin_start', 'local_o365', $opname));
-                    echo $options.$header.\html_writer::tag('h5', $linkhtml);
-                    $options = '';
-                }
+                default:
+                    if ($canconnect && ($howconnected != 'linked' || $canunlink)) {
+                        $connectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
+                        $linkhtml = \html_writer::link($connectlinkurl, get_string('ucp_connection_aadlogin_start', 'local_o365', $opname));
+                        echo $options.$header.\html_writer::tag('h5', $linkhtml);
+                        $options = '';
+                    }
+            }
+            echo \html_writer::end_div();
         }
-        echo \html_writer::end_div();
 
         // Connected account.
         $header = \html_writer::start_div('local_o365_connectionoption');
