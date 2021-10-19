@@ -911,7 +911,7 @@ class main {
                        assign.assigned assigned,
                        assign.photoid photoid,
                        assign.photoupdated photoupdated,
-                       obj.id AS objrecid
+                       obj.id AS objectid
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
@@ -935,8 +935,8 @@ class main {
         }
 
         // Fetch linked AAD user accounts.
-        list($upnsql, $upnparams) = $DB->get_in_or_equal($upns);
-        list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
+        [$upnsql, $upnparams] = $DB->get_in_or_equal($upns);
+        [$usernamesql, $usernameparams] = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
         $sql = 'SELECT tok.oidcusername,
                        u.username as username,
                        u.id as muserid,
@@ -946,7 +946,7 @@ class main {
                        assign.assigned assigned,
                        assign.photoid photoid,
                        assign.photoupdated photoupdated,
-                       obj.id AS objrecid
+                       obj.id AS objectid
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
@@ -960,53 +960,53 @@ class main {
 
         $processedusers = [];
 
-        foreach ($aadusers as $user) {
+        foreach ($aadusers as $aaduser) {
             $this->mtrace(' ');
 
-            if (empty($user['upnlower'])) {
-                $this->mtrace('Azure AD user missing UPN (' . $user['objectId'] . '); skipping...');
+            if (unified::is_configured()) {
+                $userobjectid = $aaduser['id'];
+            } else {
+                $userobjectid = $aaduser['objectId'];
+            }
+
+            if (empty($aaduser['upnlower'])) {
+                $this->mtrace('Azure AD user missing UPN (' . $userobjectid . '); skipping...');
                 continue;
             }
 
-            $this->mtrace('Syncing user '.$user['upnlower']);
-
-            if (unified::is_configured()) {
-                $userobjectid = $user['id'];
-            } else {
-                $userobjectid = $user['objectId'];
-            }
+            $this->mtrace('Syncing user '.$aaduser['upnlower']);
 
             // Process guest users.
-            $user['convertedupn'] = $user['upnlower'];
-            if (stripos($user['userPrincipalName'], '#EXT#') !== false) {
-                $user['convertedupn'] = strtolower($user['mail']);
+            $aaduser['convertedupn'] = $aaduser['upnlower'];
+            if (stripos($aaduser['userPrincipalName'], '#EXT#') !== false) {
+                $aaduser['convertedupn'] = strtolower($aaduser['mail']);
             }
 
-            if (in_array($user['convertedupn'], $processedusers)) {
+            if (in_array($aaduser['convertedupn'], $processedusers)) {
                 $this->mtrace('User already processed; skipping...');
                 continue;
             } else {
-                $processedusers[] = $user['convertedupn'];
+                $processedusers[] = $aaduser['convertedupn'];
             }
 
-            if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']]) &&
-                !isset($existingusers[$user['convertedupn']])) {
-                $this->sync_new_user($aadsync, $user, isset($aadsync['guestsync']));
+            if (!isset($existingusers[$aaduser['upnlower']]) && !isset($existingusers[$aaduser['upnsplit0']]) &&
+                !isset($existingusers[$aaduser['convertedupn']])) {
+                $this->sync_new_user($aadsync, $aaduser, isset($aadsync['guestsync']));
             } else {
                 $existinguser = null;
-                if (isset($existingusers[$user['upnlower']])) {
-                    $existinguser = $existingusers[$user['upnlower']];
+                if (isset($existingusers[$aaduser['upnlower']])) {
+                    $existinguser = $existingusers[$aaduser['upnlower']];
                     $exactmatch = true;
-                } else if (isset($existingusers[$user['upnsplit0']])) {
-                    $existinguser = $existingusers[$user['upnsplit0']];
-                    $exactmatch = strlen($user['upnsplit0']) >= $switchauthminupnsplit0;
-                } else if (isset($existingusers[$user['convertedupn']])) {
-                    $existinguser = $existingusers[$user['convertedupn']];
+                } else if (isset($existingusers[$aaduser['upnsplit0']])) {
+                    $existinguser = $existingusers[$aaduser['upnsplit0']];
+                    $exactmatch = strlen($aaduser['upnsplit0']) >= $switchauthminupnsplit0;
+                } else if (isset($existingusers[$aaduser['convertedupn']])) {
+                    $existinguser = $existingusers[$aaduser['convertedupn']];
                     $exactmatch = true;
                 }
 
                 // Process guest users.
-                if (stripos($user['upnlower'], '_ext_') !== false) {
+                if (stripos($aaduser['upnlower'], '_ext_') !== false) {
                     $this->mtrace('The user is a guest user.');
                     if (!isset($aadsync['guestsync'])) {
                         $this->mtrace('The option to sync guest users is turned off.');
@@ -1016,18 +1016,18 @@ class main {
                     }
                 }
 
-                $this->sync_existing_user($aadsync, $user, $existinguser, $exactmatch);
+                $this->sync_existing_user($aadsync, $aaduser, $existinguser, $exactmatch);
 
                 if ($existinguser->auth === 'oidc' || empty($existinguser->tokid)) {
                     // Create userobject if it does not exist.
-                    if (empty($existinguser->objrecid)) {
+                    if (empty($existinguser->objectid)) {
                         $this->mtrace('Adding o365 object record for user.');
                         $now = time();
                         $userobjectdata = (object)[
                             'type' => 'user',
                             'subtype' => '',
                             'objectid' => $userobjectid,
-                            'o365name' => $user['userPrincipalName'],
+                            'o365name' => $aaduser['userPrincipalName'],
                             'moodleid' => $existinguser->muserid,
                             'tenant' => '',
                             'timecreated' => $now,
@@ -1047,7 +1047,7 @@ class main {
                         if ($fullexistinguser) {
                             $existingusercopy = \core_user::get_user_by_username($existinguser->username);
                             $fullexistinguser->description = $existingusercopy->description;
-                            $this->update_user_from_aaddata($user, $fullexistinguser);
+                            $this->update_user_from_aaddata($aaduser, $fullexistinguser);
                             $this->mtrace('User is now updated.');
                         } else {
                             $this->mtrace('Update failed for user with username "' . $existinguser->username . '".');
@@ -1168,15 +1168,34 @@ class main {
      * @return bool
      */
     protected function sync_existing_user($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
+        global $DB;
+
         $photoexpire = get_config('local_o365', 'photoexpire');
         if (empty($photoexpire) || !is_numeric($photoexpire)) {
             $photoexpire = 24;
         }
         $photoexpiresec = $photoexpire * 3600;
 
-        $userobjectid = (unified::is_configured())
-            ? $aaduserdata['id']
-            : $aaduserdata['objectId'];
+        $userobjectid = (unified::is_configured()) ? $aaduserdata['id'] : $aaduserdata['objectId'];
+
+        // Check for user GUID changes.
+        // There shouldn't be multiple token records, but just in case.
+        $oidctokenrecords = $DB->get_records('auth_oidc_token',
+            ['userid' => $existinguser->muserid, 'oidcusername' => $existinguser->username]);
+        foreach ($oidctokenrecords as $oidctokenrecord) {
+            if ($oidctokenrecord->oidcuniqid != $userobjectid) {
+                $DB->delete_records('auth_oidc_token', ['id' => $oidctokenrecord->id]);
+                $this->mtrace('Deleted auth_oidc token due to com');
+            }
+        }
+
+        if ($localo365objectrecord = $DB->get_record('local_o365_objects', ['id' => $existinguser->objectid])) {
+            if ($localo365objectrecord->objectid != $userobjectid) {
+                $localo365objectrecord->objectid = $userobjectid;
+                $DB->update_record('local_o365_objects', $localo365objectrecord);
+                $this->mtrace('Updated user object ID in local_o365_object record.');
+            }
+        }
 
         // Assign user to app if not already assigned.
         if (isset($syncoptions['appassign'])) {
@@ -1370,7 +1389,7 @@ class main {
             $existingsqlparams = ['user', $CFG->mnet_localhost_id, '0', 'oidc'];
             if ($deletedusersids) {
                 // Check if all Moodle users with oidc authentication and matching records are still existing users in Azure.
-                list($objectidsql, $objectidparams) = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM, 'param', false);
+                [$objectidsql, $objectidparams] = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM, 'param', false);
                 $existingsql .= ' AND obj.objectid ' . $objectidsql;
                 $existingsqlparams = array_merge($existingsqlparams, $objectidparams);
             }
@@ -1413,15 +1432,24 @@ class main {
      * not deleted, the account will unsuspended.
      *
      * @param array $aadusers
+     * @param bool $syncdisabledstatus
      *
      * @return bool
      */
-    public function reenable_suspsend_users(array $aadusers) {
+    public function reenable_suspsend_users(array $aadusers, $syncdisabledstatus) {
         global $DB;
 
         $validaaduserids = [];
-        foreach ($aadusers as $aaduser) {
-            $validaaduserids[] = $aaduser['id'];
+        if ($syncdisabledstatus) {
+            foreach ($aadusers as $aaduser) {
+                if ($aaduser['accountEnabled']) {
+                    $validaaduserids[] = $aaduser['id'];
+                }
+            }
+        } else {
+            foreach ($aadusers as $aaduser) {
+                $validaaduserids[] = $aaduser['id'];
+            }
         }
 
         if ($validaaduserids) {
