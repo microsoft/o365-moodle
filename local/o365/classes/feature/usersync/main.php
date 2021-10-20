@@ -543,7 +543,7 @@ class main {
                     break;
                 case 'preferredName':
                     if (!isset($aaddata[$remotefield])) {
-                        if (stripos($user->username, '_ext_') !== false) {
+                        if (stripos($aaddata['unplower'], '_ext_') !== false) {
                             $user->$localfield = $usersync->get_preferred_name($userobjectid);
                         }
                     }
