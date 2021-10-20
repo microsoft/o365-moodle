@@ -947,6 +947,8 @@ class main {
 
         $existingusers = $existingusers + $linkedexistingusers;
 
+        $processedusers = [];
+
         foreach ($aadusers as $user) {
             $this->mtrace(' ');
 
@@ -967,6 +969,13 @@ class main {
             $user['convertedupn'] = $user['upnlower'];
             if (stripos($user['userPrincipalName'], '#EXT#') !== false) {
                 $user['convertedupn'] = strtolower($user['mail']);
+            }
+
+            if (in_array($user['convertedupn'], $processedusers)) {
+                $this->mtrace('User already processed; skipping...');
+                continue;
+            } else {
+                $processedusers[] = $user['convertedupn'];
             }
 
             if (!isset($existingusers[$user['upnlower']]) && !isset($existingusers[$user['upnsplit0']]) &&
