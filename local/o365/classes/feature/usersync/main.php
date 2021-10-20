@@ -895,13 +895,9 @@ class main {
             return true;
         }
 
+        $select = 'SELECT LOWER(u.username) AS username,';
         if (isset($aadsync['emailsync'])) {
-            $select = 'SELECT LOWER(u.email) AS email,
-                       LOWER(u.username) AS username,';
-            $where = ' WHERE u.email';
-        } else {
-            $select = 'SELECT LOWER(u.username) AS username,';
-            $where = ' WHERE u.username';
+            $select .= ' LOWER(u.email) AS email,';
         }
 
         list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames);
