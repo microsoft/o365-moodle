@@ -533,7 +533,7 @@ class main {
                 $user->$localfield = $usersync->get_user_roles($userobjectid);
             } else if ($remotefield == "preferredName") {
                 if (!isset($aaddata[$remotefield])) {
-                    if (stripos($user->username, '_ext_') !== false) {
+                    if (stripos($aaddata['userPrincipalName'], '_ext_') !== false) {
                         $user->$localfield = $usersync->get_preferred_name($userobjectid);
                     }
                 }
