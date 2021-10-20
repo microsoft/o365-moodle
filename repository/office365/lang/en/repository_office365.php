@@ -24,7 +24,6 @@
 $string['cachedef_unifiedfolderids'] = 'Microsoft 365 Repository - Unified folder IDs';
 $string['cachedef_unifiedgroupfolderids'] = 'Microsoft 365 Repository - Unified folder IDs for groups';
 $string['configplugin'] = 'Configure Microsoft 365 Repository';
-$string['courses'] = 'SharePoint (Courses)';
 $string['coursegroup'] = 'Disable Groups (Courses) folder in file picker';
 $string['groups'] = 'Groups (Courses)';
 $string['defaultgroupsfolder'] = 'Course Files';
@@ -39,15 +38,12 @@ $string['erroro365required'] = 'This file is currently only available to Microso
 
 $string['file'] = 'File';
 $string['myfiles'] = 'My OneDrive';
-$string['officevideo'] = 'Disable Microsoft 365 Video folder in file picker';
 $string['office365:view'] = 'View Microsoft 365 repository';
 $string['onedrivegroup'] = 'Disable My OneDrive folder in file picker';
 $string['pluginname'] = 'Microsoft 365';
 $string['pluginname_help'] = 'An Microsoft 365 Repository';
-$string['sharepointgroup'] = 'Disable SharePoint (Courses) folder in file picker';
 $string['trendinggroup'] = 'Disable Files Trending Around Me folder in file picker';
 $string['upload'] = 'Upload New File';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Microsoft 365 plugins</a></p>';
 $string['trendingaround'] = 'Files Trending Around Me';
-$string['office365video'] = 'Microsoft 365 Video';
 $string['privacy:metadata'] = 'This plugin communicates with the Microsoft 365 OneDrive API as the current user. Any files uploaded will be sent to the remote server';
