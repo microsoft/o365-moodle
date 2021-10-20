@@ -168,41 +168,15 @@ $string['settings_aadsync_emailsync'] = 'Match Azure usernames to moodle emails 
 $string['settings_addsync_tzsync'] = 'Sync Outlook timezone to Moodle in cronjob';
 $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on login';
 $string['settings_aadsync_guestsync'] = 'Sync guest users';
+
+// User field mappting.
 $string['settings_fieldmap'] = 'User Field Mapping';
 $string['settings_fieldmap_addmapping'] = 'Add Mapping';
-$string['settings_fieldmap_details'] = 'Configure mapping between user fields in Microsoft 365 and Moodle.';
 $string['settings_fieldmap_header_behavior'] = 'Updates';
 $string['settings_fieldmap_header_local'] = 'Moodle Field';
 $string['settings_fieldmap_header_remote'] = 'Active Directory Field';
-$string['settings_fieldmap_field_city'] = 'City';
-$string['settings_fieldmap_field_companyName'] = 'Company Name';
-$string['settings_fieldmap_field_objectId'] = 'Object ID';
-$string['settings_fieldmap_field_country'] = 'Country';
-$string['settings_fieldmap_field_department'] = 'Department';
-$string['settings_fieldmap_field_displayName'] = 'Display Name';
-$string['settings_fieldmap_field_surname'] = 'Surname';
-$string['settings_fieldmap_field_faxNumber'] = 'Fax Number';
-$string['settings_fieldmap_field_telephoneNumber'] = 'Telephone Number';
-$string['settings_fieldmap_field_givenName'] = 'Given Name';
-$string['settings_fieldmap_field_jobTitle'] = 'Job Title';
-$string['settings_fieldmap_field_mail'] = 'Email';
-$string['settings_fieldmap_field_mobile'] = 'Mobile';
-$string['settings_fieldmap_field_postalCode'] = 'Postal Code';
-$string['settings_fieldmap_field_preferredLanguage'] = 'Language';
-$string['settings_fieldmap_field_state'] = 'State';
-$string['settings_fieldmap_field_streetAddress'] = 'Street Address';
-$string['settings_fieldmap_field_userPrincipalName'] = 'Username (UPN)';
-$string['settings_fieldmap_field_employeeId'] = 'Employee ID';
-$string['settings_fieldmap_field_businessPhones'] = 'Office phone';
-$string['settings_fieldmap_field_mobilePhone'] = 'Mobile phone';
-$string['settings_fieldmap_field_officeLocation'] = 'Office';
-$string['settings_fieldmap_field_preferredName'] = 'Preferred Name';
-$string['settings_fieldmap_field_manager'] = 'Manager';
-$string['settings_fieldmap_field_teams'] = 'Teams';
-$string['settings_fieldmap_field_groups'] = 'Groups';
-$string['settings_fieldmap_field_roles'] = 'Roles';
-$string['settings_fieldmap_field_extensionattribute'] = 'Extension attribute {$a}';
 $string['settings_fieldmap_update_always'] = 'On login & creation';
+$string['settings_fieldmap_details'] = 'Field mapping setting has been moved to the <a href="{$a}">Open ID Connect authentication plugin</a>.';
 
 // Settings in the "Course sync" section of the "Sync settings" tab.
 $string['settings_secthead_coursesync'] = 'Course Sync';
