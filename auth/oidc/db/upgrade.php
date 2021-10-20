@@ -263,5 +263,50 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071506, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2020071507) {
+        // Migrate field mapping settings from local_o365.
+        $existingfieldmappingsettings = get_config('local_o365', 'fieldmap');
+        if ($existingfieldmappingsettings !== false) {
+            $userfields = auth_oidc_get_all_user_fields();
+
+            $existingfieldmappingsettings = @unserialize($existingfieldmappingsettings);
+            if (is_array($existingfieldmappingsettings)) {
+                foreach ($existingfieldmappingsettings as $existingfieldmappingsetting) {
+                    $fieldmap = explode('/', $existingfieldmappingsetting);
+
+                    if (count($fieldmap) !== 3) {
+                        // Invalid settings, ignore.
+                        continue;
+                    }
+
+                    list($remotefield, $localfield, $behaviour) = $fieldmap;
+
+                    if ($remotefield == 'facsimileTelephoneNumber') {
+                        $remotefield = 'faxNumber';
+                    }
+
+                    set_config('field_map_' . $localfield, $remotefield, 'auth_oidc');
+                    set_config('field_lock_' . $localfield, 'unlocked', 'auth_oidc');
+                    set_config('field_updatelocal_' . $localfield, $behaviour, 'auth_oidc');
+
+                    if (($key = array_search($localfield, $userfields)) !== false) {
+                        unset($userfields[$key]);
+                    }
+                }
+
+                foreach ($userfields as $userfield) {
+                    set_config('field_map_' . $userfield, '', 'auth_oidc');
+                    set_config('field_lock_' . $userfield, 'unlocked', 'auth_oidc');
+                    set_config('field_updatelocal_' . $userfield, 'always', 'auth_oidc');
+                }
+            }
+
+            unset_config('fieldmap', 'local_o365');
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2020071507, 'auth', 'oidc');
+    }
+
     return $result;
 }

@@ -40,45 +40,14 @@ class base {
             'opname' => get_string('pluginname', 'auth_oidc')
         ];
         $storedconfig = (array)get_config('auth_oidc');
-        $forcedconfig = [
-            'field_updatelocal_idnumber' => 'oncreate',
-            'field_lock_idnumber' => 'unlocked',
-            'field_updatelocal_lang' => 'oncreate',
-            'field_lock_lang' => 'unlocked',
-            'field_updatelocal_firstname' => 'oncreate',
-            'field_lock_firstname' => 'unlocked',
-            'field_updatelocal_lastname' => 'oncreate',
-            'field_lock_lastname' => 'unlocked',
-            'field_updatelocal_email' => 'oncreate',
-            'field_lock_email' => 'unlocked',
-        ];
 
-        // If local_o365 plugin is installed, use its settings for the core fields.
-        if (auth_oidc_is_local_365_installed()) {
-            $fieldmaps = get_config('local_o365', 'fieldmap');
-            if ($fieldmaps === false) {
-                $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
-            } else {
-                $fieldmaps = @unserialize($fieldmaps);
-                if (!is_array($fieldmaps)) {
-                    $fieldmaps = \local_o365\adminsetting\usersyncfieldmap::defaultmap();
-                }
-            }
-
-            foreach ($fieldmaps as $fieldmap) {
-                $fieldmap = explode('/', $fieldmap);
-                if (count($fieldmap) !== 3) {
-                    continue;
-                }
-                list($remotefield, $localfield, $behavior) = $fieldmap;
-                if (in_array($behavior, ['onlogin', 'always'])) {
-                    $forcedconfig['field_updatelocal_' . $localfield] = 'onlogin';
-                    $forcedconfig['field_lock_' . $localfield] = 'unlocked';
-                }
+        foreach ($storedconfig as $configname => $configvalue) {
+            if (strpos($configname, 'field_updatelocal_') === 0 && $configvalue == 'always') {
+                $storedconfig[$configname] = 'onlogin';
             }
         }
 
-        $this->config = (object)array_merge($default, $storedconfig, $forcedconfig);
+        $this->config = (object)array_merge($default, $storedconfig);
     }
 
     /**
