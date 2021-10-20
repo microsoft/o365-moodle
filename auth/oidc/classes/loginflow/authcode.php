@@ -452,7 +452,14 @@ class authcode extends base {
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             $user = authenticate_user_login($username, null, true);
-            complete_user_login($user);
+
+            if (!empty($user)) {
+                complete_user_login($user);
+            } else {
+                // There was a problem in authenticate_user_login.
+                throw new \moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
+            }
+
             return true;
         } else {
             // No existing token, user not connected.
@@ -519,7 +526,6 @@ class authcode extends base {
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
                 }
                 complete_user_login($user);
-                return true;
             } else {
                 // There was a problem in authenticate_user_login. Clean up incomplete token record.
                 if (!empty($tokenrec)) {
