@@ -845,12 +845,24 @@ class main {
 
         $usernames = [];
         $upns = [];
+
+        $guestsync = array_key_exists('guestsync', $aadsync);
+
         foreach ($aadusers as $i => $user) {
             if (!isset($user['userPrincipalName'])) {
                 // User doesn't have userPrincipalName, should be deleted users.
                 unset($aadusers[$i]);
                 continue;
             }
+
+            if (!$guestsync) {
+                if (strpos($user['userPrincipalName'], '#EXT#') !== false) {
+                    // The user is a guest user, and the guest sync option is disabled. Skip processing the user.
+                    unset($aadusers[$i]);
+                    continue;
+                }
+            }
+
             $upnlower = \core_text::strtolower($user['userPrincipalName']);
             $aadusers[$i]['upnlower'] = $upnlower;
 
