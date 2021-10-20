@@ -896,13 +896,10 @@ class main {
         if (isset($aadsync['emailsync'])) {
             $select = 'SELECT LOWER(u.email) AS email,
                        LOWER(u.username) AS username,';
-            $where = ' WHERE u.email';
         } else {
             $select = 'SELECT LOWER(u.username) AS username,';
-            $where = ' WHERE u.username';
         }
 
-        list($usernamesql, $usernameparams) = $DB->get_in_or_equal($usernames);
         $sql = "$select
                        u.id as muserid,
                        u.auth,
@@ -918,10 +915,22 @@ class main {
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                 $where $usernamesql AND u.mnethostid = ? AND u.deleted = ?
+                 WHERE u.mnethostid = ? AND u.deleted = ?
               ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@example.org before john.smith.
-        $params = array_merge(['user'], $usernameparams, [$CFG->mnet_localhost_id, '0']);
+        $params = array_merge(['user'], [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
+
+        foreach ($existingusers as $id => $existinguser) {
+            if (isset($aadsync['emailsync'])) {
+                if (!in_array($existinguser->email, $usernames)) {
+                    unset($existingusers[$id]);
+                }
+            } else {
+                if (!in_array($existinguser->username, $usernames)) {
+                    unset($existingusers[$id]);
+                }
+            }
+        }
 
         // Fetch linked AAD user accounts.
         list($upnsql, $upnparams) = $DB->get_in_or_equal($upns);
