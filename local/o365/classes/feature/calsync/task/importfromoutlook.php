@@ -64,7 +64,9 @@ class importfromoutlook extends \core\task\scheduled_task {
         foreach ($calsubs as $i => $calsub) {
             try {
                 mtrace('Syncing events for user #'.$calsub->user_id);
-                $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime);
+
+                $o365upn = \local_o365\utils::get_o365_upn($calsub->user_id);
+                $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime, $o365upn);
                 if (!empty($events) && is_array($events) && isset($events['value']) && is_array($events['value'])) {
                     if (!empty($events['value'])) {
                         foreach ($events['value'] as $i => $event) {
