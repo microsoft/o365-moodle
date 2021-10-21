@@ -41,7 +41,7 @@ $string['myfiles'] = 'My OneDrive';
 $string['office365:view'] = 'View Microsoft 365 repository';
 $string['onedrivegroup'] = 'Disable My OneDrive folder in file picker';
 $string['pluginname'] = 'Microsoft 365';
-$string['pluginname_help'] = 'An Microsoft 365 Repository';
+$string['pluginname_help'] = 'A Microsoft 365 Repository';
 $string['trendinggroup'] = 'Disable Files Trending Around Me folder in file picker';
 $string['upload'] = 'Upload New File';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Microsoft 365 plugins</a></p>';
