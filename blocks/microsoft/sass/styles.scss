@@ -93,8 +93,13 @@
     }
 }
 .block_microsoft_icon {
-    width: 32px;
-    height: 32px;
-    margin: 0;
-    padding: 0;
+width: 32px;
+height: 32px;
+margin: 0;
+padding: 0;
+}
+
+.mform .form-inline label {
+    justify-content: flex-start;
+    width: 100%;
 }

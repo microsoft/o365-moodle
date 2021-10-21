@@ -69,3 +69,6 @@
   height: 32px;
   margin: 0;
   padding: 0; }
+.mform .form-inline label {
+  justify-content: flex-start;
+  width: 100%;}
