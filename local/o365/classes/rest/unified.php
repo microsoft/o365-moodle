@@ -2131,7 +2131,9 @@ class unified extends \local_o365\rest\o365api {
         ];
         $this->betaapicall('post', $endpoint, json_encode($data));
 
-        if ($this->httpclient->info['http_code'] == 201) {
+        // If the request was successful, it would return 201; otherwise, if the request failed with "duplicate",
+        // it would return 409, and it means the app has already been provisioned.
+        if ($this->httpclient->info['http_code'] == 201 || $this->httpclient->info['http_code'] == 409) {
             return true;
         } else {
             throw new \moodle_exception('errorprovisioningapp', 'local_o365');
