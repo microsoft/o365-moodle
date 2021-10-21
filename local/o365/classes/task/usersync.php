@@ -241,13 +241,13 @@ class usersync extends scheduled_task {
     }
 
     /**
-     * Process users in chunks of 20000 at a time.
+     * Process users in chunks of 10000 at a time.
      *
      * @param $usersync
      * @param $users
      */
     protected function sync_users($usersync, $users) {
-        $chunk = array_chunk($users, 20000);
+        $chunk = array_chunk($users, 10000);
         foreach ($chunk as $u) {
             $this->mtrace(count($u) . ' users in chunk. Syncing...');
             $usersync->sync_users($u);
