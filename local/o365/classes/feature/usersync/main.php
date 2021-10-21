@@ -910,11 +910,9 @@ class main {
             return true;
         }
 
+        $select = 'SELECT LOWER(u.username) AS username,';
         if (isset($aadsync['emailsync'])) {
-            $select = 'SELECT LOWER(u.email) AS email,
-                       LOWER(u.username) AS username,';
-        } else {
-            $select = 'SELECT LOWER(u.username) AS username,';
+            $select .= ' LOWER(u.email) AS email,';
         }
 
         $sql = "$select
