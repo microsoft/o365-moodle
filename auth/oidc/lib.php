@@ -166,7 +166,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
         $item->matchingstatus = get_string('mismatched', 'auth_oidc');
         $item->details = get_string('mismatched_details', 'auth_oidc',
             ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]);
-        $deletetokenurl = new moodle_url('/auth/oidc/cleanupiodctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new moodle_url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token_and_reference', 'auth_oidc'));
 
         $mismatchedtokens[$record->id] = $item;
