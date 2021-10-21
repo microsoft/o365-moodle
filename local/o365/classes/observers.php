@@ -532,11 +532,41 @@ class observers {
         if ((get_config('local_o365', 'createteams') === 'oncustom') && $syncnewcoursesetting) {
             \local_o365\feature\usergroups\utils::set_course_group_enabled($event->objectid, true, true);
         }
-        
+
         if (\local_o365\rest\sharepoint::is_configured() === true) {
             $sharepoint = static::construct_sharepoint_api_with_system_user();
             if (!empty($sharepoint)) {
                 $sharepoint->create_course_site($event->objectid);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Handle course_restored event.
+     *
+     * Does the following:
+     *  - enable sync on new courses if course sync is "custom", and the option to enable sync on new courses by default is set.
+     *
+     * @param \core\event\course_restored $event
+     *
+     * @return bool
+     */
+    public static function handle_course_restored(\core\event\course_restored $event) {
+        if (\local_o365\utils::is_configured() !== true) {
+            return false;
+        }
+
+        $eventdata = $event->get_data();
+
+        // Enable team sync for newly restored courses if the create teams setting is "custom", and the option to enable sync on
+        // new courses by default is on.
+        $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
+        if ((get_config('local_o365', 'createteams') === 'oncustom') && $syncnewcoursesetting) {
+            if (isset($eventdata['other']) && isset($eventdata['other']['target']) &&
+                $eventdata['other']['target'] == \backup::TARGET_NEW_COURSE) {
+                \local_o365\feature\usergroups\utils::set_course_group_enabled($event->objectid, true, true);
             }
         }
 
