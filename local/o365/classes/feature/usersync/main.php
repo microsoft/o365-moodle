@@ -498,51 +498,66 @@ class main {
             $remotefield = $fieldmapping['field_map'];
             $behavior = $fieldmapping['update_local'];
 
-            if ($remotefield == 'objectId') {
-                $remotefield = $objectidfieldname;
-            }
             if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
                 // Field mapping doesn't apply to this event type.
                 continue;
             }
+
+            if ($remotefield == 'objectId') {
+                $remotefield = $objectidfieldname;
+            }
+
             if (isset($aaddata[$remotefield])) {
-                if ($localfield == "country") {
-                    // Update country with two letter country code.
-                    $incoming = strtoupper($aaddata[$remotefield]);
-                    $countrymap = get_string_manager()->get_list_of_countries();
-                    if (isset($countrymap[$incoming])) {
-                        $countrycode = $incoming;
-                    } else {
-                        $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
-                    }
-                    $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
-                } else {
-                    $user->$localfield = $aaddata[$remotefield];
+                switch ($remotefield) {
+                    case 'country':
+                        // Update country with two-letter country code.
+                        $incoming = strtoupper($aaddata[$remotefield]);
+                        $countrymap = get_string_manager()->get_list_of_countries();
+                        if (isset($countrymap[$incoming])) {
+                            $countrycode = $incoming;
+                        } else {
+                            $countrycode = array_search($aaddata[$remotefield], get_string_manager()->get_list_of_countries());
+                        }
+                        $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
+                        break;
+                    case 'businessPhones':
+                        $user->$localfield = implode(', ', $aaddata[$remotefield]);
+                        break;
+                    default:
+                        $user->$localfield = $aaddata[$remotefield];
                 }
             }
 
-            if ($remotefield == "manager") {
-                $user->$localfield = $usersync->get_user_manager($userobjectid);
-            } else if ($remotefield == "groups") {
-                $user->$localfield = $usersync->get_user_groups($userobjectid);
-            } else if ($remotefield == "teams") {
-                $user->$localfield = $usersync->get_user_teams($userobjectid);
-            } else if ($remotefield == "roles") {
-                $user->$localfield = $usersync->get_user_roles($userobjectid);
-            } else if ($remotefield == "preferredName") {
-                if (!isset($aaddata[$remotefield])) {
-                    if (stripos($user->username, '_ext_') !== false) {
-                        $user->$localfield = $usersync->get_preferred_name($userobjectid);
+            switch ($remotefield) {
+                case 'manager':
+                    $user->$localfield = $usersync->get_user_manager($userobjectid);
+                    break;
+                case 'groups':
+                    $user->$localfield = $usersync->get_user_groups($userobjectid);
+                    break;
+                case 'teams':
+                    $user->$localfield = $usersync->get_user_teams($userobjectid);
+                    break;
+                case 'roles':
+                    $user->$localfield = $usersync->get_user_roles($userobjectid);
+                    break;
+                case 'preferredName':
+                    if (!isset($aaddata[$remotefield])) {
+                        if (stripos($user->username, '_ext_') !== false) {
+                            $user->$localfield = $usersync->get_preferred_name($userobjectid);
+                        }
                     }
-                }
-            } else if (substr($remotefield, 0, 18) == 'extensionAttribute') {
-                $extensionattributeid = substr($remotefield, 18);
-                if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
-                    if (isset($aaddata['onPremisesExtensionAttributes']) &&
-                        isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
-                        $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+                    break;
+                default:
+                    if (substr($remotefield, 0, 18) == 'extensionAttribute') {
+                        $extensionattributeid = substr($remotefield, 18);
+                        if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
+                            if (isset($aaddata['onPremisesExtensionAttributes']) &&
+                                isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
+                                $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+                            }
+                        }
                     }
-                }
             }
         }
 
