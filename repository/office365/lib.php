@@ -327,7 +327,8 @@ class repository_office365 extends \repository {
             if ($this->unifiedconfigured === true) {
                 $apiclient = $this->get_unified_apiclient();
                 $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
-                $result = $apiclient->create_file($parentid, $filename, $content, 'application/octet-stream');
+                $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+                $result = $apiclient->create_file($parentid, $filename, $content, 'application/octet-stream', $o365userid);
             } else {
                 $apiclient = $this->get_onedrive_apiclient();
                 $result = $apiclient->create_file($filepath, $filename, $content);
@@ -554,7 +555,10 @@ class repository_office365 extends \repository {
      * @return array List of $list array and $path array.
      */
     protected function get_listing_my_unified($path = '') {
+        global $USER;
+
         $path = (empty($path)) ? '/' : $path;
+        $caller = '/repository_office365::get_listing_my_unified';
 
         $list = [];
 
@@ -569,7 +573,9 @@ class repository_office365 extends \repository {
             $realpath = substr($path, 0, -strlen('/upload/'));
         } else {
             try {
-                $contents = $unified->get_files($realpath);
+                $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+                $contents = $unified->get_files($realpath, $o365userid);
+
                 $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
             } catch (\Exception $e) {
                 $errmsg = 'Exception when retrieving personal onedrive files for folder';
@@ -583,7 +589,8 @@ class repository_office365 extends \repository {
         }
 
         if ($realpath !== '/') {
-            $metadata = $unified->get_file_metadata($realpath);
+            $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+            $metadata = $unified->get_file_metadata($realpath, $o365userid);
             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
                 $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
                 $cache = \cache::make('repository_office365', 'unifiedfolderids');
@@ -658,12 +665,15 @@ class repository_office365 extends \repository {
      * @return array List of $list array and $path array.
      */
     protected function get_listing_trending_unified($path = '') {
+        global $USER;
+
         $path = (empty($path)) ? '/' : $path;
-        $list = [];
+        $caller = '\repository_office365::get_listing_trending_unified';
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
         try {
-            $contents = $unified->get_trending_files($realpath);
+            $o365upn = \local_o365\utils::get_o365_upn($USER->id);
+            $contents = $unified->get_trending_files($realpath, $o365upn);
             $list = $this->contents_api_response_to_list($contents, $realpath, 'trendingaround', null, false);
         } catch (\Exception $e) {
             $errmsg = 'Exception when retrieving personal trending files';
@@ -859,6 +869,8 @@ class repository_office365 extends \repository {
      *   url: URL to the source (from parameters)
      */
     public function get_file($reference, $filename = '') {
+        global $USER;
+
         $caller = '\repository_office365::get_file';
         $reference = $this->unpack_reference($reference);
 
@@ -872,7 +884,8 @@ class repository_office365 extends \repository {
                 \local_o365\utils::debug('Could not construct onedrive api.', $caller);
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
-            $file = $sourceclient->get_file_by_id($reference['id']);
+            $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+            $file = $sourceclient->get_file_by_id($reference['id'], $o365userid);
         } else if ($reference['source'] === 'onedrivegroup') {
             if ($this->unifiedconfigured === true) {
                 $sourceclient = $this->get_unified_apiclient();
@@ -937,6 +950,8 @@ class repository_office365 extends \repository {
      * @return string file reference, ready to be stored
      */
     public function get_file_reference($source) {
+        global $USER;
+
         $caller = '\repository_office365::get_file_reference';
         $sourceunpacked = $this->unpack_reference($source);
         if (isset($sourceunpacked['source']) && isset($sourceunpacked['id'])) {
@@ -960,7 +975,8 @@ class repository_office365 extends \repository {
                 if ($filesource === 'onedrive') {
                     if ($this->unifiedconfigured === true) {
                         $sourceclient = $this->get_unified_apiclient();
-                        $reference['url'] = $sourceclient->get_sharing_link($fileid);
+                        $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+                        $reference['url'] = $sourceclient->get_sharing_link($fileid, $o365userid);
                     } else {
                         $sourceclient = $this->get_onedrive_apiclient();
                         $filemetadata = $sourceclient->get_file_metadata($fileid);

@@ -28,7 +28,6 @@ None. This plugin depends upon the Microsoft Account local plugin to be configur
 This is a singleton class that provides simple wrappers for various authentication and the OneNote online REST API. Some of the functionality provided includes:
 - render_signin_widget: Returns the HTML for displaying the signin widget for Microsoft OneNote.
 - get_items_list: Used for drilling down the hierarchy of OneNote notebooks, sections, and pages.
-- get_item_name: Returns the name of a notebook, section, or page.
 - download_page: Downloads the contents of a OneNote page, including the HTML and any images; saves them in a folder and creates a .zip file out of it.
 - render_action_button: Returns the HTML for displaying action buttons that allow students to view or work on OneNote assignments and teachers to provide feedback on them.
 - get_page: Gets (or creates) the student submission page or teacher feedback page in OneNote for the given student assignment. Performs all actions such as determining if a page already exists and returning that; or determining if this is the first time a student is accessing the assignment and creating the page from the assignment title / prompt etc; or determining if a downloaded zipped page already exists and thawing the OneNote page from that.

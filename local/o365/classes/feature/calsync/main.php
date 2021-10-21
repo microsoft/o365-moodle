@@ -110,10 +110,12 @@ class main {
      * @param string $calid The o365 ID of the calendar to create the event in.
      * @return int The new ID of the calidmap record.
      */
-    public function create_event_raw($muserid, $eventid, $subject, $body, $timestart, $timeend, $attendees, array $other = array(), $calid) {
+    public function create_event_raw($muserid, $eventid, $subject, $body, $timestart, $timeend, $attendees, array $other = array(),
+        $calid) {
         global $DB;
         $apiclient = $this->construct_calendar_api($muserid, true);
-        $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, $other, $calid);
+        $o365upn = \local_o365\utils::get_o365_upn($muserid);
+        $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, $other, $calid, $o365upn);
         $idmaprec = [
             'eventid' => $eventid,
             'outlookeventid' => $response['Id'],
@@ -133,7 +135,8 @@ class main {
      */
     public function update_event_raw($muserid, $outlookeventid, $updated) {
         $apiclient = $this->construct_calendar_api($muserid, true);
-        $apiclient->update_event($outlookeventid, $updated);
+        $o365upn = \local_o365\utils::get_o365_upn($muserid);
+        $apiclient->update_event($outlookeventid, $updated, $o365upn);
     }
 
     /**
@@ -145,7 +148,8 @@ class main {
     public function delete_event_raw($muserid, $outlookeventid, $idmaprecid = null) {
         global $DB;
         $apiclient = $this->construct_calendar_api($muserid, true);
-        $response = $apiclient->delete_event($outlookeventid);
+        $o365upn = \local_o365\utils::get_o365_upn($muserid);
+        $apiclient->delete_event($outlookeventid, $o365upn);
         if (!empty($idmaprecid)) {
             $DB->delete_records('local_o365_calidmap', ['id' => $idmaprecid]);
         } else {
@@ -278,7 +282,8 @@ class main {
                 // Send event to o365 and store ID.
                 $apiclient = $this->construct_calendar_api($event->userid);
                 $calid = (!empty($calsub->o365calid) && empty($calsub->isprimary)) ? $calsub->o365calid : null;
-                $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
+                $o365upn = \local_o365\utils::get_o365_upn($event->userid);
+                $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid, $o365upn);
                 $idmaprec = [
                     'eventid' => $event->id,
                     'outlookeventid' => $response['Id'],
@@ -310,7 +315,8 @@ class main {
             if (isset($eventcreatorsub->subisprimary) && $eventcreatorsub->subisprimary == 1) {
                 $calid = null;
             }
-            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid);
+            $o365upn = \local_o365\utils::get_o365_upn($event->userid);
+            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid, $o365upn);
             $idmaprec = [
                 'eventid' => $event->id,
                 'outlookeventid' => $response['Id'],
@@ -324,7 +330,8 @@ class main {
         foreach ($nonprimarycalsubs as $attendee) {
             $apiclient = $this->construct_calendar_api($attendee->id);
             $calid = (!empty($attendee->subo365calid)) ? $attendee->subo365calid : null;
-            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
+            $o365upn = \local_o365\utils::get_o365_upn($attendee->userid);
+            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid, $o365upn);
             $idmaprec = [
                 'eventid' => $event->id,
                 'outlookeventid' => $response['Id'],
@@ -345,7 +352,8 @@ class main {
     public function get_calendars() {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
-        $response = $apiclient->get_calendars();
+        $o365upn = \local_o365\utils::get_o365_upn($USER->id);
+        $response = $apiclient->get_calendars($o365upn);
         return (!empty($response['value']) && is_array($response['value'])) ? $response['value'] : [];
     }
 
@@ -359,7 +367,8 @@ class main {
      */
     public function get_events($muserid, $o365calid, $since = null) {
         $apiclient = $this->construct_calendar_api($muserid, false);
-        return $apiclient->get_events($o365calid, $since);
+        $o365upn = \local_o365\utils::get_o365_upn($muserid);
+        return $apiclient->get_events($o365calid, $since, $o365upn);
     }
 
     /**
@@ -404,7 +413,8 @@ class main {
 
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
-            $apiclient->update_event($idmaprec->outlookeventid, $updated);
+            $o365upn = \local_o365\utils::get_o365_upn($idmaprec->userid);
+            $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
         }
         return true;
     }
@@ -426,7 +436,8 @@ class main {
 
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
-            $apiclient->delete_event($idmaprec->outlookeventid);
+            $o365upn = \local_o365\utils::get_o365_upn($idmaprec->userid);
+            $apiclient->delete_event($idmaprec->outlookeventid, $o365upn);
         }
 
         // Clean up idmap table.
@@ -490,7 +501,8 @@ class main {
     public function create_outlook_calendar($name) {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
-        return $apiclient->create_calendar($name);
+        $o365upn = \local_o365\utils::get_o365_upn($USER->id);
+        return $apiclient->create_calendar($name, $o365upn);
     }
 
     /**
@@ -503,7 +515,8 @@ class main {
     public function update_outlook_calendar($outlookcalendearid, $updated) {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
-        return $apiclient->update_calendar($outlookcalendearid, $updated);
+        $o365upn = \local_o365\utils::get_o365_upn($USER->id);
+        return $apiclient->update_calendar($outlookcalendearid, $updated, $o365upn);
     }
 
     /**
