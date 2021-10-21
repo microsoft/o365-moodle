@@ -556,6 +556,14 @@ if ($hassiteconfig) {
             get_string('settings_bot_app_password_desc', 'local_o365'),
             ''));
 
+        // Setting bot_shared_secret.
+        $sharedsecretsetting = new admin_setting_configtext('local_o365/bot_sharedsecret',
+            get_string('settings_bot_sharedsecret', 'local_o365'),
+            get_string('settings_bot_sharedsecret_desc', 'local_o365'),
+            '');
+        $sharedsecretsetting->nosave = true;
+        $settings->add($sharedsecretsetting);
+
         // Download JSON settings file.
         $jsondownloadhtml = $OUTPUT->box_start('form-item row local_o365_settings_teams_banner_part_2');
         $jsondownloadhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
@@ -596,14 +604,6 @@ if ($hassiteconfig) {
             get_string('settings_teams_moodle_app_short_name', 'local_o365'),
             get_string('settings_teams_moodle_app_short_name_desc', 'local_o365'),
             'Moodle'));
-
-        // Setting bot_shared_secret.
-        $sharedsecretsetting = new admin_setting_configtext('local_o365/bot_sharedsecret',
-            get_string('settings_bot_sharedsecret', 'local_o365'),
-            get_string('settings_bot_sharedsecret_desc', 'local_o365'),
-            '');
-        $sharedsecretsetting->nosave = true;
-        $settings->add($sharedsecretsetting);
 
         // Setting bot_feature_enabled.
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
