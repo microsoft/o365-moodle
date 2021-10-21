@@ -366,6 +366,19 @@ class observers {
         // All validation passed. Start processing.
         $siteresetsetting = get_config('local_o365', 'course_reset_teams');
 
+        $createteams = get_config('local_o365', 'createteams');
+
+        switch ($createteams) {
+            case 'off':
+                $siteresetsetting = TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_ONLY;
+                break;
+            case 'onall':
+                if ($siteresetsetting == TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_ONLY) {
+                    $siteresetsetting = TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW;
+                }
+                break;
+        }
+
         switch ($siteresetsetting) {
             case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE:
                 // Check course settings.
@@ -376,24 +389,66 @@ class observers {
                         $courseresetsetting = block_microsoft_get_course_reset_setting($courseid);
 
                         if ($connectedtoteam) {
-                            if ($courseresetsetting == TEAMS_COURSE_RESET_SETTING_DISCONNECT) {
-                                $coursegroups->process_course_reset_team($course, $o365object);
+                            switch ($createteams) {
+                                case 'off':
+                                    $courseresetsetting = TEAMS_COURSE_RESET_SETTING_DISCONNECT_ONLY;
+                                    break;
+                                case 'onall':
+                                    if ($courseresetsetting == TEAMS_COURSE_RESET_SETTING_DISCONNECT_ONLY) {
+                                        $courseresetsetting = TEAMS_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW;
+                                    }
+                                    break;
+                            }
+                            switch ($courseresetsetting) {
+                                case TEAMS_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW:
+                                    $coursegroups->process_course_reset_team($course, $o365object, true);
+                                    break;
+                                case TEAMS_COURSE_RESET_SETTING_DISCONNECT_ONLY:
+                                    $coursegroups->process_course_reset_team($course, $o365object, false);
+                                    utils::set_course_group_enabled($courseid, false, true);
+                                    break;
                             }
                         } else {
-                            if ($courseresetsetting == GROUP_COURSE_RESET_SETTING_DISCONNECT) {
-                                $coursegroups->process_course_reset_group($course, $o365object);
+                            switch ($createteams) {
+                                case 'off':
+                                    $courseresetsetting = GROUP_COURSE_RESET_SETTING_DISCONNECT_ONLY;
+                                    break;
+                                case 'onall':
+                                    if ($courseresetsetting == GROUP_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW) {
+                                        $courseresetsetting = GROUP_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW;
+                                    }
+                                    break;
+                            }
+                            switch ($courseresetsetting) {
+                                case GROUP_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW:
+                                    $coursegroups->process_course_reset_group($course, $o365object, true);
+                                    break;
+                                case GROUP_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW:
+                                    $coursegroups->process_course_reset_group($course, $o365object, false);
+                                    utils::set_course_group_enabled($courseid, false, true);
+                                    break;
                             }
                         }
                     }
                 }
 
                 break;
-            case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT:
+            case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW:
                 if ($connectedtoteam) {
-                    $coursegroups->process_course_reset_team($course, $o365object);
+                    $coursegroups->process_course_reset_team($course, $o365object, true);
                 } else {
-                    $coursegroups->process_course_reset_group($course, $o365object);
+                    $coursegroups->process_course_reset_group($course, $o365object, true);
                 }
+
+                break;
+            case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_ONLY:
+                if ($connectedtoteam) {
+                    $coursegroups->process_course_reset_team($course, $o365object, false);
+                } else {
+                    $coursegroups->process_course_reset_group($course, $o365object, false);
+                }
+                utils::set_course_group_enabled($courseid, false, true);
+
                 break;
         }
 

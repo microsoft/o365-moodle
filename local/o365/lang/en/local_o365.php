@@ -467,6 +467,7 @@ $string['settings_course_reset_teams_details'] = 'Actions to be performed on a T
 $string['settings_course_reset_teams_option_do_nothing'] = 'Do nothing<br/>The Team or group is still connected to the course. User unenrolments will result in user Team or group membership removal.';
 $string['settings_course_reset_teams_option_per_course'] = 'Allow settings per course<br/>This requires the Microsoft block to be added to the course. Users with capability to reset the course can choose what to do during course reset in the block.';
 $string['settings_course_reset_teams_option_force_archive'] = 'Disconnect the course with the Team or group and create a new one<br/>The existing Team or group connected to the course will be renamed as configured. If a Team is connected, it will be archived. A new Team or group will be created and connected to the course.';
+$string['settings_course_reset_teams_option_archive_only'] = 'Disconnect the course with the Team or group only<br />The existing Team or group connected to the course will be renamed as configured. If a Team is connected, it will be archived. No new Team or group will be created.';
 $string['settings_reset_team_name_prefix'] = 'Reset Team name prefix';
 $string['settings_reset_team_name_prefix_details'] = 'When resetting a course that is connected to a Team, the name of the existing connected Team will be prefixed with this.';
 $string['settings_reset_group_name_prefix'] = 'Reset group name prefix';
