@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * OIDC client test cases.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -102,7 +104,8 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
     /**
      * Test setting and getting endpoints.
      *
-     * @dataProvider dataprovider_endpoints
+     * @param $endpoints
+     * @param $expectedexception
      */
     public function test_endpoints_getters_and_setters($endpoints, $expectedexception) {
         if (!empty($expectedexception)) {

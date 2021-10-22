@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Definition of base login flow class.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -28,6 +30,9 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
+/**
+ * A base loginflow class.
+ */
 class base {
     /** @var object Plugin config. */
     public $config;
@@ -35,6 +40,9 @@ class base {
     /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
     protected $httpclient;
 
+    /**
+     * Constructor.
+     */
     public function __construct() {
         $default = [
             'opname' => get_string('pluginname', 'auth_oidc')
@@ -76,6 +84,7 @@ class base {
      *
      * @param object &$frm Form object.
      * @param object &$user User object.
+     * @return bool
      */
     public function loginpage_hook(&$frm, &$user) {
         return true;
@@ -187,7 +196,7 @@ class base {
     /**
      * Set an HTTP client to use.
      *
-     * @param auth_oidchttpclientinterface $httpclient [description]
+     * @param \auth_oidc\httpclientinterface $httpclient
      */
     public function set_httpclient(\auth_oidc\httpclientinterface $httpclient) {
         $this->httpclient = $httpclient;
@@ -244,8 +253,10 @@ class base {
 
             // Check if we have recorded the user's previous login method.
             $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $userrec->id]);
-            $prevauthmethod = (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) ?
-                $prevmethodrec->method : null;
+            $prevauthmethod = null;
+            if (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) {
+                $prevauthmethod = $prevmethodrec->method;
+            }
             // Manual is always available, we don't need it twice.
             if ($prevauthmethod === 'manual') {
                 $prevauthmethod = null;

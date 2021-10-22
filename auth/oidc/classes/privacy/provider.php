@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Privacy subsystem implementation.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,17 +25,19 @@
 
 namespace auth_oidc\privacy;
 
+defined('MOODLE_INTERNAL') || die();
+
 use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\writer;
 
-if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
-    interface auth_oidc_userlist extends \core_privacy\local\request\core_userlist_provider {}
-} else {
-    interface auth_oidc_userlist {};
-}
+interface auth_oidc_userlist extends \core_privacy\local\request\core_userlist_provider {
+};
 
+/**
+ * Privacy provider for auth_oidc.
+ */
 class provider implements
     \core_privacy\local\request\plugin\provider,
     \core_privacy\local\metadata\provider,
@@ -45,7 +49,7 @@ class provider implements
      * @param   collection     $collection The initialised collection to add items to.
      * @return  collection     A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $collection): collection {
+    public static function get_metadata(collection $collection) : collection {
 
         $tables = [
             'auth_oidc_prevlogin' => [
@@ -170,7 +174,7 @@ class provider implements
      * @param \stdClass $user The user to get the map for.
      * @return array The table user map.
      */
-    protected static function get_table_user_map(\stdClass $user): array {
+    protected static function get_table_user_map(\stdClass $user) : array {
         $tables = [
             'auth_oidc_prevlogin' => ['userid' => $user->id],
             'auth_oidc_token' => ['userid' => $user->id],

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * An event when something wrong happened, and debug message needs to be logged.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace auth_oidc\event;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Event fired whenever we need to record a debug message.
