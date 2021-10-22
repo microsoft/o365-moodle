@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Resource Owner Password Credentials Grant login flow.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -60,7 +62,6 @@ class rocreds extends base {
      *
      * @param object &$frm Form object.
      * @param object &$user User object.
-     *
      * @return bool
      */
     public function loginpage_hook(&$frm, &$user) {
@@ -123,8 +124,9 @@ class rocreds extends base {
                     'reason' => $failurereason)));
             $event->trigger();
 
-            error_log('[client '.getremoteaddr()."]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  ".
-                    $_SERVER['HTTP_USER_AGENT']);
+            debugging('[client '.getremoteaddr()."]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  ".
+                $_SERVER['HTTP_USER_AGENT']);
+
             return false;
         }
 

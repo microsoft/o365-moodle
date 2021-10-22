@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Definition of a redirect URL admin setting control.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -31,15 +33,12 @@ defined('MOODLE_INTERNAL') || die();
  * Displays the redirect URI for easier config.
  */
 class auth_oidc_admin_setting_redirecturi extends \admin_setting {
-
     /**
      * Constructor.
      *
-     * @param string $name Name of the setting.
-     * @param string $visiblename Visible name of the setting.
-     * @param string $description Description of the setting.
-     * @param array $defaultsetting Default value.
-     * @param array $choices Array of icon choices.
+     * @param $name
+     * @param $heading
+     * @param $description
      */
     public function __construct($name, $heading, $description) {
         $this->nosave = true;
@@ -67,6 +66,7 @@ class auth_oidc_admin_setting_redirecturi extends \admin_setting {
     /**
      * Never write settings.
      *
+     * @param mixed $data
      * @return string Always returns an empty string.
      */
     public function write_setting($data) {
@@ -76,6 +76,8 @@ class auth_oidc_admin_setting_redirecturi extends \admin_setting {
     /**
      * Returns an HTML string for the redirect uri display.
      *
+     * @param mixed $data
+     * @param string $query
      * @return string Returns an HTML string.
      */
     public function output_html($data, $query = '') {

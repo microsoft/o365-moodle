@@ -23,6 +23,8 @@
 
 namespace auth_oidc;
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot.'/lib/filelib.php');
 
 /**

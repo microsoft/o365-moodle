@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Utility functions.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,15 +25,17 @@
 
 namespace auth_oidc;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * General purpose utility class.
  */
 class utils {
-
     /**
      * Process an OIDC JSON response.
      *
      * @param string $response The received JSON.
+     * @param array $expectedstructure
      * @return array The parsed JSON.
      */
     public static function process_json_response($response, array $expectedstructure = array()) {
@@ -111,6 +115,8 @@ class utils {
      * Record a debug message.
      *
      * @param string $message The debug message to log.
+     * @param string $where
+     * @param null $debugdata
      */
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('auth_oidc', 'debugmode');
