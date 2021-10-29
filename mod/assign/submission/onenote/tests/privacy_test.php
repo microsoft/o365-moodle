@@ -19,6 +19,7 @@
  *
  * @package assignsubmission_onenote
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -241,6 +242,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
      *
      * @param object $assign Assign object
      * @param stdClass $student User object
+     * @param string $submissiontext
      * @return array Submission plugin object and the submission object.
      */
     protected function create_onenote_submission($assign, $student, $submissiontext) {
@@ -275,8 +277,8 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
     /**
      * Count the number of submission OneNote files
      *
+     * @param object $assign Assign object
      * @param int $submissionid
-     * @param string $area
      * @return int
      */
     private function count_files($assign, $submissionid) {
