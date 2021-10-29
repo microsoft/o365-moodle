@@ -15,8 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provides the information to backup feedback files.
- * This just adds its filearea to the annotations and records the number of files.
+ * Provides the information to backup feedback files. This just adds its filearea to the annotations and records the number of files.
  * @package   assignfeedback_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,6 +29,14 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Restore subplugin class.
+ *
+ * Provides the necessary information needed
+ * to restore one assign_feedback subplugin.
+ *
+ * @package   assignfeedback_onenote
+ */
 class backup_assignfeedback_onenote_subplugin extends backup_subplugin {
 
     /**

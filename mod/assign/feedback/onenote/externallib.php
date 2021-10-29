@@ -64,7 +64,7 @@ class assignfeedback_onenote_external extends external_api {
      */
     public static function feedback_onenote_delete_foruser_parameters() {
         return new external_function_parameters (['contextid' => new external_value(PARAM_INT, 'Context id'),
-            'gradeid' => new external_value(PARAM_INT, 'Grade id'), 'userid' => new external_value(PARAM_INT, 'User id'),]);
+            'gradeid' => new external_value(PARAM_INT, 'Grade id'), 'userid' => new external_value(PARAM_INT, 'User id'), ]);
     }
 
     /**
@@ -81,17 +81,17 @@ class assignfeedback_onenote_external extends external_api {
         $warnings = [];
 
         $params = self::validate_parameters(self::feedback_onenote_delete_foruser_parameters(),
-            ['contextid' => $contextid, 'gradeid' => $gradeid, 'userid' => $userid,]);
+            ['contextid' => $contextid, 'gradeid' => $gradeid, 'userid' => $userid, ]);
 
-        // This code removes the entry
+        // This code removes the entry.
         $fs = get_file_storage();
         // Delete any previous feedbacks.
         $fs->delete_area_files($contextid, 'assignfeedback_onenote', \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
             $gradeid);
 
-        // Remove entry from local_onenote_assign_pages
-        $grade_record = $DB->get_record('assign_grades', ['id' => $gradeid], '*', MUST_EXIST);
-        $record = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $grade_record->assignment, 'user_id' => $userid],
+        // Remove entry from local_onenote_assign_pages.
+        $graderecord = $DB->get_record('assign_grades', ['id' => $gradeid], '*', MUST_EXIST);
+        $record = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $graderecord->assignment, 'user_id' => $userid],
             '*', MUST_EXIST);
         $record->feedback_teacher_page_id = '';
         $DB->update_record('local_onenote_assign_pages', $record);
@@ -110,6 +110,6 @@ class assignfeedback_onenote_external extends external_api {
      */
     public static function feedback_onenote_delete_foruser_returns() {
         return new external_single_structure(['status' => new external_value(PARAM_BOOL, 'status: true if success'),
-            'warnings' => new external_warnings(),]);
+            'warnings' => new external_warnings(), ]);
     }
 }
