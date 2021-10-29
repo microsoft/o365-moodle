@@ -76,9 +76,9 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
      * Create basic setup for test cases
      * @return bool
      */
-    public function setup() {
+    public function setup():void {
         global $CFG;
-        return true; // Need to update tests to not contact external services.
+        return; // Need to update tests to not contact external services.
         $this->resetAfterTest(true);
 
         $this->user = $this->getDataGenerator()->create_user();
