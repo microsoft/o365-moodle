@@ -21,6 +21,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
+defined('MOODLE_INTERNAL') || die;
 
 $settings->add(new admin_setting_configcheckbox('assignfeedback_onenote/default',
                    new lang_string('default', 'assignfeedback_onenote'),
