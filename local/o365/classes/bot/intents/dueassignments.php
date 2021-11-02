@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class dueassignments implements bot intent interface for student-due-assignments.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,19 +25,17 @@
 
 namespace local_o365\bot\intents;
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->dirroot . '/mod/assign/lib.php');
 
 /**
- * Class dueassignments implements bot intent interface for student-due-assignments
- * @package local_o365\bot\intents
+ * Class dueassignments implements bot intent interface for student-due-assignments.
  */
 class dueassignments implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message with details about student due assignments
-     * @param $language - Message language
+     * Gets a message with details about student due assignments.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities (optional and not used at the moment)
      * @return array|string - Bot message structure with data
      */

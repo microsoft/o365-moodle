@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class intentshelper to store intents general functions to reduce code duplication.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,16 +25,13 @@
 
 namespace local_o365\bot\intents;
 
-defined('MOODLE_INTERNAL') || die();
-
-define("INTENTDATEFORMAT", "d/m/Y"); //Date format used in bot messages
-define("INTENTTIMEFORMAT", "H:i"); //Time format used in bot messages
+define("INTENTDATEFORMAT", "d/m/Y"); // Date format used in bot messages.
+define("INTENTTIMEFORMAT", "H:i"); // Time format used in bot messages.
 
 require_once($CFG->libdir . '/accesslib.php');
 
 /**
- * Class intentshelper to store intents general functions to reduce code duplication
- * @package local_o365\bot\intents
+ * Class intentshelper to store intents general functions to reduce code duplication.
  */
 class intentshelper {
 
@@ -45,7 +44,7 @@ class intentshelper {
      * @param bool $limit - limit output to standard intents limit (true/false)
      * @return array - array containing sql string and sql params for DB manipulation functions
      */
-    public function getcoursesstudentslistsql($courses = [], $fields = 'u.id', $where = '', $whereparams = [], $limit = false){
+    public function getcoursesstudentslistsql($courses = [], $fields = 'u.id', $where = '', $whereparams = [], $limit = false) {
         global $DB;
         $userssql = "SELECT $fields FROM {user} u ";
         $sqlparams = [];
@@ -60,23 +59,24 @@ class intentshelper {
             $sqlparams = array_merge($sqlparams, $coursesparams);
         }
         $userssql .= ' WHERE u.deleted = 0 AND u.suspended = 0';
-        if(!empty($where)){
+        if (!empty($where)) {
             $userssql .= " AND $where";
             $sqlparams = array_merge($sqlparams, $whereparams);
         }
         $userssql .= ' ORDER BY u.lastaccess DESC';
-        if($limit){
+        if ($limit) {
             $userssql .= ' LIMIT ' . \local_o365\bot\intents\intentinterface::DEFAULT_LIMIT_NUMBER;
         }
         return [$userssql, $sqlparams];
     }
 
     /**
-     * Gets array of teacher courses
-     * @param $teacherid - teacher user id in Moodle
+     * Gets array of teacher courses.
+     *
+     * @param int $teacherid - teacher user id in Moodle
      * @return array - list of teacher courses ids
      */
-    public function getteachercourses($teacherid){
+    public function getteachercourses($teacherid) {
         $courses = array_keys(enrol_get_users_courses($teacherid, true, 'id'));
         $teachercourses = [];
         foreach ($courses as $course) {
@@ -90,14 +90,14 @@ class intentshelper {
     }
 
     /**
-     * Formats timestamp to default bot messages date format
-     * @param $timestamp - unix time stamp to be formatted
+     * Formats timestamp to default bot messages date format.
+     *
+     * @param int $timestamp - unix time stamp to be formatted
      * @param bool $time - should time be showed beside date (true/false)
      * @return false|string - formatted date
      */
-    public function formatdate($timestamp, $time = false){
+    public function formatdate($timestamp, $time = false) {
         $format = ($time ? INTENTDATEFORMAT.' '.INTENTTIMEFORMAT : INTENTDATEFORMAT);
         return date($format, $timestamp);
     }
 }
-

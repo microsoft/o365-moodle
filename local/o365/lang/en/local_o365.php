@@ -227,7 +227,7 @@ $string['settings_team_name_suffix'] = 'Teams name suffix';
 $string['settings_team_name_suffix_desc'] = '';
 $string['settings_team_name_sample'] = 'Assume a course has:
 <ul>
-<li>Full name: <b>Sample course</b> 
+<li>Full name: <b>Sample course</b></li>
 <li>Short name: <b>sample 15</b></li>
 <li>Moodle created ID: <b>2</b></li>
 <li>ID number: <b>Sample ID 15</b></li>
@@ -267,7 +267,7 @@ $string['settings_group_mail_alias_suffix'] = 'Group mail alias suffix';
 $string['settings_group_mail_alias_suffix_desc'] = '';
 $string['settings_group_names_sample'] = 'Assume a course has:
 <ul>
-<li>Full name: <b>Sample course 15</b> 
+<li>Full name: <b>Sample course 15</b></li>
 <li>Short name: <b>sample 15</b></li>
 <li>Moodle created ID: <b>2</b></li>
 <li>ID number: <b>Sample ID 15</b></li>
@@ -746,7 +746,7 @@ $string['privacy:metadata:local_o365_calsettings:user_id'] = 'The ID of the Mood
 $string['privacy:metadata:local_o365_calsettings:o365calid'] = 'The ID of the calendar in Microsoft 365';
 $string['privacy:metadata:local_o365_calsettings:timecreated'] = 'The time the record was created.';
 
-// "Microsoft 365 / Moodle Control Panel" page in the Microsoft block.
+// Page "Microsoft 365 / Moodle Control Panel" in the Microsoft block.
 $string['ucp_title'] = 'Microsoft 365 / Moodle Control Panel';
 $string['ucp_general_intro'] = 'Here you can manage your connection to Microsoft 365.';
 $string['ucp_connectionstatus'] = 'Connection Status';
@@ -807,7 +807,7 @@ $string['ucp_syncdir_both'] = 'Update both Outlook and Moodle';
 $string['ucp_options'] = 'Options';
 $string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already connected with another Moodle account.';
 
-// "Group control panel" page in the Microsoft block.
+// Page "Group control panel" in the Microsoft block.
 $string['groups'] = 'Microsoft 365 Groups';
 $string['groups_edit_name'] = 'Group name';
 $string['groups_edit_nameexists'] = 'The group with the {$a} currently exists, please choose another name.';

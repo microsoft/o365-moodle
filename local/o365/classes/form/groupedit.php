@@ -14,26 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_o365\form;
-
 /**
  * A form for editing of Microsoft 365 groups.
  *
- * @copyright 2016 Remote-leaner Inc.
+ * @package local_o365
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2016 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die;
+namespace local_o365\form;
 
-require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot . '/lib/formslib.php');
 
 /**
- * Group form class
- *
- * @copyright 2006 The Open University, N.D.Freear AT open.ac.uk, J.White AT open.ac.uk
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @package   core_group
+ * Group form class.
  */
 class groupedit extends \moodleform {
 
@@ -49,11 +44,12 @@ class groupedit extends \moodleform {
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        $mform->addElement('text','displayname', get_string('groups_edit_name', 'local_o365'),'maxlength="254" size="50"');
+        $mform->addElement('text', 'displayname', get_string('groups_edit_name', 'local_o365'), 'maxlength="254" size="50"');
         $mform->addRule('displayname', get_string('required'), 'required', null, 'client');
         $mform->setType('displayname', PARAM_TEXT);
 
-        $mform->addElement('editor', 'description_editor', get_string('groups_edit_description', 'local_o365'), null, $editoroptions);
+        $mform->addElement('editor', 'description_editor', get_string('groups_edit_description', 'local_o365'), null,
+            $editoroptions);
         $mform->setType('description_editor', PARAM_RAW);
 
         $mform->addElement('static', 'currentpicture', get_string('currentpicture'));
@@ -64,13 +60,13 @@ class groupedit extends \moodleform {
         $mform->addElement('filepicker', 'imagefile', get_string('groups_edit_newpicture', 'local_o365'));
         $mform->addHelpButton('imagefile', 'groups_edit_newpicture', 'local_o365');
 
-        $mform->addElement('hidden','id');
+        $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
-        $mform->addElement('hidden','groupid');
+        $mform->addElement('hidden', 'groupid');
         $mform->setType('groupid', PARAM_INT);
 
-        $mform->addElement('hidden','courseid');
+        $mform->addElement('hidden', 'courseid');
         $mform->setType('courseid', PARAM_INT);
 
         $this->add_action_buttons();

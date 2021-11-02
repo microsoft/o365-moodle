@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Represents an oauth2 token.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -99,6 +101,7 @@ class systemtoken extends \local_o365\oauth2\token {
     /**
      * Store a new system token.
      *
+     * @param int $userid
      * @param string $token Token access token.
      * @param int $expiry Token expiry timestamp.
      * @param string $refreshtoken Token refresh token.

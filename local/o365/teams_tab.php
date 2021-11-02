@@ -114,7 +114,7 @@ function ssoLogin() {
         microsoftTeams.authentication.getAuthToken({
             successCallback: (result) => {
                 const url = '" . $ssologinurl->out() . "';
-                
+
                 return fetch(url, {
                     method: 'POST',
                     headers: {
@@ -155,7 +155,7 @@ function inIframe () {
  * If a visitor visits teams web site from mobile browser, Teams will tell the visitor to download mobile app and prevent access
  * by default.
  * However, if the visitor enables 'mobile mode' or equivalent, the message can be bypassed, thus this check may fail.
- */  
+ */
 function isMobileApp() {
     if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         return true;

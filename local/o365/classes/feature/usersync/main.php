@@ -39,8 +39,17 @@ require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
+/**
+ * User sync feature.
+ */
 class main {
+    /**
+     * @var clientdata|null
+     */
     protected $clientdata = null;
+    /**
+     * @var httpclient|null
+     */
     protected $httpclient = null;
 
     /**
@@ -273,8 +282,8 @@ class main {
     /**
      * Sync timezone of user from Outlook to Moodle.
      *
-     * @param $muserid
-     * @param $user
+     * @param int $muserid
+     * @param object $user
      */
     public function sync_timezone($muserid, $user) {
         $tokenresource = unified::get_tokenresource();
@@ -370,6 +379,14 @@ class main {
         return [$users, $skiptoken];
     }
 
+    /**
+     * Return the users search delta, along with skip token and delta tokens.
+     *
+     * @param string $params
+     * @param null $skiptoken
+     * @param null $deltatoken
+     * @return array
+     */
     public function get_users_delta($params = 'default', $skiptoken = null, $deltatoken = null) {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
@@ -383,7 +400,7 @@ class main {
     /**
      * Return the name of the manager of the Microsoft 365 user with the given oid.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return mixed|string
      */
@@ -400,7 +417,7 @@ class main {
     /**
      * Return the names of groups that the Microsoft 365 user with the given oid are in, joined by comma.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return string
      */
@@ -417,7 +434,7 @@ class main {
     /**
      * Return the names of teams that the Microsoft 365 user with the given oid are in, joined by comma.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return string
      */
@@ -434,7 +451,7 @@ class main {
     /**
      * Return the names of roles that the Microsoft 365 user with the given oid has, joined by comma.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return string
      */
@@ -445,7 +462,7 @@ class main {
         if ($objectsids) {
             $results = $apiclient->get_directory_objects($objectsids);
             foreach ($results as $result) {
-                if (stripos($result['@odata.type'], 'role') !== FALSE) {
+                if (stripos($result['@odata.type'], 'role') !== false) {
                     $roles[] = $result['displayName'];
                 }
             }
@@ -457,7 +474,7 @@ class main {
     /**
      * Return the preferred name of the Microsoft 365 user with the given oid.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return mixed
      */
@@ -572,7 +589,7 @@ class main {
     /**
      * Check if any of the fields in the field map configuration would require calling Graph API function to get user details.
      *
-     * @param $eventtype
+     * @param string $eventtype
      *
      * @return bool
      */
@@ -768,7 +785,7 @@ class main {
      * Updates a Moodle user from Azure AD user data.
      *
      * @param array $aaddata Array of Azure AD user data.
-     * @param $fullexistinguser
+     * @param object $fullexistinguser
      *
      * @return \stdClass An object representing the created Moodle user.
      */
@@ -931,7 +948,7 @@ class main {
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
                  WHERE u.mnethostid = ? AND u.deleted = ?
-              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@example.org before john.smith.
+              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@email.com before john.smith.
         $params = array_merge(['user'], [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
@@ -1076,9 +1093,9 @@ class main {
     /**
      * Sync a Microsoft 365 that hasn't been synced before - create a new Moodle account.
      *
-     * @param $syncoptions
-     * @param $aaduserdata
-     * @param $syncguestusers
+     * @param array $syncoptions
+     * @param array $aaduserdata
+     * @param bool $syncguestusers
      *
      * @return false|\stdClass|null
      */
@@ -1173,10 +1190,10 @@ class main {
     /**
      * Sync a Moodle user who has been previously connected to a Microsoft 365 account.
      *
-     * @param $syncoptions
-     * @param $aaduserdata
-     * @param $existinguser
-     * @param $exactmatch
+     * @param array $syncoptions
+     * @param array $aaduserdata
+     * @param object $existinguser
+     * @param bool $exactmatch
      *
      * @return bool
      */
@@ -1279,6 +1296,15 @@ class main {
         }
     }
 
+    /**
+     * Match a Microsoft 365 user with a Moodle user.
+     *
+     * @param array $syncoptions
+     * @param array $aaduserdata
+     * @param object $existinguser
+     * @param bool $exactmatch
+     * @return bool|void
+     */
     protected function sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
         global $DB;
 
@@ -1356,7 +1382,7 @@ class main {
      *
      * Note this will not catch oidc users without matching Microsoft 365 account.
      *
-     * @param $aadusers
+     * @param array $aadusers
      * @param bool $delete
      *
      * @return bool
@@ -1466,7 +1492,7 @@ class main {
         }
 
         if ($validaaduserids) {
-            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
+            [$objectidsql, $objectidparams] = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
             $query = 'SELECT u.*
                         FROM {user} u
                         JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id

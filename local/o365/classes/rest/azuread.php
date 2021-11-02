@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * API client for Azure AD graph.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,10 +29,14 @@ namespace local_o365\rest;
  * API client for Azure AD graph.
  */
 class azuread extends \local_o365\rest\o365api {
-    /** The general API area of the class. */
+    /**
+     * @var string The general API area of the class.
+     */
     public $apiarea = 'directory';
 
-    /** @var string A value to use for the Azure AD tenant. If null, will use value from local_o365/aadtenant config setting. */
+    /**
+     * @var string A value to use for the Azure AD tenant. If null, will use value from local_o365/aadtenant config setting.
+     */
     protected $tenantoverride = null;
 
     /**
@@ -191,8 +197,8 @@ class azuread extends \local_o365\rest\o365api {
 
         // Determine whether we have write permissions.
         $writeappid = $allappdata['Microsoft.Azure.ActiveDirectory']['appId'];
-        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.ReadWrite.All']['id'])
-            ? $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.ReadWrite.All']['id'] : null;
+        $writepermid = isset($allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.ReadWrite.All']['id']) ?
+            $allappdata['Microsoft.Azure.ActiveDirectory']['perms']['Directory.ReadWrite.All']['id'] : null;
         $haswrite = (!empty($writepermid) && !empty($currentperms[$writeappid][$writepermid])) ? true : false;
         $canfix = ($haswrite === true) ? true : false;
 
@@ -281,6 +287,7 @@ class azuread extends \local_o365\rest\o365api {
      *
      * @param int $muserid Moodle userid.
      * @param string $userid Azure object id for user.
+     * @param string $appobjectid
      * @return array|null Array of result, or null if error.
      */
     public function assign_user($muserid, $userid, $appobjectid) {
@@ -446,7 +453,8 @@ class azuread extends \local_o365\rest\o365api {
             $o365user = \local_o365\obj\o365user::instance_from_muserid($user->id);
             if (empty($o365user)) {
                 // No o365 user data for the user is available.
-                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn', $user->username);
+                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn',
+                    $user->username);
                 return false;
             }
             $httpclient = new \local_o365\httpclient();

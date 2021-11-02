@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class laststudentlogin implements bot intent interface for teacher-last-student-login intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,17 +25,15 @@
 
 namespace local_o365\bot\intents;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Class laststudentlogin implements bot intent interface for teacher-last-student-login intent
- * @package local_o365\bot\intents
+ * Class laststudentlogin implements bot intent interface for teacher-last-student-login intent.
  */
 class laststudentlogin implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message for teacher with details about student last login
-     * @param $language - Message language
+     * Gets a message for teacher with details about student last login.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities. Gives student name.
      * @return array|string - Bot message structure with data
      */
@@ -49,14 +49,15 @@ class laststudentlogin implements \local_o365\bot\intents\intentinterface {
         if ($name) {
             $concat = $DB->sql_concat("u.firstname", "' '", "u.lastname");
             $where = $DB->sql_like($concat, ":name", false);
-            $lastloginsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess 
-                               FROM {user} u 
+            $lastloginsql = "SELECT u.id, u.username, CONCAT(u.firstname, ' ', u.lastname) as fullname, u.lastaccess
+                               FROM {user} u
                               WHERE $where AND u.suspended = 0 AND u.deleted = 0";
             $lastloginparams = ['name' => '%'.$DB->sql_like_escape($name).'%'];
             if (!is_siteadmin()) {
                 $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
                 if (!empty($courses)) {
-                    list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,'u.id');
+                    list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,
+                        'u.id');
                     $userslist = $DB->get_fieldset_sql($userssql, $userssqlparams);
                     list($usersloginsql, $usersloginparams) = $DB->get_in_or_equal($userslist, SQL_PARAMS_NAMED);
                     $lastloginsql .= " AND u.id $usersloginsql";
@@ -84,8 +85,11 @@ class laststudentlogin implements \local_o365\bot\intents\intentinterface {
                 $userpicture = new \user_picture($user);
                 $userpicture->size = 1;
                 $pictureurl = $userpicture->get_url($PAGE)->out(false);
-                $subtitledata = (empty($user->lastaccess) ? get_string('never', 'local_o365') :
-                                \local_o365\bot\intents\intentshelper::formatdate($user->lastaccess, true));
+                if (empty($user->lastaccess)) {
+                    $subtitledata = get_string('never', 'local_o365');
+                } else {
+                    $subtitledata = \local_o365\bot\intents\intentshelper::formatdate($user->lastaccess, true);
+                }
                 $listitems[] = [
                         'title' => $user->fullname,
                         'subtitle' => get_string_manager()->get_string('last_login_date', 'local_o365', $subtitledata, $language),

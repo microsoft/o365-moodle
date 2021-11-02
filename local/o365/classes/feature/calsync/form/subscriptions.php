@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Microsoft 365 Calendar Sync Subscription Form.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,14 +25,14 @@
 
 namespace local_o365\feature\calsync\form;
 
-defined('MOODLE_INTERNAL') || die();
-
 global $CFG;
 require_once($CFG->dirroot.'/lib/formslib.php');
-\MoodleQuickForm::registerElementType('localo365calendar', "$CFG->dirroot/local/o365/classes/feature/calsync/form/element/calendar.php", '\local_o365\feature\calsync\form\element\calendar');
+\MoodleQuickForm::registerElementType('localo365calendar',
+    "$CFG->dirroot/local/o365/classes/feature/calsync/form/element/calendar.php",
+    '\local_o365\feature\calsync\form\element\calendar');
 
 /**
- * o365 Calendar Sync Subscription Form.
+ * Microsoft 365 Calendar Sync Subscription Form.
  */
 class subscriptions extends \moodleform {
     /**
@@ -66,16 +68,19 @@ class subscriptions extends \moodleform {
 
             $sitecalcustom = $this->_customdata;
             $sitecalcustom['cansyncin'] = $this->_customdata['cancreatesiteevents'];
-            $mform->addElement('localo365calendar', 'sitecal', '', get_string('calendar_site', 'local_o365'), $checkboxattrs, $sitecalcustom);
+            $mform->addElement('localo365calendar', 'sitecal', '', get_string('calendar_site', 'local_o365'), $checkboxattrs,
+                $sitecalcustom);
 
             $usercalcustom = $this->_customdata;
             $usercalcustom['cansyncin'] = true;
-            $mform->addElement('localo365calendar', 'usercal', '', get_string('calendar_user', 'local_o365'), $checkboxattrs, $usercalcustom);
+            $mform->addElement('localo365calendar', 'usercal', '', get_string('calendar_user', 'local_o365'), $checkboxattrs,
+                $usercalcustom);
 
             foreach ($this->_customdata['usercourses'] as $courseid => $course) {
                 $coursecalcustom = $this->_customdata;
                 $coursecalcustom['cansyncin'] = (!empty($this->_customdata['cancreatecourseevents'][$courseid])) ? true : false;
-                $mform->addElement('localo365calendar', 'coursecal['.$course->id.']', '', $course->fullname, $checkboxattrs, $coursecalcustom);
+                $mform->addElement('localo365calendar', 'coursecal['.$course->id.']', '', $course->fullname, $checkboxattrs,
+                    $coursecalcustom);
             }
         }
 
@@ -149,10 +154,16 @@ class subscriptions extends \moodleform {
         // Handle changes to site and user calendar subscriptions.
         foreach (['site', 'user'] as $caltype) {
             $formkey = $caltype.'cal';
-            $calchecked = (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) ? true : false;
-            $calchecked = (empty($fromform->settingcal)) ? false : $calchecked;
-            $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith'])) ? $fromform->{$formkey}['syncwith'] : '';
-            $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav'])) ? $fromform->{$formkey}['syncbehav'] : 'out';
+            $calchecked = false;
+            if ($fromform->settingcal) {
+                if (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) {
+                    $calchecked = true;
+                }
+            }
+            $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith'])) ?
+                $fromform->{$formkey}['syncwith'] : '';
+            $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav'])) ?
+                $fromform->{$formkey}['syncbehav'] : 'out';
             if ($caltype === 'site' && empty($cancreatesiteevents)) {
                 $syncbehav = 'out';
             }
