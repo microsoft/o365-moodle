@@ -17,6 +17,7 @@
 /**
  * Post-install code for the assignfeedback_onenote module.
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
+ * @package   assignfeedback_onenote
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */

@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * General purpose utility class.
  * @package local_onenote
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,6 +28,12 @@ namespace local_onenote;
  * General purpose utility class.
  */
 class utils {
+    /**
+     * Convert to a string.
+     *
+     * @param  mixed $val The string to convert
+     * @return string A string representation.
+     */
     public static function tostring($val) {
         if (is_scalar($val)) {
             if (is_bool($val)) {
@@ -45,6 +52,8 @@ class utils {
      * Record a debug message.
      *
      * @param string $message The debug message to log.
+     * @param string $where
+     * @param string $debugdata
      */
     public static function debug($message, $where = '', $debugdata = null) {
         if (class_exists('\local_o365\utils')) {

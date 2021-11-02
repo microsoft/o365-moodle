@@ -15,14 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package local_o365
+ * Utility for o365
+ *
+ * @package local_onenote
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_onenote\api;
-
+/**
+ * General purpose utility class.
+ */
 class o365 extends base {
     /** @var string Base url to access API */
     const API = 'https://www.onenote.com/api/beta/me/notes';
@@ -59,6 +63,7 @@ class o365 extends base {
      * Get a full URL and include auth token. This is useful for associated resources: attached images, etc.
      *
      * @param string $url A full URL to get.
+     * @param array $options
      * @return string The result of the request.
      */
     public function geturl($url, $options = array()) {

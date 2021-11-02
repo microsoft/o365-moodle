@@ -149,9 +149,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
             // Show a view all link if the number of files is over this limit.
             $count = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
-            // Check if feedback is already given
+            // Check if feedback is already given.
             if ($count <= \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES && $count > 0) {
-              $o .= '<button type="submit" class="btn btn-primary" gradeid="'.$grade->id.'" userid="'. $userid .'" contextid="'.$this->assignment->get_context()->id.'" id="deleteuserfeedback"  name="deleteuserfeedback">'.get_string('deletefeedbackforuser','assignfeedback_onenote').'</button>';
+                $o .= '<button type="submit" class="btn btn-primary" gradeid="'.$grade->id.'" userid="'. $userid;
+                $o .= '" contextid="'.$this->assignment->get_context()->id;
+                $o .= '" id="deleteuserfeedback"  name="deleteuserfeedback">';
+                $o .= get_string('deletefeedbackforuser', 'assignfeedback_onenote').'</button>';
             }
 
         } else {

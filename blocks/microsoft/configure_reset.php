@@ -44,7 +44,7 @@ $redirecturl = new moodle_url('/course/view.php', ['id' => $courseid]);
 // Validations.
 // Part 1, site course sync settings.
 if (!utils::is_enabled()) {
-    print_error('error_site_course_sync_disabled', 'block_microsoft', $redirecturl);
+    throw new moodle_exception('error_site_course_sync_disabled', 'block_microsoft', $redirecturl);
 }
 
 // Part 2, course sync enabled.
@@ -53,25 +53,25 @@ if (utils::course_is_group_enabled($courseid)) {
     // Check if course customisation is allowed.
     $siteresetsetting = get_config('local_o365', 'course_reset_teams');
     if ($siteresetsetting != TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE) {
-        print_error('error_reset_setting_not_managed_per_course', 'block_microsoft', $redirecturl);
+        throw new moodle_exception('error_reset_setting_not_managed_per_course', 'block_microsoft', $redirecturl);
     }
     if (utils::course_is_group_feature_enabled($courseid, 'team')) {
         // The course is configured to be synced to Team.
         if (!$o365object = $DB->get_record('local_o365_objects',
             ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
-            print_error('error_connected_team_missing', 'block_microsoft', $redirecturl);
+            throw new moodle_exception('error_connected_team_missing', 'block_microsoft', $redirecturl);
         }
         $connectedtoteam = true;
     } else {
         // The course is configured to be synced to group.
         if (!$o365object = $DB->get_record('local_o365_objects',
             ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
-            print_error('error_connected_group_missing', 'block_microsoft', $redirecturl);
+            throw new moodle_exception('error_connected_group_missing', 'block_microsoft', $redirecturl);
         }
     }
 } else {
     // Sync is disabled for the course.
-    print_error('error_course_sync_disabled', 'block_microsoft', $redirecturl);
+    throw new moodle_exception('error_course_sync_disabled', 'block_microsoft', $redirecturl);
 }
 
 $formdata = ['course' => $courseid];
