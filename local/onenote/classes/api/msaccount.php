@@ -26,7 +26,9 @@
 namespace local_onenote\api;
 
 defined('MOODLE_INTERNAL') || die();
-
+/**
+ * General purpose utility class.
+ */
 class msaccount extends base {
     /** @var string Base url to access API */
     const API = 'https://www.onenote.com/api/beta'; // TODO: Switch to non-beta version: 'https://www.onenote.com/api/v1.0'.
@@ -89,6 +91,7 @@ class msaccount extends base {
      * Get a full URL and include auth token. This is useful for associated resources: attached images, etc.
      *
      * @param string $url A full URL to get.
+     * @param array $options
      * @return string The result of the request.
      */
     public function geturl($url, $options = array()) {

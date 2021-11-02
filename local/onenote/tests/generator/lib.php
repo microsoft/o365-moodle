@@ -19,9 +19,14 @@
  *
  * @package    local_onenote
  * @category   test
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc.
  */
 
+/**
+ * Class repository_onenote_generator
+ *
+ */
 class repository_onenote_generator extends testing_repository_generator {
 
     /**

@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Unit tests for the \local_onenote\api\base class
  * @package    local_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -48,28 +49,29 @@ require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
  * @group office365
  */
 class local_onenote_onenoteapi_testcase extends advanced_testcase {
+    /** @var \onenoteapi */
     private $onenoteapi;
-
+    /** @var \user */
     protected $user;
-
+    /** @var \user1 */
     protected $user1;
-
+    /** @var \course1 */
     protected $course1;
-
+    /** @var \course2 */
     protected $course2;
-
+    /** @var \cm */
     protected $cm;
-
+    /** @var \cm1 */
     protected $cm1;
-
+    /** @var \context */
     protected $context;
-
+    /** @var \context1 */
     protected $context1;
-
+    /** @var \assign */
     protected $assign;
-
+    /** @var \assign1 */
     protected $assign1;
-
+    /** @var \config */
     protected $config;
 
     /**
@@ -122,7 +124,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
 
     /**
      * Set current user
-     * @param $index
+     * @param int $index
      */
     public function set_user($index) {
         if ($index == 0) {
@@ -421,7 +423,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
 
     /**
      * Method for creating submission page.
-     * @param $cm
+     * @param object $cm
      * @param bool $wantfeedbackpage
      * @param bool $isteacher
      * @param null $submissionuserid

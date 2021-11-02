@@ -253,7 +253,7 @@ class local_onenote_privacy_testcase extends \core_privacy\tests\provider_testca
      * @param int $userid The user's ID.
      * @return array Array of records, indexed by table name.
      */
-    static private function create_userdata(int $userid) {
+    private static function create_userdata(int $userid) {
         $records = [
             'local_onenote_user_sections' => self::create_usersections_record($userid),
             'local_onenote_assign_pages' => self::create_assignpages_record($userid),
@@ -268,7 +268,7 @@ class local_onenote_privacy_testcase extends \core_privacy\tests\provider_testca
      * @return stdClass
      * @throws dml_exception
      */
-    static private function create_usersections_record(int $userid): \stdClass {
+    private static function create_usersections_record(int $userid): \stdClass {
         global $DB;
         $record = new stdClass();
         $record->user_id = $userid;
@@ -285,7 +285,7 @@ class local_onenote_privacy_testcase extends \core_privacy\tests\provider_testca
      * @return stdClass
      * @throws dml_exception
      */
-    static private function create_assignpages_record(int $userid): \stdClass {
+    private static function create_assignpages_record(int $userid): \stdClass {
         global $DB;
         $record = new stdClass();
         $record->user_id = $userid;
