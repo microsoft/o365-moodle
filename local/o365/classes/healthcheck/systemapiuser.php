@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Checks that the system API user can communicate with Microsoft 365.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,7 +26,7 @@
 namespace local_o365\healthcheck;
 
 /**
- * Checks that the system API user can communicate with Microsoft 365
+ * Checks that the system API user can communicate with Microsoft 365.
  */
 class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
     /**

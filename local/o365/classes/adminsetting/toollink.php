@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * A link to an admin tool.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,6 @@
 
 namespace local_o365\adminsetting;
 
-global $CFG;
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
@@ -31,11 +32,13 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
  */
 class toollink extends \admin_setting {
     /**
-     * Constructor
+     * Constructor.
      *
      * @param string $name
      * @param string $visiblename
-     * @param string $information text in box
+     * @param string $linktext
+     * @param string $linkurl
+     * @param string $description
      */
     public function __construct($name, $visiblename, $linktext, $linkurl, $description) {
         $this->nosave = true;
@@ -65,16 +68,19 @@ class toollink extends \admin_setting {
     /**
      * Never write settings.
      *
-     * @return string Always returns an empty string
+     * @param mixed $data
+     * @return string
      */
     public function write_setting($data) {
         return '';
     }
 
     /**
-     * Returns an HTML string.
+     * Return an HTML string.
      *
-     * @return string Returns an HTML string
+     * @param mixed $data
+     * @param string $query
+     * @return string
      */
     public function output_html($data, $query = '') {
         $settinghtml = \html_writer::link($this->linkurl, $this->linktext);

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin installation script.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,8 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once ($CFG->dirroot.'/local/o365/lib.php');
+require_once($CFG->dirroot.'/local/o365/lib.php');
 
+/**
+ * Installation script.
+ */
 function xmldb_local_o365_install() {
     local_o365_check_sharedsecret();
 }

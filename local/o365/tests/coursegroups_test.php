@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Course group feature test cases.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -88,10 +90,9 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
      * @return \local_o365\feature\usergroups\coursegroups Constructed coursegroups instance.
      */
     public function constructcoursegroupsinstance($httpclient) {
-        global $DB;
         $token = $this->get_mock_token();
         $graphclient = new \local_o365\rest\unified($token, $httpclient);
-        return new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, false);
+        return new \local_o365\feature\usergroups\coursegroups($graphclient, false);
     }
 
     /**

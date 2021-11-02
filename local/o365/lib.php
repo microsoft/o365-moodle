@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin library
+ *
  * @package local_o365
  * @author  Remote-Learner.net Inc
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -81,9 +83,9 @@ function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forced
     // Extract the filename / filepath from the $args array.
     $filename = array_pop($args); // The last item in the $args array.
     if (!$args) {
-        $filepath = '/'; // $args is empty => the path is '/'
+        $filepath = '/'; // Variable $args is empty => the path is '/'.
     } else {
-        $filepath = '/' . implode('/', $args) . '/'; // $args contains elements of the filepath
+        $filepath = '/' . implode('/', $args) . '/'; // Variable $args contains elements of the filepath.
     }
 
     // Retrieve the file from the Files API.
@@ -154,7 +156,7 @@ function local_o365_create_deploy_json() {
 /**
  * Recursively delete content of the folder and all its contents.
  *
- * @param $path
+ * @param string $path Path to the deleted
  */
 function local_o365_rmdir($path) {
     $it = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
@@ -208,7 +210,7 @@ function local_o365_create_manifest_file() {
     $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
     if ($botfeatureenabled) {
         if (!$botappid || $botappid == '00000000-0000-0000-0000-000000000000') {
-            // bot id not configured, cannot create manifest file
+            // Bot id not configured, cannot create manifest file.
             $error = get_string('error_missing_app_id', 'local_o365');
 
             return [$error, $zipfilename];
@@ -353,11 +355,11 @@ function local_o365_create_manifest_file() {
  *
  * @return string - decoded string
  */
-function local_o365_base64UrlDecode($data) {
-    $urlUnsafeData = strtr($data, '-_', '+/');
-    $paddedData = str_pad($urlUnsafeData, strlen($data) % 4, '=', STR_PAD_RIGHT);
+function local_o365_base64urldecode($data) {
+    $urlunsafedata = strtr($data, '-_', '+/');
+    $paddeddata = str_pad($urlunsafedata, strlen($data) % 4, '=', STR_PAD_RIGHT);
 
-    return base64_decode($paddedData);
+    return base64_decode($paddeddata);
 }
 
 /**

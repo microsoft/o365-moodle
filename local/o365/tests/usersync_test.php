@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * User sync test cases.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,8 +24,6 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
 
 /**
  * Tests \local_o365\feature\usersync\main.
@@ -344,7 +344,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $usersync->sync_users($users['value']);
 
         // Simulate user logins - create mock tokens.
-        for ($i =1; $i <=3; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $user = $DB->get_record('user', ['username' => 'testuser'.$i.'@example.onmicrosoft.com']);
             $token = [
                 'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,

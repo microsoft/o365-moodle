@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class incompleteassignments implements bot intent interface for teacher-incomplete-assignments.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,17 +25,15 @@
 
 namespace local_o365\bot\intents;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Class incompleteassignments implements bot intent interface for teacher-incomplete-assignments
- * @package local_o365\bot\intents
+ * Class incompleteassignments implements bot intent interface for teacher-incomplete-assignments.
  */
 class incompleteassignments implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message with details about incomplete assignments in teacher courses
-     * @param $language - Message language
+     * Gets a message with details about incomplete assignments in teacher courses.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities (optional and not used at the moment)
      * @return array|string - Bot message structure with data
      */

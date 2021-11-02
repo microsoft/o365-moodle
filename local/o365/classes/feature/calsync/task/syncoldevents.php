@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * AdHoc task to sync existing Moodle calendar events with Microsoft 365.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -118,9 +120,17 @@ class syncoldevents extends \core\task\adhoc_task {
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid)) ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
+                                if (!empty($subscribersprimary[$event->eventuserid]->subo365calid)) {
+                                    $calid = $subscribersprimary[$event->eventuserid]->subo365calid;
+                                } else {
+                                    $calid = null;
+                                }
                             } else if (isset($subscribersnotprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid)) ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
+                                if (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid)) {
+                                    $calid = $subscribersnotprimary[$event->eventuserid]->subo365calid;
+                                } else {
+                                    $calid = null;
+                                }
                             }
                             $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
                                     $subscribersprimary, [], $calid);
@@ -154,7 +164,8 @@ class syncoldevents extends \core\task\adhoc_task {
                     mtrace('Syncing non-primary calendar users.');
                     foreach ($subscribersnotprimary as $userid => $user) {
                         $calid = (!empty($user->subo365calid)) ? $user->subo365calid : null;
-                        $calsync->ensure_event_synced_for_user($event->eventid, $user->id, $subject, $body, $evstart, $evend, $calid);
+                        $calsync->ensure_event_synced_for_user($event->eventid, $user->id, $subject, $body, $evstart, $evend,
+                            $calid);
                     }
                 }
 
@@ -230,17 +241,30 @@ class syncoldevents extends \core\task\adhoc_task {
                     mtrace('Syncing primary calendar users.');
                     try {
                         // Determine attendees - if this is a group event, limit to group members.
-                        $eventattendees = ($grouplimit !== null && is_array($grouplimit)) ? array_intersect_key($subscribersprimary, $grouplimit) : $subscribersprimary;
+                        if ($grouplimit !== null && is_array($grouplimit)) {
+                            $eventattendees = array_intersect_key($subscribersprimary, $grouplimit);
+                        } else {
+                            $eventattendees = $subscribersprimary;
+                        }
 
                         // If there's a stored outlookeventid the event exists in o365, so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
-                            $calsync->update_event_raw($event->eventuserid, $event->outlookeventid, ['attendees' => $eventattendees]);
+                            $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
+                                ['attendees' => $eventattendees]);
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersprimary[$event->eventuserid]->subo365calid)) ? $subscribersprimary[$event->eventuserid]->subo365calid : null;
+                                if (!empty($subscribersprimary[$event->eventuserid]->subo365calid)) {
+                                    $calid = $subscribersprimary[$event->eventuserid]->subo365calid;
+                                } else {
+                                    $calid = null;
+                                }
                             } else if (isset($subscribersnotprimary[$event->eventuserid])) {
-                                $calid = (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid)) ? $subscribersnotprimary[$event->eventuserid]->subo365calid : null;
+                                if (!empty($subscribersnotprimary[$event->eventuserid]->subo365calid)) {
+                                    $calid = $subscribersnotprimary[$event->eventuserid]->subo365calid;
+                                } else {
+                                    $calid = null;
+                                }
                             }
                             $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
                                     $eventattendees, [], $calid);
@@ -278,7 +302,8 @@ class syncoldevents extends \core\task\adhoc_task {
                             continue;
                         }
                         $calid = (!empty($user->subo365calid)) ? $user->subo365calid : null;
-                        $calsync->ensure_event_synced_for_user($event->eventid, $user->id, $subject, $body, $evstart, $evend, $calid);
+                        $calsync->ensure_event_synced_for_user($event->eventid, $user->id, $subject, $body, $evstart, $evend,
+                            $calid);
                     }
                 }
             } catch (\Exception $e) {

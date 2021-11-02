@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * User filtering class.
+ *
  * @package local_o365
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright 2016 onwards Remote-Learner Inc (http://www.remote-learner.net)

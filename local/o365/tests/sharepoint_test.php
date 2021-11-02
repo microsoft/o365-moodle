@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Sharepoint test cases.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -89,6 +91,9 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
     /**
      * Get a successful response for creating a site.
      *
+     * @param string $title
+     * @param string $url
+     * @param string $description
      * @return string The json response.
      */
     protected function get_response_create_site($title, $url, $description) {
@@ -127,6 +132,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
     /**
      * Get a successful response for adding a user to a group.
      *
+     * @param string $userupn
      * @return string The json response.
      */
     protected function get_response_add_user_to_group($userupn) {
@@ -151,6 +157,8 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
     /**
      * Get a successful response for creating a group.
      *
+     * @param string $name
+     * @param string $desc
      * @return string The json response.
      */
     protected function get_response_create_group($name, $desc) {
