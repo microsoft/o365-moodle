@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Block Microsoft block
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -127,7 +128,7 @@ class block_microsoft extends block_base {
      * @return string
      */
     protected function get_course_content() {
-        global $PAGE, $COURSE;
+        global $COURSE;
 
         if ($COURSE->id == SITEID) {
             return '';
@@ -135,7 +136,7 @@ class block_microsoft extends block_base {
 
         $courseid = $COURSE->id;
         $groupsenabled = utils::is_enabled();
-        $iscoursecontext = $PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID;
+        $iscoursecontext = $this->page->context instanceof \context_course && $this->page->context->instanceid !== SITEID;
         $courseisgroupenabled = utils::course_is_group_enabled($courseid);
         $config = (array)get_config('block_microsoft');
 
@@ -145,7 +146,7 @@ class block_microsoft extends block_base {
         $courseheaderdisplayed = false;
         $o365record = null;
 
-        if (has_capability('local/o365:teamowner', $PAGE->context)) {
+        if (has_capability('local/o365:teamowner', $this->page->context)) {
 
             $courseheaderdisplayed = true;
         }
@@ -155,7 +156,7 @@ class block_microsoft extends block_base {
             $html .= $courseheader;
 
             // Link to course sync options.
-            if (has_capability('local/o365:teamowner', $PAGE->context)) {
+            if (has_capability('local/o365:teamowner', $this->page->context)) {
                 $createteams = get_config('local_o365', 'createteams');
                 $allowedmanageteamsyncpercourse = get_config('local_o365', 'createteams_per_course');
                 if ($createteams == 'oncustom' && $allowedmanageteamsyncpercourse) {
@@ -168,8 +169,9 @@ class block_microsoft extends block_base {
         }
 
         if ($iscoursecontext && $groupsenabled && $courseisgroupenabled) {
-            $canmanage = (has_capability('local/o365:managegroups', $PAGE->context) === true) ? true : false;
-            $canview = (is_enrolled($PAGE->context) && has_capability('local/o365:viewgroups', $PAGE->context)) ? true : false;
+            $canmanage = (has_capability('local/o365:managegroups', $this->page->context) === true) ? true : false;
+            $canview = (is_enrolled($this->page->context)
+              && has_capability('local/o365:viewgroups', $this->page->context)) ? true : false;
 
             if ($canmanage === true || $canview === true) {
                 if (!empty($config['settings_showcoursegroup'])) {
@@ -197,7 +199,7 @@ class block_microsoft extends block_base {
                         }
 
                         // Link to course reset options.
-                        if (has_capability('moodle/course:reset', $PAGE->context)) {
+                        if (has_capability('moodle/course:reset', $this->page->context)) {
                             switch (get_config('local_o365', 'course_reset_teams')) {
                                 case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE:
                                     // Allow user to configure reset actions.
@@ -287,7 +289,7 @@ class block_microsoft extends block_base {
      * @return string Block content.
      */
     protected function get_user_content_connected() {
-        global $PAGE, $DB, $CFG, $SESSION, $USER, $OUTPUT;
+        global $DB, $CFG, $SESSION, $USER, $OUTPUT;
         $o365config = get_config('local_o365');
         $html = '';
 
@@ -296,9 +298,9 @@ class block_microsoft extends block_base {
         // Only profile sync once for each session.
         if (empty($SESSION->block_microsoft_profilesync) &&
             (isset($aadsync['photosynconlogin']) || isset($aadsync['tzsynconlogin']))) {
-            $PAGE->requires->jquery();
-            $PAGE->requires->js('/blocks/microsoft/js/microsoft.js');
-            $PAGE->requires->js_init_call('microsoft_update_profile', array($CFG->wwwroot));
+            $this->page->requires->jquery();
+            $this->page->requires->js('/blocks/microsoft/js/microsoft.js');
+            $this->page->requires->js_init_call('microsoft_update_profile', array($CFG->wwwroot));
         }
 
         $user = $DB->get_record('user', array('id' => $USER->id));
@@ -337,11 +339,11 @@ class block_microsoft extends block_base {
 
         $userupn = \local_o365\utils::get_o365_upn($USER->id);
 
-        if ($PAGE->context instanceof \context_course && $PAGE->context->instanceid !== SITEID) {
+        if ($this->page->context instanceof \context_course && $this->page->context->instanceid !== SITEID) {
             // Course SharePoint Site.
             if (!empty($this->globalconfig->settings_showcoursespsite) && !empty($o365config->sharepointlink)) {
                 $sharepointstr = get_string('linksharepoint', 'block_microsoft');
-                $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $PAGE->context->instanceid]);
+                $coursespsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $this->page->context->instanceid]);
                 if (!empty($coursespsite)) {
                     $spsite = \local_o365\rest\sharepoint::get_tokenresource();
                     if (!empty($spsite)) {
@@ -354,7 +356,7 @@ class block_microsoft extends block_base {
             }
         }
 
-        // My Delve URL
+        // My Delve URL.
         if (!empty($delveurl)) {
             $delveattrs = ['class' => 'servicelink block_microsoft_delve', 'target' => '_blank'];
             $delvestr = get_string('linkmydelve', 'block_microsoft');
@@ -429,8 +431,10 @@ class block_microsoft extends block_base {
             $items[] = html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (auth_oidc_connectioncapability($USER->id, 'connect') === true || auth_oidc_connectioncapability($USER->id, 'disconnect') === true ||
-                local_o365_connectioncapability($USER->id, 'link') || local_o365_connectioncapability($USER->id, 'unlink')) {
+        if (auth_oidc_connectioncapability($USER->id, 'connect') === true
+          || auth_oidc_connectioncapability($USER->id, 'disconnect') === true
+          || local_o365_connectioncapability($USER->id, 'link')
+          || local_o365_connectioncapability($USER->id, 'unlink')) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
                 $connectstr = get_string('linkconnection', 'block_microsoft');
@@ -532,7 +536,7 @@ class block_microsoft extends block_base {
      * @return string HTML for the rendered OneNote section of the block.
      */
     protected function render_onenote() {
-        global $USER, $PAGE;
+        global $USER;
 
         if (empty($this->globalconfig->settings_showonenotenotebook)) {
             return '';
@@ -554,10 +558,12 @@ class block_microsoft extends block_base {
             $output = '';
             if ($onenoteapi->is_logged_in()) {
                 // Add the "save to onenote" button if we are on an assignment page.
-                $onassignpage = ($PAGE->cm && $PAGE->cm->modname == 'assign' && $action == 'editsubmission') ? true : false;
-                if ($onassignpage === true && $onenoteapi->is_student($PAGE->cm->id, $USER->id)) {
+                $onassignpage = ($this->page->cm
+                  && $this->page->cm->modname == 'assign'
+                  && $action == 'editsubmission') ? true : false;
+                if ($onassignpage === true && $onenoteapi->is_student($this->page->cm->id, $USER->id)) {
                     $workstr = get_string('workonthis', 'block_microsoft');
-                    $output .= $onenoteapi->render_action_button($workstr, $PAGE->cm->id).'<br /><br />';
+                    $output .= $onenoteapi->render_action_button($workstr, $this->page->cm->id).'<br /><br />';
                 }
                 // Find moodle notebook, create if not found.
                 $moodlenotebook = null;
@@ -597,14 +603,15 @@ class block_microsoft extends block_base {
 
     /**
      * Get the HTML for the sign in button for an MS account.
-     *
+     * @param url $loginurl url for sign in button
      * @return string HTML containing the sign in widget.
      */
     public function render_signin_widget($loginurl) {
         $loginstr = get_string('msalogin', 'block_microsoft');
 
         $attrs = [
-            'onclick' => 'window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;',
+            'onclick' =>
+              'window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;',
             'class' => 'servicelink block_microsoft_msasignin'
         ];
         return html_writer::link($loginurl, $loginstr, $attrs);
