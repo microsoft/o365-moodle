@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Provider infomration for onenote
  * @package local_onenote
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,17 +24,23 @@
 
 namespace local_onenote\privacy;
 
+defined('MOODLE_INTERNAL') || die();
+
 use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\writer;
 
 if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
-    interface local_onenote_userlist extends \core_privacy\local\request\core_userlist_provider {}
+    interface local_onenote_userlist extends \core_privacy\local\request\core_userlist_provider {
+    }
 } else {
-    interface local_onenote_userlist {};
+    interface local_onenote_userlist {
+    };
 }
-
+/**
+ * Provider details for onenote
+ */
 class provider implements
     \core_privacy\local\request\plugin\provider,
     \core_privacy\local\metadata\provider,
@@ -206,7 +213,7 @@ class provider implements
     /**
      * Get a map of database tables that contain user data, and the filters to get records for a user.
      *
-     * @param \stdClass $user The user to get the map for.
+     * @param int $userid The user to get the map for.
      * @return array The table user map.
      */
     protected static function get_table_user_map(int $userid): array {
