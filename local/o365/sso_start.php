@@ -40,7 +40,7 @@ microsoftTeams.getContext(function (context) {
         redirectUri: "' . $CFG->wwwroot . '/local/o365/sso_end.php",
         cacheLocation: "localStorage",
         navigateToLoginRequestUrl: false,
-        
+
         // Setup extra query parameters for ADAL
         // - openid and profile scope adds profile information to the id_token
         // - login_hint provides the expected user name

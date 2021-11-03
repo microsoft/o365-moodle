@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * AzureAD test cases.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,9 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
 /**
+ * Mock AzureAD.
  * @codeCoverageIgnore
  */
 class azuread_mock extends \local_o365\rest\azuread {

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * An httpclientinterface implementation, using curl class as backend and adding patch and merge methods.
+ *
  * @package local_o365
  * @author Dongsheng Cai <dongsheng@moodle.com>
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -24,7 +26,6 @@
 
 namespace local_o365;
 
-global $CFG;
 require_once($CFG->dirroot.'/lib/filelib.php');
 
 /**
@@ -169,7 +170,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
         fclose($fp);
         return $ret;
     }
-    
+
     /**
      * HTTP download file method
      *
@@ -178,7 +179,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      * @return bool
      */
     public function download_file($url, $options = array()) {
-        $url = str_replace(array('+',' '), '%20', $url);
+        $url = str_replace(array('+', ' '), '%20', $url);
         return $this->request($url, $options);
     }
 }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Update assignment API class.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -61,7 +63,8 @@ class update_onenoteassignment extends \external_api {
         $params = self::validate_parameters(self::assignment_update_parameters(), ['data' => $data]);
         $params = $params['data'];
 
-        list($course, $module, $assign) = \local_o365\webservices\utils::verify_assignment($params['coursemodule'], $params['course']);
+        list($course, $module, $assign) = \local_o365\webservices\utils::verify_assignment($params['coursemodule'],
+            $params['course']);
 
         $context = \context_course::instance($params['course']);
         self::validate_context($context);

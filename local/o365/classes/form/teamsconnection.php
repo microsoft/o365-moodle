@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Single team connection form.
+ *
  * @package local_o365
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,14 +25,10 @@
 
 namespace local_o365\form;
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->dirroot.'/lib/formslib.php');
 
 /**
  * Single Teams connection form.
- *
- * @package local_o365\form
  */
 class teamsconnection extends \moodleform {
     /**

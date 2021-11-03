@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled task to process a batch from the match queue.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -223,7 +225,8 @@ class processmatchqueue extends \core\task\scheduled_task {
                 $updatedrec->id = $matchrec->id;
                 $updatedrec->completed = 1;
                 $DB->update_record('local_o365_matchqueue', $updatedrec);
-                mtrace('Match record created for userid #'.$matchrec->muserid.' and o365 user '.\core_text::strtolower($o365user['userPrincipalName']));
+                mtrace('Match record created for userid #' . $matchrec->muserid . ' and o365 user ' .
+                    \core_text::strtolower($o365user['userPrincipalName']));
 
             } catch (\Exception $e) {
                 $exceptionstring = $e->getMessage().': '.$e->debuginfo;

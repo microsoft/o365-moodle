@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Observer functions used by the calendar sync feature.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,9 +25,11 @@
 
 namespace local_o365\feature\calsync;
 
-global $CFG;
 require_once($CFG->dirroot.'/lib/filelib.php');
 
+/**
+ * Observer functions used by the calendar sync feature.
+ */
 class observers {
     /** @var bool Flag indicating whether we're currently importing events. */
     public static $importingevents = false;

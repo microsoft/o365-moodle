@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Test cases for \local_o365\webservices\utils.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -270,7 +272,8 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      * @param int $courseid The course id to pass to the test method.
      * @param array $expectedreturn The expected return of the test method.
      */
-    public function test_get_assignment_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid, $expectedreturn) {
+    public function test_get_assignment_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
+        $expectedreturn) {
         global $DB;
 
         list($course, $modulerecord) = $this->create_assignment_info_testdata($createcourse, $modulerecords);
@@ -328,8 +331,10 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
         $testcases['All data correct (with permission, no onenote)'][] = true;
         $testcases['All data correct (with permission, no onenote)'][] = false;
 
-        $testcases['All data correct (multiple module records) (with permission, no onenote)'] = $assignmentinfotests['All data correct (multiple module records)'];
-        $testcases['All data correct (multiple module records) (with permission, no onenote)'][2] = ['local_o365\webservices\exception\invalidassignment'];
+        $testcases['All data correct (multiple module records) (with permission, no onenote)'] =
+            $assignmentinfotests['All data correct (multiple module records)'];
+        $testcases['All data correct (multiple module records) (with permission, no onenote)'][2] =
+            ['local_o365\webservices\exception\invalidassignment'];
         $testcases['All data correct (multiple module records) (with permission, no onenote)'][] = true;
         $testcases['All data correct (multiple module records) (with permission, no onenote)'][] = false;
 
@@ -338,7 +343,8 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
         $testcases['All data correct (with permission, with onenote)'][] = true;
         $testcases['All data correct (with permission, with onenote)'][] = true;
 
-        $testcases['All data correct (multiple module records) (with permission, with onenote)'] = $assignmentinfotests['All data correct (multiple module records)'];
+        $testcases['All data correct (multiple module records) (with permission, with onenote)'] =
+            $assignmentinfotests['All data correct (multiple module records)'];
         $testcases['All data correct (multiple module records) (with permission, with onenote)'][2] = [];
         $testcases['All data correct (multiple module records) (with permission, with onenote)'][] = true;
         $testcases['All data correct (multiple module records) (with permission, with onenote)'][] = true;
@@ -361,7 +367,8 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      * @param bool $grantcapability Whether to grant the test user the capability to work with the assignment.
      * @param bool $addonenotesubmission Whether to add the OneNote submission record to this assignment.
      */
-    public function test_verify_assignment($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid, $expectedreturn, $grantcapability, $addonenotesubmission) {
+    public function test_verify_assignment($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
+        $expectedreturn, $grantcapability, $addonenotesubmission) {
         global $DB;
 
         list($course, $modulerecord) = $this->create_assignment_info_testdata($createcourse, $modulerecords);
@@ -460,7 +467,8 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      * @param int $courseid The course id to pass to the test method.
      * @param array $expectedreturn The expected return of the test method.
      */
-    public function test_get_assignment_return_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid, $expectedreturn) {
+    public function test_get_assignment_return_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
+        $expectedreturn) {
         list($course, $modulerecord) = $this->create_assignment_info_testdata($createcourse, $modulerecords);
 
         if (!empty($expectedexception)) {

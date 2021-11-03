@@ -56,7 +56,7 @@ if (!$PAGE->requires->is_head_done()) {
 }
 global $install;
 
-// Define tab constants
+// Define tab constants.
 if (!defined('LOCAL_O365_TAB_SETUP')) {
     define('LOCAL_O365_TAB_SETUP', 0); // Setup settings.
     define('LOCAL_O365_TAB_SYNC', 1); // Sync settings.
@@ -414,7 +414,7 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_photoexpire_details', 'local_o365');
         $settings->add(new admin_setting_configtext('local_o365/photoexpire', $label, $desc, '24'));
 
-        // Custom theme
+        // Custom theme.
         $themes = get_list_of_themes();
         foreach ($themes as $theme) {
             $name = $theme->name;
@@ -535,12 +535,12 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365/teams_setting_moodle_setup_heading', '',
             get_string('settings_teams_moodle_setup_heading', 'local_o365')));
 
-        //Setup Moodle Settings for Teams
+        // Setup Moodle Settings for Teams.
         $label = new lang_string('settings_moodlesettingssetup', 'local_o365');
         $desc = new lang_string('settings_moodlesettingssetup_details', 'local_o365');
         $settings->add(new moodlesetup('local_o365/moodlesetup', $label, $desc));
 
-        //Instructions.
+        // Instructions.
         $settings->add(new admin_setting_heading('local_o365/teams_setting_instructions', '',
             get_string('settings_teams_additional_instructions', 'local_o365')));
 

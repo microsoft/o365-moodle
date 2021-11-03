@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Admin setting to map SDS fields.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,14 +25,15 @@
 
 namespace local_o365\adminsetting;
 
-global $CFG;
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
  * Admin setting to control field mappings for users.
  */
 class sdsfieldmap extends fieldmap {
-    /** string The string ID to use for the remote field column. */
+    /**
+     * @var string The string ID to use for the remote field column.
+     */
     protected $remotefieldstrid = 'settings_sds_fieldmap_remotecolumn';
 
     /**
@@ -44,7 +47,8 @@ class sdsfieldmap extends fieldmap {
      * @param array $localfields Array of local fields (ignored + overridden in this child class)
      * @param array $syncbehav Array of sync behaviours. (ignored + overridden in this child class)
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [], $syncbehav = []) {
+    public function __construct($name, $visiblename, $description, $defaultsetting, $remotefields = [], $localfields = [],
+        $syncbehav = []) {
         global $DB;
 
         $syncbehav = [

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled task to run school data sync sync.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -90,7 +92,8 @@ class sync extends \core\task\scheduled_task {
                 // Create the course.
                 $fullname = $section[$apiclient::PREFIX.'_CourseName'];
                 $fullname .= ' '.$section[$apiclient::PREFIX.'_SectionNumber'];
-                $course = static::get_or_create_section_course($section['objectId'], $section['displayName'], $fullname, $coursecat->id);
+                $course = static::get_or_create_section_course($section['objectId'], $section['displayName'], $fullname,
+                    $coursecat->id);
                 $coursecontext = \context_course::instance($course->id);
 
                 // Associate the section group with the course.
@@ -141,7 +144,8 @@ class sync extends \core\task\scheduled_task {
                                 ];
                                 $ra = $DB->get_record('role_assignments', $roleparams, 'id');
                                 if (empty($ra)) {
-                                    static::mtrace('......... Assigning role for user '.$objectrec->moodleid.' in course '.$course->id);
+                                    static::mtrace('......... Assigning role for user '.$objectrec->moodleid.' in course '.
+                                        $course->id);
                                     role_assign($role->id, $objectrec->moodleid, $coursecontext->id);
                                     static::mtrace('......... Enrolling user '.$objectrec->moodleid.' into course '.$course->id);
                                     enrol_try_internal_enrol($course->id, $objectrec->moodleid);

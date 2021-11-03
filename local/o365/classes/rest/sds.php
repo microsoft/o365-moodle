@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * API client for school data sync.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,7 +32,9 @@ class sds extends \local_o365\rest\o365api {
     /** Prefix identifying SDS-specific attributes. */
     const PREFIX = 'extension_fe2174665583431c953114ff7268b7b3_Education';
 
-    /** The general API area of the class. */
+    /**
+     * @var string The general API area of the class.
+     */
     public $apiarea = 'sds';
 
     /**
