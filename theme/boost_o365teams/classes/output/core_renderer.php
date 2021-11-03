@@ -37,11 +37,17 @@ use pix_icon;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Core Render.
+ *
+ * @package    theme_boost_o365teams
+ * @copyright  2018 Enovation Solutions
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class core_renderer extends \theme_boost\output\core_renderer {
     /**
      * Return header html.
-     * The header section includes custom content security policy setting, as well as reference to Microsoft teams JS
-     * lib.
+     * The header section includes custom content security policy setting, as well as reference to the Microsoft Teams JS lib.
      *
      * @return string
      */
@@ -57,24 +63,20 @@ class core_renderer extends \theme_boost\output\core_renderer {
     }
 
     /**
-     * Return HTML that shows logged in user link.
+     * Return HTML that shows link to the profile page of the user who is logged in.
      *
      * @return string
-     * @throws \moodle_exception
      */
     public function user_link() {
         global $USER, $OUTPUT;
 
         if (!empty($USER->id)) {
 
-            $profilepagelink = new moodle_url('/user/profile.php',
-                    array('id' => $USER->id));
-            $profilepic = $OUTPUT->user_picture($USER, array('size' => 26, 'link' => false));
+            $profilepagelink = new moodle_url('/user/profile.php', ['id' => $USER->id]);
+            $profilepic = $OUTPUT->user_picture($USER, ['size' => 26, 'link' => false]);
             $userfullname = fullname($USER);
-            $piclink = html_writer::link($profilepagelink, $profilepic,
-                    array('target' => '_blank', 'class' => 'user_details'));
-            $userprofile = html_writer::link($profilepagelink, $userfullname,
-                    array('target' => '_blank'));
+            $piclink = html_writer::link($profilepagelink, $profilepic, ['target' => '_blank', 'class' => 'user_details']);
+            $userprofile = html_writer::link($profilepagelink, $userfullname, ['target' => '_blank']);
 
             return $piclink . $userprofile;
         } else {
@@ -84,7 +86,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
 
     /**
      * Return page footer.
-     * Page footer contains JS calls to microsoft Teams JS lib.
+     * Page footer contains JS calls to the Microsoft Teams JS lib.
      *
      * @return string
      */
@@ -101,7 +103,6 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * Return HTML for feedback link.
      *
      * @return string
-     * @throws coding_exception
      */
     public function feedback_link() {
         $feedbacklink = '';
@@ -109,11 +110,9 @@ class core_renderer extends \theme_boost\output\core_renderer {
         // Hardcoded URL.
         $feedbacklinksetting = 'https://microsoftteams.uservoice.com/forums/916759-moodle';
         if ($feedbacklinksetting) {
-            $feedbacklink = html_writer::link($feedbacklinksetting,
-                    html_writer::tag('span',
-                            get_string('feedback', 'theme_boost_o365teams')),
-                    array('target' => '_blank', 'class' => 'feedbacklink',
-                            'title' => get_string('share_feedback', 'theme_boost_o365teams')));
+            $feedbacklink = html_writer::link($feedbacklinksetting, html_writer::tag('span',
+                get_string('feedback', 'theme_boost_o365teams')), ['target' => '_blank', 'class' => 'feedbacklink',
+                'title' => get_string('share_feedback', 'theme_boost_o365teams')]);
         }
 
         return $feedbacklink;
@@ -124,10 +123,9 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * Stamp is from user upload in theme settings, or Moodle logo if not uploaded.
      *
      * @return string
-     * @throws \moodle_exception
      */
     public function get_footer_stamp() {
-        global $CFG, $PAGE, $OUTPUT;
+        global $CFG, $OUTPUT, $PAGE;
 
         if (!empty($PAGE->theme->setting_file_url('footer_stamp', 'footer_stamp'))) {
             $fileurl = $PAGE->theme->setting_file_url('footer_stamp', 'footer_stamp');
@@ -135,15 +133,15 @@ class core_renderer extends \theme_boost\output\core_renderer {
             $relativebaseurl = preg_replace('|^https?://|i', '//', $CFG->wwwroot);
             $relativefileurl = str_replace($relativebaseurl, '', $fileurl);
             $url = new moodle_url($relativefileurl);
-            $img = html_writer::empty_tag('img', array("src" => $url));
+            $img = html_writer::empty_tag('img', ["src" => $url]);
 
             $coursepageurl = $this->page->url;
-            $stamp = html_writer::link($coursepageurl, $img, array('target' => '_blank', 'class' => 'stamp'));
+            $stamp = html_writer::link($coursepageurl, $img, ['target' => '_blank', 'class' => 'stamp']);
         } else {
-            $img = html_writer::empty_tag('img', array("src" => $OUTPUT->image_url('moodlelogo', 'theme')));
+            $img = html_writer::empty_tag('img', ["src" => $OUTPUT->image_url('moodlelogo', 'theme')]);
 
             $coursepageurl = $this->page->url;
-            $stamp = html_writer::link($coursepageurl, $img, array('target' => '_blank', 'class' => 'stamp'));
+            $stamp = html_writer::link($coursepageurl, $img, ['target' => '_blank', 'class' => 'stamp']);
         }
 
         return $stamp;
