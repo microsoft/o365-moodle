@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Language file
  * @package repository_office365
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
