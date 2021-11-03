@@ -4,24 +4,28 @@
     font-weight: 400;
     font-style: normal;
 }
+
 @font-face { /* where FontName and fontname represents the name of the font you want to add */
     font-family: 'Segoe UIB';
     src: url([[font:theme|segoeuib.ttf]]) format('truetype');
     font-weight: 700;
     font-style: normal;
 }
+
 @font-face { /* where FontName and fontname represents the name of the font you want to add */
     font-family: 'Segoe UIL';
     src: url([[font:theme|segoeuil.ttf]]) format('truetype');
     font-weight: 100;
     font-style: normal;
 }
+
 @font-face { /* where FontName and fontname represents the name of the font you want to add */
     font-family: 'Segoe UISL';
     src: url([[font:theme|segoeuisl.ttf]]) format('truetype');
     font-weight: 300;
     font-style: normal;
 }
+
 @font-face { /* where FontName and fontname represents the name of the font you want to add */
     font-family: 'Segoe UISB';
     src: url([[font:theme|seguisb.ttf]]) format('truetype');
@@ -42,7 +46,7 @@ form .felement input {
     float: left;
 }
 .format-topics .section .activity {
-    background-color: #ffffff;
+    background-color: #fff;
     padding: 10px;
     padding-left: 20px;
     margin-top: 2px;
@@ -51,7 +55,7 @@ form .felement input {
     background-color: #2d2c2c;
 }
 .theme_contrast.format-topics .section .activity {
-    background-color: #000000;
+    background-color: #000;
 }
 .format-topics .sectionname {
     font-size: 1em;
@@ -70,8 +74,8 @@ form .felement input {
 .format-weeks.path-course-view .completionprogress {
     float: left;
 }
-.format-weeks .weeks .section .activity{
-    background-color: #ffffff;
+.format-weeks .weeks .section .activity {
+    background-color: #fff;
     padding: 10px;
     padding-left: 20px;
     margin-top: 2px;
@@ -80,7 +84,7 @@ form .felement input {
     background-color: #2d2c2c;
 }
 .theme_contrast.format-weeks .weeks .section .activity {
-    background-color: #000000;
+    background-color: #000;
 }
 .format-weeks .weeks .sectionname {
     font-size: 1em;
@@ -103,7 +107,7 @@ form .felement input {
     padding-left: 0px;
 }
 .format-collapsibletopics .section .activity {
-    background-color: #ffffff;
+    background-color: #fff;
     padding: 10px;
     padding-left: 20px;
     margin-top: 2px;
@@ -112,28 +116,29 @@ form .felement input {
     background-color: #2d2c2c;
 }
 .theme_contrast .format-collapsibletopics .section .activity {
-    background-color: #000000;
+    background-color: #000;
 }
 .format-collapsibletopics .course-content ul.collapsibletopics li.section .sectionname {
     font-size: 15px;
-    color: #000000;
+    color: #000;
 }
 .theme_default .course-content ul.collapsibletopics li.section .sectionname {
-    color: #000000;
+    color: #000;
 }
 .theme_dark .course-content ul.collapsibletopics li.section .sectionname {
-    color: #ffffff;
+    color: #fff;
 }
 .theme_contrast .course-content ul.collapsibletopics li.section .sectionname {
-    color: #ffffff;
+    color: #fff;
 }
-.format-collapsibletopics .course-content ul.collapsibletopics a.sectiontoggle[aria-expanded="true"], .course-content ul.collapsibletopics a.sectiontoggle[aria-expanded="false"] {
+.format-collapsibletopics .course-content ul.collapsibletopics a.sectiontoggle[aria-expanded="true"],
+.course-content ul.collapsibletopics a.sectiontoggle[aria-expanded="false"] {
     background-size: 13px 13px;
     font-size: 0.8rem;
 }
 .format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle ~ .section-summary-activities,
-.format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle.collapsed ~ .section-summary-activities{
-    padding-left:20px;
+.format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle.collapsed ~ .section-summary-activities {
+    padding-left: 20px;
 }
 /*.format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle ~ .section-summary-activities,*/
 /*.format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle.collapsed ~ .section-summary-activities{*/
@@ -157,7 +162,7 @@ form .felement input {
     padding-left: 0px;
 }
 .format-collapsibleweeks .section .activity {
-    background-color: #ffffff;
+    background-color: #fff;
     padding: 10px;
     padding-left: 20px;
     margin-top: 2px;
@@ -166,7 +171,7 @@ form .felement input {
     background-color: #2d2c2c;
 }
 .theme_contrast.format-collapsibleweeks .section .activity {
-    background-color: #000000;
+    background-color: #000;
 }
 
 .format-collapsibleweeks .course-content ul.collapsibleweeks a.sectiontoggle[aria-expanded="true"],
@@ -176,23 +181,23 @@ form .felement input {
 }
 .format-collapsibleweeks .course-content ul.collapsibleweeks li.section .sectionname {
     font-size: 15px;
-    color: #000000;
+    color: #000;
 }
 .theme_default .course-content ul.collapsibleweeks li.section .sectionname {
-    color: #000000;
+    color: #000;
 }
 .theme_dark .course-content ul.collapsibleweeks li.section .sectionname {
-    color: #ffffff;
+    color: #fff;
 }
 .theme_contrast .course-content ul.collapsibleweeks li.section .sectionname {
-    color: #ffffff;
+    color: #fff;
 }
 .format-collapsibleweeks .section_availability .ishidden {
     padding-left: 32px;
 }
 .format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle ~ .section-summary-activities,
-.format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle.collapsed ~ .section-summary-activities{
-    padding-left:20px;
+.format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle.collapsed ~ .section-summary-activities {
+    padding-left: 20px;
 }
 /*.format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle ~ .section-summary-activities,*/
 /*.format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle.collapsed ~ .section-summary-activities{*/
@@ -226,7 +231,7 @@ form .felement input {
 }
 .format-topics .course-content .single-section .section-navigation .mdl-right,
 .format-topics .course-content .single-section .section-navigation .mdl-left {
-    display:none;
+    display: none;
 }
 .format-topics #sectionmenu {
     display: none;
@@ -255,7 +260,7 @@ form .felement input {
 }
 #page-course-view-weeks .navigationtitle .mdl-left,
 #page-course-view-weeks .navigationtitle .mdl-right {
-    display:none;
+    display: none;
 }
 /*.format-weeks .course-content .single-section .section-navigation .mdl-right,*/
 /*.format-weeks .course-content .single-section .section-navigation .mdl-left {*/
@@ -284,7 +289,7 @@ form .felement input {
     background-color: #2d2c2c;
 }
 .theme_contrast #course_page_title {
-    background-color: #000000;
+    background-color: #000;
 }
 body .back_course_main {
     position: relative;
@@ -300,19 +305,23 @@ body .back_course_main {
     padding-bottom: 20px;
     padding-top: 28px;
 }
-.page_title a:active, .page_title a:hover {
-    text-decoration:none;
+.page_title a:active,
+.page_title a:hover {
+    text-decoration: none;
 }
-@media (max-width:800px){
+
+@media (max-width:800px) {
     body #course_page_title {
         font-size: 21px;
     }
 }
+
 @media (max-width:640px) {
     body #course_page_title {
         font-size: 17px;
     }
 }
+
 @media (max-width:550px) {
     body #course_page_title {
         font-size: 16px;
@@ -335,33 +344,34 @@ body .back_course_main {
     padding: 0;
 }
 .theme_dark .card-body {
-    background-color: #201F1F;
+    background-color: #201f1f;
 }
 .theme_contrast .card-body {
-    background-color: #000000;
+    background-color: #000;
 }
 .container-fluid {
     padding-right: 0;
     padding-left: 0;
 }
-body, body.theme_default {
+body,
+body.theme_default {
     background-color: #f3f2f1;
     font-size: 0.875rem;
     color: #484644;
 }
 body.theme_dark {
-    background-color: #201F1F;
-    color: #ffffff;
+    background-color: #201f1f;
+    color: #fff;
 }
 body.theme_contrast {
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #000;
+    color: #fff;
 }
 .theme_dark #region-main {
-    background-color: #201F1F;
+    background-color: #201f1f;
 }
 .theme_contrast #region-main {
-    background-color: #000000;
+    background-color: #000;
 }
 #region-main-box {
     padding-right: 0;
@@ -369,24 +379,24 @@ body.theme_contrast {
 }
 /* course body START */
 .pagelayout-incourse .card-body {
-    background-color: #ffffff;
+    background-color: #fff;
 }
 .theme_dark.pagelayout-incourse .card-body {
-    background-color: #201F1F;
+    background-color: #201f1f;
 }
 .theme_contrast.pagelayout-incourse .card-body {
-    background-color: #000000;
+    background-color: #000;
 }
 .pagelayout-incourse .card-body div[role="main"] {
     border-top: solid 2px #f3f2f1;
     padding-right: 15px;
 }
 .theme_dark.pagelayout-incourse .card-body div[role="main"] {
-    border-top: solid 2px #201F1F;
+    border-top: solid 2px #201f1f;
     padding-right: 15px;
 }
 .theme_contrast.pagelayout-incourse .card-body div[role="main"] {
-    border-top: solid 2px #000000;
+    border-top: solid 2px #000;
     padding-right: 15px;
 }
 .form-group div[data-fieldtype="filemanager"] {
@@ -405,14 +415,15 @@ body.theme_contrast {
     margin-left: 0px;
 }
 
-a, theme_default a {
-    color: #484644;;
+a,
+.theme_default a {
+    color: #484644;
 }
 .theme_dark a {
-    color: #6264A7;
+    color: #6264a7;
 }
 .theme_contrast a {
-    color: #FFFF00;
+    color: #ffff00;
 }
 /* course body END */
 
@@ -421,19 +432,22 @@ a, theme_default a {
     font-family: 'Segoe UISB';
 }
 .section .activity .actions {
-    float:left;
+    float: left;
     position: static;
 }
 .section .activity .actions {
-    margin-right:4px;
+    margin-right: 4px;
 }
-.section .activity .activityinstance, .section .activity .activityinstance > a {
-    float:left;
+.section .activity .activityinstance,
+.section .activity .activityinstance > a {
+    float: left;
 }
-.section .activity .contentwithoutlink, .section .activity .activityinstance {
+.section .activity .contentwithoutlink,
+.section .activity .activityinstance {
     min-width: 15%;
 }
-.section .activity .availabilityinfo, .section .activity .contentafterlink {
+.section .activity .availabilityinfo,
+.section .activity .contentafterlink {
     float: left;
     width: 99%;
 }
@@ -453,23 +467,23 @@ a, theme_default a {
 /* activity list END */
 /* footer START */
 .footerlogo {
-    width:100%;
-    color:gold;
-    height:60px;
+    width: 100%;
+    color: gold;
+    height: 60px;
     position: fixed;
     bottom: 0px;
     background-color: #f3f2f1;
-    padding-top:10px;
-    padding-bottom:10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 .theme_dark .footerlogo {
-    background-color: #201F1F;
+    background-color: #201f1f;
 }
 .theme_contrast .footerlogo {
-    background-color: #000000;
+    background-color: #000;
 }
 .footerlogo .stamp img {
-    float:right;
+    float: right;
 }
 .user_details {
     color: black;
@@ -484,19 +498,19 @@ div.footerright {
 }
 a.feedbacklink {
     margin-right: 20px;
-    color: #6264A7;
+    color: #6264a7;
     display: inline-block;
     padding-top: 10px;
     font-size: 0.9375rem;
 }
 .theme_default a.feedbacklink {
-    color: #6264A7;
+    color: #6264a7;
 }
 .theme_dark a.feedbacklink {
     color: #c8c6c4;
 }
 .theme_contrast a.feedbacklink {
-    color: #FFFF00;
+    color: #ffff00;
 }
 .fa-lightbulb-o {
     font-family: "FontAwesome" !important;
@@ -509,7 +523,8 @@ a.feedbacklink {
 /* footer END */
 /* popup icon START */
 
-.modtype_assign .popupicon, .modtype_quiz .popupicon {
+.modtype_assign .popupicon,
+.modtype_quiz .popupicon {
     display: none;
 }
 .popupicon {
@@ -536,7 +551,7 @@ button {
 /* ENABLED SECONDARY BUTTON */
 /* secondary button */
 .btn-secondary {
-    background: #ffffff;
+    background: #fff;
     border: 0.125rem solid;
     border-color: #bdbdbd;
     border-radius: 0.1875rem;
@@ -555,20 +570,22 @@ button {
 .btn-secondary:not(:disabled):not(.disabled):active {
     background: #414040;
     border-color: transparent;
-    color: #FFFFFF;
+    color: #fff;
 }
 /* secondary button :hover*/
-.btn-secondary:hover, .btn-secondary:focus:enabled {
+.btn-secondary:hover,
+.btn-secondary:focus:enabled {
     background: rgb(200,200,200);
     border-color: transparent;
     color: #000;
 }
 /* secondary button :focus*/
-.btn-secondary:focus, .btn-secondary:focus:enabled {
+.btn-secondary:focus,
+.btn-secondary:focus:enabled {
     background: #636262;
     border-color: transparent;
-    color: #FFFFFF;
-    outline: 0.125rem solid #FFFFFF;
+    color: #fff;
+    outline: 0.125rem solid #fff;
     outline-offset: -0.25rem;
 }
 /* secondary button (checked)*/
@@ -589,8 +606,9 @@ div.disabled .btn-secondary {
 
 /* ENABLED PRIMARY BUTTON */
 /* primary button */
-.btn-primary, .btn-default {
-    background: #6264A7;
+.btn-primary,
+.btn-default {
+    background: #6264a7;
     border: 0.125rem solid;
     border-color: transparent;
     border-radius: 0.1875rem;
@@ -603,22 +621,25 @@ div.disabled .btn-secondary {
     white-space: nowrap;
     -webkit-box-shadow: unset !important;
     box-shadow: unset !important;
-    color: #FFFFFF;
+    color: #fff;
 }
 /* primary button :active*/
-.btn-primary:not(:disabled):not(.disabled):active, .btn-default:not(:disabled):not(.disabled):active {
-    background: #A6A7DC;
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-default:not(:disabled):not(.disabled):active {
+    background: #a6a7dc;
     border-color: transparent;
-    color: #201F1F;
+    color: #201f1f;
 }
 /* primary button :hover*/
-.btn-primary:hover, .btn-primary:focus:enabled, .btn-default:hover, .btn-default:focus:enabled {
+.btn-primary:hover, .btn-primary:focus:enabled,
+.btn-default:hover, .btn-default:focus:enabled {
     background: #464775;
     border-color: transparent;
-    color: #FFFFFF;
+    color: #fff;
 }
 /* primary button :focus*/
-.btn-primary:focus, .btn-primary:focus:enabled, .btn-default:focus, .btn-default:focus:enabled {
+.btn-primary:focus, .btn-primary:focus:enabled,
+.btn-default:focus, .btn-default:focus:enabled {
 }
 
 body {
@@ -649,7 +670,7 @@ header#page-header {
 
 .btn {
     font-size: 0.875rem;
-    height:unset;
+    height: unset;
 }
 .course-content ul.section {
     margin: 0;
@@ -673,12 +694,12 @@ ul {
 
 /*!* modules START *!*/
 .path-mod .card-body div[role="main"] {
-    padding-right:15px;
-    padding-left:48px;
+    padding-right: 15px;
+    padding-left: 48px;
 }
 
 #prev-activity-link {
-    margin-left:33px;
+    margin-left: 33px;
 }
 /*.editsubmissionform .col-md-3 {*/
 /*display: none;*/
@@ -690,26 +711,51 @@ ul {
     flex: unset;
     max-width: unset;
 }
-.table-striped tbody tr:nth-of-type(odd), table.collection tbody tr:nth-of-type(odd), table#explaincaps tbody tr:nth-of-type(odd), table#defineroletable tbody tr:nth-of-type(odd), table.grading-report tbody tr:nth-of-type(odd), table#listdirectories tbody tr:nth-of-type(odd), table.rolecaps tbody tr:nth-of-type(odd), table.userenrolment tbody tr:nth-of-type(odd), form#movecourses table tbody tr:nth-of-type(odd), #page-admin-course-index .editcourse tbody tr:nth-of-type(odd), .forumheaderlist tbody tr:nth-of-type(odd), table.flexible tbody tr:nth-of-type(odd), .generaltable tbody tr:nth-of-type(odd) {
+.table-striped tbody tr:nth-of-type(odd),
+table.collection tbody tr:nth-of-type(odd),
+table#explaincaps tbody tr:nth-of-type(odd),
+table#defineroletable tbody tr:nth-of-type(odd),
+table.grading-report tbody tr:nth-of-type(odd),
+table#listdirectories tbody tr:nth-of-type(odd),
+table.rolecaps tbody tr:nth-of-type(odd),
+table.userenrolment tbody tr:nth-of-type(odd),
+form#movecourses table tbody tr:nth-of-type(odd),
+#page-admin-course-index .editcourse tbody tr:nth-of-type(odd),
+.forumheaderlist tbody tr:nth-of-type(odd),
+table.flexible tbody tr:nth-of-type(odd),
+.generaltable tbody tr:nth-of-type(odd) {
     background-color: #f2f2f2;
 }
 /* Assignment Module START */
-.path-mod-assign td.submissionstatussubmitted, .path-mod-assign div.submissionstatussubmitted, .path-mod-assign a:link.submissionstatussubmitted,
-.path-mod-assign td.submissionnotgraded, .path-mod-assign div.submissionnotgraded,
-.path-mod-assign td.latesubmission, .path-mod-assign a:link.latesubmission, .path-mod-assign div.latesubmission,
-.path-mod-assign td.submissiongraded, .path-mod-assign div.submissiongraded
-{
+.path-mod-assign td.submissionstatussubmitted,
+.path-mod-assign div.submissionstatussubmitted,
+.path-mod-assign a:link.submissionstatussubmitted,
+.path-mod-assign td.submissionnotgraded,
+.path-mod-assign div.submissionnotgraded,
+.path-mod-assign td.latesubmission,
+.path-mod-assign a:link.latesubmission,
+.path-mod-assign div.latesubmission,
+.path-mod-assign td.submissiongraded,
+.path-mod-assign div.submissiongraded {
     color: inherit;
     background-color: inherit;
 }
-.table-hover tbody tr:hover, table.grading-report tbody tr:hover, .forumheaderlist tbody tr:hover, .generaltable tbody tr:hover, table.flexible tbody tr:hover, .category_subcategories tbody tr:hover, table#modules tbody tr:hover, table#permissions tbody tr:hover {
+.table-hover tbody tr:hover,
+table.grading-report tbody tr:hover,
+.forumheaderlist tbody tr:hover,
+.generaltable tbody tr:hover,
+table.flexible tbody tr:hover,
+.category_subcategories tbody tr:hover,
+table#modules tbody tr:hover,
+table#permissions tbody tr:hover {
     background-color: #f2f2f2;
 }
 /* Assignment Module END */
 
 
 /* Quiz Module START */
-#page-mod-quiz-attempt .card div[role="main"], #page-mod-quiz-view .card div[role="main"] {
+#page-mod-quiz-attempt .card div[role="main"],
+#page-mod-quiz-view .card div[role="main"] {
     padding-top: 10px;
 }
 .card .quizattempt .continuebutton {
