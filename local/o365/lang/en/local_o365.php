@@ -318,10 +318,13 @@ $string['acp_tenants_hosttenant'] = 'Host Tenant: {$a}';
 $string['acp_tenants_intro'] = '<b>How Multitenancy Works:</b><br />Multitenancy allows multiple Microsoft 365 tenants to access your Moodle site. <br /><br />
     Here\'s how to get set up:
     <ol>
-        <li>Log in to Moodle as a administrator user that is not using the OpenID Connect authentication plugin.</li>
+        <li>Log in to Moodle as a site administrator user that is not using the OpenID Connect authentication plugin.</li>
+        <li>Ensure the <b>Authorization Endpoint</b> and <b>Token Endpoint</b> settings of the OpenID Connect authentication plugin are using the default non-tenant specific settings.</li>
         <li>Disable the OpenID Connect authentication plugin in Moodle. (Use <a href="{$a}/admin/settings.php?section=manageauths">the authentication plugins administration page</a>.)</li>
         <li>Navigate to Azure AD, and find the application you configured for Moodle.</li>
         <li>Enable multitenancy in the Azure AD application and save changes.</li>
+        <li>Give at least one of the following Graph Delegated permissions to the app: <b>Directory.Read.All</b>, <b>Domain.Read.All</b>, or <b>Domain.ReadWrite.All</b>. Admin consent for your organisation is not required.</li>
+        <li>If you are already signed in using your Microsoft account from the additional tenant, log out completely and log back in.</li>
         <li>For each tenant you want to enable, click "Add New Tenant" and log in with an administrator account from the tenant you want to enable.</li>
         <li>Once you have added all the tenants you want, re-enable the OpenID Connect authentication plugin in Moodle.</li>
         <li>You\'re done! To add additional tenants in the future, just click the "Add New Tenant" button and log in with an administrator account from that tenant.</li>
