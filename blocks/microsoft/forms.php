@@ -29,7 +29,6 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
- * Class block_microsoft_course_sync_form.
  * Form to configure course sync options.
  */
 class block_microsoft_course_sync_form extends moodleform {
@@ -56,7 +55,6 @@ class block_microsoft_course_sync_form extends moodleform {
 }
 
 /**
- * Class block_microsoft_course_configure_team_form.
  * Form to configure course Team reset actions.
  */
 class block_microsoft_course_configure_team_form extends moodleform {
@@ -89,7 +87,6 @@ class block_microsoft_course_configure_team_form extends moodleform {
 }
 
 /**
- * Class block_microsoft_course_configure_group_form.
  * Form to configure course group reset actions.
  */
 class block_microsoft_course_configure_group_form extends moodleform {
