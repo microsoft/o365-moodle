@@ -639,7 +639,8 @@ class coursegroups {
 
         $this->mtrace('Done');
 
-        return [array_merge($toaddowners, $toaddmembers), array_merge($toremoveowners, $toremovemembers)];
+        return [array_unique(array_merge($toaddowners, $toaddmembers)),
+            array_unique(array_merge($toremoveowners, $toremovemembers))];
     }
 
     /**
