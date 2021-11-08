@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Privacy subsystem implementation of local_office365.
+ *
  * @package local_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,6 +25,11 @@
 
 namespace local_office365\privacy;
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Privacy subsystem implementation of local_office365.
+ */
 class provider implements
     \core_privacy\local\metadata\null_provider {
 
