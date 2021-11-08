@@ -15,11 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Office365 cache
  * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2015 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 $definitions = [
     'unifiedfolderids' => [

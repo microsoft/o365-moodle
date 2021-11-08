@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Office365 repository lib
  * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -280,7 +281,8 @@ class repository_office365 extends \repository {
 
     /**
      * Process uploaded file.
-     *
+     * @param string $saveasfilename
+     * @param int $maxbytes
      * @return array Array of uploaded file information.
      */
     public function upload($saveasfilename, $maxbytes) {
@@ -362,7 +364,8 @@ class repository_office365 extends \repository {
                 }
                 try {
                     $result = $apiclient->create_group_file($group->objectid, '', $filename, $content);
-                    $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'groupid' => $group->objectid]);
+                    $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype
+                      , 'groupid' => $group->objectid]);
                 } catch (\Exception $e) {
                     $errmsg = 'Exception when uploading share point files for group';
                     $debugdata = [
@@ -509,7 +512,8 @@ class repository_office365 extends \repository {
                         if (!empty($curparent)) {
                             $metadata = $unified->get_group_file_metadata($group->objectid, $curparent);
                             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
-                                $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
+                                $parentrefpath = substr($metadata['parentReference']['path']
+                                  , (strpos($metadata['parentReference']['path'], ':') + 1));
                                 $cache = \cache::make('repository_office365', 'unifiedgroupfolderids');
                                 $result = $cache->set($parentrefpath.'/'.$metadata['name'], $metadata['id']);
                                 if (!empty($parentrefpath)) {
@@ -592,7 +596,8 @@ class repository_office365 extends \repository {
             $o365userid = \local_o365\utils::get_o365_userid($USER->id);
             $metadata = $unified->get_file_metadata($realpath, $o365userid);
             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
-                $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
+                $parentrefpath = substr($metadata['parentReference']['path']
+                  , (strpos($metadata['parentReference']['path'], ':') + 1));
                 $cache = \cache::make('repository_office365', 'unifiedfolderids');
                 $result = $cache->set($parentrefpath.'/'.$metadata['name'], $metadata['id']);
                 if (!empty($parentrefpath)) {
@@ -994,7 +999,8 @@ class repository_office365 extends \repository {
                     $reference['url'] = $sourceclient->get_group_file_sharing_link($sourceunpacked['groupid'], $fileid);
                 } else if ($filesource === 'trendingaround') {
                     if ($this->unifiedconfigured !== true) {
-                        \local_o365\utils::debug('Tried to access a trending around me file while the graph api is disabled.', $caller);
+                        \local_o365\utils::debug('Tried to access a trending around me file while the graph api is disabled.'
+                          , $caller);
                         throw new \moodle_exception('errorwhiledownload', 'repository_office365');
                     }
                     $sourceclient = $this->get_unified_apiclient();
@@ -1176,7 +1182,6 @@ class repository_office365 extends \repository {
     /**
      * Validate Admin Settings Moodle form
      *
-     * @static
      * @param moodleform $mform Moodle form (passed by reference)
      * @param array $data array of ("fieldname"=>value) of submitted data
      * @param array $errors array of ("fieldname"=>errormessage) of errors
@@ -1211,10 +1216,10 @@ class repository_office365 extends \repository {
         $mform->setType('trendinggroup', PARAM_INT);
     }
      /**
-     * Option names of dropbox office365
-     *
-     * @return array
-     */
+      * Option names of dropbox office365
+      *
+      * @return array
+      */
     public static function get_type_option_names() {
         return array('coursegroup', 'onedrivegroup', 'trendinggroup', 'pluginname');
     }
