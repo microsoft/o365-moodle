@@ -21,9 +21,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
+defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
-
-
-
-);
+$capabilities = array();

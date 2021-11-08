@@ -16,6 +16,7 @@
 
 /**
  * This file contains the definition for the library class for OneNote submission plugin
+ *
  * This class provides all the functionality for the new assign module.
  * @package assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com) Sushant Gawali (sushant@introp.net)
@@ -339,7 +340,8 @@ class assign_submission_onenote extends assign_submission_plugin {
         );
 
         if ($filesubmission) {
-            $filesubmission->numfiles = $this->count_files($submission->id, \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+            $filesubmission->numfiles =
+              $this->count_files($submission->id, \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             $updatestatus = $DB->update_record('assignsubmission_onenote', $filesubmission);
             $params['objectid'] = $filesubmission->id;
 
@@ -349,7 +351,8 @@ class assign_submission_onenote extends assign_submission_plugin {
             return $updatestatus;
         } else {
             $filesubmission = new stdClass();
-            $filesubmission->numfiles = $this->count_files($submission->id, \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+            $filesubmission->numfiles =
+              $this->count_files($submission->id, \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             $filesubmission->submission = $submission->id;
             $filesubmission->assignment = $this->assignment->get_instance()->id;
             $filesubmission->id = $DB->insert_record('assignsubmission_onenote', $filesubmission);
@@ -414,7 +417,8 @@ class assign_submission_onenote extends assign_submission_plugin {
                             $this->assignment->get_course_module()->id, false, $isteacher,
                             $submission->userid, $submission->id, null);
                     if ($isteacher) {
-                        $o .= '<p class="warning onenote_warning">'.get_string('viewsubmissionwarning', 'assignsubmission_onenote').'</p>';
+                        $o .= '<p class="warning onenote_warning">'
+                          .get_string('viewsubmissionwarning', 'assignsubmission_onenote').'</p>';
                     }
                 } else {
                     $o .= $onenoteapi->render_signin_widget();
@@ -423,8 +427,8 @@ class assign_submission_onenote extends assign_submission_plugin {
 
                 // Show standard link to download zip package.
                 $o .= '<p>'.get_string('download', 'assignsubmission_onenote').'</p>';
-                $o .= $this->assignment->render_area_files('assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                        $submission->id);
+                $o .= $this->assignment->render_area_files('assignsubmission_onenote',
+                  \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submission->id);
             }
 
             return $o;
@@ -440,7 +444,8 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return string
      */
     public function view(stdClass $submission) {
-        return $this->assignment->render_area_files('assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submission->id);
+        return $this->assignment->render_area_files('assignsubmission_onenote',
+          \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submission->id);
     }
 
     /**
@@ -537,8 +542,9 @@ class assign_submission_onenote extends assign_submission_plugin {
         // Copy the files across.
         $contextid = $this->assignment->get_context()->id;
         $fs = get_file_storage();
-        $files = $fs->get_area_files($contextid, 'assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-                $sourcesubmission->id, 'id', false);
+        $files = $fs->get_area_files($contextid, 'assignsubmission_onenote',
+          \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $sourcesubmission->id,
+          'id', false);
         foreach ($files as $file) {
             $fieldupdates = array('itemid' => $destsubmission->id);
             $fs->create_file_from_storedfile($fieldupdates, $file);
@@ -560,20 +566,20 @@ class assign_submission_onenote extends assign_submission_plugin {
      * @return boolean
      */
     public function remove(stdClass $submission) {
-      global $DB;
-      $fs = get_file_storage();
+        global $DB;
+        $fs = get_file_storage();
 
-      $fs->delete_area_files($this->assignment->get_context()->id,
-        'assignsubmission_onenote',
-        \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
-        $submission->id);
+        $fs->delete_area_files($this->assignment->get_context()->id,
+          'assignsubmission_onenote',
+          \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+          $submission->id);
 
-      $currentsubmission = $this->get_file_submission($submission->id);
-      if ($currentsubmission) {
-        $currentsubmission->numfiles = 0;
-        $DB->update_record('assignsubmission_onenote', $currentsubmission);
-      }
+        $currentsubmission = $this->get_file_submission($submission->id);
+        if ($currentsubmission) {
+            $currentsubmission->numfiles = 0;
+            $DB->update_record('assignsubmission_onenote', $currentsubmission);
+        }
 
-      return true;
+        return true;
     }
 }
