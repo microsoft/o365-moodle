@@ -891,13 +891,7 @@ $string['help_user_tzsynconlogin_help'] = 'This will cause a user\'s Moodle time
 $string['help_user_guestsync'] = 'Sync guest users Help';
 $string['help_user_guestsync_help'] = 'If enabled, guest users in Azure AD will be synced to Moodle in the user sync task.';
 
-$string['assignment'] = 'Assignment';
-$string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />
-                        Submitted on - {$a->submittedon} &nbsp; |  &nbsp; Due date - {$a->duedate}';
-$string['due_date'] = 'Due date - {$a}';
-$string['grade_date'] = 'Grade - {$a->grade} &nbsp; | &nbsp; Date - {$a->date}';
-$string['help_message'] = 'Hi there! I am your Moodle assistant. You can ask me the following questions:';
-$string['last_login_date'] = 'Last login date - {$a}';
+// Bot feature.
 $string['list_of_absent_students'] = 'This is the list of students that were absent this month:';
 $string['list_of_assignments_grades_compared'] = 'This is the list of your assignments grades compared with class average:';
 $string['list_of_assignments_needs_grading'] = 'This is the list of the assignments that need grading:';
@@ -909,6 +903,13 @@ $string['list_of_latest_logged_students'] = 'This is the list of latest logged s
 $string['list_of_recent_grades'] = 'This is the list of your recent grades:';
 $string['list_of_students_with_least_score'] = 'This is the list of students with least score in the latest assignment:';
 $string['list_of_students_with_name'] = 'These are the students with the name {$a}:';
+$string['assignment'] = 'Assignment';
+$string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />
+                        Submitted on - {$a->submittedon} &nbsp; |  &nbsp; Due date - {$a->duedate}';
+$string['due_date'] = 'Due date - {$a}';
+$string['grade_date'] = 'Grade - {$a->grade} &nbsp; | &nbsp; Date - {$a->date}';
+$string['help_message'] = 'Hi there! I am your Moodle assistant. You can ask me the following questions:';
+$string['last_login_date'] = 'Last login date - {$a}';
 $string['never'] = 'Never';
 $string['no_absent_users_found'] = 'No absent users found';
 $string['no_assignments_for_grading_found'] = 'No assignments for grading found';
@@ -948,3 +949,6 @@ $string['tab_moodle'] = 'Moodle';
 $string['sso_login'] = 'Login to Microsoft 365';
 $string['other_login'] = 'Login manually';
 $string['course_selector_label'] = "Select existing course";
+
+// Misc.
+$string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
