@@ -23,8 +23,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
 /**
  * Tests \local_o365\rest\sharepoint.
  *
@@ -36,7 +34,7 @@ class local_o365_sharepoint_testcase extends \advanced_testcase {
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
-    protected function setUp() {
+    protected function setUp() : void {
         parent::setUp();
         $this->resetAfterTest(true);
     }
