@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin upgrade script.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,36 +35,35 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     global $DB;
 
     $dbman = $DB->get_manager();
-    $result = true;
 
-    if ($result && $oldversion < 2014111703) {
+    if ($oldversion < 2014111703) {
         // Lengthen field.
         $table = new xmldb_table('auth_oidc_token');
         $field = new xmldb_field('scope', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'username');
         $dbman->change_field_type($table, $field);
 
-        upgrade_plugin_savepoint($result, '2014111703', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2014111703, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015012702) {
+    if ($oldversion < 2015012702) {
         $table = new xmldb_table('auth_oidc_state');
         $field = new xmldb_field('additionaldata', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timecreated');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015012702', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015012702, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015012703) {
+    if ($oldversion < 2015012703) {
         $table = new xmldb_table('auth_oidc_token');
         $field = new xmldb_field('oidcusername', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'username');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015012703', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015012703, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015012704) {
+    if ($oldversion < 2015012704) {
         // Update OIDC users.
         $sql = 'SELECT u.id as userid,
                        u.username as username,
@@ -116,25 +117,25 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 continue;
             }
         }
-        upgrade_plugin_savepoint($result, '2015012704', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015012704, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015012707) {
+    if ($oldversion < 2015012707) {
         if (!$dbman->table_exists('auth_oidc_prevlogin')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_oidc_prevlogin');
         }
-        upgrade_plugin_savepoint($result, '2015012707', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015012707, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015012710) {
+    if ($oldversion < 2015012710) {
         // Lengthen field.
         $table = new xmldb_table('auth_oidc_token');
         $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, 'oidcusername');
         $dbman->change_field_type($table, $field);
-        upgrade_plugin_savepoint($result, '2015012710', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015012710, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015111904.01) {
+    if ($oldversion < 2015111904.01) {
         // Ensure the username field in auth_oidc_token is lowercase.
         $authtokensrs = $DB->get_recordset('auth_oidc_token');
         foreach ($authtokensrs as $authtokenrec) {
@@ -146,10 +147,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 $DB->update_record('auth_oidc_token', $updatedrec);
             }
         }
-        upgrade_plugin_savepoint($result, '2015111904.01', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015111904.01, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2015111905.01) {
+    if ($oldversion < 2015111905.01) {
         // Update old endpoints.
         $config = get_config('auth_oidc');
         if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
@@ -160,10 +161,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
         }
 
-        upgrade_plugin_savepoint($result, '2015111905.01', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2015111905.01, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2018051700.01) {
+    if ($oldversion < 2018051700.01) {
         $table = new xmldb_table('auth_oidc_token');
         $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'username');
         if (!$dbman->field_exists($table, $field)) {
@@ -179,10 +180,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 $DB->update_record('auth_oidc_token', $newrec);
             }
         }
-        upgrade_plugin_savepoint($result, '2018051700.01', 'auth', 'oidc');
+        upgrade_plugin_savepoint(true, 2018051700.01, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2020020301) {
+    if ($oldversion < 2020020301) {
         $oldgraphtokens = $DB->get_records('auth_oidc_token', ['resource' => 'https://graph.windows.net']);
         foreach ($oldgraphtokens as $graphtoken) {
             $graphtoken->resource = 'https://graph.microsoft.com';
@@ -197,7 +198,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020020301, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2020071503) {
+    if ($oldversion < 2020071503) {
         $localo365singlesignoffsetting = get_config('local_o365', 'single_sign_off');
         if ($localo365singlesignoffsetting !== false) {
             set_config('single_sign_off', true, 'auth_oidc');

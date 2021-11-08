@@ -262,7 +262,7 @@ class auth_oidc_privacy_testcase extends \core_privacy\tests\provider_testcase {
      * @return stdClass
      * @throws dml_exception
      */
-    static private function create_token(int $userid): \stdClass {
+    static private function create_token(int $userid) : \stdClass {
         global $DB;
         $record = new stdClass();
         $record->oidcuniqid = "user@example.com";
@@ -287,7 +287,7 @@ class auth_oidc_privacy_testcase extends \core_privacy\tests\provider_testcase {
      * @return stdClass
      * @throws dml_exception
      */
-    static private function create_prevlogin(int $userid): \stdClass {
+    static private function create_prevlogin(int $userid) : \stdClass {
         global $DB;
         $record = new stdClass();
         $record->userid = $userid;

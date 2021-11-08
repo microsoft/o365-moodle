@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * OIDC client.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -46,6 +48,7 @@ class oidcclient {
     /** @var array Array of endpoints. */
     protected $endpoints = [];
 
+    /** @var string The resource of the token. */
     protected $tokenresource;
 
     /**
@@ -146,6 +149,11 @@ class oidcclient {
         }
     }
 
+    /**
+     * Validate the return the endpoint.
+     * @param $endpoint
+     * @return mixed|null
+     */
     public function get_endpoint($endpoint) {
         return (isset($this->endpoints[$endpoint])) ? $this->endpoints[$endpoint] : null;
     }
@@ -163,7 +171,7 @@ class oidcclient {
         $params = [
             'response_type' => 'code',
             'client_id' => $this->clientid,
-            'scope' =>  $this->scope,
+            'scope' => $this->scope,
             'nonce' => $nonce,
             'response_mode' => 'form_post',
             'resource' => $this->tokenresource,
@@ -188,6 +196,7 @@ class oidcclient {
      * Generate a new state parameter.
      *
      * @param string $nonce The generated nonce value.
+     * @param array $stateparams
      * @return string The new state value.
      */
     protected function getnewstate($nonce, array $stateparams = array()) {

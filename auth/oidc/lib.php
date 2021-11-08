@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin library.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -24,6 +26,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Initialize custom icon.
+ *
+ * @param $filefullname
+ * @return false|void
+ */
 function auth_oidc_initialize_customicon($filefullname) {
     global $CFG;
 
@@ -256,7 +264,6 @@ function auth_oidc_get_remote_fields() {
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
         ];
     }
-
 
     return $remotefields;
 }

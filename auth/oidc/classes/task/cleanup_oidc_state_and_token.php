@@ -29,6 +29,9 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\task\scheduled_task;
 
+/**
+ * A scheduled task that cleans up oidc states and tokens.
+ */
 class cleanup_oidc_state_and_token extends scheduled_task {
     /**
      * Get a descriptive name for the task.
