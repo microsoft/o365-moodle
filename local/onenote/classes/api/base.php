@@ -73,7 +73,8 @@ abstract class base {
     /**
      * Get a full URL and include auth token. This is useful for associated resources: attached images, etc.
      *
-     * @param string $url A full URL to get.
+     * @param string $url A full URL to get
+     * @param array $options
      * @return string The result of the request.
      */
     abstract public function geturl($url, $options = array());
@@ -126,7 +127,8 @@ abstract class base {
         $debugtracker = '';
         $debugcaller = 'onenote\api\base\getinstance';
 
-        $iso365user = (class_exists('\local_o365\rest\onenote') && \local_o365\utils::is_o365_connected($USER->id) === true) ? true : false;
+        $iso365user = (class_exists('\local_o365\rest\onenote')
+          && \local_o365\utils::is_o365_connected($USER->id) === true) ? true : false;
         if ($iso365user === true) {
             $debugtracker .= '1';
 
@@ -247,7 +249,7 @@ abstract class base {
     /**
      * Downloads a OneNote page, including any associated images etc. to a zip file from OneNote using an authenticated request.
      *
-     * @param string $id ID of OneNote page.
+     * @param string $pageid ID of OneNote page.
      * @param string $path Path to save the zip file to.
      * @return array Array containing the path to the downloaded zip file and the url to the original OneNote page.
      */
@@ -385,18 +387,18 @@ abstract class base {
                 case 'notebook':
                     $itemname = 'Notebook';
                     if (isset($item['name'])) {
-                        // Legacy
+                        // Legacy.
                         $itemname = $item['name'];
                     } else if (isset($item['displayName'])) {
-                        // Graph
+                        // Graph.
                         $itemname = $item['displayName'];
                     }
                     $itemlastmodified = 'now';
                     if (isset($item['lastModifiedTime'])) {
-                        // Legacy
+                        // Legacy.
                         $itemlastmodified = $item['lastModifiedTime'];
                     } else if (isset($item['lastModifiedDateTime'])) {
-                        // Graph
+                        // Graph.
                         $itemlastmodified = $item['lastModifiedDateTime'];
                     }
 
@@ -416,18 +418,18 @@ abstract class base {
                 case 'section':
                     $itemname = 'Notebook';
                     if (isset($item['name'])) {
-                        // Legacy
+                        // Legacy.
                         $itemname = $item['name'];
                     } else if (isset($item['displayName'])) {
-                        // Graph
+                        // Graph.
                         $itemname = $item['displayName'];
                     }
                     $itemlastmodified = 'now';
                     if (isset($item['lastModifiedTime'])) {
-                        // Legacy
+                        // Legacy.
                         $itemlastmodified = $item['lastModifiedTime'];
                     } else if (isset($item['lastModifiedDateTime'])) {
-                        // Graph
+                        // Graph.
                         $itemlastmodified = $item['lastModifiedDateTime'];
                     }
 
@@ -447,10 +449,10 @@ abstract class base {
                 case 'page':
                     $itemcreatedtime = 'now';
                     if (isset($item['createdTime'])) {
-                        // Legacy
+                        // Legacy.
                         $itemcreatedtime = $item['createdTime'];
                     } else if (isset($item['createdDateTime'])) {
-                        // Graph
+                        // Graph.
                         $itemcreatedtime = $item['createdDateTime'];
                     }
 
@@ -561,8 +563,8 @@ abstract class base {
     /**
      * Insert or update OneNote notebook sections discovered during the sync process into the database.
      *
-     * @param $courseid Course id.
-     * @param $sectionid OneNote section id.
+     * @param int $courseid Course id.
+     * @param int $sectionid OneNote section id.
      */
     protected function upsert_user_section($courseid, $sectionid) {
         global $DB, $USER;
@@ -793,8 +795,10 @@ abstract class base {
                     // page was modified after the teacher last viewed the submission.
                     if ($isteacher && 'submission_teacher_page_id' == $requestedpageidfield) {
 
-                        // Delete Teacher's OneNote copy if the student's OneNote time last modified date is greater than the teacher's.
-                        if (isset($page['lastModifiedTime']) && strtotime($page['lastModifiedTime']) < $pagerecord->student_lastmodified) {
+                        // Delete Teacher's OneNote copy if the student's OneNote time last modified date
+                        // is greater than the teacher's.
+                        if (isset($page['lastModifiedTime'])
+                          && strtotime($page['lastModifiedTime']) < $pagerecord->student_lastmodified) {
 
                             $this->apicall('delete', '/pages/'.$pagerecord->$requestedpageidfield);
                             $page = null;
@@ -831,7 +835,8 @@ abstract class base {
 
         // If we are being called for getting a feedback page.
         if ($wantfeedbackpage) {
-            list($postdata, $boundary) = $this->prepare_feedback_postdata($submissionid, $assign, $student, $context, $isteacher, $gradeid);
+            list($postdata, $boundary) =
+              $this->prepare_feedback_postdata($submissionid, $assign, $student, $context, $isteacher, $gradeid);
         } else {
             list($postdata, $boundary) = $this->prepare_submission_postdata($submissionid, $assign, $student, $context, $isteacher);
         }
@@ -897,6 +902,7 @@ abstract class base {
                 }
             } catch (\Exception $e) {
                 // Process apicall response will log any errors.
+                return null;
             }
         }
 
@@ -1170,7 +1176,7 @@ abstract class base {
      * HACKHACK: Remove this once OneNote fixes their bug.
      * OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
      * The workaround is to replace the last <br/> in a sequence with a <p/>.
-     * @param $xpath The xpath object associdated with the HTML DOM for the page.
+     * @param object $xpath The xpath object associdated with the HTML DOM for the page.
      */
     protected function process_br_tags($xpath) {
         $brnodes = $xpath->query('//br');
@@ -1201,7 +1207,7 @@ abstract class base {
      * HACKHACK: Remove this once OneNote fixes their bug.
      * OneNote has a bug that occurs with HTML containing consecutive <br/> tags.
      * They get converted into garbage chars like ￼. Replace them with <p/> tags.
-     * @param $xpath The xpath object associdated with the HTML DOM for the page.
+     * @param object $xpath The xpath object associdated with the HTML DOM for the page.
      */
     protected function handle_garbage_chars($xpath) {
         $garbagenodes = $xpath->query("//p[contains(., 'ï¿¼')]");
@@ -1280,8 +1286,8 @@ abstract class base {
      * Function to add span elements for heading and td tags and respective font sizes.
      * This is done becaues OneNote supports a subset of the full HTML and it needs a span element to specify font attributes.
      *
-     * @param $dom HTML DOM of the page being processed.
-     * @param $xpath XPath object associated with the HTML page.
+     * @param object $dom HTML DOM of the page being processed.
+     * @param object $xpath XPath object associated with the HTML page.
      */
     protected function process_tags($dom, $xpath) {
 
@@ -1356,7 +1362,7 @@ abstract class base {
      * Function to increase the span font size to make downloaded html look better. This is used to process
      * the HTML of the page downloaded from OneNote.
      *
-     * @param $xpath XPath object assoicated with the HTML page.
+     * @param object $xpath XPath object assoicated with the HTML page.
      */
     protected function process_span_tags($xpath) {
 
