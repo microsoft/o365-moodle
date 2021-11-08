@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Get a list of students in a course by course id.
+ *
  * @package local_o365
  * @author 2011 Jerome Mouneyrac, modified 2016 James McQuillan
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,13 +29,12 @@ require_once($CFG->dirroot.'/course/modlib.php');
 
 /**
  * Get a list of students in a course by course id.
- * Borrowed heavily from core_enrol_get_enrolled_users.
  */
 class read_courseusers extends \external_api {
     /**
-     * Returns description of method parameters
+     * Return description of method parameters.
      *
-     * @return external_function_parameters
+     * @return \external_function_parameters
      */
     public static function courseusers_read_parameters() {
         return new \external_function_parameters(
@@ -54,10 +55,14 @@ class read_courseusers extends \external_api {
     /**
      * Get list of users enrolled in the specified course.
      *
-     * @return array of courses
+     * @param int $courseid
+     * @param int $limitfrom
+     * @param int $limitnumber
+     * @param array $userids
+     * @return array
      */
     public static function courseusers_read($courseid, $limitfrom = 0, $limitnumber = 0, $userids = []) {
-        global $CFG, $USER, $DB;
+        global $CFG, $DB;
         require_once($CFG->dirroot.'/user/lib.php');
 
         $params = self::validate_parameters(
@@ -70,9 +75,7 @@ class read_courseusers extends \external_api {
             ]
         );
 
-        $userids = (!empty($params['userids']) && is_array($params['userids']))
-            ? array_flip($params['userids'])
-            : [];
+        $userids = (!empty($params['userids']) && is_array($params['userids'])) ? array_flip($params['userids']) : [];
 
         $withcapability = '';
         $userfields = [
@@ -109,7 +112,7 @@ class read_courseusers extends \external_api {
 
         require_capability('moodle/course:viewparticipants', $context);
 
-        list($enrolledsql, $enrolledparams) = get_enrolled_sql($context, $withcapability);
+        [$enrolledsql, $enrolledparams] = get_enrolled_sql($context, $withcapability);
 
         // For user context preloading.
         $ctxselect = ', ' . \context_helper::get_preload_record_columns_sql('ctx');
@@ -122,7 +125,7 @@ class read_courseusers extends \external_api {
             // Filter by groups the user can view.
             $usergroups = groups_get_user_groups($course->id);
             if (!empty($usergroups['0'])) {
-                list($groupsql, $groupparams) = $DB->get_in_or_equal($usergroups['0'], SQL_PARAMS_NAMED);
+                [$groupsql, $groupparams] = $DB->get_in_or_equal($usergroups['0'], SQL_PARAMS_NAMED);
                 $groupjoin = "JOIN {groups_members} gm ON (u.id = gm.userid AND gm.groupid $groupsql)";
                 $enrolledparams = array_merge($enrolledparams, $groupparams);
             } else {
@@ -169,14 +172,18 @@ class read_courseusers extends \external_api {
             new \external_single_structure(
                 [
                     'id' => new \external_value(PARAM_INT, 'ID of the user'),
-                    'username' => new \external_value(PARAM_RAW, 'Username policy is defined in Moodle security config', VALUE_OPTIONAL),
+                    'username' => new \external_value(PARAM_RAW, 'Username policy is defined in Moodle security config',
+                        VALUE_OPTIONAL),
                     'fullname' => new \external_value(PARAM_NOTAGS, 'The fullname of the user'),
                     'firstname' => new \external_value(PARAM_NOTAGS, 'The first name(s) of the user', VALUE_OPTIONAL),
                     'lastname' => new \external_value(PARAM_NOTAGS, 'The family name of the user', VALUE_OPTIONAL),
                     'email' => new \external_value(PARAM_TEXT, 'An email address - allow email as root@localhost', VALUE_OPTIONAL),
-                    'idnumber' => new \external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution', VALUE_OPTIONAL),
-                    'lang' => new \external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution', VALUE_OPTIONAL),
-                    'profileimageurlsmall' => new \external_value(PARAM_URL, 'User image profile URL - small version', VALUE_OPTIONAL),
+                    'idnumber' => new \external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
+                        VALUE_OPTIONAL),
+                    'lang' => new \external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
+                        VALUE_OPTIONAL),
+                    'profileimageurlsmall' => new \external_value(PARAM_URL, 'User image profile URL - small version',
+                        VALUE_OPTIONAL),
                     'profileimageurl' => new \external_value(PARAM_URL, 'User image profile URL - big version', VALUE_OPTIONAL),
                 ]
             )

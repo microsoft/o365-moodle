@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Test cases for user groups features.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,8 +24,6 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
 
 require_once($CFG->dirroot.'/webservice/tests/helpers.php');
 
@@ -155,7 +155,8 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
         $this->getDataGenerator()->enrol_user($user->id, $course1->id);
         groups_add_member($group1->id, $user->id, 'mod_workshop', '124');
 
-        // Only assign managegroups to one course, both local/o365:managegroups and moodle/course:managegroups are required to manage moodle groups.
+        // Only assign managegroups to one course, both local/o365:managegroups and moodle/course:managegroups are required ...
+        // to manage moodle groups.
         $context = \context_course::instance($course->id);
         $roleid = $this->assignUserCapability('local/o365:managegroups', $context->id);
         $this->assignUserCapability('moodle/course:managegroups', $context->id, $roleid);

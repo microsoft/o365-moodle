@@ -69,6 +69,11 @@ class usersync extends scheduled_task {
         set_config('task_usersync_last' . $name, $value, 'local_o365');
     }
 
+    /**
+     * Print debugging information using mtrace.
+     *
+     * @param string $msg
+     */
     protected function mtrace($msg) {
         mtrace('...... ' . $msg);
     }
@@ -110,7 +115,7 @@ class usersync extends scheduled_task {
             try {
                 $continue = true;
                 while ($continue) {
-                    list($returnedusers, $skiptoken) = $usersync->get_users('default', $skiptoken);
+                    [$returnedusers, $skiptoken] = $usersync->get_users('default', $skiptoken);
                     $users = array_merge($users, $returnedusers);
                     $continue = (!empty($skiptoken));
                 }
@@ -150,7 +155,7 @@ class usersync extends scheduled_task {
             try {
                 $continue = true;
                 while ($continue) {
-                    list($returnedusers, $skiptoken, $deltatoken) = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
+                    [$returnedusers, $skiptoken, $deltatoken] = $usersync->get_users_delta('default', $skiptoken, $deltatoken);
                     $users = array_merge($users, $returnedusers);
                     $continue = (empty($deltatoken) && !empty($skiptoken));
                 }
@@ -212,7 +217,7 @@ class usersync extends scheduled_task {
                     try {
                         $continue = true;
                         while ($continue) {
-                            list($returnedusers, $skiptoken) = $usersync->get_users('default', $skiptoken);
+                            [$returnedusers, $skiptoken] = $usersync->get_users('default', $skiptoken);
                             $users = array_merge($users, $returnedusers);
                             $continue = (!empty($skiptoken));
                         }
@@ -243,8 +248,8 @@ class usersync extends scheduled_task {
     /**
      * Process users in chunks of 10000 at a time.
      *
-     * @param $usersync
-     * @param $users
+     * @param main $usersync
+     * @param array $users
      */
     protected function sync_users($usersync, $users) {
         $chunk = array_chunk($users, 10000);

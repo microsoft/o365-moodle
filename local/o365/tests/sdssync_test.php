@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * SDS sync feature test cases.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,8 +24,6 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
 
 /**
  * Tests \local_o365\feature\sds\task\sync
@@ -307,7 +307,9 @@ class local_o365_sdssync_testcase extends \advanced_testcase {
      */
     protected function get_school_response() {
         $response = [
-            "odata.metadata" => 'https://graph.microsoft.com/contososd.com/$metadata#directoryObjects/Microsoft.DirectoryServices.AdministrativeUnit/@Element',
+            "odata.metadata" =>
+                'https://graph.microsoft.com/contososd.com/$metadata#directoryObjects/' .
+                'Microsoft.DirectoryServices.AdministrativeUnit/@Element',
             "odata.type" => "Microsoft.DirectoryServices.AdministrativeUnit",
             "objectType" => "AdministrativeUnit",
             "objectId" => "fd1bdc2b-a59c-444e-af75-e250c546410e",
@@ -339,7 +341,9 @@ class local_o365_sdssync_testcase extends \advanced_testcase {
      */
     protected function get_school_sections_response() {
         $response = [
-            'odata.metadata' => 'https://graph.microsoft.com/95b43ae0-0554-4cc5-8c22-fe219dc31156/$metadata#directoryObjects/Microsoft.DirectoryServices.Group',
+            'odata.metadata' =>
+                'https://graph.microsoft.com/95b43ae0-0554-4cc5-8c22-fe219dc31156/$metadata#directoryObjects' .
+                '/Microsoft.DirectoryServices.Group',
             'value' => [
                 [
                     "odata.type" => "Microsoft.DirectoryServices.Group",

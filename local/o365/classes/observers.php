@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Event observers of local_o365 plugin.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,6 @@
 
 namespace local_o365;
 
-global $CFG;
 require_once($CFG->dirroot.'/lib/filelib.php');
 
 /**
@@ -46,8 +47,7 @@ class observers {
         $eventdata = $event->get_data();
 
         $redirect = '/admin/settings.php?section=local_o365';
-        $action = (!empty($eventdata['other']['statedata']['action']))
-            ? $eventdata['other']['statedata']['action'] : null;
+        $action = (!empty($eventdata['other']['statedata']['action'])) ? $eventdata['other']['statedata']['action'] : null;
 
         switch ($action) {
             case 'setsystemapiuser':
@@ -93,13 +93,17 @@ class observers {
                 $scope = $eventdata['other']['tokenparams']['scope'];
                 $res = $eventdata['other']['tokenparams']['resource'];
                 $token = new \local_o365\oauth2\token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
-                $tokenresource = (\local_o365\rest\unified::is_enabled() === true)
-                    ? \local_o365\rest\unified::get_tokenresource()
-                    : \local_o365\rest\discovery::get_tokenresource();
+                if (\local_o365\rest\unified::is_enabled() === true) {
+                    $tokenresource = \local_o365\rest\unified::get_tokenresource();
+                } else {
+                    $tokenresource = \local_o365\rest\discovery::get_tokenresource();
+                }
                 $token = \local_o365\oauth2\token::jump_tokenresource($token, $tokenresource, $clientdata, $httpclient);
-                $apiclient = (\local_o365\rest\unified::is_enabled() === true)
-                    ? new \local_o365\rest\unified($token, $httpclient)
-                    : new \local_o365\rest\discovery($token, $httpclient);
+                if (\local_o365\rest\unified::is_enabled() === true) {
+                    $apiclient = new \local_o365\rest\unified($token, $httpclient);
+                } else {
+                    $apiclient = new \local_o365\rest\discovery($token, $httpclient);
+                }
                 $tenant = $apiclient->get_tenant();
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 \local_o365\utils::enableadditionaltenant($tenant);
@@ -176,8 +180,8 @@ class observers {
                     \local_o365\utils::debug('no oidcuniqid received', $caller, $eventdata);
                 }
 
-                # Enrol user to all courses he was enrolled prior to connecting.
-                # Do not attempt to enrol the user if user groups are not enabled.
+                // Enrol user to all courses he was enrolled prior to connecting.
+                // Do not attempt to enrol the user if user groups are not enabled.
                 if (\local_o365\feature\usergroups\utils::is_enabled() === true) {
                     try {
                         $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
@@ -584,8 +588,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_course_updated(\core\event\course_updated $event) {
-        global $DB;
-
         if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
@@ -598,7 +600,7 @@ class observers {
 
             if (($teamsyncenabled || $groupsyncenabled) && \local_o365\feature\usergroups\utils::is_enabled() === true) {
                 $apiclient = \local_o365\feature\usergroups\utils::get_graphclient();
-                $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, true);
+                $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, true);
 
                 if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($courseid, 'team')) {
                     if ($teamsyncenabled) {
@@ -639,7 +641,7 @@ class observers {
         }
         $courseid = $event->objectid;
 
-        // delete course group
+        // Delete course group.
         \local_o365\feature\usergroups\utils::delete_course_group($courseid);
 
         if (\local_o365\rest\sharepoint::is_configured() !== true) {
@@ -836,7 +838,7 @@ class observers {
                             if (empty(array_intersect($roles, $userroleids))) {
                                 $apiclient = \local_o365\utils::get_api();
                                 $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
-                                // add the user back to the group as member
+                                // Add the user back to the group as member.
                                 $apiclient->add_user_to_course_group($courseid, $userid);
                             }
                         }
@@ -923,13 +925,13 @@ class observers {
     public static function handle_notification_sent(\core\event\notification_sent $event) {
         global $CFG, $DB, $PAGE;
 
-        // check if we have the configuration to send proactive notifications
+        // Check if we have the configuration to send proactive notifications.
         $aadtenant = get_config('local_o365', 'aadtenant');
         $botappid = get_config('local_o365', 'bot_app_id');
         $botappsecret = get_config('local_o365', 'bot_app_password');
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
-            // incomplete settings, exit.
+            // Incomplete settings, exit.
             if (!PHPUNIT_TEST) {
                 debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
             }
@@ -939,75 +941,75 @@ class observers {
         $notificationid = $event->objectid;
         $notification = $DB->get_record('notifications', ['id' => $notificationid]);
         if (!$notification) {
-            // notification cannot be found, exit.
+            // Notification cannot be found, exit.
             debugging('SKIPPED: handle_notification_sent - notification cannot be found', DEBUG_DEVELOPER);
             return true;
         }
 
         $user = $DB->get_record('user', ['id' => $notification->useridto]);
         if (!$user) {
-            // recipient user invalid, exit.
+            // Recipient user invalid, exit.
             debugging('SKIPPED: handle_notification_sent - recipient user invalid', DEBUG_DEVELOPER);
             return true;
         }
 
         if ($user->auth != 'oidc') {
-            // recipient user is not Microsoft 365 user, exit.
+            // Recipient user is not Microsoft 365 user, exit.
             debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
             return true;
         }
 
-        // get user object record
+        // Get user object record.
         $userrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
         if (!$userrecord) {
-            // recipient user doesn't have an object ID, exit.
+            // Recipient user doesn't have an object ID, exit.
             debugging('SKIPPED: handle_notification_sent - recipient user doesn\'t have an object ID', DEBUG_DEVELOPER);
             return true;
         }
 
-        // get course object record
+        // Get course object record.
         if (!array_key_exists('courseid', $event->other)) {
-            // course doesn't exist, exit.
+            // Course doesn't exist, exit.
             debugging('SKIPPED: handle_notification_sent - course doesn\'t exist', DEBUG_DEVELOPER);
             return true;
         }
         $courseid = $event->other['courseid'];
         if (!$courseid || $courseid == SITEID) {
-            // invalid course id, exit.
+            // Invalid course id, exit.
             debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
             return true;
         }
         $course = $DB->get_record('course', ['id' => $courseid]);
         if (!$course) {
-            // invalid course, exit.
+            // Invalid course, exit.
             debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
             return true;
         }
 
-        // get course object record
+        // Get course object record.
         $courserecord = $DB->get_record('local_o365_objects',
             ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
         if (!$courserecord) {
-            // course record doesn't have an object ID, exit.
+            // Course record doesn't have an object ID, exit.
             debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
             return true;
-        }else{
+        } else {
             $courseobjectid = $courserecord->objectid;
         }
 
-        // passed all tests, need to send notification
+        // Passed all tests, need to send notification.
         $botframework = new \local_o365\rest\botframework();
         if (!$botframework->has_token()) {
-            // cannot get token, exit.
+            // Cannot get token, exit.
             debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
             return true;
         }
 
-        //Check if we need to add activity details
-        $listItems = [];
-        if ((strpos($notification->component, 'mod_') !== FALSE) && !empty($notification->contexturl)) {
+        // Check if we need to add activity details.
+        $listitems = [];
+        if ((strpos($notification->component, 'mod_') !== false) && !empty($notification->contexturl)) {
             $PAGE->theme->force_svg_use(null);
-            $listItems[] = [
+            $listitems[] = [
                 'title' => $notification->contexturlname,
                 'subtitle' => '',
                 'icon' => $CFG->wwwroot . '/local/o365/pix/moodle.png',
@@ -1016,9 +1018,8 @@ class observers {
             ];
         }
         $message = (empty($notification->smallmessage) ? $notification->fullmessage : $notification->smallmessage);
-        // send notification
-        $botframework->send_notification($courseobjectid, $userrecord->objectid,
-            $message, $listItems, $notificationendpoint);
+        // Send notification.
+        $botframework->send_notification($courseobjectid, $userrecord->objectid, $message, $listitems, $notificationendpoint);
         return true;
     }
 

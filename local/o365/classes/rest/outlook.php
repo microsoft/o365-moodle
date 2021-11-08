@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * API client for o365 outlook api.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,7 +29,9 @@ namespace local_o365\rest;
  * API client for o365 outlook api.
  */
 class outlook extends \local_o365\rest\o365api {
-    /** The general API area of the class. */
+    /**
+     * @var string The general API area of the class.
+     */
     public $apiarea = 'outlook';
 
     /**
@@ -50,7 +54,7 @@ class outlook extends \local_o365\rest\o365api {
 
     /**
      * Get a users photo.
-     * @param $user User to retrieve photo.
+     * @param string $user User to retrieve photo.
      * @return array|null Returned binary photo data, false if there is no photo.
      */
     public function get_photo($user = null) {
@@ -64,8 +68,8 @@ class outlook extends \local_o365\rest\o365api {
 
     /**
      * Get photo meta data.
-     * @param $user User to retrieve photo meta data for.
-     * @param $minsize Ignored for api version 1.
+     * @param string $user User to retrieve photo meta data for.
+     * @param string $minsize Ignored for api version 1.
      * @return array|null Returned response, or false if error.
      */
     public function get_photo_metadata($user = null, $minsize = 100) {

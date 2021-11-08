@@ -30,7 +30,9 @@ namespace local_o365\rest;
  * Client for unified Microsoft 365 API.
  */
 class unified extends \local_o365\rest\o365api {
-    /** The general API area of the class. */
+    /**
+     * @var string The general API area of the class.
+     */
     public $apiarea = 'graph';
 
     /**
@@ -212,6 +214,14 @@ class unified extends \local_o365\rest\o365api {
         return (!empty($token)) ? true : false;
     }
 
+    /**
+     * Assign a user to an Azure app.
+     *
+     * @param int $muserid
+     * @param string $userobjectid
+     * @param string $appobjectid
+     * @return string|null
+     */
     public function assign_user($muserid, $userobjectid, $appobjectid) {
         global $DB;
         $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
@@ -313,8 +323,8 @@ class unified extends \local_o365\rest\o365api {
         try {
             $response = $this->process_apicall_response($response, $expectedparams);
         } catch (\Exception $e) {
-            if ($e->getMessage() ==
-                'Error in API call: Another object with the same value for property mailNickname already exists.') {
+            $expectedexception = 'Error in API call: Another object with the same value for property mailNickname already exists.';
+            if ($e->getMessage() == $expectedexception) {
                 $groupdata['mailNickname'] = $groupdata['mailNickname'] . '_' . preg_replace('/[^a-z0-9]+/iu', '', $name);
                 $response = $this->apicall('post', '/groups', json_encode($groupdata));
                 $response = $this->process_apicall_response($response, $expectedparams);
@@ -402,7 +412,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Return the URL to the team for the group/Team with the given ID.
      *
-     * @param $objectid
+     * @param string $objectid
      *
      * @return mixed|string
      */
@@ -514,7 +524,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a list of group owners.
      *
-     * @param $groupobjectid The object ID of the group.
+     * @param string $groupobjectid The object ID of the group.
      *
      * @return array|null
      */
@@ -528,6 +538,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a file by it's file id.
      *
+     * @param string $groupid
      * @param string $parentid The parent id to use.
      * @return array|null Returned response, or null if error.
      */
@@ -545,6 +556,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a file's metadata by it's file id.
      *
+     * @param string $groupid
      * @param string $fileid The file's ID.
      * @return string The file's content.
      */
@@ -557,6 +569,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Create a readonly sharing link for a group file.
      *
+     * @param string $groupid
      * @param string $fileid OneDrive file id.
      * @return string Sharing link url.
      */
@@ -570,6 +583,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a file's content by it's file id.
      *
+     * @param string $groupid
      * @param string $fileid The file's ID.
      * @return string The file's content.
      */
@@ -642,6 +656,7 @@ class unified extends \local_o365\rest\o365api {
      * @param string $parentid The parent Id.
      * @param string $filename The file's name.
      * @param string $content The file's content.
+     * @param string $contenttype
      * @return file upload response.
      */
     public function create_group_file($groupid, $parentid = '', $filename, $content, $contenttype = 'text/plain') {
@@ -739,6 +754,14 @@ class unified extends \local_o365\rest\o365api {
         return $this->process_apicall_response($response, ['value' => null]);
     }
 
+    /**
+     * Return users delta.
+     *
+     * @param array $params
+     * @param string $skiptoken
+     * @param string $deltatoken
+     * @return array
+     */
     public function get_users_delta($params, $skiptoken, $deltatoken) {
         $endpoint = "/users/delta";
         $odataqueries = [];
@@ -794,8 +817,9 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get user manager by passing user AD id
-     * @param $userobjectid - user AD id
+     * Get user manager by passing user AD id.
+     *
+     * @param string $userobjectid - user AD id
      * @return array|null
      */
     public function get_user_manager($userobjectid) {
@@ -811,8 +835,9 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get user groups by passing user AD id
-     * @param $userobjectid - user AD id
+     * Get user groups by passing user AD id.
+     *
+     * @param string $userobjectid - user AD id
      * @return array|null
      */
     public function get_user_groups($userobjectid) {
@@ -829,7 +854,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get user groups, including transitive groups, by passing user AD ID.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return mixed
      */
@@ -841,8 +866,9 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get user teams by passing user AD id
-     * @param $userobjectid - user AD id
+     * Get user teams by passing user AD id.
+     *
+     * @param string $userobjectid - user AD id
      * @return array|null
      */
     public function get_user_teams($userobjectid) {
@@ -854,14 +880,15 @@ class unified extends \local_o365\rest\o365api {
 
     /**
      * Get user objects by passing user AD id
-     * @param $userobjectid - user AD id
-     * @param $securityEnabledOnly - return only secure groups
+     *
+     * @param string $userobjectid - user AD id
+     * @param bool $securityenabledonly - return only secure groups
      * @return array|null
      */
-    public function get_user_objects($userobjectid, $securityEnabledOnly = true) {
+    public function get_user_objects($userobjectid, $securityenabledonly = true) {
         $endpoint = "users/$userobjectid/getMemberObjects";
         $data = [
-            'securityEnabledOnly' => $securityEnabledOnly
+            'securityEnabledOnly' => $securityenabledonly
         ];
         $response = $this->apicall('post', $endpoint, json_encode($data));
         $result = $this->process_apicall_response($response, ['value' => null]);
@@ -869,9 +896,10 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get directory objects by passing objects ids
-     * @param $ids - objects ids which data should be returned
-     * @param $types - collection of resource types that specifies the set of resource collections to search (optional).
+     * Get directory objects by passing objects ids.
+     *
+     * @param string $ids - objects ids which data should be returned
+     * @param string $types - collection of resource types that specifies the set of resource collections to search (optional).
      * @return array|null
      */
     public function get_directory_objects($ids, $types = null) {
@@ -1011,7 +1039,7 @@ class unified extends \local_o365\rest\o365api {
      * @param string $upn user's userPrincipalName
      * @return array|null Returned response, or null if error.
      */
-    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null, 
+    public function create_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null,
         $upn) {
         $eventdata = [
             'subject' => $subject,
@@ -1041,8 +1069,8 @@ class unified extends \local_o365\rest\o365api {
         }
         $eventdata = array_merge($eventdata, $other);
         $eventdata = json_encode($eventdata);
-        $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
-            '/users/' . $upn . '/calendar/events';
+        $endpoint = (!empty($calendarid)) ?
+            '/users/' . $upn . '/calendars/' . $calendarid . '/events' : '/users/' . $upn . '/calendar/events';
         $response = $this->apicall('post', $endpoint, $eventdata);
         $expectedparams = ['id' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
@@ -1064,7 +1092,8 @@ class unified extends \local_o365\rest\o365api {
      * @param string $calendarid The o365 ID of the calendar to create the event in.
      * @return array|null Returned response, or null if error.
      */
-    public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
+    public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(),
+        $calendarid = null) {
         $eventdata = [
             'subject' => $subject,
             'body' => [
@@ -1092,7 +1121,7 @@ class unified extends \local_o365\rest\o365api {
         }
         $eventdata = array_merge($eventdata, $other);
         $eventdata = json_encode($eventdata);
-        $endpoint =  "/groups/{$calendarid}/calendar/events";
+        $endpoint = "/groups/{$calendarid}/calendar/events";
         $response = $this->apicall('post', $endpoint, $eventdata);
         $expectedparams = ['id' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
@@ -1112,8 +1141,8 @@ class unified extends \local_o365\rest\o365api {
      */
     public function get_events($calendarid, $since, $upn) {
         \core_date::set_default_server_timezone();
-        $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
-            '/users/' . $upn . '/calendar/events';
+        $endpoint = (!empty($calendarid)) ?
+            '/users/' . $upn . '/calendars/' . $calendarid . '/events' : '/users/' . $upn . '/calendar/events';
         if (!empty($since)) {
             // Pass datetime in UTC, regardless of Moodle timezone setting.
             $sincedt = new \DateTime('@'.$since);
@@ -1224,11 +1253,11 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Create a file.
      *
-     * @param $parentid
-     * @param $filename
-     * @param $content
+     * @param string $parentid
+     * @param string $filename
+     * @param string $content
      * @param string $contenttype
-     * @param $o365userid
+     * @param string $o365userid
      *
      * @return array|null
      */
@@ -1452,6 +1481,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get information on the current application.
      *
+     * @param string $resourceid
      * @return array|null Array of application information, or null if failure.
      */
     public function get_permission_grants($resourceid = '') {
@@ -1531,6 +1561,11 @@ class unified extends \local_o365\rest\o365api {
         return [];
     }
 
+    /**
+     * Check application Graph API permissions.
+     *
+     * @return array
+     */
     public function check_graph_apponly_permissions() {
         $this->token->refresh();
         $requiredperms = $this->get_graph_required_apponly_permissions();
@@ -1644,7 +1679,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a users photo.
      *
-     * @param $user User to retrieve photo.
+     * @param string $user User to retrieve photo.
      *
      * @return string|false Returned binary photo data, false if there is no photo.
      */
@@ -1662,7 +1697,7 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get user profile photo metadata.
      *
-     * @param $user The UPN of the user to retrieve photo meta data for.
+     * @param string $user The UPN of the user to retrieve photo meta data for.
      *
      * @return false|int no photo found, or the height of the photo image.
      */
@@ -2052,7 +2087,8 @@ class unified extends \local_o365\rest\o365api {
             $o365user = \local_o365\obj\o365user::instance_from_muserid($user->id);
             if (empty($o365user)) {
                 // No o365 user data for the user is available.
-                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn', $user->username);
+                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn',
+                    $user->username);
                 return false;
             }
             $httpclient = new \local_o365\httpclient();
@@ -2069,7 +2105,7 @@ class unified extends \local_o365\rest\o365api {
             }
             $userdata = $apiclient->get_user($o365user->objectid, $isguestuser);
 
-            if (\local_o365\rest\unified::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
+            if (static::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
                 $userdata['objectId'] = $userdata['id'];
             }
             $userobjectdata = (object)[
@@ -2089,10 +2125,9 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Create a team from group.
      *
-     * @param $groupobjectid
+     * @param string $groupobjectid
      *
      * @return mixed
-     * @throws \moodle_exception
      */
     public function create_team($groupobjectid) {
         $teamdata = [
@@ -2118,11 +2153,10 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Provision an app in a team.
      *
-     * @param $groupobjectid
-     * @param $appid
+     * @param string $groupobjectid
+     * @param string $appid
      *
      * @return bool
-     * @throws \moodle_exception
      */
     public function provision_app($groupobjectid, $appid) {
         $endpoint = '/teams/' . $groupobjectid . '/installedApps';
@@ -2143,10 +2177,9 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Return the ID of the app with the given internalId in the catalog.
      *
-     * @param $externalappid
+     * @param string $externalappid
      *
      * @return string|null
-     * @throws \moodle_exception
      */
     public function get_catalog_app_id($externalappid) {
         $moodleappid = null;
@@ -2166,10 +2199,9 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Return the ID of the general channel of the team.
      *
-     * @param $groupobjectid
+     * @param string $groupobjectid
      *
      * @return string|null
-     * @throws \moodle_exception
      */
     public function get_general_channel_id($groupobjectid) {
         $generalchannelid = null;
@@ -2189,13 +2221,12 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Add a Moodle tab for the Moodle course to a channel.
      *
-     * @param $groupobjectid
-     * @param $channelid
-     * @param $appid
-     * @param $moodlecourseid
+     * @param string $groupobjectid
+     * @param string $channelid
+     * @param string $appid
+     * @param int $moodlecourseid
      *
      * @return string
-     * @throws \coding_exception
      */
     public function add_moodle_tab_to_channel($groupobjectid, $channelid, $appid, $moodlecourseid) {
         global $CFG;
@@ -2212,13 +2243,12 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Add a tab of app to a channel.
      *
-     * @param $groupobjectid
-     * @param $channelid
-     * @param $appid
-     * @param $tabconfiguration
+     * @param string $groupobjectid
+     * @param string $channelid
+     * @param string $appid
+     * @param string $tabconfiguration
      *
      * @return string
-     * @throws \coding_exception
      */
     public function add_tab_to_channel($groupobjectid, $channelid, $appid, $tabconfiguration) {
         $endpoint = '/teams/' . $groupobjectid . '/channels/' . $channelid . '/tabs';
@@ -2273,8 +2303,8 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Update the name of a Team.
      *
-     * @param $objectid
-     * @param $displayname
+     * @param string $objectid
+     * @param string $displayname
      *
      * @return string
      */
@@ -2291,20 +2321,20 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Archive a Team.
      *
-     * @param $objectid
+     * @param string $objectid
      *
      * @return string
      */
     public function archive_team($objectid) {
         $endpoint = '/teams/' . $objectid . '/archive';
-        
+
         return $this->betaapicall('post', $endpoint);
     }
 
     /**
      * Get user timezone in Outlook settings.
      *
-     * @param $upn
+     * @param string $upn
      *
      * @return array|null
      */
