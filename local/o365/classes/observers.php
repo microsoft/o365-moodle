@@ -372,14 +372,27 @@ class observers {
             return true;
         }
 
-        try {
-            // Add user from course usergroup.
-            $apiclient = \local_o365\utils::get_api();
-            $apiclient->add_user_to_course_group($courseid, $userid);
-        } catch (\Exception $e) {
-            \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+        $adduser = false;
+        if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
+            // SDS course.
+            if (get_config('local_o365', 'sdsenrolmentenabled') && get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                $adduser = true;
+            }
+        } else {
+            $adduser = true;
         }
-        return false;
+
+        if ($adduser) {
+            try {
+                // Add user from course to usergroup.
+                $apiclient = \local_o365\utils::get_api();
+                $apiclient->add_user_to_course_group($courseid, $userid);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -392,7 +405,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
-        global $CFG;
+        global $CFG, $DB;
 
         require_once($CFG->libdir . '/enrollib.php');
 
@@ -413,20 +426,32 @@ class observers {
             return true;
         }
 
-        try {
-            // Remove user from course usergroup.
-            $apiclient = \local_o365\utils::get_api();
-            $apiclient->remove_user_from_course_group($courseid, $userid);
-        } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
+        $removeuser = false;
+        if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
+            // SDS course.
+            if (get_config('local_o365', 'sdsenrolmentenabled') && get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                $removeuser = true;
+            }
+        } else {
+            $removeuser = true;
         }
 
-        try {
-            // Remove owner from course usergroup.
-            $apiclient = \local_o365\utils::get_api();
-            $apiclient->remove_owner_from_course_group($courseid, $userid);
-        } catch (\Exception $e) {
-            \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
+        if ($removeuser) {
+            try {
+                // Remove user from course usergroup.
+                $apiclient = \local_o365\utils::get_api();
+                $apiclient->remove_user_from_course_group($courseid, $userid);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
+            }
+
+            try {
+                // Remove owner from course usergroup.
+                $apiclient = \local_o365\utils::get_api();
+                $apiclient->remove_owner_from_course_group($courseid, $userid);
+            } catch (\Exception $e) {
+                \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_deleted', $e);
+            }
         }
 
         return true;
@@ -438,10 +463,13 @@ class observers {
      * Tasks
      *     - remove user from microsoft team when they are suspended but still enrolled.
      *     - add user to microsoft team when they are unsuspended.
+     *
      * @param \core\event\user_enrolment_updated $event The triggered event.
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_updated(\core\event\user_enrolment_updated $event) {
+        global $DB;
+
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
@@ -453,38 +481,51 @@ class observers {
             return false;
         }
 
-        // Check if the user was suspended, or unsuspended. Add or remove them from the teams course group as appropriate.
-        if (!is_enrolled(\context_course::instance($courseid), $userid, null, true)) {
-            // We need to remove the user.
-            try {
-                // Remove user from course usergroup.
-                $apiclient = \local_o365\utils::get_api();
-                $apiclient->remove_user_from_course_group($courseid, $userid);
-            } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_updated', $e);
-            }
-
-            try {
-                // Remove owner from course usergroup.
-                $apiclient = \local_o365\utils::get_api();
-                $apiclient->remove_owner_from_course_group($courseid, $userid);
-            } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_updated', $e);
+        $changeuser = false;
+        if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
+            // SDS course.
+            if (get_config('local_o365', 'sdsenrolmentenabled') && get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                $changeuser = true;
             }
         } else {
-            // We need to add the user.
-            try {
-                // Add user from course usergroup.
-                $apiclient = \local_o365\utils::get_api();
-                $apiclient->add_user_to_course_group($courseid, $userid);
-            } catch (\Exception $e) {
-                \local_o365\utils::debug('Exception: '.$e->getMessage(), $e);
+            $changeuser = true;
+        }
+
+        if ($changeuser) {
+            // Check if the user was suspended, or unsuspended. Add or remove them from the teams course group as appropriate.
+            if (!is_enrolled(\context_course::instance($courseid), $userid, null, true)) {
+                // We need to remove the user.
+                try {
+                    // Remove user from course usergroup.
+                    $apiclient = \local_o365\utils::get_api();
+                    $apiclient->remove_user_from_course_group($courseid, $userid);
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_updated', $e);
+                }
+
+                try {
+                    // Remove owner from course usergroup.
+                    $apiclient = \local_o365\utils::get_api();
+                    $apiclient->remove_owner_from_course_group($courseid, $userid);
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug($e->getMessage(), 'handle_user_enrolment_updated', $e);
+                }
+            } else {
+                // We need to add the user.
+                try {
+                    // Add user from course usergroup.
+                    $apiclient = \local_o365\utils::get_api();
+                    $apiclient->add_user_to_course_group($courseid, $userid);
+                } catch (\Exception $e) {
+                    \local_o365\utils::debug('Exception: '.$e->getMessage(), $e);
+                }
+            }
+            if (!empty($e)) {
+                // We had some exception that will have been logged if debugmode is turned on in local_o365.
+                return false;
             }
         }
-        if (!empty($e)) {
-            // We had some exception that will have been logged if debugmode is turned on in local_o365.
-            return false;
-        }
+
         return true;
     }
 
@@ -624,9 +665,12 @@ class observers {
     }
 
     /**
-     * Handle course_deleted event
+     * Handle course_deleted event.
      *
      * Does the following:
+     *     - delete course connection records.
+     *     - delete SDS connection records.
+     *     - delete connect group if the option is enabled.
      *     - delete sharepoint sites and groups, and local sharepoint site data.
      *
      * @param \core\event\course_deleted $event The triggered event.
@@ -639,8 +683,17 @@ class observers {
         }
         $courseid = $event->objectid;
 
-        // delete course group
-        \local_o365\feature\usergroups\utils::delete_course_group($courseid);
+        // Delete course group mapping records.
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $courseid]);
+
+        // Delete SDS section record.
+        if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
+            $DB->delete_records('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid]);
+        } else {
+            if (get_config('local_o365', 'delete_group_on_course_deletion')) {
+                \local_o365\feature\usergroups\utils::delete_course_group($courseid);
+            }
+        }
 
         if (\local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
@@ -764,24 +817,36 @@ class observers {
                 $courseid = $event->courseid;
                 $roleid = $event->objectid;
 
-                if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
-                    $caller = 'local_o365\observer::handle_role_assigned';
+                $adduser = false;
+                if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
+                    // SDS course.
+                    if (get_config('local_o365', 'sdsenrolmentenabled') && get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                        $adduser = true;
+                    }
+                } else {
+                    $adduser = true;
+                }
 
-                    if (empty($userid) || empty($courseid)) {
-                        \local_o365\utils::debug("handle_role_assigned no userid $userid or course $courseid", $caller);
-                    } else {
-                        $apiclient = \local_o365\utils::get_api();
-                        $context = \context_course::instance($courseid);
-                        $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
-                        if (!empty($roles)) {
-                            $roles = array_keys($roles);
-                            if (in_array($roleid, $roles)) {
-                                $response = $apiclient->add_owner_to_course_group($courseid, $userid);
+                if ($adduser) {
+                    if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+                        $caller = 'local_o365\observer::handle_role_assigned';
+
+                        if (empty($userid) || empty($courseid)) {
+                            \local_o365\utils::debug("handle_role_assigned no userid $userid or course $courseid", $caller);
+                        } else {
+                            $apiclient = \local_o365\utils::get_api();
+                            $context = \context_course::instance($courseid);
+                            $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
+                            if (!empty($roles)) {
+                                $roles = array_keys($roles);
+                                if (in_array($roleid, $roles)) {
+                                    $response = $apiclient->add_owner_to_course_group($courseid, $userid);
+                                } else {
+                                    $response = $apiclient->add_user_to_course_group($courseid, $userid);
+                                }
                             } else {
                                 $response = $apiclient->add_user_to_course_group($courseid, $userid);
                             }
-                        } else {
-                            $response = $apiclient->add_user_to_course_group($courseid, $userid);
                         }
                     }
                 }
@@ -818,26 +883,38 @@ class observers {
                 $courseid = $event->courseid;
                 $roleid = $event->objectid;
 
-                if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
-                    $caller = 'local_o365\observer::handle_role_unassigned';
+                $removeuser = false;
+                if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
+                    // SDS course.
+                    if (get_config('local_o365', 'sdsenrolmentenabled') && get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                        $removeuser = true;
+                    }
+                } else {
+                    $removeuser = true;
+                }
 
-                    if (empty($userid) || empty($courseid)) {
-                        \local_o365\utils::debug("handle_role_unassigned no userid $userid or course $courseid",
-                            $caller);
-                    } else {
-                        $context = \context_course::instance($courseid);
-                        $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
-                        if (!empty($roles)) {
-                            $roles = array_keys($roles);
-                            $userroles = get_user_roles($context, $userid, false);
-                            $userroleids = array_column($userroles, 'roleid');
-                            unset($userroleids[$roleid]);
+                if ($removeuser) {
+                    if (\local_o365\feature\usergroups\utils::course_is_group_enabled($courseid)) {
+                        $caller = 'local_o365\observer::handle_role_unassigned';
 
-                            if (empty(array_intersect($roles, $userroleids))) {
-                                $apiclient = \local_o365\utils::get_api();
-                                $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
-                                // add the user back to the group as member
-                                $apiclient->add_user_to_course_group($courseid, $userid);
+                        if (empty($userid) || empty($courseid)) {
+                            \local_o365\utils::debug("handle_role_unassigned no userid $userid or course $courseid",
+                                $caller);
+                        } else {
+                            $context = \context_course::instance($courseid);
+                            $roles = get_roles_with_capability('local/o365:teamowner', CAP_ALLOW, $context);
+                            if (!empty($roles)) {
+                                $roles = array_keys($roles);
+                                $userroles = get_user_roles($context, $userid, false);
+                                $userroleids = array_column($userroles, 'roleid');
+                                unset($userroleids[$roleid]);
+
+                                if (empty(array_intersect($roles, $userroleids))) {
+                                    $apiclient = \local_o365\utils::get_api();
+                                    $response = $apiclient->remove_owner_from_course_group($courseid, $userid);
+                                    // add the user back to the group as member
+                                    $apiclient->add_user_to_course_group($courseid, $userid);
+                                }
                             }
                         }
                     }
