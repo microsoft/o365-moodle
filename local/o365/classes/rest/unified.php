@@ -464,11 +464,26 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a list of recently deleted groups.
      *
+     * @param string $skiptoken
      * @return array Array of returned information.
      */
-    public function list_deleted_groups() {
-        $response = $this->betaapicall('get', '/directory/deleteditems/Microsoft.Graph.Group');
-        $response = $this->process_apicall_response($response);
+    public function list_deleted_groups($skiptoken = '') {
+        $endpoint = '/directory/deleteditems/Microsoft.Graph.Group';
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->betaapicall('get', $endpoint);
+        $response = $this->process_apicall_response($response, ['value' => null]);
+
         return $response;
     }
 
@@ -508,6 +523,7 @@ class unified extends \local_o365\rest\o365api {
 
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
+
         return $this->process_apicall_response($response, $expectedparams);
     }
 
@@ -515,35 +531,62 @@ class unified extends \local_o365\rest\o365api {
      * Get a list of group owners.
      *
      * @param $groupobjectid The object ID of the group.
-     *
+     * @param string $skiptoken
      * @return array|null
      */
-    public function get_group_owners($groupobjectid) {
+    public function get_group_owners($groupobjectid, $skiptoken = '') {
         $endpoint = '/groups/' . $groupobjectid . '/owners';
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
+
         return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
-     * Get a file by it's file id.
+     * Return the list of files in a group.
      *
+     * @param string $groupid
      * @param string $parentid The parent id to use.
+     * @param string $skiptoken
      * @return array|null Returned response, or null if error.
      */
-    public function get_group_files($groupid, $parentid = '') {
+    public function get_group_files($groupid, $parentid = '', $skiptoken = '') {
         if (!empty($parentid) && $parentid !== '/') {
             $endpoint = "/groups/{$groupid}/drive/items/{$parentid}/children";
         } else {
             $endpoint = "/groups/{$groupid}/drive/root/children";
         }
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
-     * Get a file's metadata by it's file id.
+     * Get a file's metadata by its file id.
      *
      * @param string $fileid The file's ID.
      * @return string The file's content.
@@ -642,7 +685,7 @@ class unified extends \local_o365\rest\o365api {
      * @param string $parentid The parent Id.
      * @param string $filename The file's name.
      * @param string $content The file's content.
-     * @return file upload response.
+     * @return string file upload response.
      */
     public function create_group_file($groupid, $parentid = '', $filename, $content, $contenttype = 'text/plain') {
         $filename = rawurlencode($filename);
@@ -811,18 +854,32 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get user groups by passing user AD id
-     * @param $userobjectid - user AD id
+     * Get user groups by passing user AD id.
+     *
+     * @param string $userobjectid - user AD id
+     * @param string $skiptoken
      * @return array|null
      */
-    public function get_user_groups($userobjectid) {
+    public function get_user_groups($userobjectid, $skiptoken = '') {
         $endpoint = "users/$userobjectid/transitiveMemberOf/microsoft.graph.group";
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         if ($this->httpclient->info['http_code'] == 200) {
             $result = $this->process_apicall_response($response, ['value' => null]);
-            return $result['value'];
+            return $result;
         } else {
-            return [];
+            return ['value' => null];
         }
     }
 
@@ -830,26 +887,53 @@ class unified extends \local_o365\rest\o365api {
      * Get user groups, including transitive groups, by passing user AD ID.
      *
      * @param $userobjectid
-     *
+     * @param string $skiptoken
      * @return mixed
      */
-    public function get_user_transitive_groups($userobjectid) {
+    public function get_user_transitive_groups($userobjectid, $skiptoken = '') {
         $endpoint = "users/$userobjectid/getMemberGroups";
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('post', $endpoint, json_encode(['securityEnabledOnly' => false]));
         $result = $this->process_apicall_response($response, ['value' => null]);
-        return $result['value'];
+
+        return $result;
     }
 
     /**
      * Get user teams by passing user AD id
      * @param $userobjectid - user AD id
+     * @param string $skiptoken
      * @return array|null
      */
-    public function get_user_teams($userobjectid) {
+    public function get_user_teams($userobjectid, $skiptoken = '') {
         $endpoint = "users/$userobjectid/joinedTeams";
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         $result = $this->process_apicall_response($response, ['value' => null]);
-        return $result['value'];
+
+        return $result;
     }
 
     /**
@@ -909,11 +993,26 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get a list of recently deleted users in the last 30 days.
      *
+     * @param string $skiptoken
      * @return array Array of returned information.
      */
-    public function list_deleted_users() {
-        $response = $this->betaapicall('get', '/directory/deleteditems/Microsoft.Graph.User');
-        $response = $this->process_apicall_response($response);
+    public function list_deleted_users($skiptoken = '') {
+        $endpoint = '/directory/deleteditems/Microsoft.Graph.User';
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+        
+        $response = $this->betaapicall('get', $endpoint);
+        $response = $this->process_apicall_response($response, ['value' => null]);
+
         return $response;
     }
 
@@ -934,13 +1033,24 @@ class unified extends \local_o365\rest\o365api {
      * Get a list of the user's o365 calendars.
      *
      * @param string $upn The user's userPrincipalName
+     * @param string $skiptoken
      * @return array|null Returned response, or null if error.
      */
-    public function get_calendars($upn) {
-        if (!$upn) {
-            return false;
+    public function get_calendars($upn, $skiptoken = '') {
+        $endpoint = '/users/' . $upn . '/calendars';
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
         }
-        $response = $this->apicall('get', '/users/' . $upn . '/calendars');
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
         foreach ($return['value'] as $i => $calendar) {
@@ -1108,18 +1218,32 @@ class unified extends \local_o365\rest\o365api {
      * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
      * @param string $since datetime date('c') to get events since.
      * @param string $upn user's userPrincipalName
+     * @param string $skiptoken
      * @return array Array of events.
      */
-    public function get_events($calendarid, $since, $upn) {
+    public function get_events($calendarid, $since, $upn, $skiptoken = '') {
         \core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
             '/users/' . $upn . '/calendar/events';
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
         if (!empty($since)) {
             // Pass datetime in UTC, regardless of Moodle timezone setting.
-            $sincedt = new \DateTime('@'.$since);
+            $sincedt = new \DateTime('@' . $since);
             $since = urlencode($sincedt->format('Y-m-d\TH:i:s\Z'));
-            $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
+            $odataqueries[] = '$filter=CreatedDateTime%20ge%20' . $since;
         }
+
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         $return = $this->process_apicall_response($response, $expectedparams);
@@ -1246,34 +1370,60 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get a file by it's file id.
+     * List a user's files.
      *
      * @param string $parentid The parent id to use.
      * @param string $o365userid user's Office 365 account object ID
-     *
+     * @param string $skiptoken
      * @return array|null Returned response, or null if error.
      */
-    public function get_files($parentid = '', $o365userid) {
+    public function get_user_files($parentid = '', $o365userid, $skiptoken = '') {
         if (!empty($parentid) && $parentid !== '/') {
             $endpoint = "/users/{$o365userid}/drive/items/{$parentid}/children";
         } else {
             $endpoint = "/users/{$o365userid}/drive/root/children";
         }
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
         $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
 
     /**
-     * Get a files from trendingAround api.
+     * Get files from trendingAround api.
      *
-     * @param string $parentid The parent id to use.
      * @param string $upn user's userPrincipalName
+     * @param string $skiptoken
      * @return array|null Returned response, or null if error.
      */
-    public function get_trending_files($parentid = '', $upn) {
-        $response = $this->betaapicall('get', '/users/' . $upn . '/trendingAround');
+    public function get_trending_files($upn, $skiptoken = '') {
+        $endpoint = '/users/' . $upn . '/trendingAround';
+
+        $odataqueries = [];
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->betaapicall('get', $endpoint);
         $expectedparams = ['value' => null];
+
         return $this->process_apicall_response($response, $expectedparams);
     }
 

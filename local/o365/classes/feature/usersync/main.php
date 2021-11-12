@@ -404,14 +404,28 @@ class main {
      *
      * @return string
      */
-    public function get_user_groups($userobjectid) {
+    public function get_user_group_names($userobjectid) {
         $apiclient = $this->construct_user_api();
-        $results = $apiclient->get_user_groups($userobjectid);
-        $groups = [];
-        foreach ($results as $result) {
-            $groups[] = $result['displayName'];
+        $usergroupsresults = $apiclient->get_user_groups($userobjectid);
+        $usergroups = $usergroupsresults['value'];
+        while (!empty($usergroupsresults['@odata.nextLink'])) {
+            $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $usergroupsresults = $apiclient->get_user_groups($userobjectid);
+                    $usergroups = array_merge($usergroups, $usergroupsresults['value']);
+                }
+            }
         }
-        return join(',', $groups);
+
+        $groupnames = [];
+        foreach ($usergroups as $usergroup) {
+            $groupnames[] = $usergroup['displayName'];
+        }
+
+        return join(',', $groupnames);
     }
 
     /**
@@ -423,12 +437,27 @@ class main {
      */
     public function get_user_teams($userobjectid) {
         $apiclient = $this->construct_user_api();
-        $results = $apiclient->get_user_teams($userobjectid);
-        $teams = [];
-        foreach ($results as $result) {
-            $teams[] = $result['displayName'];
+
+        $userteamsresults = $apiclient->get_user_teams($userobjectid);
+        $userteams = $userteamsresults['value'];
+
+        while (!empty($userteamsresults['@odata.nextLink'])) {
+            $nextlink = parse_url($userteamsresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $userteamsresults = $apiclient->get_user_teams($userobjectid, $query['$skiptoken']);
+                    $userteams = array_merge($userteams, $userteamsresults['value']);
+                }
+            }
         }
-        return join(',', $teams);
+
+        $teamnames = [];
+        foreach ($userteams as $userteam) {
+            $teamnames[] = $userteam['displayName'];
+        }
+        return join(',', $teamnames);
     }
 
     /**
@@ -533,7 +562,7 @@ class main {
                     $user->$localfield = $usersync->get_user_manager($userobjectid);
                     break;
                 case 'groups':
-                    $user->$localfield = $usersync->get_user_groups($userobjectid);
+                    $user->$localfield = $usersync->get_user_group_names($userobjectid);
                     break;
                 case 'teams':
                     $user->$localfield = $usersync->get_user_teams($userobjectid);
@@ -631,8 +660,21 @@ class main {
                     utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
                     return false;
                 }
-                $usersgroups = $apiclient->get_user_transitive_groups($aaddata['id']);
-                foreach ($usersgroups as $usergroup) {
+                $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
+                $usergroups = $usergroupsresults['value'];
+                while (!empty($usergroupsresults['@odata.nextLink'])) {
+                    $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
+                    if (isset($nextlink['query'])) {
+                        $query = [];
+                        parse_str($nextlink['query'], $query);
+                        if (isset($query['$skiptoken'])) {
+                            $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
+                            $usergroups = array_merge($usergroups, $usergroupsresults['value']);
+                        }
+                    }
+                }
+
+                foreach ($usergroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
                         return true;
                     }
@@ -1368,28 +1410,38 @@ class main {
 
         try {
             $deletedusersids = [];
-            $deletedusers = $apiclient->list_deleted_users();
-            if (is_array($deletedusers) && !empty($deletedusers['value'])) {
-                foreach ($deletedusers['value'] as $deleteduser) {
-                    if (!empty($deleteduser) && isset($deleteduser['id'])) {
-                        // Check for synced user.
-                        $sql = 'SELECT u.*
-                                  FROM {user} u
-                                  JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                                 WHERE u.mnethostid = ?
-                                   AND u.deleted = ?
-                                   AND u.suspended = ?
-                                   AND u.auth = ?
-                                   AND obj.objectid = ? ';
-                        $params = ['user', $CFG->mnet_localhost_id, '0', '0', 'oidc', $deleteduser['id']];
-                        $synceduser = $DB->get_record_sql($sql, $params);
-                        if (!empty($synceduser)) {
-                            $synceduser->suspended = 1;
-                            user_update_user($synceduser, false);
-                            $this->mtrace($synceduser->username . ' was deleted in Azure, the matching account is suspended.');
-                        }
-                        $deletedusersids[] = $deleteduser['id'];
+            $deleteduserresults = $apiclient->list_deleted_users();
+            $deletedusers = $deleteduserresults['value'];
+            while (!empty($deleteduserresults['@odata.nextLink'])) {
+                $nextlink = parse_url($deleteduserresults['@odata.nextLink']);
+                if (isset($nextlink['query'])) {
+                    $query = [];
+                    parse_str($nextlink['query'], $query);
+                    if (isset($query['$skiptoken'])) {
+                        $deleteduserresults = $apiclient->list_deleted_users($query['$skiptoken']);
+                        $deletedusers = array_merge($deletedusers, $deleteduserresults['value']);
                     }
+                }
+            }
+            foreach ($deletedusers as $deleteduser) {
+                if (!empty($deleteduser) && isset($deleteduser['id'])) {
+                    // Check for synced user.
+                    $sql = 'SELECT u.*
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+                             WHERE u.mnethostid = ?
+                               AND u.deleted = ?
+                               AND u.suspended = ?
+                               AND u.auth = ?
+                               AND obj.objectid = ? ';
+                    $params = ['user', $CFG->mnet_localhost_id, '0', '0', 'oidc', $deleteduser['id']];
+                    $synceduser = $DB->get_record_sql($sql, $params);
+                    if (!empty($synceduser)) {
+                        $synceduser->suspended = 1;
+                        user_update_user($synceduser, false);
+                        $this->mtrace($synceduser->username . ' was deleted in Azure, the matching account is suspended.');
+                    }
+                    $deletedusersids[] = $deleteduser['id'];
                 }
             }
 
@@ -1466,7 +1518,7 @@ class main {
         }
 
         if ($validaaduserids) {
-            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
+            [$objectidsql, $objectidparams] = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
             $query = 'SELECT u.*
                         FROM {user} u
                         JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id
