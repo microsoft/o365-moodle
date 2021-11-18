@@ -63,12 +63,3 @@
   margin: 1rem auto 2rem; }
 .block_microsoft hr {
   margin: 1rem 0 !important; }
-
-.block_microsoft_icon {
-  width: 32px;
-  height: 32px;
-  margin: 0;
-  padding: 0; }
-.mform .form-inline label {
-  justify-content: flex-start;
-  width: 100%;}
