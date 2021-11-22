@@ -43,9 +43,8 @@ class o365 extends base {
 
         try {
             if (\local_o365\rest\unified::is_configured() === true) {
-                $apiclient = \local_o365\rest\unified::instance_for_user();
-                $o365userid = \local_o365\utils::get_o365_userid($USER->id);
-                $apimethod = '/users/' . $o365userid . '/onenote' .$apimethod;
+                $apiclient = \local_o365\rest\unified::instance_for_user($USER->id);
+                $apimethod = '/me/onenote' . $apimethod;
             } else {
                 $apiclient = \local_o365\rest\onenote::instance_for_user($USER->id);
             }
@@ -64,7 +63,7 @@ class o365 extends base {
     public function geturl($url, $options = array()) {
         global $USER;
         $apiclient = (\local_o365\rest\unified::is_configured() === true)
-            ? \local_o365\rest\unified::instance_for_user()
+            ? \local_o365\rest\unified::instance_for_user($USER->id)
             : \local_o365\rest\onenote::instance_for_user($USER->id);
         return (!empty($apiclient)) ? $apiclient->geturl($url, $options) : '';
     }
