@@ -159,7 +159,7 @@ class subscriptions extends \moodleform {
         foreach (['site', 'user'] as $caltype) {
             $formkey = $caltype.'cal';
             $calchecked = false;
-            if ($fromform->settingcal) {
+            if (!empty($fromform->settingcal)) {
                 if (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) {
                     $calchecked = true;
                 }
