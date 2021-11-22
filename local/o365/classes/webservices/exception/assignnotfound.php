@@ -25,6 +25,8 @@
 
 namespace local_o365\webservices\exception;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Exception thrown when an associated assignment record is not found for a given course module.
  */

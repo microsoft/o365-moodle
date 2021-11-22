@@ -25,6 +25,8 @@
 
 namespace local_o365\webservices;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Get help card for user.
  */

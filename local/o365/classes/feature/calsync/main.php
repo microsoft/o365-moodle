@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Calendar sync feature.
  */

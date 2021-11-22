@@ -25,8 +25,12 @@
 
 namespace local_o365\feature\calsync\form;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
+
 require_once($CFG->dirroot.'/lib/formslib.php');
+
 \MoodleQuickForm::registerElementType('localo365calendar',
     "$CFG->dirroot/local/o365/classes/feature/calsync/form/element/calendar.php",
     '\local_o365\feature\calsync\form\element\calendar');

@@ -25,6 +25,10 @@
 
 namespace local_o365\bot\intents;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot.'/mod/assign/locallib.php');
 
 /**

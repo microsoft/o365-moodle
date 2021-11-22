@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\sharepointcustom;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Utility functions for the SharePoint feature.
  */

@@ -25,6 +25,8 @@
 
 namespace local_o365\task;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Scheduled task to trigger sending messages from Moodle to user via the bot.
  */

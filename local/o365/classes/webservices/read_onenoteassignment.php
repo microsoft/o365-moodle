@@ -25,6 +25,10 @@
 
 namespace local_o365\webservices;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot.'/course/modlib.php');
 
 /**

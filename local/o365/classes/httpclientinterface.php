@@ -25,6 +25,8 @@
 
 namespace local_o365;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * HTTP Client Interface.
  */

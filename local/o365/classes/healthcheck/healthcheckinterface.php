@@ -25,6 +25,8 @@
 
 namespace local_o365\healthcheck;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Interface for all health checks.
  */

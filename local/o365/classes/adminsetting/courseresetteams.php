@@ -27,6 +27,10 @@ namespace local_o365\adminsetting;
 
 use admin_setting;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
