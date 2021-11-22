@@ -25,6 +25,8 @@
 
 namespace local_o365\task;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Initialize SharePoint site.
  */

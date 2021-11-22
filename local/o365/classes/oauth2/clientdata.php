@@ -25,6 +25,8 @@
 
 namespace local_o365\oauth2;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class representing oauth2 client data.
  */

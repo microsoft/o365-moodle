@@ -35,6 +35,10 @@ use local_o365\rest\outlook;
 use local_o365\rest\unified;
 use local_o365\utils;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');

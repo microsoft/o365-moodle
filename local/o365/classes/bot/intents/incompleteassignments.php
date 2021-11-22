@@ -25,6 +25,8 @@
 
 namespace local_o365\bot\intents;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class incompleteassignments implements bot intent interface for teacher-incomplete-assignments.
  */

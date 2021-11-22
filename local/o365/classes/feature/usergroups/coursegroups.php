@@ -27,6 +27,10 @@ namespace local_o365\feature\usergroups;
 
 use context_course;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 define('API_CALL_RETRY_LIMIT', 5);
 
 /**

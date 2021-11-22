@@ -30,6 +30,8 @@ use core\task\scheduled_task;
 use local_o365\feature\usersync\main;
 use local_o365\utils;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Scheduled task to sync users with Azure AD.
  */

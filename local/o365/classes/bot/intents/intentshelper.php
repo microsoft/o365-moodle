@@ -25,6 +25,10 @@
 
 namespace local_o365\bot\intents;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 define("INTENTDATEFORMAT", "d/m/Y"); // Date format used in bot messages.
 define("INTENTTIMEFORMAT", "H:i"); // Time format used in bot messages.
 

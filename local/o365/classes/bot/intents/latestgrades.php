@@ -25,6 +25,8 @@
 
 namespace local_o365\bot\intents;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class latestgrades implements bot intent interface for student-latest-grades intent.
  */

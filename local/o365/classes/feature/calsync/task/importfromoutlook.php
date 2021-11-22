@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync\task;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Scheduled task to check for new o365 events and sync them into Moodle.
  */

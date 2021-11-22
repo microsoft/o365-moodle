@@ -25,6 +25,8 @@
 
 namespace local_o365\oauth2;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Represents an oauth2 token from the system API user.
  */

@@ -25,6 +25,10 @@
 
 namespace local_o365\feature\usergroups;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**

@@ -30,6 +30,8 @@ use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\writer;
 
+defined('MOODLE_INTERNAL') || die();
+
 interface local_o365_userlist extends \core_privacy\local\request\core_userlist_provider {
 };
 

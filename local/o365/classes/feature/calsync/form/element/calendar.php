@@ -25,6 +25,10 @@
 
 namespace local_o365\feature\calsync\form\element;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once("$CFG->libdir/form/advcheckbox.php");
 
 /**

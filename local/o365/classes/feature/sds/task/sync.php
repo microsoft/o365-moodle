@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\sds\task;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Scheduled task to run school data sync sync.
  */

@@ -25,6 +25,8 @@
 
 namespace local_o365\bot;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class botintent - general class for accessing specific intent based on params
  *

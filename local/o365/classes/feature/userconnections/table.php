@@ -24,6 +24,10 @@
 
 namespace local_o365\feature\userconnections;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->libdir.'/tablelib.php');
 
 /**

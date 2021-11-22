@@ -25,6 +25,8 @@
 
 namespace local_o365\tests;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * A mock sharepoint API class.
  *

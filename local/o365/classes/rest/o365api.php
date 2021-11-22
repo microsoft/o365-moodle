@@ -25,6 +25,8 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Abstract base class for all o365 REST api classes.
  */

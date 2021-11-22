@@ -25,6 +25,8 @@
 
 namespace local_o365\bot\intents;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Interface intentinterface defines constants default for all intents and  methods that all intents must implement.
  */
