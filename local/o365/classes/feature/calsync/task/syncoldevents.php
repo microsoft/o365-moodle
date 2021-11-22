@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync\task;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * AdHoc task to sync existing Moodle calendar events with Microsoft 365.
  *

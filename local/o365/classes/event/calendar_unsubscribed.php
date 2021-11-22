@@ -25,6 +25,8 @@
 
 namespace local_o365\event;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Event fired whenever a user unsubscribes from a calendar.
  */

@@ -25,6 +25,8 @@
 
 namespace local_o365\healthcheck;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Checks that the system API user can communicate with Microsoft 365.
  */

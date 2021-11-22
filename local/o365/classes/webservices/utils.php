@@ -27,6 +27,8 @@ namespace local_o365\webservices;
 
 use \local_o365\webservices\exception as exception;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Webservices utilities.
  */

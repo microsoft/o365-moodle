@@ -25,6 +25,8 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * API client for school data sync.
  */

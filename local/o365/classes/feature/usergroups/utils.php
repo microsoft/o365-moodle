@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\usergroups;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * An utility class for the group / team sync feature.
  */

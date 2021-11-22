@@ -25,6 +25,8 @@
 
 namespace local_o365\adminsetting;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * A tab in the plugin configuration page.
  */

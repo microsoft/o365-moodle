@@ -25,6 +25,8 @@
 
 namespace local_o365\webservices\exception;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Exception thrown when a module that does not exist is called.
  */

@@ -25,6 +25,8 @@
 
 namespace local_o365\bot\intents;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class recentstudents implements bot intent interface for teacher-recent-students intent.
  */

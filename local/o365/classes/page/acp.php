@@ -26,6 +26,8 @@
 
 namespace local_o365\page;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Admin control panel page.
  */

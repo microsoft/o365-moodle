@@ -26,6 +26,8 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Client for unified Microsoft 365 API.
  */
