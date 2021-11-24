@@ -176,7 +176,7 @@ $string['ucp_options'] = 'Opções';
 
 $string['assignment'] = 'Tarefa';
 $string['course_assignment_submitted_due'] = 'Curso - {$a->course} &nbsp; |  &nbsp; Tarefa -{$a->assignment} <br />
-                        Enviado em - {$a->submittedon} &nbsp; |  &nbsp; Data de entrega - {$a->duedate}';
+Enviado em - {$a->submittedon} &nbsp; |  &nbsp; Data de entrega - {$a->duedate}';
 $string['due_date'] = 'Data de entrega - {$a}';
 $string['grade_date'] = 'Nota - {$a->grade} &nbsp; | &nbsp; Data - {$a->date}';
 $string['help_message'] = 'Olá! Eu sou seu assistente Moodle. Você pode fazer as seguintes perguntas:';

@@ -65,13 +65,15 @@ class main {
      * @throws \moodle_exception
      */
     public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
-        $this->clientdata = (!empty($clientdata))
-            ? $clientdata
-            : clientdata::instance_from_oidc();
+        if (!PHPUNIT_TEST) {
+            $this->clientdata = (!empty($clientdata))
+                ? $clientdata
+                : clientdata::instance_from_oidc();
 
-        $this->httpclient = (!empty($httpclient))
-            ? $httpclient
-            : new httpclient();
+            $this->httpclient = (!empty($httpclient))
+                ? $httpclient
+                : new httpclient();
+        }
     }
 
     /**
@@ -504,7 +506,47 @@ class main {
 
         require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
-        $fieldmappings = auth_oidc_get_field_mappings();
+        if (PHPUNIT_TEST) {
+            $fieldmappings = [
+                'firstname' => [
+                    'field_map' => 'givenName',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'lastname' => [
+                    'field_map' => 'surname',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'email' => [
+                    'field_map' => 'mail',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'idnumber' => [
+                    'field_map' => 'userPrincipalName',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'city' => [
+                    'field_map' => 'city',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'country' => [
+                    'field_map' => 'country',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'department' => [
+                    'field_map' => 'department',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+            ];
+        } else {
+            $fieldmappings = auth_oidc_get_field_mappings();
+        }
 
         if (unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
             $objectidfieldname = 'id';
@@ -549,36 +591,38 @@ class main {
                 }
             }
 
-            switch ($remotefield) {
-                case 'manager':
-                    $user->$localfield = $usersync->get_user_manager($userobjectid);
-                    break;
-                case 'groups':
-                    $user->$localfield = $usersync->get_user_groups($userobjectid);
-                    break;
-                case 'teams':
-                    $user->$localfield = $usersync->get_user_teams($userobjectid);
-                    break;
-                case 'roles':
-                    $user->$localfield = $usersync->get_user_roles($userobjectid);
-                    break;
-                case 'preferredName':
-                    if (!isset($aaddata[$remotefield])) {
-                        if (stripos($aaddata['userPrincipalName'], '_ext_') !== false) {
-                            $user->$localfield = $usersync->get_preferred_name($userobjectid);
-                        }
-                    }
-                    break;
-                default:
-                    if (substr($remotefield, 0, 18) == 'extensionAttribute') {
-                        $extensionattributeid = substr($remotefield, 18);
-                        if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
-                            if (isset($aaddata['onPremisesExtensionAttributes']) &&
-                                isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
-                                $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+            if (!PHPUNIT_TEST) {
+                switch ($remotefield) {
+                    case 'manager':
+                        $user->$localfield = $usersync->get_user_manager($userobjectid);
+                        break;
+                    case 'groups':
+                        $user->$localfield = $usersync->get_user_groups($userobjectid);
+                        break;
+                    case 'teams':
+                        $user->$localfield = $usersync->get_user_teams($userobjectid);
+                        break;
+                    case 'roles':
+                        $user->$localfield = $usersync->get_user_roles($userobjectid);
+                        break;
+                    case 'preferredName':
+                        if (!isset($aaddata[$remotefield])) {
+                            if (stripos($aaddata['userPrincipalName'], '_ext_') !== false) {
+                                $user->$localfield = $usersync->get_preferred_name($userobjectid);
                             }
                         }
-                    }
+                        break;
+                    default:
+                        if (substr($remotefield, 0, 18) == 'extensionAttribute') {
+                            $extensionattributeid = substr($remotefield, 18);
+                            if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
+                                if (isset($aaddata['onPremisesExtensionAttributes']) &&
+                                    isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
+                                    $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+                                }
+                            }
+                        }
+                }
             }
         }
 
@@ -695,6 +739,7 @@ class main {
         global $CFG, $DB;
 
         $creationallowed = $this->check_usercreationrestriction($aaddata);
+
         if ($creationallowed !== true) {
             mtrace('Cannot create user because they do not meet the configured user creation restrictions.');
             return false;
