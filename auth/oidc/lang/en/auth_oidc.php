@@ -30,7 +30,8 @@ $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable identity providers.';
 
 $string['cfg_authendpoint_key'] = 'Authorization Endpoint';
-$string['cfg_authendpoint_desc'] = 'The URI of the Authorization endpoint from your identity provider to use.';
+$string['cfg_authendpoint_desc'] = 'The URI of the Authorization endpoint from your identity provider to use.<br/>
+Note if the site is to be configured to allow users from other tenants to access, tenant specific authorization endpoint cannot be used.';
 $string['cfg_autoappend_key'] = 'Auto-Append';
 $string['cfg_autoappend_desc'] = 'Automatically append this string when logging in users using the "Resource Owner Password Credentials" authentication method. This is useful when your identity provider requires a common domain, but don\'t want to require users to type it in when logging in. For example, if the full OpenID Connect user is "james@example.com" and you enter "@example.com" here, the user will only have to enter "james" as their username. <br /><b>Note:</b> In the case where conflicting usernames exist - i.e. a Moodle user exists wth the same name, the priority of the authentication plugin is used to determine which user wins out.';
 $string['cfg_clientid_key'] = 'Client ID';
@@ -80,7 +81,8 @@ $string['cfg_opname_desc'] = 'This is an end-user-facing label that identifies t
 $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI". Your OpenID Connect identity provider should ask for this when registering Moodle as a client. <br /><b>NOTE:</b> You must enter this in your OpenID Connect provider *exactly* as it appears here. Any difference will prevent logins using OpenID Connect.';
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
-$string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
+$string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.<br/>
+Note if the site is to be configured to allow users from other tenants to access, tenant specific token endpoint cannot be used.';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect provider will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
 $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
