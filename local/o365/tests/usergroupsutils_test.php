@@ -37,7 +37,7 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
-    protected function setUp() {
+    protected function setUp() : void {
         parent::setUp();
         $this->resetAfterTest(true);
     }
@@ -75,13 +75,13 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
 
         $DB->delete_records('config_plugins', ['name' => 'createteams', 'plugin' => 'local_o365']);
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
-        $this->assertInternalType('array', $actual);
+        $this->assertIsArray($actual);
         $this->assertEmpty($actual);
 
         set_config('createteams', 'off', 'local_o365');
         set_config('usergroupcustom', json_encode([1 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
-        $this->assertInternalType('array', $actual);
+        $this->assertIsArray($actual);
         $this->assertEmpty($actual);
 
         set_config('createteams', 'onall', 'local_o365');
@@ -92,7 +92,7 @@ class local_o365_usergroupsutils_testcase extends \externallib_advanced_testcase
         set_config('createteams', 'oncustom', 'local_o365');
         set_config('usergroupcustom', json_encode([1 => 1]), 'local_o365');
         $actual = \local_o365\feature\usergroups\utils::get_enabled_courses();
-        $this->assertInternalType('array', $actual);
+        $this->assertIsArray($actual);
         $this->assertEquals([1], $actual);
     }
 

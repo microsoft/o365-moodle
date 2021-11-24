@@ -52,7 +52,7 @@ class local_o365_azuread_testcase extends \advanced_testcase {
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
-    protected function setUp() {
+    protected function setUp() : void {
         parent::setUp();
         $this->resetAfterTest(true);
     }

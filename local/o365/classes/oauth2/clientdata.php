@@ -109,18 +109,18 @@ class clientdata {
     }
 
     /**
-     * Get the registerd client ID.
+     * Get the registered client ID.
      *
-     * @return string The registerd client ID.
+     * @return string The registered client ID.
      */
     public function get_clientid() {
         return $this->clientid;
     }
 
     /**
-     * Get the registered client secreet.
+     * Get the registered client secret.
      *
-     * @return string The registered client secreet.
+     * @return string The registered client secret.
      */
     public function get_clientsecret() {
         return $this->clientsecret;

@@ -65,8 +65,8 @@ class assignsubmission_onenote_events_testcase extends advanced_testcase {
     /**
      * Setup all the various parts of an assignment activity including creating a file submission.
      */
-    protected function setUp() {
-        return true; // Need to update test to not contact external services.
+    protected function setUp():void {
+        return ; // Need to update test to not contact external services.
         $this->user = $this->getDataGenerator()->create_user();
         $this->course = $this->getDataGenerator()->create_course();
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
