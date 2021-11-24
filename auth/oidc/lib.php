@@ -158,7 +158,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
 
     $mismatchedtokens = [];
 
-    $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusernmae, tok.oidcusername AS oidcusername,
+    $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusername, tok.oidcusername AS oidcusername,
                    tok.oidcuniqid as oidcuniqid, u.id AS muserid, u.username AS musername
               FROM {auth_oidc_token} tok
               JOIN {user} u ON u.id = tok.userid
