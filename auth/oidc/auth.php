@@ -284,23 +284,35 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @return bool
      */
     public function postlogout_hook($user) {
-        global $CFG;
+        global $CFG, $DB;
 
         $singlesignoutsetting = get_config('auth_oidc', 'single_sign_off');
 
         if ($singlesignoutsetting) {
-            $logouturl = get_config('auth_oidc', 'logouturi');
-            if (!$logouturl) {
-                $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
-                    urlencode($CFG->wwwroot);
-            } else {
-                if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
-                    preg_match("/\/oauth2\/logout$/", $logouturl)) {
-                    $logouturl .= '?post_logout_redirect_uri=' . urlencode($CFG->wwwroot);
+            $redirect = false;
+
+            if ($user->auth == 'oidc') {
+                $redirect = true;
+            } else if (auth_oidc_is_local_365_installed()) {
+                if ($DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
+                    $redirect = true;
                 }
             }
 
-            redirect($logouturl);
+            if ($redirect) {
+                $logouturl = get_config('auth_oidc', 'logouturi');
+                if (!$logouturl) {
+                    $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
+                        urlencode($CFG->wwwroot);
+                } else {
+                    if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
+                        preg_match("/\/oauth2\/logout$/", $logouturl)) {
+                        $logouturl .= '?post_logout_redirect_uri=' . urlencode($CFG->wwwroot);
+                    }
+                }
+
+                redirect($logouturl);
+            }
         }
 
         return true;
