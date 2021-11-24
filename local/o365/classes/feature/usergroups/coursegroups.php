@@ -279,21 +279,33 @@ class coursegroups {
     public function restore_group($objectrecid, $objectid, $objectrecmetadata) {
         global $DB;
 
-        $deletedgroups = $this->graphclient->list_deleted_groups();
-        if (is_array($deletedgroups) && !empty($deletedgroups['value'])) {
-            foreach ($deletedgroups['value'] as $deletedgroup) {
-                if (!empty($deletedgroup) && isset($deletedgroup['id']) && $deletedgroup['id'] == $objectid) {
-                    // Deleted group found.
-                    $this->graphclient->restore_deleted_group($objectid);
-                    $updatedobjectrec = new \stdClass;
-                    $updatedobjectrec->id = $objectrecid;
-                    unset($objectrecmetadata['softdelete']);
-                    $updatedobjectrec->metadata = json_encode($objectrecmetadata);
-                    $DB->update_record('local_o365_objects', $updatedobjectrec);
-                    return true;
+        $deletedgroupsresults = $this->graphclient->list_deleted_groups();
+        $deletedgroups = $deletedgroupsresults['value'];
+        while (!empty($deletedgroupsresults['@odata.nextLink'])) {
+            $nextlink = parse_url($deletedgroupsresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $deletedgroupsresults = $this->graphclient->list_deleted_groups($query['$skiptoken']);
+                    $deletedgroups = array_merge($deletedgroups, $deletedgroupsresults['value']);
                 }
             }
         }
+
+        foreach ($deletedgroups as $deletedgroup) {
+            if (!empty($deletedgroup) && isset($deletedgroup['id']) && $deletedgroup['id'] == $objectid) {
+                // Deleted group found.
+                $this->graphclient->restore_deleted_group($objectid);
+                $updatedobjectrec = new \stdClass;
+                $updatedobjectrec->id = $objectrecid;
+                unset($objectrecmetadata['softdelete']);
+                $updatedobjectrec->metadata = json_encode($objectrecmetadata);
+                $DB->update_record('local_o365_objects', $updatedobjectrec);
+                return true;
+            }
+        }
+
         // No deleted group found. May have expired. Delete our record.
         $DB->delete_records('local_o365_objects', ['id' => $objectrecid]);
         return false;
@@ -529,10 +541,8 @@ class coursegroups {
         $members = $this->get_group_members($groupobjectid);
         $currentmembers = array_keys($members);
 
-        $owners = $this->graphclient->get_group_owners($groupobjectid);
-        foreach ($owners['value'] as $owner) {
-            $currentowners[] = $owner['id'];
-        }
+        $owners = $this->get_group_owners($groupobjectid);
+        $currentowners = array_keys($owners);
 
         // Get intended group members.
         $intendedteamownerids = static::get_team_owner_ids_by_course_id($courseid);
@@ -678,7 +688,7 @@ class coursegroups {
     /**
      * Return all group members for the group with the object ID.
      *
-     * @param int $objectid
+     * @param string $objectid
      *
      * @return array
      */
@@ -707,6 +717,39 @@ class coursegroups {
         }
 
         return $groupmembers;
+    }
+
+    /**
+     * Return all group owners for the group with the object ID.
+     *
+     * @param string $objectid
+     * @return array
+     */
+    public function get_group_owners($objectid) {
+        $groupowners = [];
+
+        $ownerresults = $this->graphclient->get_group_owners($objectid);
+        foreach ($ownerresults['value'] as $ownerresult) {
+            $groupowners[$ownerresult['id']] = $ownerresult;
+        }
+
+        while (!empty($ownerresults['@odata.nextLink'])) {
+            $nextlink = parse_url($ownerresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $ownerresults = $this->graphclient->get_group_owners($objectid, $query['$skiptoken']);
+                    foreach ($ownerresults['value'] as $ownerresult) {
+                        if (!array_key_exists($ownerresult['id'], $groupowners)) {
+                            $groupowners[$ownerresult['id']] = $ownerresult;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $groupowners;
     }
 
     /**
