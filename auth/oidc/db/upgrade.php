@@ -309,5 +309,5 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2021051701, 'auth', 'oidc');
     }
 
-    return $result;
+    return true;
 }
