@@ -359,6 +359,8 @@ abstract class o365api {
                     'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
                  ],
                 'requiredDelegatedPermissionsUsingAppPermissions' => [
+                    'Files.ReadWrite.All' => [],
+                    'Notes.ReadWrite.All' => [],
                     'User.Read' => [],
                     'openid' => [],
                     'offline_access' => [],
