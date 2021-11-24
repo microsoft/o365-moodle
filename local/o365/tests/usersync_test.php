@@ -36,7 +36,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
-    protected function setUp() {
+    protected function setUp() : void {
         parent::setUp();
         $this->resetAfterTest(true);
     }
@@ -243,9 +243,10 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $httpclient = new \local_o365\tests\mockhttpclient();
         $clientdata = $this->get_mock_clientdata();
         $apiclient = new \local_o365\feature\usersync\main($clientdata, $httpclient);
-        $apiclient->create_user_from_aaddata($aaddata);
+        $apiclient->create_user_from_aaddata($aaddata, []);
 
-        $userparams = ['auth' => 'oidc', 'username' => $aaddata['mail']];
+        $userparams = ['auth' => 'oidc', 'username' => $aaddata['mail'], 'firstname' => $aaddata['givenName'],
+            'lastname' => $aaddata['surname']];
         $this->assertTrue($DB->record_exists('user', $userparams));
         $createduser = $DB->get_record('user', $userparams);
 
@@ -318,92 +319,4 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $this->assertEquals('Dev', $createduser->department);
         $this->assertEquals('en', $createduser->lang);
     }
-
-    /**
-     * Test aadsync delete option.
-     */
-    public function test_sync_users_delete() {
-        global $CFG, $DB;
-        set_config('aadsync', 'create,delete', 'local_o365');
-
-        $response = [
-            'value' => [
-                $this->get_aad_userinfo(1),
-                $this->get_aad_userinfo(2),
-                $this->get_aad_userinfo(3),
-            ],
-        ];
-
-        $clientdata = $this->get_mock_clientdata();
-        $httpclient = new \local_o365\tests\mockhttpclient();
-        $httpclient->set_response(json_encode($response));
-
-        $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
-        $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
-        $users = $apiclient->get_users();
-        $usersync->sync_users($users['value']);
-
-        // Simulate user logins - create mock tokens.
-        for ($i = 1; $i <= 3; $i++) {
-            $user = $DB->get_record('user', ['username' => 'testuser'.$i.'@example.onmicrosoft.com']);
-            $token = [
-                'oidcuniqid' => '00000000-0000-0000-0000-00000000000'.$i,
-                'authcode' => '000',
-                'username' => 'testuser'.$i.'@example.onmicrosoft.com',
-                'userid' => $user->id,
-                'scope' => 'test',
-                'tokenresource' => \local_o365\rest\azuread::get_tokenresource(),
-                'token' => '000',
-                'expiry' => '9999999999',
-                'refreshtoken' => 'fsdfsdf'.$i,
-                'idtoken' => 'sdfsdfsdf'.$i,
-            ];
-            $DB->insert_record('auth_oidc_token', (object)$token);
-        }
-
-        // Change user 2 to look like a non-synced user to test synced user checking.
-        $user2 = $DB->get_record('user', ['username' => $response['value'][1]['userPrincipalName']]);
-        $user2->username = 'sometestuser';
-        $DB->update_record('user', $user2);
-
-        // Now run sync again with deleted users marked.
-        $response = [
-            'value' => [
-                $this->get_aad_userinfo(1),
-                $this->get_aad_userinfo(2),
-                $this->get_aad_userinfo(3),
-            ],
-        ];
-        $response['value'][0]['aad.isDeleted'] = '1';
-        $response['value'][1]['aad.isDeleted'] = '1';
-        $clientdata = $this->get_mock_clientdata();
-        $httpclient = new \local_o365\tests\mockhttpclient();
-        $httpclient->set_response(json_encode($response));
-        $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
-        $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
-        $users = $apiclient->get_users();
-        $usersync->sync_users($users['value']);
-
-        // User 1 should be suspended.
-        $params = ['username' => $response['value'][0]['userPrincipalName']];
-        $user = $DB->get_record('user', $params);
-        $this->assertNotEmpty($user);
-        $this->assertEquals(1, $user->suspended);
-
-        // User 2 should not be suspended (not a synced user).
-        $params = ['username' => $response['value'][1]['userPrincipalName']];
-        $user = $DB->get_record('user', $params);
-        $this->assertEmpty($user);
-        $params = ['username' => 'sometestuser'];
-        $user = $DB->get_record('user', $params);
-        $this->assertNotEmpty($user);
-        $this->assertEquals(0, $user->suspended);
-
-        // User 3 should not be suspended (not marked deleted in AAD).
-        $params = ['username' => $response['value'][2]['userPrincipalName']];
-        $user = $DB->get_record('user', $params);
-        $this->assertNotEmpty($user);
-        $this->assertEquals(0, $user->suspended);
-    }
-
 }

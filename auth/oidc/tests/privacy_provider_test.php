@@ -39,7 +39,7 @@ class auth_oidc_privacy_testcase extends \core_privacy\tests\provider_testcase {
     /**
      * Tests set up.
      */
-    public function setUp() {
+    public function setUp():void {
         global $CFG;
         $this->resetAfterTest();
         $this->setAdminUser();

@@ -39,8 +39,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
     /**
      * Tests set up.
      */
-    public function setUp() {
-        global $CFG;
+    protected function setUp() : void {
         $this->resetAfterTest();
         $this->setAdminUser();
     }
