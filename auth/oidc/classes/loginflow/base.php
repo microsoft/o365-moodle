@@ -110,57 +110,82 @@ class base {
             $eventtype = 'create';
         }
 
+        $fieldmappingfromtoken = true;
+
         if (auth_oidc_is_local_365_installed()) {
-            if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
-                // If local_o365 is installed, and field mapping uses fields not covered by token,
-                // then call Graph API function to get user details.
-                $apiclient = \local_o365\utils::get_api($tokenrec->userid);
-                if ($apiclient) {
-                    $userdata = $apiclient->get_user($tokenrec->oidcuniqid, 'default', true);
+            // Check if multitenants are enabled. User from additional tenants can only sync fields from token.
+            $additionaltenants = get_config('local_o365', 'multitenants');
+            if (!empty($additionaltenants)) {
+                $additionaltenants = json_decode($additionaltenants, true);
+                if (!is_array($additionaltenants)) {
+                    $additionaltenants = [];
                 }
-            } else {
-                // If local_o365 is installed, but all field mapping fields are in token, then use token.
-                $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
-
-                $oid = $idtoken->claim('oid');
-                if (!empty($oid)) {
-                    $userdata['objectId'] = $oid;
-                }
-
-                $upn = $idtoken->claim('upn');
-                if (!empty($upn)) {
-                    $userdata['userPrincipalName'] = $upn;
-                } else if (isset($tokenrec->oidcusername) && $tokenrec->oidcusername) {
-                    $userdata['userPrincipalName'] = $tokenrec->oidcusername;
-                }
-
-                $firstname = $idtoken->claim('given_name');
-                if (!empty($firstname)) {
-                    $userdata['givenName'] = $firstname;
-                }
-
-                $lastname = $idtoken->claim('family_name');
-                if (!empty($lastname)) {
-                    $userdata['surname'] = $lastname;
-                }
-
-                $email = $idtoken->claim('email');
-                if (!empty($email)) {
-                    $userdata['mail'] = $email;
-                } else {
-                    if (!empty($upn)) {
-                        $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                        if (!empty($aademailvalidateresult)) {
-                            $userdata['mail'] = $aademailvalidateresult;
-                        }
-                    }
+            }
+            $userfromadditionaltenant = false;
+            foreach ($additionaltenants as $additionaltenant) {
+                $additionaltenant = '@' . $additionaltenant;
+                if (stripos($username, $additionaltenant) !== false) {
+                    $userfromadditionaltenant = true;
+                    break;
                 }
             }
 
-            // Call function in local_o365 to map fields.
-            $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
-            $userinfo = (array)$updateduser;
-        } else {
+            if (!$userfromadditionaltenant) {
+                if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
+                    // If local_o365 is installed, and field mapping uses fields not covered by token,
+                    // then call Graph API function to get user details.
+                    $apiclient = \local_o365\utils::get_api($tokenrec->userid);
+                    if ($apiclient) {
+                        $fieldmappingfromtoken = false;
+                        $userdata = $apiclient->get_user($tokenrec->oidcuniqid, true);
+                    }
+                } else {
+                    // If local_o365 is installed, but all field mapping fields are in token, then use token.
+                    $fieldmappingfromtoken = false;
+                    $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
+
+                    $oid = $idtoken->claim('oid');
+                    if (!empty($oid)) {
+                        $userdata['objectId'] = $oid;
+                    }
+
+                    $upn = $idtoken->claim('upn');
+                    if (!empty($upn)) {
+                        $userdata['userPrincipalName'] = $upn;
+                    } else if (isset($tokenrec->oidcusername) && $tokenrec->oidcusername) {
+                        $userdata['userPrincipalName'] = $tokenrec->oidcusername;
+                    }
+
+                    $firstname = $idtoken->claim('given_name');
+                    if (!empty($firstname)) {
+                        $userdata['givenName'] = $firstname;
+                    }
+
+                    $lastname = $idtoken->claim('family_name');
+                    if (!empty($lastname)) {
+                        $userdata['surname'] = $lastname;
+                    }
+
+                    $email = $idtoken->claim('email');
+                    if (!empty($email)) {
+                        $userdata['mail'] = $email;
+                    } else {
+                        if (!empty($upn)) {
+                            $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                            if (!empty($aademailvalidateresult)) {
+                                $userdata['mail'] = $aademailvalidateresult;
+                            }
+                        }
+                    }
+                }
+
+                // Call the function in local_o365 to map fields.
+                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
+                $userinfo = (array)$updateduser;
+            }
+        }
+
+        if ($fieldmappingfromtoken) {
             // If local_o365 is not installed, use default mapping.
             $userinfo = [];
 
@@ -395,20 +420,8 @@ class base {
         $client = new \auth_oidc\oidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
 
-        $authendpoint = $this->config->authendpoint;
-        $tokenendpoint = $this->config->tokenendpoint;
-        $aadtenant = get_config('local_o365', 'aadtenant');
-        if ($aadtenant) {
-            if ($authendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
-                $authendpoint = str_replace('common', $aadtenant, $authendpoint);
-            }
+        $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
 
-            if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
-                $tokenendpoint = str_replace('common', $aadtenant, $tokenendpoint);
-            }
-        }
-
-        $client->setendpoints(['auth' => $authendpoint, 'token' => $tokenendpoint]);
         return $client;
     }
 
