@@ -357,6 +357,8 @@ abstract class o365api {
                     'Notes.ReadWrite.All' => [],
                     'AppRoleAssignment.ReadWrite.All' => [],
                     'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
+                    'EduRoster.Read.All' => ['EduRoster.ReadWrite.All'],
+                    'Member.Read.Hidden' => [],
                  ],
                 'requiredDelegatedPermissionsUsingAppPermissions' => [
                     'Files.ReadWrite.All' => [],
@@ -378,6 +380,7 @@ abstract class o365api {
                     'Notes.ReadWrite.All' => [],
                     'AppRoleAssignment.ReadWrite.All' => [],
                     'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
+                    'EduRoster.ReadBasic' => [],
                     'User.Read' => ['User.ReadWrite.All'],
                     'openid' => [],
                     'offline_access' => [],
