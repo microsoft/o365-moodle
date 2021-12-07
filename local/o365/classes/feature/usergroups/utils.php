@@ -632,7 +632,9 @@ class utils {
         } else {
             if (isset($usergroupconfig[$courseid])) {
                 unset($usergroupconfig[$courseid]);
-                static::delete_course_group($courseid);
+                if (get_config('local_o365', 'delete_group_on_course_sync_disabled')) {
+                    static::delete_course_group($courseid);
+                }
             }
         }
 

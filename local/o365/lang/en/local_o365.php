@@ -32,7 +32,7 @@ $string['pluginname'] = 'Microsoft 365 Integration';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_syncsettings'] = 'Sync Settings';
 $string['settings_header_advanced'] = 'Advanced';
-$string['settings_header_sds'] = 'School Data Sync (preview)';
+$string['settings_header_sds'] = 'School Data Sync';
 $string['settings_header_teams'] = 'Teams Settings';
 $string['settings_header_moodle_app'] = 'Teams Moodle app';
 
@@ -188,6 +188,10 @@ $string['acp_usergroupcustom_oncustom'] = 'Customize<br />Allows you to select w
 $string['acp_usergroupcustom_onall'] = 'All Features Enabled<br />Enables Course Groups (i.e. Teams) for all courses and exposes all Group features in the Microsoft block for all courses.';
 $string['settings_usergroups_prefer_class_team'] = 'Create Class Teams (over standard Teams)';
 $string['settings_usergroups_prefer_class_team_details'] = 'If enabled, Teams created from Moodle will use the education template (thus resulting in a Class Team) whereas possible.';
+$string['settings_usergroups_delete_group_on_course_deletion'] = 'Delete Microsoft groups when connected Moodle course is deleted';
+$string['settings_usergroups_delete_group_on_course_deletion_details'] = 'If enabled, Moodle will try to delete the Microsoft group (and associated Team) when the connected course is deleted from Moodle. Note this does not apply to courses created from SDS sync.';
+$string['settings_usergroups_delete_group_on_course_sync_disabled'] = 'Delete Microsoft groups when course sync is disabled';
+$string['settings_usergroups_delete_group_on_course_sync_disabled_details'] = 'If enabled, Moodle will try to delete the connected Microsoft group (and associated Team) when course sync is turned off for a Moodle course.';
 $string['settings_usergroups_controlled_per_course'] = 'Allow configure course sync in course';
 $string['settings_usergroups_controlled_per_course_details'] = 'If the "Teams" sync setting is set to "Customize", and this option is enabled, Moodle users who are eligible to act as Team owners will be able to control course sync from the Microsoft block in the course.';
 $string['settings_usergroups_courses_per_task'] = 'Courses to sync per task run';
@@ -282,8 +286,6 @@ $string['settings_secthead_advanced'] = 'Advanced Settings';
 $string['settings_secthead_advanced_desc'] = 'These settings control other features of the plugin suite. Be careful! These may cause unintended effects.';
 $string['settings_secthead_legacy'] = 'Legacy';
 $string['settings_secthead_legacy_desc'] = 'These settings and features are deprecated and likely to be removed soon.';
-$string['settings_secthead_preview'] = 'Preview Features';
-$string['settings_secthead_preview_desc'] = '';
 
 // Settings in the "Tools" section of the "Advanced" tab.
 $string['settings_tools_tenants'] = 'Tenants';
@@ -521,60 +523,41 @@ $string['acp_sharepointcourseselect_syncopt'] = 'Sync SharePoint Subsites';
 $string['acp_sharepointcourseselect_syncopt_btn'] = 'Sync to SharePoint Subsites';
 $string['acp_sharepointcourseselect_syncopt_inst'] = 'Because this functionality was recently upgraded, the information shown here may not be accurate. Use the button below to sync this display with existing course subsites on SharePoint. This operation may take some time.';
 
-// Settings in the "Legacy" section of the "Advanced" tab.
-$string['settings_previewfeatures'] = 'Enable preview features';
-$string['settings_previewfeatures_details'] = 'Enable features provided on a "preview" basis. These features use brand new APIs, or are experimental in some way. These features may be more prone to break, but will give you a sneak peak at what\'s coming in the near future.';
-
-// Settings in the "School Data Sync (preview)" tab.
+// Settings in the "School Data Sync" tab.
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';
-$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br /><br />The school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
+$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br/>
+<br/>
+SDS sync feature requires <b>"Application access"</b> connection method to work.<br/>
+Please also ensure the Azure app used for the integration has <b>EduRoster.Read.All</b> and <b>Member.Read.Hidden</b> Microsoft Graph application permissions, which are not automatically added by the default set up. Admin consent needs to be granted for them too.<br/>
+<br/>
+By default, the school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_sds_coursecreation'] = 'Course Creation';
 $string['settings_sds_coursecreation_desc'] = 'These options control course creation in Moodle based on information in SDS.';
 $string['settings_sds_coursecreation_enabled'] = 'Create Courses';
 $string['settings_sds_coursecreation_enabled_desc'] = 'Create courses for these schools.';
+$string['settings_sds_teams_enabled'] = 'Teams creation enabled';
+$string['settings_sds_teams_enabled_desc'] = 'This controls if Moodle courses created from syncing SDS classes are automatically connected to the Microsoft Team of the SDS class. This should be enabled only if Teams are automatically created from the SDS classes.';
 $string['settings_sds_enrolment_enabled'] = 'Enrol users';
-$string['settings_sds_enrolment_enabled_desc'] = 'Enrol students and teachers into courses created from SDS.';
-$string['settings_sds_profilesync'] = 'Profile Data Sync';
-$string['settings_sds_profilesync_desc'] = 'These options control profile data syncing between SDS data and Moodle.';
-$string['settings_sds_profilesync_enabled'] = 'Enable';
-$string['settings_sds_profilesync_enabled_desc'] = 'Enable profile data syncing when we sync with SDS';
-$string['settings_sds_fieldmap'] = 'Field Mapping';
-$string['settings_sds_fieldmap_details'] = 'This controls how fields are mapped between SDS and Moodle.';
-$string['settings_sds_fieldmap_remotecolumn'] = 'SDS Field';
-$string['settings_sds_fieldmap_f_mailNickname'] = 'Unique student alias';
-$string['settings_sds_fieldmap_f_userPrincipalName'] = 'Official email address';
-$string['settings_sds_fieldmap_f_givenName'] = 'First name';
-$string['settings_sds_fieldmap_f_surname'] = 'Last name';
-$string['settings_sds_fieldmap_f_pre_MiddleName'] = 'Middle name';
-$string['settings_sds_fieldmap_f_pre_SyncSource_StudentId'] = 'SIS assigned student ID';
-$string['settings_sds_fieldmap_f_pre_SyncSource_SchoolId'] = 'School ID';
-$string['settings_sds_fieldmap_f_pre_Email'] = 'Personal email address';
-$string['settings_sds_fieldmap_f_pre_StateId'] = 'State assigned number';
-$string['settings_sds_fieldmap_f_pre_StudentNumber'] = 'Disctrict/School assigned number';
-$string['settings_sds_fieldmap_f_pre_MailingAddress'] = 'Mailing address';
-$string['settings_sds_fieldmap_f_pre_MailingCity'] = 'Mailing address city';
-$string['settings_sds_fieldmap_f_pre_MailingState'] = 'Mailing address state';
-$string['settings_sds_fieldmap_f_pre_MailingZip'] = 'Mailing address zip';
-$string['settings_sds_fieldmap_f_pre_MailingLatitude'] = 'Mailing address latitude';
-$string['settings_sds_fieldmap_f_pre_MailingLongitude'] = 'Mailing address longitude';
-$string['settings_sds_fieldmap_f_pre_MailingCountry'] = 'Mailing address country';
-$string['settings_sds_fieldmap_f_pre_ResidenceAddress'] = 'Residence address';
-$string['settings_sds_fieldmap_f_pre_ResidenceCity'] = 'Residence city';
-$string['settings_sds_fieldmap_f_pre_ResidenceState'] = 'Residence state';
-$string['settings_sds_fieldmap_f_pre_ResidenceZip'] = 'Residence zip';
-$string['settings_sds_fieldmap_f_pre_ResidenceLatitude'] = 'Residence address latitude';
-$string['settings_sds_fieldmap_f_pre_ResidenceLongitude'] = 'Residence address longitude';
-$string['settings_sds_fieldmap_f_pre_ResidenceCountry'] = 'Residence country';
-$string['settings_sds_fieldmap_f_pre_Gender'] = 'Gender';
-$string['settings_sds_fieldmap_f_pre_DateOfBirth'] = 'Date of birth';
-$string['settings_sds_fieldmap_f_pre_Grade'] = 'Grade level';
-$string['settings_sds_fieldmap_f_pre_EnglishLanguageLearnersStatus'] = 'English language learner status';
-$string['settings_sds_fieldmap_f_pre_FederalRace'] = 'Federal race';
-$string['settings_sds_fieldmap_f_pre_GraduationYear'] = 'Graduation year';
-$string['settings_sds_fieldmap_f_pre_StudentStatus'] = 'Student status';
-$string['settings_sds_fieldmap_f_pre_AnchorId'] = 'Internal unique student identifier.';
-$string['settings_sds_fieldmap_f_pre_ObjectType'] = 'The object type ("Student")';
+$string['settings_sds_enrolment_enabled_desc'] = 'Enrol SDS class teachers and members into Moodle courses created from the classes.<br />
+Note in order to sync SDS class teacher/member role changes to Moodle classes, <b>Advanced enrolments sync with SDS classes</b> option has to be enabled, and <b>Teacher role</b> and <b>Member role</b> settings have to be confgured.';
+$string['settings_sds_sync_enrolment_to_sds'] = 'Advanced enrolments sync with SDS classes';
+$string['settings_sds_sync_enrolment_to_sds_desc'] = 'This option requires <b>Enrol users</b> option to be enabled to work.<br />
+If this setting is enabled, the SDS class sync will do the following:
+<ul>
+<li>Changes in SDS class ownership / membership status will be synced to Moodle course and reflected in Moodle user role changes.</li>
+<li>User enrolment changes, such as enrolments and unenrolments, that are made in Moodle course connected to SDS classes will be synchronised back to SDS classes. The ownership / membership status of the user will depend on the "local/o365:teamowner" and "local/o365:teammember" capabilities in the course context.</li>
+</ul>';
+$string['settings_sds_enrolment_teacher_role'] = 'Teacher role';
+$string['settings_sds_enrolment_teacher_role_desc'] = 'If the "Enrol users" option is enabled, teachers in SDS class will be enrolled in connected Moodle course with this role.';
+$string['settings_sds_enrolment_student_role'] = 'Member role';
+$string['settings_sds_enrolment_student_role_desc'] = 'If the "Enrol users" option is enabled, students in SDS class will be enrolled in connected Moodle course with this role.';
+$string['settings_sds_profilesync_header'] = 'Profile Data Sync';
+$string['settings_sds_profilesync_header_desc'] = 'These options control profile data syncing between SDS data and Moodle.';
+$string['settings_sds_profilesync_disabled'] = 'Disabled';
+$string['settings_sds_profilesync'] = 'Sync profile data from school';
+$string['settings_sds_profilesync_desc'] = 'Select the SDS school from which Moodle synchronises SDS specific profile data.<br/>
+Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.';
 $string['settings_sds_noschools'] = '<div class="alert alert-info">You do not have any schools available in School data sync.</div>';
 
 // Settings in the "Teams Settings" tab.
@@ -835,7 +818,7 @@ $string['task_calendarsyncin'] = 'Sync o365 events in to Moodle';
 $string['task_groupcreate'] = 'Create user groups in Microsoft 365';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_sds_sync'] = 'Sync with SDS';
-$string['task_syncusers'] = 'Sync users with Azure AD.';
+$string['task_syncusers'] = 'Sync users with Azure AD';
 $string['task_sharepointinit'] = 'Initialize SharePoint.';
 $string['task_processmatchqueue'] = 'Process Match Queue';
 $string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to a Microsoft 365 user.';

@@ -1424,6 +1424,7 @@ class unified extends \local_o365\rest\o365api {
         }
 
         $response = $this->apicall('get', $endpoint);
+
         $expectedparams = ['value' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -2521,5 +2522,134 @@ class unified extends \local_o365\rest\o365api {
         $expectedparams = ['value' => null];
 
         return $this->process_apicall_response($response, $expectedparams);
+    }
+
+    /**
+     * Return the list of SDS schools.
+     *
+     * @param string $skiptoken
+     * @return array|null
+     */
+    public function get_schools($skiptoken = '') {
+        $endpoint = '/education/schools';
+        $odataqueries = [];
+
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
+        return $this->process_apicall_response($response, ['value' => null]);
+    }
+
+    /**
+     * Return the list of classes in the SDS school with the given object ID.
+     *
+     * @param string $schoolobjectid
+     * @param string $skiptoken
+     * @return array|null
+     */
+    public function get_school_classes($schoolobjectid, $skiptoken = '') {
+        $endpoint = '/education/schools/' . $schoolobjectid . '/classes';
+        $odataquries = [];
+
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataquries[] = '$skiptoken=' . $skiptoken;
+        }
+
+        if (!empty($odataquries)) {
+            $endpoint .= '?' . implode('&', $odataquries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
+        return $this->process_apicall_response($response, ['value' => null]);
+    }
+
+    /**
+     * Return the list of teachers in the class with the given object ID.
+     *
+     * @param $classobjectid
+     * @param string $skiptoken
+     * @return array|null
+     */
+    public function get_school_class_teachers($classobjectid, $skiptoken = '') {
+        $endpoint = '/education/classes/' . $classobjectid . '/teachers';
+        $odataqueries = [];
+
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
+        return $this->process_apicall_response($response, ['value' => null]);
+    }
+
+    /**
+     * Return the list of members in the class with the given object ID.
+     *
+     * @param string $classobjectid
+     * @param string $skiptoken
+     * @return array|null
+     */
+    public function get_school_class_members($classobjectid, $skiptoken = '') {
+        $endpoint = '/education/classes/' . $classobjectid . '/members';
+        $odataqueries = [];
+
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
+        return $this->process_apicall_response($response, ['value' => null]);
+    }
+
+    /**
+     * Return the list of users in the SDS school with the given object ID.
+     *
+     * @param string $schoolobjectid
+     * @param string $skiptoken
+     * @return array|null
+     */
+    public function get_school_users($schoolobjectid, $skiptoken = '') {
+        $endpoint = '/education/schools/' . $schoolobjectid . '/users';
+        $odataqueries = [];
+
+        if (empty($skiptoken) || !is_string($skiptoken)) {
+            $skiptoken = '';
+        }
+        if (!empty($skiptoken)) {
+            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        }
+
+        if (!empty($odataqueries)) {
+            $endpoint .= '?' . implode('&', $odataqueries);
+        }
+
+        $response = $this->apicall('get', $endpoint);
+        return $this->process_apicall_response($response, ['value' => null]);
     }
 }
