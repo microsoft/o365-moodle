@@ -208,7 +208,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071503, 'auth', 'oidc');
     }
 
-    if ($result && $oldversion < 2020071504) {
+    if ($oldversion < 2020071504) {
         if ($dbman->field_exists('auth_oidc_token', 'resource')) {
             // Rename field resource on table auth_oidc_token to tokenresource.
             $table = new xmldb_table('auth_oidc_token');
