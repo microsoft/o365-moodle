@@ -430,7 +430,7 @@ class token {
             $this->expiry = $result['expires_on'];
             $this->refreshtoken = $result['refresh_token'];
             $this->scope = $result['scope'];
-            $this->tokenresource = $result['tokenresource'];
+            $this->tokenresource = $result['resource'];
 
             $existingtoken = $this->get_stored_token($this->userid, $originaltokenresource);
             if (!empty($existingtoken)) {
