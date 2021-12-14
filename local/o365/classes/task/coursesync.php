@@ -25,48 +25,48 @@
 
 namespace local_o365\task;
 
+use local_o365\feature\coursesync\main;
+use local_o365\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
  * Create any needed groups in Microsoft 365.
  */
-class groupcreate extends \core\task\scheduled_task {
+class coursesync extends \core\task\scheduled_task {
     /**
      * Get a descriptive name for this task (shown to admins).
      *
      * @return string
      */
     public function get_name() {
-        return get_string('task_groupcreate', 'local_o365');
+        return get_string('task_coursesync', 'local_o365');
     }
 
     /**
      * Do the job.
+     *
+     * @return bool|void
      */
     public function execute() {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             return false;
         }
 
-        if (\local_o365\feature\usergroups\utils::is_enabled() !== true) {
-            mtrace('Groups not enabled, skipping...');
+        if (\local_o365\feature\coursesync\utils::is_enabled() !== true) {
+            mtrace('Course synchronisation not enabled, skipping...');
             return true;
         }
 
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-
-        $unifiedresource = \local_o365\rest\unified::get_tokenresource();
-        $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
-        if (empty($unifiedtoken)) {
-            mtrace('Could not get graph API token.');
-            return true;
+        try {
+            $graphclient = utils::get_api();
+        } catch (\Exception $e) {
+            utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
+            return false;
         }
-        $graphclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
 
-        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, true);
-        $coursegroups->create_groups_for_new_courses();
-        $coursegroups->sync_group_profile_photo();
-        $coursegroups->update_teams_cache();
+        $coursesync = new main($graphclient, true);
+        $coursesync->sync_courses();
+        $coursesync->update_teams_cache();
     }
 }

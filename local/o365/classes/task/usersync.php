@@ -84,7 +84,7 @@ class usersync extends scheduled_task {
      * Do the job.
      */
     public function execute() {
-        if (utils::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             $this->mtrace('Microsoft 365 not configured');
 
             return false;
@@ -123,7 +123,7 @@ class usersync extends scheduled_task {
                 }
             } catch (\Exception $e) {
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
-                utils::debug($e->getMessage(), 'usersync task', $e);
+                utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
             }
@@ -163,7 +163,7 @@ class usersync extends scheduled_task {
                 }
             } catch (\Exception $e) {
                 $this->mtrace('Error in delta usersync: ' . $e->getMessage());
-                utils::debug($e->getMessage(), 'usersync task', $e);
+                utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
                 $deltatoken = null;
@@ -204,7 +204,7 @@ class usersync extends scheduled_task {
             } else {
                 if ($lastruntime + 24 * 60 * 60 > time()) {
                     $rundelete = false;
-                    $this->mtrace('Suspend/delete users feature disabled because it was run less than 1 day ago.');
+                    $this->mtrace('Suspend/delete users feature skipped because it was run less than 1 day ago.');
                 } else {
                     set_config('task_usersync_lastdelete', time(), 'local_o365');
                 }
@@ -225,7 +225,7 @@ class usersync extends scheduled_task {
                         }
                     } catch (\Exception $e) {
                         $this->mtrace('Error in full usersync: ' . $e->getMessage());
-                        utils::debug($e->getMessage(), 'usersync task', $e);
+                        utils::debug($e->getMessage(), __METHOD__, $e);
                         $this->mtrace('Resetting skip and delta tokens.');
                         $skiptoken = null;
                     }

@@ -48,7 +48,7 @@ class utils {
             $apiclient = new unified($unifiedtoken, $httpclient);
             return $apiclient;
         } else {
-            static::mtrace('Could not construct system API user token for SDS sync task.');
+            mtrace('Could not construct system API user token for SDS sync task.');
         }
 
         return null;
@@ -135,5 +135,16 @@ class utils {
         }
 
         return [$idandnamemappings, $additionalprofilemappings];
+    }
+
+    /**
+     * Return the ID of Moodle courses connected to SDS course sections.
+     *
+     * @return array
+     */
+    public static function get_sds_course_ids() {
+        global $DB;
+
+        return $DB->get_fieldset_select('local_o365_objects', 'moodleid', 'type = ?', ['sdssection']);
     }
 }

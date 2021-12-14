@@ -268,16 +268,15 @@ class sync extends \core\task\scheduled_task {
                     $groupobjectrec['timecreated'] = $now;
                     $groupobjectrec['timemodified'] = $now;
                     $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $groupobjectrec);
-                    \local_o365\feature\usergroups\utils::set_course_group_enabled($course->id);
+                    \local_o365\feature\coursesync\utils::set_course_sync_enabled($course->id);
 
                     if ($teamsyncenabled) {
-                        $teamobjectrec = ['type' => 'group', 'subtype' => 'courseteam', 'objectid' => $schoolclass['id'],
+                        $teamobjectrec = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $schoolclass['id'],
                             'moodleid' => $course->id];
                         $teamobjectrec['o365name'] = $schoolclass['displayName'];
                         $teamobjectrec['timecreated'] = $now;
                         $teamobjectrec['timemodified'] = $now;
                         $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrec);
-                        \local_o365\feature\usergroups\utils::set_course_group_feature_enabled($course->id, ['team'], true);
                     }
                 }
 
@@ -538,7 +537,7 @@ class sync extends \core\task\scheduled_task {
      * Do the job.
      */
     public function execute() {
-        if (utils::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             static::mtrace('local_o365 reported unconfigured during SDS sync task, so exiting.');
             return false;
         }

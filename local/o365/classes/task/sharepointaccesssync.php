@@ -196,7 +196,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
      * Do the job.
      */
     public function execute() {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
 
@@ -211,7 +211,7 @@ class sharepointaccesssync extends \core\task\adhoc_task {
                 $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
             } else {
                 $errmsg = 'Could not get system API user token for SharePoint';
-                \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointaccesssync::execute');
+                \local_o365\utils::debug($errmsg, __METHOD__);
             }
         }
 

@@ -26,10 +26,12 @@
 
 namespace local_o365\feature\usersync;
 
+use Exception;
 use local_o365\oauth2\clientdata;
 use local_o365\httpclient;
 use local_o365\oauth2\systemapiusertoken;
 use local_o365\oauth2\token;
+use local_o365\obj\o365user;
 use local_o365\rest\azuread;
 use local_o365\rest\outlook;
 use local_o365\rest\unified;
@@ -106,14 +108,14 @@ class main {
             $tokenresource = azuread::get_tokenresource();
             $token = systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
             if (empty($token)) {
-                throw new \Exception('No token available for usersync');
+                throw new Exception('No token available for usersync');
             }
             return new azuread($token, $this->httpclient);
         } else {
             $tokenresource = unified::get_tokenresource();
             $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
             if (empty($token)) {
-                throw new \Exception('No token available for usersync');
+                throw new Exception('No token available for usersync');
             }
             return new unified($token, $this->httpclient);
         }
@@ -141,7 +143,7 @@ class main {
                 : systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
-            throw new \Exception('No token available for user #'.$muserid);
+            throw new Exception('No token available for user #'.$muserid);
         }
 
         if ($unifiedconfigured === true) {
@@ -211,11 +213,10 @@ class main {
      * Assign photo to Moodle user account.
      *
      * @param int $muserid
-     * @param object $user
-     *
+     * @param string $upn
      * @return boolean True on photo updated.
      */
-    public function assign_photo($muserid, $user) {
+    public function assign_photo(int $muserid, string $upn = '') {
         global $DB, $CFG;
 
         require_once("$CFG->libdir/gdlib.php");
@@ -226,14 +227,14 @@ class main {
         }
         $result = false;
         $apiclient = $this->construct_outlook_api($muserid, true);
-        if (empty($user)) {
-            $o365user = \local_o365\obj\o365user::instance_from_muserid($muserid);
-            $user = $o365user->upn;
+        if (empty($upn)) {
+            $o365user = o365user::instance_from_muserid($muserid);
+            $upn = $o365user->upn;
         }
-        $size = $apiclient->get_photo_metadata($user);
+        $size = $apiclient->get_photo_metadata($upn);
         $muser = \core_user::get_user($muserid, 'id, picture', MUST_EXIST);
         $context = \context_user::instance($muserid, MUST_EXIST);
-        // If there is no meta data, there is no photo.
+        // If there is no metadata, there is no photo.
         if (empty($size)) {
             // Profile photo has been deleted.
             if (!empty($muser->picture)) {
@@ -244,11 +245,7 @@ class main {
             }
             $result = false;
         } else if ($size['@odata.mediaEtag'] !== $photoid) {
-            if (!empty($size['height']) && !empty($size['width'])) {
-                $image = $apiclient->get_photo($user, $size['height'], $size['width']);
-            } else {
-                $image = $apiclient->get_photo($user);
-            }
+            $image = $apiclient->get_photo($upn);
 
             // Check if json error message was returned.
             if ($image && !preg_match('/^{/', $image)) {
@@ -289,20 +286,20 @@ class main {
      * Sync timezone of user from Outlook to Moodle.
      *
      * @param int $muserid
-     * @param object $user
+     * @param string $upn
      */
-    public function sync_timezone($muserid, $user) {
+    public function sync_timezone(int $muserid, string $upn = '') {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
-            throw new \Exception('No token available for usersync');
+            throw new Exception('No token available for usersync');
         }
         $apiclient = new unified($token, $this->httpclient);
-        if (empty($user)) {
-            $o365user = \local_o365\obj\o365user::instance_from_muserid($muserid);
-            $user = $o365user->upn;
+        if (empty($upn)) {
+            $o365user = o365user::instance_from_muserid($muserid);
+            $upn = $o365user->upn;
         }
-        $remotetimezone = $apiclient->get_user_timezone_by_upn($user);
+        $remotetimezone = $apiclient->get_user_timezone_by_upn($upn);
         if (is_array($remotetimezone) && !empty($remotetimezone['value'])) {
             $remotetimezonesetting = $remotetimezone['value'];
             $moodletimezone = \core_date::normalise_timezone($remotetimezonesetting);
@@ -397,7 +394,7 @@ class main {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
-            throw new \Exception('No token available for usersync');
+            throw new Exception('No token available for usersync');
         }
         $apiclient = new unified($token, $this->httpclient);
         return $apiclient->get_users_delta($params, $skiptoken, $deltatoken);
@@ -431,18 +428,6 @@ class main {
         $apiclient = $this->construct_user_api();
         $usergroupsresults = $apiclient->get_user_groups($userobjectid);
         $usergroups = $usergroupsresults['value'];
-        while (!empty($usergroupsresults['@odata.nextLink'])) {
-            $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $usergroupsresults = $apiclient->get_user_groups($userobjectid);
-                    $usergroups = array_merge($usergroups, $usergroupsresults['value']);
-                }
-            }
-        }
-
         $groupnames = [];
         foreach ($usergroups as $usergroup) {
             $groupnames[] = $usergroup['displayName'];
@@ -463,19 +448,6 @@ class main {
 
         $userteamsresults = $apiclient->get_user_teams($userobjectid);
         $userteams = $userteamsresults['value'];
-
-        while (!empty($userteamsresults['@odata.nextLink'])) {
-            $nextlink = parse_url($userteamsresults['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $userteamsresults = $apiclient->get_user_teams($userobjectid, $query['$skiptoken']);
-                    $userteams = array_merge($userteams, $userteamsresults['value']);
-                }
-            }
-        }
-
         $teamnames = [];
         foreach ($userteams as $userteam) {
             $teamnames[] = $userteam['displayName'];
@@ -713,7 +685,7 @@ class main {
 
         if ($restriction['remotefield'] === 'o365group') {
             if (unified::is_configured() !== true) {
-                utils::debug('graph api is not configured.', 'check_usercreationrestriction');
+                utils::debug('graph api is not configured.', __METHOD__);
                 return false;
             }
 
@@ -722,22 +694,11 @@ class main {
             try {
                 $group = $apiclient->get_group_by_name($restriction['value']);
                 if (empty($group) || !isset($group['id'])) {
-                    utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
+                    utils::debug('Could not find group (1)', __METHOD__, $group);
                     return false;
                 }
                 $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
                 $usergroups = $usergroupsresults['value'];
-                while (!empty($usergroupsresults['@odata.nextLink'])) {
-                    $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
-                    if (isset($nextlink['query'])) {
-                        $query = [];
-                        parse_str($nextlink['query'], $query);
-                        if (isset($query['$skiptoken'])) {
-                            $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
-                            $usergroups = array_merge($usergroups, $usergroupsresults['value']);
-                        }
-                    }
-                }
 
                 foreach ($usergroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
@@ -745,8 +706,8 @@ class main {
                     }
                 }
                 return false;
-            } catch (\Exception $e) {
-                utils::debug('Could not find group (2)', 'check_usercreationrestriction', $e);
+            } catch (Exception $e) {
+                utils::debug('Could not find group (2)', __METHOD__, $e);
                 return false;
             }
         } else {
@@ -1222,7 +1183,7 @@ class main {
             if (!empty($newmuser)) {
                 $this->mtrace('Created user #' . $newmuser->id);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (isset($syncoptions['emailsync'])) {
                 if ($DB->record_exists('user', ['username' => $aaduserdata['userPrincipalName']])) {
                     $this->mtrace('Could not create user "' . $aaduserdata['userPrincipalName'] .
@@ -1242,7 +1203,7 @@ class main {
                 if (!empty($newmuser) && !empty($userobjectid)) {
                     $this->assign_user($newmuser->id, $userobjectid);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
             }
         }
@@ -1254,7 +1215,7 @@ class main {
                     if (!empty($newmuser)) {
                         $this->assign_photo($newmuser->id, $aaduserdata['upnlower']);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->mtrace('Could not assign photo to user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
                         $e->getMessage());
                 }
@@ -1268,7 +1229,7 @@ class main {
                     if (!empty($newmuser)) {
                         $this->sync_timezone($newmuser->id, $aaduserdata['upnlower']);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->mtrace('Could not sync timezone for user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
                         $e->getMessage());
                 }
@@ -1325,7 +1286,7 @@ class main {
                     if (!empty($existinguser->muserid) && !empty($userobjectid)) {
                         $this->assign_user($existinguser->muserid, $userobjectid);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->mtrace('Could not assign user "'.$aaduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
             }
@@ -1338,7 +1299,7 @@ class main {
                     if (!PHPUNIT_TEST) {
                         $this->assign_photo($existinguser->muserid, $aaduserdata['upnlower']);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->mtrace('Could not assign profile photo to user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
                         $e->getMessage());
                 }
@@ -1351,7 +1312,7 @@ class main {
                 if (!PHPUNIT_TEST) {
                     $this->sync_timezone($existinguser->muserid, $aaduserdata['upnlower']);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->mtrace('Could not sync timezone for user "' . $aaduserdata['userPrincipalName'] . '" Reason: ' .
                     $e->getMessage());
             }
@@ -1559,8 +1520,8 @@ class main {
             }
 
             return true;
-        } catch (\Exception $e) {
-            utils::debug('Could not delete users', 'suspend_users', $e);
+        } catch (Exception $e) {
+            utils::debug('Could not delete users', __METHOD__, $e);
 
             return false;
         }

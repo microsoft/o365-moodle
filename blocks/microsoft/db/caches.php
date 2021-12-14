@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Cache setup
+ * Cache setup.
+ *
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,9 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 $definitions = [
     'onenotenotebook' => [
-        'mode' => cache_store::MODE_SESSION
-    ],
-    'groups' => [
         'mode' => cache_store::MODE_SESSION
     ],
 ];

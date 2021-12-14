@@ -100,8 +100,3 @@ $label = new lang_string('settings_geto365link', 'block_microsoft');
 $desc = new lang_string('settings_geto365link_desc', 'block_microsoft');
 $default = new lang_string('settings_geto365link_default', 'block_microsoft');
 $settings->add(new admin_setting_configtext('block_microsoft/settings_geto365link', $label, $desc, $default, PARAM_TEXT));
-
-// Settings to show course group link in the block.
-$label = new lang_string('settings_showcoursegroup', 'block_microsoft');
-$desc = new lang_string('settings_showcoursegroup_desc', 'block_microsoft');
-$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursegroup', $label, $desc, 1));

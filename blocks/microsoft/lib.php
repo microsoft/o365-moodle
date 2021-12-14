@@ -23,7 +23,7 @@
  * @copyright (C) 2021 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
-use local_o365\feature\usergroups\utils;
+use local_o365\feature\coursesync\utils;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -37,20 +37,15 @@ require_once($CFG->dirroot . '/local/o365/lib.php');
  * @return int
  */
 function block_microsoft_get_course_sync_option(int $courseid) {
-    $coursesyncoption = MICROSOFT365_COURSE_SYNC_NONE;
+    $coursesyncoption = MICROSOFT365_COURSE_SYNC_DISABLED;
 
-    $groupsyncenabledcourseids = utils::get_enabled_courses();
-    $teamsyncenabledcourseids = utils::get_enabled_courses_with_feature('team');
+    $syncenabledcourseids = utils::get_enabled_courses();
 
-    if ($teamsyncenabledcourseids === true || $groupsyncenabledcourseids === true) {
+    if ($syncenabledcourseids === true) {
         // Sync is enabled on all courses.
-        $coursesyncoption = MICROSOFT365_COURSE_SYNC_TEAMS;
-    } else if (in_array($courseid, $groupsyncenabledcourseids)) {
-        if (in_array($courseid, $teamsyncenabledcourseids)) {
-            $coursesyncoption = MICROSOFT365_COURSE_SYNC_TEAMS;
-        } else {
-            $coursesyncoption = MICROSOFT365_COURSE_SYNC_GROUPS;
-        }
+        $coursesyncoption = MICROSOFT365_COURSE_SYNC_ENABLED;
+    } else if (in_array($courseid, $syncenabledcourseids)) {
+        $coursesyncoption = MICROSOFT365_COURSE_SYNC_ENABLED;
     }
 
     return $coursesyncoption;
@@ -63,20 +58,10 @@ function block_microsoft_get_course_sync_option(int $courseid) {
  * @param int $syncsetting
  */
 function block_microsoft_set_course_sync_option(int $courseid, int $syncsetting) {
-    switch ($syncsetting) {
-        case MICROSOFT365_COURSE_SYNC_GROUPS:
-            utils::set_course_group_enabled($courseid);
-            utils::set_course_group_feature_enabled($courseid, ['team'], false);
-
-            break;
-        case MICROSOFT365_COURSE_SYNC_TEAMS:
-            utils::set_course_group_enabled($courseid);
-            utils::set_course_group_feature_enabled($courseid, ['team']);
-
-            break;
-        default:
-            utils::set_course_group_feature_enabled($courseid, ['team'], false);
-            utils::set_course_group_enabled($courseid, false);
+    if ($syncsetting == MICROSOFT365_COURSE_SYNC_ENABLED) {
+        utils::set_course_sync_enabled($courseid);
+    } else {
+        utils::set_course_sync_enabled($courseid, false);
     }
 }
 
@@ -100,7 +85,7 @@ function block_microsoft_get_course_reset_setting(int $courseid) {
 }
 
 /**
- * Set Teams/group reset settings for the given course to the given value.
+ * Set course reset settings for the given course to the given value.
  *
  * @param int $courseid
  * @param string $resetsetting

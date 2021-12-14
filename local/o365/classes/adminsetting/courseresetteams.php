@@ -70,19 +70,19 @@ class courseresetteams extends admin_setting {
         $settinghtml = '';
 
         $options = [
-            TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DO_NOTHING => new \lang_string('settings_course_reset_teams_option_do_nothing',
+            COURSE_SYNC_RESET_SITE_SETTING_DO_NOTHING => new \lang_string('settings_course_reset_teams_option_do_nothing',
                 'local_o365'),
         ];
 
-        $createteams = get_config('local_o365', 'createteams');
-        if ($createteams == 'oncustom') {
-            $options[TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_ONLY] = new \lang_string(
+        $coursesyncsetting = get_config('local_o365', 'coursesync');
+        if ($coursesyncsetting == 'oncustom') {
+            $options[COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_ONLY] = new \lang_string(
                 'settings_course_reset_teams_option_archive_only', 'local_o365');
         }
 
-        $options[TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW] = new \lang_string(
+        $options[COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW] = new \lang_string(
             'settings_course_reset_teams_option_force_archive', 'local_o365');
-        $options[TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE] = new \lang_string(
+        $options[COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE] = new \lang_string(
             'settings_course_reset_teams_option_per_course', 'local_o365');
 
         $currentvalue = (isset($options[$data])) ? $data : $this->get_defaultsetting();

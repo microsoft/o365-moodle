@@ -18,11 +18,12 @@
  * Block Microsoft block
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use local_o365\feature\usergroups\utils;
+use local_o365\feature\coursesync\utils;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -135,108 +136,87 @@ class block_microsoft extends block_base {
         }
 
         $courseid = $COURSE->id;
-        $groupsenabled = utils::is_enabled();
+        $coursesyncenabled = utils::is_enabled();
         $iscoursecontext = $this->page->context instanceof \context_course && $this->page->context->instanceid !== SITEID;
-        $courseisgroupenabled = utils::course_is_group_enabled($courseid);
-        $config = (array)get_config('block_microsoft');
+        $iscoursesyncenabled = utils::is_course_sync_enabled($courseid);
 
         $html = '';
         $items = [];
 
         $courseheaderdisplayed = false;
-        $o365record = null;
 
         if (has_capability('local/o365:teamowner', $this->page->context)) {
-
             $courseheaderdisplayed = true;
         }
 
-        if (!empty($config['settings_showcoursegroup'])) {
-            list($courseheader, $o365record) = $this->get_course_header_and_o365object($courseid);
-            $html .= $courseheader;
+        [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
+        $html .= $courseheader;
 
-            // Link to course sync options.
-            if (has_capability('local/o365:teamowner', $this->page->context)) {
-                $createteams = get_config('local_o365', 'createteams');
-                $allowedmanageteamsyncpercourse = get_config('local_o365', 'createteams_per_course');
-                if ($createteams == 'oncustom' && $allowedmanageteamsyncpercourse) {
-                    $configuresyncurl = new moodle_url('/blocks/microsoft/configure_sync.php',
-                        ['course' => $courseid]);
-                    $items[] = html_writer::link($configuresyncurl, get_string('configure_sync', 'block_microsoft'),
-                        ['class' => 'servicelink block_microsoft_sync']);
-                }
+        // Link to course sync options.
+        if (has_capability('local/o365:teamowner', $this->page->context)) {
+            $coursesyncsetting = get_config('local_o365', 'coursesync');
+            $allowedmanageteamsyncpercourse = get_config('local_o365', 'course_sync_per_course');
+            if ($coursesyncsetting == 'oncustom' && $allowedmanageteamsyncpercourse) {
+                $configuresyncurl = new moodle_url('/blocks/microsoft/configure_sync.php',
+                    ['course' => $courseid]);
+                $items[] = html_writer::link($configuresyncurl, get_string('configure_sync', 'block_microsoft'),
+                    ['class' => 'servicelink block_microsoft_sync']);
             }
         }
 
-        if ($iscoursecontext && $groupsenabled && $courseisgroupenabled) {
+        if ($iscoursecontext && $coursesyncenabled && $iscoursesyncenabled) {
             $canmanage = (has_capability('local/o365:managegroups', $this->page->context) === true) ? true : false;
-            $canview = (is_enrolled($this->page->context)
-              && has_capability('local/o365:viewgroups', $this->page->context)) ? true : false;
+            $canview = (is_enrolled($this->page->context) && has_capability('local/o365:viewgroups', $this->page->context)) ?
+                true : false;
 
             if ($canmanage === true || $canview === true) {
-                if (!empty($config['settings_showcoursegroup'])) {
-                    if (!$courseheaderdisplayed) {
-                        list($courseheader, $o365record) = $this->get_course_header_and_o365object($courseid);
-                        $html .= $courseheader;
-                    }
+                if (!$courseheaderdisplayed) {
+                    [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
+                    $html .= $courseheader;
+                }
 
-                    if ($o365record) {
-                        // Links to course features.
-                        $groupurls = utils::get_group_urls($courseid, 0);
-                        foreach (['team', 'conversations', 'onedrive', 'calendar', 'notebook'] as $feature) {
-                            if (!isset($groupurls[$feature])) {
-                                continue;
-                            }
-
-                            if ($feature == 'team' && !utils::course_is_group_feature_enabled($courseid, 'team')) {
-                                continue;
-                            }
-
-                            $url = new moodle_url($groupurls[$feature]);
-                            $resourcename = get_string('course_feature_' . $feature, 'block_microsoft');
-                            $items[] = html_writer::link($url, $resourcename,
-                                ['target' => '_blank', 'class' => 'servicelink block_microsoft_' . $feature]);
+                if ($o365record) {
+                    // Links to course features.
+                    $microsoft365urls = utils::get_course_microsoft_365_urls($courseid);
+                    foreach (['team', 'conversations', 'onedrive', 'calendar', 'notebook'] as $feature) {
+                        if (!isset($microsoft365urls[$feature])) {
+                            continue;
                         }
 
-                        // Link to course reset options.
-                        if (has_capability('moodle/course:reset', $this->page->context)) {
-                            switch (get_config('local_o365', 'course_reset_teams')) {
-                                case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE:
-                                    // Allow user to configure reset actions.
-                                    $configurereseturl = new moodle_url('/blocks/microsoft/configure_reset.php',
-                                        ['course' => $courseid]);
-                                    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
-                                        $items[] = html_writer::link($configurereseturl,
-                                            get_string('configure_reset_team', 'block_microsoft'),
-                                            ['class' => 'servicelink block_microsoft_reset']);
-                                    } else {
-                                        $items[] = html_writer::link($configurereseturl,
-                                            get_string('configure_reset_group', 'block_microsoft'),
-                                            ['class' => 'servicelink block_microsoft_reset']);
-                                    }
+                        $url = new moodle_url($microsoft365urls[$feature]);
+                        $resourcename = get_string('course_feature_' . $feature, 'block_microsoft');
+                        $items[] = html_writer::link($url, $resourcename,
+                            ['target' => '_blank', 'class' => 'servicelink block_microsoft_' . $feature]);
+                    }
 
-                                    break;
-                                case TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW:
-                                    // Force archive, show notification.
-                                    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
-                                        $items[] = html_writer::span(get_string('course_reset_disconnect_team', 'block_microsoft'),
-                                            'servicelink block_microsoft_reset');
-                                    } else {
-                                        $items[] = html_writer::span(get_string('course_reset_disconnect_group', 'block_microsoft'),
-                                            'servicelink block_microsoft_reset');
-                                    }
+                    // Link to course reset options.
+                    if (has_capability('moodle/course:reset', $this->page->context)) {
+                        switch (get_config('local_o365', 'course_reset_teams')) {
+                            case COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE:
+                                // Allow user to configure reset actions.
+                                $configurereseturl = new moodle_url('/blocks/microsoft/configure_reset.php',
+                                    ['course' => $courseid]);
+                                $items[] = html_writer::link($configurereseturl,
+                                    get_string('configure_reset', 'block_microsoft'),
+                                    ['class' => 'servicelink block_microsoft_reset']);
 
-                                    break;
-                                default:
-                                    // Force do nothing, show notification.
-                                    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
-                                        $items[] = html_writer::span(get_string('course_reset_do_nothing_team', 'block_microsoft'),
-                                            'servicelink block_microsoft_reset');
-                                    } else {
-                                        $items[] = html_writer::span(get_string('course_reset_do_nothing_group', 'block_microsoft'),
-                                            'servicelink block_microsoft_reset');
-                                    }
-                            }
+                                break;
+                            case COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW:
+                                // Force archive, show notification.
+                                $items[] = html_writer::span(get_string('course_reset_disconnect_and_create_new',
+                                    'block_microsoft'), 'servicelink block_microsoft_reset');
+
+                                break;
+                            case COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_ONLY:
+                                // Force disconnect, show notification.
+                                $items[] = html_writer::span(get_string('course_reset_disconnect_only', 'block_microsoft'),
+                                    'servicelink block_microsoft_reset');
+
+                                break;
+                            default:
+                                // Force do nothing, show notification.
+                                $items[] = html_writer::span(get_string('course_reset_do_nothing', 'block_microsoft'),
+                                    'servicelink block_microsoft_reset');
                         }
                     }
                 }
@@ -258,23 +238,27 @@ class block_microsoft extends block_base {
 
         $o365record = null;
 
-        if (utils::course_is_group_feature_enabled($courseid, 'team')) {
-            if ($o365record = $DB->get_record('local_o365_objects',
-                ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
-                // The course is configured to be connected to a Team, and is connected.
-                $html = html_writer::tag('h5', get_string('course_connected_to_team', 'block_microsoft'));
-            } else {
-                // The course is configured to be connected to a Team, but the Team cannot be found.
-                $html = html_writer::tag('h5', get_string('course_connected_to_team_missing', 'block_microsoft'));
-            }
-        } else if (utils::course_is_group_enabled($courseid)) {
+        if (utils::is_course_sync_enabled($courseid)) {
             if ($o365record = $DB->get_record('local_o365_objects',
                 ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
-                // The course is configured to be connected to a group, and is connected.
-                $html = html_writer::tag('h5', get_string('course_connected_to_group', 'block_microsoft'));
+                [$subtypesql, $params] = $DB->get_in_or_equal(['courseteam', 'teamfromgroup'], SQL_PARAMS_NAMED);
+                $params['type'] = 'group';
+                $params['moodleid'] = $courseid;
+                $sql = "SELECT *
+                          FROM {local_o365_objects}
+                         WHERE subtype $subtypesql
+                           AND type = :type
+                           AND moodleid = :moodleid";
+                if ($o365record = $DB->get_record_sql($sql, $params)) {
+                    // The course is configured to be synced, and is connected to a Team.
+                    $html = html_writer::tag('h5', get_string('course_connected_to_team', 'block_microsoft'));
+                } else {
+                    // The course is configured to be synced, and is connected to a group only, i.e. team creation is pending.
+                    $html = html_writer::tag('h5', get_string('course_connected_to_team_pending', 'block_microsoft'));
+                }
             } else {
-                // The course is configured to be connected to a group, but the group cannot be found.
-                $html = html_writer::tag('h5', get_string('course_connected_to_group_missing', 'block_microsoft'));
+                // The course is configured to be synced, and is not connected to a group yet.
+                $html = html_writer::tag('h5', get_string('course_connected_to_group_pending', 'block_microsoft'));
             }
         } else {
             $html = html_writer::tag('h5', get_string('course_not_connected', 'block_microsoft'));
@@ -292,16 +276,6 @@ class block_microsoft extends block_base {
         global $DB, $CFG, $SESSION, $USER, $OUTPUT;
         $o365config = get_config('local_o365');
         $html = '';
-
-        $aadsync = get_config('local_o365', 'aadsync');
-        $aadsync = array_flip(explode(',', $aadsync));
-        // Only profile sync once for each session.
-        if (empty($SESSION->block_microsoft_profilesync) &&
-            (isset($aadsync['photosynconlogin']) || isset($aadsync['tzsynconlogin']))) {
-            $this->page->requires->jquery();
-            $this->page->requires->js('/blocks/microsoft/js/microsoft.js');
-            $this->page->requires->js_init_call('microsoft_update_profile', array($CFG->wwwroot));
-        }
 
         $user = $DB->get_record('user', array('id' => $USER->id));
         $langconnected = get_string('o365connected', 'block_microsoft', $user);
@@ -496,7 +470,7 @@ class block_microsoft extends block_base {
         }
 
         $url = get_config('block_microsoft', 'settings_geto365link');
-        $str = get_string('geto365', 'block_microsoft');
+        $str = get_string('install_office', 'block_microsoft');
         return [
             html_writer::link($url, $str, ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']),
         ];
@@ -586,34 +560,14 @@ class block_microsoft extends block_base {
                 } else {
                     $output .= get_string('error_nomoodlenotebook', 'block_microsoft');
                 }
-            } else {
-                if (\local_o365\utils::is_configured_msaccount()) {
-                    $output .= $this->render_signin_widget($onenoteapi->get_login_url());
-                }
             }
             return $output;
         } catch (\Exception $e) {
             if (class_exists('\local_o365\utils')) {
-                \local_o365\utils::debug($e->getMessage(), 'block_microsoft', $e);
+                \local_o365\utils::debug($e->getMessage(), __METHOD__, $e);
             }
             return '<span class="block_microsoft_onenote servicelink">'.get_string('linkonenote_unavailable', 'block_microsoft')
                     .'<br /><small>'.get_string('contactadmin', 'block_microsoft').'</small></span>';
         }
-    }
-
-    /**
-     * Get the HTML for the sign in button for an MS account.
-     * @param url $loginurl url for sign in button
-     * @return string HTML containing the sign in widget.
-     */
-    public function render_signin_widget($loginurl) {
-        $loginstr = get_string('msalogin', 'block_microsoft');
-
-        $attrs = [
-            'onclick' =>
-              'window.open(this.href,\'mywin\',\'left=20,top=20,width=500,height=500,toolbar=1,resizable=0\'); return false;',
-            'class' => 'servicelink block_microsoft_msasignin'
-        ];
-        return html_writer::link($loginurl, $loginstr, $attrs);
     }
 }

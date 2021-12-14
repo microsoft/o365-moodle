@@ -71,7 +71,7 @@ class utils {
                 } catch (\Exception $e) {
                     $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: '.$e->getMessage();
                     mtrace($errmsg);
-                    \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+                    \local_o365\utils::debug($errmsg, __METHOD__);
                     set_config('sharepoint_initialized', 'error', 'local_o365');
                     return false;
                 }
@@ -105,7 +105,7 @@ class utils {
                 } catch (\Exception $e) {
                     $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
                     mtrace($errmsg);
-                    \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+                    \local_o365\utils::debug($errmsg, __METHOD__);
                     set_config('sharepoint_initialized', 'error', 'local_o365');
                     return false;
                 }
@@ -213,7 +213,7 @@ class utils {
         } catch (\Exception $e) {
             $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: ' . $e->getMessage();
             mtrace($errmsg);
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            \local_o365\utils::debug($errmsg, __METHOD__);
             set_config('sharepoint_initialized', 'error', 'local_o365');
             return false;
         }

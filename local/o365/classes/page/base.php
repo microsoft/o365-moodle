@@ -123,7 +123,7 @@ class base {
     protected function standard_header() {
         global $OUTPUT;
         echo $OUTPUT->header();
-        echo \html_writer::tag('h5', $this->title);
+        echo \html_writer::tag('h2', $this->title);
     }
 
     /**

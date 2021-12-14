@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin setting to configure user groups.
+ * Admin setting to configure course sync.
  *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -32,9 +33,9 @@ global $CFG;
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
- * Admin setting to configure user groups.
+ * Admin setting to configure course sync.
  */
-class usergroups extends \admin_setting {
+class coursesync extends \admin_setting {
     /**
      * Return the setting
      *
@@ -65,11 +66,11 @@ class usergroups extends \admin_setting {
     public function output_html($data, $query = '') {
         $settinghtml = '';
 
-        $customizeurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usergroupcustom']);
+        $customizeurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'coursesynccustom']);
         $options = [
-            'off' => get_string('acp_usergroupcustom_off', 'local_o365'),
-            'oncustom' => get_string('acp_usergroupcustom_oncustom', 'local_o365', $customizeurl->out()),
-            'onall' => get_string('acp_usergroupcustom_onall', 'local_o365'),
+            'off' => get_string('acp_coursesynccustom_off', 'local_o365'),
+            'oncustom' => get_string('acp_coursesynccustom_oncustom', 'local_o365', $customizeurl->out()),
+            'onall' => get_string('acp_coursesynccustom_onall', 'local_o365'),
         ];
         $curval = (isset($options[$data])) ? $data : $this->get_defaultsetting();
         foreach ($options as $key => $desc) {
@@ -91,7 +92,7 @@ class usergroups extends \admin_setting {
         }
         $js = <<<JS
 function teams_togglecustom() {
-    if ($("#id_s_local_o365_createteams_oncustom").is(":checked")) {
+    if ($("#id_s_local_o365_coursesync_oncustom").is(":checked")) {
         console.log("custom on");
         $("#adminsetting_teams").show();
     } else {

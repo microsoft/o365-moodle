@@ -26,6 +26,8 @@
 
 namespace local_o365\adminsetting;
 
+use admin_setting_configmulticheckbox;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -35,15 +37,15 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 /**
  * Azure AD sync options.
  */
-class aadsyncoptions extends \admin_setting_configmulticheckbox {
+class aadsyncoptions extends admin_setting_configmulticheckbox {
     /** @var array Array of choices value=>label */
     public $choices;
 
     /**
      * Constructor: uses parent::__construct
      *
-     * @param string $name unique ascii name, either 'mysetting' for settings that in config,
-     * or 'myplugin/mysetting' for ones in config_plugins.
+     * @param string $name unique ascii name, either 'mysetting' for settings that in config, or 'myplugin/mysetting' for ones in
+     * config_plugins.
      * @param string $visiblename localised
      * @param string $description long localised info
      */
@@ -74,8 +76,6 @@ class aadsyncoptions extends \admin_setting_configmulticheckbox {
      *
      * Rely on data being an array should data ever be another valid vartype with acceptable value this may cause a warning/error
      * if (!is_array($data)) would fix the problem.
-     *
-     * @todo Add vartype handling to ensure $data is an array
      *
      * @param array $data An array of checked values
      * @param string $query

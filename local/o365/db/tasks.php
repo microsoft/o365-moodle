@@ -45,7 +45,7 @@ $tasks = [
         'month' => '*'
     ],
     [
-        'classname' => 'local_o365\task\groupcreate',
+        'classname' => 'local_o365\task\coursesync',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',

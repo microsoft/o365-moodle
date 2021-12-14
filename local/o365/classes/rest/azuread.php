@@ -441,7 +441,7 @@ class azuread extends \local_o365\rest\o365api {
         if (is_numeric($user)) {
             $user = $DB->get_record('user', ['id' => $user]);
             if (empty($user)) {
-                \local_o365\utils::debug('User not found', 'rest\azuread\get_muser_upn', $user);
+                \local_o365\utils::debug('User not found', __METHOD__, $user);
                 return false;
             }
         }
@@ -455,15 +455,14 @@ class azuread extends \local_o365\rest\o365api {
             $o365user = \local_o365\obj\o365user::instance_from_muserid($user->id);
             if (empty($o365user)) {
                 // No o365 user data for the user is available.
-                \local_o365\utils::debug('Could not construct o365user class for user.', 'rest\azuread\get_muser_upn',
-                    $user->username);
+                \local_o365\utils::debug('Could not construct o365user class for user.', __METHOD__, $user->username);
                 return false;
             }
             $httpclient = new \local_o365\httpclient();
             try {
                 $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'rest\azuread\get_muser_upn', $e);
+                \local_o365\utils::debug($e->getMessage(), __METHOD__, $e);
                 return false;
             }
             $tokenresource = static::get_tokenresource();
@@ -491,21 +490,18 @@ class azuread extends \local_o365\rest\o365api {
      * @param int $userid The ID of the moodle user.
      * @return bool|null|string True if successful, null if not applicable, string if other API error.
      */
-    public function add_user_to_course_group($courseid, $userid) {
-        global $DB;
-
-        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
-        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
-        if (empty($coursegroupobject)) {
+    public function add_member_to_group_by_moodle_ids($courseid, $userid) {
+        $coursegroupobjectid = \local_o365\feature\coursesync\utils::get_group_object_id_by_course_id($courseid);
+        if (!$coursegroupobjectid) {
             return null;
         }
 
-        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
-        if (empty($o365user)) {
+        $userobjectid = \local_o365\feature\coursesync\utils::get_user_object_id_by_user_id($userid);
+        if (!$userobjectid) {
             return null;
         }
 
-        $response = $this->add_member_to_group($coursegroupobject->objectid, $o365user->objectid);
+        $response = $this->add_member_to_group($coursegroupobjectid, $userobjectid);
         return $response;
     }
 
@@ -516,21 +512,18 @@ class azuread extends \local_o365\rest\o365api {
      * @param int $userid The ID of the moodle user.
      * @return bool|null|string True if successful, null if not applicable, string if other API error.
      */
-    public function remove_user_from_course_group($courseid, $userid) {
-        global $DB;
-
-        $filters = ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid];
-        $coursegroupobject = $DB->get_record('local_o365_objects', $filters);
-        if (empty($coursegroupobject)) {
+    public function remove_member_from_group_by_moodle_ids($courseid, $userid) {
+        $coursegroupobjectid = \local_o365\feature\coursesync\utils::get_group_object_id_by_course_id($courseid);
+        if (!$coursegroupobjectid) {
             return null;
         }
 
-        $o365user = \local_o365\obj\o365user::instance_from_muserid($userid);
-        if (empty($o365user)) {
+        $userobjectid = \local_o365\feature\coursesync\utils::get_user_object_id_by_user_id($userid);
+        if (!$userobjectid) {
             return null;
         }
 
-        $response = $this->remove_member_from_group($coursegroupobject->objectid, $o365user->objectid);
+        $response = $this->remove_member_from_group($coursegroupobjectid, $userobjectid);
         return $response;
     }
 
