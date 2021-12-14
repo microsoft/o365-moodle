@@ -39,6 +39,8 @@ class ajax extends base {
     public function header() {
         global $OUTPUT;
         echo $OUTPUT->header();
+
+        return true;
     }
 
     /**
@@ -136,14 +138,14 @@ class ajax extends base {
         $httpclient = new \local_o365\httpclient();
         $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
-        $caller = 'checkserviceresource_graph';
+
         switch ($setting) {
             case 'aadtenant':
                 try {
                     $data->valid = $apiclient->test_tenant($value);
                     $success = true;
                 } catch (\Exception $e) {
-                    \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                    \local_o365\utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                     $data->valid = false;
                     $success = true;
                 }
@@ -154,7 +156,7 @@ class ajax extends base {
                     $data->valid = $apiclient->validate_resource($value, $clientdata);
                     $success = true;
                 } catch (\Exception $e) {
-                    \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                    \local_o365\utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                     $data->valid = false;
                     $success = true;
                 }
@@ -175,7 +177,6 @@ class ajax extends base {
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $caller = 'checkserviceresource_legacy';
 
         if ($setting === 'aadtenant') {
             $tokenresource = \local_o365\rest\azuread::get_tokenresource();
@@ -189,7 +190,7 @@ class ajax extends base {
                 $data->valid = $apiclient->test_tenant($value);
                 $success = true;
             } catch (\Exception $e) {
-                \local_o365\utils::debug('Exception: '.$e->getMessage(), $caller, $e);
+                \local_o365\utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                 $data->valid = false;
                 $success = true;
             }
@@ -237,7 +238,7 @@ class ajax extends base {
                     $success = true;
                     echo $this->ajax_response($data, $success);
                 } catch (\Exception $e) {
-                    \local_o365\utils::debug($e->getMessage(), 'detect aadtenant graph', $e);
+                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
                     echo $this->error_response($e->getMessage());
                 }
                 die();
@@ -249,7 +250,7 @@ class ajax extends base {
                     $success = true;
                     echo $this->ajax_response($data, $success);
                 } catch (\Exception $e) {
-                    \local_o365\utils::debug($e->getMessage(), 'detect aadtenant graph', $e);
+                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
                     echo $this->error_response(get_string('settings_odburl_error_graph', 'local_o365'));
                 }
                 die();
@@ -288,7 +289,7 @@ class ajax extends base {
                     die();
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'detect aadtenant', $e);
+                \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant)', $e);
                 echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
                 die();
             }
@@ -303,7 +304,7 @@ class ajax extends base {
                     die();
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'detect odburl', $e);
+                \local_o365\utils::debug($e->getMessage(), __METHOD__  . ' (detect odburl)', $e);
                 echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
                 die();
             }
@@ -363,12 +364,9 @@ class ajax extends base {
                     $unifiedapi->missingperms = $missingdelegatedperms;
                 }
                 $appinfo = $unifiedapiclient->get_application_info();
-                [$missingperms, $haswrite] = $unifiedapiclient->check_legacy_permissions();
-                $legacyapi->missingperms = $missingperms;
-                $legacyapi->haswrite = $haswrite;
             } catch (\Exception $e) {
                 $unifiedapi->active = false;
-                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:unified', $e);
+                \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
                 $unifiedapi->error = $e->getMessage();
             }
         } else {
@@ -385,7 +383,7 @@ class ajax extends base {
                 $legacyapi->missingperms = $missingperms;
                 $legacyapi->haswrite = $haswrite;
             } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), 'mode_checksetup:legacy', $e);
+                \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (legacy)', $e);
                 $appdata->error = $e->getMessage();
             }
         }

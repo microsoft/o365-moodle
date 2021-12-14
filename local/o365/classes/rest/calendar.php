@@ -117,9 +117,9 @@ class calendar extends \local_o365\rest\o365api {
     }
 
     /**
-     * Create a new event in the course group's o365 calendar.
+     * Create a new event in the group's o365 calendar.
      *
-     * NOTE: Course groups are not supported in the legacy API, so this logs the call and returns false.
+     * NOTE: Groups are not supported in the legacy API, so this logs the call and returns false.
      *
      * @param string $subject The event's title/subject.
      * @param string $body The event's body/description.
@@ -132,8 +132,7 @@ class calendar extends \local_o365\rest\o365api {
      */
     public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(),
         $calendarid = null) {
-        \local_o365\utils::debug('Create group event called in legacy API', 'local_o365\rest\calendar::create_group_event',
-            $subject);
+        \local_o365\utils::debug('Create group event called in legacy API', __METHOD__, $subject);
         return false;
     }
 

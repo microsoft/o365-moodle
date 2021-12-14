@@ -23,7 +23,7 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once(__DIR__.'/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_login();
 $action = optional_param('action', null, PARAM_TEXT);
 $ucptitle = get_string('ucp_title', 'local_o365');

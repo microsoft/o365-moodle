@@ -25,6 +25,11 @@
 
 namespace local_o365\task;
 
+use local_o365\httpclient;
+use local_o365\oauth2\clientdata;
+use local_o365\rest\unified;
+use local_o365\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -44,14 +49,14 @@ class refreshsystemrefreshtoken extends \core\task\scheduled_task {
      * Attempt token refresh.
      */
     public function execute() {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             return false;
         }
 
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $graphresource = \local_o365\rest\unified::get_tokenresource();
-        $systemtoken = \local_o365\utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+        $httpclient = new httpclient();
+        $clientdata = clientdata::instance_from_oidc();
+        $graphresource = unified::get_tokenresource();
+        $systemtoken = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
         if (!empty($systemtoken)) {
             mtrace('... Success!');
         } else {

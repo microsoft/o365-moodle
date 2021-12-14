@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upgrade details
+ * Upgrade script.
+ *
  * @package block_microsoft
  * @author Akinsaya Delamarre <adelamarre@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,12 +30,11 @@
  * @return bool result
  */
 function xmldb_block_microsoft_upgrade($oldversion) {
-    $result = true;
-
-    if ($result && $oldversion < 2015111912) {
+    if ($oldversion < 2015111912) {
         set_config('settings_showoutlooksync', 0, 'block_microsoft');
         set_config('settings_showmanageo365conection', 0, 'block_microsoft');
         upgrade_block_savepoint(true, 2015111912, 'microsoft');
     }
-    return $result;
+
+    return true;
 }

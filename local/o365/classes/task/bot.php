@@ -50,7 +50,7 @@ class bot extends \core\task\scheduled_task {
 
         mtrace('Starting bot task.');
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             mtrace('Microsoft 365 not configured');
             return false;
         }

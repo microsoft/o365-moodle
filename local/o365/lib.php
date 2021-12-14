@@ -28,76 +28,42 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * TEAMS_MOODLE_APP_EXTERNAL_ID - app ID used to create Teams Moodle app.
  */
-define('TEAMS_MOODLE_APP_EXTERNAL_ID', '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95');
+const TEAMS_MOODLE_APP_EXTERNAL_ID = '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95';
 
 // Teams/group course reset site settings.
-define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DO_NOTHING', '1');
-define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE', '2');
-define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW', '3');
-define('TEAMS_GROUP_COURSE_RESET_SITE_SETTING_DISCONNECT_ONLY', '4');
+const COURSE_SYNC_RESET_SITE_SETTING_DO_NOTHING = '1';
+const COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE = '2';
+const COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW = '3';
+const COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_ONLY = '4';
 
-// Teams course reset settings.
-define('TEAMS_COURSE_RESET_SETTING_DO_NOTHING', '1');
-define('TEAMS_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW', '2');
-define('TEAMS_COURSE_RESET_SETTING_DISCONNECT_ONLY', '3');
-
-// Group course reset settings.
-define('GROUP_COURSE_RESET_SETTING_DO_NOTHING', '1');
-define('GROUP_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW', '2');
-define('GROUP_COURSE_RESET_SETTING_DISCONNECT_ONLY', '3');
+// Course reset course settings.
+const COURSE_SYNC_RESET_COURSE_SETTING_DO_NOTHING = '1';
+const COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_AND_CREATE_NEW = '2';
+const COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_ONLY = '3';
 
 // Course sync options.
-define('MICROSOFT365_COURSE_SYNC_NONE', 0);
-define('MICROSOFT365_COURSE_SYNC_GROUPS', 1);
-define('MICROSOFT365_COURSE_SYNC_TEAMS', 2);
+const MICROSOFT365_COURSE_SYNC_DISABLED = 0;
+const MICROSOFT365_COURSE_SYNC_ENABLED = 1;
 
-/**
- * Retrieve icon image and send to the browser for display.
- *
- * @param object $course Course object.
- * @param object $cm Course module object.
- * @param object $context Context.
- * @param string $filearea File area, icon or description.
- * @param array $args Array of arguments passed.
- * @param boolean $forcedownload True if download should be fored.
- * @param array $options Array of options.
- */
-function local_o365_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
-    global $DB;
-    // Check the contextlevel is as expected - if your plugin is a block, this becomes CONTEXT_BLOCK, etc.
-    if ($context->contextlevel != CONTEXT_COURSE) {
-        return false;
-    }
+// Configuration tabs.
+const LOCAL_O365_TAB_SETUP = 0; // Setup settings.
+const LOCAL_O365_TAB_SYNC = 1; // Sync settings.
+const LOCAL_O365_TAB_ADVANCED = 2; // Admin tools + advanced settings.
+const LOCAL_O365_TAB_SDS = 3; // School data sync.
+const LOCAL_O365_TAB_TEAMS = 5; // Teams integration settings.
+const LOCAL_O365_TAB_MOODLE_APP = 6; // Teams Moodle app.
 
-    // Make sure the filearea is one of those used by the plugin.
-    if ($filearea !== 'icon' && $filearea !== 'description') {
-        return false;
-    }
+// Group roles.
+const MICROSOFT365_GROUP_ROLE_OWNER = 'owner';
+const MICROSOFT365_GROUP_ROLE_MEMBER = 'member';
 
-    // Make sure the user is logged in and has access to the module.
-    require_login($course, true, $cm);
+// Team lock status.
+const TEAM_LOCKED_STATUS_UNKNOWN = 0;
+const TEAM_LOCKED = 1;
+const TEAM_UNLOCKED = 2;
 
-    // Item id is the Microsoft 365 group id in local_o365_coursegroupdata.
-    $itemid = array_shift($args); // The first item in the $args array.
-
-    // Extract the filename / filepath from the $args array.
-    $filename = array_pop($args); // The last item in the $args array.
-    if (!$args) {
-        $filepath = '/'; // Variable $args is empty => the path is '/'.
-    } else {
-        $filepath = '/' . implode('/', $args) . '/'; // Variable $args contains elements of the filepath.
-    }
-
-    // Retrieve the file from the Files API.
-    $fs = get_file_storage();
-    $file = $fs->get_file($context->id, 'local_o365', $filearea, $itemid, $filepath, $filename);
-    if (!$file) {
-        // The file does not exist.
-        return false;
-    }
-
-    send_stored_file($file, null, 0, $forcedownload, $options);
-}
+// Education license.
+const EDUCATION_LICENSE_IDS = ['c33802dd-1b50-4b9a-8bb9-f13d2cdeadac', '500b6a2a-7a50-4f40-b5f9-160e5b8c2f48'];
 
 /**
  * Check for link connection capabilities.

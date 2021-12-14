@@ -192,10 +192,8 @@ abstract class base {
      */
     public function process_apicall_response($response, array $expectedstructure = array()) {
         $backtrace = debug_backtrace(0);
-        $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
-        $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
         $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-        $caller = $callingclass.'::'.$callingfunc.':'.$callingline;
+        $caller = __METHOD__ . ':' . $callingline;
 
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {

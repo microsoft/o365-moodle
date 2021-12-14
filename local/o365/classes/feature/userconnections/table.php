@@ -106,7 +106,7 @@ class table extends \table_sql {
      * @param bool $useinitialsbar Whether to use the initials bar.
      */
     public function query_db($pagesize, $useinitialsbar=true) {
-        global $DB, $USER;
+        global $DB;
 
         $customsql = $this->where->sql;
         $customparams = $this->where->params;
@@ -128,14 +128,11 @@ class table extends \table_sql {
             'objects.o365name AS objectso365name',
             'COALESCE(aotok.oidcusername, o365match.aadupn, objects.o365name) AS o365username',
         ];
-        $sql = 'SELECT '.implode(',', $columns).'
+        $sql = 'SELECT ' . implode(',', $columns) . '
                   FROM {user} u
-             LEFT JOIN {auth_oidc_token} aotok
-                       ON aotok.userid = u.id
-             LEFT JOIN {local_o365_connections} o365match
-                       ON o365match.muserid = u.id
-             LEFT JOIN {local_o365_objects} objects
-                       ON objects.moodleid = u.id AND type = ?
+             LEFT JOIN {auth_oidc_token} aotok ON aotok.userid = u.id
+             LEFT JOIN {local_o365_connections} o365match ON o365match.muserid = u.id
+             LEFT JOIN {local_o365_objects} objects ON objects.moodleid = u.id AND type = ?
                  WHERE u.deleted = 0 AND u.username != ?';
         $params = ['user', 'guest'];
 

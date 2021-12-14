@@ -95,7 +95,7 @@ class botframework {
      * @param int $teamid object ID of the team
      * @param int $userid object ID of the recipient user
      * @param string $message content of the message
-     * @param string $listitems
+     * @param array $listitems
      * @param string|null $endpoint endpoint URL
      */
     public function send_notification($teamid, $userid, $message, $listitems, $endpoint = null) {

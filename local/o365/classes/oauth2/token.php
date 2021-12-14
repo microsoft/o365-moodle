@@ -169,13 +169,10 @@ class token {
                     }
                 }
                 $backtrace = debug_backtrace(0);
-                $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
-                $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
                 $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-                $caller = $callingclass.'::'.$callingfunc.':'.$callingline;
+                $caller = __METHOD__ . ':' . $callingline;
                 // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
-                \local_o365\utils::debug('Cannot retrieve a token for the base resource.',
-                    'local_o365\oauth2\token::instance ' . $caller);
+                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', $caller);
                 return null;
             } else {
                 $token = static::get_for_new_resource($userid, $tokenresource, $clientdata, $httpclient);
@@ -235,7 +232,7 @@ class token {
                 'tokenresult' => $tokenresult,
                 'resource' => $newtokenresource,
             ];
-            \local_o365\utils::debug($errmsg, 'local_o365\oauth2\token::jump_tokenresource', $debuginfo);
+            \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
         }
     }
 
@@ -288,7 +285,7 @@ class token {
                     'tokenresult' => $tokenresult,
                     'resource' => $tokenresource
                 ];
-                \local_o365\utils::debug($errmsg, 'local_o365\oauth2\token::get_for_new_resource', $debuginfo);
+                \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
             }
         }
         return false;

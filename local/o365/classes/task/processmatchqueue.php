@@ -19,11 +19,23 @@
  *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\task;
+
+use auth_plugin_oidc;
+use core\task\scheduled_task;
+use core_text;
+use Exception;
+use local_o365\httpclient;
+use local_o365\oauth2\clientdata;
+use local_o365\rest\azuread;
+use local_o365\rest\unified;
+use local_o365\utils;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -34,40 +46,40 @@ require_once($CFG->dirroot.'/auth/oidc/auth.php');
 /**
  * Scheduled task to process a batch from the match queue.
  */
-class processmatchqueue extends \core\task\scheduled_task {
+class processmatchqueue extends scheduled_task {
     /**
      * Get a descriptive name for this task (shown to admins).
      *
      * @return string
      */
-    public function get_name() {
+    public function get_name() : string {
         return get_string('task_processmatchqueue', 'local_o365');
     }
 
     /**
      * Construct an API client.
      *
-     * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
+     * @return azuread|unified A constructed user API client (unified or legacy), or false if error.
      */
     public function get_api() {
-        $unifiedconfigured = \local_o365\rest\unified::is_configured();
+        $unifiedconfigured = unified::is_configured();
         if ($unifiedconfigured === true) {
-            $tokenresource = \local_o365\rest\unified::get_tokenresource();
+            $tokenresource = unified::get_tokenresource();
         } else {
-            $tokenresource = \local_o365\rest\azuread::get_tokenresource();
+            $tokenresource = azuread::get_tokenresource();
         }
 
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+        $clientdata = clientdata::instance_from_oidc();
+        $httpclient = new httpclient();
+        $token = utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         if (empty($token)) {
-            throw new \Exception('No token available for system user. Please run local_o365 health check.');
+            throw new Exception('No token available for system user. Please run local_o365 health check.');
         }
 
         if ($unifiedconfigured === true) {
-            $apiclient = new \local_o365\rest\unified($token, $httpclient);
+            $apiclient = new unified($token, $httpclient);
         } else {
-            $apiclient = new \local_o365\rest\azuread($token, $httpclient);
+            $apiclient = new azuread($token, $httpclient);
         }
         return $apiclient;
     }
@@ -75,14 +87,14 @@ class processmatchqueue extends \core\task\scheduled_task {
     /**
      * Do the job.
      */
-    public function execute() {
+    public function execute() : bool {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             return false;
         }
 
-        $auth = new \auth_plugin_oidc;
+        $auth = new auth_plugin_oidc;
 
         $sql = 'SELECT mq.*,
                        u.id as muserid,
@@ -106,7 +118,7 @@ class processmatchqueue extends \core\task\scheduled_task {
             try {
                 // Check for matching Moodle user.
                 if (empty($matchrec->muserid)) {
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_nomuser', 'local_o365');
                     $updatedrec->completed = 1;
@@ -116,8 +128,8 @@ class processmatchqueue extends \core\task\scheduled_task {
                 }
 
                 // Check whether Moodle user is already o365 connected.
-                if (\local_o365\utils::is_o365_connected($matchrec->muserid)) {
-                    $updatedrec = new \stdClass;
+                if (utils::is_o365_connected($matchrec->muserid)) {
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_museralreadyo365', 'local_o365');
                     $updatedrec->completed = 1;
@@ -128,7 +140,7 @@ class processmatchqueue extends \core\task\scheduled_task {
 
                 // Check existing matches for Moodle user.
                 if (!empty($matchrec->muserexistingconnectionid)) {
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_museralreadymatched', 'local_o365');
                     $updatedrec->completed = 1;
@@ -139,7 +151,7 @@ class processmatchqueue extends \core\task\scheduled_task {
 
                 // Check existing matches for Microsoft 365 user.
                 if (!empty($matchrec->officeuserexistingconnectionid)) {
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadymatched', 'local_o365');
                     $updatedrec->completed = 1;
@@ -150,7 +162,7 @@ class processmatchqueue extends \core\task\scheduled_task {
 
                 // Check existing tokens for Microsoft 365 user (indicates o365 user is already connected to someone).
                 if (!empty($matchrec->officeuserexistingoidctoken)) {
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadyconnected', 'local_o365');
                     $updatedrec->completed = 1;
@@ -159,9 +171,9 @@ class processmatchqueue extends \core\task\scheduled_task {
                     continue;
                 }
 
-                // Check if a o365 user object record already exists.
+                // Check if an o365 user object record already exists.
                 if (!empty($matchrec->officeuserobjectrecid)) {
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadyconnected', 'local_o365');
                     $updatedrec->completed = 1;
@@ -171,16 +183,16 @@ class processmatchqueue extends \core\task\scheduled_task {
                 }
 
                 // Check o365 username.
-                $userfound = false;
                 try {
                     $o365user = $apiclient->get_user_by_upn($matchrec->o365username);
                     $userfound = true;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
+                    $o365user = [];
                     $userfound = false;
                 }
 
                 if ($userfound !== true) {
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_noo365user', 'local_o365');
                     $updatedrec->completed = 1;
@@ -191,14 +203,14 @@ class processmatchqueue extends \core\task\scheduled_task {
 
                 if (empty($matchrec->openidconnect)) {
                     // Match validated.
-                    $connectionrec = new \stdClass;
+                    $connectionrec = new stdClass;
                     $connectionrec->muserid = $matchrec->muserid;
-                    $connectionrec->aadupn = \core_text::strtolower($o365user['userPrincipalName']);
+                    $connectionrec->aadupn = core_text::strtolower($o365user['userPrincipalName']);
                     $connectionrec->uselogin = 0;
                     $DB->insert_record('local_o365_connections', $connectionrec);
                 } else {
                     $userobjectid = null;
-                    if (\local_o365\rest\unified::is_configured()) {
+                    if (unified::is_configured()) {
                         $userobjectid = $o365user['id'];
                     } else {
                         $userobjectid = $o365user['objectId'];
@@ -219,22 +231,22 @@ class processmatchqueue extends \core\task\scheduled_task {
 
                     // Updated the user's authentication method field.
                     mtrace('Updating user authentication record.');
-                    $updatedrec = new \stdClass;
+                    $updatedrec = new stdClass;
                     $updatedrec->id = $matchrec->muserid;
                     $updatedrec->auth = $auth->authtype;
                     $DB->update_record('user', $updatedrec);
                 }
 
-                $updatedrec = new \stdClass;
+                $updatedrec = new stdClass;
                 $updatedrec->id = $matchrec->id;
                 $updatedrec->completed = 1;
                 $DB->update_record('local_o365_matchqueue', $updatedrec);
                 mtrace('Match record created for userid #' . $matchrec->muserid . ' and o365 user ' .
-                    \core_text::strtolower($o365user['userPrincipalName']));
+                    core_text::strtolower($o365user['userPrincipalName']));
 
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $exceptionstring = $e->getMessage().': '.$e->debuginfo;
-                $updatedrec = new \stdClass;
+                $updatedrec = new stdClass;
                 $updatedrec->id = $matchrec->id;
                 $updatedrec->errormessage = $exceptionstring;
                 $updatedrec->completed = 1;
@@ -242,6 +254,7 @@ class processmatchqueue extends \core\task\scheduled_task {
                 mtrace($exceptionstring);
             }
         }
+
         $matchqueue->close();
 
         return true;
