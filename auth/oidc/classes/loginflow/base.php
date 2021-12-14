@@ -26,6 +26,8 @@
 
 namespace auth_oidc\loginflow;
 
+use auth_oidc\jwt;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
@@ -113,21 +115,12 @@ class base {
         $fieldmappingfromtoken = true;
 
         if (auth_oidc_is_local_365_installed()) {
-            // Check if multitenants are enabled. User from additional tenants can only sync fields from token.
-            $additionaltenants = get_config('local_o365', 'multitenants');
-            if (!empty($additionaltenants)) {
-                $additionaltenants = json_decode($additionaltenants, true);
-                if (!is_array($additionaltenants)) {
-                    $additionaltenants = [];
-                }
-            }
+            // Check if multi tenants is enabled. User from additional tenants can only sync fields from token.
             $userfromadditionaltenant = false;
-            foreach ($additionaltenants as $additionaltenant) {
-                $additionaltenant = '@' . $additionaltenant;
-                if (stripos($username, $additionaltenant) !== false) {
-                    $userfromadditionaltenant = true;
-                    break;
-                }
+            $hostingtenantid = get_config('local_o365', 'aadtenantid');
+            $token = jwt::instance_from_encoded($tokenrec->token);
+            if ($token->claim('tid') != $hostingtenantid) {
+                $userfromadditionaltenant = true;
             }
 
             if (!$userfromadditionaltenant) {
