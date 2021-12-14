@@ -166,19 +166,50 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get the tenant associated with the current account.
+     * Get the name of the default domain in the tenant associated with the current account.
      *
-     * @return string The tenant string.
+     * @return string
+     * @throws \moodle_exception
      */
-    public function get_tenant() {
+    public function get_default_domain_name_in_tenant() {
         $response = $this->apicall('get', '/domains');
         $response = $this->process_apicall_response($response, ['value' => null]);
         foreach ($response['value'] as $domain) {
-            if (!empty($domain['isInitial']) && isset($domain['id'])) {
+            if (!empty($domain['isDefault']) && isset($domain['id'])) {
                 return $domain['id'];
             }
         }
         throw new \moodle_exception('erroracpapcantgettenant', 'local_o365');
+    }
+
+    /**
+     * Get the names of the all domains in the tenant associated with the current account, with the default domain being the first.
+     *
+     * @return array
+     * @throws \moodle_exception
+     */
+    public function get_all_domain_names_in_tenant() {
+        $response = $this->apicall('get', '/domains');
+        $response = $this->process_apicall_response($response, ['value' => null]);
+        $defaultdomainname = '';
+        $domainnames = [];
+
+        foreach ($response['value'] as $domain) {
+            if (isset($domain['id'])) {
+                if (!empty($domain['isVerified'])) {
+                    if (!empty($domain['isDefault'])) {
+                        $defaultdomainname = $domain['id'];
+                    } else {
+                        $domainnames[] = $domain['id'];
+                    }
+                }
+            }
+
+        }
+
+        array_unshift($domainnames, $defaultdomainname);
+
+        return $domainnames;
     }
 
     /**
@@ -187,7 +218,7 @@ class unified extends \local_o365\rest\o365api {
      * @return string The OneDrive URL string.
      */
     public function get_odburl() {
-        $tenant = $this->get_tenant();
+        $tenant = $this->get_default_domain_name_in_tenant();
         $suffix = '.onmicrosoft.com';
         $sufflen = strlen($suffix);
         if (substr($tenant, -$sufflen) === $suffix) {
