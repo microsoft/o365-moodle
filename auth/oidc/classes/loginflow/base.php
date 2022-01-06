@@ -26,6 +26,9 @@
 
 namespace auth_oidc\loginflow;
 
+use auth_oidc\jwt;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
@@ -142,7 +145,7 @@ class base {
                 } else {
                     // If local_o365 is installed, but all field mapping fields are in token, then use token.
                     $fieldmappingfromtoken = false;
-                    $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
+                    $idtoken = jwt::instance_from_encoded($tokenrec->idtoken);
 
                     $oid = $idtoken->claim('oid');
                     if (!empty($oid)) {
@@ -180,42 +183,83 @@ class base {
                 }
 
                 // Call the function in local_o365 to map fields.
-                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new \stdClass(), 'login');
+                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new stdClass(), 'login');
                 $userinfo = (array)$updateduser;
             }
         }
 
         if ($fieldmappingfromtoken) {
-            // If local_o365 is not installed, use default mapping.
-            $userinfo = [];
+            // If local_o365 is not installed, use information from user token.
+            $userdata = [];
 
-            $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
+            $idtoken = jwt::instance_from_encoded($tokenrec->idtoken);
+
+            $objectid = $idtoken->claim('oid');
+            if (!$objectid) {
+                $userdata['objectId'] = $objectid;
+            }
+
+            $upn = $idtoken->claim('upn');
+            if (!empty($upn)) {
+                $userdata['userPrincipalName'] = $upn;
+            }
 
             $firstname = $idtoken->claim('given_name');
             if (!empty($firstname)) {
-                $userinfo['firstname'] = $firstname;
+                $userdata['givenName'] = $firstname;
             }
 
             $lastname = $idtoken->claim('family_name');
             if (!empty($lastname)) {
-                $userinfo['lastname'] = $lastname;
+                $userdata['surname'] = $lastname;
             }
 
             $email = $idtoken->claim('email');
             if (!empty($email)) {
-                $userinfo['email'] = $email;
+                $userdata['mail'] = $email;
             } else {
-                $upn = $idtoken->claim('upn');
                 if (!empty($upn)) {
                     $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
                     if (!empty($aademailvalidateresult)) {
-                        $userinfo['email'] = $aademailvalidateresult;
+                        $userdata['mail'] = $aademailvalidateresult;
                     }
                 }
             }
+
+            $updateduser = static::apply_configured_fieldmap_from_token($userdata, 'login');
+            $userinfo = (array)$updateduser;
         }
 
         return $userinfo;
+    }
+
+    /**
+     * Apply configured field mapping from token information to an empty user object.
+     *
+     * @param array $userdata
+     * @param string $eventtype
+     * @return stdClass
+     */
+    public static function apply_configured_fieldmap_from_token(array $userdata, string $eventtype) {
+        $user = new stdClass();
+
+        $fieldmappings = auth_oidc_get_field_mappings();
+
+        foreach ($fieldmappings as $localfield => $fieldmapping) {
+            $remotefield = $fieldmapping['field_map'];
+            $behavior = $fieldmapping['update_local'];
+
+            if ($behavior !== 'on' . $eventtype && $behavior !== 'always') {
+                // Field mapping doesn't apply to this event type.
+                continue;
+            }
+
+            if (isset($userdata[$remotefield])) {
+                $user->$localfield = $userdata[$remotefield];
+            }
+        }
+
+        return $user;
     }
 
     /**
@@ -315,7 +359,7 @@ class base {
                     throw new \moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
                 }
 
-                $updateduser = new \stdClass;
+                $updateduser = new stdClass;
 
                 if ($fromform->newmethod === 'manual') {
                     if (empty($fromform->password)) {
@@ -342,7 +386,7 @@ class base {
                     $updateduser->auth = $prevauthmethod;
                     // We can't use user_update_user as it will rehash the value.
                     if (!empty($prevmethodrec->password)) {
-                        $manualuserupdate = new \stdClass;
+                        $manualuserupdate = new stdClass;
                         $manualuserupdate->id = $userrec->id;
                         $manualuserupdate->password = $prevmethodrec->password;
                         $DB->update_record('user', $manualuserupdate);
@@ -434,7 +478,7 @@ class base {
      */
     protected function process_idtoken($idtoken, $orignonce = '') {
         // Decode and verify idtoken.
-        $idtoken = \auth_oidc\jwt::instance_from_encoded($idtoken);
+        $idtoken = jwt::instance_from_encoded($idtoken);
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
             \auth_oidc\utils::debug('Invalid idtoken', 'base::process_idtoken', $idtoken);
@@ -460,10 +504,10 @@ class base {
      * This check will return false if there are restrictions in place that the user did not meet, otherwise it will return
      * true. If there are no restrictions in place, this will return true.
      *
-     * @param \auth_oidc\jwt $idtoken The ID token of the user who is trying to log in.
+     * @param jwt $idtoken The ID token of the user who is trying to log in.
      * @return bool Whether the restriction check passed.
      */
-    protected function checkrestrictions(\auth_oidc\jwt $idtoken) {
+    protected function checkrestrictions(jwt $idtoken) {
         $restrictions = (isset($this->config->userrestrictions)) ? trim($this->config->userrestrictions) : '';
         $hasrestrictions = false;
         $userpassed = false;
@@ -520,12 +564,12 @@ class base {
      * @param array $username The username of the Moodle user to link to.
      * @param array $authparams Parameters receieved from the auth request.
      * @param array $tokenparams Parameters received from the token request.
-     * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param jwt $idtoken A JWT object representing the received id_token.
      * @param int $userid
      * @param null|string $originalupn
-     * @return \stdClass The created token database record.
+     * @return stdClass The created token database record.
      */
-    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, \auth_oidc\jwt $idtoken, $userid = 0,
+    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, jwt $idtoken, $userid = 0,
         $originalupn = null) {
         global $DB;
 
@@ -555,7 +599,7 @@ class base {
             }
         }
 
-        $tokenrec = new \stdClass;
+        $tokenrec = new stdClass;
         $tokenrec->oidcuniqid = $oidcuniqid;
         $tokenrec->username = $username;
         $tokenrec->userid = $userid;
@@ -587,7 +631,7 @@ class base {
      */
     protected function updatetoken($tokenid, $authparams, $tokenparams) {
         global $DB;
-        $tokenrec = new \stdClass;
+        $tokenrec = new stdClass;
         $tokenrec->id = $tokenid;
         $tokenrec->authcode = $authparams['code'];
         $tokenrec->token = $tokenparams['access_token'];
