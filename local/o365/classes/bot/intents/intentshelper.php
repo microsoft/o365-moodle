@@ -80,7 +80,7 @@ class intentshelper {
      * @param int $teacherid - teacher user id in Moodle
      * @return array - list of teacher courses ids
      */
-    public function getteachercourses($teacherid) {
+    public static function getteachercourses($teacherid) {
         $courses = array_keys(enrol_get_users_courses($teacherid, true, 'id'));
         $teachercourses = [];
         foreach ($courses as $course) {
