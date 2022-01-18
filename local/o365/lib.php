@@ -51,6 +51,10 @@ define('MICROSOFT365_COURSE_SYNC_NONE', 0);
 define('MICROSOFT365_COURSE_SYNC_GROUPS', 1);
 define('MICROSOFT365_COURSE_SYNC_TEAMS', 2);
 
+// SDS sync school disabled actions.
+const SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED = 1;
+const SDS_SCHOOL_DISABLED_ACTION_DISCONNECT = 2;
+
 /**
  * Retrieve icon image and send to the browser for display.
  *
