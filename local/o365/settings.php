@@ -180,7 +180,7 @@ if ($hassiteconfig) {
         }
     }
 
-    if ($tab == LOCAL_O365_TAB_SYNC || !empty($install)) {
+    if ($tab == LOCAL_O365_TAB_SYNC && empty($install)) {
         $label = new lang_string('settings_options_usersync', 'local_o365');
         $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
@@ -329,7 +329,7 @@ if ($hassiteconfig) {
             0));
     }
 
-    if ($tab === LOCAL_O365_TAB_ADVANCED || !empty($install)) {
+    if ($tab === LOCAL_O365_TAB_ADVANCED && empty($install)) {
         // Tools.
         $label = new lang_string('settings_header_tools', 'local_o365');
         $desc = '';
@@ -441,7 +441,7 @@ if ($hassiteconfig) {
         $settings->add(new sharepointcourseselect($settingname, $label, $desc, 'none'));
     }
 
-    if ($tab == LOCAL_O365_TAB_SDS || !empty($install)) {
+    if ($tab == LOCAL_O365_TAB_SDS && empty($install)) {
         // Section header.
         $scheduledtasks = new moodle_url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_sds_intro_previewwarning', 'local_o365');
@@ -550,7 +550,7 @@ if ($hassiteconfig) {
         }
     }
 
-    if ($tab == LOCAL_O365_TAB_TEAMS || !empty($install)) {
+    if ($tab == LOCAL_O365_TAB_TEAMS && empty($install)) {
         // Banner.
         $bannerhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1', ['id' => 'admin-teams-banner']);
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
@@ -673,7 +673,7 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('download_manifest_header', '', $downloadmanifesthtml));
     }
 
-    if (($tab == LOCAL_O365_TAB_MOODLE_APP || !empty($install)) && local_o365_show_teams_moodle_app_id_tab()) {
+    if (($tab == LOCAL_O365_TAB_MOODLE_APP && empty($install)) && local_o365_show_teams_moodle_app_id_tab()) {
         // Moodle app ID.
         $moodleappiddescription = get_string('settings_moodle_app_id_desc', 'local_o365');
         if (\local_o365\utils::is_configured() === true) {
