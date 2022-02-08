@@ -26,7 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['choosereadme'] = 'Boost o365teams is a modern highly-customisable theme. This theme is intended to be used directly, or as a parent theme when creating new themes utilising Bootstrap 4.';
 $string['pluginname'] = 'Boost Office365 Teams';
-$string['privacy:metadata'] = 'The Boost Office365 Teams plugin does not store any personal data.';
 $string['region-side-pre'] = 'Right';
 
 $string['placementfrontpage'] = 'Front page';
