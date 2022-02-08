@@ -81,7 +81,7 @@ function xmldb_local_onenote_upgrade($oldversion) {
     if ($oldversion < 2015111905) {
         // Define field submission_teacher_lastview to be added to onenote_assign_pages.
         $table = new xmldb_table('onenote_assign_pages');
-        $field = new xmldb_field('teacher_lastviewed', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'feedback_teacher_page_id');
+        $field = new xmldb_field('teacher_lastviewed', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'feedback_teacher_page_id');
         // Conditionally launch add field submission_teacher_lastview.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
