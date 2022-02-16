@@ -122,11 +122,13 @@ class base {
                 }
             }
             $userfromadditionaltenant = false;
-            foreach ($additionaltenants as $additionaltenant) {
-                $additionaltenant = '@' . $additionaltenant;
-                if (stripos($username, $additionaltenant) !== false) {
-                    $userfromadditionaltenant = true;
-                    break;
+            if(is_countable($additionaltenants) && !empty($additionaltenants)) {
+                foreach ($additionaltenants as $additionaltenant) {
+                    $additionaltenant = '@' . $additionaltenant;
+                    if (stripos($username, $additionaltenant) !== false) {
+                        $userfromadditionaltenant = true;
+                        break;
+                    }
                 }
             }
 
