@@ -1056,9 +1056,10 @@ class main {
         }
 
         // Fetch linked AAD user accounts.
-        [$upnsql, $upnparams] = $DB->get_in_or_equal($upns);
-        [$usernamesql, $usernameparams] = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
-        $sql = 'SELECT tok.oidcusername,
+        if ($upns && $usernames) {
+            [$upnsql, $upnparams] = $DB->get_in_or_equal($upns);
+            [$usernamesql, $usernameparams] = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
+            $sql = 'SELECT tok.oidcusername,
                        u.username as username,
                        u.id as muserid,
                        u.auth,
@@ -1074,10 +1075,11 @@ class main {
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
                  WHERE tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
-        $params = array_merge(['user'], $upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
-        $linkedexistingusers = $DB->get_records_sql($sql, $params);
+            $params = array_merge(['user'], $upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
+            $linkedexistingusers = $DB->get_records_sql($sql, $params);
 
-        $existingusers = $existingusers + $linkedexistingusers;
+            $existingusers = $existingusers + $linkedexistingusers;
+        }
 
         $processedusers = [];
 
