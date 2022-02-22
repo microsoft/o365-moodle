@@ -654,7 +654,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071504, 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2020071506) {
+    if ($oldversion < 2020071506) {
         // Part 1: create local_o365_teams_cache table.
         if (!$dbman->table_exists('local_o365_teams_cache')) {
             // Define table local_o365_teams_cache to be created.
@@ -735,7 +735,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071506, 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2020071507) {
+    if ($oldversion < 2020071507) {
         // Update aadsync settings to replace 'delete' with 'suspend'.
         $aadsyncsetting = get_config('local_o365', 'aadsync');
         set_config('aadsync', str_replace('delete', 'suspend', $aadsyncsetting), 'local_o365');
