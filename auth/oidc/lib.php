@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin library.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -24,6 +26,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Initialize custom icon.
+ *
+ * @param $filefullname
+ * @return false|void
+ */
 function auth_oidc_initialize_customicon($filefullname) {
     global $CFG;
 
@@ -150,7 +158,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
 
     $mismatchedtokens = [];
 
-    $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusernmae, tok.oidcusername AS oidcusername,
+    $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusername, tok.oidcusername AS oidcusername,
                    tok.oidcuniqid as oidcuniqid, u.id AS muserid, u.username AS musername
               FROM {auth_oidc_token} tok
               JOIN {user} u ON u.id = tok.userid
@@ -246,6 +254,26 @@ function auth_oidc_get_remote_fields() {
             $remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_oidc',
                 $order);
         }
+
+        // SDS profile sync.
+        [$sdsprofilesyncenabled, $schoolid, $schoolname] = local_o365\feature\sds\utils::get_profile_sync_status_with_id_name();
+
+        if ($sdsprofilesyncenabled) {
+            $remotefields['sds_school_id'] = get_string('settings_fieldmap_field_sds_school_id', 'auth_oidc',
+                get_config('local_o365', 'sdsprofilesync', $schoolid));
+            $remotefields['sds_school_name'] = get_string('settings_fieldmap_field_sds_school_name', 'auth_oidc', $schoolname);
+            $remotefields['sds_school_role'] = get_string('settings_fieldmap_field_sds_school_role', 'auth_oidc');
+            $remotefields['sds_student_externalId'] = get_string('settings_fieldmap_field_sds_student_externalId', 'auth_oidc');
+            $remotefields['sds_student_birthDate'] = get_string('settings_fieldmap_field_sds_student_birthDate', 'auth_oidc');
+            $remotefields['sds_student_grade'] = get_string('settings_fieldmap_field_sds_student_grade', 'auth_oidc');
+            $remotefields['sds_student_graduationYear'] = get_string('settings_fieldmap_field_sds_student_graduationYear',
+                'auth_oidc');
+            $remotefields['sds_student_studentNumber'] = get_string('settings_fieldmap_field_sds_student_studentNumber',
+                'auth_oidc');
+            $remotefields['sds_teacher_externalId'] = get_string('settings_fieldmap_field_sds_teacher_externalId', 'auth_oidc');
+            $remotefields['sds_teacher_teacherNumber'] = get_string('settings_fieldmap_field_sds_teacher_teacherNumber',
+                'auth_oidc');
+        }
     } else {
         $remotefields = [
             '' => '',
@@ -256,7 +284,6 @@ function auth_oidc_get_remote_fields() {
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
         ];
     }
-
 
     return $remotefields;
 }

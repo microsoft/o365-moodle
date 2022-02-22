@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Course sync to group / team feature.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,28 +27,50 @@ namespace local_o365\feature\usergroups;
 
 use context_course;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 define('API_CALL_RETRY_LIMIT', 5);
 
+/**
+ * Course sync to group / team class.
+ */
 class coursegroups {
+    /**
+     * Course full name option.
+     */
     const NAME_OPTION_FULL_NAME = 1;
+    /**
+     * Course short name option.
+     */
     const NAME_OPTION_SHORT_NAME = 2;
+    /**
+     * Course ID option.
+     */
     const NAME_OPTION_ID = 3;
+    /**
+     * Course ID number option.
+     */
     const NAME_OPTION_ID_NUMBER = 4;
 
+    /**
+     * @var \local_o365\rest\unified a graph API client.
+     */
     protected $graphclient;
-    protected $DB;
+    /**
+     * @var bool wether the debug is turned on.
+     */
     protected $debug = false;
 
     /**
      * Constructor.
      *
      * @param \local_o365\rest\unified $graphclient A graph API client to use.
-     * @param \moodle_database $DB An active database connection.
      * @param bool $debug Whether to ouput debug messages.
      */
-    public function __construct(\local_o365\rest\unified $graphclient, \moodle_database $DB, $debug = false) {
+    public function __construct(\local_o365\rest\unified $graphclient, $debug = false) {
         $this->graphclient = $graphclient;
-        $this->DB = $DB;
         $this->debug = $debug;
     }
 
@@ -54,6 +78,7 @@ class coursegroups {
      * Optionally run mtrace() based on $this->debug setting.
      *
      * @param string $msg The debug message.
+     * @param string $eol
      */
     protected function mtrace($msg, $eol = "\n") {
         if ($this->debug === true) {
@@ -65,6 +90,8 @@ class coursegroups {
      * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
     public function create_groups_for_new_courses() {
+        global $DB;
+
         $createteams = get_config('local_o365', 'createteams');
         if ($createteams === 'onall' || $createteams === 'oncustom') {
             $coursesenabled = \local_o365\feature\usergroups\utils::get_enabled_courses();
@@ -78,7 +105,7 @@ class coursegroups {
         }
 
         if (is_array($coursesenabled)) {
-            list($coursesinsql, $coursesparams) = $this->DB->get_in_or_equal($coursesenabled);
+            [$coursesinsql, $coursesparams] = $DB->get_in_or_equal($coursesenabled);
         } else {
             $coursesinsql = '';
             $coursesparams = [];
@@ -94,7 +121,7 @@ class coursegroups {
             $sql .= ' WHERE crs.id '.$coursesinsql;
             $params = array_merge($params, $coursesparams);
         }
-        $objectrecs = $this->DB->get_recordset_sql($sql, $params);
+        $objectrecs = $DB->get_recordset_sql($sql, $params);
         foreach ($objectrecs as $objectrec) {
             $metadata = (!empty($objectrec->metadata)) ? @json_decode($objectrec->metadata, true) : [];
             if (is_array($metadata) && !empty($metadata['softdelete'])) {
@@ -124,7 +151,7 @@ class coursegroups {
         if (!$courselimit) {
             $courselimit = 5;
         }
-        $courses = $this->DB->get_recordset_sql($sql, $params, 0, $courselimit);
+        $courses = $DB->get_recordset_sql($sql, $params, 0, $courselimit);
         $coursesprocessed = 0;
         foreach ($courses as $course) {
             $coursesprocessed++;
@@ -137,8 +164,7 @@ class coursegroups {
                 $creategrouponly = false;
                 $teacherids = static::get_team_owner_ids_by_course_id($course->id);
                 foreach ($teacherids as $teacherid) {
-                    if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
-                        ['type' => 'user', 'moodleid' => $teacherid])) {
+                    if ($ownerid = $DB->get_field('local_o365_objects', 'objectid', ['type' => 'user', 'moodleid' => $teacherid])) {
                         $createclassteam = true;
                         break;
                     }
@@ -189,7 +215,7 @@ class coursegroups {
         }
         $courses->close();
 
-        // Process team sync changes
+        // Process team sync changes.
         $sql = 'SELECT crs.*
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj_g ON obj_g.type = ? AND obj_g.subtype = ? AND obj_g.moodleid = crs.id
@@ -202,7 +228,7 @@ class coursegroups {
             $sql .= ' AND crs.id ' . $coursesinsql;
             $params = array_merge($params, $coursesparams);
         }
-        $courses = $this->DB->get_recordset_sql($sql, $params);
+        $courses = $DB->get_recordset_sql($sql, $params);
         $coursesprocessed = 0;
 
         // Get app ID.
@@ -214,7 +240,7 @@ class coursegroups {
             if (\local_o365\feature\usergroups\utils::course_is_group_feature_enabled($course->id, 'team')) {
                 $this->mtrace('Attempting to create team for course #' . $course->id . '...');
                 $coursesprocessed++;
-                $groupobjectrec = $this->DB->get_record('local_o365_objects',
+                $groupobjectrec = $DB->get_record('local_o365_objects',
                     ['type' => 'group', 'subtype' => 'course', 'moodleid' => $course->id]);
                 if (empty($groupobjectrec)) {
                     $errmsg = 'Could not find group object ID in local_o365_objects for course ' . $course->id;
@@ -225,8 +251,7 @@ class coursegroups {
                 $teacherids = static::get_team_owner_ids_by_course_id($course->id);
                 $hasowner = false;
                 foreach ($teacherids as $teacherid) {
-                    if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
-                        ['type' => 'user', 'moodleid' => $teacherid])) {
+                    if ($ownerid = $DB->get_field('local_o365_objects', 'objectid', ['type' => 'user', 'moodleid' => $teacherid])) {
                         $hasowner = true;
                         break;
                     }
@@ -253,21 +278,34 @@ class coursegroups {
      */
     public function restore_group($objectrecid, $objectid, $objectrecmetadata) {
         global $DB;
-        $deletedgroups = $this->graphclient->list_deleted_groups();
-        if (is_array($deletedgroups) && !empty($deletedgroups['value'])) {
-            foreach ($deletedgroups['value'] as $deletedgroup) {
-                if (!empty($deletedgroup) && isset($deletedgroup['id']) && $deletedgroup['id'] == $objectid) {
-                    // Deleted group found.
-                    $this->graphclient->restore_deleted_group($objectid);
-                    $updatedobjectrec = new \stdClass;
-                    $updatedobjectrec->id = $objectrecid;
-                    unset($objectrecmetadata['softdelete']);
-                    $updatedobjectrec->metadata = json_encode($objectrecmetadata);
-                    $DB->update_record('local_o365_objects', $updatedobjectrec);
-                    return true;
+
+        $deletedgroupsresults = $this->graphclient->list_deleted_groups();
+        $deletedgroups = $deletedgroupsresults['value'];
+        while (!empty($deletedgroupsresults['@odata.nextLink'])) {
+            $nextlink = parse_url($deletedgroupsresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $deletedgroupsresults = $this->graphclient->list_deleted_groups($query['$skiptoken']);
+                    $deletedgroups = array_merge($deletedgroups, $deletedgroupsresults['value']);
                 }
             }
         }
+
+        foreach ($deletedgroups as $deletedgroup) {
+            if (!empty($deletedgroup) && isset($deletedgroup['id']) && $deletedgroup['id'] == $objectid) {
+                // Deleted group found.
+                $this->graphclient->restore_deleted_group($objectid);
+                $updatedobjectrec = new \stdClass;
+                $updatedobjectrec->id = $objectrecid;
+                unset($objectrecmetadata['softdelete']);
+                $updatedobjectrec->metadata = json_encode($objectrecmetadata);
+                $DB->update_record('local_o365_objects', $updatedobjectrec);
+                return true;
+            }
+        }
+
         // No deleted group found. May have expired. Delete our record.
         $DB->delete_records('local_o365_objects', ['id' => $objectrecid]);
         return false;
@@ -281,6 +319,8 @@ class coursegroups {
      * @return array Array form of the created local_o365_objects record.
      */
     public function create_group($course) {
+        global $DB;
+
         $now = time();
 
         $groupname = \local_o365\feature\usergroups\utils::get_group_display_name($course);
@@ -313,7 +353,7 @@ class coursegroups {
             'timecreated' => $now,
             'timemodified' => $now,
         ];
-        $objectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$objectrec);
+        $objectrec['id'] = $DB->insert_record('local_o365_objects', (object)$objectrec);
         $this->mtrace('Recorded group object ('.$objectrec['objectid'].') into object table with record id '.$objectrec['id']);
         return $objectrec;
     }
@@ -328,6 +368,8 @@ class coursegroups {
      * @throws \dml_exception
      */
     public function create_class_team(\stdClass $course, $ownerid) {
+        global $DB;
+
         $now = time();
         $displayname = \local_o365\feature\usergroups\utils::get_team_display_name($course);
         $description = $course->summary;
@@ -367,7 +409,7 @@ class coursegroups {
             'timecreated' => $now,
             'timemodified' => $now,
         ];
-        $groupobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$groupobjectrec);
+        $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object)$groupobjectrec);
         $this->mtrace('Recorded group object (' . $groupobjectrec['objectid'] . ') into object table with record id ' .
             $groupobjectrec['id']);
 
@@ -381,7 +423,7 @@ class coursegroups {
             'timecreated' => $now,
             'timemodified' => $now,
         ];
-        $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
+        $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object)$teamobjectrec);
         $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id ' .
             $teamobjectrec['id']);
 
@@ -473,6 +515,8 @@ class coursegroups {
      * @return array|false
      */
     public function resync_group_membership($courseid, $groupobjectid = null, $addownersonly = false) {
+        global $DB;
+
         $this->mtrace('Syncing group membership for course #'.$courseid);
 
         if ($groupobjectid === null) {
@@ -481,7 +525,7 @@ class coursegroups {
                 'subtype' => 'course',
                 'moodleid' => $courseid,
             ];
-            $objectrec = $this->DB->get_record('local_o365_objects', $params);
+            $objectrec = $DB->get_record('local_o365_objects', $params);
             if (empty($objectrec)) {
                 $errmsg = 'Could not find group object ID in local_o365_objects for course '.$courseid.'. ';
                 $errmsg .= 'Please ensure group exists first.';
@@ -497,10 +541,8 @@ class coursegroups {
         $members = $this->get_group_members($groupobjectid);
         $currentmembers = array_keys($members);
 
-        $owners = $this->graphclient->get_group_owners($groupobjectid);
-        foreach ($owners['value'] as $owner) {
-            $currentowners[] = $owner['id'];
-        }
+        $owners = $this->get_group_owners($groupobjectid);
+        $currentowners = array_keys($owners);
 
         // Get intended group members.
         $intendedteamownerids = static::get_team_owner_ids_by_course_id($courseid);
@@ -525,7 +567,7 @@ class coursegroups {
             $toremovemembers = [];
         }
 
-        // Check if group object is created
+        // Check if group object is created.
         $this->mtrace('... Checking if group is setup ...', '');
         $retrycounter = 0;
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
@@ -639,13 +681,14 @@ class coursegroups {
 
         $this->mtrace('Done');
 
-        return [array_merge($toaddowners, $toaddmembers), array_merge($toremoveowners, $toremovemembers)];
+        return [array_unique(array_merge($toaddowners, $toaddmembers)),
+            array_unique(array_merge($toremoveowners, $toremovemembers))];
     }
 
     /**
      * Return all group members for the group with the object ID.
      *
-     * @param $objectid
+     * @param string $objectid
      *
      * @return array
      */
@@ -677,6 +720,39 @@ class coursegroups {
     }
 
     /**
+     * Return all group owners for the group with the object ID.
+     *
+     * @param string $objectid
+     * @return array
+     */
+    public function get_group_owners($objectid) {
+        $groupowners = [];
+
+        $ownerresults = $this->graphclient->get_group_owners($objectid);
+        foreach ($ownerresults['value'] as $ownerresult) {
+            $groupowners[$ownerresult['id']] = $ownerresult;
+        }
+
+        while (!empty($ownerresults['@odata.nextLink'])) {
+            $nextlink = parse_url($ownerresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $ownerresults = $this->graphclient->get_group_owners($objectid, $query['$skiptoken']);
+                    foreach ($ownerresults['value'] as $ownerresult) {
+                        if (!array_key_exists($ownerresult['id'], $groupowners)) {
+                            $groupowners[$ownerresult['id']] = $ownerresult;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $groupowners;
+    }
+
+    /**
      * Helper function to retrieve users who have Team owner capability in the course with the given ID.
      *
      * @param int $courseid Id of Moodle course.
@@ -699,7 +775,7 @@ class coursegroups {
     /**
      * Helper function to retrieve users who have Team member capability in the course with the given ID.
      *
-     * @param $courseid
+     * @param int $courseid
      *
      * @return array
      */
@@ -942,7 +1018,7 @@ class coursegroups {
         if (!$courselimit) {
             $courselimit = 5;
         }
-        $groups = $this->DB->get_recordset_sql($sql, $params, 0, $courselimit);
+        $groups = $DB->get_recordset_sql($sql, $params, 0, $courselimit);
         $count = 0;
         foreach ($groups as $group) {
             // If the upload fails, it will not reattempt unless user modifies the photo.
@@ -959,14 +1035,16 @@ class coursegroups {
     /**
      * Create a Microsoft 365 team for a Moodle course.
      *
-     * @param $courseid
-     * @param null $groupobjectid
-     * @param null $moodleappid
+     * @param int $courseid
+     * @param int|null $groupobjectid
+     * @param int|null $moodleappid
      *
      * @return array|bool|mixed
      * @throws \dml_exception
      */
     public function create_team($courseid, $groupobjectid = null, $moodleappid = null) {
+        global $DB;
+
         $this->mtrace('Create team for course #' . $courseid);
 
         // Get group object and id, if needed.
@@ -979,7 +1057,7 @@ class coursegroups {
                 'moodleid' => $courseid,
             ];
         }
-        $groupobjectrec = $this->DB->get_record('local_o365_objects', $groupparams);
+        $groupobjectrec = $DB->get_record('local_o365_objects', $groupparams);
         if (!empty($groupobjectrec)) {
             $groupobjectid = $groupobjectrec->objectid;
         } else {
@@ -997,7 +1075,7 @@ class coursegroups {
             'subtype' => 'courseteam',
             'moodleid' => $courseid,
         ];
-        $teamobjectrec = $this->DB->get_record('local_o365_objects', $teamparams);
+        $teamobjectrec = $DB->get_record('local_o365_objects', $teamparams);
         if (empty($teamobjectrec)) {
             // Create team.
             $now = time();
@@ -1005,8 +1083,7 @@ class coursegroups {
             $teacherids = static::get_team_owner_ids_by_course_id($courseid);
             $hasowner = false;
             foreach ($teacherids as $teacherid) {
-                if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
-                    ['type' => 'user', 'moodleid' => $teacherid])) {
+                if ($ownerid = $DB->get_field('local_o365_objects', 'objectid', ['type' => 'user', 'moodleid' => $teacherid])) {
                     $hasowner = true;
                     break;
                 }
@@ -1034,7 +1111,7 @@ class coursegroups {
                     'timecreated' => $now,
                     'timemodified' => $now,
                 ];
-                $teamobjectrec['id'] = $this->DB->insert_record('local_o365_objects', (object)$teamobjectrec);
+                $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object)$teamobjectrec);
                 $this->mtrace('Recorded team object (' . $teamobjectrec['objectid'] . ') into object table with record id '
                     . $teamobjectrec['id']);
 
@@ -1045,7 +1122,7 @@ class coursegroups {
 
             return $teamobjectrec;
         } else {
-            // team already exists
+            // Team already exists.
             $this->mtrace('Team existed for course #' . $courseid . ' with object table record id ' .
                 $teamobjectrec['id']);
             return true;
@@ -1055,9 +1132,9 @@ class coursegroups {
     /**
      * Add Moodle tab to the Teams for the course with ID provided.
      *
-     * @param $courseid
-     * @param $groupobjectid
-     * @param $moodleappid
+     * @param int $courseid
+     * @param int $groupobjectid
+     * @param string $moodleappid
      *
      * @return bool
      */
@@ -1198,16 +1275,18 @@ class coursegroups {
     /**
      * Update team name for the course with the given ID.
      *
-     * @param $courseid
+     * @param int $courseid
      *
      * @return bool
      */
     public function update_team_name($courseid) {
-        if (!$course = $this->DB->get_record('course', ['id' => $courseid])) {
+        global $DB;
+
+        if (!$course = $DB->get_record('course', ['id' => $courseid])) {
             return false;
         }
 
-        if (!$o365record = $this->DB->get_record('local_o365_objects',
+        if (!$o365record = $DB->get_record('local_o365_objects',
             ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
             return false;
         }
@@ -1217,7 +1296,7 @@ class coursegroups {
 
         $o365record->o365name = $teamname;
         $o365record->timemodified = time();
-        $this->DB->update_record('local_o365_objects', $o365record);
+        $DB->update_record('local_o365_objects', $o365record);
 
         return true;
     }
@@ -1225,16 +1304,18 @@ class coursegroups {
     /**
      * Update group name for the course with the given ID.
      *
-     * @param $courseid
+     * @param int $courseid
      *
      * @return bool
      */
     public function update_group_name($courseid) {
-        if (!$course = $this->DB->get_record('course', ['id' => $courseid])) {
+        global $DB;
+
+        if (!$course = $DB->get_record('course', ['id' => $courseid])) {
             return false;
         }
 
-        if (!$o365record = $this->DB->get_record('local_o365_objects',
+        if (!$o365record = $DB->get_record('local_o365_objects',
             ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
             return false;
         }
@@ -1249,7 +1330,7 @@ class coursegroups {
 
         $o365record->o365name = $groupname;
         $o365record->timemodified = time();
-        $this->DB->update_record('local_o365_objects', $o365record);
+        $DB->update_record('local_o365_objects', $o365record);
 
         return true;
     }
@@ -1270,6 +1351,8 @@ class coursegroups {
      * @return bool
      */
     public function process_course_reset_team(\stdClass $course, \stdClass  $o365object, bool $createafterreset = true) {
+        global $DB;
+
         // Rename existing Team.
         try {
             $resetteamnameprefix = get_config('local_o365', 'reset_team_name_prefix');
@@ -1291,15 +1374,15 @@ class coursegroups {
         }
 
         // Disconnect the Team from the course.
-        $this->DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $course->id]);
-        $this->DB->delete_records('local_o365_coursegroupdata', ['courseid' => $course->id]);
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $course->id]);
+        $DB->delete_records('local_o365_coursegroupdata', ['courseid' => $course->id]);
 
         // Create a new Team and connect it to the course.
         if ($createafterreset) {
             $ownerid = null;
             $teacherids = $this->get_team_owner_ids_by_course_id($course->id);
             foreach ($teacherids as $teacherid) {
-                if ($ownerid = $this->DB->get_field('local_o365_objects', 'objectid',
+                if ($ownerid = $DB->get_field('local_o365_objects', 'objectid',
                     ['type' => 'user', 'moodleid' => $teacherid])) {
                     break;
                 }
@@ -1363,7 +1446,6 @@ class coursegroups {
             }
         }
 
-
         return true;
     }
 
@@ -1382,6 +1464,8 @@ class coursegroups {
      * @return bool
      */
     public function process_course_reset_group(\stdClass $course, \stdClass $o365object, bool $createafterreset = true) {
+        global $DB;
+
         // Rename existing group.
         try {
             $existinggroup = $this->graphclient->get_group($o365object->objectid);
@@ -1408,8 +1492,8 @@ class coursegroups {
         }
 
         // Disconnect the group from the course.
-        $this->DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $course->id]);
-        $this->DB->delete_records('local_o365_coursegroupdata', ['courseid' => $course->id]);
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $course->id]);
+        $DB->delete_records('local_o365_coursegroupdata', ['courseid' => $course->id]);
 
         // Create a new group and connect it to the course.
         if ($createafterreset) {

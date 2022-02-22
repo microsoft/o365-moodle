@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class botintent - general class for accessing specific intent based on params.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,7 +29,6 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Class botintent - general class for accessing specific intent based on params
- * @package local_o365\bot
  *
  * @var string $intentclass - Specific intent class name
  * @var string $userlanguage - Current user language set in Moodle
@@ -35,10 +36,24 @@ defined('MOODLE_INTERNAL') || die();
  * @var array $availableintents - Implemented intents name => class name list
  */
 class botintent {
-
+    /**
+     * @var string|null intent class.
+     */
     private $intentclass;
+
+    /**
+     * @var user language.
+     */
     private $userlanguage;
+
+    /**
+     * @var mixed|null entities.
+     */
     private $entities;
+
+    /**
+     * @var string[] available intents.
+     */
     private $availableintents = [
             'student-assignment-comparison-results' => 'assignmentcomparison',
             'student-due-assignments' => 'dueassignments',
@@ -62,12 +77,12 @@ class botintent {
         global $USER;
         $this->intentclass = null;
         $this->userlanguage = $USER->lang;
-        if(!empty($params) && is_array($params)){
+        if (!empty($params) && is_array($params)) {
             $this->entities = (empty($params['entities']) ? null : json_decode($params['entities']));
             $intent = (empty($params['intent']) ? null : $params['intent']);
             if (!is_null($intent) && !empty($this->availableintents[$intent])) {
                 $this->intentclass = "\\local_o365\\bot\\intents\\{$this->availableintents[$intent]}";
-                if(!class_exists($this->intentclass)){
+                if (!class_exists($this->intentclass)) {
                     $this->intentclass = null;
                 }
             }

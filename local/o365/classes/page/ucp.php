@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * User control panel page.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,10 @@
  */
 
 namespace local_o365\page;
+
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
 
 require_once($CFG->dirroot.'/auth/oidc/lib.php');
 require_once($CFG->dirroot.'/local/o365/lib.php');
@@ -313,7 +319,8 @@ class ucp extends base {
                 ($candisconnect && $canlink && $howconnected != 'linked');
         // If the user cannot disconnect and is connected, they cannot do anything.
         $candisconnectconnected = ($canunlink && $howconnected == 'linked') || ($candisconnect && $howconnected == 'aadlogin');
-        $cannotdoanything = !($candisconnect || $canconnect || $canlink || $canunlink) || !($canconnectnotconnected || $candisconnectconnected);
+        $cannotdoanything = !($candisconnect || $canconnect || $canlink || $canunlink) ||
+            !($canconnectnotconnected || $candisconnectconnected);
         if (!$cannotdoanything) {
             echo \html_writer::div(get_string('ucp_connection_desc', 'local_o365'));
         }
@@ -355,7 +362,8 @@ class ucp extends base {
                 default:
                     if ($canconnect && ($howconnected != 'linked' || $canunlink)) {
                         $connectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
-                        $linkhtml = \html_writer::link($connectlinkurl, get_string('ucp_connection_aadlogin_start', 'local_o365', $opname));
+                        $linkhtml = \html_writer::link($connectlinkurl,
+                            get_string('ucp_connection_aadlogin_start', 'local_o365', $opname));
                         echo $options.$header.\html_writer::tag('h5', $linkhtml);
                         $options = '';
                     }
@@ -373,21 +381,24 @@ class ucp extends base {
             case 'linked':
                 if ($canunlink) {
                     $disconnecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnecttoken']);
-                    $linkhtml = \html_writer::link($disconnecttokenurl, get_string('ucp_connection_linked_stop', 'local_o365', $opname));
+                    $linkhtml = \html_writer::link($disconnecttokenurl,
+                        get_string('ucp_connection_linked_stop', 'local_o365', $opname));
                 }
                 break;
 
             case 'aadlogin':
                 if ($canlink && auth_oidc_connectioncapability($USER->id, 'disconnect')) {
                     $connecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'migratetolinked']);
-                    $linkhtml = \html_writer::link($connecttokenurl, get_string('ucp_connection_linked_migrate', 'local_o365', $opname));
+                    $linkhtml = \html_writer::link($connecttokenurl,
+                        get_string('ucp_connection_linked_migrate', 'local_o365', $opname));
                 }
                 break;
 
             default:
                 if ($canlink) {
                     $connecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
-                    $linkhtml = \html_writer::link($connecttokenurl, get_string('ucp_connection_linked_start', 'local_o365', $opname));
+                    $linkhtml = \html_writer::link($connecttokenurl,
+                        get_string('ucp_connection_linked_start', 'local_o365', $opname));
                 }
         }
 
@@ -431,6 +442,11 @@ class ucp extends base {
         return $html;
     }
 
+    /**
+     * Return connection type.
+     *
+     * @return string
+     */
     protected function get_connection_type() {
         global $USER;
 
@@ -464,8 +480,7 @@ class ucp extends base {
             }
         }
 
-        $canmanage = (auth_oidc_connectioncapability($USER->id, $mode) === true)
-            ? true : false;
+        $canmanage = (auth_oidc_connectioncapability($USER->id, $mode) === true) ? true : false;
         $canlink = local_o365_connectioncapability($USER->id, 'link');
         $canunlink = local_o365_connectioncapability($USER->id, 'unlink');
         switch ($status) {
@@ -481,14 +496,13 @@ class ucp extends base {
                         if ($canunlink) {
                             $msg .= '<br /><br />';
                             $msg .= $OUTPUT->pix_icon('t/edit', 'valid', 'moodle');
-                            $msg .= \html_writer::link($manageconnectionurl, get_string('ucp_index_connectionstatus_manage', 'local_o365'));
+                            $msg .= \html_writer::link($manageconnectionurl,
+                                get_string('ucp_index_connectionstatus_manage', 'local_o365'));
                         }
-                        //  if (auth_oidc_connectioncapability($USER->id, 'connect')) {
-                            $msg .= '<br />';
-                            $msg .= $OUTPUT->pix_icon('i/reload', 'valid', 'moodle');
-                            $refreshurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
-                            $msg .= \html_writer::link($refreshurl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
-                        //  }
+                        $msg .= '<br />';
+                        $msg .= $OUTPUT->pix_icon('i/reload', 'valid', 'moodle');
+                        $refreshurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
+                        $msg .= \html_writer::link($refreshurl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
                         break;
 
                     case 'aadlogin':
@@ -498,7 +512,8 @@ class ucp extends base {
                         if ($canmanage === true) {
                             $msg .= '<br /><br />';
                             $msg .= $OUTPUT->pix_icon('t/edit', 'valid', 'moodle');
-                            $msg .= \html_writer::link($manageconnectionurl, get_string('ucp_index_connectionstatus_manage', 'local_o365'));
+                            $msg .= \html_writer::link($manageconnectionurl,
+                                get_string('ucp_index_connectionstatus_manage', 'local_o365'));
                         }
                         break;
                 }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Abstract base class for all o365 REST api classes.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,11 +25,15 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Abstract base class for all o365 REST api classes.
  */
 abstract class o365api {
-    /** The general API area of the class. */
+    /**
+     * @var null The general API area of the class.
+     */
     public $apiarea = null;
 
     /** @var \local_o365\oauth2\token A token object representing all token information to be used for this client. */
@@ -201,8 +207,8 @@ abstract class o365api {
             $header[] = 'Content-length: '.strlen($params);
         }
 
-        $this->httpclient->resetHeader();
-        $this->httpclient->setHeader($header);
+        $this->httpclient->resetheader();
+        $this->httpclient->setheader($header);
 
         // Check if we were rate limited in the last 10 minutes.
         $ratelimitlevel = 0;
@@ -309,10 +315,11 @@ abstract class o365api {
         return $result;
     }
 
-    /*
+    /**
      * Get a full URL and include auth token. This is useful for associated resources: attached images, etc.
      *
      * @param string $url A full URL to get.
+     * @param array $options
      * @return string The result of the request.
      */
     public function geturl($url, $options = array()) {
@@ -323,8 +330,8 @@ abstract class o365api {
         $header = [
             'Authorization: Bearer '.$this->token->get_token(),
         ];
-        $this->httpclient->resetHeader();
-        $this->httpclient->setHeader($header);
+        $this->httpclient->resetheader();
+        $this->httpclient->setheader($header);
         return $this->httpclient->get($url, '', $options);
     }
 
@@ -350,8 +357,12 @@ abstract class o365api {
                     'Notes.ReadWrite.All' => [],
                     'AppRoleAssignment.ReadWrite.All' => [],
                     'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
+                    'EduRoster.Read.All' => ['EduRoster.ReadWrite.All'],
+                    'Member.Read.Hidden' => [],
                  ],
                 'requiredDelegatedPermissionsUsingAppPermissions' => [
+                    'Files.ReadWrite.All' => [],
+                    'Notes.ReadWrite.All' => [],
                     'User.Read' => [],
                     'openid' => [],
                     'offline_access' => [],
@@ -369,6 +380,7 @@ abstract class o365api {
                     'Notes.ReadWrite.All' => [],
                     'AppRoleAssignment.ReadWrite.All' => [],
                     'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
+                    'EduRoster.ReadBasic' => [],
                     'User.Read' => ['User.ReadWrite.All'],
                     'openid' => [],
                     'offline_access' => [],

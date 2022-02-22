@@ -15,11 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Office365 repository lib
  * @package repository_office365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
+
+use local_o365\utils;
 
 /**
  * Microsoft 365 repository.
@@ -49,7 +52,7 @@ class repository_office365 extends \repository {
     public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array(), $readonly = 0) {
         parent::__construct($repositoryid, $context, $options, $readonly);
         $this->httpclient = new \local_o365\httpclient();
-        if (\local_o365\utils::is_configured()) {
+        if (utils::is_configured()) {
             $this->clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         }
         $this->onedriveconfigured = \local_o365\rest\onedrive::is_configured();
@@ -67,7 +70,7 @@ class repository_office365 extends \repository {
         global $USER;
         $resource = \local_o365\rest\unified::get_tokenresource();
         if ($system === true) {
-            return \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
+            return utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         } else {
             $userid = (!empty($userid)) ? $userid : $USER->id;
             return \local_o365\oauth2\token::instance($userid, $resource, $this->clientdata, $this->httpclient);
@@ -85,7 +88,7 @@ class repository_office365 extends \repository {
         global $USER;
         $resource = \local_o365\rest\onedrive::get_tokenresource();
         if ($system === true) {
-            return \local_o365\utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
+            return utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
         } else {
             $userid = (!empty($userid)) ? $userid : $USER->id;
             return \local_o365\oauth2\token::instance($userid, $resource, $this->clientdata, $this->httpclient);
@@ -151,7 +154,7 @@ class repository_office365 extends \repository {
     public function get_listing($path = '', $page = '') {
         global $OUTPUT, $SESSION, $USER;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             throw new \moodle_exception('errorauthoidcnotconfig', 'repository_office365');
         }
 
@@ -206,20 +209,20 @@ class repository_office365 extends \repository {
         if (strpos($path, '/my/') === 0) {
             if ($unifiedactive === true) {
                 // Path is in my files.
-                list($list, $breadcrumb) = $this->get_listing_my_unified(substr($path, 3));
+                [$list, $breadcrumb] = $this->get_listing_my_unified(substr($path, 3));
             } else if ($onedriveactive === true) {
                 // Path is in my files.
-                list($list, $breadcrumb) = $this->get_listing_my(substr($path, 3));
+                [$list, $breadcrumb] = $this->get_listing_my(substr($path, 3));
             }
         } else if (strpos($path, '/groups/') === 0) {
             if ($showgroups === true) {
                 // Path is in group files.
-                list($list, $breadcrumb) = $this->get_listing_groups(substr($path, 7));
+                [$list, $breadcrumb] = $this->get_listing_groups(substr($path, 7));
             }
         } else if (strpos($path, '/trending/') === 0) {
             if ($trendingactive === true) {
                 // Path is in trending files.
-                list($list, $breadcrumb) = $this->get_listing_trending_unified(substr($path, 9));
+                [$list, $breadcrumb] = $this->get_listing_trending_unified(substr($path, 9));
             }
         } else {
             if ($unifiedactive === true && $onedriveactive === true) {
@@ -280,7 +283,8 @@ class repository_office365 extends \repository {
 
     /**
      * Process uploaded file.
-     *
+     * @param string $saveasfilename
+     * @param int $maxbytes
      * @return array Array of uploaded file information.
      */
     public function upload($saveasfilename, $maxbytes) {
@@ -311,7 +315,7 @@ class repository_office365 extends \repository {
                     $debugdata = [
                         'filepath' => $filepath,
                     ];
-                    \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                    utils::debug($errmsg, $caller, $debugdata);
                     throw new \moodle_exception('errorbadclienttype', 'repository_office365');
                 }
             }
@@ -327,7 +331,7 @@ class repository_office365 extends \repository {
             if ($this->unifiedconfigured === true) {
                 $apiclient = $this->get_unified_apiclient();
                 $parentid = (!empty($filepath)) ? substr($filepath, 1) : '';
-                $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+                $o365userid = utils::get_o365_userid($USER->id);
                 $result = $apiclient->create_file($parentid, $filename, $content, 'application/octet-stream', $o365userid);
             } else {
                 $apiclient = $this->get_onedrive_apiclient();
@@ -343,12 +347,12 @@ class repository_office365 extends \repository {
                 $coursesbyid = enrol_get_users_courses($USER->id, true);
                 if (!is_numeric($pathparts[0]) || !isset($coursesbyid[$pathparts[0]])
                         || \local_o365\feature\usergroups\utils::course_is_group_enabled($pathparts[0]) !== true) {
-                    \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $filepath]);
+                    utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $filepath]);
                     throw new \moodle_exception('errorbadpath', 'repository_office365');
                 }
                 $courseid = (int)$pathparts[0];
                 if (!is_numeric($pathparts[1]) && $pathparts[1] !== 'coursegroup') {
-                    \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $filepath]);
+                    utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $filepath]);
                     throw new \moodle_exception('errorbadpath', 'repository_office365');
                 }
                 if ($pathparts[1] === 'coursegroup') {
@@ -362,7 +366,8 @@ class repository_office365 extends \repository {
                 }
                 try {
                     $result = $apiclient->create_group_file($group->objectid, '', $filename, $content);
-                    $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype, 'groupid' => $group->objectid]);
+                    $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype
+                      , 'groupid' => $group->objectid]);
                 } catch (\Exception $e) {
                     $errmsg = 'Exception when uploading share point files for group';
                     $debugdata = [
@@ -370,11 +375,11 @@ class repository_office365 extends \repository {
                         'message' => $e->getMessage(),
                         'groupid' => $group->objectid,
                     ];
-                    \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                    utils::debug($errmsg, $caller, $debugdata);
                     $source = $this->pack_reference([]);
                 }
             } else {
-                \local_o365\utils::debug('Tried to Upload a onedrive group file while the graph api is disabled.', $caller);
+                utils::debug('Tried to Upload a onedrive group file while the graph api is disabled.', $caller);
                 throw new \moodle_exception('errorwhileupload', 'repository_office365');
             }
         } else {
@@ -382,7 +387,7 @@ class repository_office365 extends \repository {
             $debugdata = [
                 'clienttype' => $clienttype,
             ];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            utils::debug($errmsg, $caller, $debugdata);
             throw new \moodle_exception('errorbadclienttype', 'repository_office365');
         }
 
@@ -443,7 +448,7 @@ class repository_office365 extends \repository {
             $pathparts = explode('/', $pathtrimmed);
             if (!is_numeric($pathparts[0]) || !isset($coursesbyid[$pathparts[0]])
                     || \local_o365\feature\usergroups\utils::course_is_group_enabled($pathparts[0]) !== true) {
-                \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
+                utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
                 throw new \moodle_exception('errorbadpath', 'repository_office365');
             }
             $courseid = (int)$pathparts[0];
@@ -475,7 +480,7 @@ class repository_office365 extends \repository {
             } else {
                 // Validate the received group identifier.
                 if (!is_numeric($pathparts[1]) && $pathparts[1] !== 'coursegroup') {
-                    \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
+                    utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
                     throw new \moodle_exception('errorbadpath', 'repository_office365');
                 }
                 $curpath .= '/'.$pathparts[1].'/';
@@ -486,7 +491,7 @@ class repository_office365 extends \repository {
                 } else {
                     // Validate the user is a member of the group.
                     if (!isset($coursegroups[$pathparts[1]])) {
-                        \local_o365\utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
+                        utils::debug(get_string('errorbadpath', 'repository_office365'), $caller, ['path' => $path]);
                         throw new \moodle_exception('errorbadpath', 'repository_office365');
                     }
                     $groupid = (int)$pathparts[1];
@@ -509,7 +514,8 @@ class repository_office365 extends \repository {
                         if (!empty($curparent)) {
                             $metadata = $unified->get_group_file_metadata($group->objectid, $curparent);
                             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
-                                $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
+                                $parentrefpath = substr($metadata['parentReference']['path']
+                                  , (strpos($metadata['parentReference']['path'], ':') + 1));
                                 $cache = \cache::make('repository_office365', 'unifiedgroupfolderids');
                                 $result = $cache->set($parentrefpath.'/'.$metadata['name'], $metadata['id']);
                                 if (!empty($parentrefpath)) {
@@ -525,7 +531,21 @@ class repository_office365 extends \repository {
                             $breadcrumb[] = ['name' => $metadata['name'], 'path' => $curpath.$metadata['id']];
                         }
                         try {
-                            $contents = $unified->get_group_files($group->objectid, $curparent);
+                            $filesresults = $unified->get_group_files($group->objectid, $curparent);
+                            $contents = $filesresults['value'];
+                            while (!empty($filesresults['@odata.nextLink'])) {
+                                $nextlink = parse_url($filesresults['@odata.nextLink']);
+                                if (isset($nextlink['query'])) {
+                                    $query = [];
+                                    parse_str($nextlink['query'], $query);
+                                    if (isset($query['$skiptoken'])) {
+                                        $filesresults = $unified->get_group_files($group->objectid, $curparent,
+                                            $query['$skiptoken']);
+                                        $contents = array_merge($contents, $filesresults['value']);
+                                    }
+                                }
+                            }
+
                             $list = $this->contents_api_response_to_list($contents, $path, 'unifiedgroup', $group->objectid, true);
                         } catch (\Exception $e) {
                             $errmsg = 'Exception when retrieving share point files for group';
@@ -534,12 +554,12 @@ class repository_office365 extends \repository {
                                 'message' => $e->getMessage(),
                                 'groupid' => $group->objectid,
                             ];
-                            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                            utils::debug($errmsg, $caller, $debugdata);
                             $list = [];
                         }
                     }
                 } else {
-                    \local_o365\utils::debug('Could not file group object record', $caller, ['path' => $path]);
+                    utils::debug('Could not file group object record', $caller, ['path' => $path]);
                     $list = [];
                 }
             }
@@ -573,8 +593,21 @@ class repository_office365 extends \repository {
             $realpath = substr($path, 0, -strlen('/upload/'));
         } else {
             try {
-                $o365userid = \local_o365\utils::get_o365_userid($USER->id);
-                $contents = $unified->get_files($realpath, $o365userid);
+                $o365userid = utils::get_o365_userid($USER->id);
+
+                $filesresults = $unified->get_user_files($realpath, $o365userid);
+                $contents = $filesresults['value'];
+                while (!empty($filesresults['@odata.nextLink'])) {
+                    $nextlink = parse_url($filesresults['@odata.nextLink']);
+                    if (isset($nextlink['query'])) {
+                        $query = [];
+                        parse_str($nextlink['query'], $query);
+                        if (isset($query['$skiptoken'])) {
+                            $filesresults = $unified->get_user_files($realpath, $o365userid, $query['$skiptoken']);
+                            $contents = array_merge($contents, $filesresults['value']);
+                        }
+                    }
+                }
 
                 $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
             } catch (\Exception $e) {
@@ -583,16 +616,17 @@ class repository_office365 extends \repository {
                     'fullpath' => $path,
                     'message' => $e->getMessage(),
                 ];
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                utils::debug($errmsg, $caller, $debugdata);
                 return [[], $breadcrumb];
             }
         }
 
         if ($realpath !== '/') {
-            $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+            $o365userid = utils::get_o365_userid($USER->id);
             $metadata = $unified->get_file_metadata($realpath, $o365userid);
             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
-                $parentrefpath = substr($metadata['parentReference']['path'], (strpos($metadata['parentReference']['path'], ':') + 1));
+                $parentrefpath = substr($metadata['parentReference']['path']
+                  , (strpos($metadata['parentReference']['path'], ':') + 1));
                 $cache = \cache::make('repository_office365', 'unifiedfolderids');
                 $result = $cache->set($parentrefpath.'/'.$metadata['name'], $metadata['id']);
                 if (!empty($parentrefpath)) {
@@ -628,7 +662,7 @@ class repository_office365 extends \repository {
         if ($this->path_is_upload($path) !== true) {
             $onedrive = $this->get_onedrive_apiclient();
             $contents = $onedrive->get_contents($path);
-            $list = $this->contents_api_response_to_list($contents, $path, 'onedrive');
+            $list = $this->contents_api_response_to_list($contents['value'], $path, 'onedrive');
         } else {
             $list = [];
         }
@@ -672,8 +706,21 @@ class repository_office365 extends \repository {
         $unified = $this->get_unified_apiclient();
         $realpath = $path;
         try {
-            $o365upn = \local_o365\utils::get_o365_upn($USER->id);
-            $contents = $unified->get_trending_files($realpath, $o365upn);
+            $o365upn = utils::get_o365_upn($USER->id);
+            $filesresults = $unified->get_trending_files($o365upn);
+            $contents = $filesresults['value'];
+            while (!empty($filesresults['@odata.nextLink'])) {
+                $nextlink = parse_url($filesresults['@odata.nextLink']);
+                if (isset($nextlink['query'])) {
+                    $query = [];
+                    parse_str($nextlink['query'], $query);
+                    if (isset($query['$skiptoken'])) {
+                        $filesresults = $unified->get_trending_files($o365upn, $query['$skiptoken']);
+                        $contents = array_merge($contents, $filesresults['value']);
+                    }
+                }
+            }
+
             $list = $this->contents_api_response_to_list($contents, $realpath, 'trendingaround', null, false);
         } catch (\Exception $e) {
             $errmsg = 'Exception when retrieving personal trending files';
@@ -681,7 +728,7 @@ class repository_office365 extends \repository {
                 'fullpath' => $path,
                 'message' => $e->getMessage(),
             ];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            utils::debug($errmsg, $caller, $debugdata);
             $list = [];
         }
 
@@ -727,8 +774,8 @@ class repository_office365 extends \repository {
             ];
         }
 
-        if (isset($response['value'])) {
-            foreach ($response['value'] as $content) {
+        if (isset($response)) {
+            foreach ($response as $content) {
                 if ($clienttype === 'unified' || $clienttype === 'unifiedgroup') {
                     $itempath = $pathprefix.'/'.$content['id'];
                     if (isset($content['folder'])) {
@@ -881,16 +928,16 @@ class repository_office365 extends \repository {
                 $sourceclient = $this->get_onedrive_apiclient();
             }
             if (empty($sourceclient)) {
-                \local_o365\utils::debug('Could not construct onedrive api.', $caller);
+                utils::debug('Could not construct onedrive api.', $caller);
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
-            $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+            $o365userid = utils::get_o365_userid($USER->id);
             $file = $sourceclient->get_file_by_id($reference['id'], $o365userid);
         } else if ($reference['source'] === 'onedrivegroup') {
             if ($this->unifiedconfigured === true) {
                 $sourceclient = $this->get_unified_apiclient();
             } else {
-                \local_o365\utils::debug('Tried to access a onedrive group file while the graph api is disabled.', $caller);
+                utils::debug('Tried to access a onedrive group file while the graph api is disabled.', $caller);
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             $file = $sourceclient->get_group_file_by_id($reference['groupid'], $reference['id']);
@@ -899,7 +946,7 @@ class repository_office365 extends \repository {
                 $sourceclient = $this->get_unified_apiclient();
             }
             if (empty($sourceclient)) {
-                \local_o365\utils::debug('Could not construct unified api.', $caller);
+                utils::debug('Could not construct unified api.', $caller);
                 throw new \moodle_exception('errorwhiledownload', 'repository_office365');
             }
             $file = $sourceclient->get_file_by_url($reference['url']);
@@ -917,7 +964,7 @@ class repository_office365 extends \repository {
                 'reference' => $reference,
                 'filename' => $filename,
             ];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            utils::debug($errmsg, $caller, $debugdata);
             throw new \moodle_exception('errorwhiledownload', 'repository_office365');
         }
         return ['path' => $path, 'url' => $reference];
@@ -975,7 +1022,7 @@ class repository_office365 extends \repository {
                 if ($filesource === 'onedrive') {
                     if ($this->unifiedconfigured === true) {
                         $sourceclient = $this->get_unified_apiclient();
-                        $o365userid = \local_o365\utils::get_o365_userid($USER->id);
+                        $o365userid = utils::get_o365_userid($USER->id);
                         $reference['url'] = $sourceclient->get_sharing_link($fileid, $o365userid);
                     } else {
                         $sourceclient = $this->get_onedrive_apiclient();
@@ -986,7 +1033,7 @@ class repository_office365 extends \repository {
                     }
                 } else if ($filesource === 'onedrivegroup') {
                     if ($this->unifiedconfigured !== true) {
-                        \local_o365\utils::debug('Tried to access a onedrive group file while the graph api is disabled.', $caller);
+                        utils::debug('Tried to access a onedrive group file while the graph api is disabled.', $caller);
                         throw new \moodle_exception('errorwhiledownload', 'repository_office365');
                     }
                     $sourceclient = $this->get_unified_apiclient();
@@ -994,7 +1041,7 @@ class repository_office365 extends \repository {
                     $reference['url'] = $sourceclient->get_group_file_sharing_link($sourceunpacked['groupid'], $fileid);
                 } else if ($filesource === 'trendingaround') {
                     if ($this->unifiedconfigured !== true) {
-                        \local_o365\utils::debug('Tried to access a trending around me file while the graph api is disabled.', $caller);
+                        utils::debug('Tried to access a trending around me file while the graph api is disabled.', $caller);
                         throw new \moodle_exception('errorwhiledownload', 'repository_office365');
                     }
                     $sourceclient = $this->get_unified_apiclient();
@@ -1012,7 +1059,7 @@ class repository_office365 extends \repository {
                     'message' => $e->getMessage(),
                     'e' => $e,
                 ];
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                utils::debug($errmsg, $caller, $debugdata);
             }
 
             return $this->pack_reference($reference);
@@ -1025,7 +1072,7 @@ class repository_office365 extends \repository {
                 $errmsg .= ' id is not set.';
             }
             $debugdata = ['sourceunpacked' => $sourceunpacked];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            utils::debug($errmsg, $caller, $debugdata);
         }
         return $source;
     }
@@ -1099,7 +1146,7 @@ class repository_office365 extends \repository {
         $fileuserid = $storedfile->get_userid();
 
         if (!isset($reference['source'])) {
-            \local_o365\utils::debug('File reference is broken - no source parameter.', 'send_file', $reference);
+            utils::debug('File reference is broken - no source parameter.', 'send_file', $reference);
             send_file_not_found();
             die();
         }
@@ -1110,7 +1157,7 @@ class repository_office365 extends \repository {
             case 'onedrive':
                 $sourceclient = $this->get_onedrive_apiclient(false, $fileuserid);
                 if (empty($sourceclient)) {
-                    \local_o365\utils::debug('Could not construct api client for user', 'send_file', $fileuserid);
+                    utils::debug('Could not construct api client for user', 'send_file', $fileuserid);
                     send_file_not_found();
                     die();
                 }
@@ -1132,14 +1179,14 @@ class repository_office365 extends \repository {
                 break;
 
             default:
-                \local_o365\utils::debug('File reference is broken - invalid source parameter.', 'send_file', $reference);
+                utils::debug('File reference is broken - invalid source parameter.', 'send_file', $reference);
                 send_file_not_found();
                 die();
         }
 
         // Do embedding if relevant.
         if ($doembed === true) {
-            if (\local_o365\utils::is_o365_connected($USER->id) !== true) {
+            if (utils::is_o365_connected($USER->id) !== true) {
                 // Embedding currently only supported for logged-in Microsoft 365 users.
                 echo get_string('erroro365required', 'repository_office365');
                 die();
@@ -1147,7 +1194,7 @@ class repository_office365 extends \repository {
             if (!empty($sourceclient)) {
                 if (empty($fileurl)) {
                     $errstr = 'Embed was requested, but could not get file info to complete request.';
-                    \local_o365\utils::debug($errstr, 'send_file', ['reference' => $reference, 'fileinfo' => $fileinfo]);
+                    utils::debug($errstr, 'send_file', ['reference' => $reference, 'fileinfo' => $fileinfo]);
                 } else {
                     try {
                         $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
@@ -1162,11 +1209,11 @@ class repository_office365 extends \repository {
                         redirect($fileurl);
                     } else {
                         $errstr = 'Embed was requested, but could not complete.';
-                        \local_o365\utils::debug($errstr, 'send_file', $reference);
+                        utils::debug($errstr, 'send_file', $reference);
                     }
                 }
             } else {
-                \local_o365\utils::debug('Could not construct OneDrive client for system api user.', 'send_file');
+                utils::debug('Could not construct OneDrive client for system api user.', 'send_file');
             }
         }
 
@@ -1176,7 +1223,6 @@ class repository_office365 extends \repository {
     /**
      * Validate Admin Settings Moodle form
      *
-     * @static
      * @param moodleform $mform Moodle form (passed by reference)
      * @param array $data array of ("fieldname"=>value) of submitted data
      * @param array $errors array of ("fieldname"=>errormessage) of errors
@@ -1184,7 +1230,7 @@ class repository_office365 extends \repository {
      */
     public static function type_form_validation($mform, $data, $errors) {
         global $CFG;
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             array_push($errors, get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
         }
         return $errors;
@@ -1199,7 +1245,7 @@ class repository_office365 extends \repository {
     public static function type_config_form($mform, $classname = 'repository') {
         global $CFG;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             $mform->addElement('static', null, '', get_string('notconfigured', 'repository_office365', $CFG->wwwroot));
         }
         parent::type_config_form($mform);
@@ -1211,10 +1257,10 @@ class repository_office365 extends \repository {
         $mform->setType('trendinggroup', PARAM_INT);
     }
      /**
-     * Option names of dropbox office365
-     *
-     * @return array
-     */
+      * Option names of dropbox office365
+      *
+      * @return array
+      */
     public static function get_type_option_names() {
         return array('coursegroup', 'onedrivegroup', 'trendinggroup', 'pluginname');
     }

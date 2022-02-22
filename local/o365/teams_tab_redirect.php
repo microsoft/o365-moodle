@@ -15,8 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Redirect visitor to site page.
- * This page is triggered when a page that should be accessed from iframe is accessed directly.
+ * Redirect visitor to site page - triggered when a page that should be accessed from iframe is accessed directly.
  *
  * @package local_o365
  * @author Lai Wei <lai.wei@enovation.ie>

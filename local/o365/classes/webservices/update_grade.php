@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Update a grade.
+ *
  * @package local_o365
  * @author  2012 Paul Charsley, modified slightly 2017 James McQuillan
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,6 +27,10 @@ namespace local_o365\webservices;
 
 use \local_o365\webservices\exception as exception;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot.'/course/modlib.php');
 require_once($CFG->libdir.'/externallib.php');
 require_once($CFG->dirroot.'/user/externallib.php');
@@ -32,8 +38,6 @@ require_once($CFG->dirroot.'/mod/assign/locallib.php');
 
 /**
  * Update a grade.
- *
- * This is borrowed heavily from mod_assign_save_grade, modified to return grade record ids.
  */
 class update_grade extends \external_api {
     /**

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * A mock sharepoint API class.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,11 @@
 
 namespace local_o365\tests;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
+ * A mock sharepoint API class.
+ *
  * @codeCoverageIgnore
  */
 class mocksharepoint extends \local_o365\rest\sharepoint {

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * AdHoc task to sync Moodle permissions with sharepoint.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\task;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * AdHoc task to sync Moodle permissions with sharepoint.

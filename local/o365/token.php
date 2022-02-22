@@ -16,7 +16,8 @@
 
 /**
  * Return token
- * @package    moodlecore
+ *
+ * @package    local_o365
  * @copyright  2011 Dongsheng Cai <dongsheng@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,9 +26,8 @@ define('AJAX_SCRIPT', true);
 define('REQUIRE_CORRECT_ACCESS', true);
 define('NO_MOODLE_COOKIES', true);
 
-
 require_once(__DIR__ . '/../../config.php');
-require_once($CFG->dirroot.'/lib/authlib.php');
+require_once($CFG->dirroot . '/lib/authlib.php');
 require_once($CFG->libdir . '/externallib.php');
 require_once('lib.php');
 
@@ -41,28 +41,25 @@ if (!isset($headers['Authorization'])) {
 }
 local_o365_check_sharedsecret();
 $authtoken = substr($headers['Authorization'], 7);
-list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
-$dataEncoded = "$headerEncoded.$payloadEncoded";
-$signature = local_o365_base64UrlDecode($signatureEncoded);
+[$headerencoded, $payloadencoded, $signatureencoded] = explode('.', $authtoken);
+$dataencoded = "$headerencoded.$payloadencoded";
+$signature = local_o365_base64urldecode($signatureencoded);
 $secret = get_config('local_o365', 'bot_sharedsecret');
-$rawSignature = hash_hmac('sha256', $dataEncoded, $secret, true);
-if(!hash_equals($rawSignature, $signature)){
+$rawsignature = hash_hmac('sha256', $dataencoded, $secret, true);
+if (!hash_equals($rawsignature, $signature)) {
     http_response_code(401);
     throw new moodle_exception('invalidlogin');
 }
 
-$payload = json_decode(local_o365_base64UrlDecode($payloadEncoded));
+$payload = json_decode(local_o365_base64urldecode($payloadencoded));
 
-$headr = array();
+$headr = [];
 $headr[] = 'Content-length: 0';
 $headr[] = 'Content-type: application/json';
-$headr[] = 'Authorization: Bearer '.$payload->token;
+$headr[] = 'Authorization: Bearer ' . $payload->token;
 $curl = curl_init();
-curl_setopt_array($curl, array(
-    CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => "https://graph.microsoft.com/v1.0/me/",
-    CURLOPT_HTTPHEADER => $headr)
-);
+curl_setopt_array($curl,
+    [CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => "https://graph.microsoft.com/v1.0/me/", CURLOPT_HTTPHEADER => $headr]);
 $data = json_decode(curl_exec($curl));
 curl_close($curl);
 
@@ -111,7 +108,7 @@ if (!empty($user)) {
     $userauth = get_auth_plugin($user->auth);
     if (!empty($userauth->config->expiration) and $userauth->config->expiration == 1) {
         $days2expire = $userauth->password_expire($user->username);
-        if (intval($days2expire) < 0 ) {
+        if (intval($days2expire) < 0) {
             http_response_code(401);
             throw new moodle_exception('passwordisexpired', 'webservice');
         }
@@ -124,7 +121,7 @@ if (!empty($user)) {
     \core\session\manager::set_user($user);
 
     // Check if the service exists and is enabled.
-    $service = $DB->get_record('external_services', array('shortname' => $serviceshortname, 'enabled' => 1));
+    $service = $DB->get_record('external_services', ['shortname' => $serviceshortname, 'enabled' => 1]);
     if (empty($service)) {
         http_response_code(503);
         throw new moodle_exception('servicenotavailable', 'webservice');

@@ -30,7 +30,8 @@ $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable identity providers.';
 
 $string['cfg_authendpoint_key'] = 'Authorization Endpoint';
-$string['cfg_authendpoint_desc'] = 'The URI of the Authorization endpoint from your identity provider to use.';
+$string['cfg_authendpoint_desc'] = 'The URI of the Authorization endpoint from your identity provider to use.<br/>
+Note if the site is to be configured to allow users from other tenants to access, tenant specific authorization endpoint cannot be used.';
 $string['cfg_autoappend_key'] = 'Auto-Append';
 $string['cfg_autoappend_desc'] = 'Automatically append this string when logging in users using the "Resource Owner Password Credentials" authentication method. This is useful when your identity provider requires a common domain, but don\'t want to require users to type it in when logging in. For example, if the full OpenID Connect user is "james@example.com" and you enter "@example.com" here, the user will only have to enter "james" as their username. <br /><b>Note:</b> In the case where conflicting usernames exist - i.e. a Moodle user exists wth the same name, the priority of the authentication plugin is used to determine which user wins out.';
 $string['cfg_clientid_key'] = 'Client ID';
@@ -80,7 +81,8 @@ $string['cfg_opname_desc'] = 'This is an end-user-facing label that identifies t
 $string['cfg_redirecturi_key'] = 'Redirect URI';
 $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect URI". Your OpenID Connect identity provider should ask for this when registering Moodle as a client. <br /><b>NOTE:</b> You must enter this in your OpenID Connect provider *exactly* as it appears here. Any difference will prevent logins using OpenID Connect.';
 $string['cfg_tokenendpoint_key'] = 'Token Endpoint';
-$string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.';
+$string['cfg_tokenendpoint_desc'] = 'The URI of the token endpoint from your identity provider to use.<br/>
+Note if the site is to be configured to allow users from other tenants to access, tenant specific token endpoint cannot be used.';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect provider will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
 $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
@@ -98,6 +100,7 @@ $string['cfg_field_mapping_desc'] = 'User profile data can be mapped from Open I
 <ul>
 <li>Basic profile data is available from ID tokens from all IdP.</li>
 <li>If Azure AD is used as the IdP, additional profile data can be made available by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
+<li>If SDS profile sync feature is enabled in the local_o365 plugin, certain profile fields can be synchronised from SDS to Moodle. when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.</li>
 </ul>';
 
 $string['event_debug'] = 'Debug message';
@@ -240,3 +243,13 @@ $string['settings_fieldmap_field_teams'] = 'Teams';
 $string['settings_fieldmap_field_groups'] = 'Groups';
 $string['settings_fieldmap_field_roles'] = 'Roles';
 $string['settings_fieldmap_field_extensionattribute'] = 'Extension attribute {$a}';
+$string['settings_fieldmap_field_sds_school_id'] = 'SDS school ID ({$a})';
+$string['settings_fieldmap_field_sds_school_name'] = 'SDS school name ({$a})';
+$string['settings_fieldmap_field_sds_school_role'] = 'SDS school role ("Student" or "Teacher")';
+$string['settings_fieldmap_field_sds_student_externalId'] = 'SDS student external ID';
+$string['settings_fieldmap_field_sds_student_birthDate'] = 'SDS student birth date';
+$string['settings_fieldmap_field_sds_student_grade'] = 'SDS student grade';
+$string['settings_fieldmap_field_sds_student_graduationYear'] = 'SDS student graduation year';
+$string['settings_fieldmap_field_sds_student_studentNumber'] = 'SDS student number';
+$string['settings_fieldmap_field_sds_teacher_externalId'] = 'SDS teacher external ID';
+$string['settings_fieldmap_field_sds_teacher_teacherNumber'] = 'SDS teacher number';

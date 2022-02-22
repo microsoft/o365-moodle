@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Get a list of assignments in one or more courses.
+ *
  * @package local_o365
  * @author  2012 Paul Charsley, modified slightly 2017 James McQuillan
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,6 +25,10 @@
 
 namespace local_o365\webservices;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot.'/course/modlib.php');
 require_once($CFG->libdir.'/externallib.php');
 require_once($CFG->dirroot.'/user/externallib.php');
@@ -30,7 +36,6 @@ require_once($CFG->dirroot.'/mod/assign/locallib.php');
 
 /**
  * Get a list of assignments in one or more courses.
- * Borrowed heavily from mod_assign_get_assignments.
  */
 class read_assignments extends \external_api {
 
@@ -48,7 +53,8 @@ class read_assignments extends \external_api {
                 []
             ),
             'assignmentids' => new \external_multiple_structure(
-                new \external_value(PARAM_INT, 'assignment id, empty for retrieving all assignments for courses the user is enroled in'),
+                new \external_value(PARAM_INT,
+                    'assignment id, empty for retrieving all assignments for courses the user is enroled in'),
                 '0 or more assignment ids',
                 VALUE_DEFAULT,
                 []
@@ -61,7 +67,8 @@ class read_assignments extends \external_api {
             ),
             'includenotenrolledcourses' => new \external_value(
                 PARAM_BOOL,
-                'whether to return courses that the user can see even if is not enroled in. This requires the parameter courseids to not be empty.',
+                'whether to return courses that the user can see even if is not enroled in. This requires the parameter ' .
+                'courseids to not be empty.',
                 VALUE_DEFAULT,
                 false
             )
@@ -81,7 +88,8 @@ class read_assignments extends \external_api {
      * @return An array of courses and warnings.
      * @since  Moodle 2.4
      */
-    public static function assignments_read($courseids = [], $assignmentids = [], $capabilities = [], $includenotenrolledcourses = false) {
+    public static function assignments_read($courseids = [], $assignmentids = [], $capabilities = [],
+        $includenotenrolledcourses = false) {
         global $USER, $DB, $CFG;
 
         $params = self::validate_parameters(
@@ -143,7 +151,7 @@ class read_assignments extends \external_api {
                     'item' => 'course',
                     'itemid' => $cid,
                     'warningcode' => '1',
-                    'message' => 'No access rights in course context '.$e->getMessage()
+                    'message' => 'No access rights in course context ' . $e->getMessage()
                 );
                 continue;
             }
@@ -151,7 +159,7 @@ class read_assignments extends \external_api {
                 unset($courses[$cid]);
             }
         }
-        $extrafields='m.id as assignmentid, ' .
+        $extrafields = 'm.id as assignmentid, ' .
                      'm.course, ' .
                      'm.nosubmissions, ' .
                      'm.submissiondrafts, ' .

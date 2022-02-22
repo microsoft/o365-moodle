@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class representing Microsoft 365 user information.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,16 +25,39 @@
 
 namespace local_o365\obj;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class representing Microsoft 365 user information.
  */
 class o365user {
+    /**
+     * @var int|null
+     */
     protected $muserid = null;
+    /**
+     * @var string|null
+     */
     protected $oidctoken = null;
+    /**
+     * @var string|null
+     */
     public $objectid = null;
+    /**
+     * @var string|null
+     */
     public $username = null;
+    /**
+     * @var string|null
+     */
     public $upn = null;
 
+    /**
+     * Constructor.
+     *
+     * @param int $userid
+     * @param string $oidctoken
+     */
     protected function __construct($userid, $oidctoken) {
         $this->muserid = $userid;
         $this->oidctoken = $oidctoken;
@@ -41,10 +66,21 @@ class o365user {
         $this->upn = $oidctoken->oidcusername;
     }
 
+    /**
+     * Return ID token.
+     *
+     * @return mixed
+     */
     public function get_idtoken() {
         return $this->oidctoken->idtoken;
     }
 
+    /**
+     * Create a new instance of the o365user object from the user ID.
+     *
+     * @param int $userid
+     * @return o365user|null
+     */
     public static function instance_from_muserid($userid) {
         global $DB;
 

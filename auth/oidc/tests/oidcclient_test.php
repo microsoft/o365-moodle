@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * OIDC client test cases.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -55,7 +57,8 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
         $secret = 'secret';
         $redirecturi = 'redirecturi';
         $tokenresource = 'resource';
-        $client->setcreds($id, $secret, $redirecturi, $tokenresource);
+        $scope = (isset($this->config->oidcscope)) ? $this->config->oidcscope : null;
+        $client->setcreds($id, $secret, $redirecturi, $tokenresource,$scope);
 
         $this->assertEquals($id, $client->get_clientid());
         $this->assertEquals($secret, $client->get_clientsecret());
@@ -102,7 +105,8 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
     /**
      * Test setting and getting endpoints.
      *
-     * @dataProvider dataprovider_endpoints
+     * @param $endpoints
+     * @param $expectedexception
      */
     public function test_endpoints_getters_and_setters($endpoints, $expectedexception) {
         if (!empty($expectedexception)) {

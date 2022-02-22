@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adapted from 'theme_altitude'
+ * A tab in the plugin configuration page.
  *
- * @package   theme-altitude
+ * @package   local_o365
  * @author    Eric Bjella <eric.bjella@remote-learne.net>
  * @copyright 2016 Remote Learner  http://www.remote-learner.net/
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,11 +25,27 @@
 
 namespace local_o365\adminsetting;
 
-class tabs extends \admin_setting {
+defined('MOODLE_INTERNAL') || die();
 
+/**
+ * A tab in the plugin configuration page.
+ */
+class tabs extends \admin_setting {
+    /**
+     * @var array[] tabs.
+     */
     protected $tabs = [0 => []];
+    /**
+     * @var int current active tab.
+     */
     protected $selected;
+    /**
+     * @var string selected tab.
+     */
     protected $section;
+    /**
+     * @var bool whether to reload the configuration page.
+     */
     protected $reload;
 
     /**

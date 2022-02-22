@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Checks current recorded rate limit.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\healthcheck;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Checks current recorded rate limit
@@ -72,12 +76,6 @@ class ratelimit implements \local_o365\healthcheck\healthcheckinterface {
                 'severity' => static::SEVERITY_OK,
                 'message' => get_string('healthcheck_ratelimit_result_passed', 'local_o365'),
             ];
-        }
-
-        if (empty($systemtoken)) {
-
-        } else {
-
         }
     }
 

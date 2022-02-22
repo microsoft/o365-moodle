@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Get a list of courses where the current user is a teacher.
+ *
  * @package local_o365
  * @author 2011 Jerome Mouneyrac, modified 2016 James McQuillan
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,11 +25,14 @@
 
 namespace local_o365\webservices;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot.'/course/modlib.php');
 
 /**
  * Get a list of courses where the current user is a teacher.
- * Borrowed heavily from core_enrol_get_users_courses.
  */
 class read_teachercourses extends \external_api {
     /**
@@ -50,6 +55,7 @@ class read_teachercourses extends \external_api {
      * Get list of courses user is enrolled in (only active enrolments are returned).
      * Please note the current user must be able to access the course, otherwise the course is not included.
      *
+     * @param array $courseids
      * @return array of courses
      */
     public static function teachercourses_read($courseids = []) {
@@ -63,9 +69,7 @@ class read_teachercourses extends \external_api {
             ]
         );
 
-        $courseids = (!empty($params['courseids']) && is_array($params['courseids']))
-            ? array_flip($params['courseids'])
-            : [];
+        $courseids = (!empty($params['courseids']) && is_array($params['courseids'])) ? array_flip($params['courseids']) : [];
 
         // Get courses.
         $fields = 'id, shortname, fullname, idnumber, visible, format, showgrades, lang, enablecompletion';
@@ -126,7 +130,8 @@ class read_teachercourses extends \external_api {
                     'format' => new \external_value(PARAM_PLUGIN, 'course format: weeks, topics, social, site', VALUE_OPTIONAL),
                     'showgrades' => new \external_value(PARAM_BOOL, 'true if grades are shown, otherwise false', VALUE_OPTIONAL),
                     'lang' => new \external_value(PARAM_LANG, 'forced course language', VALUE_OPTIONAL),
-                    'enablecompletion' => new \external_value(PARAM_BOOL, 'true if completion is enabled, otherwise false', VALUE_OPTIONAL)
+                    'enablecompletion' => new \external_value(PARAM_BOOL, 'true if completion is enabled, otherwise false',
+                        VALUE_OPTIONAL),
                 ]
             )
         );

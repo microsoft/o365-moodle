@@ -105,8 +105,3 @@ $settings->add(new admin_setting_configtext('block_microsoft/settings_geto365lin
 $label = new lang_string('settings_showcoursegroup', 'block_microsoft');
 $desc = new lang_string('settings_showcoursegroup_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showcoursegroup', $label, $desc, 1));
-
-// Settings to show study groups link in the block.
-//$label = new lang_string('settings_showstudygroups', 'block_microsoft');
-//$desc = new lang_string('settings_showstudygroups_desc', 'block_microsoft');
-//$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_showstudygroups', $label, $desc, 1));

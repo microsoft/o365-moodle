@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class latesubmissions implements bot intent interface for teacher-late-submissions intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,17 +27,19 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 /**
- * Class latesubmissions implements bot intent interface for teacher-late-submissions intent
- * @package local_o365\bot\intents
+ * Class latesubmissions implements bot intent interface for teacher-late-submissions intent.
  */
 class latesubmissions implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message for teachers with the list of students late submissions
-     * @param $language - Message language
+     * Gets a message for teachers with the list of students late submissions.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities. Gives student name.
      * @return array|string - Bot message structure with data
      */

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Admin setting to set the system API user.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,10 @@
 
 namespace local_o365\adminsetting;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
+
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
@@ -76,10 +81,12 @@ class systemapiuser extends \admin_setting {
         return '';
     }
 
-
     /**
-     * Return an XHTML string for the setting
-     * @return string Returns an XHTML string
+     * Return an XHTML string for the setting.
+     *
+     * @param mixed $data
+     * @param string $query
+     * @return string
      */
     public function output_html($data, $query='') {
         global $OUTPUT;

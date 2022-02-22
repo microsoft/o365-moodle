@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Utility class for the group / team sync feature.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,6 +25,11 @@
 
 namespace local_o365\feature\usergroups;
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * An utility class for the group / team sync feature.
+ */
 class utils {
     /**
      * Determine whether course usergroups are enabled or not.
@@ -134,7 +141,8 @@ class utils {
         $group = $DB->get_record('local_o365_coursegroupdata', ['courseid' => $data->courseid, 'groupid' => $data->groupid]);
         if ($editform && $editoroptions && empty($data->groupid)) {
             // Update description from editor with fixed files.
-            $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'local_o365', 'description', $data->id);
+            $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'local_o365', 'description',
+                $data->id);
         }
 
         if (!empty($group)) {
@@ -168,7 +176,8 @@ class utils {
         if (!empty($data->groupid)) {
             if ($editform && $editoroptions) {
                 $context = \context_course::instance($data->courseid, MUST_EXIST);
-                $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'group', 'description', $data->groupid);
+                $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'group', 'description',
+                    $data->groupid);
             }
             $upd = new \stdClass();
             $upd->id = $data->groupid;
@@ -257,7 +266,8 @@ class utils {
         }
 
         if ($editform && $editoroptions && empty($data->groupid)) {
-            $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'local_o365', 'description', $data->id);
+            $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'local_o365', 'description',
+                $data->id);
         }
 
         $DB->update_record('local_o365_coursegroupdata', $data);
@@ -300,7 +310,8 @@ class utils {
                 $graphapi = static::get_graphclient();
                 $o365group = $graphapi->update_group($groupdata);
             } catch (\Exception $e) {
-                \local_o365\utils::debug('Updating of study group for Moodle group "'.$usergroupid.'" failed: '.$e->getMessage(), $caller);
+                \local_o365\utils::debug('Updating of study group for Moodle group "'.$usergroupid.'" failed: '.$e->getMessage(),
+                    $caller);
                 return false;
             }
 
@@ -344,9 +355,14 @@ class utils {
 
     /**
      * Return list of study groups.
+     *
+     * @param int $userid
      * @param array $filter Array containing filter for groups, 'courseid' or group 'id'.
+     * @param bool $manage
+     * @param int $start
      * @param int $max Maxiumn amount of groups to show.
      * @param int|boolean $mode False for html link, 1 for only links and 2 for moodle group object.
+     *
      * @return array Array of links, or array of objects. Last link is a link to complete list of study groups.
      */
     public static function study_groups_list($userid, $filter, $manage = true, $start = 0, $max = 5, $mode = false) {
@@ -364,7 +380,11 @@ class utils {
                         // No roles with capability, than user does not have access.
                         return [];
                     }
-                    list ($rolesql, $roleparams) = $DB->get_in_or_equal(array_map(function ($role) { return $role->id; }, $roles));
+                    $roleids = [];
+                    foreach ($roles as $role) {
+                        $roleids[] = $role->id;
+                    }
+                    [$rolesql, $roleparams] = $DB->get_in_or_equal($roleids);
                     $params = array_merge($roleparams, [$userid]);
                     $groupssql = 'SELECT DISTINCT g.id id, g.name, g.courseid
                                     FROM {groups} g, {role_assignments} ra, {context} c
@@ -427,7 +447,8 @@ class utils {
         }
         if (count($moodlegroups) > $max && !$mode) {
             $morestr = get_string('groups_more', 'local_o365');
-            $moreurl = new \moodle_url('/local/o365/groupcp.php', ['action' => 'managecoursegroups', 'courseid' => $filter['courseid']]);
+            $moreurl = new \moodle_url('/local/o365/groupcp.php',
+                ['action' => 'managecoursegroups', 'courseid' => $filter['courseid']]);
             $grouplist[] = \html_writer::link($moreurl, $morestr, ['class' => 'servicelink']);
         }
         return $grouplist;
@@ -450,7 +471,8 @@ class utils {
         }
         $group = new \stdClass();
         $group->courseid = $courseid;
-        if ($o365object = $DB->get_record('local_o365_objects', ['moodleid' => $moodleid, 'type' => 'group', 'subtype' => $subtype])) {
+        if ($o365object = $DB->get_record('local_o365_objects',
+            ['moodleid' => $moodleid, 'type' => 'group', 'subtype' => $subtype])) {
             $group->displayname = $o365object->o365name;
             $group->description = $o365object->o365name;
             $group->descriptionformat = 1;
@@ -491,7 +513,7 @@ class utils {
             return false;
         }
 
-        if (\local_o365\feature\usergroups\utils::is_enabled() !== true) {
+        if (static::is_enabled() !== true) {
             return false;
         }
 
@@ -536,8 +558,8 @@ class utils {
     /**
      * Get urls for Moodle group by api call.
      *
-     * @param $courseid
-     * @param $groupid
+     * @param int $courseid
+     * @param int $groupid
      *
      * @return string[]|null
      */
@@ -610,7 +632,9 @@ class utils {
         } else {
             if (isset($usergroupconfig[$courseid])) {
                 unset($usergroupconfig[$courseid]);
-                static::delete_course_group($courseid);
+                if (get_config('local_o365', 'delete_group_on_course_sync_disabled')) {
+                    static::delete_course_group($courseid);
+                }
             }
         }
 
@@ -975,7 +999,7 @@ class utils {
     /**
      * Return the list of o365_object IDs for the users with the given IDs.
      *
-     * @param $userids
+     * @param array $userids
      *
      * @return array
      */
@@ -983,7 +1007,7 @@ class utils {
         global $DB;
 
         if ($userids) {
-            list($idsql, $idparams) = $DB->get_in_or_equal($userids);
+            [$idsql, $idparams] = $DB->get_in_or_equal($userids);
             $sql = "SELECT objectid
                   FROM {local_o365_objects}
                  WHERE type = ?

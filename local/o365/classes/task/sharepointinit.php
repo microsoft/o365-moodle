@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Initialize SharePoint site.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\task;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Initialize SharePoint site.
@@ -59,6 +63,11 @@ class sharepointinit extends \core\task\adhoc_task {
         */
     }
 
+    /**
+     * Call Graph API to initialise SharePoint.
+     *
+     * @return bool|void
+     */
     protected function execute_graph() {
         global $DB;
         mtrace('SharePoint Init using Graph API...');
@@ -116,7 +125,8 @@ class sharepointinit extends \core\task\adhoc_task {
                             $moodlesitename = $frontpagerec->shortname;
                         }
                         mtrace('Setting parent site to "'.$currentparentsite.'", creating subsite "'.$partialurl.'"');
-                        $result = $apiclient->sharepoint_create_site($parsedurl['host'], $currentparentsite, $moodlesitename, $moodlesitedesc);
+                        $result = $apiclient->sharepoint_create_site($parsedurl['host'], $currentparentsite, $moodlesitename,
+                            $moodlesitedesc);
                         mtrace('Created parent site "'.$currentparentsite.'"');
                     } else {
                         mtrace('Parent site "'.$currentparentsite.'" already exists.');
@@ -168,6 +178,11 @@ class sharepointinit extends \core\task\adhoc_task {
         }
     }
 
+    /**
+     * Call legacy API to initialise SharePoint.
+     *
+     * @return bool|void
+     */
     protected function execute_legacy() {
         global $DB;
         mtrace('SharePoint Init using Legacy API...');

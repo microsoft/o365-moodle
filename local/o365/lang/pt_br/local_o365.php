@@ -15,8 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Portuguese language strings.
+ *
  * @package local_o365
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 $string['pluginname'] = 'Integração ao Microsoft 365';
@@ -171,7 +176,7 @@ $string['ucp_options'] = 'Opções';
 
 $string['assignment'] = 'Tarefa';
 $string['course_assignment_submitted_due'] = 'Curso - {$a->course} &nbsp; |  &nbsp; Tarefa -{$a->assignment} <br />
-                        Enviado em - {$a->submittedon} &nbsp; |  &nbsp; Data de entrega - {$a->duedate}';
+Enviado em - {$a->submittedon} &nbsp; |  &nbsp; Data de entrega - {$a->duedate}';
 $string['due_date'] = 'Data de entrega - {$a}';
 $string['grade_date'] = 'Nota - {$a->grade} &nbsp; | &nbsp; Data - {$a->date}';
 $string['help_message'] = 'Olá! Eu sou seu assistente Moodle. Você pode fazer as seguintes perguntas:';

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled task to trigger sending messages from Moodle to user via the bot.
+ *
  * @package local_o365
  * @author Tomasz Muras <tomek.muras@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -38,8 +40,13 @@ class bot extends \core\task\scheduled_task {
         return get_string('task_bot', 'local_o365');
     }
 
+    /**
+     * Execute the task.
+     *
+     * @return bool|void
+     */
     public function execute() {
-        global $DB, $CFG, $OUTPUT;
+        global $DB;
 
         mtrace('Starting bot task.');
 
@@ -83,7 +90,7 @@ class bot extends \core\task\scheduled_task {
         }
 
         $this->notificationendpoint = $notificationendpoint;
-        //$this->assignment_past_due_date(); - will be used for custom proactive notifications
+        // $this->assignment_past_due_date(); - will be used for custom proactive notifications.
 
         mtrace('Finishing bot task.');
     }
@@ -102,7 +109,7 @@ class bot extends \core\task\scheduled_task {
         // Get all assignments up to 1 day after due date that were not processed yet.
         $yesterday = time() - DAYSECS;
         $today = time();
-        list($sql, $params) = $DB->get_in_or_equal($this->courses);
+        [$sql, $params] = $DB->get_in_or_equal($this->courses);
 
         $sql = "SELECT a.*
                       FROM {assign} a
@@ -116,7 +123,7 @@ class bot extends \core\task\scheduled_task {
 
         require_once($CFG->dirroot . '/mod/assign/locallib.php');
         foreach ($assignments as $assignment) {
-            list ($course, $cm) = get_course_and_cm_from_instance($assignment->id, 'assign');
+            [$course, $cm] = get_course_and_cm_from_instance($assignment->id, 'assign');
             $context = \context_module::instance($cm->id);
 
             $o365course = $DB->get_record('local_o365_objects',

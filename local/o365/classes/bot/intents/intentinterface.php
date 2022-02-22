@@ -15,9 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Interface intentinterface defines constants default for all intents and  methods that all intents must implement.
+ *
  * @package local_o365
  * @author Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
 namespace local_o365\bot\intents;
@@ -25,8 +28,7 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Interface intentinterface defines constants default for all intents and  methods that all intents must implement
- * @package local_o365\bot\intents
+ * Interface intentinterface defines constants default for all intents and  methods that all intents must implement.
  */
 interface intentinterface {
     /**
@@ -36,7 +38,8 @@ interface intentinterface {
 
     /**
      * Get bot ready message.
-     * @param $language - message language code
+     *
+     * @param string $language - message language code
      * @param mixed $entities - intent entities (optional)
      * @return array - structured message with all details for bot
      */

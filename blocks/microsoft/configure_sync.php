@@ -42,11 +42,11 @@ $redirecturl = new moodle_url('/course/view.php', ['id' => $courseid]);
 // Validations.
 $sitecoursesyncconfig = get_config('local_o365', 'createteams');
 if ($sitecoursesyncconfig != 'oncustom') {
-    print_error('error_course_sync_not_configurable_per_course', 'block_microsoft', $redirecturl);
+    throw new moodle_exception('error_course_sync_not_configurable_per_course', 'block_microsoft', $redirecturl);
 }
 
 if (!get_config('local_o365', 'createteams_per_course')) {
-    print_error('error_course_sync_not_configurable_per_course', 'block_microsoft', $redirecturl);
+    throw new moodle_exception('error_course_sync_not_configurable_per_course', 'block_microsoft', $redirecturl);
 }
 
 $formdata = [

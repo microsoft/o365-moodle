@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Represents an oauth2 token.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\oauth2;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Represents an oauth2 token.
@@ -31,6 +35,7 @@ class apptoken extends \local_o365\oauth2\token {
     /**
      * Get a token instance for a new resource.
      *
+     * @param int $userid
      * @param string $tokenresource The new resource.
      * @param \local_o365\oauth2\clientdata $clientdata Client information.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
@@ -73,8 +78,8 @@ class apptoken extends \local_o365\oauth2\token {
             'Content-Type: application/x-www-form-urlencoded',
             'Content-Length: '.strlen($params)
         ];
-        $httpclient->resetHeader();
-        $httpclient->setHeader($header);
+        $httpclient->resetheader();
+        $httpclient->setheader($header);
         $tokenresult = $httpclient->post($tokenendpoint, $params);
         $tokenresult = @json_decode($tokenresult, true);
         if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
@@ -197,6 +202,7 @@ class apptoken extends \local_o365\oauth2\token {
     /**
      * Store a new app token.
      *
+     * @param int $userid
      * @param string $token Token access token.
      * @param int $expiry Token expiry timestamp.
      * @param string $refreshtoken Token refresh token (unused in this token type).

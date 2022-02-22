@@ -35,12 +35,25 @@ use local_o365\rest\outlook;
 use local_o365\rest\unified;
 use local_o365\utils;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
+/**
+ * User sync feature.
+ */
 class main {
+    /**
+     * @var clientdata|null
+     */
     protected $clientdata = null;
+    /**
+     * @var httpclient|null
+     */
     protected $httpclient = null;
 
     /**
@@ -52,13 +65,15 @@ class main {
      * @throws \moodle_exception
      */
     public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
-        $this->clientdata = (!empty($clientdata))
-            ? $clientdata
-            : clientdata::instance_from_oidc();
+        if (!PHPUNIT_TEST) {
+            $this->clientdata = (!empty($clientdata))
+                ? $clientdata
+                : clientdata::instance_from_oidc();
 
-        $this->httpclient = (!empty($httpclient))
-            ? $httpclient
-            : new httpclient();
+            $this->httpclient = (!empty($httpclient))
+                ? $httpclient
+                : new httpclient();
+        }
     }
 
     /**
@@ -273,8 +288,8 @@ class main {
     /**
      * Sync timezone of user from Outlook to Moodle.
      *
-     * @param $muserid
-     * @param $user
+     * @param int $muserid
+     * @param object $user
      */
     public function sync_timezone($muserid, $user) {
         $tokenresource = unified::get_tokenresource();
@@ -370,6 +385,14 @@ class main {
         return [$users, $skiptoken];
     }
 
+    /**
+     * Return the users search delta, along with skip token and delta tokens.
+     *
+     * @param string $params
+     * @param null $skiptoken
+     * @param null $deltatoken
+     * @return array
+     */
     public function get_users_delta($params = 'default', $skiptoken = null, $deltatoken = null) {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
@@ -383,7 +406,7 @@ class main {
     /**
      * Return the name of the manager of the Microsoft 365 user with the given oid.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return mixed|string
      */
@@ -400,41 +423,70 @@ class main {
     /**
      * Return the names of groups that the Microsoft 365 user with the given oid are in, joined by comma.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return string
      */
-    public function get_user_groups($userobjectid) {
+    public function get_user_group_names($userobjectid) {
         $apiclient = $this->construct_user_api();
-        $results = $apiclient->get_user_groups($userobjectid);
-        $groups = [];
-        foreach ($results as $result) {
-            $groups[] = $result['displayName'];
+        $usergroupsresults = $apiclient->get_user_groups($userobjectid);
+        $usergroups = $usergroupsresults['value'];
+        while (!empty($usergroupsresults['@odata.nextLink'])) {
+            $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $usergroupsresults = $apiclient->get_user_groups($userobjectid);
+                    $usergroups = array_merge($usergroups, $usergroupsresults['value']);
+                }
+            }
         }
-        return join(',', $groups);
+
+        $groupnames = [];
+        foreach ($usergroups as $usergroup) {
+            $groupnames[] = $usergroup['displayName'];
+        }
+
+        return join(',', $groupnames);
     }
 
     /**
      * Return the names of teams that the Microsoft 365 user with the given oid are in, joined by comma.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return string
      */
     public function get_user_teams($userobjectid) {
         $apiclient = $this->construct_user_api();
-        $results = $apiclient->get_user_teams($userobjectid);
-        $teams = [];
-        foreach ($results as $result) {
-            $teams[] = $result['displayName'];
+
+        $userteamsresults = $apiclient->get_user_teams($userobjectid);
+        $userteams = $userteamsresults['value'];
+
+        while (!empty($userteamsresults['@odata.nextLink'])) {
+            $nextlink = parse_url($userteamsresults['@odata.nextLink']);
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $userteamsresults = $apiclient->get_user_teams($userobjectid, $query['$skiptoken']);
+                    $userteams = array_merge($userteams, $userteamsresults['value']);
+                }
+            }
         }
-        return join(',', $teams);
+
+        $teamnames = [];
+        foreach ($userteams as $userteam) {
+            $teamnames[] = $userteam['displayName'];
+        }
+        return join(',', $teamnames);
     }
 
     /**
      * Return the names of roles that the Microsoft 365 user with the given oid has, joined by comma.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return string
      */
@@ -445,7 +497,7 @@ class main {
         if ($objectsids) {
             $results = $apiclient->get_directory_objects($objectsids);
             foreach ($results as $result) {
-                if (stripos($result['@odata.type'], 'role') !== FALSE) {
+                if (stripos($result['@odata.type'], 'role') !== false) {
                     $roles[] = $result['displayName'];
                 }
             }
@@ -457,7 +509,7 @@ class main {
     /**
      * Return the preferred name of the Microsoft 365 user with the given oid.
      *
-     * @param $userobjectid
+     * @param string $userobjectid
      *
      * @return mixed
      */
@@ -483,7 +535,47 @@ class main {
 
         require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
-        $fieldmappings = auth_oidc_get_field_mappings();
+        if (PHPUNIT_TEST) {
+            $fieldmappings = [
+                'firstname' => [
+                    'field_map' => 'givenName',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'lastname' => [
+                    'field_map' => 'surname',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'email' => [
+                    'field_map' => 'mail',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'idnumber' => [
+                    'field_map' => 'userPrincipalName',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'city' => [
+                    'field_map' => 'city',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'country' => [
+                    'field_map' => 'country',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+                'department' => [
+                    'field_map' => 'department',
+                    'field_lock' => 'unlocked',
+                    'update_local' => 'always',
+                ],
+            ];
+        } else {
+            $fieldmappings = auth_oidc_get_field_mappings();
+        }
 
         if (unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
             $objectidfieldname = 'id';
@@ -528,36 +620,38 @@ class main {
                 }
             }
 
-            switch ($remotefield) {
-                case 'manager':
-                    $user->$localfield = $usersync->get_user_manager($userobjectid);
-                    break;
-                case 'groups':
-                    $user->$localfield = $usersync->get_user_groups($userobjectid);
-                    break;
-                case 'teams':
-                    $user->$localfield = $usersync->get_user_teams($userobjectid);
-                    break;
-                case 'roles':
-                    $user->$localfield = $usersync->get_user_roles($userobjectid);
-                    break;
-                case 'preferredName':
-                    if (!isset($aaddata[$remotefield])) {
-                        if (stripos($aaddata['userPrincipalName'], '_ext_') !== false) {
-                            $user->$localfield = $usersync->get_preferred_name($userobjectid);
-                        }
-                    }
-                    break;
-                default:
-                    if (substr($remotefield, 0, 18) == 'extensionAttribute') {
-                        $extensionattributeid = substr($remotefield, 18);
-                        if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
-                            if (isset($aaddata['onPremisesExtensionAttributes']) &&
-                                isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
-                                $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+            if (!PHPUNIT_TEST) {
+                switch ($remotefield) {
+                    case 'manager':
+                        $user->$localfield = $usersync->get_user_manager($userobjectid);
+                        break;
+                    case 'groups':
+                        $user->$localfield = $usersync->get_user_group_names($userobjectid);
+                        break;
+                    case 'teams':
+                        $user->$localfield = $usersync->get_user_teams($userobjectid);
+                        break;
+                    case 'roles':
+                        $user->$localfield = $usersync->get_user_roles($userobjectid);
+                        break;
+                    case 'preferredName':
+                        if (!isset($aaddata[$remotefield])) {
+                            if (stripos($aaddata['userPrincipalName'], '_ext_') !== false) {
+                                $user->$localfield = $usersync->get_preferred_name($userobjectid);
                             }
                         }
-                    }
+                        break;
+                    default:
+                        if (substr($remotefield, 0, 18) == 'extensionAttribute') {
+                            $extensionattributeid = substr($remotefield, 18);
+                            if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
+                                if (isset($aaddata['onPremisesExtensionAttributes']) &&
+                                    isset($aaddata['onPremisesExtensionAttributes'][$remotefield])) {
+                                    $user->$localfield = $aaddata['onPremisesExtensionAttributes'][$remotefield];
+                                }
+                            }
+                        }
+                }
             }
         }
 
@@ -572,7 +666,7 @@ class main {
     /**
      * Check if any of the fields in the field map configuration would require calling Graph API function to get user details.
      *
-     * @param $eventtype
+     * @param string $eventtype
      *
      * @return bool
      */
@@ -631,8 +725,21 @@ class main {
                     utils::debug('Could not find group (1)', 'check_usercreationrestriction', $group);
                     return false;
                 }
-                $usersgroups = $apiclient->get_user_transitive_groups($aaddata['id']);
-                foreach ($usersgroups as $usergroup) {
+                $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
+                $usergroups = $usergroupsresults['value'];
+                while (!empty($usergroupsresults['@odata.nextLink'])) {
+                    $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
+                    if (isset($nextlink['query'])) {
+                        $query = [];
+                        parse_str($nextlink['query'], $query);
+                        if (isset($query['$skiptoken'])) {
+                            $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
+                            $usergroups = array_merge($usergroups, $usergroupsresults['value']);
+                        }
+                    }
+                }
+
+                foreach ($usergroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
                         return true;
                     }
@@ -674,6 +781,7 @@ class main {
         global $CFG, $DB;
 
         $creationallowed = $this->check_usercreationrestriction($aaddata);
+
         if ($creationallowed !== true) {
             mtrace('Cannot create user because they do not meet the configured user creation restrictions.');
             return false;
@@ -768,7 +876,7 @@ class main {
      * Updates a Moodle user from Azure AD user data.
      *
      * @param array $aaddata Array of Azure AD user data.
-     * @param $fullexistinguser
+     * @param object $fullexistinguser
      *
      * @return \stdClass An object representing the created Moodle user.
      */
@@ -931,7 +1039,7 @@ class main {
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
                  WHERE u.mnethostid = ? AND u.deleted = ?
-              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@example.org before john.smith.
+              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@email.com before john.smith.
         $params = array_merge(['user'], [$CFG->mnet_localhost_id, '0']);
         $existingusers = $DB->get_records_sql($sql, $params);
 
@@ -1076,9 +1184,9 @@ class main {
     /**
      * Sync a Microsoft 365 that hasn't been synced before - create a new Moodle account.
      *
-     * @param $syncoptions
-     * @param $aaduserdata
-     * @param $syncguestusers
+     * @param array $syncoptions
+     * @param array $aaduserdata
+     * @param bool $syncguestusers
      *
      * @return false|\stdClass|null
      */
@@ -1173,10 +1281,10 @@ class main {
     /**
      * Sync a Moodle user who has been previously connected to a Microsoft 365 account.
      *
-     * @param $syncoptions
-     * @param $aaduserdata
-     * @param $existinguser
-     * @param $exactmatch
+     * @param array $syncoptions
+     * @param array $aaduserdata
+     * @param object $existinguser
+     * @param bool $exactmatch
      *
      * @return bool
      */
@@ -1279,6 +1387,15 @@ class main {
         }
     }
 
+    /**
+     * Match a Microsoft 365 user with a Moodle user.
+     *
+     * @param array $syncoptions
+     * @param array $aaduserdata
+     * @param object $existinguser
+     * @param bool $exactmatch
+     * @return bool|void
+     */
     protected function sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
         global $DB;
 
@@ -1356,7 +1473,7 @@ class main {
      *
      * Note this will not catch oidc users without matching Microsoft 365 account.
      *
-     * @param $aadusers
+     * @param array $aadusers
      * @param bool $delete
      *
      * @return bool
@@ -1368,28 +1485,38 @@ class main {
 
         try {
             $deletedusersids = [];
-            $deletedusers = $apiclient->list_deleted_users();
-            if (is_array($deletedusers) && !empty($deletedusers['value'])) {
-                foreach ($deletedusers['value'] as $deleteduser) {
-                    if (!empty($deleteduser) && isset($deleteduser['id'])) {
-                        // Check for synced user.
-                        $sql = 'SELECT u.*
-                                  FROM {user} u
-                                  JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                                 WHERE u.mnethostid = ?
-                                   AND u.deleted = ?
-                                   AND u.suspended = ?
-                                   AND u.auth = ?
-                                   AND obj.objectid = ? ';
-                        $params = ['user', $CFG->mnet_localhost_id, '0', '0', 'oidc', $deleteduser['id']];
-                        $synceduser = $DB->get_record_sql($sql, $params);
-                        if (!empty($synceduser)) {
-                            $synceduser->suspended = 1;
-                            user_update_user($synceduser, false);
-                            $this->mtrace($synceduser->username . ' was deleted in Azure, the matching account is suspended.');
-                        }
-                        $deletedusersids[] = $deleteduser['id'];
+            $deleteduserresults = $apiclient->list_deleted_users();
+            $deletedusers = $deleteduserresults['value'];
+            while (!empty($deleteduserresults['@odata.nextLink'])) {
+                $nextlink = parse_url($deleteduserresults['@odata.nextLink']);
+                if (isset($nextlink['query'])) {
+                    $query = [];
+                    parse_str($nextlink['query'], $query);
+                    if (isset($query['$skiptoken'])) {
+                        $deleteduserresults = $apiclient->list_deleted_users($query['$skiptoken']);
+                        $deletedusers = array_merge($deletedusers, $deleteduserresults['value']);
                     }
+                }
+            }
+            foreach ($deletedusers as $deleteduser) {
+                if (!empty($deleteduser) && isset($deleteduser['id'])) {
+                    // Check for synced user.
+                    $sql = 'SELECT u.*
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+                             WHERE u.mnethostid = ?
+                               AND u.deleted = ?
+                               AND u.suspended = ?
+                               AND u.auth = ?
+                               AND obj.objectid = ? ';
+                    $params = ['user', $CFG->mnet_localhost_id, '0', '0', 'oidc', $deleteduser['id']];
+                    $synceduser = $DB->get_record_sql($sql, $params);
+                    if (!empty($synceduser)) {
+                        $synceduser->suspended = 1;
+                        user_update_user($synceduser, false);
+                        $this->mtrace($synceduser->username . ' was deleted in Azure, the matching account is suspended.');
+                    }
+                    $deletedusersids[] = $deleteduser['id'];
                 }
             }
 
@@ -1466,7 +1593,7 @@ class main {
         }
 
         if ($validaaduserids) {
-            list($objectidsql, $objectidparams) = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
+            [$objectidsql, $objectidparams] = $DB->get_in_or_equal($validaaduserids, SQL_PARAMS_NAMED);
             $query = 'SELECT u.*
                         FROM {user} u
                         JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id

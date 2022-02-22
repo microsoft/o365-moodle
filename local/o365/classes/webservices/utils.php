@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Webservices utilities.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,6 +26,8 @@
 namespace local_o365\webservices;
 
 use \local_o365\webservices\exception as exception;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Webservices utilities.
@@ -35,6 +39,7 @@ class utils {
      * This checks whether the given module ID is a OneNote assignment.
      *
      * @param int $coursemoduleid The course module ID.
+     * @param int $courseid
      * @return bool Whether we can proceed or not.
      */
     public static function verify_assignment($coursemoduleid, $courseid) {

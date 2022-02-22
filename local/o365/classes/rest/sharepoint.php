@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * API client for SharePoint.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,11 +25,15 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * API client for SharePoint.
  */
 class sharepoint extends \local_o365\rest\o365api {
-    /** The general API area of the class. */
+    /**
+     * @var string The general API area of the class.
+     */
     public $apiarea = 'sharepoint';
 
     /** @var string The site we're accessing. */
@@ -422,8 +428,6 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Get groups.
      *
-     * @param string $name The name of the group.
-     * @param string $description The description of the group.
      * @return array|null Returned response, or null if error.
      */
     public function get_groups() {
@@ -774,7 +778,9 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Update a subsite for a course.
      *
-     * @param int|\stdClass $course A course record or course ID.
+     * @param int $courseid
+     * @param string $shortname
+     * @param string $fullname
      * @return bool Success/Failure.
      */
     public function update_course_site($courseid, $shortname, $fullname) {
@@ -870,7 +876,8 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return string Return embed code.
      */
     public function get_video_embed_code($channelid, $videoid, $width = 640, $height = 360) {
-        $response = $this->apicall('get', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetVideoEmbedCode?width=$width&height=$height");
+        $endpoint = "/VideoService/Channels('$channelid')/Videos('$videoid')/GetVideoEmbedCode?width=$width&height=$height";
+        $response = $this->apicall('get', $endpoint);
         $expectedparams = ['value' => null];
         $response = $this->process_apicall_response($response, $expectedparams);
         return $response['value'];
@@ -935,7 +942,8 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return VideoObject -- The object into which to upload the video.
      */
     public function create_video_placeholder($channelid, $description = '', $title = '', $filename = '') {
-        $params = '{ \'__metadata\': { \'type\': \'SP.Publishing.VideoItem\' }, \'Description\': \''.$description.'\', 	\'Title\': \''.$title.'\', \'FileName\' : \''.$filename.'\' }';
+        $params = '{ \'__metadata\': { \'type\': \'SP.Publishing.VideoItem\' }, \'Description\': \''.$description.'\', '.
+            '\'Title\': \''.$title.'\', \'FileName\' : \''.$filename.'\' }';
         $options = array('contenttype' => 'application/json;odata=verbose', 'Accept' => 'application/json;odata=verbose');
         $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos", $params, $options);
         $response = $this->process_apicall_response($response);
@@ -951,7 +959,8 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return Response code
      */
     protected function upload_video_small($channelid, $videoid, $content) {
-        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/SaveBinaryStream", $content);
+        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/SaveBinaryStream",
+            $content);
         $response = $this->process_apicall_response($response);
         return $response;
     }
@@ -962,27 +971,30 @@ class sharepoint extends \local_o365\rest\o365api {
      * @param string $channelid The ID of the channel where video need to uploaded.
      * @param string $videoid video ID.
      * @param string $filename The name of file on disk with full path ...
-     * @param string $guid.
-     * @param integer $filesize.
-     * @param integer $offsetsize.
+     * @param string $guid
+     * @param int $filesize
+     * @param int $offsetsize
      * @return Response code
      */
     protected function upload_video_large($channelid, $videoid, $filename, $guid, $filesize, $offsetsize) {
         @set_time_limit(0);
-        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/StartUpload(uploadId=guid'$guid')");
+        $endpoint = "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/StartUpload(uploadId=guid'$guid')";
+        $response = $this->apicall('post', $endpoint);
         $response = $this->process_apicall_response($response);
         $uploadedsize = 0;
         while ($uploadedsize + $offsetsize < $filesize) {
-            $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/ContinueUpload(uploadId=guid'$guid',fileOffset='$uploadedsize')",
-                    file_get_contents($filename, false, null, $uploadedsize, $offsetsize));
+            $endpoint = "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/" .
+                "ContinueUpload(uploadId=guid'$guid',fileOffset='$uploadedsize')";
+            $response = $this->apicall('post', $endpoint, file_get_contents($filename, false, null, $uploadedsize, $offsetsize));
             $uploadedsize += $offsetsize;
             $response = $this->process_apicall_response($response);
             if (!$response['value']) {
                 return $response;
             }
         }
-        $response = $this->apicall('post', "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/FinishUpload(uploadId=guid'$guid',fileOffset='$uploadedsize')",
-                file_get_contents($filename, false, null, $uploadedsize, $offsetsize));
+        $endpoint = "/VideoService/Channels('$channelid')/Videos('$videoid')/GetFile()/" .
+            "FinishUpload(uploadId=guid'$guid',fileOffset='$uploadedsize')";
+        $response = $this->apicall('post', $endpoint, file_get_contents($filename, false, null, $uploadedsize, $offsetsize));
         $response = $this->process_apicall_response($response);
         return $response;
     }
@@ -990,7 +1002,7 @@ class sharepoint extends \local_o365\rest\o365api {
     /**
      * Upload a video.
      *
-     * @param string $channelid The ID of the channel where video need to uploaded.
+     * @param string $channelid The ID of the channel where video need to be uploaded.
      * @param string $videoid video ID.
      * @param string $filename The name of file on disk with full path ...
      * @param int $offsetsize Upload chunk size (default 8192 * 1024).
@@ -1034,7 +1046,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $options['CURLOPT_FAILONERROR'] = true;
         $options['CURLOPT_FOLLOWLOCATION'] = true;
         $options['CURLOPT_RETURNTRANSFER'] = true;
-        $options['CURLOPT_TIMEOUT'] = 30*60;
+        $options['CURLOPT_TIMEOUT'] = 30 * 60;
         $options['CURLOPT_HTTPGET'] = true;
         $options['CURLOPT_HEADER'] = false;
         $options['CURLOPT_HTTPHEADER'] = $header;

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Admin setting to control field mappings for users.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,10 @@
 
 namespace local_o365\adminsetting;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
+
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
@@ -105,7 +110,9 @@ class usersynccreationrestriction extends \admin_setting {
     /**
      * Return an XHTML string for the setting.
      *
-     * @return string Returns an XHTML string
+     * @param mixed $data
+     * @param string $query
+     * @return string
      */
     public function output_html($data, $query = '') {
         global $DB, $OUTPUT;
@@ -113,16 +120,20 @@ class usersynccreationrestriction extends \admin_setting {
         if (empty($data) || !is_array($data)) {
             $data = [];
         }
-        $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']])) ? $data['remotefield'] : '';
+        $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']])) ?
+            $data['remotefield'] : '';
         $value = (isset($data['value'])) ? $data['value'] : '';
         $useregex = (!empty($data['useregex'])) ? true : false;
 
         $html = \html_writer::start_tag('div');
+        $onchange = 'document.getElementById(\'usercreationrestriction_useregex_wrapper\').style.visibility ' .
+            '= (this.value == \'o365group\') ? \'hidden\' : \'visible\'';
         $selectattrs = [
             'style' => 'width: 250px;vertical-align: top;margin-right: 0.25rem;margin-top:0.25rem;',
-            'onchange' => 'document.getElementById(\'usercreationrestriction_useregex_wrapper\').style.visibility = (this.value == \'o365group\') ? \'hidden\' : \'visible\'',
+            'onchange' => $onchange,
         ];
-        $html .= \html_writer::select($this->remotefields, $this->get_full_name().'[remotefield]', $remotefield, ['' => 'choosedots'], $selectattrs);
+        $html .= \html_writer::select($this->remotefields,
+            $this->get_full_name().'[remotefield]', $remotefield, ['' => 'choosedots'], $selectattrs);
 
         $inputdivattrs = ['style' => 'display:inline-block;margin-top:0.25rem;'];
         $html .= \html_writer::start_tag('div', $inputdivattrs);

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Utility functions for the SharePoint feature.
+ *
  * @package local_o365
  * @author Amy Groshek <amy@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,6 +25,11 @@
 
 namespace local_o365\feature\sharepointcustom;
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Utility functions for the SharePoint feature.
+ */
 class utils {
     /**
      * Enable or disable course subsite.
@@ -69,50 +76,48 @@ class utils {
                     return false;
                 }
 
-                 // Create parent site(s).
-                    try {
-                        mtrace('Creating parent site for Moodle...');
-                        $moodlesiteuri = $sharepoint->get_moodle_parent_site_uri();
-                        mtrace($moodlesiteuri);
-                        $sitelevels = explode('/', $moodlesiteuri);
-                        $currentparentsite = '';
-                        foreach ($sitelevels as $partialurl) {
-                            $sharepoint->set_site($currentparentsite);
-                            if ($sharepoint->site_exists($currentparentsite.'/'.$partialurl) === false) {
-                                $moodlesitename = get_string('acp_parentsite_name', 'local_o365');
-                                $moodlesitedesc = get_string('acp_parentsite_desc', 'local_o365');
-                                $frontpagerec = $DB->get_record('course', ['id' => SITEID], 'id,shortname');
-                                if (!empty($frontpagerec) && !empty($frontpagerec->shortname)) {
-                                    $moodlesitename = $frontpagerec->shortname;
-                                }
-                                mtrace('Setting parent site to "'.$currentparentsite.'", creating subsite "'.$partialurl.'"');
-                                $result = $sharepoint->create_site($moodlesitename, $partialurl, $moodlesitedesc);
-                                $currentparentsite .= '/'.$partialurl;
-                                mtrace('Created parent site "'.$currentparentsite.'"');
-                            } else {
-                                $currentparentsite .= '/'.$partialurl;
-                                mtrace('Parent site "'.$currentparentsite.'" already exists.');
+                // Create parent site(s).
+                try {
+                    mtrace('Creating parent site for Moodle...');
+                    $moodlesiteuri = $sharepoint->get_moodle_parent_site_uri();
+                    mtrace($moodlesiteuri);
+                    $sitelevels = explode('/', $moodlesiteuri);
+                    $currentparentsite = '';
+                    foreach ($sitelevels as $partialurl) {
+                        $sharepoint->set_site($currentparentsite);
+                        if ($sharepoint->site_exists($currentparentsite.'/'.$partialurl) === false) {
+                            $moodlesitename = get_string('acp_parentsite_name', 'local_o365');
+                            $moodlesitedesc = get_string('acp_parentsite_desc', 'local_o365');
+                            $frontpagerec = $DB->get_record('course', ['id' => SITEID], 'id,shortname');
+                            if (!empty($frontpagerec) && !empty($frontpagerec->shortname)) {
+                                $moodlesitename = $frontpagerec->shortname;
                             }
+                            mtrace('Setting parent site to "'.$currentparentsite.'", creating subsite "'.$partialurl.'"');
+                            $result = $sharepoint->create_site($moodlesitename, $partialurl, $moodlesitedesc);
+                            $currentparentsite .= '/'.$partialurl;
+                            mtrace('Created parent site "'.$currentparentsite.'"');
+                        } else {
+                            $currentparentsite .= '/'.$partialurl;
+                            mtrace('Parent site "'.$currentparentsite.'" already exists.');
                         }
-                        mtrace('Finished creating Moodle parent site.');
-                    } catch (\Exception $e) {
-                        $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
-                        mtrace($errmsg);
-                        \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
-                        set_config('sharepoint_initialized', 'error', 'local_o365');
-                        return false;
                     }
+                    mtrace('Finished creating Moodle parent site.');
+                } catch (\Exception $e) {
+                    $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
+                    mtrace($errmsg);
+                    \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+                    set_config('sharepoint_initialized', 'error', 'local_o365');
+                    return false;
+                }
 
-                    // Create course sites.
-                    mtrace('Creating course subsites in "'.$moodlesiteuri.'"');
-                    $sharepoint->set_site($moodlesiteuri);
+                // Create course sites.
+                mtrace('Creating course subsites in "'.$moodlesiteuri.'"');
+                $sharepoint->set_site($moodlesiteuri);
 
-                    $coursecreated = $sharepoint->create_course_site($courseid);
-                    // return $coursecreated;
-                    if (!empty($coursecreated)) {
-                        $return[] = $coursecreated;
-                    }
-
+                $coursecreated = $sharepoint->create_course_site($courseid);
+                if (!empty($coursecreated)) {
+                    $return[] = $coursecreated;
+                }
             } else {
                 if (isset($customsubsitesconfig[$courseid])) {
                     unset($customsubsitesconfig[$courseid]);
@@ -125,11 +130,10 @@ class utils {
         }
     }
 
-   /**
+    /**
      * Determine whether a course subsite is enabled or disabled.
      *
      * @param int $courseid The ID of the course.
-     * @param string $feature The feature to check.
      * @return bool Whether the feature is enabled or not.
      */
     public static function course_is_sharepoint_enabled($courseid) {
@@ -139,8 +143,7 @@ class utils {
         } else if ($customsubsitesenabled === 'oncustom') {
             $config = get_config('local_o365', 'sharepointsubsitescustom');
             $config = @json_decode($config, true);
-            return (!empty($config) && is_array($config) && isset($config[$courseid]))
-                ? true : false;
+            return (!empty($config) && is_array($config) && isset($config[$courseid])) ? true : false;
         }
         return false;
     }
@@ -180,7 +183,7 @@ class utils {
     /**
      * Update sharepoint subsite json object upon upgrade.
      *
-     * @param object $return Object with results of update.
+     * @return array|false|mixed
      */
     public static function update_enabled_subsites_json() {
         global $DB;
@@ -190,7 +193,7 @@ class utils {
         // Get JSON of enabled courses.
         $subsitesconfig = get_config('local_o365', 'sharepointsubsitescustom');
         $subsitesconfig = json_decode($subsitesconfig, true);
-        $subsitesconfig = $subsitesconfig ? $subsitesconfig : array();
+        $subsitesconfig = $subsitesconfig ? $subsitesconfig : [];
         // Get sharepoint.
         try {
             $sharepointtokenresource = \local_o365\rest\sharepoint::get_tokenresource();
@@ -208,7 +211,7 @@ class utils {
 
             $sharepoint = new \local_o365\rest\sharepoint($sptoken, $httpclient);
         } catch (\Exception $e) {
-            $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: '.$e->getMessage();
+            $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: ' . $e->getMessage();
             mtrace($errmsg);
             \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
             set_config('sharepoint_initialized', 'error', 'local_o365');
@@ -226,7 +229,7 @@ class utils {
             if (array_key_exists($key, $allcourses) && $key > 1) {
                 // Look on sharepoint.
                 $siteurl = strtolower(preg_replace('/[^a-z0-9_]+/iu', '', $allcourses[$key]->shortname));
-                $fullsiteurl = $tokenresource.'/'.$parentsite.'/'.$siteurl;
+                $fullsiteurl = $tokenresource . '/' . $parentsite . '/' . $siteurl;
                 $sitespvalid = \local_o365\rest\sharepoint::validate_site($fullsiteurl, $clientdata, $httpclient);
                 // If the course is on sharepoint already, make sure it's in the json.
                 if ($sitespvalid === 'notempty') {

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class representing oauth2 client data.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\oauth2;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Class representing oauth2 client data.
@@ -73,6 +77,12 @@ class clientdata {
         }
     }
 
+    /**
+     * Return the app token end point of the tenant.
+     *
+     * @param string $tenant
+     * @return string
+     */
     public static function get_apptokenendpoint_from_tenant($tenant) {
         return 'https://login.microsoftonline.com/'.$tenant.'/oauth2/token';
     }
@@ -80,6 +90,7 @@ class clientdata {
     /**
      * Get an instance from auth_oidc config.
      *
+     * @param string|null $tenant
      * @return \local_o365\oauth2\clientdata The constructed client data creds.
      */
     public static function instance_from_oidc($tenant = null) {
@@ -98,18 +109,18 @@ class clientdata {
     }
 
     /**
-     * Get the registerd client ID.
+     * Get the registered client ID.
      *
-     * @return string The registerd client ID.
+     * @return string The registered client ID.
      */
     public function get_clientid() {
         return $this->clientid;
     }
 
     /**
-     * Get the registered client secreet.
+     * Get the registered client secret.
      *
-     * @return string The registered client secreet.
+     * @return string The registered client secret.
      */
     public function get_clientsecret() {
         return $this->clientsecret;

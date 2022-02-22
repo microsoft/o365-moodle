@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Observer functions used in the group / team sync feature.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,8 +27,13 @@ namespace local_o365\feature\usergroups;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
+/**
+ * A class defining the observer functions used in the group / team sync feature.
+ */
 class observers {
     /**
      * Get a Microsoft Graph API instance.
@@ -91,8 +98,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_group_created(\core\event\group_created $event) {
-        global $DB;
-
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
@@ -110,7 +115,7 @@ class observers {
             return false;
         }
 
-        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, false);
         try {
             $object = $coursegroups->create_study_group($usergroupid);
             if (empty($object->objectid)) {
@@ -131,7 +136,6 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_group_updated(\core\event\group_updated $event) {
-        global $DB;
         if (\local_o365\utils::is_configured() !== true || \local_o365\feature\usergroups\utils::is_enabled() !== true) {
             return false;
         }
@@ -141,7 +145,7 @@ class observers {
         }
 
         $usergroupid = $event->objectid;
-        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, false);
         $coursegroups->update_study_group($usergroupid);
     }
 
@@ -361,7 +365,7 @@ class observers {
         if (empty($apiclient)) {
             return false;
         }
-        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, $DB, false);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($apiclient, false);
 
         // All validation passed. Start processing.
         $siteresetsetting = get_config('local_o365', 'course_reset_teams');

@@ -29,12 +29,12 @@ use admin_setting;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Class courseresetteams.
- *
- * @package local_o365\adminsetting
  */
 class courseresetteams extends admin_setting {
     /**
@@ -86,7 +86,7 @@ class courseresetteams extends admin_setting {
             'settings_course_reset_teams_option_per_course', 'local_o365');
 
         $currentvalue = (isset($options[$data])) ? $data : $this->get_defaultsetting();
-        foreach ($options as $key => $desc)  {
+        foreach ($options as $key => $desc) {
             $radioattributes = [
                 'type' => 'radio',
                 'id' => $this->get_id() . '_' . $key,

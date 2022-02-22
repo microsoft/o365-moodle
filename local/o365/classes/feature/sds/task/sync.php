@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled task to run school data sync sync.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,12 @@
  */
 
 namespace local_o365\feature\sds\task;
+
+use core_course_category;
+use local_o365\rest\unified;
+use local_o365\utils;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Scheduled task to run school data sync sync.
@@ -37,146 +45,398 @@ class sync extends \core\task\scheduled_task {
     }
 
     /**
-     * Run the sync process
+     * Run the sync process.
      *
-     * @param \local_o365\rest\sds $apiclient The SDS apiclient.
+     * @param unified $apiclient The unified apiclient.
      */
     public static function runsync($apiclient) {
         global $DB, $CFG;
 
-        require_once($CFG->dirroot.'/lib/accesslib.php');
-        require_once($CFG->dirroot.'/lib/enrollib.php');
+        require_once($CFG->dirroot . '/user/lib.php');
+        require_once($CFG->dirroot . '/user/profile/lib.php');
+        require_once($CFG->libdir . '/accesslib.php');
+        require_once($CFG->libdir . '/enrollib.php');
 
-        $schools = get_config('local_o365', 'sdsschools');
-        $profilesyncenabled = get_config('local_o365', 'sdsprofilesyncenabled');
-        $fieldmap = get_config('local_o365', 'sdsfieldmap');
-        $fieldmap = (!empty($fieldmap)) ? @unserialize($fieldmap) : [];
-        if (empty($fieldmap) || !is_array($fieldmap)) {
-            $fieldmap = [];
+        // Profile data sync.
+        static::mtrace('... Running profile sync');
+        [$idandnamemappings, $additionalprofilemappings] = \local_o365\feature\sds\utils::get_sds_profile_sync_api_requirements();
+
+        if ($idandnamemappings || $additionalprofilemappings) {
+            static::mtrace('...... SDS fields exists in field mapping settings');
+            [$profilesyncenabled, $schoolid, $schoolname] = \local_o365\feature\sds\utils::get_profile_sync_status_with_id_name(
+                $apiclient);
+
+            if ($profilesyncenabled) {
+                static::mtrace('...... SDS field mapping enabled and connected to school "' . $schoolname . '"');
+                $processedschoolusers = [];
+                if ($additionalprofilemappings) {
+                    static::mtrace('...... Additional SDS profile data required');
+                    $schooluserresults = $apiclient->get_school_users($schoolid);
+                    $rawschoolusers = $schooluserresults['value'];
+                    while (!empty($schooluserresults['@odata.nextLink'])) {
+                        $nextlink = parse_url($schooluserresults['@odata.nextLink']);
+                        $schooluserresults = [];
+                        if (isset($nextlink['query'])) {
+                            $query = [];
+                            parse_str($nextlink['query'], $query);
+                            if (isset($query['$skiptoken'])) {
+                                $schooluserresults = $apiclient->get_school_users($schoolid, $query['$skiptoken']);
+                                $rawschoolusers = array_merge($rawschoolusers, $schooluserresults['value']);
+                            }
+                        }
+                    }
+
+                    foreach ($rawschoolusers as $rawschooluser) {
+                        if ($userobjectrecord = $DB->get_record('local_o365_objects', ['type' => 'user',
+                            'objectid' => $rawschooluser['id']])) {
+                            $processedschoolusers[$userobjectrecord->moodleid] = $rawschooluser;
+                        }
+                    }
+                } else {
+                    static::mtrace('...... Only basic SDS profile data required');
+                }
+
+                $oidcusers = $DB->get_records('user', ['auth' => 'oidc', 'deleted' => 0]);
+                foreach ($oidcusers as $userid => $oidcuser) {
+                    $completeuser = get_complete_user_data('id', $userid);
+                    if ($completeuser) {
+                        static::mtrace('......... Processing user ' . $oidcuser->username);
+                        foreach ($idandnamemappings as $remotefield => $localfield) {
+                            switch ($remotefield) {
+                                case 'sds_school_id':
+                                    $completeuser->$localfield = $schoolid;
+                                    break;
+                                case 'sds_school_name':
+                                    $completeuser->$localfield = $schoolname;
+                                    break;
+                            }
+                        }
+
+                        if (array_key_exists($userid, $processedschoolusers)) {
+                            static::mtrace('............ User profile found in SDS');
+                            $processedschooluser = $processedschoolusers[$userid];
+                            $primaryrole = $processedschooluser['primaryRole'];
+                            $studentexternalid = '';
+                            $studentbirthdate = '';
+                            $studentgrade = '';
+                            $studentgraduationyear = '';
+                            $studentstudentnumber = '';
+                            $teacherexternalid = '';
+                            $teacherteachernumber = '';
+                            if (array_key_exists('student', $processedschooluser)) {
+                                $studentexternalid = $processedschooluser['student']['externalId'];
+                                $studentbirthdate = $processedschooluser['student']['birthDate'];
+                                $studentgrade = $processedschooluser['student']['grade'];
+                                $studentgraduationyear = $processedschooluser['student']['graduationYear'];
+                                $studentstudentnumber = $processedschooluser['student']['studentNumber'];
+                            } else if (array_key_exists('teacher', $processedschooluser)) {
+                                $teacherexternalid = $processedschooluser['teacher']['externalId'];
+                                $teacherteachernumber = $processedschooluser['teacher']['teacherNumber'];
+                            }
+
+                            foreach ($additionalprofilemappings as $remotefield => $localfield) {
+                                switch ($remotefield) {
+                                    case 'sds_school_role':
+                                        $completeuser->$localfield = $primaryrole;
+                                        break;
+                                    case 'sds_student_externalId':
+                                        $completeuser->$localfield = $studentexternalid;
+                                        break;
+                                    case 'sds_student_birthDate':
+                                        $completeuser->$localfield = $studentbirthdate;
+                                        break;
+                                    case 'sds_student_grade':
+                                        $completeuser->$localfield = $studentgrade;
+                                        break;
+                                    case 'sds_student_graduationYear':
+                                        $completeuser->$localfield = $studentgraduationyear;
+                                        break;
+                                    case 'sds_student_studentNumber':
+                                        $completeuser->$localfield = $studentstudentnumber;
+                                        break;
+                                    case 'sds_teacher_externalId':
+                                        $completeuser->$localfield = $teacherexternalid;
+                                        break;
+                                    case 'sds_teacher_teacherNumber':
+                                        $completeuser->$localfield = $teacherteachernumber;
+                                        break;
+                                }
+                            }
+
+                            // Save user profile.
+                            user_update_user($completeuser, false, false);
+                            profile_save_data($completeuser);
+
+                            static::mtrace('............ User profile updated');
+                        } else {
+                            static::mtrace('............ User profile not found in SDS');
+                        }
+                    }
+                }
+            } else {
+                static::mtrace('...... SDS field mapping disabled');
+            }
+        } else {
+            static::mtrace('...... SDS fields not used in field map settings');
         }
-        if (empty($fieldmap)) {
-            $profilesyncenabled = false;
-        }
+
+        // Course sync.
+        static::mtrace('... Running course sync');
+        $schoolobjectids = get_config('local_o365', 'sdsschools');
         $enrolenabled = get_config('local_o365', 'sdsenrolmentenabled');
+        $teamsyncenabled = get_config('local_o365', 'sdsteamsenabled');
 
         // Get role records.
-        $studentrole = $DB->get_record('role', ['shortname' => 'student']);
+        $studentrole = null;
+        $studentroleid = get_config('local_o365', 'sdsenrolmentstudentrole');
+        if ($studentroleid) {
+            $studentrole = $DB->get_record('role', ['id' => $studentroleid], '*', IGNORE_MISSING);
+        }
         if (empty($studentrole)) {
             throw new \Exception('Could not find the student role.');
         }
-        $teacherrole = $DB->get_record('role', ['shortname' => 'manager']);
+
+        $teacherrole = null;
+        $teacherroleid = get_config('local_o365', 'sdsenrolmentteacherrole');
+        if ($teacherroleid) {
+            $teacherrole = $DB->get_record('role', ['id' => $teacherroleid], '*', IGNORE_MISSING);
+        }
         if (empty($teacherrole)) {
             throw new \Exception('Could not find the teacher role');
         }
 
-        $schools = explode(',', $schools);
+        $schoolobjectids = explode(',', $schoolobjectids);
+
+        $syncedschools = [];
+        $schoolresults = $apiclient->get_schools();
+        $schools = $schoolresults['value'];
+        while (!empty($schoolresults['@odata.nextLink'])) {
+            $nextlink = parse_url($schoolresults['@odata.nextLink']);
+            $schoolresults = [];
+            if (isset($nextlink['query'])) {
+                $query = [];
+                parse_str($nextlink['query'], $query);
+                if (isset($query['$skiptoken'])) {
+                    $schoolresults = $apiclient->get_schools($query['$skiptoken']);
+                    $schools = array_merge($schools, $schoolresults['value']);
+                }
+            }
+        }
+
         foreach ($schools as $school) {
-            $school = trim($school);
-            if (empty($school)) {
-                continue;
+            if (in_array($school['id'], $schoolobjectids)) {
+                $syncedschools[$school['id']] = $school;
             }
-            try {
-                $schooldata = $apiclient->get_school($school);
-            } catch (\Exception $e) {
-                static::mtrace('... Skipped SDS school '.$school.' because we received an error from the API');
-                continue;
+        }
+
+        foreach ($syncedschools as $schoolid => $syncedschool) {
+            $coursecat = static::get_or_create_school_coursecategory($syncedschool['id'], $syncedschool['displayName']);
+            static::mtrace('... Processing ' . $syncedschool['displayName']);
+
+            $schoolclassresults = $apiclient->get_school_classes($schoolid);
+            $schoolclasses = $schoolclassresults['value'];
+            while (!empty($schoolclassresults['@odata.nextLink'])) {
+                $nextlink = parse_url($schoolclassresults['@odata.nextLink']);
+                $schoolclassresults = [];
+                if (isset($nextlink['query'])) {
+                    $query = [];
+                    parse_str($nextlink['query'], $query);
+                    if (isset($query['$skiptoken'])) {
+                        $schoolclassresults = $apiclient->get_school_classes($schoolid, $query['$skiptoken']);
+                        $schoolclasses = array_merge($schoolclasses, $schoolclassresults['value']);
+                    }
+                }
             }
-            $coursecat = static::get_or_create_school_coursecategory($schooldata['objectId'], $schooldata['displayName']);
-            static::mtrace('... Processing '.$schooldata['displayName']);
-            $schoolnumber = $schooldata[$apiclient::PREFIX.'_SyncSource_SchoolId'];
-            $sections = $apiclient->get_school_sections($schoolnumber);
-            foreach ($sections['value'] as $section) {
-                static::mtrace('...... Processing '.$section['displayName']);
+
+            foreach ($schoolclasses as $schoolclass) {
+                static::mtrace('...... Processing ' . $schoolclass['displayName']);
+
                 // Create the course.
-                $fullname = $section[$apiclient::PREFIX.'_CourseName'];
-                $fullname .= ' '.$section[$apiclient::PREFIX.'_SectionNumber'];
-                $course = static::get_or_create_section_course($section['objectId'], $section['displayName'], $fullname, $coursecat->id);
+                $course = static::get_or_create_class_course($schoolclass['id'], $schoolclass['mailNickname'],
+                    $schoolclass['displayName'], $coursecat->id);
                 $coursecontext = \context_course::instance($course->id);
 
                 // Associate the section group with the course.
-                $groupobjectparams = [
-                    'type' => 'group',
-                    'subtype' => 'course',
-                    'objectid' => $section['objectId'],
-                    'moodleid' => $course->id,
-                ];
+                $groupobjectparams = ['type' => 'group', 'subtype' => 'course', 'objectid' => $schoolclass['id'],
+                    'moodleid' => $course->id];
                 $groupobjectrec = $DB->get_record('local_o365_objects', $groupobjectparams);
+
                 if (empty($groupobjectrec)) {
                     $now = time();
                     $groupobjectrec = $groupobjectparams;
-                    $groupobjectrec['o365name'] = $section['displayName'];
+                    $groupobjectrec['o365name'] = $schoolclass['displayName'];
                     $groupobjectrec['timecreated'] = $now;
                     $groupobjectrec['timemodified'] = $now;
-                    $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object)$groupobjectrec);
+                    $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $groupobjectrec);
+                    \local_o365\feature\usergroups\utils::set_course_group_enabled($course->id);
+
+                    if ($teamsyncenabled) {
+                        $teamobjectrec = ['type' => 'group', 'subtype' => 'courseteam', 'objectid' => $schoolclass['id'],
+                            'moodleid' => $course->id];
+                        $teamobjectrec['o365name'] = $schoolclass['displayName'];
+                        $teamobjectrec['timecreated'] = $now;
+                        $teamobjectrec['timemodified'] = $now;
+                        $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrec);
+                        \local_o365\feature\usergroups\utils::set_course_group_feature_enabled($course->id, ['team'], true);
+                    }
                 }
 
-                // Sync membership.
-                if (!empty($enrolenabled) || !empty($profilesyncenabled)) {
-                    $members = $apiclient->get_section_members($section['objectId']);
-                    foreach ($members['value'] as $member) {
-                        $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $member['objectId']]);
+                // Sync enrolments.
+                if (!empty($enrolenabled)) {
+                    static::mtrace('......... Running enrol sync');
+
+                    $classuserids = [];
+
+                    // Sync teachers.
+                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                        $existingteacherroleassignments = get_users_from_role_on_context($teacherrole, $coursecontext);
+                        $existingteacherids = [];
+                        foreach ($existingteacherroleassignments as $roleassignment) {
+                            $existingteacherids[] = $roleassignment->userid;
+                        }
+                    }
+
+                    $teachersobjectids = [];
+                    $classteacherresults = $apiclient->get_school_class_teachers($schoolclass['id']);
+                    $classteachers = $classteacherresults['value'];
+                    while (!empty($classteacherresults['@odata.nextLink'])) {
+                        $nextlink = parse_url($classteacherresults['@odata.nextLink']);
+                        $classteacherresults = [];
+                        if (isset($nextlink['query'])) {
+                            $query = [];
+                            parse_str($nextlink['query'], $query);
+                            if (isset($query['$skiptoken'])) {
+                                $classteacherresults = $apiclient->get_school_class_teachers($schoolclass['id'],
+                                    $query['$skiptoken']);
+                                $classteachers = array_merge($classteachers, $classteacherresults['value']);
+                            }
+                        }
+                    }
+
+                    foreach ($classteachers as $classteacher) {
+                        $classuserids[] = $classteacher['id'];
+                        $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classteacher['id']]);
                         if (!empty($objectrec)) {
-                            if (!empty($enrolenabled)) {
-                                $role = null;
-                                $type = $member[$apiclient::PREFIX.'_ObjectType'];
-                                switch ($type) {
-                                    case 'Student':
-                                        $role = $studentrole;
-                                        break;
-                                    case 'Teacher':
-                                        $role = $teacherrole;
-                                        break;
+                            if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                                if (($key = array_search($objectrec->moodleid, $existingteacherids)) !== false) {
+                                    unset($existingteacherids[$key]);
                                 }
+                            }
 
-                                if (empty($role)) {
-                                    continue;
+                            $teachersobjectids[] = $classteacher['id'];
+                            $role = $teacherrole;
+
+                            $roleparams = ['roleid' => $role->id, 'contextid' => $coursecontext->id,
+                                'userid' => $objectrec->moodleid, 'component' => '', 'itemid' => 0];
+                            if (!$DB->record_exists('role_assignments', $roleparams)) {
+                                static::mtrace('............ Enrolling user ' . $objectrec->moodleid . ' into course ' .
+                                    $course->id);
+                                enrol_try_internal_enrol($course->id, $objectrec->moodleid, $role->id);
+                            }
+                        }
+                    }
+
+                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                        foreach ($existingteacherids as $existingteacherid) {
+                            static::mtrace('............ Unassign class teacher role from user ' . $existingteacherid .
+                                ' in course ' . $course->id);
+                            role_unassign($teacherroleid, $existingteacherid, $coursecontext->id);
+                        }
+                    }
+
+                    // Sync members.
+                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                        $existingstudentroleassignments = get_users_from_role_on_context($studentrole, $coursecontext);
+                        $existingstudentids = [];
+                        foreach ($existingstudentroleassignments as $roleassignment) {
+                            $existingstudentids[] = $roleassignment->userid;
+                        }
+                    }
+
+                    $classmemberresults = $apiclient->get_school_class_members($schoolclass['id']);
+                    $classmembers = $classmemberresults['value'];
+                    while (!empty($classmemberresults['@odata.nextLink'])) {
+                        $nextlink = parse_url($classmemberresults['@odata.nextLink']);
+                        $classmemberresults = [];
+                        if (isset($nextlink['query'])) {
+                            $query = [];
+                            parse_str($nextlink['query'], $query);
+                            if (isset($query['$skiptoken'])) {
+                                $classmemberresults = $apiclient->get_school_class_members($schoolclass['id'],
+                                    $query['$skiptoken']);
+                                $classmembers = array_merge($classmembers, $classmemberresults['value']);
+                            }
+                        }
+                    }
+
+                    foreach ($classmembers as $classmember) {
+                        if (!in_array($classmember['id'], $teachersobjectids)) {
+                            $classuserids[] = $classmember['id'];
+                        }
+                        $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classmember['id']]);
+                        if (!empty($objectrec)) {
+                            if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                                if (($key = array_search($objectrec->moodleid, $existingstudentids)) !== false) {
+                                    unset($existingstudentids[$key]);
                                 }
+                            }
 
-                                $roleparams = [
-                                    'roleid' => $role->id,
-                                    'contextid' => $coursecontext->id,
-                                    'userid' => $objectrec->moodleid,
-                                    'component' => '',
-                                    'itemid' => 0,
-                                ];
-                                $ra = $DB->get_record('role_assignments', $roleparams, 'id');
-                                if (empty($ra)) {
-                                    static::mtrace('......... Assigning role for user '.$objectrec->moodleid.' in course '.$course->id);
-                                    role_assign($role->id, $objectrec->moodleid, $coursecontext->id);
-                                    static::mtrace('......... Enrolling user '.$objectrec->moodleid.' into course '.$course->id);
-                                    enrol_try_internal_enrol($course->id, $objectrec->moodleid);
+                            $role = $studentrole;
+
+                            $roleparams = ['roleid' => $role->id, 'contextid' => $coursecontext->id,
+                                'userid' => $objectrec->moodleid, 'component' => '', 'itemid' => 0];
+                            if (!$DB->record_exists('role_assignments', $roleparams)) {
+                                static::mtrace('............ Enrolling user ' . $objectrec->moodleid . ' into course ' .
+                                    $course->id);
+                                enrol_try_internal_enrol($course->id, $objectrec->moodleid, $role->id);
+                            }
+                        }
+                    }
+
+                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                        foreach ($existingstudentids as $existingstudentid) {
+                            static::mtrace('............ Unassign class member role from user ' . $existingstudentid .
+                                ' in course ' . $course->id);
+                            role_unassign($studentroleid, $existingstudentid, $coursecontext->id);
+                        }
+                    }
+
+                    // Unenrol users who have been removed from the SDS class.
+                    $enrolledusers = get_enrolled_users($coursecontext);
+                    [$moodleuseridsql, $params] = $DB->get_in_or_equal(array_keys($enrolledusers), SQL_PARAMS_NAMED);
+                    $sql = 'SELECT objectid, moodleid AS userid
+                              FROM {local_o365_objects}
+                             WHERE type = :usertype
+                               AND moodleid ' . $moodleuseridsql;
+                    $params = array_merge($params, ['usertype' => 'user']);
+                    $courseuserobjectids = $DB->get_records_sql($sql, $params);
+                    $userstoberemoved = array_diff(array_keys($courseuserobjectids), $classuserids);
+                    $enrols = [];
+                    $enrolsql = '';
+                    $enrolparams = [];
+                    if ($userstoberemoved) {
+                        $enrols = $DB->get_records('enrol', ['courseid' => $course->id]);
+                        [$enrolsql, $enrolparams] = $DB->get_in_or_equal(array_keys($enrols), SQL_PARAMS_NAMED);
+                    }
+                    if ($enrols) {
+                        foreach ($userstoberemoved as $userobjectid) {
+                            $userid = $courseuserobjectids[$userobjectid]->userid;
+                            static::mtrace('............ Unenrol user '. $userid . ' from course ' . $course->id);
+                            $sql = 'SELECT *
+                                      FROM {user_enrolments}
+                                     WHERE userid = :userid
+                                       AND enrolid ' . $enrolsql;
+                            $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
+                            foreach ($userenrolments as $userenrolment) {
+                                if (isset($enrols[$userenrolment->enrolid])) {
+                                    $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
+                                    $enrolplugin->unenrol_user($enrols[$userenrolment->enrolid], $userid);
                                 }
                             }
                         }
                     }
-                }
-            }
-
-            if (!empty($profilesyncenabled)) {
-                static::mtrace('...... Running profile sync');
-                $skiptoken = get_config('local_o365', 'sdsprofilesync_skiptoken');
-                $students = $apiclient->get_school_users($schooldata['objectId'], $skiptoken);
-                foreach ($students['value'] as $student) {
-                    $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $student['objectId']]);
-                    if (!empty($objectrec)) {
-                        $muser = $DB->get_record('user', ['id' => $objectrec->moodleid]);
-                        static::update_profiledata($muser, $student, $fieldmap);
-                    }
-                }
-                set_config('sdsprofilesync_skiptoken', '', 'local_o365');
-                if (!empty($students['odata.nextLink'])) {
-                    // Extract skiptoken.
-                    $nextlink = parse_url($students['odata.nextLink']);
-                    if (isset($nextlink['query'])) {
-                        $query = [];
-                        parse_str($nextlink['query'], $query);
-                        if (isset($query['$skiptoken'])) {
-                            static::mtrace('...... Skip token saved for next run');
-                            set_config('sdsprofilesync_skiptoken', $query['$skiptoken'], 'local_o365');
-                        }
-                    }
                 } else {
-                    static::mtrace('...... Full run complete.');
+                    static::mtrace('......... Enrol sync disabled');
                 }
             }
         }
@@ -194,74 +454,21 @@ class sync extends \core\task\scheduled_task {
     }
 
     /**
-     * Update a user's information based on configured field map.
+     * Retrieve or create a course for a class.
      *
-     * @param object $muser The Moodle user record.
-     * @param array $sdsdata Incoming data from SDS.
-     * @param array $fieldmaps Array of configured field maps.
-     * @return bool Success/Failure.
-     */
-    public static function update_profiledata($muser, $sdsdata, $fieldmaps) {
-        global $DB, $CFG;
-        require_once($CFG->dirroot.'/user/profile/lib.php');
-
-        static::mtrace("......... Updating user {$muser->id}");
-        foreach ($fieldmaps as $fieldmap) {
-            $fieldmap = explode('/', $fieldmap);
-            list($remotefield, $localfield) = $fieldmap;
-            if (strpos($remotefield, 'pre_') === 0) {
-                $remotefield = \local_o365\rest\sds::PREFIX.'_'.substr($remotefield, 4);
-            }
-            if (!isset($sdsdata[$remotefield])) {
-                $debugmsg = "SDS: no remotefield: {$remotefield} for user {$muser->id}";
-                $caller = 'update_profiledata';
-                \local_o365\utils::debug($debugmsg, $caller);
-                continue;
-            }
-
-            $newdata = $sdsdata[$remotefield];
-
-            if ($localfield === 'country') {
-                // Update country with two letter country code.
-                $newdata = strtoupper($newdata);
-                $countrymap = get_string_manager()->get_list_of_countries();
-                if (isset($countrymap[$newdata])) {
-                    $countrycode = $incoming;
-                } else {
-                    $muser->$localfield = '';
-                    foreach ($countrymap as $code => $name) {
-                        if (strtoupper($name) === $newdata) {
-                            $muser->$localfield = $code;
-                            break;
-                        }
-                    }
-                }
-            } else if ($localfield === 'lang') {
-                $muser->$localfield = (strlen($newdata) > 2) ? substr($newdata, 0, 2) : $newdata;
-            } else {
-                $muser->$localfield = $newdata;
-            }
-        }
-        $DB->update_record('user', $muser);
-        profile_save_data($muser);
-        return true;
-    }
-
-    /**
-     * Retrieve or create a course for a section.
-     *
-     * @param string $sectionobjectid The object ID of the section.
-     * @param string $sectionshortname The shortname of the section.
-     * @param string $sectionfullname The fullname of the section.
+     * @param string $classobjectid The object ID of the class.
+     * @param string $shortname The shortname of the class course.
+     * @param string $fullname The full name of the class course.
      * @param int $categoryid The ID of the category to create the course in (if necessary).
      * @return object The course object.
      */
-    public static function get_or_create_section_course($sectionobjectid, $sectionshortname, $sectionfullname, $categoryid = 0) {
+    public static function get_or_create_class_course($classobjectid, $shortname, $fullname, $categoryid = 0) {
         global $DB, $CFG;
-        require_once($CFG->dirroot.'/course/lib.php');
+
+        require_once($CFG->dirroot . '/course/lib.php');
 
         // Look for existing category.
-        $params = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $sectionobjectid];
+        $params = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid];
         $objectrec = $DB->get_record('local_o365_objects', $params);
         if (!empty($objectrec)) {
             $course = $DB->get_record('course', ['id' => $objectrec->moodleid]);
@@ -275,26 +482,14 @@ class sync extends \core\task\scheduled_task {
         }
 
         // Create new course category and object record.
-        $data = [
-            'category' => $categoryid,
-            'shortname' => $sectionshortname,
-            'fullname' => $sectionfullname,
-            'idnumber' => $sectionobjectid,
-        ];
-        $course = create_course((object)$data);
+        $data = ['category' => $categoryid, 'shortname' => $shortname, 'fullname' => $fullname, 'idnumber' => $classobjectid,];
+        $course = create_course((object) $data);
 
         $now = time();
-        $objectrec = [
-            'type' => 'sdssection',
-            'subtype' => 'course',
-            'objectid' => $sectionobjectid,
-            'moodleid' => $course->id,
-            'o365name' => $sectionshortname,
-            'tenant' => '',
-            'timecreated' => $now,
-            'timemodified' => $now,
-        ];
+        $objectrec = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid, 'moodleid' => $course->id,
+            'o365name' => $shortname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now,];
         $DB->insert_record('local_o365_objects', $objectrec);
+
         return $course;
     }
 
@@ -303,16 +498,16 @@ class sync extends \core\task\scheduled_task {
      *
      * @param string $schoolobjectid The Microsoft 365 object ID of the school.
      * @param string $schoolname The name of the school.
-     * @return \coursecat A coursecat object for the retrieved or created course category.
+     * @return \core_course_category A coursecat object for the retrieved or created course category.
      */
     public static function get_or_create_school_coursecategory($schoolobjectid, $schoolname) {
-        global $DB, $CFG;
+        global $DB;
 
         // Look for existing category.
         $params = ['type' => 'sdsschool', 'subtype' => 'coursecat', 'objectid' => $schoolobjectid];
         $existingobject = $DB->get_record('local_o365_objects', $params);
         if (!empty($existingobject)) {
-            $coursecat = \core_course_category::get($existingobject->moodleid, IGNORE_MISSING, true);
+            $coursecat = core_course_category::get($existingobject->moodleid, IGNORE_MISSING, true);
             if (!empty($coursecat)) {
                 return $coursecat;
             } else {
@@ -323,69 +518,32 @@ class sync extends \core\task\scheduled_task {
         }
 
         // Create new course category and object record.
-        $data = [
-            'visible' => 1,
-            'name' => $schoolname,
-            'idnumber' => $schoolobjectid,
-
-        ];
+        $data = ['visible' => 1, 'name' => $schoolname, 'idnumber' => $schoolobjectid,];
         if (strlen($data['name']) > 255) {
             static::mtrace('School name was over 255 chrs when creating course category, truncating to 255.');
             $data['name'] = substr($data['name'], 0, 255);
         }
 
-        $coursecat = \core_course_category::create($data);
+        $coursecat = core_course_category::create($data);
 
         $now = time();
-        $objectrec = [
-            'type' => 'sdsschool',
-            'subtype' => 'coursecat',
-            'objectid' => $schoolobjectid,
-            'moodleid' => $coursecat->id,
-            'o365name' => $schoolname,
-            'tenant' => '',
-            'timecreated' => $now,
-            'timemodified' => $now,
-        ];
+        $objectrec = ['type' => 'sdsschool', 'subtype' => 'coursecat', 'objectid' => $schoolobjectid, 'moodleid' => $coursecat->id,
+            'o365name' => $schoolname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now,];
         $DB->insert_record('local_o365_objects', $objectrec);
-        return $coursecat;
-    }
 
-    /**
-     * Get the SDS api client.
-     *
-     * @return \local_o365\rest\sds The SDS API client.
-     */
-    public static function get_apiclient() {
-        $httpclient = new \local_o365\httpclient();
-        $tokenresource = \local_o365\rest\sds::get_tokenresource();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        if (!empty($clientdata)) {
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-            if (!empty($token)) {
-                $apiclient = new \local_o365\rest\sds($token, $httpclient);
-                return $apiclient;
-            } else {
-                static::mtrace('Could not construct system API user token for SDS sync task.');
-            }
-        } else {
-            static::mtrace('Could not construct client data object for SDS sync task.');
-        }
-        return null;
+        return $coursecat;
     }
 
     /**
      * Do the job.
      */
     public function execute() {
-        global $DB, $CFG;
-
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             static::mtrace('local_o365 reported unconfigured during SDS sync task, so exiting.');
             return false;
         }
 
-        $apiclient = static::get_apiclient();
+        $apiclient = \local_o365\feature\sds\utils::get_apiclient();
         if (!empty($apiclient)) {
             return static::runsync($apiclient);
         } else {

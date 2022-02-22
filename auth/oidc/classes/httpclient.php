@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * HTTP clinet.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,9 @@
 
 namespace auth_oidc;
 
-require_once($CFG->dirroot.'/lib/filelib.php');
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/lib/filelib.php');
 
 /**
  * Implementation of \auth_oidc\httpclientinterface using Moodle CURL.

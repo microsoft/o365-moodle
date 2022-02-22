@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * A bot intent interface for teacher-absent-students intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,14 +29,14 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Class absentstudents implements bot intent interface for teacher-absent-students intent
- * @package local_o365\bot\intents
  */
 class absentstudents implements \local_o365\bot\intents\intentinterface {
     /**
-     * Gets absent students message for bot with all required params
-     * @param $language - Message language
+     * Gets absent students message for bot with all required params.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities (optional and not used at the moment)
-     * @return array|string - Bot message structure with data
+     * @return array - Bot message structure with data
      */
     public function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
@@ -47,7 +49,7 @@ class absentstudents implements \local_o365\bot\intents\intentinterface {
         }
         if (!empty($courses) || is_siteadmin()) {
             $monthstart = mktime(0, 0, 0, date("n"), 1);
-            list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,
+            [$userssql, $userssqlparams] = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,
                         'u.id, u.username, u.firstname, u.lastname, u.lastaccess, u.picture',
                         'u.lastaccess < :monthstart', ['monthstart' => $monthstart], true);
             $userslist = $DB->get_records_sql($userssql, $userssqlparams);

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class latestgrades implements bot intent interface for student-latest-grades intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,14 +28,14 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Class latestgrades implements bot intent interface for student-latest-grades intent
- * @package local_o365\bot\intents
+ * Class latestgrades implements bot intent interface for student-latest-grades intent.
  */
 class latestgrades implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message for student with their latest grades
-     * @param $language - Message language
+     * Gets a message for student with their latest grades.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities. Gives student name.
      * @return array|string - Bot message structure with data
      */

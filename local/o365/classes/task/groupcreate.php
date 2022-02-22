@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Create any needed groups in Microsoft 365.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\task;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Create any needed groups in Microsoft 365.
@@ -40,8 +44,6 @@ class groupcreate extends \core\task\scheduled_task {
      * Do the job.
      */
     public function execute() {
-        global $DB;
-
         if (\local_o365\utils::is_configured() !== true) {
             return false;
         }
@@ -62,7 +64,7 @@ class groupcreate extends \core\task\scheduled_task {
         }
         $graphclient = new \local_o365\rest\unified($unifiedtoken, $httpclient);
 
-        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, $DB, true);
+        $coursegroups = new \local_o365\feature\usergroups\coursegroups($graphclient, true);
         $coursegroups->create_groups_for_new_courses();
         $coursegroups->sync_group_profile_photo();
         $coursegroups->update_teams_cache();

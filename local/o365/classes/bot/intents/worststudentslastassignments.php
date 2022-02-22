@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class worststudentslastassignments implements bot intent interface for teacher-worst-students-last-assignment intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,17 +27,18 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once ($CFG->dirroot.'/mod/assign/locallib.php');
+global $CFG;
+
+require_once($CFG->dirroot.'/mod/assign/locallib.php');
 
 /**
- * Class worststudentslastassignments implements bot intent interface for teacher-worst-students-last-assignment intent
- * @package local_o365\bot\intents
+ * Class worststudentslastassignments implements bot intent interface for teacher-worst-students-last-assignment intent.
  */
 class worststudentslastassignments implements \local_o365\bot\intents\intentinterface {
 
     /**
      * Gets a message for teachers with the list of students who did the worst in last assignment
-     * @param $language - Message language
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities. Gives student name.
      * @return array|string - Bot message structure with data
      */
@@ -77,8 +80,12 @@ class worststudentslastassignments implements \local_o365\bot\intents\intentinte
                   ORDER BY grade ASC';
             $params = ['aid' => $assignment, 'gradenotgraded' => ASSIGN_GRADE_NOT_SET];
             $grades = $DB->get_records_sql($sql, $params, 0, self::DEFAULT_LIMIT_NUMBER);
-            $usersids = array_map(function($grade){return $grade->userid;}, $grades);
-            if(!empty($usersids)){
+            $usersids = array_map(
+                function($grade){
+                    return $grade->userid;
+                },
+                $grades);
+            if (!empty($usersids)) {
                 list($userssql, $usersparams) = $DB->get_in_or_equal($usersids, SQL_PARAMS_NAMED);
                 $users = $DB->get_records_sql("SELECT id, username, firstname, lastname
                                                  FROM {user}

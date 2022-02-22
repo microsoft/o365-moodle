@@ -24,7 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once ($CFG->dirroot.'/local/o365/lib.php');
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Update plugin.
@@ -36,40 +38,39 @@ function xmldb_local_o365_upgrade($oldversion) {
     global $DB, $USER, $SITE;
 
     $dbman = $DB->get_manager();
-    $result = true;
 
-    if ($result && $oldversion < 2014111700) {
+    if ($oldversion < 2014111700) {
         if (!$dbman->table_exists('local_o365_token')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_token');
         }
-        upgrade_plugin_savepoint($result, '2014111700', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111700', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111702) {
+    if ($oldversion < 2014111702) {
         if (!$dbman->table_exists('local_o365_calsub')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_calsub');
         }
         if (!$dbman->table_exists('local_o365_calidmap')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_calidmap');
         }
-        upgrade_plugin_savepoint($result, '2014111702', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111702', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111703) {
+    if ($oldversion < 2014111703) {
         $table = new xmldb_table('local_o365_calidmap');
         $field = new xmldb_field('outlookeventid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'eventid');
         $dbman->change_field_type($table, $field);
-        upgrade_plugin_savepoint($result, '2014111703', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111703', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111707) {
+    if ($oldversion < 2014111707) {
         if (!$dbman->table_exists('local_o365_cronqueue')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_cronqueue');
         }
-        upgrade_plugin_savepoint($result, '2014111707', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111707', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111710) {
+    if ($oldversion < 2014111710) {
         if (!$dbman->table_exists('local_o365_coursespsite')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_coursespsite');
         }
@@ -79,26 +80,26 @@ function xmldb_local_o365_upgrade($oldversion) {
         if (!$dbman->table_exists('local_o365_aaduserdata')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_aaduserdata');
         }
-        upgrade_plugin_savepoint($result, '2014111710', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111710', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111711) {
+    if ($oldversion < 2014111711) {
         $table = new xmldb_table('local_o365_spgroupdata');
         $field = new xmldb_field('permtype', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'grouptitle');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2014111711', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111711', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111715) {
+    if ($oldversion < 2014111715) {
         if (!$dbman->table_exists('local_o365_spgroupassign')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_spgroupassign');
         }
-        upgrade_plugin_savepoint($result, '2014111715', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111715', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2014111716) {
+    if ($oldversion < 2014111716) {
         // Drop old index.
         $table = new xmldb_table('local_o365_token');
         $index = new xmldb_index('usrresscp', XMLDB_INDEX_NOTUNIQUE, ['user_id', 'resource', 'scope']);
@@ -118,29 +119,29 @@ function xmldb_local_o365_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
-        upgrade_plugin_savepoint($result, '2014111716', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2014111716', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012702) {
+    if ($oldversion < 2015012702) {
         // Migrate settings.
         $config = get_config('local_o365');
         if (empty($config->sharepointlink) && isset($config->tenant) && isset($config->parentsiteuri)) {
             $sharepointlink = 'https://'.$config->tenant.'.sharepoint.com/'.$config->parentsiteuri;
             set_config('sharepointlink', $sharepointlink, 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2015012702', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012702', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012704) {
+    if ($oldversion < 2015012704) {
         $config = get_config('local_o365');
         if (!empty($config->tenant)) {
             set_config('aadtenant', $config->tenant.'.onmicrosoft.com', 'local_o365');
             set_config('odburl', $config->tenant.'-my.sharepoint.com', 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2015012704', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012704', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012707) {
+    if ($oldversion < 2015012707) {
         $table = new xmldb_table('local_o365_calsub');
         $field = new xmldb_field('o365calid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'caltypeid');
         if (!$dbman->field_exists($table, $field)) {
@@ -150,10 +151,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015012707', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012707', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012708) {
+    if ($oldversion < 2015012708) {
         $table = new xmldb_table('local_o365_calidmap');
         $field = new xmldb_field('origin', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'outlookeventid');
         if (!$dbman->field_exists($table, $field)) {
@@ -171,10 +172,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
         $idmaps->close();
 
-        upgrade_plugin_savepoint($result, '2015012708', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012708', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012709) {
+    if ($oldversion < 2015012709) {
         $table = new xmldb_table('local_o365_calidmap');
         $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'origin');
         if (!$dbman->field_exists($table, $field)) {
@@ -204,10 +205,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
         $idmaps->close();
 
-        upgrade_plugin_savepoint($result, '2015012709', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012709', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012710) {
+    if ($oldversion < 2015012710) {
         $calsubs = $DB->get_recordset('local_o365_calsub');
         foreach ($calsubs as $i => $calsub) {
             if (empty($calsub->syncbehav)) {
@@ -218,66 +219,66 @@ function xmldb_local_o365_upgrade($oldversion) {
             }
         }
         $calsubs->close();
-        upgrade_plugin_savepoint($result, '2015012710', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012710', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012712) {
+    if ($oldversion < 2015012712) {
         // Lengthen field.
         $table = new xmldb_table('local_o365_token');
         $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, 'user_id');
         $dbman->change_field_type($table, $field);
-        upgrade_plugin_savepoint($result, '2015012712', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012712', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012713) {
+    if ($oldversion < 2015012713) {
         if (!$dbman->table_exists('local_o365_objects')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_objects');
         }
-        upgrade_plugin_savepoint($result, '2015012713', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012713', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012714) {
+    if ($oldversion < 2015012714) {
         $table = new xmldb_table('local_o365_objects');
         $field = new xmldb_field('subtype', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'type');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015012714', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012714', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015012715) {
+    if ($oldversion < 2015012715) {
         // Lengthen field.
         $table = new xmldb_table('local_o365_token');
         $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, 'user_id');
         $dbman->change_field_type($table, $field);
-        upgrade_plugin_savepoint($result, '2015012715', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015012715', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015060102) {
+    if ($oldversion < 2015060102) {
         $usersync = get_config('local_o365', 'aadsync');
         if ($usersync === '1') {
             set_config('aadsync', 'create', 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2015060102', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015060102', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015060103) {
+    if ($oldversion < 2015060103) {
         if (!$dbman->table_exists('local_o365_connections')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_connections');
         }
-        upgrade_plugin_savepoint($result, '2015060103', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015060103', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015060104) {
+    if ($oldversion < 2015060104) {
         $table = new xmldb_table('local_o365_connections');
         $field = new xmldb_field('uselogin', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'aadupn');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015060104', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015060104', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015060109) {
+    if ($oldversion < 2015060109) {
         if ($dbman->table_exists('local_o365_aaduserdata')) {
             $now = time();
             $aaduserdatars = $DB->get_recordset('local_o365_aaduserdata');
@@ -297,17 +298,17 @@ function xmldb_local_o365_upgrade($oldversion) {
                 }
             }
         }
-        upgrade_plugin_savepoint($result, '2015060109', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015060109', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015060111) {
+    if ($oldversion < 2015060111) {
         // Clean up old "calendarsyncin" task record, if present. Replaced by \local_o365\feature\calsync\task\importfromoutlook.
         $conditions = ['component' => 'local_o365', 'classname' => '\local_o365\task\calendarsyncin'];
         $DB->delete_records('task_scheduled', $conditions);
-        upgrade_plugin_savepoint($result, '2015060111', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015060111', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111900.01) {
+    if ($oldversion < 2015111900.01) {
         $authoidcversion = get_config('auth_oidc', 'version');
         if ($authoidcversion && $authoidcversion < 2020071507) {
             $fieldmapconfig = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'fieldmap']);
@@ -325,26 +326,26 @@ function xmldb_local_o365_upgrade($oldversion) {
             }
         }
 
-        upgrade_plugin_savepoint($result, '2015111900.01', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111900.01', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111900.02) {
+    if ($oldversion < 2015111900.02) {
         $table = new xmldb_table('local_o365_appassign');
         if (!$dbman->table_exists($table)) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_appassign');
         }
-        upgrade_plugin_savepoint($result, '2015111900.02', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111900.02', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111901.01) {
+    if ($oldversion < 2015111901.01) {
         $table = new xmldb_table('local_o365_matchqueue');
         if (!$dbman->table_exists($table)) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_matchqueue');
         }
-        upgrade_plugin_savepoint($result, '2015111901.01', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111901.01', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111901.03) {
+    if ($oldversion < 2015111901.03) {
         // Create new indexes.
         $table = new xmldb_table('auth_oidc_token');
         $index = new xmldb_index('oidcusername', XMLDB_INDEX_NOTUNIQUE, ['oidcusername']);
@@ -360,10 +361,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
-        upgrade_plugin_savepoint($result, '2015111901.03', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111901.03', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111903) {
+    if ($oldversion < 2015111903) {
         $table = new xmldb_table('local_o365_appassign');
         $index = new xmldb_index('userobjectid', XMLDB_INDEX_UNIQUE, array('userobjectid'));
         if ($dbman->index_exists($table, $index)) {
@@ -381,42 +382,42 @@ function xmldb_local_o365_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015111903', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111903', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111905) {
+    if ($oldversion < 2015111905) {
         // Delete custom profile fields for data type o365 and oidc which are no longer used.
         $fields = $DB->get_records_sql("SELECT * FROM {user_info_field} WHERE datatype IN ('o365', 'oidc')");
         foreach ($fields as $field) {
             $DB->delete_records('user_info_data', array('fieldid' => $field->id));
             $DB->delete_records('user_info_field', array('id' => $field->id));
         }
-        upgrade_plugin_savepoint($result, '2015111905', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111905', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111911.01) {
+    if ($oldversion < 2015111911.01) {
         $table = new xmldb_table('local_o365_appassign');
         $field = new xmldb_field('photoupdated', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'photoid');
         if ($dbman->field_exists($table, $field)) {
-            $field->setNotNull(FALSE);
+            $field->setNotNull(false);
             $dbman->change_field_notnull($table, $field);
         }
-        upgrade_plugin_savepoint($result, '2015111911.01', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111911.01', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111913) {
+    if ($oldversion < 2015111913) {
         if (!$dbman->table_exists('local_o365_coursegroupdata')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'local_o365_coursegroupdata');
         }
-        upgrade_plugin_savepoint($result, '2015111913', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111913', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111913.02) {
+    if ($oldversion < 2015111913.02) {
         $config = get_config('local_o365');
         if (!empty($config->creategroups)) {
             set_config('creategroups', 'onall', 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2015111913.02', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111913.02', 'local', 'o365');
     }
 
     if ($oldversion < 2015111914.02) {
@@ -430,10 +431,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         // O365 savepoint reached.
-        upgrade_plugin_savepoint(true, 2015111914.02, 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111914.02', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2015111914.03) {
+    if ($oldversion < 2015111914.03) {
         // Drop index.
         $table = new xmldb_table('local_o365_token');
         $index = new xmldb_index('user', XMLDB_INDEX_NOTUNIQUE, ['user_id']);
@@ -447,11 +448,10 @@ function xmldb_local_o365_upgrade($oldversion) {
             $dbman->drop_index($table, $index);
         }
 
-        upgrade_plugin_savepoint($result, '2015111914.03', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111914.03', 'local', 'o365');
     }
 
     if ($oldversion < 2015111916.01) {
-
         // Define table local_o365_calsettings to be created.
         $table = new xmldb_table('local_o365_calsettings');
 
@@ -487,12 +487,12 @@ function xmldb_local_o365_upgrade($oldversion) {
             }
         }
 
-        upgrade_plugin_savepoint($result, 2015111916.01, 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2015111916.01', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2016062000.01) {
+    if ($oldversion < 2016062000.01) {
         set_config('sharepointcourseselect', 'off', 'local_o365');
-        upgrade_plugin_savepoint($result, 2016062000.01, 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2016062000.01', 'local', 'o365');
     }
 
     if ($oldversion < 2016062000.02) {
@@ -523,10 +523,10 @@ function xmldb_local_o365_upgrade($oldversion) {
                 }
             }
         }
-        upgrade_plugin_savepoint($result, 2016062000.02, 'local', 'o365');
+        upgrade_plugin_savepoint(true, 2016062000.02, 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2016062000.03) {
+    if ($oldversion < 2016062000.03) {
         if ($dbman->table_exists('local_o365_coursegroupdata')) {
             $table = new xmldb_table('local_o365_coursegroupdata');
             $field = new xmldb_field('classnotebook', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', null);
@@ -534,10 +534,10 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $dbman->add_field($table, $field);
             }
         }
-        upgrade_plugin_savepoint($result, '2016062000.03', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2016062000.03', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2016062001.01) {
+    if ($oldversion < 2016062001.01) {
         $sharepointcourseselect = get_config('local_o365', 'sharepointcourseselect');
         // Setting value "Off" used to mean "sync all".
         if ($sharepointcourseselect === 'off') {
@@ -545,20 +545,20 @@ function xmldb_local_o365_upgrade($oldversion) {
         } else if (empty($sharepointcourseselect) || $sharepointcourseselect !== 'oncustom') {
             set_config('sharepointcourseselect', 'none', 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2016062001.01', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2016062001.01', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2016062004.01) {
+    if ($oldversion < 2016062004.01) {
         $enableunifiedapi = get_config('local_o365', 'enableunifiedapi');
         if (empty($enableunifiedapi)) {
             set_config('disablegraphapi', 1, 'local_o365');
         } else {
             set_config('disablegraphapi', 0, 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2016062004.01', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2016062004.01', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2016120500.05) {
+    if ($oldversion < 2016120500.05) {
         if ($dbman->table_exists('local_o365_objects')) {
             $table = new xmldb_table('local_o365_objects');
             $field = new xmldb_field('tenant', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'o365name');
@@ -566,10 +566,10 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $dbman->add_field($table, $field);
             }
         }
-        upgrade_plugin_savepoint($result, '2016120500.05', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2016120500.05', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2016120500.06) {
+    if ($oldversion < 2016120500.06) {
         if ($dbman->table_exists('local_o365_objects')) {
             $table = new xmldb_table('local_o365_objects');
             $field = new xmldb_field('metadata', XMLDB_TYPE_TEXT, null, null, null, null, null, 'tenant');
@@ -577,29 +577,30 @@ function xmldb_local_o365_upgrade($oldversion) {
                 $dbman->add_field($table, $field);
             }
         }
-        upgrade_plugin_savepoint($result, '2016120500.06', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2016120500.06', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2017111301) {
-        mtrace('Warning! This version removes the legacy Microsoft 365 API. If you *absolutely* need it, add "$CFG->local_o365_forcelegacyapi = true;" to your config.php. This option will be removed in the next version.');
-        upgrade_plugin_savepoint($result, '2017111301', 'local', 'o365');
+    if ($oldversion < 2017111301) {
+        mtrace('Warning! This version removes the legacy Microsoft 365 API. If you *absolutely* need it, ' .
+            'add "$CFG->local_o365_forcelegacyapi = true;" to your config.php. This option will be removed in the next version.');
+        upgrade_plugin_savepoint(true, '2017111301', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2018051702) {
+    if ($oldversion < 2018051702) {
         $createteamssetting = get_config('local_o365', 'creategroups');
         set_config('createteams', $createteamssetting, 'local_o365');
-        upgrade_plugin_savepoint($result, '2018051702', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2018051702', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2018051703) {
+    if ($oldversion < 2018051703) {
         if (!$dbman->table_exists('local_o365_notif')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_o365_notif');
         }
 
-        upgrade_plugin_savepoint($result, '2018051703', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2018051703', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2018051704) {
+    if ($oldversion < 2018051704) {
         $botappid = get_config('local_o365', 'bot_app_id');
         $botapppassword = get_config('local_o365', 'bot_app_password');
         $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
@@ -608,15 +609,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         } else {
             set_config('bot_feature_enabled', '0', 'local_o365');
         }
-        upgrade_plugin_savepoint($result, '2018051704', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2018051704', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2018051705) {
+    if ($oldversion < 2018051705) {
         local_o365_check_sharedsecret();
-        upgrade_plugin_savepoint($result, '2018051705', 'local', 'o365');
+        upgrade_plugin_savepoint(true, '2018051705', 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2020020302) {
+    if ($oldversion < 2020020302) {
         $aadsyncsetting = get_config('local_o365', 'aadsync');
         if ($aadsyncsetting !== false) {
             if (strpos($aadsyncsetting, 'delete') === 0) {
@@ -629,7 +630,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020020302, 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2020071503) {
+    if ($oldversion < 2020071503) {
         $authoidcversion = get_config('auth_oidc', 'version');
         if ($authoidcversion && $authoidcversion < 2020071507) {
             $fieldmapsettings = get_config('local_o365', 'fieldmap');
@@ -645,7 +646,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071503, 'local', 'o365');
     }
 
-    if ($result && $oldversion < 2020071504) {
+    if ($oldversion < 2020071504) {
         // Delete delta token, purge cache.
         unset_config('task_usersync_lastdeltatoken', 'local_o365');
         purge_all_caches();
@@ -747,5 +748,5 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071507, 'local', 'o365');
     }
 
-    return $result;
+    return true;
 }

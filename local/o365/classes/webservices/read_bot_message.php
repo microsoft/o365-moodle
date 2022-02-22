@@ -15,9 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Get help card for user.
+ *
  * @package local_o365
  * @author  2018 Enovation
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\webservices;
@@ -25,7 +28,7 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Get help card for user
+ * Get help card for user.
  */
 class read_bot_message extends \external_api {
 
@@ -54,7 +57,8 @@ class read_bot_message extends \external_api {
     /**
      * Returns the students with the searched name and last login time.
      *
-     * @param text name Required param based on which the user is looked up in database
+     * @param string $intent
+     * @param string $entities
      * @return An array of students and warnings.
      */
     public static function bot_message_read($intent = null, $entities = null) {

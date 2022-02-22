@@ -22,6 +22,7 @@
  * @copyright  Enovation Solutions Ltd. {@link https://enovation.ie}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 $functions = array(
         'mod_assign_feedback_onenote_delete' => array(

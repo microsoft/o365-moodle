@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * HTTP Client Interface.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * HTTP Client Interface.
@@ -72,10 +76,10 @@ interface httpclientinterface {
      *
      * @param array $header
      */
-    public function setHeader($header);
+    public function setheader($header);
 
      /**
       * Resets the HTTP Request headers (to prepare for the new request)
       */
-    public function resetHeader();
+    public function resetheader();
 }

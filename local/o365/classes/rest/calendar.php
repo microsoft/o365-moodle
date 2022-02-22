@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * API client for o365 calendar API.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,11 +25,15 @@
 
 namespace local_o365\rest;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * API client for o365 calendar.
  */
 class calendar extends \local_o365\rest\o365api {
-    /** The general API area of the class. */
+    /**
+     * @var string The general API area of the class.
+     */
     public $apiarea = 'calendar';
 
     /**
@@ -74,7 +80,7 @@ class calendar extends \local_o365\rest\o365api {
     /**
      * Update a existing o365 calendar.
      *
-     * @param string $calendearid The calendar's title.
+     * @param string $outlookcalendearid The calendar's title.
      * @param array $updated Array of updated information. Keys are 'name'.
      * @return array|null Returned response, or null if error.
      */
@@ -124,8 +130,10 @@ class calendar extends \local_o365\rest\o365api {
      * @param string $calendarid The o365 ID of the calendar to create the event in.
      * @return array|null Returned response, or null if error.
      */
-    public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(), $calendarid = null) {
-        \local_o365\utils::debug('Create group event called in legacy API', 'local_o365\rest\calendar::create_group_event', $subject);
+    public function create_group_event($subject, $body, $starttime, $endtime, $attendees, array $other = array(),
+        $calendarid = null) {
+        \local_o365\utils::debug('Create group event called in legacy API', 'local_o365\rest\calendar::create_group_event',
+            $subject);
         return false;
     }
 

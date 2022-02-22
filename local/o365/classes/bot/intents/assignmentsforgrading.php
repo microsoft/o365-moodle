@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class assignmentsforgrading implements bot intent interface for teacher-assignments-for-grading intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,17 +27,19 @@ namespace local_o365\bot\intents;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 /**
- * Class assignmentsforgrading implements bot intent interface for teacher-assignments-for-grading intent
- * @package local_o365\bot\intents
+ * Class assignmentsforgrading implements bot intent interface for teacher-assignments-for-grading intent.
  */
 class assignmentsforgrading implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message with details about assignments that needs teacher grading
-     * @param $language - Message language
+     * Gets a message with details about assignments that needs teacher grading.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities (optional and not used at the moment)
      * @return array|string - Bot message structure with data
      */
@@ -80,7 +84,8 @@ class assignmentsforgrading implements \local_o365\bot\intents\intentinterface {
                 }
                 $subtitledata = new \stdClass();
                 $subtitledata->participants = $assign->count_participants($currentgroup);
-                $subtitledata->submitted = $assign->count_submissions_with_status(ASSIGN_SUBMISSION_STATUS_SUBMITTED, $currentgroup);
+                $subtitledata->submitted = $assign->count_submissions_with_status(ASSIGN_SUBMISSION_STATUS_SUBMITTED,
+                    $currentgroup);
                 $subtitledata->needsgrading = $assign->count_submissions_need_grading($currentgroup);
                 $assignment = array(
                         'title' => $cm->name,

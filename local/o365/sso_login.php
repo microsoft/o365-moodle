@@ -32,9 +32,9 @@ $PAGE->set_context(context_system::instance());
 
 $authtoken = local_o365_get_auth_token();
 
-list($headerEncoded, $payloadEncoded, $signatureEncoded) = explode('.', $authtoken);
+[$headerencoded, $payloadencoded, $signatureencoded] = explode('.', $authtoken);
 
-$payload = json_decode(local_o365_base64UrlDecode($payloadEncoded));
+$payload = json_decode(local_o365_base64urldecode($payloadencoded));
 
 $loginsuccess = false;
 if ($authoidctoken = $DB->get_record('auth_oidc_token', ['oidcusername' => $payload->upn])) {

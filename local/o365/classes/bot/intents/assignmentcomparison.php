@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class assignmentcomparison implements bot intent interface for student-assignment-comparison-results intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,14 +28,14 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Class assignmentcomparison implements bot intent interface for student-assignment-comparison-results intent
- * @package local_o365\bot\intents
+ * Class assignmentcomparison implements bot intent interface for student-assignment-comparison-results intent.
  */
 class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
 
     /**
      * Gets a message with details about user assignments with grades compared to class average
-     * @param $language - Message language
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities (optional and not used at the moment)
      * @return array|string - Bot message structure with data
      */
@@ -44,7 +46,7 @@ class assignmentcomparison implements \local_o365\bot\intents\intentinterface {
         $listtitle = '';
         $message = '';
 
-        $sql = "SELECT gi.iteminstance, g.itemid, g.finalgrade, g.timemodified 
+        $sql = "SELECT gi.iteminstance, g.itemid, g.finalgrade, g.timemodified
                   FROM {grade_grades} g
                   JOIN {grade_items} gi ON gi.id = g.itemid
                  WHERE g.userid = :userid AND gi.itemmodule LIKE :assignstr AND g.finalgrade IS NOT NULL

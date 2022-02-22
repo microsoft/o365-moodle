@@ -27,7 +27,13 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/course/renderer.php');
 require_once($CFG->dirroot . '/mod/assign/renderer.php');
 require_once($CFG->dirroot . '/mod/quiz/renderer.php');
-
+/**
+ * mod_assign
+ *
+ * @package    theme_boost_o365teams
+ * @copyright  2018 Enovation Solutions
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class theme_boost_o365teams_mod_assign_renderer extends mod_assign_renderer {
     /**
      * Render the header.
@@ -61,9 +67,24 @@ class theme_boost_o365teams_mod_assign_renderer extends mod_assign_renderer {
         return $o;
     }
 }
-
+/**
+ * course
+ *
+ * @package    theme_boost_o365teams
+ * @copyright  2018 Enovation Solutions
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
-
+    /**
+     * Render the header.
+     *
+     * @param object $course
+     * @param object $completioninfo
+     * @param cm_info $mod
+     * @param int $sectionreturn
+     * @param array $displayoptions
+     * @return string
+     */
     public function course_section_cm($course, &$completioninfo, cm_info $mod, $sectionreturn, $displayoptions = array()) {
         $output = '';
         // We return empty string (because course module will not be displayed at all) if
@@ -153,7 +174,13 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
         $output .= html_writer::end_tag('div');
         return $output;
     }
-
+    /**
+     * Get Section Name
+     *
+     * @param cm_info $mod
+     * @param array $displayoptions
+     * @return string
+     */
     public function course_section_cm_name_title(cm_info $mod, $displayoptions = array()) {
         $output = '';
         $url = $mod->url;
@@ -198,7 +225,13 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
         return $output;
     }
 }
-
+/**
+ * mod_quiz
+ *
+ * @package    theme_boost_o365teams
+ * @copyright  2018 Enovation Solutions
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class theme_boost_o365teams_mod_quiz_renderer extends mod_quiz_renderer {
     /**
      * Ouputs the form for making an attempt
@@ -295,7 +328,13 @@ class theme_boost_o365teams_mod_quiz_renderer extends mod_quiz_renderer {
 
         return $output;
     }
-
+    /**
+     * No Question message
+     *
+     * @param boolean $canedit
+     * @param url $editurl
+     * @return string
+     */
     public function no_questions_message($canedit, $editurl) {
         $output = '';
         $output .= $this->notification(get_string('noquestions', 'quiz'));

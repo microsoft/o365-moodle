@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * API for bot framework.
+ *
  * @package local_o365
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,14 +27,21 @@ namespace local_o365\rest;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * API for bot framework.
+ */
 class botframework {
+    /**
+     * @var string|null
+     */
     private $token;
+    /**
+     * @var \local_o365\httpclient
+     */
     private $httpclient;
 
     /**
      * botframework constructor.
-     *
-     * @throws \dml_exception
      */
     public function __construct() {
         $this->httpclient = new \local_o365\httpclient();
@@ -42,8 +51,6 @@ class botframework {
 
     /**
      * Authenticate with bot framework to get token.
-     *
-     * @throws \dml_exception
      */
     public function get_token() {
         $tokenendpoint = 'https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token';
@@ -88,9 +95,8 @@ class botframework {
      * @param int $teamid object ID of the team
      * @param int $userid object ID of the recipient user
      * @param string $message content of the message
+     * @param string $listitems
      * @param string|null $endpoint endpoint URL
-     *
-     * @throws \dml_exception
      */
     public function send_notification($teamid, $userid, $message, $listitems, $endpoint = null) {
         if (is_null($endpoint)) {

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Exception thrown when a grade could not be saved in local_o365_update_grade.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\webservices\exception;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Exception thrown when a grade could not be saved in local_o365_update_grade.
@@ -32,7 +36,7 @@ class couldnotsavegrade extends \moodle_exception {
      *
      * @param string $errorcode The name of the string from error.php to print
      * @param string $module name of module
-     * @param string $link The url where the user will be prompted to continue. If no url is provided the user will be directed to the site index page.
+     * @param string $link The url where the user will be prompted to continue, or site index page if no url is provided.
      * @param mixed $a Extra words and phrases that might be required in the error string
      * @param string $debuginfo optional debugging information
      */

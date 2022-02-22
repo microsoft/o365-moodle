@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Ajax page.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,6 +24,8 @@
  */
 
 namespace local_o365\page;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Ajax page.
@@ -58,8 +62,9 @@ class ajax extends base {
     /**
      * Build an error ajax response.
      *
-     * @param mixed $data Wrapper for response data.
-     * @param bool $success General success indicator.
+     * @param string $errormessage
+     * @param string $errorcode
+     * @return false|string
      */
     protected function error_response($errormessage, $errorcode = '') {
         $result = new \stdClass;
@@ -358,7 +363,7 @@ class ajax extends base {
                     $unifiedapi->missingperms = $missingdelegatedperms;
                 }
                 $appinfo = $unifiedapiclient->get_application_info();
-                list($missingperms, $haswrite) = $unifiedapiclient->check_legacy_permissions();
+                [$missingperms, $haswrite] = $unifiedapiclient->check_legacy_permissions();
                 $legacyapi->missingperms = $missingperms;
                 $legacyapi->haswrite = $haswrite;
             } catch (\Exception $e) {
@@ -376,7 +381,7 @@ class ajax extends base {
             try {
                 $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
                 $appinfo = $aadapiclient->get_application_info();
-                list($missingperms, $haswrite) = $aadapiclient->check_permissions();
+                [$missingperms, $haswrite] = $aadapiclient->check_permissions();
                 $legacyapi->missingperms = $missingperms;
                 $legacyapi->haswrite = $haswrite;
             } catch (\Exception $e) {
@@ -483,8 +488,8 @@ class ajax extends base {
 
         // Enabling admin settings.
         $count = admin_write_settings([
-            's__allowframembedding' => 1, // Allow frame embedding
-            's__enablewebservices' => 1,  // Enable webservices
+            's__allowframembedding' => 1, // Allow frame embedding.
+            's__enablewebservices' => 1,  // Enable webservices.
             ]);
         if ($count == 0) {
             $data->info[] = get_string('settings_notice_webservicesframealreadyenabled', 'local_o365');
@@ -494,17 +499,17 @@ class ajax extends base {
 
         // Enable REST protocol.
         $webservice = 'rest';
-        $available_webservices = \core_component::get_plugin_list('webservice');
-        $active_webservices = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
-        foreach ($active_webservices as $key=>$active) {
-            if (empty($available_webservices[$active])) {
-                unset($active_webservices[$key]);
+        $availablewebservices = \core_component::get_plugin_list('webservice');
+        $activewebservices = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
+        foreach ($activewebservices as $key => $active) {
+            if (empty($availablewebservices[$active])) {
+                unset($activewebservices[$key]);
             }
         }
-        if (!in_array($webservice, $active_webservices)) {
-            $active_webservices[] = $webservice;
-            $active_webservices = array_unique($active_webservices);
-            if (set_config('webserviceprotocols', implode(',', $active_webservices))) {
+        if (!in_array($webservice, $activewebservices)) {
+            $activewebservices[] = $webservice;
+            $activewebservices = array_unique($activewebservices);
+            if (set_config('webserviceprotocols', implode(',', $activewebservices))) {
                 $data->success[] = get_string('settings_notice_restenabled', 'local_o365');
             } else {
                 $data->errormessages[] = get_string('settings_notice_restnotenabled', 'local_o365');
@@ -541,7 +546,6 @@ class ajax extends base {
                 $data->error[] = get_string('settings_notice_createtokennotallowed', 'local_o365');
             }
         }
-
 
         // Enable permission to use REST Protocol.
         $caproles = array_keys(get_roles_with_capability('webservice/rest:use', CAP_ALLOW, $systemcontext));

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Calendar form element. Provides checkbox to enable/disable calendar and options for sync behavior.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,7 +25,10 @@
 
 namespace local_o365\feature\calsync\form\element;
 
-global $CFG, $SITE;
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once("$CFG->libdir/form/advcheckbox.php");
 
 /**
@@ -40,7 +45,7 @@ class calendar extends \HTML_QuickForm_advcheckbox {
     protected $syncbehav = 'out';
 
     /** @var string html for help button, if empty then no help will icon will be dispalyed. */
-    public $_helpbutton='';
+    public $_helpbutton = '';
 
     /**
      * Constructor, accessed through __call constructor workaround.
@@ -51,7 +56,8 @@ class calendar extends \HTML_QuickForm_advcheckbox {
      * @param array $attributes Array of checkbox attributes.
      * @param array $customdata Array of form custom data.
      */
-    public function calendarconstruct($elementName = null, $elementLabel = null, $text = null, $attributes = null, $customdata = []) {
+    public function calendarconstruct($elementName = null, $elementLabel = null, $text = null, $attributes = null,
+        $customdata = []) {
         parent::__construct($elementName, $elementLabel, $text, $attributes, null);
         $this->customdata = $customdata;
         $this->_type = 'advcheckbox';
@@ -113,7 +119,7 @@ class calendar extends \HTML_QuickForm_advcheckbox {
     /**
      * Export value for the element.
      *
-     * @param array &$submitValues Array of all submitted values.
+     * @param array $submitValues Array of all submitted values.
      * @param bool $assoc
      * @return array Exported value.
      */
@@ -132,9 +138,11 @@ class calendar extends \HTML_QuickForm_advcheckbox {
         $checkboxid = $this->getAttribute('id').'_checkbox';
         $checkboxname = $this->getName().'[checked]';
         $checkboxchecked = ($this->checked === true) ? 'checked="checked"' : '';
-        $checkboxonclick = 'if($(this).is(\':checked\')){$(this).parent().siblings().show();}else{$(this).parent().siblings().hide();}';
+        $checkboxonclick = 'if($(this).is(\':checked\')){$(this).parent().siblings().show();}else{$(this).parent().siblings()'.
+            '.hide();}';
         $html = '<div>';
-        $html .= '<input type="checkbox" name="'.$checkboxname.'" onclick="'.$checkboxonclick.'" id="'.$checkboxid.'" '.$checkboxchecked.'/>';
+        $html .= '<input type="checkbox" name="'.$checkboxname.'" onclick="'.$checkboxonclick.'" id="'.$checkboxid.'" '.
+            $checkboxchecked.'/>';
         $html .= \html_writer::label($this->_text, $checkboxid);
         $html .= '</div>';
 

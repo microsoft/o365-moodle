@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Class recentstudents implements bot intent interface for teacher-recent-students intent.
+ *
  * @package local_o365
  * @author  Enovation Solutions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,14 +28,14 @@ namespace local_o365\bot\intents;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Class recentstudents implements bot intent interface for teacher-recent-students intent
- * @package local_o365\bot\intents
+ * Class recentstudents implements bot intent interface for teacher-recent-students intent.
  */
 class recentstudents implements \local_o365\bot\intents\intentinterface {
 
     /**
-     * Gets a message for teachers with the list of students who logged in recently
-     * @param $language - Message language
+     * Gets a message for teachers with the list of students who logged in recently.
+     *
+     * @param string $language - Message language
      * @param mixed $entities - Intent entities. Gives student name.
      * @return array|string - Bot message structure with data
      */
@@ -51,7 +53,7 @@ class recentstudents implements \local_o365\bot\intents\intentinterface {
         if (!is_siteadmin()) {
             $courses = \local_o365\bot\intents\intentshelper::getteachercourses($USER->id);
             if (!empty($courses)) {
-                list($userssql, $userssqlparams) = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses,'u.id');
+                [$userssql, $userssqlparams] = \local_o365\bot\intents\intentshelper::getcoursesstudentslistsql($courses, 'u.id');
                 $userslist = $DB->get_fieldset_sql($userssql, $userssqlparams);
                 list($userslastlogedsql, $userslastloggedparams) = $DB->get_in_or_equal($userslist, SQL_PARAMS_NAMED);
                 $lastloggedsql .= " AND u.id $userslastlogedsql";

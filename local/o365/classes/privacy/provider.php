@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Privacy subsystem implementation for local_o365.
+ *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,12 +30,14 @@ use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\writer;
 
-if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
-    interface local_o365_userlist extends \core_privacy\local\request\core_userlist_provider {}
-} else {
-    interface local_o365_userlist {};
-}
+defined('MOODLE_INTERNAL') || die();
 
+interface local_o365_userlist extends \core_privacy\local\request\core_userlist_provider {
+};
+
+/**
+ * Privacy subsystem implementation for local_o365.
+ */
 class provider implements
     \core_privacy\local\request\plugin\provider,
     \core_privacy\local\metadata\provider,
@@ -45,7 +49,7 @@ class provider implements
      * @param collection $collection The initialised collection to add items to.
      * @return collection A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $collection): collection {
+    public static function get_metadata(collection $collection) : collection {
 
         $tables = [
             'local_o365_calidmap' => [
@@ -271,7 +275,7 @@ class provider implements
      * @param \stdClass $user The user to get the map for.
      * @return array The table user map.
      */
-    protected static function get_table_user_map(\stdClass $user): array {
+    protected static function get_table_user_map(\stdClass $user) : array {
         $tables = [
             'local_o365_calidmap' => ['userid' => $user->id],
             'local_o365_calsub' => ['user_id' => $user->id],

@@ -15,12 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * User control panel page.
+ *
  * @package local_o365
+ * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\page;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * User control panel page.
@@ -70,7 +75,8 @@ class groupcp extends base {
         $group = $DB->get_record('local_o365_coursegroupdata', ['courseid' => $data->courseid, 'groupid' => $data->groupid]);
         if ($editform && $editoroptions && empty($data->groupid)) {
             // Update description from editor with fixed files.
-            $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'local_o365', 'description', $data->id);
+            $data = file_postupdate_standard_editor($data, 'description', $editoroptions, $context, 'local_o365', 'description',
+                $data->id);
         }
 
         if (!empty($group)) {
@@ -117,7 +123,8 @@ class groupcp extends base {
 
         $manage = has_capability('local/o365:managegroups', $context);
         if ($manage) {
-            $groups = \local_o365\feature\usergroups\utils::study_groups_list($USER->id, ['courseid' => $course->id], $manage, 0, 1000, 2);
+            $groups = \local_o365\feature\usergroups\utils::study_groups_list($USER->id, ['courseid' => $course->id], $manage, 0,
+                1000, 2);
         } else {
             $groups = \local_o365\feature\usergroups\utils::study_groups_list($USER->id, null, $manage, 0, 1000, 2);
         }
@@ -312,10 +319,12 @@ class groupcp extends base {
 
         if (!empty($editorid)) {
             $editoroptions['subdirs'] = file_area_contains_subdirs($context, $component, 'description', $editorid);
-            $group = file_prepare_standard_editor($group, 'description', $editoroptions, $context, $component, 'description', $editorid);
+            $group = file_prepare_standard_editor($group, 'description', $editoroptions, $context, $component, 'description',
+                $editorid);
         } else {
             $editoroptions['subdirs'] = false;
-            $group = file_prepare_standard_editor($group, 'description', $editoroptions, $context, $component, 'description', null);
+            $group = file_prepare_standard_editor($group, 'description', $editoroptions, $context, $component, 'description',
+                null);
         }
 
         // First create the form.
@@ -332,7 +341,8 @@ class groupcp extends base {
             } else {
                 $id = \local_o365\feature\usergroups\utils::create_group($data, $editform, $editoroptions);
                 $group = $DB->get_record('local_o365_coursegroupdata', ['id' => $id]);
-                $returnurl = new \moodle_url('/local/o365/groupcp.php', ['courseid' => $group->courseid, 'groupid' => $group->groupid]);
+                $returnurl = new \moodle_url('/local/o365/groupcp.php',
+                    ['courseid' => $group->courseid, 'groupid' => $group->groupid]);
             }
             redirect($returnurl);
         }
@@ -432,7 +442,8 @@ class groupcp extends base {
         }
 
         if (has_capability('local/o365:managegroups', $this->context)) {
-            $url = new \moodle_url('/local/o365/groupcp.php', ['action' => 'editgroup', 'id' => $group->id, 'courseid' => $courseid]);
+            $url = new \moodle_url('/local/o365/groupcp.php',
+                ['action' => 'editgroup', 'id' => $group->id, 'courseid' => $courseid]);
             $streditgroup = get_string('groups_editsettings', 'local_o365');
             $html = \html_writer::tag('h5', \html_writer::link($url, $streditgroup));
             echo \html_writer::tag('div', $html);

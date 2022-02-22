@@ -26,8 +26,15 @@
 
 namespace local_o365\adminsetting;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
 require_once($CFG->dirroot . '/lib/adminlib.php');
 
+/**
+ * Azure AD sync options.
+ */
 class aadsyncoptions extends \admin_setting_configmulticheckbox {
     /** @var array Array of choices value=>label */
     public $choices;
@@ -63,18 +70,16 @@ class aadsyncoptions extends \admin_setting_configmulticheckbox {
     }
 
     /**
-     * Returns XHTML field(s) as required by choices
+     * Returns XHTML field(s) as required by choices.
      *
-     * Relies on data being an array should data ever be another valid vartype with
-     * acceptable value this may cause a warning/error
-     * if (!is_array($data)) would fix the problem
+     * Rely on data being an array should data ever be another valid vartype with acceptable value this may cause a warning/error
+     * if (!is_array($data)) would fix the problem.
+     *
+     * @todo Add vartype handling to ensure $data is an array
      *
      * @param array $data An array of checked values
      * @param string $query
-     *
      * @return string XHTML field
-     * @todo Add vartype handling to ensure $data is an array
-     *
      */
     public function output_html($data, $query = '') {
         global $OUTPUT;

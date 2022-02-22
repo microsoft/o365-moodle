@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Plugin version information.
+ *
  * @package auth_oidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,8 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2020071535;
+$plugin->version = 2020071541;
 $plugin->requires = 2020061500;
-$plugin->release = '3.9.7';
+$plugin->release = '3.9.8';
 $plugin->component = 'auth_oidc';
 $plugin->maturity = MATURITY_STABLE;
