@@ -848,23 +848,25 @@ class main {
         update_internal_user_password($user, $password);
 
         // Add o365 object.
-        if (unified::is_configured()) {
-            $userobjectid = $aaddata['id'];
-        } else {
-            $userobjectid = $aaddata['objectId'];
+        if (!$DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $newuser->id])) {
+            if (unified::is_configured()) {
+                $userobjectid = $aaddata['id'];
+            } else {
+                $userobjectid = $aaddata['objectId'];
+            }
+            $now = time();
+            $userobjectdata = (object)[
+                'type' => 'user',
+                'subtype' => '',
+                'objectid' => $userobjectid,
+                'o365name' => $aaddata['userPrincipalName'],
+                'moodleid' => $newuser->id,
+                'tenant' => '',
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ];
+            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
         }
-        $now = time();
-        $userobjectdata = (object)[
-            'type' => 'user',
-            'subtype' => '',
-            'objectid' => $userobjectid,
-            'o365name' => $aaddata['userPrincipalName'],
-            'moodleid' => $newuser->id,
-            'tenant' => '',
-            'timecreated' => $now,
-            'timemodified' => $now,
-        ];
-        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
 
         // Trigger event.
         \core\event\user_created::create_from_userid($newuser->id)->trigger();
@@ -1382,7 +1384,7 @@ class main {
             $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $aaduserdata['upnlower']));
             return $this->sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch);
         } else {
-            $this->mtrace('The user is already using OpenID for authentication.');
+            $this->mtrace('The user is already using OIDC for authentication.');
             return true;
         }
     }
@@ -1405,9 +1407,8 @@ class main {
         }
 
         if (isset($syncoptions['matchswitchauth']) && $exactmatch) {
-            // Switch the user to OpenID authentication method, but only if this setting is enabled and full username matched.
-            // Do not switch Moodle user to OpenID if another Moodle user is already using same Microsoft 365 account for logging
-            // in.
+            // Switch the user to OIDC authentication method, but only if this setting is enabled and full username matched.
+            // Do not switch Moodle user to OIDC if another Moodle user is already using same Microsoft 365 account for logging in.
             $sql = 'SELECT u.username
                       FROM {user} u
                  LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
@@ -1417,7 +1418,7 @@ class main {
             $alreadylinkedusername = $DB->get_field_sql($sql, $params);
 
             if ($alreadylinkedusername !== false) {
-                $errmsg = 'This Azure AD user has already been linked with Moodle user %s. Not switching Moodle user %s to OpenID.';
+                $errmsg = 'This Azure AD user has already been linked with Moodle user %s. Not switching Moodle user %s to OIDC.';
                 $this->mtrace(sprintf($errmsg, $alreadylinkedusername, $existinguser->username));
                 return true;
             } else {
@@ -1431,8 +1432,9 @@ class main {
                 user_update_user($existinguser, true);
                 // Clear user's password.
                 $password = null;
+                $existinguser->password = $fullexistinguser->password;
                 update_internal_user_password($existinguser, $password);
-                $this->mtrace('Switched user to OpenID.');
+                $this->mtrace('Switched user to OIDC.');
 
                 // Clear force password change preference.
                 unset_user_preference('auth_forcepasswordchange', $existinguser);
@@ -1448,7 +1450,7 @@ class main {
                 'uselogin' => isset($syncoptions['matchswitchauth']) ? 1 : 0,
             ];
             $DB->insert_record('local_o365_connections', $matchrec);
-            $this->mtrace('Matched user, but did not switch them to OpenID.');
+            $this->mtrace('Matched user, but did not switch them to OIDC.');
             return true;
         }
     }
