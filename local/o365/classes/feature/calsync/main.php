@@ -386,6 +386,7 @@ class main {
         $calendars = $calendarresults['value'];
         while (!empty($calendarresults['@odata.nextLink'])) {
             $nextlink = parse_url($calendarresults['@odata.nextLink']);
+            $calendarresults = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -414,6 +415,7 @@ class main {
         $events = $eventresults['value'];
         while (!empty($eventresults['@odata.nextLink'])) {
             $nextlink = parse_url($eventresults['@odata.nextLink']);
+            $eventresults = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);

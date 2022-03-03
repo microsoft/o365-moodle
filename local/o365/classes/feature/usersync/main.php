@@ -433,6 +433,7 @@ class main {
         $usergroups = $usergroupsresults['value'];
         while (!empty($usergroupsresults['@odata.nextLink'])) {
             $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
+            $usergroupsresults = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -466,6 +467,7 @@ class main {
 
         while (!empty($userteamsresults['@odata.nextLink'])) {
             $nextlink = parse_url($userteamsresults['@odata.nextLink']);
+            $userteamsresults = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -729,6 +731,7 @@ class main {
                 $usergroups = $usergroupsresults['value'];
                 while (!empty($usergroupsresults['@odata.nextLink'])) {
                     $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
+                    $usergroupsresults = [];
                     if (isset($nextlink['query'])) {
                         $query = [];
                         parse_str($nextlink['query'], $query);
@@ -1489,6 +1492,7 @@ class main {
             $deletedusers = $deleteduserresults['value'];
             while (!empty($deleteduserresults['@odata.nextLink'])) {
                 $nextlink = parse_url($deleteduserresults['@odata.nextLink']);
+                $deleteduserresults = [];
                 if (isset($nextlink['query'])) {
                     $query = [];
                     parse_str($nextlink['query'], $query);
