@@ -116,5 +116,14 @@ function xmldb_local_onenote_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2016062002, 'local', 'onenote');
     }
 
+    if ($oldversion < 2020110931) {
+        // Make sure teacher_lastviewed is a integer
+        $table = new xmldb_table('local_onenote_assign_pages');
+        $field = new xmldb_field('teacher_lastviewed', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'feedback_teacher_page_id');
+        $dbman->change_field_type($table, $field);
+
+        // Onenote savepoint reached.
+        upgrade_plugin_savepoint(true, 2020110931, 'local', 'onenote');
+    }
     return true;
 }
