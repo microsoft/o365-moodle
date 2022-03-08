@@ -389,8 +389,8 @@ class main {
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $calendarresults = $apiclient->get_calendars($o365upn, $query['$skiptoken']);
+                if (isset($query['$skip'])) {
+                    $calendarresults = $apiclient->get_calendars($o365upn, $query['$skip']);
                     $calendars = array_merge($calendars, $calendarresults['value']);
                 }
             }
@@ -417,8 +417,8 @@ class main {
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $eventresults = $apiclient->get_events($o365calid, $since, $o365upn, $query['$skiptoken']);
+                if (isset($query['$skip'])) {
+                    $eventresults = $apiclient->get_events($o365calid, $since, $o365upn, $query['$skip']);
                     $events = array_merge($events, $eventresults['value']);
                 }
             }
