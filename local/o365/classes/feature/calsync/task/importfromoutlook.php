@@ -65,64 +65,59 @@ class importfromoutlook extends \core\task\scheduled_task {
 
         $calsubs = $DB->get_recordset_select('local_o365_calsub', 'syncbehav = ? OR syncbehav = ?', ['in', 'both']);
         $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
-        foreach ($calsubs as $i => $calsub) {
+        foreach ($calsubs as $calsub) {
             try {
                 mtrace('Syncing events for user #'.$calsub->user_id);
 
-                $o365upn = \local_o365\utils::get_o365_upn($calsub->user_id);
-                $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime, $o365upn);
-                if (!empty($events) && is_array($events) && isset($events['value']) && is_array($events)) {
-                    if (!empty($events)) {
-                        foreach ($events as $i => $event) {
-                            if (!isset($event['Id'])) {
-                                $errmsg = 'Skipped an event because of malformed data.';
-                                \local_o365\utils::debug($errmsg, 'importfromoutlook', $event);
-                                mtrace($errmsg);
-                                continue;
-                            }
-                            $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
-                            if ($idmapexists === false) {
-                                // Create Moodle event.
-                                $eventparams = [
-                                    'name' => $event['Subject'],
-                                    'description' => $event['Body']['Content'],
-                                    'eventtype' => $calsub->caltype,
-                                    'repeatid' => 0,
-                                    'modulename' => 0,
-                                    'instance' => 0,
-                                    'timestart' => strtotime($event['Start']),
-                                    'visible' => 1,
-                                    'uuid' => '',
-                                    'sequence' => 1,
-                                ];
-                                $end = strtotime($event['End']);
-                                $eventparams['timeduration'] = $end - $eventparams['timestart'];
+                $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime);
+                if (!empty($events) && is_array($events)) {
+                    foreach ($events as $event) {
+                        if (!isset($event['Id'])) {
+                            $errmsg = 'Skipped an event because of malformed data.';
+                            \local_o365\utils::debug($errmsg, 'importfromoutlook', $event);
+                            mtrace($errmsg);
+                            continue;
+                        }
+                        $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
+                        if ($idmapexists === false) {
+                            // Create Moodle event.
+                            $eventparams = [
+                                'name' => $event['Subject'],
+                                'description' => $event['Body']['Content'],
+                                'eventtype' => $calsub->caltype,
+                                'repeatid' => 0,
+                                'modulename' => 0,
+                                'instance' => 0,
+                                'timestart' => strtotime($event['Start']),
+                                'visible' => 1,
+                                'uuid' => '',
+                                'sequence' => 1,
+                            ];
+                            $end = strtotime($event['End']);
+                            $eventparams['timeduration'] = $end - $eventparams['timestart'];
 
-                                if ($calsub->caltype === 'user') {
-                                    $eventparams['userid'] = $calsub->caltypeid;
-                                }
-                                if ($calsub->caltype === 'course') {
-                                    $eventparams['courseid'] = $calsub->caltypeid;
-                                }
-                                $moodleevent = \calendar_event::create($eventparams, false);
-                                if (!empty($moodleevent) && !empty($moodleevent->id)) {
-                                    $idmaprec = [
-                                        'eventid' => $moodleevent->id,
-                                        'outlookeventid' => $event['Id'],
-                                        'origin' => 'o365',
-                                        'userid' => $calsub->user_id
-                                    ];
-                                    $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                                    mtrace('Successfully imported event #'.$moodleevent->id);
-                                }
+                            if ($calsub->caltype === 'user') {
+                                $eventparams['userid'] = $calsub->caltypeid;
+                            }
+                            if ($calsub->caltype === 'course') {
+                                $eventparams['courseid'] = $calsub->caltypeid;
+                            }
+                            $moodleevent = \calendar_event::create($eventparams, false);
+                            if (!empty($moodleevent) && !empty($moodleevent->id)) {
+                                $idmaprec = [
+                                    'eventid' => $moodleevent->id,
+                                    'outlookeventid' => $event['Id'],
+                                    'origin' => 'o365',
+                                    'userid' => $calsub->user_id
+                                ];
+                                $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                                mtrace('Successfully imported event #'.$moodleevent->id);
                             }
                         }
-                    } else {
-                        mtrace('No new events to sync in.');
                     }
                 } else {
-                    $errmsg = 'Bad response received when fetching events.';
-                    \local_o365\utils::debug($errmsg, 'importfromoutlook', $events);
+                    $errmsg = 'No events received.';
+                    \local_o365\utils::debug($errmsg, __METHOD__, $events);
                     mtrace($errmsg);
                 }
             } catch (\Exception $e) {
