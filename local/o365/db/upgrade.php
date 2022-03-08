@@ -748,5 +748,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071507, 'local', 'o365');
     }
 
+    if ($oldversion < 2020071547) {
+        // Reset last calendar sync run task.
+        set_config('calsyncinlastrun', 0, 'local_o365');
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020071547, 'local', 'o365');
+    }
+
     return true;
 }

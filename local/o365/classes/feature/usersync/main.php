@@ -365,7 +365,7 @@ class main {
             $skiptoken = '';
         }
 
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         $result = $apiclient->get_users($params, $skiptoken);
         $users = [];
         $skiptoken = null;
@@ -431,18 +431,6 @@ class main {
         $apiclient = $this->construct_user_api();
         $usergroupsresults = $apiclient->get_user_groups($userobjectid);
         $usergroups = $usergroupsresults['value'];
-        while (!empty($usergroupsresults['@odata.nextLink'])) {
-            $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $usergroupsresults = $apiclient->get_user_groups($userobjectid);
-                    $usergroups = array_merge($usergroups, $usergroupsresults['value']);
-                }
-            }
-        }
-
         $groupnames = [];
         foreach ($usergroups as $usergroup) {
             $groupnames[] = $usergroup['displayName'];
@@ -463,18 +451,6 @@ class main {
 
         $userteamsresults = $apiclient->get_user_teams($userobjectid);
         $userteams = $userteamsresults['value'];
-
-        while (!empty($userteamsresults['@odata.nextLink'])) {
-            $nextlink = parse_url($userteamsresults['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $userteamsresults = $apiclient->get_user_teams($userobjectid, $query['$skiptoken']);
-                    $userteams = array_merge($userteams, $userteamsresults['value']);
-                }
-            }
-        }
 
         $teamnames = [];
         foreach ($userteams as $userteam) {
@@ -727,17 +703,6 @@ class main {
                 }
                 $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
                 $usergroups = $usergroupsresults['value'];
-                while (!empty($usergroupsresults['@odata.nextLink'])) {
-                    $nextlink = parse_url($usergroupsresults['@odata.nextLink']);
-                    if (isset($nextlink['query'])) {
-                        $query = [];
-                        parse_str($nextlink['query'], $query);
-                        if (isset($query['$skiptoken'])) {
-                            $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
-                            $usergroups = array_merge($usergroups, $usergroupsresults['value']);
-                        }
-                    }
-                }
 
                 foreach ($usergroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
