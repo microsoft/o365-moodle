@@ -655,9 +655,15 @@ class main {
             }
         }
 
-        // Lang cannot be longer than 2 chars.
-        if (!empty($user->lang) && strlen($user->lang) > 2) {
-            $user->lang = substr($user->lang, 0, 2);
+        if (!empty($user->lang)) {
+            // Lang cannot be longer than 2 chars.
+            if (strlen($user->lang) > 2) {
+                $user->lang = substr($user->lang, 0, 2);
+            }
+            // Validate lang setting.
+            if (!get_string_manager()->translation_exists($user->lang, false)) {
+                $user->lang = $CFG->lang;
+            }
         }
 
         return $user;
@@ -831,10 +837,6 @@ class main {
             if (email_is_not_allowed($newuser->email)) {
                 unset($newuser->email);
             }
-        }
-
-        if (empty($newuser->lang) || !get_string_manager()->translation_exists($newuser->lang)) {
-            $newuser->lang = $CFG->lang;
         }
 
         $newuser->timemodified = $newuser->timecreated;
