@@ -25,9 +25,14 @@
 
 namespace local_o365\feature\sds;
 
+use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Utility functions for the SDS feature.
@@ -38,17 +43,16 @@ class utils {
      *
      * @return unified|null The SDS API client.
      */
-    public static function get_apiclient() {
+    public static function get_apiclient() : ?unified {
         $httpclient = new httpclient();
         $clientdata = clientdata::instance_from_oidc();
         $unifiedresource = unified::get_tokenresource();
         $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
 
         if (!empty($unifiedtoken)) {
-            $apiclient = new unified($unifiedtoken, $httpclient);
-            return $apiclient;
+            return new unified($unifiedtoken, $httpclient);
         } else {
-            static::mtrace('Could not construct system API user token for SDS sync task.');
+            mtrace('Could not construct system API user token for SDS sync task.');
         }
 
         return null;
@@ -60,7 +64,7 @@ class utils {
      * @param unified|null $apiclient
      * @return array
      */
-    public static function get_profile_sync_status_with_id_name($apiclient = null) {
+    public static function get_profile_sync_status_with_id_name(unified $apiclient = null) : array {
         $profilesyncenabled = false;
         $schoolid = '';
         $schoolname = '';
@@ -97,7 +101,7 @@ class utils {
                             break;
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // School invalid, reset settings.
                     set_config('sdsprofilesync', '', 'local_o365');
                 }
@@ -112,7 +116,7 @@ class utils {
      *
      * @return array[]
      */
-    public static function get_sds_profile_sync_api_requirements() {
+    public static function get_sds_profile_sync_api_requirements() : array {
         $idandnamemappings = [];
         $additionalprofilemappings = [];
 
