@@ -204,18 +204,20 @@ class processmatchqueue extends \core\task\scheduled_task {
                         $userobjectid = $o365user['objectId'];
                     }
 
-                    mtrace('Adding o365 object record for user.');
-                    $now = time();
-                    $userobjectdata = (object)[
-                        'type' => 'user',
-                        'subtype' => '',
-                        'objectid' => $userobjectid,
-                        'o365name' => $o365user['userPrincipalName'],
-                        'moodleid' => $matchrec->muserid,
-                        'timecreated' => $now,
-                        'timemodified' => $now,
-                    ];
-                    $DB->insert_record('local_o365_objects', $userobjectdata);
+                    if (!$DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $matchrec->muserid])) {
+                        mtrace('Adding o365 object record for user.');
+                        $now = time();
+                        $userobjectdata = (object)[
+                            'type' => 'user',
+                            'subtype' => '',
+                            'objectid' => $userobjectid,
+                            'o365name' => $o365user['userPrincipalName'],
+                            'moodleid' => $matchrec->muserid,
+                            'timecreated' => $now,
+                            'timemodified' => $now,
+                        ];
+                        $DB->insert_record('local_o365_objects', $userobjectdata);
+                    }
 
                     // Updated the user's authentication method field.
                     mtrace('Updating user authentication record.');

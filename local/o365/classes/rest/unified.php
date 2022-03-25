@@ -2272,7 +2272,7 @@ class unified extends \local_o365\rest\o365api {
                     $user->username);
                 return false;
             }
-            $httpclient = new \local_o365\httpclient();
+
             try {
                 $apiclient = \local_o365\utils::get_api();
             } catch (\Exception $e) {
@@ -2289,16 +2289,19 @@ class unified extends \local_o365\rest\o365api {
             if (static::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
                 $userdata['objectId'] = $userdata['id'];
             }
-            $userobjectdata = (object)[
-                'type' => 'user',
-                'subtype' => '',
-                'objectid' => $userdata['objectId'],
-                'o365name' => $userdata['userPrincipalName'],
-                'moodleid' => $user->id,
-                'timecreated' => $now,
-                'timemodified' => $now,
-            ];
-            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+            if (!$DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
+                $userobjectdata = (object)[
+                    'type' => 'user',
+                    'subtype' => '',
+                    'objectid' => $userdata['objectId'],
+                    'o365name' => $userdata['userPrincipalName'],
+                    'moodleid' => $user->id,
+                    'timecreated' => $now,
+                    'timemodified' => $now,
+                ];
+                $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+            }
+
             return $userobjectdata->o365name;
         }
     }
