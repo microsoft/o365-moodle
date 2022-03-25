@@ -29,6 +29,7 @@ use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -45,14 +46,19 @@ class utils {
      */
     public static function get_apiclient() : ?unified {
         $httpclient = new httpclient();
-        $clientdata = clientdata::instance_from_oidc();
-        $unifiedresource = unified::get_tokenresource();
-        $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
+        try {
+            $clientdata = clientdata::instance_from_oidc();
+            $unifiedresource = unified::get_tokenresource();
+            $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient);
 
-        if (!empty($unifiedtoken)) {
-            return new unified($unifiedtoken, $httpclient);
-        } else {
-            mtrace('Could not construct system API user token for SDS sync task.');
+            if (!empty($unifiedtoken)) {
+                $apiclient = new unified($unifiedtoken, $httpclient);
+                return $apiclient;
+            } else {
+                static::mtrace('Could not construct system API user token for SDS sync task.');
+            }
+        } catch (moodle_exception $e) {
+            return null;
         }
 
         return null;
