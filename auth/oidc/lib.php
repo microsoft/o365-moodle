@@ -276,7 +276,7 @@ function auth_oidc_get_remote_fields() {
         }
     } else {
         $remotefields = [
-            '' => '',
+            '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_oidc'),
             'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_oidc'),
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
             'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_oidc'),
@@ -284,6 +284,20 @@ function auth_oidc_get_remote_fields() {
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
         ];
     }
+
+    return $remotefields;
+}
+
+/**
+ * Return the list of available remote fields to map email field.
+ *
+ * @return array
+ */
+function auth_oidc_get_email_remote_fields() {
+    $remotefields = [
+        'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
+        'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
+    ];
 
     return $remotefields;
 }
@@ -324,7 +338,39 @@ function auth_oidc_get_field_mappings() {
         }
     }
 
+    if (!array_key_exists('email', $fieldmappings)) {
+        $fieldmappings['email'] = auth_oidc_apply_default_email_mapping();
+    }
+
     return $fieldmappings;
+}
+
+/**
+ * Apply default email mapping settings.
+ *
+ * @return array
+ */
+function auth_oidc_apply_default_email_mapping() {
+    set_config('field_map_email', 'mail', 'auth_oidc');
+
+    $authoidcconfig = get_config('auth_oidc');
+
+    $fieldsetting = [];
+    $fieldsetting['field_map'] = 'mail';
+
+    if (property_exists($authoidcconfig, 'field_lock_email')) {
+        $fieldsetting['field_lock'] = $authoidcconfig->field_lock_email;
+    } else {
+        $fieldsetting['field_lock'] = 'unlocked';
+    }
+
+    if (property_exists($authoidcconfig, 'field_updatelocal_email')) {
+        $fieldsetting['update_local'] = $authoidcconfig->field_updatelocal_email;
+    } else {
+        $fieldsetting['update_local'] = 'always';
+    }
+
+    return $fieldsetting;
 }
 
 /**
@@ -381,6 +427,7 @@ function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $hel
     }
 
     $remotefields = auth_oidc_get_remote_fields();
+    $emailremotefields = auth_oidc_get_email_remote_fields();
 
     foreach ($userfields as $field) {
         // Define the fieldname we display to the  user.
@@ -415,8 +462,13 @@ function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $hel
         } else if ($mapremotefields) {
             // We are mapping to a remote field here.
             // Mapping.
-            $settings->add(new admin_setting_configselect("auth_oidc/field_map_{$field}",
-                get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $remotefields));
+            if ($field == 'email') {
+                $settings->add(new admin_setting_configselect("auth_oidc/field_map_{$field}",
+                    get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $emailremotefields));
+            } else {
+                $settings->add(new admin_setting_configselect("auth_oidc/field_map_{$field}",
+                    get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $remotefields));
+            }
 
             // Update local.
             $settings->add(new admin_setting_configselect("auth_{$auth}/field_updatelocal_{$field}",
@@ -431,7 +483,6 @@ function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $hel
             // Lock fields.
             $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}",
                 get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
-
         } else {
             // Lock fields Only.
             $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}",
