@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page allow authorised users to configure course reset actions on connected Team/group.
+ * This page allows authorised users to configure course reset actions on the connected Team.
  *
  * @package block_microsoft
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -23,7 +23,7 @@
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use local_o365\feature\usergroups\utils;
+use local_o365\feature\coursesync\utils;
 
 require_once(__DIR__.'/../../config.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
@@ -48,26 +48,16 @@ if (!utils::is_enabled()) {
 }
 
 // Part 2, course sync enabled.
-$connectedtoteam = false;
-if (utils::course_is_group_enabled($courseid)) {
+if (utils::is_course_sync_enabled($courseid)) {
     // Check if course customisation is allowed.
     $siteresetsetting = get_config('local_o365', 'course_reset_teams');
-    if ($siteresetsetting != TEAMS_GROUP_COURSE_RESET_SITE_SETTING_PER_COURSE) {
+    if ($siteresetsetting != COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE) {
         throw new moodle_exception('error_reset_setting_not_managed_per_course', 'block_microsoft', $redirecturl);
     }
-    if (utils::course_is_group_feature_enabled($courseid, 'team')) {
-        // The course is configured to be synced to Team.
-        if (!$o365object = $DB->get_record('local_o365_objects',
-            ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
-            throw new moodle_exception('error_connected_team_missing', 'block_microsoft', $redirecturl);
-        }
-        $connectedtoteam = true;
-    } else {
-        // The course is configured to be synced to group.
-        if (!$o365object = $DB->get_record('local_o365_objects',
-            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
-            throw new moodle_exception('error_connected_group_missing', 'block_microsoft', $redirecturl);
-        }
+
+    if (!$o365object = $DB->get_record('local_o365_objects',
+        ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+        throw new moodle_exception('error_connected_team_missing', 'block_microsoft', $redirecturl);
     }
 } else {
     // Sync is disabled for the course.
@@ -79,13 +69,8 @@ $existingcourseresetsetting = block_microsoft_get_course_reset_setting($courseid
 if ($existingcourseresetsetting) {
     $formdata['reset_setting'] = $existingcourseresetsetting;
 }
-if ($connectedtoteam) {
-    $mform = new block_microsoft_course_configure_team_form();
-    $mform->set_data($formdata);
-} else {
-    $mform = new block_microsoft_course_configure_group_form();
-    $mform->set_data($formdata);
-}
+$mform = new block_microsoft_course_configure_form();
+$mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
     redirect($redirecturl);
@@ -104,11 +89,7 @@ $PAGE->set_heading($pagetitle);
 
 echo $OUTPUT->header();
 
-if ($connectedtoteam) {
-    echo $OUTPUT->heading(get_string('reset_page_heading_team', 'block_microsoft', $COURSE->fullname));
-} else {
-    echo $OUTPUT->heading(get_string('reset_page_heading_group', 'block_microsoft', $COURSE->fullname));
-}
+echo $OUTPUT->heading(get_string('reset_page_heading', 'block_microsoft', $COURSE->fullname));
 
 $mform->display();
 

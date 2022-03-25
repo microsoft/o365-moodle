@@ -19,6 +19,7 @@
  *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -26,38 +27,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $observers = [
-    // User groups.
-    [
-        'eventname'   => '\core\event\group_created',
-        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_created',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\group_deleted',
-        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_deleted',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\group_updated',
-        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_updated',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\group_member_added',
-        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_member_added',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\group_member_removed',
-        'callback'    => '\local_o365\feature\usergroups\observers::handle_group_member_removed',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-
     // Calendar sync.
     [
         'eventname'   => '\core\event\user_enrolment_deleted',
@@ -136,20 +105,14 @@ $observers = [
 
     // Events from core.
     [
-        'eventname'   => '\core\event\user_enrolment_created',
-        'callback'    => '\local_o365\observers::handle_user_enrolment_created',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
-        'eventname'   => '\core\event\user_enrolment_deleted',
-        'callback'    => '\local_o365\observers::handle_user_enrolment_deleted',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
         'eventname'   => '\core\event\user_enrolment_updated',
         'callback'    => '\local_o365\observers::handle_user_enrolment_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\enrol_instance_updated',
+        'callback'    => '\local_o365\observers:handle_enrol_instance_updated',
         'priority'    => 200,
         'internal'    => false,
     ],
@@ -166,8 +129,14 @@ $observers = [
         'internal'    => false,
     ],
     [
-        'eventname'   => '\core\event\role_capabilities_updated',
-        'callback'    => '\local_o365\observers::handle_role_capabilities_updated',
+        'eventname'   => '\core\event\capability_assigned',
+        'callback'    => '\local_o365\observers::handle_capability_change',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\capability_unassigned',
+        'callback'    => '\local_o365\observers::handle_capability_change',
         'priority'    => 200,
         'internal'    => false,
     ],
@@ -227,7 +196,7 @@ $observers = [
     ],
     [
         'eventname'   => '\core\event\course_reset_started',
-        'callback'    => '\local_o365\feature\usergroups\observers::handle_course_reset_started',
+        'callback'    => '\local_o365\feature\coursesync\observers::handle_course_reset_started',
         'priority'    => 200,
         'internal'    => true,
     ],

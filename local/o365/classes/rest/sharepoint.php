@@ -91,17 +91,16 @@ class sharepoint extends \local_o365\rest\o365api {
      * @return array|bool The parsed URL into 'resource' and 'subsiteurl' keys, or false if invalid.
      */
     public static function parse_site_url($url) {
-        $caller = 'rest\sharepoint::parse_site_url';
         $cleanurl = clean_param($url, PARAM_URL);
         if ($cleanurl !== $url) {
             $errmsg = 'Site url failed clean_param';
             $debugdata = ['orig' => $url, 'clean' => $cleanurl];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            \local_o365\utils::debug($errmsg, __METHOD__, $debugdata);
             return false;
         }
         if (strpos($cleanurl, 'https://') !== 0) {
             $errmsg = 'Site url was not https.';
-            \local_o365\utils::debug($errmsg, $caller, $cleanurl);
+            \local_o365\utils::debug($errmsg, __METHOD__, $cleanurl);
             return false;
         }
 
@@ -109,7 +108,7 @@ class sharepoint extends \local_o365\rest\o365api {
         if (empty($cleanurlparts) || empty($cleanurlparts['host'])) {
             $errmsg = 'Site url failed parse_url.';
             $debugdata = ['cleanurl' => $cleanurl, 'parts' => $cleanurlparts];
-            \local_o365\utils::debug($errmsg, $caller, $debugdata);
+            \local_o365\utils::debug($errmsg, __METHOD__, $debugdata);
             return false;
         }
 
@@ -142,11 +141,11 @@ class sharepoint extends \local_o365\rest\o365api {
                 return $siteinfo['tokenresource'];
             } else {
                 $errmsg = 'SharePoint link URL was not valid';
-                \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_tokenresource', $config->sharepointlink);
+                \local_o365\utils::debug($errmsg, __METHOD__, $config->sharepointlink);
             }
         } else {
             $errmsg = 'No SharePoint link URL was found. Plugin not configured?';
-            \local_o365\utils::debug($errmsg, 'rest\sharepoint::get_tokenresource');
+            \local_o365\utils::debug($errmsg, __METHOD__);
         }
         return false;
     }
@@ -436,7 +435,7 @@ class sharepoint extends \local_o365\rest\o365api {
     }
 
     /**
-     * Create a user group.
+     * Create a Microsoft 365 group.
      *
      * @param string $name The name of the group.
      * @param string $description The description of the group.
@@ -610,14 +609,13 @@ class sharepoint extends \local_o365\rest\o365api {
     protected function create_course_subsite($course) {
         global $DB;
         $now = time();
-        $caller = '\local_o365\rest\sharepoint::create_course_subsite';
 
         // To account for times when the course shortname might change, look for a coursespsite record for the course with the same
         // parent site URL.
         $siterec = $DB->get_record('local_o365_coursespsite', ['courseid' => $course->id]);
         if (!empty($siterec) && strpos($siterec->siteurl, '/'.$this->parentsite.'/') === 0) {
             $debugdata = ['courseid' => $course->id, 'spsiteid' => $siterec->id];
-            \local_o365\utils::debug('Found a stored subsite record for this course.', $caller, $debugdata);
+            \local_o365\utils::debug('Found a stored subsite record for this course.', __METHOD__, $debugdata);
             return $siterec;
         }
 
@@ -627,7 +625,7 @@ class sharepoint extends \local_o365\rest\o365api {
         // Check if site exists.
         if ($this->site_exists($fullsiteurl) !== true) {
             // Create site.
-            \local_o365\utils::debug('Creating site '.$fullsiteurl, $caller);
+            \local_o365\utils::debug('Creating site '.$fullsiteurl, __METHOD__);
             $DB->delete_records('local_o365_coursespsite', ['courseid' => $course->id]);
             $sitedata = $this->create_site($course->fullname, $siteurl, $course->summary);
             $siterec = new \stdClass;
@@ -640,7 +638,7 @@ class sharepoint extends \local_o365\rest\o365api {
             return $siterec;
         } else {
             $debugmsg = 'Subsite already exists, looking for local data.';
-            \local_o365\utils::debug($debugmsg, $caller, $fullsiteurl);
+            \local_o365\utils::debug($debugmsg, __METHOD__, $fullsiteurl);
             if (!empty($siterec)) {
                 // We have a local spsite record for the course, but for a different parent site, so our record is out of date.
                 $sitedata = $this->get_site($fullsiteurl);
@@ -661,7 +659,7 @@ class sharepoint extends \local_o365\rest\o365api {
                     'courseid' => $course->id,
                     'courseshortname' => $course->shortname
                 ];
-                \local_o365\utils::debug($errmsg, $caller, $debugdata);
+                \local_o365\utils::debug($errmsg, __METHOD__, $debugdata);
                 throw new \moodle_exception('erroro365apisiteexistsnolocal', 'local_o365');
             }
         }
@@ -728,7 +726,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $coursesubsiteenabled = \local_o365\feature\sharepointcustom\utils::course_subsite_enabled($course);
         if (!$coursesubsiteenabled) {
             $errmsg = 'SharePoint subsite not enabled for this course. Cannot create a subsite.';
-            \local_o365\utils::debug($errmsg, 'rest\sharepoint\update_course_site', $course->id);
+            \local_o365\utils::debug($errmsg, __METHOD__, $course->id);
             return false;
         } else {
             $requiredcapability = static::get_course_site_required_capability();
@@ -789,7 +787,7 @@ class sharepoint extends \local_o365\rest\o365api {
         $spsite = $DB->get_record('local_o365_coursespsite', ['courseid' => $courseid]);
         if (empty($spsite)) {
             $errmsg = 'Did not update SharePoint course site because we found no record of one.';
-            \local_o365\utils::debug($errmsg, 'rest\sharepoint\update_course_site', $courseid);
+            \local_o365\utils::debug($errmsg, __METHOD__, $courseid);
             return false;
         }
 
@@ -826,7 +824,7 @@ class sharepoint extends \local_o365\rest\o365api {
         if (empty($spsite)) {
             // No site created (that we know about).
             $errmsg = 'Did not delete course SharePoint site because no record of a SharePoint site for that course was found.';
-            \local_o365\utils::debug($errmsg, 'rest\sharepoint\delete_course_site', $courseid);
+            \local_o365\utils::debug($errmsg, __METHOD__, $courseid);
             return false;
         }
         $this->set_site($spsite->siteurl);

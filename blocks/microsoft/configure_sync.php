@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page allow authorised users to configure course sync to Teams/group.
+ * This page allows authorised users to configure course sync to Microsoft.
  *
  * @package block_microsoft
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -40,12 +40,12 @@ $PAGE->set_context($coursecontext);
 $redirecturl = new moodle_url('/course/view.php', ['id' => $courseid]);
 
 // Validations.
-$sitecoursesyncconfig = get_config('local_o365', 'createteams');
+$sitecoursesyncconfig = get_config('local_o365', 'coursesync');
 if ($sitecoursesyncconfig != 'oncustom') {
     throw new moodle_exception('error_course_sync_not_configurable_per_course', 'block_microsoft', $redirecturl);
 }
 
-if (!get_config('local_o365', 'createteams_per_course')) {
+if (!get_config('local_o365', 'course_sync_per_course')) {
     throw new moodle_exception('error_course_sync_not_configurable_per_course', 'block_microsoft', $redirecturl);
 }
 

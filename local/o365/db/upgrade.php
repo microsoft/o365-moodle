@@ -589,8 +589,8 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($oldversion < 2018051702) {
-        $createteamssetting = get_config('local_o365', 'creategroups');
-        set_config('createteams', $createteamssetting, 'local_o365');
+        $coursesyncsetting = get_config('local_o365', 'creategroups');
+        set_config('createteams', $coursesyncsetting, 'local_o365');
         upgrade_plugin_savepoint(true, '2018051702', 'local', 'o365');
     }
 
@@ -798,6 +798,85 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2021051717, 'local', 'o365');
+    }
+
+    if ($oldversion < 2021051718) {
+        $pluginsettings = get_config('local_o365');
+
+        // Delete local_o365_coursegroupdata / local_o365_groupdata table.
+        $table = new xmldb_table('local_o365_coursegroupdata');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+        $table = new xmldb_table('local_o365_groupdata');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Rename "createteams" to "coursesync".
+        if (isset($pluginsettings->createteams)) {
+            if (!isset($pluginsettings->coursesync)) {
+                set_config('coursesync', $pluginsettings->createteams, 'local_o365');
+            }
+            unset_config('createteams', 'local_o365');
+        }
+
+        // Rename "usergroupcustom" to "coursesynccustom".
+        if (isset($pluginsettings->usergroupcustom)) {
+            if (!isset($pluginsettings->coursesynccustom)) {
+                set_config('coursesynccustom', $pluginsettings->usergroupcustom, 'local_o365');
+            }
+            unset_config('usergroupcustom', 'local_o365');
+        }
+
+        // Temporarily rename "usergroupcustomfeatures" to "coursesynccustomfeatures" - to be deleted.
+        if (isset($pluginsettings->usergroupcustomfeatures)) {
+            if (!isset($pluginsettings->coursesynccustomfeatures)) {
+                set_config('coursesynccustomfeatures', $pluginsettings->usergroupcustomfeatures, 'local_o365');
+            }
+            unset_config('usergroupcustomfeatures', 'local_o365');
+        }
+
+        // Rename "createteams_per_course" to "course_sync_per_course".
+        if (isset($pluginsettings->createteams_per_course)) {
+            if (!isset($pluginsettings->course_sync_per_course)) {
+                set_config('course_sync_per_course', $pluginsettings->createteams_per_course, 'local_o365');
+            }
+            unset_config('createteams_per_course', 'local_o365');
+        }
+
+        // Delete setting "coursesynccustomfeatures".
+        if (isset($pluginsettings->coursesynccustomfeatures)) {
+            unset_config('coursesynccustomfeatures', 'local_o365');
+        }
+
+        // Delete setting "group_creation_fallback".
+        if (isset($pluginsettings->group_creation_fallback)) {
+            unset_config('group_creation_fallback', 'local_o365');
+        }
+
+        // Delete setting "prefer_class_team".
+        if (isset($pluginsettings->prefer_class_team)) {
+            unset_config('prefer_class_team', 'local_o365');
+        }
+
+        // If the tenant has education license, stamp with class details.
+        if (!isset($pluginsettings->education_group_params_set)) {
+            set_config('education_group_params_set', time(), 'local_o365');
+            local_o365\feature\coursesync\utils::migrate_existing_groups();
+        }
+
+        // Define field locked to be added to local_o365_teams_cache.
+        $table = new xmldb_table('local_o365_teams_cache');
+        $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'url');
+
+        // Conditionally launch add field locked.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2021051718, 'local', 'o365');
     }
 
     return true;

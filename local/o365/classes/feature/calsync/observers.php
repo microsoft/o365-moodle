@@ -55,7 +55,7 @@ class observers {
      */
     public static function handle_user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
         global $DB;
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
 
@@ -109,7 +109,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_event_created(\core\event\calendar_event_created $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
         if (static::$importingevents === true) {
@@ -127,7 +127,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_event_updated(\core\event\calendar_event_updated $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
         $calsync = new \local_o365\feature\calsync\main();
@@ -141,7 +141,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_event_deleted(\core\event\calendar_event_deleted $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
         $calsync = new \local_o365\feature\calsync\main();
@@ -155,7 +155,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_subscribed(\local_o365\event\calendar_subscribed $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
         $eventdata = $event->get_data();
@@ -177,7 +177,7 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_calendar_unsubscribed(\local_o365\event\calendar_unsubscribed $event) {
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
         $eventdata = $event->get_data();

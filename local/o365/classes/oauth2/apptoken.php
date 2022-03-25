@@ -100,18 +100,19 @@ class apptoken extends \local_o365\oauth2\token {
                 'tokenresult' => $tokenresult,
                 'resource' => $tokenresource
             ];
-            \local_o365\utils::debug($errmsg, 'local_o365\oauth2\token::get_for_new_resource', $debuginfo);
+            \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
             return false;
         }
     }
 
     /**
-     * Refresh the appication only token.
+     * Refresh the application only token.
      *
      * @return bool Success/Failure.
      */
     public function refresh() {
         $result = static::get_app_token($this->tokenresource, $this->clientdata, $this->httpclient);
+
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $originaltokenresource = $this->tokenresource;
             $this->token = $result['access_token'];

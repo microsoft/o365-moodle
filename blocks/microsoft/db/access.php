@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Access defintions
+ * Access definitions.
+ *
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -41,22 +42,5 @@ $capabilities = [
             'manager' => CAP_ALLOW
         ],
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
-    ],
-    'block/microsoft:managegroups' => [
-        'riskbitmask' => RISK_SPAM | RISK_XSS,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ],
-    ],
-    'block/microsoft:viewgroups' => [
-        'riskbitmask' => RISK_SPAM | RISK_XSS,
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'student' => CAP_ALLOW,
-        ],
     ],
 ];

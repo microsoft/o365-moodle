@@ -47,7 +47,7 @@ class importfromoutlook extends \core\task\scheduled_task {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/calendar/lib.php');
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
 
@@ -74,7 +74,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                     foreach ($events as $event) {
                         if (!isset($event['Id'])) {
                             $errmsg = 'Skipped an event because of malformed data.';
-                            \local_o365\utils::debug($errmsg, 'importfromoutlook', $event);
+                            \local_o365\utils::debug($errmsg, __METHOD__, $event);
                             mtrace($errmsg);
                             continue;
                         }
@@ -129,7 +129,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                     mtrace('No new events to sync in.');
                 }
             } catch (\Exception $e) {
-                \local_o365\utils::debug('Error syncing events: '.$e->getMessage(), 'importfromoutlook', $e);
+                \local_o365\utils::debug('Error syncing events: ' . $e->getMessage(), __METHOD__, $e);
                 mtrace('Error: '.$e->getMessage());
             }
         }

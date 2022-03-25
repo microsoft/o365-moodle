@@ -15,9 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language Strings
+ * English Language Strings.
+ *
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
@@ -31,9 +33,7 @@ $string['linksways'] = 'My Sways';
 $string['linkmsstream'] = 'Microsoft Stream';
 $string['linkmsteams'] = 'Microsoft Teams';
 $string['linkemail'] = 'My Email';
-$string['linkdocsdotcom'] = 'My Docs.com';
 $string['linkonenote_unavailable'] = 'OneNote unavailable';
-$string['linkcoursegroup'] = 'Course Group';
 $string['linksharepoint'] = 'Course SharePoint site';
 $string['linkoutlook'] = 'Outlook Calendar sync settings';
 $string['linkprefs'] = 'Edit settings';
@@ -41,8 +41,6 @@ $string['linkconnection'] = 'Microsoft 365 connection settings';
 $string['microsoft'] = 'Microsoft';
 $string['microsoft:addinstance'] = 'Add a new Microsoft block';
 $string['microsoft:myaddinstance'] = 'Add a New Microsoft block to the My Moodle page';
-$string['microsoft:viewgroups'] = 'Allow the ability to view the groups control panel';
-$string['microsoft:managegroups'] = 'Allow the ability to manage groups';
 $string['notebookname'] = 'Moodle Notebook';
 $string['opennotebook'] = 'Open your notebook';
 $string['workonthis'] = 'Work on this';
@@ -53,16 +51,16 @@ $string['o365matched_complete_authreq'] = 'To complete the connection, please cl
 $string['o365connected'] = '{$a->firstname} you are currently <span class="notifysuccess">connected</span> to Microsoft 365';
 $string['notconnected'] = 'You are <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['course_connected_to_team'] = 'The course is <span class="notifysuccess">connected</span> to a <b>Team</b>.';
-$string['course_connected_to_team_missing'] = 'The course is configured to be connected to a <b>Team</b>, but the Team is <span class="notifyproblem">not found</span>.';
-$string['course_connected_to_group'] = 'The course is <span class="notifysuccess">connected</span> to a <b>group</b>.';
-$string['course_connected_to_group_missing'] = 'The course is configured to be connected to a <b>group</b>, but the group is <span class="notifyproblem">not found</span>.';
+$string['course_connected_to_team_pending'] = 'The course is configured to be connected to a <b>Team</b>, but the Team creation is <span class="notifyproblem">pending</span>.';
+$string['course_connected_to_group_pending'] = 'The course is configured to be connected to a <b>Team</b>, but the group creation is <span class="notifyproblem">pending</span>.';
 $string['course_not_connected'] = 'The course is <span class="notifyproblem">not connected</span> to any Microsoft services.';
 $string['cachedef_onenotenotebook'] = 'Stores OneNote notebook.';
-$string['cachedef_groups'] = 'Caches Microsoft 365 group information.';
 $string['msalogin'] = 'Log in with Microsoft Account';
 $string['logintoo365'] = 'Log in to Microsoft 365';
 $string['connecttoo365'] = 'Connect to Microsoft 365';
-$string['geto365'] = 'Install Office';
+$string['install_office'] = 'Install Office';
+
+// Configuration settings.
 $string['settings_showemail'] = 'Show "My Email"';
 $string['settings_showemail_desc'] = 'Enable or disable the "My Email" link in the block.';
 $string['settings_showmydelve'] = 'Show "My Delve"';
@@ -94,13 +92,11 @@ $string['settings_showmanageo365conection'] = 'Show "Microsoft 365 connection se
 $string['settings_showmanageo365conection_desc'] = 'Enable or disable the "Microsoft 365 connection settings" link in the block. <br /><b>Note:</b> This is shown to Microsoft 365 connected users and takes them to connection management page.';
 $string['settings_showcoursespsite'] = 'Show "Course SharePoint site"';
 $string['settings_showcoursespsite_desc'] = 'Enable or disable the "Course SharePoint site" link in the block. <br /><b>Note:</b> This is shown in the block when viewing a course that has an associated SharePoint site.';
-$string['settings_showcoursegroup'] = 'Show "Course Group"';
-$string['settings_showcoursegroup_desc'] = 'Enable or disable the "Course Group" link in the block. <br /><b>Note:</b> This is shown when viewing a course that has an associated Microsoft 365 group.';
 $string['defaultprofile'] = 'Profile image';
-$string['groupsnotenabledforcourse'] = 'Office Groups are not enabled for this course.';
 $string['settings_geto365link'] = 'Install Office download URL';
 $string['settings_geto365link_desc'] = 'The URL to use for the "Install Office" link.';
 $string['settings_geto365link_default'] = 'https://portal.office.com/OLS/MySoftware.aspx';
+
 $string['linkmydelve'] = 'My Delve';
 $string['linkmyforms'] = 'My Forms';
 $string['privacy:metadata'] = 'The Microsoft block only displays links to various features and services.';
@@ -114,38 +110,29 @@ $string['course_feature_notebook'] = 'Class notebook';
 
 // Course sync settings.
 $string['configure_sync'] = 'Configure course sync';
-$string['error_course_sync_not_configurable_per_course'] = 'Teams/Groups sync cannot be configured per course.';
-$string['sync_page_heading'] = 'Sync course {$a} to Microsoft 365 Teams/Groups';
-$string['configure_course_sync'] = 'Configure course sync to Microsoft 365 Teams/Groups';
+$string['error_course_sync_not_configurable_per_course'] = 'Course sync cannot be configured per course.';
+$string['sync_page_heading'] = 'Sync course {$a} to Microsoft Teams';
+$string['configure_course_sync'] = 'Configure course sync to Microsoft Team';
 $string['course_sync_option'] = 'Sync option';
-$string['course_sync_option_not_synced'] = 'Not synced';
-$string['course_sync_option_groups'] = 'Microsoft 365 Groups only';
-$string['course_sync_option_teams'] = 'Microsoft 365 Teams';
+$string['course_sync_option_disabled'] = 'Disabled';
+$string['course_sync_option_enabled'] = 'Enabled';
 $string['sync_setting_saved'] = 'Course sync option is saved';
 
 // Course reset status.
-$string['course_reset_disconnect_team'] = 'When the course is reset, the Team connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
-$string['course_reset_disconnect_group'] = 'When the course is reset, the group connected to the course will be renamed as configured. A new group will be created and connected to the course.';
-$string['course_reset_do_nothing_team'] = 'When the course is reset, the connection between the course and the Team will remain. All user changes made to the course will be synced to the Team.';
-$string['course_reset_do_nothing_group'] = 'When the course is reset, the connection between the course and the group will remain. All user changes made to the course will be synced to the group.';
-$string['configure_reset_team'] = 'Choose Team action on course reset';
-$string['configure_reset_group'] = 'Choose group action on course reset';
+$string['course_reset_disconnect_and_create_new'] = 'When the course is reset, the Team  connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
+$string['course_reset_do_nothing'] = 'When the course is reset, the connection between the course and the Team will remain. All user changes made to the course will be synced to the Team.';
+$string['course_reset_disconnect_only'] = 'When the course is reset, the Team  connected to the course will be renamed as configured, and archived. No new Team will be created.';
+$string['configure_reset'] = 'Choose Microsoft Team action on course reset';
 
 // Course reset settings page.
-$string['reset_page_heading_team'] = 'Team reset action for course {$a}';
-$string['reset_page_heading_group'] = 'Group reset action for course {$a}';
+$string['reset_page_heading'] = 'Course reset action for {$a}';
 $string['configure_course_reset'] = 'Configure course reset setting';
-$string['course_reset_team_option'] = 'Action to the Team when resetting the course';
-$string['course_reset_group_option'] = 'Action to the group when resetting the course';
-$string['teams_reset_option_do_nothing'] = 'Do nothing.<br/>The Team is still connected to the course. User unenrolments will result in user Team membership removal.';
-$string['teams_reset_option_disconnect'] = 'Disconnect and create a new Team.<br/>The existing Team connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
-$string['teams_reset_option_disconnect_only'] = 'Disconnect only.<br/>The existing Team connected to the course will be renamed as configured, and archived. No new Team will be created.';
-$string['group_reset_option_do_nothing'] = 'Do nothing.<br/>The group is still connected to the course. User unenrolments will result in user group membership removal.';
-$string['group_reset_option_disconnect'] = 'Disconnect and create a new group.<br/>The existing group connected to the course will be disconnected and renamed as configured. A new group will be created and connected to the course.';
-$string['group_reset_option_disconnect_only'] = 'Disconnect only.<br/>The existing group connected to the course will be disconnected and renamed as configured. No new group will be created.';
+$string['course_reset_option'] = 'Action to the Team when resetting the course';
+$string['reset_option_do_nothing'] = 'Do nothing.<br/>The Team will still be connected to the course. User unenrolments will result in user Team ownership/membership removal.';
+$string['reset_option_disconnect_and_create_new'] = 'Disconnect and create a new Team.<br/>The existing Team connected to the course will be renamed as configured, and archived. A new Team will be created and connected to the course.';
+$string['reset_option_disconnect_only'] = 'Disconnect only.<br/>The existing Team connected to the course will be renamed as configured, and archived. No new Team will be created.';
 $string['reset_setting_saved'] = 'Course reset setting has been saved.';
 $string['error_site_course_sync_disabled'] = 'Course sync is not enabled';
 $string['error_reset_setting_not_managed_per_course'] = 'Reset action configuration is centrally managed by site administrators.';
-$string['error_connected_team_missing'] = 'The course is configured to be synced to a Team, but the Team cannot be found.';
-$string['error_connected_group_missing'] = 'The course is configured to be synced to a group, but the group cannot be found.';
-$string['error_course_sync_disabled'] = 'The course is not configured to be synced to a Team or group.';
+$string['error_connected_team_missing'] = 'The course is configured to be synced, but the Team cannot be found.';
+$string['error_course_sync_disabled'] = 'The course is not configured to be synced.';
