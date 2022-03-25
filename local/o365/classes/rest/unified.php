@@ -913,29 +913,16 @@ class unified extends \local_o365\rest\o365api {
      * Get user groups by passing user AD id.
      *
      * @param string $userobjectid - user AD id
-     * @param string $skiptoken
      * @return array|null
      */
-    public function get_user_groups($userobjectid, $skiptoken = '') {
+    public function get_user_groups($userobjectid) {
         $endpoint = "users/$userobjectid/transitiveMemberOf/microsoft.graph.group";
-
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
         $response = $this->apicall('get', $endpoint);
         if ($this->httpclient->info['http_code'] == 200) {
             $result = $this->process_apicall_response($response, ['value' => null]);
             return $result;
         } else {
-            return ['value' => null];
+            return ['value' => []];
         }
     }
 
@@ -943,22 +930,10 @@ class unified extends \local_o365\rest\o365api {
      * Get user groups, including transitive groups, by passing user AD ID.
      *
      * @param string $userobjectid
-     * @param string $skiptoken
      * @return mixed
      */
-    public function get_user_transitive_groups($userobjectid, $skiptoken = '') {
+    public function get_user_transitive_groups($userobjectid) {
         $endpoint = "users/$userobjectid/getMemberGroups";
-
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
 
         $response = $this->apicall('post', $endpoint, json_encode(['securityEnabledOnly' => false]));
         $result = $this->process_apicall_response($response, ['value' => null]);
@@ -969,22 +944,10 @@ class unified extends \local_o365\rest\o365api {
     /**
      * Get user teams by passing user AD id
      * @param string $userobjectid - user AD id
-     * @param string $skiptoken
      * @return array|null
      */
-    public function get_user_teams($userobjectid, $skiptoken = '') {
+    public function get_user_teams($userobjectid) {
         $endpoint = "users/$userobjectid/joinedTeams";
-
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
 
         $response = $this->apicall('get', $endpoint);
         $result = $this->process_apicall_response($response, ['value' => null]);
@@ -1094,15 +1057,15 @@ class unified extends \local_o365\rest\o365api {
      * @param string $skiptoken
      * @return array|null Returned response, or null if error.
      */
-    public function get_calendars($upn, $skiptoken = '') {
+    public function get_calendars($upn, $skip = '') {
         $endpoint = '/users/' . $upn . '/calendars';
 
         $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
+        if (empty($skip) || !is_string($skip)) {
+            $skip = '';
         }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        if (!empty($skip)) {
+            $odataqueries[] = '$skip=' . $skip;
         }
         if (!empty($odataqueries)) {
             $endpoint .= '?' . implode('&', $odataqueries);
@@ -1277,20 +1240,20 @@ class unified extends \local_o365\rest\o365api {
      * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
      * @param string $since datetime date('c') to get events since.
      * @param string $upn user's userPrincipalName
-     * @param string $skiptoken
+     * @param string $skip
      * @return array Array of events.
      */
-    public function get_events($calendarid, $since, $upn, $skiptoken = '') {
+    public function get_events($calendarid, $since, $upn, $skip = '') {
         \core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
             '/users/' . $upn . '/calendar/events';
 
         $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
+        if (empty($skip) || !is_string($skip)) {
+            $skip = '';
         }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
+        if (!empty($skip)) {
+            $odataqueries[] = '$skip=' . $skip;
         }
         if (!empty($since)) {
             // Pass datetime in UTC, regardless of Moodle timezone setting.
