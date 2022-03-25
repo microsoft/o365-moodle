@@ -310,6 +310,7 @@ $string['settings_usersynccreationrestriction_regex'] = 'Value is a regular expr
 $string['settings_maintenance'] = 'Maintenance';
 $string['settings_maintenance_details'] = 'Various maintenance tasks are available to resolve some common issues.';
 $string['settings_maintenance_linktext'] = 'View maintenance tools';
+$string['multi_tenants_settings_needs_update'] = 'Multi tenants settings needs to be updated. Please go to <a href="{$a}">multi tenants configuration page</a>.';
 
 // Settings in "Configure additional tenants" feature of the "Advanced" tab.
 $string['acp_tenants_title'] = 'Multitenancy';
@@ -336,8 +337,13 @@ $string['acp_tenants_none'] = 'You have not configured any tenants. If you have 
 $string['acp_tenants_revokeaccess'] = 'Revoke Access';
 $string['acp_tenants_tenant'] = 'Tenant';
 $string['acp_tenants_actions'] = 'Actions';
+$string['acp_tenants_delete'] = 'Delete';
 $string['acp_tenantsadd_desc'] = 'To grant access to an additional tenant, click the button below and log in to Microsoft 365 using an adminitrator account of the new tenant. You will be returned to the list of additional tenants where the new tenant will be listed. You will then be able to use Moodle with the new tenant.';
 $string['acp_tenantsadd_linktext'] = 'Proceed to Microsoft 365 login page';
+$string['acp_tenants_additional_tenants'] = 'Additional tenants';
+$string['acp_tenants_legacy_tenants'] = 'Legacy tenants (Action required)';
+$string['acp_tenants_legacy_tenants_help'] = 'Additional tenants below added previously may not work in the updated multitenancy workflow, and need to be fixed.<br/>
+Please use the "Add New Tenant" button above to add again.';
 
 // Settings in the "Health check" feature of the "Advanced" tab.
 $string['acp_healthcheck'] = 'Health Check';

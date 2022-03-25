@@ -26,6 +26,10 @@
 
 namespace local_o365\page;
 
+use html_table;
+use html_writer;
+use local_o365\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -106,7 +110,7 @@ class acp extends base {
         if (empty($config->aadtenant)) {
             return false;
         }
-        if (\local_o365\utils::is_configured_apponlyaccess() === true || !empty($config->systemtokens)) {
+        if (utils::is_configured_apponlyaccess() === true || !empty($config->systemtokens)) {
             return true;
         }
         return false;
@@ -118,29 +122,29 @@ class acp extends base {
     public function mode_tenants() {
         global $CFG;
         $this->standard_header();
-        echo \html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
-        echo \html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
-        echo \html_writer::empty_tag('br');
+        echo html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
+        echo html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
         $config = get_config('local_o365');
         if ($this->checktenantsetup() !== true) {
             $errmsg = get_string('acp_tenants_errornotsetup', 'local_o365');
-            echo \html_writer::div($errmsg, 'alert alert-info');
+            echo html_writer::div($errmsg, 'alert alert-info');
             $this->standard_footer();
             return;
         }
 
         $multitenantdesc = get_string('acp_tenants_intro', 'local_o365', $CFG->wwwroot);
-        echo \html_writer::div($multitenantdesc, 'alert alert-info');
+        echo html_writer::div($multitenantdesc, 'alert alert-info');
 
-        echo \html_writer::empty_tag('br');
+        echo html_writer::empty_tag('br');
         $hosttenantstr = get_string('acp_tenants_hosttenant', 'local_o365', $config->aadtenant);
-        $hosttenanthtml = \html_writer::tag('h4', $hosttenantstr);
-        echo \html_writer::div($hosttenanthtml, '');
-        echo \html_writer::empty_tag('br');
+        $hosttenanthtml = html_writer::tag('h4', $hosttenantstr);
+        echo html_writer::div($hosttenanthtml, '');
+        echo html_writer::empty_tag('br');
 
         $addtenantstr = get_string('acp_tenants_add', 'local_o365');
         $addtenanturl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenantsadd']);
-        echo \html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
+        echo html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
 
         $configuredtenants = get_config('local_o365', 'multitenants');
         if (!empty($configuredtenants)) {
@@ -151,52 +155,88 @@ class acp extends base {
         }
 
         if (!empty($configuredtenants)) {
-            $table = new \html_table;
+            echo html_writer::empty_tag('hr');
+            echo html_writer::tag('h4', get_string('acp_tenants_additional_tenants', 'local_o365'));
+
+            $table = new html_table();
             $table->head[] = get_string('acp_tenants_tenant', 'local_o365');
             $table->head[] = get_string('acp_tenants_actions', 'local_o365');
             $revokeaccessstr = get_string('acp_tenants_revokeaccess', 'local_o365');
-            foreach ($configuredtenants as $configuredtenant) {
+            foreach ($configuredtenants as $tenantid => $tenantdomains) {
                 $revokeurlparams = [
                     'mode' => 'tenantsrevoke',
-                    't' => base64_encode($configuredtenant),
+                    't' => base64_encode($tenantid),
                     'sesskey' => sesskey(),
                 ];
                 $revokeurl = new \moodle_url('/local/o365/acp.php', $revokeurlparams);
                 $table->data[] = [
-                    $configuredtenant,
-                    \html_writer::link($revokeurl, $revokeaccessstr),
+                    implode(', ', $tenantdomains),
+                    html_writer::link($revokeurl, $revokeaccessstr),
                 ];
             }
-            echo \html_writer::table($table);
+            echo html_writer::table($table);
         } else {
             $emptytenantstr = get_string('acp_tenants_none', 'local_o365');
-            echo \html_writer::empty_tag('br');
-            echo \html_writer::empty_tag('br');
-            echo \html_writer::div($emptytenantstr, 'alert alert-error');
+            echo html_writer::empty_tag('br');
+            echo html_writer::empty_tag('br');
+            echo html_writer::div($emptytenantstr, 'alert alert-error');
+        }
+
+        // Show legacy tenants table.
+        $legacyconfiguredtenants = get_config('local_o365', 'legacymultitenants');
+
+        if (!empty($legacyconfiguredtenants)) {
+            $legacyconfiguredtenants = json_decode($legacyconfiguredtenants, true);
+            if (!is_array($legacyconfiguredtenants)) {
+                $legacyconfiguredtenants = [];
+            }
+        }
+
+        if (!empty($legacyconfiguredtenants)) {
+            echo html_writer::empty_tag('hr');
+            echo html_writer::tag('h4', get_string('acp_tenants_legacy_tenants', 'local_o365'));
+            echo html_writer::div(get_string('acp_tenants_legacy_tenants_help', 'local_o365'), 'warning');
+
+            $table = new html_table();
+            $table->head[] = get_string('acp_tenants_tenant', 'local_o365');
+            $table->head[] = get_string('acp_tenants_actions', 'local_o365');
+            foreach ($legacyconfiguredtenants as $configuredtenant) {
+                $deleturlparams = [
+                    'mode' => 'tenantsdeletelegacy',
+                    't' => base64_encode($configuredtenant),
+                    'sesskey' => sesskey(),
+                ];
+                $deleteurl = new \moodle_url('/local/o365/acp.php', $deleturlparams);
+                $table->data[] = [
+                    $configuredtenant,
+                    html_writer::link($deleteurl, get_string('acp_tenants_delete', 'local_o365')),
+                ];
+            }
+            echo html_writer::table($table);
         }
 
         $this->standard_footer();
     }
 
     /**
-     * Description page shown before adding an additional tenant.
+     * Description page shown before adding a new tenant.
      */
     public function mode_tenantsadd() {
         $this->standard_header();
-        echo \html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
-        echo \html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
-        echo \html_writer::empty_tag('br');
+        echo html_writer::tag('h2', get_string('acp_tenants_title', 'local_o365'));
+        echo html_writer::div(get_string('acp_tenants_title_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
         if ($this->checktenantsetup() !== true) {
             $errmsg = get_string('acp_tenants_errornotsetup', 'local_o365');
-            echo \html_writer::div($errmsg, 'alert alert-info');
+            echo html_writer::div($errmsg, 'alert alert-info');
             $this->standard_footer();
             return;
         }
-        echo \html_writer::div(get_string('acp_tenantsadd_desc', 'local_o365'));
-        echo \html_writer::empty_tag('br');
+        echo html_writer::div(get_string('acp_tenantsadd_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
         $addtenantstr = get_string('acp_tenantsadd_linktext', 'local_o365');
         $addtenanturl = new \moodle_url('/local/o365/acp.php', ['mode' => 'tenantsaddgo']);
-        echo \html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
+        echo html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
 
         $this->standard_footer();
     }
@@ -206,10 +246,23 @@ class acp extends base {
      */
     public function mode_tenantsrevoke() {
         require_sesskey();
+        $tenantid = required_param('t', PARAM_TEXT);
+        $tenantid = (string)base64_decode($tenantid);
+        utils::disableadditionaltenant($tenantid);
+        redirect(new \moodle_url('/local/o365/acp.php', ['mode' => 'tenants']));
+    }
+
+    /**
+     * Delete a legacy tenant form the legacy configuration settings.
+     *
+     * @return void
+     */
+    public function mode_tenantsdeletelegacy() {
+        require_sesskey();
         $tenant = required_param('t', PARAM_TEXT);
         $tenant = (string)base64_decode($tenant);
-        \local_o365\utils::disableadditionaltenant($tenant);
-        redirect(new \moodle_url('/local/o365/acp.php?mode=tenants'));
+        utils::deletelegacyadditionaltenant($tenant);
+        redirect(new \moodle_url('/local/o365/acp.php', ['mode' => 'tenants']));
     }
 
     /**
@@ -235,7 +288,7 @@ class acp extends base {
     public function mode_healthcheck() {
         $this->standard_header();
 
-        echo \html_writer::tag('h2', get_string('acp_healthcheck', 'local_o365'));
+        echo html_writer::tag('h2', get_string('acp_healthcheck', 'local_o365'));
         echo '<br />';
 
         $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
@@ -265,7 +318,7 @@ class acp extends base {
                 echo '<div class="alert '.$severityclass.'">';
                 echo $result['message'];
                 if (isset($result['fixlink'])) {
-                    echo '<br /><br />'.\html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));
+                    echo '<br /><br />'. html_writer::link($result['fixlink'], get_string('healthcheck_fixlink', 'local_o365'));
                 }
                 echo '</div><br />';
             }
@@ -368,28 +421,28 @@ class acp extends base {
 
         $PAGE->requires->jquery();
         $this->standard_header();
-        echo \html_writer::tag('h2', get_string('acp_usermatch', 'local_o365'));
-        echo \html_writer::div(get_string('acp_usermatch_desc', 'local_o365'));
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::tag('h4', get_string('acp_usermatch_upload', 'local_o365'));
-        echo \html_writer::div(get_string('acp_usermatch_upload_desc', 'local_o365'));
-        echo \html_writer::empty_tag('br');
+        echo html_writer::tag('h2', get_string('acp_usermatch', 'local_o365'));
+        echo html_writer::div(get_string('acp_usermatch_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
+        echo html_writer::empty_tag('br');
+        echo html_writer::tag('h4', get_string('acp_usermatch_upload', 'local_o365'));
+        echo html_writer::div(get_string('acp_usermatch_upload_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
         if (!empty($SESSION->o365matcherrors)) {
             foreach ($SESSION->o365matcherrors as $error) {
-                echo \html_writer::div($error, 'alert-error alert local_o365_statusmessage');
+                echo html_writer::div($error, 'alert-error alert local_o365_statusmessage');
             }
             $SESSION->o365matcherrors = [];
         }
         $mform->display();
 
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::tag('h4', get_string('acp_usermatch_matchqueue', 'local_o365'));
-        echo \html_writer::div(get_string('acp_usermatch_matchqueue_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
+        echo html_writer::tag('h4', get_string('acp_usermatch_matchqueue', 'local_o365'));
+        echo html_writer::div(get_string('acp_usermatch_matchqueue_desc', 'local_o365'));
         $matchqueuelength = $DB->count_records('local_o365_matchqueue');
         if ($matchqueuelength > 0) {
 
-            echo \html_writer::start_tag('div', ['class' => 'local_o365_matchqueuetoolbar']);
+            echo html_writer::start_tag('div', ['class' => 'local_o365_matchqueuetoolbar']);
 
             $clearurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'usermatchclear']);
             $clearurl = $clearurl->out();
@@ -399,41 +452,41 @@ class acp extends base {
             $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.success\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'success\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearsuccess', 'local_o365');
-            echo \html_writer::tag('button', $checkicon.' '.$buttontext, $attrs);
+            echo html_writer::tag('button', $checkicon.' '.$buttontext, $attrs);
 
             // Clear error button.
             $warningicon = $OUTPUT->pix_icon('i/warning', 'warning', 'moodle');
             $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.error\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'error\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearerrors', 'local_o365');
-            echo \html_writer::tag('button', $warningicon.' '.$buttontext, $attrs);
+            echo html_writer::tag('button', $warningicon.' '.$buttontext, $attrs);
 
             // Clear warning button.
             $queuedicon = $OUTPUT->pix_icon('i/scheduled', 'warning', 'moodle');
             $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr.queued\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'queued\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearqueued', 'local_o365');
-            echo \html_writer::tag('button', $queuedicon.' '.$buttontext, $attrs);
+            echo html_writer::tag('button', $queuedicon.' '.$buttontext, $attrs);
 
             // Clear all button.
             $removeicon = $OUTPUT->pix_icon('t/delete', 'warning', 'moodle');
             $clearcallback = '$(\'table.local_o365_matchqueue\').find(\'tr:not(:first-child)\').fadeOut();';
             $attrs = ['onclick' => '$.post(\''.$clearurl.'\', {type:\'all\'}, function(data) { '.$clearcallback.' })'];
             $buttontext = get_string('acp_usermatch_matchqueue_clearall', 'local_o365');
-            echo \html_writer::tag('button', $removeicon.' '.$buttontext, $attrs);
+            echo html_writer::tag('button', $removeicon.' '.$buttontext, $attrs);
 
-            echo \html_writer::end_tag('div');
+            echo html_writer::end_tag('div');
 
             $matchqueue = $DB->get_recordset('local_o365_matchqueue', null, 'id ASC');
             // Constructing table manually instead of \html_table for memory reasons.
-            echo \html_writer::start_tag('table', ['class' => 'local_o365_matchqueue']);
-            echo \html_writer::start_tag('tr');
-            echo \html_writer::tag('th', '');
-            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_muser', 'local_o365'));
-            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_o365user', 'local_o365'));
-            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_openidconnect', 'local_o365'));
-            echo \html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_status', 'local_o365'));
-            echo \html_writer::end_tag('tr');
+            echo html_writer::start_tag('table', ['class' => 'local_o365_matchqueue']);
+            echo html_writer::start_tag('tr');
+            echo html_writer::tag('th', '');
+            echo html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_muser', 'local_o365'));
+            echo html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_o365user', 'local_o365'));
+            echo html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_openidconnect', 'local_o365'));
+            echo html_writer::tag('th', get_string('acp_usermatch_matchqueue_column_status', 'local_o365'));
+            echo html_writer::end_tag('tr');
             foreach ($matchqueue as $queuerec) {
                 $status = 'queued';
                 $trclass = 'alert-info queued';
@@ -445,45 +498,45 @@ class acp extends base {
                     $trclass = 'alert-error error';
                 }
 
-                echo \html_writer::start_tag('tr', ['class' => $trclass]);
+                echo html_writer::start_tag('tr', ['class' => $trclass]);
 
                 switch ($status) {
                     case 'success':
-                        echo \html_writer::tag('td', $checkicon);
+                        echo html_writer::tag('td', $checkicon);
                         break;
 
                     case 'error':
-                        echo \html_writer::tag('td', $warningicon);
+                        echo html_writer::tag('td', $warningicon);
                         break;
 
                     default:
-                        echo \html_writer::tag('td', $queuedicon);
+                        echo html_writer::tag('td', $queuedicon);
                 }
 
-                echo \html_writer::tag('td', $queuerec->musername);
-                echo \html_writer::tag('td', $queuerec->o365username);
-                echo \html_writer::tag('td', $queuerec->openidconnect > 0 ? get_string('yes') : get_string('no'));
+                echo html_writer::tag('td', $queuerec->musername);
+                echo html_writer::tag('td', $queuerec->o365username);
+                echo html_writer::tag('td', $queuerec->openidconnect > 0 ? get_string('yes') : get_string('no'));
 
                 switch ($status) {
                     case 'success':
-                        echo \html_writer::tag('td', get_string('acp_usermatch_matchqueue_status_success', 'local_o365'));
+                        echo html_writer::tag('td', get_string('acp_usermatch_matchqueue_status_success', 'local_o365'));
                         break;
 
                     case 'error':
                         $statusstr = get_string('acp_usermatch_matchqueue_status_error', 'local_o365', $queuerec->errormessage);
-                        echo \html_writer::tag('td', $statusstr);
+                        echo html_writer::tag('td', $statusstr);
                         break;
 
                     default:
-                        echo \html_writer::tag('td', get_string('acp_usermatch_matchqueue_status_queued', 'local_o365'));
+                        echo html_writer::tag('td', get_string('acp_usermatch_matchqueue_status_queued', 'local_o365'));
                 }
-                echo \html_writer::end_tag('tr');
+                echo html_writer::end_tag('tr');
             }
-            echo \html_writer::end_tag('table');
+            echo html_writer::end_tag('table');
             $matchqueue->close();
         } else {
             $msgclasses = 'alert-info alert local_o365_statusmessage';
-            echo \html_writer::div(get_string('acp_usermatch_matchqueue_empty', 'local_o365'), $msgclasses);
+            echo html_writer::div(get_string('acp_usermatch_matchqueue_empty', 'local_o365'), $msgclasses);
         }
         $this->standard_footer();
     }
@@ -577,7 +630,7 @@ class acp extends base {
             $sortdir = 'asc';
         }
 
-        $table = new \html_table();
+        $table = new html_table();
         foreach ($headers as $hkey => $desc) {
             $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
             $linkattrs = ['mode' => 'usergroupcustom', 'sort' => $hkey, 'sortdir' => $diffsortdir];
@@ -586,7 +639,7 @@ class acp extends base {
             if ($sort === $hkey) {
                 $desc .= ' '.$OUTPUT->pix_icon('t/'.'sort_'.$sortdir, 'sort');
             }
-            $table->head[] = \html_writer::link($link, $desc);
+            $table->head[] = html_writer::link($link, $desc);
         }
         $table->head[] = get_string('acp_usergroupcustom_enabled', 'local_o365');
         $table->head[] = get_string('groups_team', 'local_o365');
@@ -637,10 +690,10 @@ class acp extends base {
             $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
 
             $rowdata = [
-                \html_writer::link($courseurl, $course->fullname),
+                html_writer::link($courseurl, $course->fullname),
                 $course->shortname,
-                \html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
-                \html_writer::checkbox($teamname, 1, $teamenabled, '', $teamcheckboxattrs),
+                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
+                html_writer::checkbox($teamname, 1, $teamenabled, '', $teamcheckboxattrs),
             ];
             $table->data[] = $rowdata;
         }
@@ -717,11 +770,11 @@ class acp extends base {
             }
         }); '."\n";
         $js .= '}; '."\n";
-        echo \html_writer::script($js);
-        echo \html_writer::tag('h2', get_string('acp_usergroupcustom', 'local_o365'));
+        echo html_writer::script($js);
+        echo html_writer::tag('h2', get_string('acp_usergroupcustom', 'local_o365'));
 
         // Option to enable all sync features on all pages.
-        echo \html_writer::tag('button', get_string('acp_usrgroupcustom_enable_all', 'local_o365'),
+        echo html_writer::tag('button', get_string('acp_usrgroupcustom_enable_all', 'local_o365'),
             ['onclick' => 'local_o365_usergroup_all_set_feature(1)']);
 
         // Option to enable sync by default for new courses.
@@ -735,33 +788,33 @@ class acp extends base {
         $strbulkenable = get_string('acp_usergroupcustom_bulk_enable', 'local_o365');
         $strbulkdisable = get_string('acp_usergroupcustom_bulk_disable', 'local_o365');
 
-        echo \html_writer::tag('h5', get_string('acp_usergroupcustom_bulk', 'local_o365'));
-        echo \html_writer::tag('h6', get_string('acp_usergroupcustom_bulk_help', 'local_o365'));
+        echo html_writer::tag('h5', get_string('acp_usergroupcustom_bulk', 'local_o365'));
+        echo html_writer::tag('h6', get_string('acp_usergroupcustom_bulk_help', 'local_o365'));
 
-        echo \html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
-        echo \html_writer::tag('span', get_string('groups_team', 'local_o365').': ');
-        echo \html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'teams\', 1)']);
-        echo \html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'teams\', 0)']);
-        echo \html_writer::end_tag('div');
+        echo html_writer::start_tag('div', ['style' => 'display: inline-block;margin: 0 1rem']);
+        echo html_writer::tag('span', get_string('groups_team', 'local_o365').': ');
+        echo html_writer::tag('button', $strbulkenable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'teams\', 1)']);
+        echo html_writer::tag('button', $strbulkdisable, ['onclick' => 'local_o365_usergroup_bulk_set_feature(\'teams\', 0)']);
+        echo html_writer::end_tag('div');
 
         // Search form.
-        echo \html_writer::tag('h5', get_string('search'));
-        echo \html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
-        echo \html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
-        echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'usergroupcustom']);
-        echo \html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search',
+        echo html_writer::tag('h5', get_string('search'));
+        echo html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
+        echo html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'usergroupcustom']);
+        echo html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search',
             'value' => s($search)]);
-        echo \html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
-        echo \html_writer::div(\html_writer::tag('strong', get_string('acp_usergroupcustom_searchwarning', 'local_o365')));
-        echo \html_writer::end_tag('fieldset');
-        echo \html_writer::end_tag('form');
-        echo \html_writer::empty_tag('br');
+        echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
+        echo html_writer::div(html_writer::tag('strong', get_string('acp_usergroupcustom_searchwarning', 'local_o365')));
+        echo html_writer::end_tag('fieldset');
+        echo html_writer::end_tag('form');
+        echo html_writer::empty_tag('br');
 
-        echo \html_writer::tag('h5', get_string('courses'));
-        echo \html_writer::table($table);
-        echo \html_writer::tag('p', get_string('acp_usergroupcustom_savemessage', 'local_o365'),
+        echo html_writer::tag('h5', get_string('courses'));
+        echo html_writer::table($table);
+        echo html_writer::tag('p', get_string('acp_usergroupcustom_savemessage', 'local_o365'),
             ['id' => 'acp_usergroupcustom_savemessage', 'style' => 'display: none; font-weight: bold; color: red']);
-        echo  \html_writer::tag('button', get_string('savechanges'),
+        echo  html_writer::tag('button', get_string('savechanges'),
             ['class' => 'buttonsbar', 'onclick' => 'local_o365_usergroup_save()']);
 
         $searchtext = optional_param('search', '', PARAM_TEXT);
@@ -805,7 +858,7 @@ class acp extends base {
             $sortdir = 'asc';
         }
 
-        $table = new \html_table();
+        $table = new html_table();
         foreach ($headers as $hkey => $desc) {
             $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
             $linkattrs = ['mode' => 'teamconnections', 'sort' => $hkey, 'sortdir' => $diffsortdir];
@@ -814,7 +867,7 @@ class acp extends base {
             if ($sort === $hkey) {
                 $desc .= ' ' . $OUTPUT->pix_icon('t/sort_' . $sortdir, 'sort');
             }
-            $table->head[] = \html_writer::link($link, $desc);
+            $table->head[] = html_writer::link($link, $desc);
         }
         $table->head[] = get_string('acp_teamconnections_connected_team', 'local_o365');
         $table->head[] = get_string('acp_teamconnections_actions', 'local_o365');
@@ -856,12 +909,12 @@ class acp extends base {
                     // Synced to both group and team.
                     if ($teamscache = $DB->get_record('local_o365_teams_cache', ['objectid' => $grouprecord->objectid])) {
                         // Team record can be found in cache.
-                        $existingconnection = \html_writer::link($teamscache->url, $teamscache->name);
+                        $existingconnection = html_writer::link($teamscache->url, $teamscache->name);
                         $updateurl = new \moodle_url('/local/o365/acp.php',
                             ['mode' => 'teamconnections_update', 'course' => $course->id, 'sesskey' => sesskey()]);
                         $updatelabel = get_string('acp_teamconnections_table_update', 'local_o365');
 
-                        $actions = [\html_writer::link($updateurl, $updatelabel)];
+                        $actions = [html_writer::link($updateurl, $updatelabel)];
                     } else {
                         // A matching record exists in local_o365_objects, but the team cannot be found.
                         // This may be caused by the connection was soft deleted.
@@ -870,7 +923,7 @@ class acp extends base {
                             ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]);
                         $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
 
-                        $actions = [\html_writer::link($connecturl, $connectlabel)];
+                        $actions = [html_writer::link($connecturl, $connectlabel)];
                     }
                 } else {
                     // Synced to group only.
@@ -882,21 +935,21 @@ class acp extends base {
                             ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]);
                         $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
 
-                        $actions = [\html_writer::link($connecturl, $connectlabel)];
+                        $actions = [html_writer::link($connecturl, $connectlabel)];
                     } else if ($teamscache = $DB->get_record('local_o365_teams_cache', ['objectid' => $grouprecord->objectid])) {
                         // A team is found for the synced group.
-                        $existingconnection = \html_writer::link($teamscache->url, $teamscache->name) . '<br/>' .
+                        $existingconnection = html_writer::link($teamscache->url, $teamscache->name) . '<br/>' .
                             get_string('acp_teamconnections_team_exists_but_not_connected', 'local_o365');
                         $completeconnectionurl = new \moodle_url('/local/o365/acp.php',
                             ['mode' => 'teamconnections_complete_connection', 'course' => $course->id, 'sesskey' => sesskey()]);
                         $completeconnectionlabel = get_string('acp_teamconnections_table_complete_connection', 'local_o365');
 
-                        $actions = [\html_writer::link($completeconnectionurl, $completeconnectionlabel)];
+                        $actions = [html_writer::link($completeconnectionurl, $completeconnectionlabel)];
 
                         $connecturl = new \moodle_url('/local/o365/acp.php',
                             ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]);
                         $connectlabel = get_string('acp_teamconnections_table_connect_to_different_team', 'local_o365');
-                        $actions[] = \html_writer::link($connecturl, $connectlabel);
+                        $actions[] = html_writer::link($connecturl, $connectlabel);
                     } else {
                         // A team does not exist for the synced group.
                         $teamownerids = \local_o365\feature\usergroups\coursegroups::get_team_owner_ids_by_course_id($course->id);
@@ -908,16 +961,16 @@ class acp extends base {
                                 ['mode' => 'teamconnections_create_team', 'course' => $course->id, 'sesskey' => sesskey()]);
                             $createteamlabel = get_string('acp_teamconnections_table_create_team', 'local_o365');
 
-                            $actions = [\html_writer::link($createteamurl, $createteamlabel)];
+                            $actions = [html_writer::link($createteamurl, $createteamlabel)];
                         } else {
-                            $actions = [\html_writer::span(get_string('acp_teamconnections_table_cannot_create_team_from_group',
+                            $actions = [html_writer::span(get_string('acp_teamconnections_table_cannot_create_team_from_group',
                                 'local_o365'))];
                         }
 
                         $connecturl = new \moodle_url('/local/o365/acp.php',
                             ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]);
                         $connectlabel = get_string('acp_teamconnections_table_connect_to_different_team', 'local_o365');
-                        $actions[] = \html_writer::link($connecturl, $connectlabel);
+                        $actions[] = html_writer::link($connecturl, $connectlabel);
                     }
                 }
             } else {
@@ -929,7 +982,7 @@ class acp extends base {
                         ['mode' => 'teamconnections_connect', 'course' => $course->id, 'sesskey' => sesskey()]);
                     $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
 
-                    $actions = [\html_writer::link($connecturl, $connectlabel)];
+                    $actions = [html_writer::link($connecturl, $connectlabel)];
                 }
             }
 
@@ -938,7 +991,7 @@ class acp extends base {
             $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
 
             $rowdata = [
-                \html_writer::link($courseurl, $course->fullname),
+                html_writer::link($courseurl, $course->fullname),
                 $course->shortname,
                 $existingconnection,
                 $actionsfield,
@@ -950,7 +1003,7 @@ class acp extends base {
         $PAGE->requires->jquery();
         $this->standard_header();
 
-        echo \html_writer::tag('h2', get_string('acp_teamconnections_title', 'local_o365'));
+        echo html_writer::tag('h2', get_string('acp_teamconnections_title', 'local_o365'));
 
         // Cache status.
         $teamscacheupdated = get_config('local_o365', 'teamscacheupdated');
@@ -959,26 +1012,26 @@ class acp extends base {
         $linkparams = ['updateurl' => $updatecacheurl->out()];
         if ($teamscacheupdated) {
             $linkparams['lastupdated'] = userdate($teamscacheupdated);
-            echo \html_writer::div(get_string('acp_teamconnections_cache_last_updated', 'local_o365', $linkparams));
+            echo html_writer::div(get_string('acp_teamconnections_cache_last_updated', 'local_o365', $linkparams));
         } else {
-            echo \html_writer::div(get_string('acp_teamconnections_cache_never_updated', 'local_o365', $linkparams));
+            echo html_writer::div(get_string('acp_teamconnections_cache_never_updated', 'local_o365', $linkparams));
         }
 
         // Search form.
-        echo \html_writer::tag('h5', get_string('search'));
-        echo \html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
-        echo \html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
-        echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'teamconnections']);
-        echo \html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search',
+        echo html_writer::tag('h5', get_string('search'));
+        echo html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
+        echo html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'teamconnections']);
+        echo html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search',
             'value' => s($search)]);
-        echo \html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
-        echo \html_writer::div(\html_writer::tag('strong', get_string('acp_usergroupcustom_searchwarning', 'local_o365')));
-        echo \html_writer::end_tag('fieldset');
-        echo \html_writer::end_tag('form');
-        echo \html_writer::empty_tag('br');
+        echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
+        echo html_writer::div(html_writer::tag('strong', get_string('acp_usergroupcustom_searchwarning', 'local_o365')));
+        echo html_writer::end_tag('fieldset');
+        echo html_writer::end_tag('form');
+        echo html_writer::empty_tag('br');
 
-        echo \html_writer::tag('h5', get_string('courses'));
-        echo \html_writer::table($table);
+        echo html_writer::tag('h5', get_string('courses'));
+        echo html_writer::table($table);
 
         $searchtext = optional_param('search', '', PARAM_TEXT);
         $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'teamconnections', 'search' => $searchtext]);
@@ -1016,7 +1069,7 @@ class acp extends base {
 
         $redirecturl = new \moodle_url('/local/o365/acp.php', ['mode' => 'teamconnections']);
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             throw new \moodle_exception('acp_teamconnections_exception_not_configured', 'local_o365', $redirecturl);
         }
 
@@ -1112,7 +1165,7 @@ class acp extends base {
             $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
             $this->standard_header();
-            echo \html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
+            echo html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
             $mform->display();
             $this->standard_footer();
         }
@@ -1131,7 +1184,7 @@ class acp extends base {
 
         $redirecturl = new \moodle_url('/local/o365/acp.php', ['mode' => 'teamconnections']);
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             throw new \moodle_exception('acp_teamconnections_exception_not_configured', 'local_o365', $redirecturl);
         }
 
@@ -1233,7 +1286,7 @@ class acp extends base {
             $PAGE->navbar->add(get_string('acp_teamconnections', 'local_o365'), $url);
             $PAGE->requires->jquery();
             $this->standard_header();
-            echo \html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
+            echo html_writer::tag('h4', get_string('acp_teamconnections_form_connect_course', 'local_o365', $course->fullname));
             $mform->display();
             $this->standard_footer();
         }
@@ -1344,7 +1397,7 @@ class acp extends base {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $graphresource = \local_o365\rest\unified::get_tokenresource();
-        $graphtoken = \local_o365\utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+        $graphtoken = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
         if (empty($graphtoken)) {
             mtrace('Could not get Microsoft Graph API token.');
             return true;
@@ -1436,7 +1489,7 @@ class acp extends base {
         $httpclient = new \local_o365\httpclient();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $graphresource = \local_o365\rest\unified::get_tokenresource();
-        $graphtoken = \local_o365\utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+        $graphtoken = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
         if (empty($graphtoken)) {
             mtrace('Could not get Microsoft Graph API token.');
             return true;
@@ -1685,7 +1738,7 @@ class acp extends base {
             $sortdir = 'asc';
         }
 
-        $table = new \html_table;
+        $table = new html_table;
         foreach ($headers as $hkey => $desc) {
             $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
             $linkattrs = ['mode' => 'sharepointcourseselect', 'sort' => $hkey, 'sortdir' => $diffsortdir];
@@ -1694,7 +1747,7 @@ class acp extends base {
             if ($sort === $hkey) {
                 $desc .= ' '.$OUTPUT->pix_icon('t/'.'sort_'.$sortdir, 'sort');
             }
-            $table->head[] = \html_writer::link($link, $desc);
+            $table->head[] = html_writer::link($link, $desc);
         }
         $table->head[] = get_string('acp_sharepointcourseselectlabel_enabled', 'local_o365');
 
@@ -1739,7 +1792,7 @@ class acp extends base {
                 $course->shortname,
                 $course->fullname,
                 '<span class="category-'.$category->id.'">'.$category->name.'</span>',
-                \html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
+                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs),
             ];
             $table->data[] = $rowdata;
         }
@@ -1791,52 +1844,52 @@ class acp extends base {
         }); '."\n";
         $js .= '} '."\n";
         $js .= '}; '."\n";
-        echo \html_writer::script($js);
+        echo html_writer::script($js);
 
         // Print functionality heading.
-        echo \html_writer::tag('h2', get_string('acp_sharepointcourseselect', 'local_o365'));
+        echo html_writer::tag('h2', get_string('acp_sharepointcourseselect', 'local_o365'));
         // If we haven't updated by syncing data from sharepoint, and there are courses, give the option to do that.
         if (!$spcustomsynced && (count($courses) > 1)) {
             $linkattrs = ['mode' => 'sharepointcourseenabled_sync'];
             $link = new \moodle_url('/local/o365/acp.php', $linkattrs);
-            echo \html_writer::tag('h5', get_string('acp_sharepointcourseselect_syncopt', 'local_o365'));
-            echo \html_writer::tag('p', get_string('acp_sharepointcourseselect_syncopt_inst', 'local_o365'));
-            echo \html_writer::empty_tag('img', ['src' => $OUTPUT->pix_url('spinner', 'local_o365'), 'alt' => 'In process...',
+            echo html_writer::tag('h5', get_string('acp_sharepointcourseselect_syncopt', 'local_o365'));
+            echo html_writer::tag('p', get_string('acp_sharepointcourseselect_syncopt_inst', 'local_o365'));
+            echo html_writer::empty_tag('img', ['src' => $OUTPUT->pix_url('spinner', 'local_o365'), 'alt' => 'In process...',
                 'class' => 'local_o365_spinner']);
             echo $OUTPUT->single_button($syncendpoint, get_string('acp_sharepointcourseselect_syncopt_btn', 'local_o365'), 'get');
             $js = '$(\'div.singlebutton :submit\').click(function() { $(\'img.local_o365_spinner\').show(); });';
-            echo \html_writer::script($js);
+            echo html_writer::script($js);
         }
         // Search form.
-        echo \html_writer::tag('h5', get_string('search'));
-        echo \html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
-        echo \html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
-        echo \html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'sharepointcourseselect']);
-        echo \html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search',
+        echo html_writer::tag('h5', get_string('search'));
+        echo html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
+        echo html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'sharepointcourseselect']);
+        echo html_writer::empty_tag('input', ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search',
             'value' => s($search)]);
-        echo \html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
-        echo \html_writer::div(\html_writer::tag('strong', get_string('acp_sharepointcourseselect_searchwarning', 'local_o365')));
-        echo \html_writer::end_tag('fieldset');
-        echo \html_writer::end_tag('form');
-        echo \html_writer::empty_tag('br');
+        echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
+        echo html_writer::div(html_writer::tag('strong', get_string('acp_sharepointcourseselect_searchwarning', 'local_o365')));
+        echo html_writer::end_tag('fieldset');
+        echo html_writer::end_tag('form');
+        echo html_writer::empty_tag('br');
 
         // Write instructions for selecting courses.
-        echo \html_writer::tag('h5', get_string('acp_sharepointcourseselect_instr_header', 'local_o365'));
-        echo \html_writer::tag('p', get_string('acp_sharepointcourseselect_instr', 'local_o365'));
+        echo html_writer::tag('h5', get_string('acp_sharepointcourseselect_instr_header', 'local_o365'));
+        echo html_writer::tag('p', get_string('acp_sharepointcourseselect_instr', 'local_o365'));
         // Begin courses table.
-        echo \html_writer::tag('h5', get_string('courses'));
-        echo \html_writer::table($table);
+        echo html_writer::tag('h5', get_string('courses'));
+        echo html_writer::table($table);
         // URL and paging elements.
         $cururl = new \moodle_url('/local/o365/acp.php', ['mode' => 'sharepointcourseselect']);
         echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
          // Notification box to confirm bulk save.
-        echo \html_writer::start_tag('div', ['class' => 'alert alert-success alert-block fade in',
+        echo html_writer::start_tag('div', ['class' => 'alert alert-success alert-block fade in',
             'id' => 'acp_sharepointcustom_savemessage', 'style' => 'display: none;', 'role' => 'alert']);
-        echo \html_writer::tag('button', '×', ['class' => 'close', 'data-dismiss' => 'alert', 'type' => 'button']);
+        echo html_writer::tag('button', '×', ['class' => 'close', 'data-dismiss' => 'alert', 'type' => 'button']);
         echo get_string('acp_sharepointcustom_savemessage', 'local_o365');
-        echo \html_writer::end_tag('div');
+        echo html_writer::end_tag('div');
         // Bulk save button.
-        echo  \html_writer::tag('button', get_string('savechanges'),
+        echo  html_writer::tag('button', get_string('savechanges'),
             ['class' => 'buttonsbar', 'onclick' => 'local_o365_sharepointcustom_save()']);
 
         $this->standard_footer();
@@ -1851,42 +1904,42 @@ class acp extends base {
         $PAGE->requires->jquery();
         $this->standard_header();
 
-        echo \html_writer::tag('h2', get_string('acp_maintenance', 'local_o365'));
-        echo \html_writer::div(get_string('acp_maintenance_desc', 'local_o365'));
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::div(get_string('acp_maintenance_warning', 'local_o365'), 'alert alert-info');
+        echo html_writer::tag('h2', get_string('acp_maintenance', 'local_o365'));
+        echo html_writer::div(get_string('acp_maintenance_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
+        echo html_writer::div(get_string('acp_maintenance_warning', 'local_o365'), 'alert alert-info');
 
         $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_coursegroupusers']);
         $toolname = get_string('acp_maintenance_coursegroupusers', 'local_o365');
-        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
-        echo \html_writer::div(get_string('acp_maintenance_coursegroupusers_desc', 'local_o365'));
+        echo html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo html_writer::div(get_string('acp_maintenance_coursegroupusers_desc', 'local_o365'));
 
         $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_coursegroupscheck']);
         $toolname = get_string('acp_maintenance_coursegroupscheck', 'local_o365');
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
-        echo \html_writer::div(get_string('acp_maintenance_coursegroupscheck_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
+        echo html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo html_writer::div(get_string('acp_maintenance_coursegroupscheck_desc', 'local_o365'));
 
         if (empty($CFG->local_o365_disabledebugdata)) {
             $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_debugdata']);
             $toolname = get_string('acp_maintenance_debugdata', 'local_o365');
-            echo \html_writer::empty_tag('br');
-            echo \html_writer::link($toolurl, $toolname);
-            echo \html_writer::div(get_string('acp_maintenance_debugdata_desc', 'local_o365'));
+            echo html_writer::empty_tag('br');
+            echo html_writer::link($toolurl, $toolname);
+            echo html_writer::div(get_string('acp_maintenance_debugdata_desc', 'local_o365'));
         }
 
         $toolurl = new \moodle_url('/auth/oidc/cleanupoidctokens.php');
         $toolname = get_string('cfg_cleanupoidctokens_key', 'auth_oidc');
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::link($toolurl, $toolname, ['target' => '_blank']);
-        echo \html_writer::div(get_string('cfg_cleanupoidctokens_desc', 'auth_oidc'));
+        echo html_writer::empty_tag('br');
+        echo html_writer::link($toolurl, $toolname, ['target' => '_blank']);
+        echo html_writer::div(get_string('cfg_cleanupoidctokens_desc', 'auth_oidc'));
 
         // Clear delta token.
         $toolurl = new \moodle_url($this->url, ['mode' => 'maintenance_cleandeltatoken']);
         $toolname = get_string('acp_maintenance_cleandeltatoken', 'local_o365');
-        echo \html_writer::empty_tag('br');
-        echo \html_writer::link($toolurl, $toolname);
-        echo \html_writer::div(get_string('acp_maintenance_cleandeltatoken_desc', 'local_o365'));
+        echo html_writer::empty_tag('br');
+        echo html_writer::link($toolurl, $toolname);
+        echo html_writer::div(get_string('acp_maintenance_cleandeltatoken_desc', 'local_o365'));
 
         $this->standard_footer();
     }
@@ -1946,7 +1999,7 @@ class acp extends base {
         $userid = required_param('userid', PARAM_INT);
         confirm_sesskey();
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (utils::is_configured() !== true) {
             mtrace('Microsoft 365 not configured');
             return false;
         }
@@ -1984,7 +2037,7 @@ class acp extends base {
         $userrec = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
 
         // Check whether Moodle user is already o365 connected.
-        if (\local_o365\utils::is_o365_connected($userid)) {
+        if (utils::is_o365_connected($userid)) {
             throw new \moodle_exception('acp_userconnections_manualmatch_error_muserconnected', 'local_o365');
         }
 
@@ -2072,8 +2125,8 @@ class acp extends base {
             ];
             $url = new \moodle_url('/local/o365/acp.php', $urlparams);
             $label = get_string('acp_userconnections_table_unmatch', 'local_o365');
-            $message .= \html_writer::link($url, $label);
-            echo \html_writer::tag('div', $message, ['class' => 'alert alert-info', 'style' => 'text-align:center']);
+            $message .= html_writer::link($url, $label);
+            echo html_writer::tag('div', $message, ['class' => 'alert alert-info', 'style' => 'text-align:center']);
             $this->standard_footer();
         }
     }
@@ -2113,8 +2166,8 @@ class acp extends base {
             ];
             $url = new \moodle_url('/local/o365/acp.php', $urlparams);
             $label = get_string('acp_userconnections_table_disconnect', 'local_o365');
-            $message .= \html_writer::link($url, $label);
-            echo \html_writer::tag('div', $message, ['class' => 'alert alert-info', 'style' => 'text-align:center']);
+            $message .= html_writer::link($url, $label);
+            echo html_writer::tag('div', $message, ['class' => 'alert alert-info', 'style' => 'text-align:center']);
             $this->standard_footer();
         }
     }
