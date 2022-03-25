@@ -425,6 +425,9 @@ class sync extends scheduled_task {
 
                     // Unenrol users who have been removed from the SDS class.
                     $enrolledusers = get_enrolled_users($coursecontext);
+                    if (!$enrolledusers) {
+                        continue;
+                    }
                     [$moodleuseridsql, $params] = $DB->get_in_or_equal(array_keys($enrolledusers), SQL_PARAMS_NAMED);
                     $sql = 'SELECT objectid, moodleid AS userid
                               FROM {local_o365_objects}
@@ -434,13 +437,11 @@ class sync extends scheduled_task {
                     $courseuserobjectids = $DB->get_records_sql($sql, $params);
                     $userstoberemoved = array_diff(array_keys($courseuserobjectids), $classuserids);
                     $enrols = [];
-                    $enrolsql = '';
-                    $enrolparams = [];
                     if ($userstoberemoved) {
                         $enrols = $DB->get_records('enrol', ['courseid' => $course->id]);
-                        [$enrolsql, $enrolparams] = $DB->get_in_or_equal(array_keys($enrols), SQL_PARAMS_NAMED);
                     }
                     if ($enrols) {
+                        [$enrolsql, $enrolparams] = $DB->get_in_or_equal(array_keys($enrols), SQL_PARAMS_NAMED);
                         foreach ($userstoberemoved as $userobjectid) {
                             $userid = $courseuserobjectids[$userobjectid]->userid;
                             static::mtrace('Unenrol user '. $userid . ' from course ' . $course->id, 5);
