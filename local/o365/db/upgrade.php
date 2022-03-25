@@ -24,6 +24,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use local_o365\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/local/o365/lib.php');
@@ -746,6 +748,14 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2020110902, 'local', 'o365');
+    }
+
+    if ($oldversion < 2020110927) {
+        // Update multi tenants setting.
+        utils::updatemultitenantssettings();
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020110927, 'local', 'o365');
     }
 
     return true;
