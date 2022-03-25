@@ -758,5 +758,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020071542, 'local', 'o365');
     }
 
+    if ($oldversion < 2020071543) {
+        // Update "task_usersync_lastdelete" setting from timestamp to YYYYMMDD.
+        set_config('task_usersync_lastdelete', date('Ymd', strtotime('yesterday')), 'local_o365');
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020071543, 'local', 'o365');
+    }
+
     return true;
 }
