@@ -708,9 +708,6 @@ class observers {
         }
         $courseid = $event->objectid;
 
-        // Delete course group mapping records.
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $courseid]);
-
         // Delete SDS section record.
         if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
             $DB->delete_records('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid]);
@@ -719,6 +716,10 @@ class observers {
                 \local_o365\feature\usergroups\utils::delete_course_group($courseid);
             }
         }
+
+        // Delete course group mapping records.
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'moodleid' => $courseid]);
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid]);
 
         if (\local_o365\rest\sharepoint::is_configured() !== true) {
             return false;
