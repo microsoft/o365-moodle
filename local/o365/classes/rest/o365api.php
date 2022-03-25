@@ -363,6 +363,7 @@ abstract class o365api {
                 'requiredDelegatedPermissionsUsingAppPermissions' => [
                     'Files.ReadWrite.All' => [],
                     'Notes.ReadWrite.All' => [],
+                    'Calendars.ReadWrite' => [],
                     'User.Read' => [],
                     'openid' => [],
                     'offline_access' => [],
