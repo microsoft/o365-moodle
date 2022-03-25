@@ -90,7 +90,7 @@ class discovery extends \local_o365\rest\o365api {
      *
      * @return string|null The tenant, or null if error.
      */
-    public function get_tenant() {
+    public function get_default_domain_name_in_tenant() {
         $entitykey = 'Directory@AZURE';
         $service = $this->get_service($entitykey);
         if (!empty($service) && isset($service['serviceEndpointUri'])) {

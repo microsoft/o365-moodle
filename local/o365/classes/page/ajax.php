@@ -232,7 +232,7 @@ class ajax extends base {
         switch ($setting) {
             case 'aadtenant':
                 try {
-                    $service = $apiclient->get_tenant();
+                    $service = $apiclient->get_default_domain_name_in_tenant();
                     $data->settingval = $service;
                     $success = true;
                     echo $this->ajax_response($data, $success);
@@ -279,7 +279,7 @@ class ajax extends base {
 
         if ($setting === 'aadtenant') {
             try {
-                $service = $discovery->get_tenant();
+                $service = $discovery->get_default_domain_name_in_tenant();
                 if (!empty($service)) {
                     $data->settingval = $service;
                     $success = true;

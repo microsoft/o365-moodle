@@ -172,7 +172,7 @@ class utils {
             return [];
         }
         $aadresource = \local_o365\rest\azuread::get_tokenresource();
-        list($idsql, $idparams) = $DB->get_in_or_equal($userids);
+        [$idsql, $idparams] = $DB->get_in_or_equal($userids);
         $sql = 'SELECT u.id as userid
                   FROM {user} u
              LEFT JOIN {local_o365_token} localtok ON localtok.user_id = u.id
@@ -316,29 +316,37 @@ class utils {
     /**
      * Enable an additional Microsoft 365 tenant.
      *
-     * @param string $tenant
+     * @param string $tenantid
+     * @param array $tenantdomainnames
      */
-    public static function enableadditionaltenant($tenant) {
-        $configuredtenants = get_config('local_o365', 'multitenants');
-        if (!empty($configuredtenants)) {
-            $configuredtenants = json_decode($configuredtenants, true);
-            if (!is_array($configuredtenants)) {
-                $configuredtenants = [];
-            }
-        }
-        $configuredtenants[] = $tenant;
-        $configuredtenants = array_unique($configuredtenants);
-        set_config('multitenants', json_encode($configuredtenants), 'local_o365');
+    public static function enableadditionaltenant($tenantid, $tenantdomainnames) {
+        static::updatemultitenantssettings();
 
-        // Generate restrictions.
-        $newrestrictions = [];
-        $o365config = get_config('local_o365');
-        array_unshift($configuredtenants, $o365config->aadtenant);
-        foreach ($configuredtenants as $configuredtenant) {
-            $newrestriction = '@';
-            $newrestriction .= str_replace('.', '\.', $configuredtenant);
-            $newrestriction .= '$';
-            $newrestrictions[] = $newrestriction;
+        $multitenantsconfig = get_config('local_o365', 'multitenants');
+        $additionaltenants = json_decode($multitenantsconfig);
+
+        if (!array_key_exists($tenantid, $additionaltenants)) {
+            $additionaltenants[$tenantid] = $tenantdomainnames;
+        }
+        set_config('multitenants', json_encode($additionaltenants), 'local_o365');
+
+        // Cleanup legacy multi tenants configurations.
+        $configuredlegacytenants = get_config('local_o365', 'legacymultitenants');
+        if (!empty($configuredlegacytenants)) {
+            $configuredlegacytenants = json_decode($configuredlegacytenants, true);
+            if (is_array($configuredlegacytenants)) {
+                $configuredlegacytenants = array_diff($configuredlegacytenants, $tenantdomainnames);
+            }
+            set_config('legacymultitenants', json_encode($configuredlegacytenants), 'local_o365');
+        }
+
+        // Update restrictions.
+        $hostingtenant = get_config('local_o365', 'aadtenant');
+        $newrestrictions = ['@' . str_replace('.', '\.', $hostingtenant) . '$'];
+        foreach ($additionaltenants as $configuredtenantdomains) {
+            foreach ($configuredtenantdomains as $configuredtenantdomain) {
+                $newrestrictions[] = '@' . str_replace('.', '\.', $configuredtenantdomain) . '$';
+            }
         }
         $userrestrictions = get_config('auth_oidc', 'userrestrictions');
         $userrestrictions = explode("\n", $userrestrictions);
@@ -349,11 +357,58 @@ class utils {
     }
 
     /**
+     * Update multitenants configuration settings for the March 2022 upgrade.
+     *  - The old multitenants configuration contains a json encoded array of the initial domain names of each additional tenant,
+     * e.g. ["contoso.onmicrosoft.com"].
+     *  - The new multitenants configuration contains a json encoded array having tenant ID as key, and an array of verified domains
+     * as value. e.g. {"00000000-0000-0000-0000-000000000000":["contoso.onmicrosoft.com","contoso.com"]}.
+     *
+     * @return void
+     */
+    public static function updatemultitenantssettings() {
+        $multitenantsconfig = get_config('local_o365', 'multitenants');
+        $additionaltenantdomains = [];
+
+        $legacymultitenantsconfig = get_config('local_o365', 'legacymultitenants');
+        $legacyadditionaltenantdomains = json_decode($legacymultitenantsconfig, true);
+        if (!is_array($legacyadditionaltenantdomains)) {
+            $legacyadditionaltenantdomains = [];
+        }
+
+        if (!empty($multitenantsconfig)) {
+            $multitenantsconfig = json_decode($multitenantsconfig, true);
+            if (is_array($multitenantsconfig) && count($multitenantsconfig) != 0) {
+                if (array_keys($multitenantsconfig)[0] != '0') {
+                    // Configuration array keys are not numbers - already migrated.
+                    return true;
+                }
+                foreach ($multitenantsconfig as $currenttenantid => $currenttenantdomainnames) {
+                    if (is_int($currenttenantid) || strlen($currenttenantid) != 36) {
+                        // Not real tenant ID, this contains settings in old format.
+                        if (is_array($currenttenantdomainnames)) {
+                            $legacyadditionaltenantdomains = array_merge($legacyadditionaltenantdomains, $currenttenantdomainnames);
+                        } else {
+                            $legacyadditionaltenantdomains = array_merge($legacyadditionaltenantdomains,
+                                [$currenttenantdomainnames]);
+                        }
+                    } else {
+                        $additionaltenantdomains[$currenttenantid] = $currenttenantdomainnames;
+                    }
+                }
+                set_config('legacymultitenants', json_encode($legacyadditionaltenantdomains), 'local_o365');
+            }
+
+            set_config('multitenants', json_encode($additionaltenantdomains), 'local_o365');
+        }
+    }
+
+    /**
      * Disable an additional Microsoft 365 tenant.
      *
-     * @param string $tenant
+     * @param string $tenantid
+     * @return bool|void
      */
-    public static function disableadditionaltenant($tenant) {
+    public static function disableadditionaltenant(string $tenantid) {
         $o365config = get_config('local_o365');
         if (empty($o365config->multitenants)) {
             return true;
@@ -362,16 +417,42 @@ class utils {
         if (!is_array($configuredtenants)) {
             $configuredtenants = [];
         }
-        $configuredtenants = array_diff($configuredtenants, [$tenant]);
-        set_config('multitenants', json_encode($configuredtenants), 'local_o365');
+
+        $revokeddomains = [];
+        if (array_key_exists($tenantid, $configuredtenants)) {
+            $revokeddomains = $configuredtenants[$tenantid];
+            unset($configuredtenants[$tenantid]);
+            set_config('multitenants', json_encode($configuredtenants), 'local_o365');
+        }
 
         // Update restrictions.
         $userrestrictions = get_config('auth_oidc', 'userrestrictions');
         $userrestrictions = (!empty($userrestrictions)) ? explode("\n", $userrestrictions) : [];
-        $regex = '@'.str_replace('.', '\.', $tenant).'$';
-        $userrestrictions = array_diff($userrestrictions, [$regex]);
+        foreach ($revokeddomains as $revokeddomain) {
+            $regex = '@' . str_replace('.', '\.', $revokeddomain) . '$';
+            $userrestrictions = array_diff($userrestrictions, [$regex]);
+        }
         $userrestrictions = implode("\n", $userrestrictions);
         set_config('userrestrictions', $userrestrictions, 'auth_oidc');
+    }
+
+    /**
+     * Delete an additional tenant from the legacy additional tenant settings.
+     *
+     * @param $tenant
+     * @return bool|void
+     */
+    public static function deletelegacyadditionaltenant($tenant) {
+        $o365config = get_config('local_o365');
+        if (empty($o365config->legacymultitenants)) {
+            return true;
+        }
+        $configuredlegacytenants = json_decode($o365config->legacymultitenants, true);
+        if (!is_array($configuredlegacytenants)) {
+            $configuredlegacytenants = [];
+        }
+        $configuredlegacytenants = array_diff($configuredlegacytenants, [$tenant]);
+        set_config('legacymultitenants', json_encode($configuredlegacytenants), 'local_o365');
     }
 
     /**
@@ -390,7 +471,7 @@ class utils {
             if (!empty($token)) {
                 $apiclient = (\local_o365\rest\unified::is_enabled() === true) ?
                     new \local_o365\rest\unified($token, $httpclient) : new \local_o365\rest\discovery($token, $httpclient);
-                $tenant = $apiclient->get_tenant();
+                $tenant = $apiclient->get_default_domain_name_in_tenant();
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 return ($tenant != get_config('local_o365', 'aadtenant')) ? $tenant : '';
             }
