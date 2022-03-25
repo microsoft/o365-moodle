@@ -283,6 +283,7 @@ class coursegroups {
         $deletedgroups = $deletedgroupsresults['value'];
         while (!empty($deletedgroupsresults['@odata.nextLink'])) {
             $nextlink = parse_url($deletedgroupsresults['@odata.nextLink']);
+            $deletedgroupsresults = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -487,6 +488,7 @@ class coursegroups {
         while (!empty($groups['@odata.nextLink'])) {
             // Extract skiptoken.
             $nextlink = parse_url($groups['@odata.nextLink']);
+            $groups = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -702,6 +704,7 @@ class coursegroups {
 
         while (!empty($memberrecords['@odata.nextLink'])) {
             $nextlink = parse_url($memberrecords['@odata.nextLink']);
+            $memberrecords = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -735,6 +738,7 @@ class coursegroups {
 
         while (!empty($ownerresults['@odata.nextLink'])) {
             $nextlink = parse_url($ownerresults['@odata.nextLink']);
+            $ownerresults = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
@@ -1209,6 +1213,7 @@ class coursegroups {
         }
         while (!empty($teamspart['@odata.nextLink'])) {
             $nextlink = parse_url($teamspart['@odata.nextLink']);
+            $teamspart = [];
             if (isset($nextlink['query'])) {
                 $query = [];
                 parse_str($nextlink['query'], $query);
