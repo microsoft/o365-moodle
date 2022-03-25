@@ -535,6 +535,7 @@ class repository_office365 extends \repository {
                             $contents = $filesresults['value'];
                             while (!empty($filesresults['@odata.nextLink'])) {
                                 $nextlink = parse_url($filesresults['@odata.nextLink']);
+                                $filesresults = [];
                                 if (isset($nextlink['query'])) {
                                     $query = [];
                                     parse_str($nextlink['query'], $query);
@@ -599,6 +600,7 @@ class repository_office365 extends \repository {
                 $contents = $filesresults['value'];
                 while (!empty($filesresults['@odata.nextLink'])) {
                     $nextlink = parse_url($filesresults['@odata.nextLink']);
+                    $filesresults = [];
                     if (isset($nextlink['query'])) {
                         $query = [];
                         parse_str($nextlink['query'], $query);
@@ -711,6 +713,7 @@ class repository_office365 extends \repository {
             $contents = $filesresults['value'];
             while (!empty($filesresults['@odata.nextLink'])) {
                 $nextlink = parse_url($filesresults['@odata.nextLink']);
+                $filesresults = [];
                 if (isset($nextlink['query'])) {
                     $query = [];
                     parse_str($nextlink['query'], $query);
