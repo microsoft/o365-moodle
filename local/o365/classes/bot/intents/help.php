@@ -31,7 +31,19 @@ defined('MOODLE_INTERNAL') || die();
  * Class help implements bot intent interface for get-help intent.
  */
 class help implements \local_o365\bot\intents\intentinterface {
+    /**
+     * @var array to cache user permission status
+     */
 
+
+    private static function check_permission($permission) {
+        static $checkedpermissions = [];
+        if (!isset($checkedpermissions[$permission])) {
+            $systemcontext = \context_system::instance();
+            $checkedpermissions[$permission] = has_capability('local/o365:'.$permission, $systemcontext);
+        }
+        return $checkedpermissions[$permission];
+    }
     /**
      * Gets a message with the welcome text and available questions.
      *
@@ -39,26 +51,18 @@ class help implements \local_o365\bot\intents\intentinterface {
      * @param mixed $entities - Intent entities (optional and not used at the moment)
      * @return array|string - Bot message structure with data
      */
-    public function get_message($language, $entities = null) {
-        global $CFG, $USER, $DB;
+    public static function get_message($language, $entities = null) {
+        global $CFG;
         $listitems = [];
         $warnings = [];
         $listtitle = '';
-        $message = '';
 
-        $questions = file_get_contents($CFG->dirroot . '/local/o365/classes/bot/bot_questions_list.json');
-        $questions = json_decode($questions);
-
-        $roles = $DB->get_fieldset_sql('SELECT DISTINCT(r.shortname) FROM {role_assignments} ra
-                            JOIN {role} r ON r.id = ra.roleid
-                            WHERE ra.userid = :userid ', ['userid' => $USER->id]);
         $message = get_string_manager()->get_string('help_message', 'local_o365', null, $language);
-        foreach ($roles as $role) {
-            if ($questions->{$role}) {
-                foreach ($questions->{$role} as $question) {
-                    $text = get_string_manager()->get_string($question->text, 'local_o365', null, $language);
-                    $action = ($question->clickable ? $text : null);
-                    $actiontype = ($question->clickable ? 'imBack' : null);
+        foreach ($entities as $intent) {
+            if (!empty($intent['permission']) && self::check_permission($intent['permission'])) {
+                    $text = get_string_manager()->get_string($intent['text'], 'local_o365', null, $language);
+                    $action = ($intent['clickable'] ? $text : null);
+                    $actiontype = ($intent['clickable'] ? 'imBack' : null);
                     $listitems[] = [
                             'title' => $text,
                             'subtitle' => null,
@@ -66,8 +70,6 @@ class help implements \local_o365\bot\intents\intentinterface {
                             'action' => $action,
                             'actionType' => $actiontype
                     ];
-
-                }
             }
         }
         return array(

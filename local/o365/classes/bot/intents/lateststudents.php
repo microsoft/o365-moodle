@@ -39,7 +39,7 @@ class lateststudents implements \local_o365\bot\intents\intentinterface {
      * @param mixed $entities - Intent entities. Gives student name.
      * @return array|string - Bot message structure with data
      */
-    public function get_message($language, $entities = null) {
+    public static function get_message($language, $entities = null) {
         global $USER, $DB, $PAGE;
         $listitems = [];
         $warnings = [];

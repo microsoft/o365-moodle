@@ -830,6 +830,8 @@ $string['task_processmatchqueue_err_o365useralreadymatched'] = 'Microsoft 365 us
 $string['task_processmatchqueue_err_o365useralreadyconnected'] = 'Microsoft 365 user is already connected to a Moodle user.';
 
 // Capabilities.
+$string['o365:accessbotstudentdata'] = 'Access student bot data';
+$string['o365:accessbotteacherdata'] = 'Access teacher bot data';
 $string['o365:manageconnectionlink'] = 'Manage Connection Link';
 $string['o365:manageconnectionunlink'] = 'Manage Connection Unlink';
 $string['o365:managegroups'] = 'Manage Groups';

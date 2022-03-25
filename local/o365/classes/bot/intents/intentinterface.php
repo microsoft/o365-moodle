@@ -43,5 +43,5 @@ interface intentinterface {
      * @param mixed $entities - intent entities (optional)
      * @return array - structured message with all details for bot
      */
-    public function get_message($language, $entities = null);
+    public static function get_message($language, $entities = null);
 }
