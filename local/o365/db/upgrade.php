@@ -774,5 +774,23 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020110929, 'local', 'o365');
     }
 
+    if ($oldversion < 2020110930) {
+        // Remove duplicate entries for users in local_o365_objects.
+        $sql = "SELECT DISTINCT(a.id)
+                  FROM {local_o365_objects} a
+                  JOIN {local_o365_objects} b ON b.moodleid = a.moodleid AND a.o365name = b.o365name AND a.objectid = b.objectid
+                 WHERE a.type = :user1
+                   AND b.type = :user2
+                   AND a.id > b.id";
+        $duplicateentries = $DB->get_fieldset_sql($sql, ['user1' => 'user', 'user2' => 'user']);
+
+        if ($duplicateentries) {
+            $DB->delete_records_list('local_o365_objects', 'id', $duplicateentries);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020110930, 'local', 'o365');
+    }
+
     return true;
 }
