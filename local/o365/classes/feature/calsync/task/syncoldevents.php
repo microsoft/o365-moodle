@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync\task;
 
+use local_o365\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -89,7 +91,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $httpclient = new \local_o365\httpclient();
         $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
 
-        list($subscribersprimary, $subscribersnotprimary) = $this->get_subscribers('site');
+        [$subscribersprimary, $subscribersnotprimary] = $this->get_subscribers('site');
 
         $sql = 'SELECT ev.id AS eventid,
                        ev.name AS eventname,
@@ -205,7 +207,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $httpclient = new \local_o365\httpclient();
         $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
 
-        list($subscribersprimary, $subscribersnotprimary) = $this->get_subscribers('course', $courseid);
+        [$subscribersprimary, $subscribersnotprimary] = $this->get_subscribers('course', $courseid);
 
         $sql = 'SELECT ev.id AS eventid,
                        ev.name AS eventname,
@@ -353,7 +355,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $usertoken = $calsync->get_user_token($userid);
         if (empty($usertoken)) {
             // No token, can't sync.
-            \local_o365\utils::debug('Could not get user token for calendar sync.', 'sync_userevents');
+            utils::debug('Could not get user token for calendar sync.', __METHOD__);
             return false;
         }
 
@@ -435,8 +437,8 @@ class syncoldevents extends \core\task\adhoc_task {
         $opdata = $this->get_custom_data();
         $timecreated = (isset($opdata->timecreated)) ? $opdata->timecreated : time();
 
-        if (\local_o365\utils::is_configured() !== true) {
-            \local_o365\utils::debug(get_string('erroracpauthoidcnotconfig', 'local_o365'), get_called_class());
+        if (utils::is_connected() !== true) {
+            utils::debug(get_string('erroracpauthoidcnotconfig', 'local_o365'), __METHOD__);
             return false;
         }
 

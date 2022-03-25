@@ -146,4 +146,15 @@ class utils {
 
         return [$idandnamemappings, $additionalprofilemappings];
     }
+
+    /**
+     * Return the ID of Moodle courses connected to SDS course sections.
+     *
+     * @return array
+     */
+    public static function get_sds_course_ids() {
+        global $DB;
+
+        return $DB->get_fieldset_select('local_o365_objects', 'moodleid', 'type = ?', ['sdssection']);
+    }
 }

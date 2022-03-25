@@ -84,7 +84,7 @@ class usersync extends scheduled_task {
      * Do the job.
      */
     public function execute() {
-        if (utils::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             $this->mtrace('Microsoft 365 not configured');
 
             return false;
@@ -123,7 +123,7 @@ class usersync extends scheduled_task {
                 }
             } catch (\Exception $e) {
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
-                utils::debug($e->getMessage(), 'usersync task', $e);
+                utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
             }
@@ -163,7 +163,7 @@ class usersync extends scheduled_task {
                 }
             } catch (\Exception $e) {
                 $this->mtrace('Error in delta usersync: ' . $e->getMessage());
-                utils::debug($e->getMessage(), 'usersync task', $e);
+                utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
                 $deltatoken = null;
@@ -224,7 +224,7 @@ class usersync extends scheduled_task {
                         }
                     } catch (\Exception $e) {
                         $this->mtrace('Error in full usersync: ' . $e->getMessage());
-                        utils::debug($e->getMessage(), 'usersync task', $e);
+                        utils::debug($e->getMessage(), __METHOD__, $e);
                         $this->mtrace('Resetting skip and delta tokens.');
                         $skiptoken = null;
                     }

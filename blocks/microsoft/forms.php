@@ -43,21 +43,20 @@ class block_microsoft_course_sync_form extends moodleform {
 
         // Sync options.
         $syncoptions = [
-            MICROSOFT365_COURSE_SYNC_NONE => get_string('course_sync_option_not_synced', 'block_microsoft'),
-            MICROSOFT365_COURSE_SYNC_GROUPS => get_string('course_sync_option_groups', 'block_microsoft'),
-            MICROSOFT365_COURSE_SYNC_TEAMS => get_string('course_sync_option_teams', 'block_microsoft'),
+            MICROSOFT365_COURSE_SYNC_DISABLED => get_string('course_sync_option_disabled', 'block_microsoft'),
+            MICROSOFT365_COURSE_SYNC_ENABLED => get_string('course_sync_option_enabled', 'block_microsoft'),
         ];
         $mform->addElement('select', 'sync', get_string('course_sync_option', 'block_microsoft'), $syncoptions);
-        $mform->setDefault('sync', MICROSOFT365_COURSE_SYNC_NONE);
+        $mform->setDefault('sync', MICROSOFT365_COURSE_SYNC_DISABLED);
 
         $this->add_action_buttons();
     }
 }
 
 /**
- * Form to configure course Team reset actions.
+ * Form to configure course reset actions.
  */
-class block_microsoft_course_configure_team_form extends moodleform {
+class block_microsoft_course_configure_form extends moodleform {
     /**
      * Form definition.
      */
@@ -69,50 +68,19 @@ class block_microsoft_course_configure_team_form extends moodleform {
 
         $resetoptions = [];
         $resetoptions[] = $mform->createElement('radio', 'reset_setting', '',
-            get_string('teams_reset_option_do_nothing', 'block_microsoft'), TEAMS_COURSE_RESET_SETTING_DO_NOTHING);
-        $createteams = get_config('local_o365', 'createteams');
-        if ($createteams == 'oncustom') {
+            get_string('reset_option_do_nothing', 'block_microsoft'), COURSE_SYNC_RESET_COURSE_SETTING_DO_NOTHING);
+        $coursesyncsetting = get_config('local_o365', 'coursesync');
+        if ($coursesyncsetting == 'oncustom') {
             $resetoptions[] = $mform->createElement('radio', 'reset_setting', '',
-                get_string('teams_reset_option_disconnect_only', 'block_microsoft'),
-                TEAMS_COURSE_RESET_SETTING_DISCONNECT_ONLY);
+                get_string('reset_option_disconnect_only', 'block_microsoft'),
+                COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_ONLY);
         }
         $resetoptions[] = $mform->createElement('radio', 'reset_setting', '',
-            get_string('teams_reset_option_disconnect', 'block_microsoft'), TEAMS_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW);
-        $mform->addGroup($resetoptions, 'resetsettinggroup', get_string('course_reset_team_option', 'block_microsoft'),
+            get_string('reset_option_disconnect_and_create_new', 'block_microsoft'),
+            COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_AND_CREATE_NEW);
+        $mform->addGroup($resetoptions, 'resetsettinggroup', get_string('course_reset_option', 'block_microsoft'),
             '<br/>', false);
-        $mform->setDefault('reset_setting', TEAMS_COURSE_RESET_SETTING_DO_NOTHING);
-
-        $this->add_action_buttons();
-    }
-}
-
-/**
- * Form to configure course group reset actions.
- */
-class block_microsoft_course_configure_group_form extends moodleform {
-    /**
-     * Form definition.
-     */
-    protected function definition() {
-        $mform = $this->_form;
-
-        $mform->addElement('hidden', 'course');
-        $mform->setType('course', PARAM_INT);
-
-        $resetoptions = [];
-        $resetoptions[] = $mform->createElement('radio', 'reset_setting', '',
-            get_string('group_reset_option_do_nothing', 'block_microsoft'), GROUP_COURSE_RESET_SETTING_DO_NOTHING);
-        $createteams = get_config('local_o365', 'createteams');
-        if ($createteams == 'oncustom') {
-            $resetoptions[] = $mform->createElement('radio', 'reset_setting', '',
-                get_string('group_reset_option_disconnect_only', 'block_microsoft'),
-                GROUP_COURSE_RESET_SETTING_DISCONNECT_ONLY);
-        }
-        $resetoptions[] = $mform->createElement('radio', 'reset_setting', '',
-            get_string('group_reset_option_disconnect', 'block_microsoft'), GROUP_COURSE_RESET_SETTING_DISCONNECT_AND_CREATE_NEW);
-        $mform->addGroup($resetoptions, 'resetsettinggroup', get_string('course_reset_group_option', 'block_microsoft'),
-            '<br/><br/>', false);
-        $mform->setDefault('reset_setting', GROUP_COURSE_RESET_SETTING_DO_NOTHING);
+        $mform->setDefault('reset_setting', COURSE_SYNC_RESET_COURSE_SETTING_DO_NOTHING);
 
         $this->add_action_buttons();
     }

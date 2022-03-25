@@ -46,7 +46,7 @@ class sharepointinit extends \core\task\adhoc_task {
     public function execute() {
         global $DB;
 
-        if (\local_o365\utils::is_configured() !== true) {
+        if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
 
@@ -84,7 +84,7 @@ class sharepointinit extends \core\task\adhoc_task {
         } catch (\Exception $e) {
             $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: '.$e->getMessage();
             mtrace($errmsg);
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            \local_o365\utils::debug($errmsg, __METHOD__);
             set_config('sharepoint_initialized', 'error', 'local_o365');
             return false;
         }
@@ -101,7 +101,7 @@ class sharepointinit extends \core\task\adhoc_task {
         } catch (\Exception $e) {
             $errmsg = 'ERROR: Problem initializing SharePoint integration. Reason: '.$e->getMessage();
             mtrace($errmsg);
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            \local_o365\utils::debug($errmsg, __METHOD__);
             set_config('sharepoint_initialized', 'error', 'local_o365');
             return false;
         }
@@ -137,7 +137,7 @@ class sharepointinit extends \core\task\adhoc_task {
         } catch (\Exception $e) {
             $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
             mtrace($errmsg);
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            \local_o365\utils::debug($errmsg, __METHOD__);
             set_config('sharepoint_initialized', 'error', 'local_o365');
             return false;
         }
@@ -169,7 +169,7 @@ class sharepointinit extends \core\task\adhoc_task {
         if (!empty($failures)) {
             $errmsg = 'ERROR: Encountered problems creating course sites.';
             mtrace($errmsg.' See logs.');
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute', $failures);
+            \local_o365\utils::debug($errmsg, __METHOD__, $failures);
             set_config('sharepoint_initialized', 'error', 'local_o365');
         } else {
             set_config('sharepoint_initialized', '1', 'local_o365');
@@ -206,7 +206,7 @@ class sharepointinit extends \core\task\adhoc_task {
         } catch (\Exception $e) {
             $errmsg = 'ERROR: Problem initializing SharePoint API. Reason: '.$e->getMessage();
             mtrace($errmsg);
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            \local_o365\utils::debug($errmsg, __METHOD__);
             set_config('sharepoint_initialized', 'error', 'local_o365');
             return false;
         }
@@ -239,7 +239,7 @@ class sharepointinit extends \core\task\adhoc_task {
         } catch (\Exception $e) {
             $errmsg = 'ERROR: Problem creating parent site. Reason: '.$e->getMessage();
             mtrace($errmsg);
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute');
+            \local_o365\utils::debug($errmsg, __METHOD__);
             set_config('sharepoint_initialized', 'error', 'local_o365');
             return false;
         }
@@ -271,7 +271,7 @@ class sharepointinit extends \core\task\adhoc_task {
         if (!empty($failures)) {
             $errmsg = 'ERROR: Encountered problems creating course sites.';
             mtrace($errmsg.' See logs.');
-            \local_o365\utils::debug($errmsg, 'local_o365\task\sharepointinit::execute', $failures);
+            \local_o365\utils::debug($errmsg, __METHOD__, $failures);
             set_config('sharepoint_initialized', 'error', 'local_o365');
         } else {
             set_config('sharepoint_initialized', '1', 'local_o365');

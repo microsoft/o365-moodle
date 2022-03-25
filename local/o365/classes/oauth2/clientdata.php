@@ -71,7 +71,8 @@ class clientdata {
                 if (!empty($tenantid)) {
                     $this->apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenantid);
                 } else {
-                    \local_o365\utils::debug('Did not populate clientdata:apptokenendpoint because no tenant was present');
+                    \local_o365\utils::debug('Did not populate clientdata:apptokenendpoint because no tenant was present',
+                        __METHOD__);
                 }
             }
         }

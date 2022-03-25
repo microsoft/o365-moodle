@@ -152,52 +152,6 @@ table.local_o365_matchqueue {
 
 }
 
-.local_o365_groupcp {
-    .local_o365_groupcp_icon {
-        width: 32px;
-        height: 32px;
-        margin: 0;
-        padding: 0;
-    }
-    .local_o365_groupcp_managegroups {
-        td {
-            padding: 4px;
-        }
-    }
-    .local_o365_groupcp_header {
-        display: inline-block;
-        width: 100%;
-        img {
-            vertical-align: middle;
-            margin-right: 1rem;
-            display: inline-block;
-            width: 5rem;
-            height: 5rem;
-        }
-        h4 {
-            display: inline-block;
-            vertical-align: middle;
-        }
-    }
-    ul {
-        list-style: none;
-        margin: 3rem 0 0 0;
-        li {
-            margin: 1rem 0;
-            a {
-                img {
-                    outline: none;
-                    width: 3rem;
-                    height: 3rem;
-                    margin-right: 0.75rem;
-                    display: inline-block;
-                    vertical-align: middle;
-                }
-            }
-        }
-    }
-}
-
 /* Display spinner while course data is syncing. */
 .local_o365_spinner {
     margin: 0 0 1em 1em;

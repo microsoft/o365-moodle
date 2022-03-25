@@ -273,10 +273,6 @@ class main {
                 $outlookgroupemail = $this->construct_outlook_group_email($event->courseid);
                 // Add the Outlook group user as an attendee and organizer to the event.
                 if (!empty($groupobject) && !empty($groupobject->o365name) && !empty($outlookgroupemail)) {
-                    // Assemble o365 group data.
-                    $firstname = '';
-                    $lastname = '';
-                    [$firstname, $lastname] = $this->group_first_last_name($groupobject->o365name);
                     // Add o365 group as organizer for the event.
                     $outlookeventorganizer = [
                         'organizer' => [
@@ -288,17 +284,21 @@ class main {
                         'responseRequested' => false,
                         'isOrganizer' => true,
                     ];
-                    $apiclient = $this->construct_calendar_api($event->userid);
-                    $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, [], $outlookeventorganizer,
-                        $groupobject->objectid);
-                    if (!empty($response)) {
-                        $idmaprec = [
-                            'eventid' => $event->id,
-                            'outlookeventid' => $response['Id'],
-                            'userid' => $event->userid,
-                            'origin' => 'moodle',
-                        ];
-                        $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                    try {
+                        $apiclient = $this->construct_calendar_api($event->userid);
+                        $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, [],
+                            $outlookeventorganizer, $groupobject->objectid);
+                        if (!empty($response)) {
+                            $idmaprec = [
+                                'eventid' => $event->id,
+                                'outlookeventid' => $response['Id'],
+                                'userid' => $event->userid,
+                                'origin' => 'moodle',
+                            ];
+                            $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                        }
+                    } catch (\Exception $e) {
+                        // No token found, nothing to do.
                     }
                 }
             }

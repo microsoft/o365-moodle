@@ -140,9 +140,9 @@ abstract class o365api {
      *
      * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
      * @param string $apimethod The API endpoint/method to call.
-     * @param string $params Additional paramters to include.
+     * @param string $params Additional parameters to include.
      * @param array $options Additional options for the request.
-     * @return string The result of the API call.
+     * @return string|array The result of the API call.
      */
     public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
         // Used if we have to retry due to rate limiting.
@@ -261,10 +261,8 @@ abstract class o365api {
      */
     public function process_apicall_response($response, array $expectedstructure = array()) {
         $backtrace = debug_backtrace(0);
-        $callingclass = (isset($backtrace[1]['class'])) ? $backtrace[1]['class'] : '?';
-        $callingfunc = (isset($backtrace[1]['function'])) ? $backtrace[1]['function'] : '?';
         $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-        $caller = $callingclass.'::'.$callingfunc.':'.$callingline;
+        $caller = __METHOD__ . ':' . $callingline;
 
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
@@ -347,86 +345,36 @@ abstract class o365api {
                 'appId' => '00000003-0000-0000-c000-000000000000',
                 'displayName' => '',
                 'requiredAppPermissions' => [
+                    'AppCatalog.Read.All' => ['AppCatalog.ReadWrite.All'],
+                    'AppRoleAssignment.ReadWrite.All' => [],
+                    'Calendars.ReadWrite' => [],
+                    'Channel.ReadBasic.All' => ['ChannelSettings.Read.All', 'ChannelSettings.ReadWrite.All'],
                     'Directory.ReadWrite.All' => [],
                     'Directory.Read.All' => [],
-                    'Group.ReadWrite.All' => [],
-                    'User.Read.All' => ['User.ReadWrite.All'],
+                    'EduRoster.ReadWrite.All' => [],
                     'Files.ReadWrite.All' => [],
-                    'Calendars.ReadWrite' => [],
-                    'Sites.Read.All' => [],
-                    'Notes.ReadWrite.All' => [],
-                    'AppRoleAssignment.ReadWrite.All' => [],
+                    'Group.ReadWrite.All' => [],
                     'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
-                    'EduRoster.Read.All' => ['EduRoster.ReadWrite.All'],
                     'Member.Read.Hidden' => [],
+                    'Notes.ReadWrite.All' => [],
+                    'Sites.Read.All' => [],
+                    'Team.Create' => [],
+                    'TeamMember.ReadWrite.All' => [],
+                    'TeamsAppInstallation.ReadWriteForTeam.All' => [],
+                    'TeamSettings.ReadWrite.All' => [],
+                    'TeamsTab.Create' => [],
+                    'User.Read.All' => ['User.ReadWrite.All'],
                  ],
                 'requiredDelegatedPermissionsUsingAppPermissions' => [
                     'Files.ReadWrite.All' => [],
                     'Notes.ReadWrite.All' => [],
+                    'Group.ReadWrite.All' => [],
                     'Calendars.ReadWrite' => [],
                     'User.Read' => [],
                     'openid' => [],
                     'offline_access' => [],
                     'email' => [],
                     'profile' => [],
-                ],
-                'requiredDelegatedPermissions' => [
-                    'Directory.ReadWrite.All' => [],
-                    'Directory.Read.All' => [],
-                    'Group.ReadWrite.All' => [],
-                    'User.Read.All' => [],
-                    'Files.ReadWrite.All' => [],
-                    'Calendars.ReadWrite' => [],
-                    'Sites.Read.All' => [],
-                    'Notes.ReadWrite.All' => [],
-                    'AppRoleAssignment.ReadWrite.All' => [],
-                    'MailboxSettings.Read' => ['MailboxSettings.ReadWrite'],
-                    'EduRoster.ReadBasic' => [],
-                    'User.Read' => ['User.ReadWrite.All'],
-                    'openid' => [],
-                    'offline_access' => [],
-                    'email' => [],
-                    'profile' => [],
-                ],
-            ],
-            'azure' => [
-                'appId' => '00000002-0000-0000-c000-000000000000',
-                'displayName' => 'Microsoft.Azure.ActiveDirectory',
-                'requiredAppPermissions' => [],
-                'requiredDelegatedPermissions' => [
-                    'Directory.Read.All' => ['Directory.ReadWrite.All'],
-                    'Directory.AccessAsUser.All' => [],
-                    'User.Read.All' => ['User.ReadWrite.All'],
-                ],
-            ],
-            'sharepoint' => [
-                'appId' => '00000003-0000-0ff1-ce00-000000000000',
-                'displayName' => 'Microsoft.SharePoint',
-                'requiredAppPermissions' => [],
-                'requiredDelegatedPermissions' => [
-                    'AllSites.Read' => ['AllSites.FullControl'],
-                    'AllSites.Write' => ['AllSites.FullControl'],
-                    'AllSites.Manage' => ['AllSites.FullControl'],
-                    'AllSites.FullControl' => [],
-                    'MyFiles.Read' => [],
-                    'MyFiles.Write' => [],
-                ],
-            ],
-            'exchange' => [
-                'appId' => '00000002-0000-0ff1-ce00-000000000000',
-                'displayName' => 'Microsoft.Exchange',
-                'requiredAppPermissions' => [],
-                'requiredDelegatedPermissions' => [
-                    'Calendars.ReadWrite' => [],
-                ],
-            ],
-            'onenote' => [
-                'appId' => '2d4d3d8e-2be3-4bef-9f87-7875a61c29de',
-                'displayName' => 'OneNote',
-                'requiredAppPermissions' => [],
-                'requiredDelegatedPermissions' => [
-                    'Notes.ReadWrite' => [],
-                    'Notes.Create' => [],
                 ],
             ],
         ];
