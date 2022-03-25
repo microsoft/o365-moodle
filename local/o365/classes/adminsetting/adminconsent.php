@@ -89,13 +89,11 @@ class adminconsent extends \admin_setting {
      * @return string
      */
     public function output_html($data, $query='') {
-        global $OUTPUT;
-
         $settinghtml = '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
         $setuserurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'adminconsent']);
 
         $linkstr = get_string('settings_adminconsent_btn', 'local_o365');
-        $message = \html_writer::link($setuserurl, $linkstr, ['class' => 'btn', 'style' => 'margin-bottom: 0.5rem']);
+        $message = \html_writer::link($setuserurl, $linkstr, ['class' => 'btn btn-primary', 'style' => 'margin-bottom: 0.5rem']);
         $messageattrs = [];
         $settinghtml .= \html_writer::tag('div', $message, $messageattrs);
 
