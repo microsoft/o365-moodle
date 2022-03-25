@@ -540,7 +540,7 @@ Please also ensure the Azure app used for the integration has <b>EduRoster.Read.
 By default, the school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_sds_coursecreation'] = 'Course Creation';
 $string['settings_sds_coursecreation_desc'] = 'These options control course creation in Moodle based on information in SDS.';
-$string['settings_sds_coursecreation_enabled'] = 'Create Courses';
+$string['settings_sds_coursecreation_enabled'] = 'Synced schools';
 $string['settings_sds_coursecreation_enabled_desc'] = 'Create courses for these schools.';
 $string['settings_sds_teams_enabled'] = 'Teams creation enabled';
 $string['settings_sds_teams_enabled_desc'] = 'This controls if Moodle courses created from syncing SDS classes are automatically connected to the Microsoft Team of the SDS class. This should be enabled only if Teams are automatically created from the SDS classes.';
@@ -566,6 +566,10 @@ $string['settings_sds_profilesync_desc'] = 'Select the SDS school from which Moo
 Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.';
 $string['settings_sds_noschools'] = '<div class="alert alert-info">You do not have any schools available in School data sync.</div>';
 $string['settings_sds_get_schools_error'] = '<div class="alert alert-info error">Failed to get SDS schools. Check the Azure app has required permission.</div>';
+$string['settings_sds_school_disabled_action'] = 'School sync disabled action';
+$string['settings_sds_school_disabled_action_desc'] = 'Action to the already connected Moodle courses when sync is disabled on an SDS school.';
+$string['settings_sds_school_disabled_action_keep_connected'] = 'Keep the Moodle course connected to the Team';
+$string['settings_sds_school_disabled_action_disconnect'] = 'Disconnect the Moodle course with the Team';
 
 // Settings in the "Teams Settings" tab.
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';

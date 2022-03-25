@@ -524,6 +524,18 @@ if ($hassiteconfig) {
                     $settings->add(new admin_setting_configselect('local_o365/sdsenrolmentstudentrole', $label, $desc, 5,
                         $roleoptions));
 
+                    // SDS school sync disabled action.
+                    $schooldisabledactionoptions = [
+                        SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED => get_string(
+                            'settings_sds_school_disabled_action_keep_connected', 'local_o365'),
+                        SDS_SCHOOL_DISABLED_ACTION_DISCONNECT => get_string('settings_sds_school_disabled_action_disconnect',
+                            'local_o365'),
+                    ];
+                    $label = new lang_string('settings_sds_school_disabled_action', 'local_o365');
+                    $desc = new lang_string('settings_sds_school_disabled_action_desc', 'local_o365');
+                    $settings->add(new admin_setting_configselect('local_o365/sdsschooldisabledaction', $label, $desc,
+                        SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED, $schooldisabledactionoptions));
+
                     // SDS user profile mapping sync section.
                     $label = new lang_string('settings_sds_profilesync_header', 'local_o365');
                     $desc = new lang_string('settings_sds_profilesync_header_desc', 'local_o365');
