@@ -766,5 +766,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2021051713, 'local', 'o365');
     }
 
+    if ($oldversion < 2021051714) {
+        // Clean up SDS sync records.
+        local_o365\feature\sds\task\sync::clean_up_sds_sync_records();
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2021051714, 'local', 'o365');
+    }
+
     return true;
 }
