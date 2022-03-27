@@ -92,9 +92,8 @@ class botintent {
         if (!empty($params) && is_array($params)) {
             $this->entities = (empty($params['entities']) ? null : json_decode($params['entities']));
             $intent = (empty($params['intent']) ? null : $params['intent']);
-            if (!is_null($intent) && !empty($this->availableintents[$intent]) &&
-                (empty($this->availableintents[$intent]['permission']) ||
-                has_capability('local/o365:'.$this->availableintents[$intent]['permission'], $contextsystem))) {
+            if (!is_null($intent) && !empty($this->availableintents[$intent]) && (empty($this->availableintents[$intent]['permission'])
+                    || self::check_permission($this->availableintents[$intent]['permission']))) {
                     $this->intentclass = "\\local_o365\\bot\\intents\\{$this->availableintents[$intent]['classname']}";
                     if (!class_exists($this->intentclass)) {
                         $this->intentclass = null;
@@ -123,5 +122,24 @@ class botintent {
                     'language' => $this->userlanguage
             );
         }
+    }
+
+    /**
+     * @var array to cache user permission status
+     */
+    public static function check_permission($permission) {
+        global $USER;
+        static $checkedpermissions = [];
+        if (!isset($checkedpermissions[$permission])) {
+            $checkedpermissions[$permission] = false;
+            $roles = get_roles_with_capability('local/o365:'.$permission);
+            foreach ($roles as $role) {
+                if (user_has_role_assignment($USER->id, $role->id)) {
+                    $checkedpermissions[$permission] = true;
+                    break;
+                }
+            }
+        }
+        return $checkedpermissions[$permission];
     }
 }
