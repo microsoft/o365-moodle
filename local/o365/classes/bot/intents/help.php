@@ -32,19 +32,6 @@ defined('MOODLE_INTERNAL') || die();
  */
 class help implements \local_o365\bot\intents\intentinterface {
     /**
-     * @var array to cache user permission status
-     */
-
-
-    private static function check_permission($permission) {
-        static $checkedpermissions = [];
-        if (!isset($checkedpermissions[$permission])) {
-            $systemcontext = \context_system::instance();
-            $checkedpermissions[$permission] = has_capability('local/o365:'.$permission, $systemcontext);
-        }
-        return $checkedpermissions[$permission];
-    }
-    /**
      * Gets a message with the welcome text and available questions.
      *
      * @param string $language - Message language
@@ -59,7 +46,7 @@ class help implements \local_o365\bot\intents\intentinterface {
 
         $message = get_string_manager()->get_string('help_message', 'local_o365', null, $language);
         foreach ($entities as $intent) {
-            if (!empty($intent['permission']) && self::check_permission($intent['permission'])) {
+            if (!empty($intent['permission']) && \local_o365\bot\botintent::check_permission($intent['permission'])) {
                     $text = get_string_manager()->get_string($intent['text'], 'local_o365', null, $language);
                     $action = ($intent['clickable'] ? $text : null);
                     $actiontype = ($intent['clickable'] ? 'imBack' : null);
