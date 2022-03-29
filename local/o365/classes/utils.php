@@ -75,10 +75,12 @@ class utils {
      * @param \local_o365\oauth2\clientdata $clientdata Client credentials.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
      * @param bool $forcecreate
-     *
-     * @return \local_o365\oauth2\apptoken|\local_o365\oauth2\systemapiusertoken An app or system token.
+     * @param bool $throwexception
+     * @return \local_o365\oauth2\apptoken|\local_o365\oauth2\systemapiusertoken|null An app or system token.
+     * @throws \Exception
      */
-    public static function get_app_or_system_token($tokenresource, $clientdata, $httpclient, $forcecreate = false) {
+    public static function get_app_or_system_token($tokenresource, $clientdata, $httpclient, $forcecreate = false,
+        $throwexception = true) {
         $token = null;
         try {
             if (static::is_configured_apponlyaccess() === true) {
@@ -99,7 +101,11 @@ class utils {
         if (!empty($token)) {
             return $token;
         } else {
-            throw new \Exception('Could not get app or system token');
+            if ($throwexception) {
+                throw new \Exception('Could not get app or system token');
+            } else {
+                return $token;
+            }
         }
     }
 
