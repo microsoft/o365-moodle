@@ -1128,14 +1128,22 @@ class observers {
 
             // Clear user records in local_o365_objects table.
             $DB->delete_records('local_o365_objects', ['type' => 'user']);
+
+            // Delete delta user token, and force a user sync task run.
+            unset_config('local_o365', 'task_usersync_lastdeltatoken');
+            if ($usersynctask = $DB->get_record('task_scheduled',
+                ['component' => 'local_o365', 'classname' => '\local_o365\task\usersync'])) {
+                $usersynctask->nextruntime = time();
+                $DB->update_record('task_scheduled', $usersynctask);
+            }
         }
 
         if ($eventdata['other']['name'] == 'enableapponlyaccess' && $eventdata['other']['oldvalue'] == '0' &&
             $eventdata['other']['value'] == '1') {
             unset_config('systemtokens', 'local_o365');
-
-            purge_all_caches();
         }
+
+        purge_all_caches();
 
         return true;
     }
