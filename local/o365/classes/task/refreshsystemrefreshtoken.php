@@ -56,7 +56,7 @@ class refreshsystemrefreshtoken extends \core\task\scheduled_task {
         $httpclient = new httpclient();
         $clientdata = clientdata::instance_from_oidc();
         $graphresource = unified::get_tokenresource();
-        $systemtoken = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+        $systemtoken = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient, false, false);
         if (!empty($systemtoken)) {
             mtrace('... Success!');
         } else {

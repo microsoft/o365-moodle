@@ -91,10 +91,12 @@ class utils {
      * @param clientdata $clientdata Client credentials.
      * @param httpclientinterface $httpclient An HTTP client.
      * @param bool $forcecreate
-     * @return apptoken|systemapiusertoken An app or system token.
+     * @param bool $throwexception
+     * @return apptoken|systemapiusertoken|null An app or system token.
+     * @throws Exception
      */
     public static function get_app_or_system_token(string $tokenresource, clientdata $clientdata, httpclientinterface $httpclient,
-        bool $forcecreate = false) {
+        bool $forcecreate = false, bool $throwexception = true) {
         $token = null;
         try {
             if (static::is_configured_apponlyaccess() === true) {
@@ -115,7 +117,11 @@ class utils {
         if (!empty($token)) {
             return $token;
         } else {
-            throw new Exception('Could not get app or system token');
+            if ($throwexception) {
+                throw new Exception('Could not get app or system token');
+            } else {
+                return $token;
+            }
         }
     }
 
