@@ -337,7 +337,7 @@ class main {
         // Remove existing owners and members.
         $existingownerids = array_keys($this->get_group_owners($groupobjectid));
         $existingmemberids = array_keys($this->get_group_members($groupobjectid));
-        $owners = array_diff($owners, $existingmemberids);
+        $owners = array_diff($owners, $existingownerids);
         $members = array_diff($members, $existingmemberids);
 
         $this->mtrace('Adding ' . count($owners) . ' owners and ' . count($members) . ' members to group with ID ' .
