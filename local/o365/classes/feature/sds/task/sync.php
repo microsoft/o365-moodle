@@ -614,6 +614,9 @@ class sync extends scheduled_task {
         $sectionsinenabledschools = [];
         $sectionsinenabledschoolids = [];
         $apiclient = \local_o365\feature\sds\utils::get_apiclient();
+        if (!$apiclient) {
+            return;
+        }
         foreach ($enabledschools as $schoolobjectid) {
             try {
                 $schoolclassresults = $apiclient->get_school_classes($schoolobjectid);
