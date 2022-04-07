@@ -2205,7 +2205,7 @@ class unified extends o365api {
             $odataqueries[] = '$skiptoken=' . $skiptoken;
         }
         if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
+            $endpoint .= '&' . implode('&', $odataqueries);
         }
         $response = $this->betaapicall('get', $endpoint);
         $expectedparams = ['value' => null];
