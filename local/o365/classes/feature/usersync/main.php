@@ -221,21 +221,18 @@ class main {
 
         require_once("$CFG->libdir/gdlib.php");
         $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
-        $photoid = '';
-        if (!empty($record->photoid)) {
-            $photoid = $record->photoid;
-        }
         $result = false;
         $apiclient = $this->construct_outlook_api($muserid, true);
         if (empty($upn)) {
             $o365user = o365user::instance_from_muserid($muserid);
             $upn = $o365user->upn;
         }
-        $size = $apiclient->get_photo_metadata($upn);
+
         $muser = \core_user::get_user($muserid, 'id, picture', MUST_EXIST);
         $context = \context_user::instance($muserid, MUST_EXIST);
-        // If there is no metadata, there is no photo.
-        if (empty($size)) {
+
+        $image = $apiclient->get_photo($upn);
+        if (!$image) {
             // Profile photo has been deleted.
             if (!empty($muser->picture)) {
                 // User has no photo. Deleting previous profile photo.
@@ -244,11 +241,9 @@ class main {
                 $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
             }
             $result = false;
-        } else if ($size['@odata.mediaEtag'] !== $photoid) {
-            $image = $apiclient->get_photo($upn);
-
+        } else {
             // Check if json error message was returned.
-            if ($image && !preg_match('/^{/', $image)) {
+            if (!preg_match('/^{/', $image)) {
                 // Update profile picture.
                 $tempfile = tempnam($CFG->tempdir.'/', 'profileimage').'.jpg';
                 if (!$fp = fopen($tempfile, 'w+b')) {
@@ -258,7 +253,6 @@ class main {
                 fwrite($fp, $image);
                 fclose($fp);
                 $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
-                $photoid = $size['@odata.mediaEtag'];
                 if ($newpicture != $muser->picture) {
                     $DB->set_field('user', 'picture', $newpicture, array('id' => $muser->id));
                     $result = true;
@@ -271,7 +265,6 @@ class main {
             $record->muserid = $muserid;
             $record->assigned = 0;
         }
-        $record->photoid = $photoid;
         $record->photoupdated = time();
         if (empty($record->id)) {
             $DB->insert_record('local_o365_appassign', $record);
