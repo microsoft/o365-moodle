@@ -1839,26 +1839,6 @@ class unified extends \local_o365\rest\o365api {
     }
 
     /**
-     * Get user profile photo metadata.
-     *
-     * @param string $user The UPN of the user to retrieve photo meta data for.
-     *
-     * @return false|int no photo found, or the height of the photo image.
-     */
-    public function get_photo_metadata($user) {
-        $response = $this->betaapicall('get', "/users/$user/photo");
-        $data = json_decode($response, true);
-        // Photo not found.
-        if (!empty($data['error'])) {
-            return false;
-        }
-        $expected = array('id' => null);
-        $photo = $this->process_apicall_response($response, $expected);
-
-        return $photo;
-    }
-
-    /**
      * Create readonly link for onedrive file.
      *
      * @param string $fileid onedrive file id.
