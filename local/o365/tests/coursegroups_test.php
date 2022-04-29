@@ -135,7 +135,7 @@ class local_o365_coursegroups_testcase extends \advanced_testcase {
                         'displayName' => $course->fullname,
                         'mailEnabled' => false,
                         'securityEnabled' => false,
-                        'mailNickname' => strtolower(preg_replace('/[^a-z0-9-_]+/iu', '', $course->fullname)),
+                        'mailNickname' => strtolower(preg_replace('/[^a-z0-9-_]+/iu', '', $course->shortname)),
                         'visibility' => 'Private',
                         'resourceBehaviorOptions' => ["HideGroupInOutlook","WelcomeEmailDisabled"],
                         'description' => $description,
