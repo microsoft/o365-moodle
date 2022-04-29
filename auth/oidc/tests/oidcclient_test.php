@@ -105,6 +105,7 @@ class auth_oidc_oidcclient_testcase extends \advanced_testcase {
     /**
      * Test setting and getting endpoints.
      *
+     * @dataProvider dataprovider_endpoints
      * @param $endpoints
      * @param $expectedexception
      */

@@ -280,7 +280,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
                 'username' => 'testuser'.$i.'@example.onmicrosoft.com',
                 'userid' => $muser['id'],
                 'scope' => 'test',
-                'tokenresource' => \local_o365\rest\azuread::get_tokenresource(),
+                'tokenresource' => \local_o365\rest\unified::get_tokenresource(),
                 'token' => '000',
                 'expiry' => '9999999999',
                 'refreshtoken' => 'fsdfsdf'.$i,
@@ -300,7 +300,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $httpclient = new \local_o365\tests\mockhttpclient();
         $httpclient->set_response($response);
 
-        $apiclient = new \local_o365\rest\azuread($this->get_mock_token(), $httpclient);
+        $apiclient = new \local_o365\rest\unified($this->get_mock_token(), $httpclient);
         $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
         $users = $apiclient->get_users();
         $usersync->sync_users($users['value']);
