@@ -63,6 +63,4 @@ $templatecontext = [
         'is_course_overview' => $iscourseoverview,
 ];
 
-$templatecontext['flatnavigation'] = $PAGE->flatnav;
-
 echo $OUTPUT->render_from_template('theme_boost_o365teams/columns2', $templatecontext);

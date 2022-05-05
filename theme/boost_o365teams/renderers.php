@@ -25,8 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/renderer.php');
-require_once($CFG->dirroot . '/mod/assign/renderer.php');
+require_once($CFG->dirroot . '/mod/assign/classes/output/renderer.php');
+require_once($CFG->dirroot . '/mod/assign/classes/output/assign_header.php');
 require_once($CFG->dirroot . '/mod/quiz/renderer.php');
+
 /**
  * mod_assign
  *
@@ -34,37 +36,39 @@ require_once($CFG->dirroot . '/mod/quiz/renderer.php');
  * @copyright  2018 Enovation Solutions
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class theme_boost_o365teams_mod_assign_renderer extends mod_assign_renderer {
+class theme_boost_o365teams_mod_assign_renderer extends mod_assign\output\renderer {
     /**
      * Render the header.
      *
-     * @param assign_header $header
+     * @param mod_assign\output\assign_header $header
      * @return string
      */
-    public function render_assign_header(assign_header $header) {
-        $o = '';
-
+    public function render_assign_header(mod_assign\output\assign_header $header) {
         if ($header->subpage) {
-            $this->page->navbar->add($header->subpage);
+            $this->page->navbar->add($header->subpage, $header->subpageurl);
         }
 
         $heading = format_string($header->assign->name, false, array('context' => $header->context));
         $this->page->set_title($heading);
         $this->page->set_heading($this->page->course->fullname);
 
-        $o .= $this->output->header();
-        if ($header->preface) {
-            $o .= $header->preface;
-        }
-
+        $description = $header->preface;
         if ($header->showintro) {
-            $o .= $this->output->box_start('generalbox boxaligncenter', 'intro');
-            $o .= format_module_intro('assign', $header->assign, $header->coursemoduleid);
-            $o .= $header->postfix;
-            $o .= $this->output->box_end();
+            $description = $this->output->box_start('generalbox boxaligncenter', 'intro');
+            if ($header->showintro) {
+                $description .= format_module_intro('assign', $header->assign, $header->coursemoduleid);
+            }
+            $description .= $header->postfix;
+            $description .= $this->output->box_end();
         }
 
-        return $o;
+        $activityheader = $this->page->activityheader;
+        $activityheader->set_attrs([
+            'title' => $activityheader->is_title_allowed() ? $heading : '',
+            'description' => $description
+        ]);
+
+        return $this->output->header();
     }
 }
 /**
