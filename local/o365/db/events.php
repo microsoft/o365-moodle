@@ -112,7 +112,7 @@ $observers = [
     ],
     [
         'eventname'   => '\core\event\enrol_instance_updated',
-        'callback'    => '\local_o365\observers:handle_enrol_instance_updated',
+        'callback'    => '\local_o365\observers::handle_enrol_instance_updated',
         'priority'    => 200,
         'internal'    => false,
     ],
