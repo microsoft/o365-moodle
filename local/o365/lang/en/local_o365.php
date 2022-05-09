@@ -600,7 +600,7 @@ Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">App reg
 $string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
 $string['settings_teams_deploy_bot_2'] = 'Need help?';
 $string['settings_bot_feature_enabled'] = 'Bot feature enabled';
-$string['settings_bot_feature_enabled_desc'] = '';
+$string['settings_bot_feature_enabled_desc'] = '<span class="warning">NOTE: There is a known issue in which if the bot feature is enabled in the Teams app, the Moodle Teams app cannot be provisioned to class teams unless the team is manually activated.</span>';
 $string['settings_bot_app_id'] = 'Application ID';
 $string['settings_bot_app_id_desc'] = '';
 $string['settings_bot_app_password'] = 'Client Secret';
