@@ -15,28 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy test assignsubmission_onenote.
+ * Unit tests for assignsubmission_onenote.
  *
- * @package assignsubmission_onenote
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
+ * @package    assignsubmission_onenote
+ * @copyright  Microsoft, Inc.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace assignfeedback_onenote\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot.'/mod/assign/tests/privacy_test.php');
+require_once($CFG->dirroot . '/mod/assign/locallib.php');
+require_once($CFG->dirroot . '/mod/assign/tests/privacy/provider_test.php');
 
 /**
- * Privacy test for assignsubmission_onenote
+ * Unit tests for mod/assign/submission/onenote/classes/privacy/
  *
- * @group assignsubmission_onenote
- * @group assignsubmission_onenote_privacy
- * @group office365
- * @group office365_privacy
+ * @copyright  Microsoft, Inc.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_assign_privacy_testcase {
-
+class provider_test extends \mod_assign\privacy\provider_test {
     /**
      * Quick test to make sure that get_metadata returns something.
      */
@@ -47,7 +46,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
     }
 
     /**
-     * Test that submission files and text are exported for a user.
+     * Test that comments are exported for a user.
      */
     public function test_export_submission_user_data() {
         $this->resetAfterTest();
@@ -70,7 +69,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         $exportdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $submission, ['Attempt 1']);
         \assignsubmission_onenote\privacy\provider::export_submission_user_data($exportdata);
         $exporteddata = $writer->get_data(['Attempt 1',
-                get_string('privacy:path', 'assignsubmission_onenote')]);
+            get_string('privacy:path', 'assignsubmission_onenote')]);
         $this->assertEquals($assign->get_instance()->id, $exporteddata->assignment);
         $this->assertEquals($submission->id, $exporteddata->submission);
         $this->assertEquals('1', $exporteddata->numfiles);
@@ -84,7 +83,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
     }
 
     /**
-     * Test that all submission files are deleted for this context.
+     * Test that all comments are deleted for this context.
      */
     public function test_delete_submission_for_context() {
         $this->resetAfterTest();
@@ -106,7 +105,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         $studenttext2 = 'Student two\'s text.';
         list($plugin2, $submission2) = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
-        $fs = new file_storage();
+        $fs = new \file_storage();
         $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
             \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         // 4 including directories.
@@ -119,7 +118,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         $this->assertTrue($plugin->is_empty($submission));
         $this->assertTrue($plugin2->is_empty($submission2));
 
-        $fs = new file_storage();
+        $fs = new \file_storage();
         $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
             \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         $this->assertEquals(0, count($files));
@@ -148,7 +147,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         $studenttext2 = 'Student two\'s text.';
         list($plugin2, $submission2) = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
-        $fs = new file_storage();
+        $fs = new \file_storage();
         $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
             \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         // 4 including directories.
@@ -162,13 +161,16 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         // But there is for the second submission.
         $this->assertFalse($plugin2->is_empty($submission2));
 
-        $fs = new file_storage();
+        $fs = new \file_storage();
         $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
             \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
         // 2 files that were not deleted.
         $this->assertEquals(2, count($files));
     }
 
+    /**
+     * Test deletion of all submissions for a context works.
+     */
     public function test_delete_submissions() {
         global $DB;
 
@@ -204,7 +206,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         $student4text = 'Student four\'s text.';
         list($plugin5, $submission5) = $this->create_onenote_submission($assign2, $user4, $student4text);
 
-        $fs = new file_storage();
+        $fs = new \file_storage();
         // 6 including directories for assign 1.
         // 4 including directories for assign 2.
         $this->assertCount(6, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
@@ -228,7 +230,7 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         $data = $DB->get_records('assignsubmission_onenote', ['assignment' => $assign2->get_instance()->id]);
         $this->assertCount(2, $data);
 
-        $fs = new file_storage();
+        $fs = new \file_storage();
         // 6 including directories for assign 1.
         // 4 including directories for assign 2.
         $this->assertCount(2, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
@@ -293,5 +295,4 @@ class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_as
         );
         return count($files);
     }
-
 }
