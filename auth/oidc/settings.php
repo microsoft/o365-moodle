@@ -30,6 +30,7 @@ use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_label;
+use auth_oidc\utils;
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
@@ -68,7 +69,7 @@ $settings->add(new admin_setting_configtext('auth_oidc/oidcscope', $configkey, $
 
 $configkey = new lang_string('cfg_redirecturi_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_redirecturi_desc', 'auth_oidc');
-$settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/redirecturi', $configkey, $configdesc));
+$settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/redirecturi', $configkey, $configdesc, utils::get_redirecturl()));
 
 $configkey = new lang_string('cfg_forceredirect_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_forceredirect_desc', 'auth_oidc');
@@ -107,6 +108,11 @@ $configkey = new lang_string('cfg_logoutendpoint_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_logoutendpoint_desc', 'auth_oidc');
 $configdefault = 'https://login.microsoftonline.com/common/oauth2/logout';
 $settings->add(new admin_setting_configtext('auth_oidc/logouturi', $configkey, $configdesc, $configdefault, PARAM_TEXT));
+
+$configkey = new lang_string('cfg_frontchannellogouturl_key', 'auth_oidc');
+$configdesc =  new lang_string('cfg_frontchannellogouturl_desc', 'auth_oidc');
+$settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/logoutendpoint', $configkey, $configdesc,
+    utils::get_frontchannellogouturl()));
 
 $label = new lang_string('cfg_debugmode_key', 'auth_oidc');
 $desc = new lang_string('cfg_debugmode_desc', 'auth_oidc');
