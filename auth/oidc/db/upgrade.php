@@ -312,5 +312,19 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2021051701, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2022041901) {
+        // Define field sid to be added to auth_oidc_token.
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('sid', XMLDB_TYPE_CHAR, '36', null, null, null, null, 'idtoken');
+
+        // Conditionally launch add field sid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2022041901, 'auth', 'oidc');
+    }
+
     return true;
 }

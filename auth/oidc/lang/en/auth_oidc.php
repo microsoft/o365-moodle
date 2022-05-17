@@ -87,12 +87,14 @@ $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect provider will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
 $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
 $string['cfg_userrestrictioncasesensitive_desc'] = 'This controls if the "/i" option in regular expression is used in the user restriction match.<br/>If enabled, all user restriction checks will be performed as with case sensitive. Note if this is disabled, any patterns on letter cases will be ignored.';
-$string['cfg_signoffintegration_key'] = 'Single sign off';
-$string['cfg_signoffintegration_desc'] = 'When connecting to Azure AD, if this option is enabled, when a Moodle user using the OpenID Connect authentication method signs off from Moodle, Moodle will attempt to log the user off from Microsoft 365 as well.
-
-Note the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle Microsoft 365 integration.';
+$string['cfg_signoffintegration_key'] = 'Single sign out';
+$string['cfg_signoffintegration_desc'] = 'If the option is enabled, when a Moodle user connected to the configured IdP logs out of Moodle, the integration will trigger a request at the logout endpiont below, attempting to log the user off from IdP as well.<br/>
+Note for integration with Microsoft Azure AD, the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle and Microsoft 365 integration.';
 $string['cfg_logoutendpoint_key'] = 'Logout Endpoint';
 $string['cfg_logoutendpoint_desc'] = 'The URI of the logout endpoint from your identity provider to use.';
+$string['cfg_frontchannellogouturl_key'] = 'Front-channel Logout URL';
+$string['cfg_frontchannellogouturl_desc'] = 'This is the URL that your IdP needs to trigger when it tries to log users out of Moodle.<br/>
+For Microsoft Azure AD, the setting is called "Front-channel logout URL" and is configurable in the Azure app.';
 $string['cfg_tools'] = 'Tools';
 $string['cfg_cleanupoidctokens_key'] = 'Cleanup OpenID Connect Tokens';
 $string['cfg_cleanupoidctokens_desc'] = 'If your users are experiencing problems logging in using their Microsoft 365 account, trying cleaning up OpenID Connect tokens. This removes stray and incomplete tokens that can cause errors. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
