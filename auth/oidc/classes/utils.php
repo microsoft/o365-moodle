@@ -135,8 +135,17 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_redirecturl() {
-        global $CFG;
-        $wwwroot = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
-        return $wwwroot.'/auth/oidc/';
+        $redirecturl = new \moodle_url('/auth/oidc/');
+        return $redirecturl->out(false);
+    }
+
+    /**
+     * Get the front channel logout URL that should be set in the identity provider.
+     *
+     * @return string The redirect URL.
+     */
+    public static function get_frontchannellogouturl() {
+        $logouturl = new \moodle_url('/auth/oidc/logout.php');
+        return $logouturl->out(false);
     }
 }
