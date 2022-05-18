@@ -168,15 +168,12 @@ $string['settings_aadsync_emailsync'] = 'Match Azure usernames to moodle emails 
 $string['settings_addsync_tzsync'] = 'Sync Outlook timezone to Moodle in cronjob';
 $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on login';
 $string['settings_aadsync_guestsync'] = 'Sync guest users';
+$string['settings_suspend_delete_running_time'] = 'User suspension/deletion running time';
+$string['settings_suspend_delete_running_time_desc'] = 'If the option is enabled, suspension/delete feature of user sync function will run once a day, at the time configured in the Moodle instance default time zone.';
 
-// User field mappting.
-$string['settings_fieldmap'] = 'User Field Mapping';
-$string['settings_fieldmap_addmapping'] = 'Add Mapping';
-$string['settings_fieldmap_header_behavior'] = 'Updates';
-$string['settings_fieldmap_header_local'] = 'Moodle Field';
-$string['settings_fieldmap_header_remote'] = 'Active Directory Field';
-$string['settings_fieldmap_update_always'] = 'On login & creation';
-$string['settings_fieldmap_details'] = 'Field mapping setting has been moved to the <a href="{$a}">Open ID Connect authentication plugin</a>.';
+// User field mapping.
+$string['settings_fieldmap'] = 'User field mapping';
+$string['settings_fieldmap_details'] = 'Available in <a href="{$a}">Open ID Connect authentication plugin</a>.';
 
 // Settings in the "Course sync" section of the "Sync settings" tab.
 $string['settings_secthead_coursesync'] = 'Course Sync';

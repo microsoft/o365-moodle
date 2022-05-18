@@ -429,3 +429,17 @@ function local_o365_get_auth_token() {
 
     return $authtoken;
 }
+
+/**
+ * Check if the suspension feature schedule in the user sync task has been set, and set the default value if not.
+ *
+ * @return void
+ */
+function local_o365_set_default_user_sync_suspension_feature_schedule() {
+    if (get_config('local_o365', 'usersync_suspension_h') === false) {
+        set_config('usersync_suspension_h', 2, 'local_o365');
+    }
+    if (get_config('local_o365', 'usersync_suspension_m') === false) {
+        set_config('usersync_suspension_m', 30, 'local_o365');
+    }
+}
