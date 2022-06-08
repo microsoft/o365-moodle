@@ -976,10 +976,14 @@ class main {
             return true;
         }
 
-        $select = 'SELECT LOWER(u.username) AS username,';
-        if (isset($aadsync['emailsync'])) {
-            $select .= ' LOWER(u.email) AS email,';
-        }
+        /* In order to find existing user accounts using isset($existingusers[$aadupn]) we have to index the array
+         * by email address if we match AAD UPNs against Moodle email addresses!
+         * TODO: We may run into problems if we have multiple accounts with the same mail address!
+         *       See setting `allowaccountssameemail`.
+         */
+        $select = isset($aadsync['emailsync']) ?
+            "SELECT LOWER(u.email) AS email, LOWER(u.username) AS username," :
+            "SELECT LOWER(u.username) AS username";
 
         $sql = "$select
                        u.id as muserid,
