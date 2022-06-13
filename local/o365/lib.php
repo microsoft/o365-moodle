@@ -395,3 +395,29 @@ function local_o365_get_auth_token() {
 
     return $authtoken;
 }
+
+/**
+ * Check if users with same email address exists in Moodle.
+ *
+ * @return bool
+ */
+function local_o365_users_with_same_email_exist() {
+    global $DB;
+
+    $userswithsameemailexists = false;
+
+    $sql = "SELECT COUNT(a.id)
+              FROM {user} a
+              JOIN {user} b
+             WHERE a.email LIKE b.email
+               AND a.id < b.id
+               AND a.deleted = 0
+               AND b.deleted = 0
+               AND a.suspended = 0
+               AND b.suspended = 0";
+    if ($DB->count_records_sql($sql) != 0) {
+        $userswithsameemailexists = true;
+    }
+
+    return $userswithsameemailexists;
+}
