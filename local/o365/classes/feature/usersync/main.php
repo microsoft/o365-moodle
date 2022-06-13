@@ -987,14 +987,18 @@ class main {
             return true;
         }
 
-        /* In order to find existing user accounts using isset($existingusers[$aadupn]) we have to index the array
-         * by email address if we match AAD UPNs against Moodle email addresses!
-         * TODO: We may run into problems if we have multiple accounts with the same mail address!
-         *       See setting `allowaccountssameemail`.
-         */
-        $select = isset($aadsync['emailsync']) ?
-            "SELECT LOWER(u.email) AS email, LOWER(u.username) AS username," :
-            "SELECT LOWER(u.username) AS username";
+        // In order to find existing user accounts using isset($existingusers[$aadupn]) we have to index the array
+        // by email address if we match AAD UPNs against Moodle email addresses!
+        if (isset($aadsync['emailsync'])) {
+            if (local_o365_users_with_same_email_exist()) {
+                // Match by email, but duplicate email exists, revert to match by username.
+                $select = "SELECT LOWER(u.username) AS username, LOWER(u.email) AS email, ";
+            } else {
+                $select = "SELECT LOWER(u.email) AS email, LOWER(u.username) AS username, ";
+            }
+        } else {
+            $select = "SELECT LOWER(u.username) AS username, ";
+        }
 
         $sql = "$select
                        u.id as muserid,
