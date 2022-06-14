@@ -198,10 +198,35 @@ class usersync extends scheduled_task {
         if (main::sync_option_enabled('suspend') || main::sync_option_enabled('reenable')) {
             $lastrundate = get_config('local_o365', 'task_usersync_lastdelete');
             $rundelete = true;
+            $alreadyruntoday = false;
+
             if (strlen($lastrundate) == 10) {
                 $lastrundate = false;
             }
-            set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
+            if ($lastrundate && $lastrundate >= date('Ymd')) {
+                $alreadyruntoday = true;
+                $rundelete = false;
+            }
+            if (!$alreadyruntoday) {
+                $suspensiontaskhour = get_config('local_o365', 'usersync_suspension_h');
+                $suspensiontaskminute = get_config('local_o365', 'usersync_suspension_m');
+                if (!$suspensiontaskhour) {
+                    $suspensiontaskhour = 0;
+                }
+                if(!$suspensiontaskminute) {
+                    $suspensiontaskminute = 0;
+                }
+                $currenthour = date('H');
+                $currentminute = date('i');
+                if ($currenthour > $suspensiontaskhour) {
+                    set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
+                } else if (($currenthour == $suspensiontaskhour) && ($currentminute >= $suspensiontaskminute)) {
+                    set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
+                } else {
+                    $rundelete = false;
+                }
+            }
+
             if ($lastrundate != false) {
                 if (date('Ymd') <= $lastrundate) {
                     $rundelete = false;
