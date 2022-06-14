@@ -103,6 +103,8 @@ class usersync extends scheduled_task {
         // Do not time out when syncing users.
         @set_time_limit(0);
 
+        $fullsyncfailed = false;
+
         if (main::sync_option_enabled('nodelta') === true) {
             $skiptoken = $this->get_token('skiptokenfull');
             if (!empty($skiptoken)) {
@@ -122,6 +124,7 @@ class usersync extends scheduled_task {
                     $continue = (!empty($skiptoken));
                 }
             } catch (\Exception $e) {
+                $fullsyncfailed = true;
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), 'usersync task', $e);
                 $this->mtrace('Resetting skip and delta tokens.');
@@ -248,6 +251,7 @@ class usersync extends scheduled_task {
                             $continue = (!empty($skiptoken));
                         }
                     } catch (\Exception $e) {
+                        $fullsyncfailed = true;
                         $this->mtrace('Error in full usersync: ' . $e->getMessage());
                         utils::debug($e->getMessage(), 'usersync task', $e);
                         $this->mtrace('Resetting skip and delta tokens.');
@@ -255,13 +259,17 @@ class usersync extends scheduled_task {
                     }
                 }
 
-                if (main::sync_option_enabled('suspend')) {
-                    $this->mtrace('Suspending deleted users...');
-                    $usersync->suspend_users($users, main::sync_option_enabled('delete'));
-                }
-                if (main::sync_option_enabled('reenable')) {
-                    $this->mtrace('Re-enabling suspended users...');
-                    $usersync->reenable_suspsend_users($users, main::sync_option_enabled('disabledsync'));
+                if ($fullsyncfailed) {
+                    $this->mtrace('Full user sync failed, skip suspending users...');
+                } else {
+                    if (main::sync_option_enabled('suspend')) {
+                        $this->mtrace('Suspending deleted users...');
+                        $usersync->suspend_users($users, main::sync_option_enabled('delete'));
+                    }
+                    if (main::sync_option_enabled('reenable')) {
+                        $this->mtrace('Re-enabling suspended users...');
+                        $usersync->reenable_suspsend_users($users, main::sync_option_enabled('disabledsync'));
+                    }
                 }
             }
         }
