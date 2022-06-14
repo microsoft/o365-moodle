@@ -879,5 +879,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020110933, 'local', 'o365');
     }
 
+    if ($oldversion < 2020110939) {
+        // Set default user sync suspension feature schedule.
+        local_o365_set_default_user_sync_suspension_feature_schedule();
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2020110939, 'local', 'o365');
+    }
+
     return true;
 }
