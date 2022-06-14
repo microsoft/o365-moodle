@@ -618,6 +618,7 @@ $string['settings_bot_sharedsecret_desc'] = 'This shared secret will be also add
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
+$string['settings_deploy_bot'] = 'Deploy bot to Azure';
 
 // Settings in the "Teams Moodle app" tab.
 $string['settings_moodle_app_id'] = 'Moodle app ID';
