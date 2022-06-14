@@ -633,7 +633,7 @@ if ($hassiteconfig) {
         // Moodle app ID.
         $moodleappiddescription = get_string('settings_moodle_app_id_desc', 'local_o365');
         if (\local_o365\utils::is_connected() === true) {
-            $graphclient = utils::get_graphclient();
+            $graphclient = \local_o365\utils::get_api();
 
             if ($graphclient) {
                 $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
