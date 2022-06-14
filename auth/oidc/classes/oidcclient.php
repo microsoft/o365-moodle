@@ -219,7 +219,6 @@ class oidcclient {
      * @param array $extraparams Additional parameters to send with the OIDC request.
      */
     public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
-        global $DB;
         if (empty($this->clientid)) {
             throw new \moodle_exception('erroroidcclientnocreds', 'auth_oidc');
         }
