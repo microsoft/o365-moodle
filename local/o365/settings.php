@@ -577,7 +577,8 @@ if ($hassiteconfig) {
         $deploybuttonhtml .= html_writer::empty_tag('br');
         $deploybuttonhtml .= html_writer::empty_tag('br');
         $deploybuttonhtml .= html_writer::link('https://aka.ms/DeployMoodleTeamsBot',
-            html_writer::img('http://azuredeploy.net/deploybutton.png', ''), ['target' => '_blank']);
+            html_writer::img(new moodle_url('/local/o365/pix/deploybutton.png'), get_string('settings_deploy_bot', 'local_o365')),
+            ['target' => '_blank']);
         $deploybuttonhtml .= html_writer::empty_tag('br');
         $deploybuttonhtml .= html_writer::link('https://aka.ms/MoodleTeamsBotHelp',
             get_string('settings_teams_deploy_bot_2', 'local_o365'), ['target' => '_blank']);
