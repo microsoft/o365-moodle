@@ -26,7 +26,9 @@
 
 namespace auth_oidc\loginflow;
 
+use auth_oidc\jwt;
 use auth_oidc\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -88,7 +90,7 @@ class authcode extends base {
         $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
         if ($valclean !== $val) {
             utils::debug('Authorization error.', 'authcode::cleanoidcparam', $name);
-            throw new \moodle_exception('errorauthgeneral', 'auth_oidc');
+            throw new moodle_exception('errorauthgeneral', 'auth_oidc');
         }
         return $valclean;
     }
@@ -179,6 +181,8 @@ class authcode extends base {
     protected function handleauthresponse(array $authparams) {
         global $DB, $SESSION, $USER, $CFG;
 
+        $sid = optional_param('session_state', '', PARAM_TEXT);
+
         if (!empty($authparams['error_description'])) {
             utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
             redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, \core\output\notification::NOTIFY_ERROR);
@@ -186,18 +190,18 @@ class authcode extends base {
 
         if (!isset($authparams['code'])) {
             utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
-            throw new \moodle_exception('errorauthnoauthcode', 'auth_oidc');
+            throw new moodle_exception('errorauthnoauthcode', 'auth_oidc');
         }
 
         if (!isset($authparams['state'])) {
             utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
-            throw new \moodle_exception('errorauthunknownstate', 'auth_oidc');
+            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
         // Validate and expire state.
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
-            throw new \moodle_exception('errorauthunknownstate', 'auth_oidc');
+            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
         $orignonce = $staterec->nonce;
         $additionaldata = [];
@@ -214,10 +218,10 @@ class authcode extends base {
         $client = $this->get_oidcclient();
         $tokenparams = $client->tokenrequest($authparams['code']);
         if (!isset($tokenparams['id_token'])) {
-            throw new \moodle_exception('errorauthnoidtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthnoidtoken', 'auth_oidc');
         }
 
-        // Decode and verify idtoken.
+        // Decode and verify ID token.
         [$oidcuniqid, $idtoken] = $this->process_idtoken($tokenparams['id_token'], $orignonce);
 
         // Check restrictions.
@@ -225,7 +229,7 @@ class authcode extends base {
         if ($passed !== true && empty($additionaldata['ignorerestrictions'])) {
             $errstr = 'User prevented from logging in due to restrictions.';
             utils::debug($errstr, 'handleauthresponse', $idtoken);
-            throw new \moodle_exception('errorrestricted', 'auth_oidc');
+            throw new moodle_exception('errorrestricted', 'auth_oidc');
         }
 
         // This is for setting the system API user.
@@ -245,7 +249,6 @@ class authcode extends base {
         // Check if OIDC user is already migrated.
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
         if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
-
             // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
             // Check if that Microsoft 365 account already exists in moodle.
             $userrec = $DB->count_records_sql('SELECT COUNT(*)
@@ -260,7 +263,7 @@ class authcode extends base {
                 } else if ($additionaldata['redirect'] == '/local/o365/ucp.php') {
                     $redirect = $additionaldata['redirect'].'?action=connection&o365accountconnected=true';
                 } else {
-                    throw new \moodle_exception('errorinvalidredirect_message', 'auth_oidc');
+                    throw new moodle_exception('errorinvalidredirect_message', 'auth_oidc');
                 }
                 redirect(new \moodle_url($redirect));
             }
@@ -276,6 +279,9 @@ class authcode extends base {
         } else {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
+            if ($USER->id && $DB->record_exists('auth_oidc_token', ['userid' => $USER->id])) {
+                $DB->set_field('auth_oidc_token', 'sid', $sid, ['userid' => $USER->id]);
+            }
             redirect(core_login_get_return_url());
         }
     }
@@ -284,9 +290,9 @@ class authcode extends base {
      * Handle a user migration event.
      *
      * @param string $oidcuniqid A unique identifier for the user.
-     * @param array $authparams Paramteres receieved from the auth request.
+     * @param array $authparams Parameters received from the auth request.
      * @param array $tokenparams Parameters received from the token request.
-     * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param jwt $idtoken A JWT object representing the received id_token.
      * @param bool $connectiononly Whether to just connect the user (true), or to connect and change login method (false).
      */
     protected function handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly = false) {
@@ -312,7 +318,7 @@ class authcode extends base {
                     return true;
                 } else {
                     // OIDC user connected to user that is not us. Can't continue.
-                    throw new \moodle_exception('errorauthuserconnectedtodifferent', 'auth_oidc');
+                    throw new moodle_exception('errorauthuserconnectedtodifferent', 'auth_oidc');
                 }
             }
         }
@@ -331,7 +337,7 @@ class authcode extends base {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
                 return true;
             } else {
-                throw new \moodle_exception('errorauthuseralreadyconnected', 'auth_oidc');
+                throw new moodle_exception('errorauthuseralreadyconnected', 'auth_oidc');
             }
         }
 
@@ -418,18 +424,18 @@ class authcode extends base {
      * Handle a login event.
      *
      * @param string $oidcuniqid A unique identifier for the user.
-     * @param array $authparams Parameters receieved from the auth request.
+     * @param array $authparams Parameters received from the auth request.
      * @param array $tokenparams Parameters received from the token request.
-     * @param \auth_oidc\jwt $idtoken A JWT object representing the received id_token.
+     * @param jwt $idtoken A JWT object representing the received id_token.
      */
-    protected function handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken) {
+    protected function handlelogin(string $oidcuniqid, array $authparams, array $tokenparams, jwt $idtoken) {
         global $DB, $CFG;
 
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
 
         // Do not continue if auth plugin is not enabled.
         if (!is_enabled_auth('oidc')) {
-            throw new \moodle_exception('erroroidcnotenabled', 'auth_oidc', null, null, '1');
+            throw new moodle_exception('erroroidcnotenabled', 'auth_oidc', null, null, '1');
         }
 
         if (!empty($tokenrec)) {
@@ -466,10 +472,9 @@ class authcode extends base {
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login.
-                throw new \moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
+                throw new moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
             }
 
-            return true;
         } else {
             /* No existing token, user not connected. Possibilities:
                 - Matched user.
@@ -501,7 +506,7 @@ class authcode extends base {
             if (!empty($matchedwith)) {
                 if ($matchedwith->auth != 'oidc') {
                     $matchedwith->aadupn = $username;
-                    throw new \moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
+                    throw new moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
                 }
             }
             $username = trim(\core_text::strtolower($username));
@@ -518,7 +523,7 @@ class authcode extends base {
                     $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
                     $event = \core\event\user_login_failed::create($eventdata);
                     $event->trigger();
-                    throw new \moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
+                    throw new moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
                 }
             }
 
@@ -543,7 +548,7 @@ class authcode extends base {
                 redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, \core\output\notification::NOTIFY_ERROR);
             }
 
-            return true;
         }
+        return true;
     }
 }
