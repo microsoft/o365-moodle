@@ -128,15 +128,30 @@ class sync extends scheduled_task {
                             $studentstudentnumber = '';
                             $teacherexternalid = '';
                             $teacherteachernumber = '';
-                            if (array_key_exists('student', $processedschooluser)) {
-                                $studentexternalid = $processedschooluser['student']['externalId'];
-                                $studentbirthdate = $processedschooluser['student']['birthDate'];
-                                $studentgrade = $processedschooluser['student']['grade'];
-                                $studentgraduationyear = $processedschooluser['student']['graduationYear'];
-                                $studentstudentnumber = $processedschooluser['student']['studentNumber'];
-                            } else if (array_key_exists('teacher', $processedschooluser)) {
-                                $teacherexternalid = $processedschooluser['teacher']['externalId'];
-                                $teacherteachernumber = $processedschooluser['teacher']['teacherNumber'];
+                            if ($primaryrole == 'student' && isset($processedschooluser['student'])) {
+                                if (isset($processedschooluser['student']['externalId'])) {
+                                    $studentexternalid = $processedschooluser['student']['externalId'];
+                                }
+                                if (isset($processedschooluser['student']['birthDate'])) {
+                                    $studentbirthdate = $processedschooluser['student']['birthDate'];
+                                }
+                                if (isset($processedschooluser['student']['grade'])) {
+                                    $studentgrade = $processedschooluser['student']['grade'];
+                                }
+                                if (isset($processedschooluser['student']['graduationYear'])) {
+                                    $studentgraduationyear = $processedschooluser['student']['graduationYear'];
+                                }
+                                if (isset($processedschooluser['student']['studentNumber'])) {
+                                    $studentstudentnumber = $processedschooluser['student']['studentNumber'];
+                                }
+                            }
+                            if ($primaryrole == 'teacher' && isset($processedschooluser['teacher'])) {
+                                if (isset($processedschooluser['teacher']['externalId'])) {
+                                    $teacherexternalid = $processedschooluser['teacher']['externalId'];
+                                }
+                                if (isset($processedschooluser['teacher']['teacherNumber'])) {
+                                    $teacherteachernumber = $processedschooluser['teacher']['teacherNumber'];
+                                }
                             }
 
                             foreach ($additionalprofilemappings as $remotefield => $localfield) {
