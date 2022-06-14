@@ -599,9 +599,20 @@ if ($hassiteconfig) {
             'Moodle'));
 
         // Setting bot_feature_enabled.
+        $botfeatureenableddescription = '';
+        if (local_o365_is_lti_feature_included()) {
+            if (\local_o365\utils::is_connected() === true) {
+                $graphclient = utils::get_graphclient();
+                if ($graphclient) {
+                    if ($graphclient->has_education_license()) {
+                        $botfeatureenableddescription = get_string('settings_bot_feature_enabled_desc', 'local_o365');
+                    }
+                }
+            }
+        }
         $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
             get_string('settings_bot_feature_enabled', 'local_o365'),
-            get_string('settings_bot_feature_enabled_desc', 'local_o365'),
+            $botfeatureenableddescription,
             '0'));
 
         // Setting bot_webhook_endpoint.

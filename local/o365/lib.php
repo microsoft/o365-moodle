@@ -395,3 +395,36 @@ function local_o365_get_auth_token() {
 
     return $authtoken;
 }
+
+/**
+ * Check Moodle and local_o365 versions to see if LTI feature is included in the plugin.
+ *
+ * @return bool
+ */
+function local_o365_is_lti_feature_included() {
+    global $CFG;
+
+    $hasltifeature = false;
+
+    $releaseparts = explode(' ', $CFG->release);
+    $release = $releaseparts[0];
+    $localo365version = get_config('local_o365', 'version');
+    switch ($release) {
+        case '3.10':
+            if ($localo365version >= 2020110935) {
+                $hasltifeature = true;
+            }
+            break;
+        case '3.11':
+            if ($localo365version >= 2021051720) {
+                $hasltifeature = true;
+            }
+            break;
+        default:
+            if (substr($release, 0, 1) >= 4) {
+                $hasltifeature = true;
+            }
+    }
+
+    return $hasltifeature;
+}
