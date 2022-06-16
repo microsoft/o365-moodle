@@ -1686,9 +1686,10 @@ class unified extends \local_o365\rest\o365api {
                 $graphperms = $allperms['graph']['requiredDelegatedPermissions'];
             }
 
-            return array_keys($graphperms);
+            return $graphperms;
+        } else {
+            return [];
         }
-        return [];
     }
 
     /**
@@ -1699,10 +1700,10 @@ class unified extends \local_o365\rest\o365api {
     public function get_graph_required_apponly_permissions() {
         $allperms = $this->get_required_permissions();
         if (isset($allperms['graph'])) {
-            $graphperms = $allperms['graph']['requiredAppPermissions'];
-            return array_keys($graphperms);
+            return $allperms['graph']['requiredAppPermissions'];
+        } else {
+            return [];
         }
-        return [];
     }
 
     /**
@@ -1716,17 +1717,45 @@ class unified extends \local_o365\rest\o365api {
         $currentperms = $this->get_graph_current_apponly_permissions();
         $availableperms = $this->get_graph_available_apponly_permissions();
 
-        $requiredperms = array_flip($requiredperms);
-        $missingperms = array_diff_key($requiredperms, $currentperms);
-        $missingperminfo = [];
-        foreach ($missingperms as $permname => $index) {
-            if (isset($availableperms[$permname])) {
-                $missingperminfo[$permname] = $availableperms[$permname]['displayName'];
+        $missingperms = [];
+
+        foreach ($requiredperms as $requiredperm => $alternativeperms) {
+            $haspermission = false;
+            if (array_key_exists($requiredperm, $currentperms)) {
+                $haspermission = true;
             } else {
-                $missingperminfo[$permname] = $permname;
+                foreach ($alternativeperms as $alternativeperm) {
+                    if (array_key_exists($alternativeperm, $currentperms)) {
+                        $haspermission = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$haspermission) {
+                $missingperms[] = $requiredperm;
             }
         }
-        return $missingperminfo;
+
+        if (empty($missingperms)) {
+            return [];
+        }
+
+        // Assemble friendly names for permissions.
+        $permnames = [];
+        foreach ($availableperms as $perminfo) {
+            if (!isset($perminfo['value']) || !isset($perminfo['adminConsentDisplayName'])) {
+                continue;
+            }
+            $permnames[$perminfo['value']] = $perminfo['adminConsentDisplayName'];
+        }
+
+        $missingpermsreturn = [];
+        foreach ($missingperms as $missingperm) {
+            $missingpermsreturn[$missingperm] = (isset($permnames[$missingperm])) ? $permnames[$missingperm] : $missingperm;
+        }
+
+        return $missingpermsreturn;
     }
 
     /**
@@ -1737,17 +1766,33 @@ class unified extends \local_o365\rest\o365api {
     public function check_graph_delegated_permissions() {
         $this->token->refresh();
         $currentperms = $this->get_unified_api_permissions();
-        $neededperms = $this->get_graph_required_permissions();
+        $requiredperms = $this->get_graph_required_permissions();
         $availableperms = $this->get_available_permissions();
 
         if ($currentperms === null || $availableperms === null) {
             return null;
         }
 
-        sort($currentperms);
-        sort($neededperms);
+        $missingperms = [];
 
-        $missingperms = array_diff($neededperms, $currentperms);
+        foreach ($requiredperms as $requiredperm => $alternativeperms) {
+            $haspermission = false;
+            if (in_array($requiredperm, $currentperms)) {
+                $haspermission = true;
+            } else {
+                foreach ($alternativeperms as $alternativeperm) {
+                    if (in_array($alternativeperm, $currentperms)) {
+                        $haspermission = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$haspermission) {
+                $missingperms[] = $requiredperm;
+            }
+        }
+
         if (empty($missingperms)) {
             return [];
         }
