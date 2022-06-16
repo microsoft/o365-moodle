@@ -370,6 +370,7 @@ abstract class o365api {
                     'Notes.ReadWrite.All' => [],
                     'Group.ReadWrite.All' => [],
                     'Calendars.ReadWrite' => [],
+                    'Domain.Read.All' => ['Domain.ReadWrite.All', 'Directory.Read.All'],
                     'User.Read' => [],
                     'openid' => [],
                     'offline_access' => [],
