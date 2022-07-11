@@ -159,10 +159,10 @@ if ($CFG->version >= '2021051705') {
             list($plugin2, $grade2) = $this->create_feedback($assign, $user2, $user3);
 
             // Check that we have data.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -175,10 +175,10 @@ if ($CFG->version >= '2021051705') {
             \assignfeedback_onenote\privacy\provider::delete_feedback_for_context($requestdata);
 
             // Check that the data is now gone.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertEmpty($feedbackonenote);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -209,10 +209,10 @@ if ($CFG->version >= '2021051705') {
             list($plugin2, $grade2) = $this->create_feedback($assign, $user2, $user3);
 
             // Check that we have data.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -225,11 +225,11 @@ if ($CFG->version >= '2021051705') {
             \assignfeedback_onenote\privacy\provider::delete_feedback_for_grade($requestdata);
 
             // These entries should be gone.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertEmpty($feedbackonenote);
             // These entries should not.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -276,16 +276,16 @@ if ($CFG->version >= '2021051705') {
             list($plugin5, $grade5) = $this->create_feedback($assign2, $user4, $user5);
 
             // Check that we have data.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin2->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin3->get_onenote_feedback($grade3->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin4->get_onenote_feedback($grade4->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin5->get_onenote_feedback($grade5->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin2->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin3->get_onenote_feedback($grade3->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin4->get_onenote_feedback($grade4->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin5->get_onenote_feedback($grade5->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             // 6 including directories for assign 1.
@@ -301,16 +301,16 @@ if ($CFG->version >= '2021051705') {
             \assignfeedback_onenote\privacy\provider::delete_feedback_for_grades($deletedata);
 
             // Check that grade 1 and grade 3 have been removed.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin2->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin3->get_onenote_feedback($grade3->id);
-            $this->assertEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin4->get_onenote_feedback($grade4->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin5->get_onenote_feedback($grade5->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertEmpty($feedbackonenote);
+            $feedbackonenote = $plugin2->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin3->get_onenote_feedback($grade3->id);
+            $this->assertEmpty($feedbackonenote);
+            $feedbackonenote = $plugin4->get_onenote_feedback($grade4->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin5->get_onenote_feedback($grade5->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             // We have deleted two from assign 1, and none from assign 2.
             // 2 including directories for assign 1.
@@ -409,10 +409,10 @@ if ($CFG->version >= '2021051705') {
             list($plugin2, $grade2) = $this->create_feedback($assign, $user2, $user3);
 
             // Check that we have data.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -425,10 +425,10 @@ if ($CFG->version >= '2021051705') {
             \assignfeedback_onenote\privacy\provider::delete_feedback_for_context($requestdata);
 
             // Check that the data is now gone.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertEmpty($feedbackonenote);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -459,10 +459,10 @@ if ($CFG->version >= '2021051705') {
             list($plugin2, $grade2) = $this->create_feedback($assign, $user2, $user3);
 
             // Check that we have data.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -475,11 +475,11 @@ if ($CFG->version >= '2021051705') {
             \assignfeedback_onenote\privacy\provider::delete_feedback_for_grade($requestdata);
 
             // These entries should be gone.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertEmpty($feedbackonenote);
             // These entries should not.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
@@ -524,16 +524,16 @@ if ($CFG->version >= '2021051705') {
             list($plugin5, $grade5) = $this->create_feedback($assign2, $user4, $user5);
 
             // Check that we have data.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin2->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin3->get_onenote_feedback($grade3->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin4->get_onenote_feedback($grade4->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin5->get_onenote_feedback($grade5->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin2->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin3->get_onenote_feedback($grade3->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin4->get_onenote_feedback($grade4->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin5->get_onenote_feedback($grade5->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             $fs = new \file_storage();
             // 6 including directories for assign 1.
@@ -549,16 +549,16 @@ if ($CFG->version >= '2021051705') {
             \assignfeedback_onenote\privacy\provider::delete_feedback_for_grades($deletedata);
 
             // Check that grade 1 and grade 3 have been removed.
-            $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
-            $this->assertEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin2->get_onenote_feedback($grade2->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin3->get_onenote_feedback($grade3->id);
-            $this->assertEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin4->get_onenote_feedback($grade4->id);
-            $this->assertNotEmpty($feedbackonenotes);
-            $feedbackonenotes = $plugin5->get_onenote_feedback($grade5->id);
-            $this->assertNotEmpty($feedbackonenotes);
+            $feedbackonenote = $plugin1->get_onenote_feedback($grade1->id);
+            $this->assertEmpty($feedbackonenote);
+            $feedbackonenote = $plugin2->get_onenote_feedback($grade2->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin3->get_onenote_feedback($grade3->id);
+            $this->assertEmpty($feedbackonenote);
+            $feedbackonenote = $plugin4->get_onenote_feedback($grade4->id);
+            $this->assertNotEmpty($feedbackonenote);
+            $feedbackonenote = $plugin5->get_onenote_feedback($grade5->id);
+            $this->assertNotEmpty($feedbackonenote);
 
             // We have deleted two from assign 1, and none from assign 2.
             // 2 including directories for assign 1.

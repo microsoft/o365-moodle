@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Utility for o365
+ * Utility for o365.
  *
  * @package local_onenote
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -24,13 +24,19 @@
  */
 
 namespace local_onenote\api;
+
+use Exception;
+use local_o365\httpclient;
+use local_o365\oauth2\clientdata;
+use local_o365\oauth2\token;
+use local_o365\rest\unified;
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * General purpose utility class.
  */
 class o365 extends base {
-    /** @var string Base url to access API */
-    const API = 'https://www.onenote.com/api/beta/me/notes';
-
     /**
      * Make an API call.
      *
@@ -40,20 +46,16 @@ class o365 extends base {
      * @param array $options Additional options for the request.
      * @return string The result of the API call.
      */
-    public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
+    public function apicall($httpmethod, $apimethod, $params = '', $options = []) {
         global $USER;
 
         $httpmethod = strtolower($httpmethod);
 
         try {
-            if (\local_o365\rest\unified::is_configured() === true) {
-                $apiclient = \local_o365\rest\unified::instance_for_user($USER->id);
-                $apimethod = '/me/onenote' . $apimethod;
-            } else {
-                $apiclient = \local_o365\rest\onenote::instance_for_user($USER->id);
-            }
+            $apiclient = unified::instance_for_user($USER->id);
+            $apimethod = '/me/onenote' . $apimethod;
             return $apiclient->apicall($httpmethod, $apimethod, $params, $options);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return json_encode(['error' => $e->getMessage()]);
         }
     }
@@ -65,11 +67,9 @@ class o365 extends base {
      * @param array $options
      * @return string The result of the request.
      */
-    public function geturl($url, $options = array()) {
+    public function geturl($url, $options = []) {
         global $USER;
-        $apiclient = (\local_o365\rest\unified::is_configured() === true)
-            ? \local_o365\rest\unified::instance_for_user($USER->id)
-            : \local_o365\rest\onenote::instance_for_user($USER->id);
+        $apiclient = unified::instance_for_user($USER->id);
         return (!empty($apiclient)) ? $apiclient->geturl($url, $options) : '';
     }
 
@@ -80,12 +80,10 @@ class o365 extends base {
      */
     public function get_token() {
         global $USER;
-        $httpclient = new \local_o365\httpclient();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $resource = (\local_o365\rest\unified::is_configured() === true)
-            ? \local_o365\rest\unified::get_tokenresource()
-            : \local_o365\rest\onenote::get_tokenresource();
-        $token = \local_o365\oauth2\token::instance($USER->id, $resource, $clientdata, $httpclient);
+        $httpclient = new httpclient();
+        $clientdata = clientdata::instance_from_oidc();
+        $resource = unified::get_tokenresource();
+        $token = token::instance($USER->id, $resource, $clientdata, $httpclient);
         return (!empty($token)) ? $token->get_token() : false;
     }
 

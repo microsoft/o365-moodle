@@ -22,8 +22,10 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maximale OneNote-Seitengröße';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Standardmäßig aktiviert';
 $string['default_help'] = 'Mit dieser Einstellung wird die gewählte Methode für die Abgabe von Lösungen für alle neuen Aufgaben voreingestellt.';
 $string['enabled'] = 'Abgabe von OneNote-Seiten';

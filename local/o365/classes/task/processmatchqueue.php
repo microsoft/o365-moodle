@@ -59,15 +59,10 @@ class processmatchqueue extends scheduled_task {
     /**
      * Construct an API client.
      *
-     * @return azuread|unified A constructed user API client (unified or legacy), or false if error.
+     * @return unified A constructed unified API client, or false if error.
      */
     public function get_api() {
-        $unifiedconfigured = unified::is_configured();
-        if ($unifiedconfigured === true) {
-            $tokenresource = unified::get_tokenresource();
-        } else {
-            $tokenresource = azuread::get_tokenresource();
-        }
+        $tokenresource = unified::get_tokenresource();
 
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
@@ -77,11 +72,8 @@ class processmatchqueue extends scheduled_task {
             return false;
         }
 
-        if ($unifiedconfigured === true) {
-            $apiclient = new unified($token, $httpclient);
-        } else {
-            $apiclient = new azuread($token, $httpclient);
-        }
+        $apiclient = new unified($token, $httpclient);
+
         return $apiclient;
     }
 

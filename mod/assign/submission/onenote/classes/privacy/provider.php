@@ -31,9 +31,15 @@ require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 use \core_privacy\local\metadata\collection;
 use \core_privacy\local\metadata\provider as metadataprovider;
+use core_privacy\local\request\userlist;
 use \core_privacy\local\request\writer;
 use \core_privacy\local\request\contextlist;
+use local_onenote\api\base;
 use \mod_assign\privacy\assign_plugin_request_data;
+use mod_assign\privacy\assignsubmission_provider;
+use mod_assign\privacy\assignsubmission_user_provider;
+use mod_assign\privacy\useridlist;
+
 /**
  * Privacy class for requesting user data.
  *
@@ -43,10 +49,10 @@ use \mod_assign\privacy\assign_plugin_request_data;
  */
 class provider implements
         metadataprovider,
-        \mod_assign\privacy\assignsubmission_provider,
-        \mod_assign\privacy\assignsubmission_user_provider {
+        assignsubmission_provider,
+        assignsubmission_user_provider {
     /**
-     * Return meta data about this plugin.
+     * Return metadata about this plugin.
      *
      * @param  collection $collection A list of information to add to.
      * @return collection Return the collection after adding to it.
@@ -65,7 +71,7 @@ class provider implements
      * This is covered by the mod_assign provider.
      *
      * @param int $userid The user ID to get context IDs for.
-     * @param \core_privacy\local\request\contextlist $contextlist Use add_from_sql with this object to add your context IDs.
+     * @param contextlist $contextlist Use add_from_sql with this object to add your context IDs.
      */
     public static function get_context_for_userid_within_submission(int $userid, contextlist $contextlist) {
         // This is already fetched from mod_assign.
@@ -76,7 +82,7 @@ class provider implements
      *
      * @param  useridlist $useridlist A user ID list object that you can append your user IDs to.
      */
-    public static function get_student_user_ids(\mod_assign\privacy\useridlist $useridlist) {
+    public static function get_student_user_ids(useridlist $useridlist) {
         // No need.
     }
 
@@ -84,9 +90,9 @@ class provider implements
      * If you have tables that contain userids and you can generate entries in your tables without creating an
      * entry in the assign_submission table then please fill in this method.
      *
-     * @param  \core_privacy\local\request\userlist $userlist The userlist object
+     * @param  userlist $userlist The userlist object
      */
-    public static function get_userids_from_context(\core_privacy\local\request\userlist $userlist) {
+    public static function get_userids_from_context(userlist $userlist) {
         // Not required.
     }
 
@@ -118,7 +124,7 @@ class provider implements
             writer::with_context($context)
                 ->export_data($currentpath, $record);
             writer::with_context($exportdata->get_context())->export_area_files($currentpath,
-                'assignsubmission_onenote', \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
+                'assignsubmission_onenote', base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
 
         }
     }
@@ -136,7 +142,7 @@ class provider implements
 
         $fs = get_file_storage();
         $fs->delete_area_files($requestdata->get_context()->id, 'assignsubmission_onenote',
-            \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
 
         $filters = ['assignment' => $requestdata->get_assign()->get_instance()->id];
         $DB->delete_records('assignsubmission_onenote', $filters);
@@ -161,7 +167,7 @@ class provider implements
         // Delete files.
         $fs = get_file_storage();
         $fs->delete_area_files($deletedata->get_context()->id, 'assignsubmission_onenote',
-            \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
 
         // Delete the records in the table.
         $filters = ['assignment' => $assignmentid, 'submission' => $submissionid];
@@ -183,13 +189,13 @@ class provider implements
             return;
         }
 
-        list($sql, $params) = $DB->get_in_or_equal($deletedata->get_submissionids(), SQL_PARAMS_NAMED);
+        [$sql, $params] = $DB->get_in_or_equal($deletedata->get_submissionids(), SQL_PARAMS_NAMED);
 
         $fs = get_file_storage();
         $fs->delete_area_files_select(
             $deletedata->get_context()->id,
             'assignsubmission_onenote',
-            \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
             $sql,
             $params
         );

@@ -52,7 +52,6 @@ $(function() {
             strdetectedval: 'Detected Value:',
             strcorrectval: 'Correct Value:',
 
-            showunified: false,
             strunifiedheader: 'Unified API',
             strunifieddesc: 'The unified API replaces the existing application-specific APIs. If available, you should add this to your Azure application.',
             strunifiederror: 'There was an error checking Unified API settings.',
@@ -60,11 +59,7 @@ $(function() {
             strunifiedmissing: 'The unified API was not found in this application.',
             strunifiedactive: 'Unified API active.',
 
-            strlegacyheader: 'Legacy API',
-            strlegacydesc: 'The legacy API is made up of application-specific APIs.',
-            strlegacyerror: 'There was an error checking legacy API settings.',
-
-            strtenanterror: 'Please use the dectect button to set your Azure AD Tenant before updating Azure Setup.',
+            strtenanterror: 'Please use the detect button to set your Azure AD Tenant before updating Azure Setup.',
         };
         var opts = $.extend({}, defaultopts, options);
         var main = this;
@@ -197,45 +192,6 @@ $(function() {
         }
 
         /**
-         * Render legacy API setup results.
-         *
-         * @param object data Data returned from ajax call.
-         * @return object jQuery object for rendered results section.
-         */
-        this.rendersection_legacyapi = function(data) {
-            if (typeof(data.error) !== 'undefined') {
-                return main.rendererrorbox(data.error);
-            }
-
-            if (typeof(data.missingperms) !== 'undefined' && Object.keys(data.missingperms).length > 0) {
-                // Render missing permissions.
-                var content = opts.strmissingperms + '<br />';
-                for (var appname in data.missingperms) {
-                    content += '<b>' + appname + '</b>';
-                    content += '<ul>';
-                    for (var permname in data.missingperms[appname]) {
-                        content += '<li>' + data.missingperms[appname][permname] + '</li>';
-                    }
-                    content += '</ul>';
-                }
-                var content = main.rendererrorbox(content);
-
-                // Add fix instructions/button.
-                if (typeof(data.haswrite) !== 'undefined' && data.haswrite === true) {
-                    main.fixbutton = $('<button>' + opts.strfixperms + '</button>');
-                    main.fixbutton.click(main.fixperms);
-                    content.append(main.fixbutton);
-                } else {
-                    content.append('<span>' + opts.strfixprereq + '</span>');
-                }
-
-                return content;
-            } else {
-                return main.rendersuccessbox(opts.strpermscorrect);
-            }
-        }
-
-        /**
          * Render all results.
          *
          * @param object results Results object.
@@ -285,29 +241,16 @@ $(function() {
                         content.append(appdata);
                     }
 
-                    if (opts.showunified === true) {
-                        // Unified API.
-                        var unified = $('<section></section>');
-                        unified.append('<h5>' + opts.strunifiedheader + '</h5>');
-                        unified.append('<span>' + opts.strunifieddesc + '</h5>');
-                        if (typeof(results.data.unifiedapi) !== 'undefined') {
-                            unified.append(main.rendersection_unifiedapi(results.data.unifiedapi));
-                        } else {
-                            unified.append(main.rendererrorbox(opts.strunifiederror));
-                        }
-                        content.append(unified);
+                    // Unified API.
+                    var unified = $('<section></section>');
+                    unified.append('<h5>' + opts.strunifiedheader + '</h5>');
+                    unified.append('<span>' + opts.strunifieddesc + '</h5>');
+                    if (typeof(results.data.unifiedapi) !== 'undefined') {
+                        unified.append(main.rendersection_unifiedapi(results.data.unifiedapi));
                     } else {
-                        // Legacy API.
-                        var legacy = $('<section></section>');
-                        legacy.append('<h5>' + opts.strlegacyheader + '</h5>');
-                        legacy.append('<span>' + opts.strlegacydesc + '</h5>');
-                        if (typeof(results.data.legacyapi) !== 'undefined') {
-                            legacy.append(main.rendersection_legacyapi(results.data.legacyapi));
-                        } else {
-                            legacy.append(main.rendererrorbox(opts.strlegacyerror));
-                        }
-                        content.append(legacy);
+                        unified.append(main.rendererrorbox(opts.strunifiederror));
                     }
+                    content.append(unified);
 
                     main.updatedisplay(content);
                     return true;

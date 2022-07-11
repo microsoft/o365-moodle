@@ -22,6 +22,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maximální velikost stránky OneNote';
 $string['countfiles'] = 'Soubory OneNote: {$a}';
 $string['default'] = 'Ve výchozím nastavení povoleno';

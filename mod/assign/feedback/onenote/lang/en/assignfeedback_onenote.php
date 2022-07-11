@@ -23,8 +23,10 @@
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maximum OneNote size';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['deletefeedback'] = 'Delete feedback for user';
 $string['deletefeedbackconfirm'] = 'Confirmation of onenote feedback removal';
 $string['deletefeedbackconfirmdetail'] = 'This will remove the saved onenote feedback for the user, details will still be in onenote';
@@ -33,10 +35,10 @@ $string['default'] = 'Enabled by default';
 $string['default_help'] = 'When set, this feedback method is enabled by default for all new assignments.';
 $string['enabled'] = 'OneNote feedback';
 $string['enabled_help'] = 'If enabled, the teacher will be able to upload OneNote pages with feedback when marking the assignments. Teachers may choose to annotate the student\'s OneNote submission or upload a completely new OneNote page.';
-$string['onenote'] = 'Feedback OneNotes';
-$string['filesadded'] = 'Feedback OneNotes added: {$a}';
+$string['onenote'] = 'Feedback OneNote';
+$string['filesadded'] = 'Feedback OneNote added: {$a}';
 $string['maxbytes'] = 'Maximum OneNote package size';
-$string['maxfiles'] = 'Maximum number of uploaded OneNotes';
+$string['maxfiles'] = 'Maximum number of uploaded OneNote';
 $string['maximumsize'] = 'Maximum OneNote package size';
 $string['moreusers'] = '{$a} more...';
 $string['nochanges'] = 'No changes';

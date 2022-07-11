@@ -22,6 +22,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maksymalny rozmiar strony w programie OneNote';
 $string['countfiles'] = 'Notatki w programie OneNote: {$a}';
 $string['default'] = 'Domyślnie włączone';

@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provider infomration for onenote
+ * Provider information for onenote.
+ *
  * @package local_onenote
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -36,52 +37,35 @@ if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
     }
 } else {
     interface local_onenote_userlist {
-    };
+    }
+
+    ;
 }
+
 /**
  * Provider details for onenote
  */
-class provider implements
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\metadata\provider,
-    local_onenote_userlist {
+class provider
+    implements \core_privacy\local\request\plugin\provider, \core_privacy\local\metadata\provider, local_onenote_userlist {
 
     /**
      * Returns meta data about this system.
      *
-     * @param   collection     $collection The initialised collection to add items to.
+     * @param collection $collection The initialised collection to add items to.
      * @return  collection     A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $collection): collection {
+    public static function get_metadata(collection $collection) : collection {
 
-        $tables = [
-            'local_onenote_user_sections' => [
-                'user_id',
-                'course_id',
-                'section_id',
-            ],
-            'local_onenote_assign_pages' => [
-                'user_id',
-                'assign_id',
-                'submission_student_page_id',
-                'feedback_student_page_id',
-                'submission_teacher_page_id',
-                'feedback_teacher_page_id',
-                'teacher_lastviewed',
-                'student_lastmodified',
-            ],
-        ];
+        $tables = ['local_onenote_user_sections' => ['user_id', 'course_id', 'section_id',],
+            'local_onenote_assign_pages' => ['user_id', 'assign_id', 'submission_student_page_id', 'feedback_student_page_id',
+                'submission_teacher_page_id', 'feedback_teacher_page_id', 'teacher_lastviewed', 'student_lastmodified',],];
 
         foreach ($tables as $table => $fields) {
             $fielddata = [];
             foreach ($fields as $field) {
-                $fielddata[$field] = 'privacy:metadata:'.$table.':'.$field;
+                $fielddata[$field] = 'privacy:metadata:' . $table . ':' . $field;
             }
-            $collection->add_database_table(
-                $table,
-                $fielddata,
-                'privacy:metadata:'.$table
-            );
+            $collection->add_database_table($table, $fielddata, 'privacy:metadata:' . $table);
         }
 
         return $collection;
@@ -90,7 +74,7 @@ class provider implements
     /**
      * Get the list of contexts that contain user information for the specified user.
      *
-     * @param   int         $userid     The user to search.
+     * @param int $userid The user to search.
      * @return  contextlist   $contextlist  The contextlist containing the list of contexts used in this plugin.
      */
     public static function get_contexts_for_userid(int $userid) : contextlist {
@@ -122,7 +106,7 @@ class provider implements
     /**
      * Export all user data for the specified user, in the specified contexts.
      *
-     * @param   approved_contextlist    $contextlist    The approved contexts to export information for.
+     * @param approved_contextlist $contextlist The approved contexts to export information for.
      */
     public static function export_user_data(approved_contextlist $contextlist) {
         global $DB;
@@ -132,10 +116,8 @@ class provider implements
         foreach ($tables as $table => $filterparams) {
             $records = $DB->get_recordset($table, $filterparams);
             foreach ($records as $record) {
-                writer::with_context($context)->export_data([
-                    get_string('privacy:metadata:local_onenote', 'local_onenote'),
-                    get_string('privacy:metadata:'.$table, 'local_onenote')
-                ], $record);
+                writer::with_context($context)->export_data([get_string('privacy:metadata:local_onenote', 'local_onenote'),
+                    get_string('privacy:metadata:' . $table, 'local_onenote')], $record);
             }
         }
     }
@@ -216,11 +198,9 @@ class provider implements
      * @param int $userid The user to get the map for.
      * @return array The table user map.
      */
-    protected static function get_table_user_map(int $userid): array {
-        $tables = [
-            'local_onenote_user_sections' => ['user_id' => $userid],
-            'local_onenote_assign_pages' => ['user_id' => $userid],
-        ];
+    protected static function get_table_user_map(int $userid) : array {
+        $tables =
+            ['local_onenote_user_sections' => ['user_id' => $userid], 'local_onenote_assign_pages' => ['user_id' => $userid],];
         return $tables;
     }
 }

@@ -120,9 +120,6 @@ $string['settings_azuresetup_unifieddesc'] = 'The Microsoft Graph API allows com
 $string['settings_azuresetup_unifiederror'] = 'There was an error checking for Microsoft Graph API support.';
 $string['settings_azuresetup_unifiedactive'] = 'Microsoft Graph API active.';
 $string['settings_azuresetup_unifiedmissing'] = 'The Microsoft Graph API was not found in this application.';
-$string['settings_azuresetup_legacyheader'] = 'Microsoft 365 API';
-$string['settings_azuresetup_legacydesc'] = 'The Microsoft 365 API is made up of application-specific APIs.';
-$string['settings_azuresetup_legacyerror'] = 'There was an error checking Microsoft 365 API settings.';
 
 // Additional settings in the "Verify setup" section of the "Setup" tab.
 $string['settings_detectoidc'] = 'Application Credentials';
@@ -131,7 +128,6 @@ $string['settings_detectoidc_credsvalid'] = 'Credentials have been set.';
 $string['settings_detectoidc_credsvalid_link'] = 'Change';
 $string['settings_detectoidc_credsinvalid'] = 'Credentials have not been set or are incomplete.';
 $string['settings_detectoidc_credsinvalid_link'] = 'Set Credentials';
-$string['settings_migration'] = '<b>Note: This version removes the legacy Microsoft 365 API. If you cannot yet migrate to the Graph API, you can add "$CFG->local_o365_forcelegacyapi = true;" to your Moodle config.php. However, this option will be removed in the next version. For more information, please consult the <a href="https://docs.moodle.org/34/en/Office365">Integration Documentation</a></b>';
 $string['settings_detectperms'] = 'Application Permissions';
 $string['settings_detectperms_details'] = 'The use the plugin features, correct permissions must be set up for the application in Azure AD.';
 $string['settings_detectperms_nocreds'] = 'Application credentials need to be set first. See above setting.';
@@ -144,8 +140,6 @@ $string['settings_detectperms_unifiednomissing'] = 'All unified permissions pres
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
 $string['settings_detectperms_invalid'] = 'Check permissions in Azure AD';
-$string['settings_disablegraphapi'] = 'Disable Microsoft Graph API';
-$string['settings_disablegraphapi_details'] = 'Disable use of the Microsoft Graph API and force API calls to use the legacy API. This should only be enabled if you are experiencing problems with the Graph API.';
 
 // Settings in "User sync" section of the "Sync settings" tab.
 $string['settings_options_usersync'] = 'User Sync';
@@ -253,8 +247,6 @@ $string['settings_team_name_sync_desc'] = 'If enabled, when Moodle course is upd
 $string['settings_header_tools'] = 'Tools';
 $string['settings_secthead_advanced'] = 'Advanced Settings';
 $string['settings_secthead_advanced_desc'] = 'These settings control other features of the plugin suite. Be careful! These may cause unintended effects.';
-$string['settings_secthead_legacy'] = 'Legacy';
-$string['settings_secthead_legacy_desc'] = 'These settings and features are deprecated and likely to be removed soon.';
 
 // Settings in the "Tools" section of the "Advanced" tab.
 $string['settings_tools_tenants'] = 'Tenants';
@@ -487,40 +479,6 @@ $string['settings_customtheme'] = 'Custom theme (Advanced)';
 $string['settings_customtheme_desc'] = 'Recommended theme is "boost_o365teams". However, you can select different theme if you have a custom theme which is adapted to be used in the Teams tab.<br/>
 Please note that a custom theme set at either course or category level would take precedence over settings here, i.e. a course would use course or category theme in Moodle app in Teams by default. This can be fixed by updating $CFG->themeorder in config.php to be "array(\'session\', \'course\', \'category\', \'user\', \'cohort\', \'site\');".';
 
-// Settings in the "Legacy" section of the "Advanced" tab.
-$string['settings_sharepointlink'] = 'SharePoint Link';
-$string['settings_sharepointlink_error'] = 'There was a problem setting up SharePoint. <br /><br /><ul><li>If you have debug logging enabled ("Record debug messages" setting above), more information may be available in the Moodle log report. (Site Administration > Reports > Logs).</li><li>To retry setup, click "Change Site", choose a new SharePoint site, click "Save Changes" at the bottom of this page, and run the Moodle cron.</ul>';
-$string['settings_sharepointlink_connected'] = 'Moodle is connected to this SharePoint site.';
-$string['settings_sharepointlink_changelink'] = 'Change Site';
-$string['settings_sharepointlink_initializing'] = 'Moodle is setting up this SharePoint site. This will occur during the next run of the Moodle cron.';
-$string['settings_sharepointlink_enterurl'] = 'Enter a URL above.';
-$string['settings_sharepointlink_details'] = 'To connect Moodle and SharePoint, enter the full URL of a SharePoint site for Moodle to connect to. If the site doesn\'t exist, Moodle will attempt to create it.';
-$string['settings_sharepointlink_status_invalid'] = 'This is not a usable SharePoint site.';
-$string['settings_sharepointlink_status_notempty'] = 'This site is usable, but already exists. Moodle may conflict with existing content. For best results, enter a SharePoint site that doesn\'t exist and Moodle will create it.';
-$string['settings_sharepointlink_status_valid'] = 'This SharePoint site will be created by Moodle and used for Moodle content.';
-$string['settings_sharepointlink_status_checking'] = 'Checking entered SharePoint site...';
-$string['acp_sharepointcourseselect'] = 'SharePoint Course Selection';
-$string['acp_sharepointcourseselect_searchwarning'] = 'Note: Searches will lose any unsaved progress. Press save changes to ensure your changes are saved.';
-$string['acp_sharepointcourseselect_applyfilter'] = 'Apply Filter';
-$string['acp_sharepointcourseselect_bulk'] = 'Bulk Operations';
-$string['acp_sharepointcourseselect_desc'] = 'Choose which courses will have SharePoint sites created for them. By default, no sites will be created. You can then choose to select specific courses ("Custom"), or create a SharePoint site for all Moodle courses ("Sync All").';
-$string['acp_sharepointcourseselect_none'] = 'None<br />No SharePoint sites will be created.';
-$string['acp_sharepointcourseselect_onall'] = 'Sync All<br />A SharePoint site will be generated for every Moodle course on this site.';
-$string['acp_sharepointcourseselect_oncustom'] = 'Custom <a href="{$a}">Customize</a><br />Choose which Moodle courses will be associated with a SharePoint site.';
-$string['acp_sharepointcourseselect_enableshown'] = 'Return to Settings';
-$string['acp_sharepointcourseselectlabel_enabled'] = 'Enable';
-$string['acp_sharepointcourseselect_filter'] = 'Filter Courses';
-$string['acp_sharepointcourseselect_filtercategory'] = 'Filter by course category';
-$string['acp_sharepointcourseselect_filterstring'] = 'Filter by string search';
-$string['acp_sharepointcourseselect_instr'] = 'To sort by column, select the column header. Select the checkbox for all courses to be associated with a SharePoint resource. To enable all courses by default, disable this custom feature in the admin settings.';
-$string['acp_sharepointcourseselect_instr_header'] = 'Instructions';
-$string['acp_sharepointcourseselect_off_header'] = 'Not Enabled';
-$string['acp_sharepointcourseselect_off_instr'] = 'SharePoint custom course selection is not enabled. Enable it in the plugin admin settings to use this feature.';
-$string['acp_sharepointcustom_savemessage'] = 'Your changes have been saved.';
-$string['acp_sharepointcourseselect_syncopt'] = 'Sync SharePoint Subsites';
-$string['acp_sharepointcourseselect_syncopt_btn'] = 'Sync to SharePoint Subsites';
-$string['acp_sharepointcourseselect_syncopt_inst'] = 'Because this functionality was recently upgraded, the information shown here may not be accurate. Use the button below to sync this display with existing course subsites on SharePoint. This operation may take some time.';
-
 // Settings in the "School Data Sync" tab.
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';
@@ -655,11 +613,9 @@ $string['eventcalendarunsubscribed'] = 'User unsubscribed from a calendar';
 // Errors.
 $string['erroracpauthoidcnotconfig'] = 'Please set application credentials in auth_oidc first.';
 $string['erroracplocalo365notconfig'] = 'Please configure local_o365 first.';
-$string['erroracpnosptoken'] = 'Did not have an available SharePoint token, and could not get one.';
 $string['errorhttpclientbadtempfileloc'] = 'Could not open temporary location to store file.';
 $string['errorhttpclientnofileinput'] = 'No file parameter in httpclient::put';
 $string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
-$string['errorcreatingsharepointclient'] = 'Could not get SharePoint api client';
 $string['errorchecksystemapiuser'] = 'Could not get a system API user token, please run the health check, ensure that your Moodle cron is running, and refresh the system API user if necessary.';
 $string['erroracpapcantgettenant'] = 'Could not get Azure AD tenant, please enter manually.';
 $string['erroracpcantgettenant'] = 'Could not get OneDrive URL, please enter manually.';
@@ -675,8 +631,6 @@ $string['erroro365apinoparentinfo'] = 'Could not find parent folder information'
 $string['erroro365apinotimplemented'] = 'This should be overridden.';
 $string['erroro365apinotoken'] = 'Did not have a token for the given resource and user, and could not get one. Is the user\'s refresh token expired?';
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
-$string['errorcouldnotcreatespgroup'] = 'Could not create the SharePoint group.';
-$string['errorcoursenotsubsiteenabled'] = 'This course is not SharePoint subsite enabled.';
 $string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 $string['eventapifail'] = 'API failure';
 
@@ -716,10 +670,6 @@ $string['privacy:metadata:local_o365_objects:tenant'] = 'The tenant the object b
 $string['privacy:metadata:local_o365_objects:metadata'] = 'Any associated metadata';
 $string['privacy:metadata:local_o365_objects:timecreated'] = 'The time the record was created.';
 $string['privacy:metadata:local_o365_objects:timemodified'] = 'The time the record was modified.';
-$string['privacy:metadata:local_o365_spgroupassign'] = 'Information about group assignments';
-$string['privacy:metadata:local_o365_spgroupassign:userid'] = 'The ID of the Moodle user';
-$string['privacy:metadata:local_o365_spgroupassign:groupid'] = 'The ID of the group in Microsoft 365';
-$string['privacy:metadata:local_o365_spgroupassign:timecreated'] = 'The time the record was created';
 $string['privacy:metadata:local_o365_appassign'] = 'Information about Microsoft 365 app role assignments';
 $string['privacy:metadata:local_o365_appassign:muserid'] = 'The ID of the Moodle user';
 $string['privacy:metadata:local_o365_appassign:assigned'] = 'Whether the user has been assigned to the app';
@@ -804,7 +754,6 @@ $string['task_coursesync'] = 'Sync Moodle courses to Microsoft Teams';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users with Azure AD';
-$string['task_sharepointinit'] = 'Initialize SharePoint.';
 $string['task_processmatchqueue'] = 'Process Match Queue';
 $string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to a Microsoft 365 user.';
 $string['task_processmatchqueue_err_museralreadyo365'] = 'Moodle user is already connected to Microsoft 365.';

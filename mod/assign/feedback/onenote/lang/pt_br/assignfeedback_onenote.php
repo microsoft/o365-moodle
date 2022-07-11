@@ -22,16 +22,18 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Tamanho máximo do OneNote';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Ativado por padrão';
 $string['default_help'] = 'Quando definido, esse método de feedback é ativado por padrão para todas as novas tarefas.';
 $string['enabled'] = 'Feedback no OneNote';
 $string['enabled_help'] = 'Se essa configuração estiver ativada, o professor poderá fazer o upload de páginas do OneNote com feedback ao corrigir suas tarefas. Os professores podem optar por fazer anotações no envio do aluno no OneNote ou fazer o upload de uma página totalmente nova do OneNote.';
-$string['onenote'] = 'OneNotes de feedback';
-$string['filesadded'] = 'OneNotes de feedback adicionados: {$a}';
+$string['onenote'] = 'OneNote de feedback';
+$string['filesadded'] = 'OneNote de feedback adicionados: {$a}';
 $string['maxbytes'] = 'Tamanho máximo de pacote do OneNote';
-$string['maxfiles'] = 'Número máximo de uploads de OneNotes';
+$string['maxfiles'] = 'Número máximo de uploads de OneNote';
 $string['maximumsize'] = 'Tamanho máximo de pacote do OneNote';
 $string['moreusers'] = 'Mais {$a}...';
 $string['nochanges'] = 'Nenhuma alteração';

@@ -23,6 +23,14 @@
  */
 namespace assignfeedback_onenote\privacy;
 
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\writer;
+use file_storage;
+use local_onenote\api\base;
+use mod_assign\privacy\assign_plugin_request_data;
+use mod_assign\tests\mod_assign_privacy_testcase;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -42,7 +50,7 @@ if ($CFG->version >= '2021051705') {
          * Quick test to make sure that get_metadata returns something.
          */
         public function test_get_metadata() {
-            $collection = new \core_privacy\local\metadata\collection('assignsubmission_onenote');
+            $collection = new collection('assignsubmission_onenote');
             $collection = \assignsubmission_onenote\privacy\provider::get_metadata($collection);
             $this->assertNotEmpty($collection);
         }
@@ -62,13 +70,13 @@ if ($CFG->version >= '2021051705') {
             $context = $assign->get_context();
 
             $submissiontext = 'Just some text';
-            list($plugin, $submission) = $this->create_onenote_submission($assign, $user1, $submissiontext);
+            [$plugin, $submission] = $this->create_onenote_submission($assign, $user1, $submissiontext);
 
-            $writer = \core_privacy\local\request\writer::with_context($context);
+            $writer = writer::with_context($context);
             $this->assertFalse($writer->has_any_data());
 
             // The student should have some text submitted.
-            $exportdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $submission, ['Attempt 1']);
+            $exportdata = new assign_plugin_request_data($context, $assign, $submission, ['Attempt 1']);
             \assignsubmission_onenote\privacy\provider::export_submission_user_data($exportdata);
             $exporteddata = $writer->get_data(['Attempt 1',
                 get_string('privacy:path', 'assignsubmission_onenote')]);
@@ -103,26 +111,26 @@ if ($CFG->version >= '2021051705') {
             $context = $assign->get_context();
 
             $studenttext = 'Student one\'s text.';
-            list($plugin, $submission) = $this->create_onenote_submission($assign, $user1, $studenttext);
+            [$plugin, $submission] = $this->create_onenote_submission($assign, $user1, $studenttext);
             $studenttext2 = 'Student two\'s text.';
-            list($plugin2, $submission2) = $this->create_onenote_submission($assign, $user2, $studenttext2);
+            [$plugin2, $submission2] = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             // 4 including directories.
             $this->assertEquals(4, count($files));
 
             // Only need the context and assign object in this plugin for this operation.
-            $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign);
+            $requestdata = new assign_plugin_request_data($context, $assign);
             \assignsubmission_onenote\privacy\provider::delete_submission_for_context($requestdata);
             // This checks that there is no content for these submissions.
             $this->assertTrue($plugin->is_empty($submission));
             $this->assertTrue($plugin2->is_empty($submission2));
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             $this->assertEquals(0, count($files));
         }
 
@@ -145,27 +153,27 @@ if ($CFG->version >= '2021051705') {
             $context = $assign->get_context();
 
             $studenttext = 'Student one\'s text.';
-            list($plugin, $submission) = $this->create_onenote_submission($assign, $user1, $studenttext);
+            [$plugin, $submission] = $this->create_onenote_submission($assign, $user1, $studenttext);
             $studenttext2 = 'Student two\'s text.';
-            list($plugin2, $submission2) = $this->create_onenote_submission($assign, $user2, $studenttext2);
+            [$plugin2, $submission2] = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             // 4 including directories.
             $this->assertEquals(4, count($files));
 
             // Need more data for this operation.
-            $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $submission, [], $user1);
+            $requestdata = new assign_plugin_request_data($context, $assign, $submission, [], $user1);
             \assignsubmission_onenote\privacy\provider::delete_submission_for_userid($requestdata);
             // This checks that there is no content for the first submission.
             $this->assertTrue($plugin->is_empty($submission));
             // But there is for the second submission.
             $this->assertFalse($plugin2->is_empty($submission2));
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             // 2 files that were not deleted.
             $this->assertEquals(2, count($files));
         }
@@ -197,29 +205,29 @@ if ($CFG->version >= '2021051705') {
             $context2 = $assign2->get_context();
 
             $student1text = 'Student one\'s text.';
-            list($plugin1, $submission1) = $this->create_onenote_submission($assign1, $user1, $student1text);
+            [$plugin1, $submission1] = $this->create_onenote_submission($assign1, $user1, $student1text);
             $student2text = 'Student two\'s text.';
-            list($plugin2, $submission2) = $this->create_onenote_submission($assign1, $user2, $student2text);
+            [$plugin2, $submission2] = $this->create_onenote_submission($assign1, $user2, $student2text);
             $student3text = 'Student two\'s text.';
-            list($plugin3, $submission3) = $this->create_onenote_submission($assign1, $user3, $student3text);
+            [$plugin3, $submission3] = $this->create_onenote_submission($assign1, $user3, $student3text);
             // Now for submissions in assignment two.
             $student3text2 = 'Student two\'s text for the second assignment.';
-            list($plugin4, $submission4) = $this->create_onenote_submission($assign2, $user3, $student3text2);
+            [$plugin4, $submission4] = $this->create_onenote_submission($assign2, $user3, $student3text2);
             $student4text = 'Student four\'s text.';
-            list($plugin5, $submission5) = $this->create_onenote_submission($assign2, $user4, $student4text);
+            [$plugin5, $submission5] = $this->create_onenote_submission($assign2, $user4, $student4text);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             // 6 including directories for assign 1.
             // 4 including directories for assign 2.
             $this->assertCount(6, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
             $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
 
             $data = $DB->get_records('assignsubmission_onenote', ['assignment' => $assign1->get_instance()->id]);
             $this->assertCount(3, $data);
             // Delete the submissions for user 1 and 3.
-            $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context1, $assign1);
+            $requestdata = new assign_plugin_request_data($context1, $assign1);
             $requestdata->set_userids([$user1->id, $user2->id]);
             $requestdata->populate_submissions_and_grades();
             \assignsubmission_onenote\privacy\provider::delete_submissions($requestdata);
@@ -232,13 +240,13 @@ if ($CFG->version >= '2021051705') {
             $data = $DB->get_records('assignsubmission_onenote', ['assignment' => $assign2->get_instance()->id]);
             $this->assertCount(2, $data);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             // 6 including directories for assign 1.
             // 4 including directories for assign 2.
             $this->assertCount(2, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
             $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
         }
 
         /**
@@ -261,7 +269,7 @@ if ($CFG->version >= '2021051705') {
             $fileinfo = [
                 'contextid' => $assign->get_context()->id,
                 'component' => 'assignsubmission_onenote',
-                'filearea' => \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                'filearea' => base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                 'itemid' => $submission->id,
                 'filepath' => '/',
                 'filename' => 'OneNote_' . time() . '.zip'
@@ -269,7 +277,7 @@ if ($CFG->version >= '2021051705') {
             // Save it.
             $fs->create_file_from_string($fileinfo, $submissiontext);
 
-            $filesubmission = new \stdClass();
+            $filesubmission = new stdClass();
             $filesubmission->numfiles = $this->count_files($assign, $submission->id);
             $filesubmission->submission = $submission->id;
             $filesubmission->assignment = $assign->get_instance()->id;
@@ -290,7 +298,7 @@ if ($CFG->version >= '2021051705') {
             $files = $fs->get_area_files(
                 $assign->get_context()->id,
                 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                 $submissionid,
                 'id',
                 false
@@ -309,13 +317,13 @@ if ($CFG->version >= '2021051705') {
      * @group office365
      * @group office365_privacy
      */
-    class assignsubmission_onenote_privacy_testcase extends \mod_assign\tests\mod_assign_privacy_testcase {
+    class assignsubmission_onenote_privacy_testcase extends mod_assign_privacy_testcase {
 
         /**
          * Quick test to make sure that get_metadata returns something.
          */
         public function test_get_metadata() {
-            $collection = new \core_privacy\local\metadata\collection('assignsubmission_onenote');
+            $collection = new collection('assignsubmission_onenote');
             $collection = \assignsubmission_onenote\privacy\provider::get_metadata($collection);
             $this->assertNotEmpty($collection);
         }
@@ -337,11 +345,11 @@ if ($CFG->version >= '2021051705') {
             $submissiontext = 'Just some text';
             [$plugin, $submission] = $this->create_onenote_submission($assign, $user1, $submissiontext);
 
-            $writer = \core_privacy\local\request\writer::with_context($context);
+            $writer = writer::with_context($context);
             $this->assertFalse($writer->has_any_data());
 
             // The student should have some text submitted.
-            $exportdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $submission, ['Attempt 1']);
+            $exportdata = new assign_plugin_request_data($context, $assign, $submission, ['Attempt 1']);
             \assignsubmission_onenote\privacy\provider::export_submission_user_data($exportdata);
             $exporteddata = $writer->get_data(['Attempt 1',
                 get_string('privacy:path', 'assignsubmission_onenote')]);
@@ -380,22 +388,22 @@ if ($CFG->version >= '2021051705') {
             $studenttext2 = 'Student two\'s text.';
             [$plugin2, $submission2] = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             // 4 including directories.
             $this->assertEquals(4, count($files));
 
             // Only need the context and assign object in this plugin for this operation.
-            $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign);
+            $requestdata = new assign_plugin_request_data($context, $assign);
             \assignsubmission_onenote\privacy\provider::delete_submission_for_context($requestdata);
             // This checks that there is no content for these submissions.
             $this->assertTrue($plugin->is_empty($submission));
             $this->assertTrue($plugin2->is_empty($submission2));
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             $this->assertEquals(0, count($files));
         }
 
@@ -422,23 +430,23 @@ if ($CFG->version >= '2021051705') {
             $studenttext2 = 'Student two\'s text.';
             [$plugin2, $submission2] = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             // 4 including directories.
             $this->assertEquals(4, count($files));
 
             // Need more data for this operation.
-            $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $submission, [], $user1);
+            $requestdata = new assign_plugin_request_data($context, $assign, $submission, [], $user1);
             \assignsubmission_onenote\privacy\provider::delete_submission_for_userid($requestdata);
             // This checks that there is no content for the first submission.
             $this->assertTrue($plugin->is_empty($submission));
             // But there is for the second submission.
             $this->assertFalse($plugin2->is_empty($submission2));
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
             // 2 files that were not deleted.
             $this->assertEquals(2, count($files));
         }
@@ -478,18 +486,18 @@ if ($CFG->version >= '2021051705') {
             $student4text = 'Student four\'s text.';
             [$plugin5, $submission5] = $this->create_onenote_submission($assign2, $user4, $student4text);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             // 6 including directories for assign 1.
             // 4 including directories for assign 2.
             $this->assertCount(6, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
             $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
 
             $data = $DB->get_records('assignsubmission_onenote', ['assignment' => $assign1->get_instance()->id]);
             $this->assertCount(3, $data);
             // Delete the submissions for user 1 and 3.
-            $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context1, $assign1);
+            $requestdata = new assign_plugin_request_data($context1, $assign1);
             $requestdata->set_userids([$user1->id, $user2->id]);
             $requestdata->populate_submissions_and_grades();
             \assignsubmission_onenote\privacy\provider::delete_submissions($requestdata);
@@ -502,13 +510,13 @@ if ($CFG->version >= '2021051705') {
             $data = $DB->get_records('assignsubmission_onenote', ['assignment' => $assign2->get_instance()->id]);
             $this->assertCount(2, $data);
 
-            $fs = new \file_storage();
+            $fs = new file_storage();
             // 6 including directories for assign 1.
             // 4 including directories for assign 2.
             $this->assertCount(2, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
             $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
         }
 
         /**
@@ -531,7 +539,7 @@ if ($CFG->version >= '2021051705') {
             $fileinfo = [
                 'contextid' => $assign->get_context()->id,
                 'component' => 'assignsubmission_onenote',
-                'filearea' => \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                'filearea' => base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                 'itemid' => $submission->id,
                 'filepath' => '/',
                 'filename' => 'OneNote_' . time() . '.zip'
@@ -539,7 +547,7 @@ if ($CFG->version >= '2021051705') {
             // Save it.
             $fs->create_file_from_string($fileinfo, $submissiontext);
 
-            $filesubmission = new \stdClass();
+            $filesubmission = new stdClass();
             $filesubmission->numfiles = $this->count_files($assign, $submission->id);
             $filesubmission->submission = $submission->id;
             $filesubmission->assignment = $assign->get_instance()->id;
@@ -560,7 +568,7 @@ if ($CFG->version >= '2021051705') {
             $files = $fs->get_area_files(
                 $assign->get_context()->id,
                 'assignsubmission_onenote',
-                \local_onenote\api\base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
                 $submissionid,
                 'id',
                 false

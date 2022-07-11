@@ -16,6 +16,7 @@
 
 /**
  * This file contains the moodle hooks for the submission onenote plugin
+ *
  * @package   assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -42,8 +43,8 @@ function assignsubmission_onenote_pluginfile($course, $cm, context $context, $fi
     }
 
     require_login($course, false, $cm);
-    $itemid = (int)array_shift($args);
-    $record = $DB->get_record('assign_submission', array('id' => $itemid), 'userid, assignment, groupid', MUST_EXIST);
+    $itemid = (int) array_shift($args);
+    $record = $DB->get_record('assign_submission', ['id' => $itemid], 'userid, assignment, groupid', MUST_EXIST);
     $userid = $record->userid;
     $groupid = $record->groupid;
 
@@ -55,13 +56,11 @@ function assignsubmission_onenote_pluginfile($course, $cm, context $context, $fi
         return false;
     }
 
-    if ($assign->get_instance()->teamsubmission &&
-        !$assign->can_view_group_submission($groupid)) {
+    if ($assign->get_instance()->teamsubmission && !$assign->can_view_group_submission($groupid)) {
         return false;
     }
 
-    if (!$assign->get_instance()->teamsubmission &&
-        !$assign->can_view_submission($userid)) {
+    if (!$assign->get_instance()->teamsubmission && !$assign->can_view_submission($userid)) {
         return false;
     }
 

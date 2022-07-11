@@ -10,36 +10,6 @@
     }
 }
 
-.local_o365_adminsetting_sharepointlink_message, .local_o365_adminsetting_sharepointlink_status {
-    margin: 0 0 0.5rem 0;
-    padding: 0.5rem;
-    img {
-        margin-right: 0.25rem;
-    }
-    span {
-        vertical-align: middle;
-    }
-}
-
-.local_o365_adminsetting_sharepointlink_status {
-    display: none;
-    &.empty {
-        display: block;
-        padding: 0;
-    }
-}
-
-.local_o365_adminsetting_sharepointlink_message.loading {
-    display: block;
-    padding: 0;
-    margin: 0.25rem 0 0.5rem 0;
-}
-
-.local_o365_sharepointlink_viewstatus .changesitelink {
-    display: inline-block;
-    margin-left: 1.5rem;
-}
-
 #local_o365_admin-azuresetup {
     button.refreshperms {
         margin: 0 0 0.75rem;
@@ -155,10 +125,5 @@ table.local_o365_matchqueue {
 /* Display spinner while course data is syncing. */
 .local_o365_spinner {
     margin: 0 0 1em 1em;
-    display: none;
-}
-
-/* Hide customize link when the setting is disabled. */
-#admin-sharepointcourseselect label.link-disabled a {
     display: none;
 }

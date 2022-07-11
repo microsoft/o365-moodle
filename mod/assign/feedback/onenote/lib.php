@@ -15,12 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the moodle hooks for the feedback onenote plugin
+ * This file contains the moodle hooks for the feedback onenote plugin.
+ *
  * @package   assignfeedback_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -42,11 +44,11 @@ function assignfeedback_onenote_pluginfile($course, $cm, context $context, $file
     }
 
     require_login($course, false, $cm);
-    $itemid = (int)array_shift($args);
-    $record = $DB->get_record('assign_grades', array('id' => $itemid), 'userid,assignment', MUST_EXIST);
+    $itemid = (int) array_shift($args);
+    $record = $DB->get_record('assign_grades', ['id' => $itemid], 'userid,assignment', MUST_EXIST);
     $userid = $record->userid;
 
-    if (!$assign = $DB->get_record('assign', array('id' => $cm->instance))) {
+    if (!$assign = $DB->get_record('assign', ['id' => $cm->instance])) {
         return false;
     }
 

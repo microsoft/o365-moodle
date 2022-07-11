@@ -40,7 +40,7 @@ class utils {
      *
      * @param int $coursemoduleid The course module ID.
      * @param int $courseid
-     * @return bool Whether we can proceed or not.
+     * @return array Whether we can proceed or not.
      */
     public static function verify_assignment($coursemoduleid, $courseid) {
         global $DB;

@@ -31,8 +31,6 @@ use local_o365\adminsetting\azuresetup;
 use local_o365\adminsetting\courseresetteams;
 use local_o365\adminsetting\moodlesetup;
 use local_o365\adminsetting\serviceresource;
-use local_o365\adminsetting\sharepointcourseselect;
-use local_o365\adminsetting\sharepointlink;
 use local_o365\adminsetting\tabs;
 use local_o365\adminsetting\toollink;
 use local_o365\adminsetting\coursesync;
@@ -373,20 +371,6 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_customtheme', 'local_o365');
         $desc = new lang_string('settings_customtheme_desc', 'local_o365');
         $settings->add(new admin_setting_configselect('local_o365/customtheme', $label, $desc, 'boost_o365teams', $options));
-
-        // Legacy settings.
-        $label = new lang_string('settings_secthead_legacy', 'local_o365');
-        $desc = new lang_string('settings_secthead_legacy_desc', 'local_o365');
-        $settings->add(new admin_setting_heading('local_o365_section_legacy', $label, $desc));
-
-        $label = new lang_string('settings_sharepointlink', 'local_o365');
-        $desc = new lang_string('settings_sharepointlink_details', 'local_o365');
-        $settings->add(new sharepointlink('local_o365/sharepointlink', $label, $desc, '', PARAM_RAW));
-
-        $label = new lang_string('acp_sharepointcourseselect', 'local_o365');
-        $desc = new lang_string('acp_sharepointcourseselect_desc', 'local_o365');
-        $settingname = 'local_o365/sharepointcourseselect';
-        $settings->add(new sharepointcourseselect($settingname, $label, $desc, 'none'));
     }
 
     if ($tab == LOCAL_O365_TAB_SDS && empty($install)) {

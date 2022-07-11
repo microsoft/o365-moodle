@@ -91,11 +91,6 @@ class provider implements
                 'timecreated',
                 'timemodified',
             ],
-            'local_o365_spgroupassign' => [
-                'userid',
-                'groupid',
-                'timecreated',
-            ],
             'local_o365_appassign' => [
                 'muserid',
                 'assigned',
@@ -282,7 +277,6 @@ class provider implements
             'local_o365_connections' => ['muserid' => $user->id],
             'local_o365_token' => ['user_id' => $user->id],
             'local_o365_objects' => ['type' => 'user', 'moodleid' => $user->id],
-            'local_o365_spgroupassign' => ['userid' => $user->id],
             'local_o365_appassign' => ['muserid' => $user->id],
             'local_o365_calsettings' => ['user_id' => $user->id],
         ];

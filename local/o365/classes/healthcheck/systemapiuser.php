@@ -68,9 +68,7 @@ class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
         $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret, $oidcconfig->authendpoint,
                 $oidcconfig->tokenendpoint);
 
-        $tokenresource = (\local_o365\rest\unified::is_configured() === true)
-            ? \local_o365\rest\unified::get_tokenresource()
-            : \local_o365\rest\azuread::get_tokenresource();
+        $tokenresource = \local_o365\rest\unified::get_tokenresource();
         $systemtoken = \local_o365\oauth2\systemapiusertoken::get_for_new_resource(null, $tokenresource, $clientdata, $httpclient);
         if (empty($systemtoken)) {
             return [

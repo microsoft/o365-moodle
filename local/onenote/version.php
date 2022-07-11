@@ -15,8 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for OneNote local plugin
- * @package    local_onenote
+ * Version details for OneNote local plugin.
+ *
+ * @package local_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc.
@@ -24,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2021051720;
+$plugin->version = 2021051721;
 $plugin->requires = 2021051700;
 $plugin->release = '3.11.3';
 $plugin->component = 'local_onenote';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'local_o365' => 2021051720,
+    'local_o365' => 2021051727,
 ];

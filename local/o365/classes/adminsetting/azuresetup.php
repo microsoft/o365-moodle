@@ -116,7 +116,7 @@ class azuresetup extends \admin_setting {
             $lastresults = json_encode(false);
         }
 
-        $unifiedenabled = (\local_o365\rest\unified::is_enabled() === true) ? 'true' : 'false';
+        $unifiedenabled = 'true';
 
         $ajaxurl = new \moodle_url('/local/o365/ajax.php');
         $settinghtml .= '<script>
@@ -153,17 +153,12 @@ $(function() {
         strdetectedval: "'.addslashes(get_string('settings_azuresetup_detectedval', 'local_o365')).'",
         strcorrectval: "'.addslashes(get_string('settings_azuresetup_correctval', 'local_o365')).'",
 
-        showunified: '.$unifiedenabled.',
         strunifiedheader: "'.addslashes(get_string('settings_azuresetup_unifiedheader', 'local_o365')).'",
         strunifieddesc: "'.addslashes(get_string('settings_azuresetup_unifieddesc', 'local_o365')).'",
         strunifiederror: "'.addslashes(get_string('settings_azuresetup_unifiederror', 'local_o365')).'",
         strunifiedpermerror: "'.addslashes(get_string('settings_azuresetup_strunifiedpermerror', 'local_o365')).'",
         strunifiedmissing: "'.addslashes(get_string('settings_azuresetup_unifiedmissing', 'local_o365')).'",
         strunifiedactive: "'.addslashes(get_string('settings_azuresetup_unifiedactive', 'local_o365')).'",
-
-        strlegacyheader: "'.addslashes(get_string('settings_azuresetup_legacyheader', 'local_o365')).'",
-        strlegacydesc: "'.addslashes(get_string('settings_azuresetup_legacydesc', 'local_o365')).'",
-        strlegacyerror: "'.addslashes(get_string('settings_azuresetup_legacyerror', 'local_o365')).'",
 
         strtenanterror: "'.addslashes(get_string('settings_azuresetup_strtenanterror', 'local_o365')).'"
     };

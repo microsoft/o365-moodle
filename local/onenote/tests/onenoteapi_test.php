@@ -16,6 +16,7 @@
 
 /**
  * Unit tests for the \local_onenote\api\base class
+ *
  * @package    local_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,7 +25,6 @@
 
 /**
  * Unit tests for the \local_onenote\api\base class.
- *
  * In order to run these tests, you need to do the following:
  * 1) Create a file phpu_config_data.json and place it in the same folder as this file.
  * 2) The file should contain config data for running these unit tests:
@@ -38,6 +38,7 @@
  *  }
  *  3) Run the unit tests using the standard process for running PHP Unit tests for Moodle.
  */
+
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
@@ -76,11 +77,12 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
 
     /**
      * Create basic setup for test cases
+     *
      * @return bool
      */
-    public function setup():void {
+    public function setup() : void {
         global $CFG;
-        return ; // Need to update tests to not contact external services.
+        return; // Need to update tests to not contact external services.
         $this->resetAfterTest(true);
 
         $this->user = $this->getDataGenerator()->create_user();
@@ -124,6 +126,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
 
     /**
      * Set current user
+     *
      * @param int $index
      */
     public function set_user($index) {
@@ -163,7 +166,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
 
         $expected = '<a onclick="window.open(this.href,\'_blank\'); return false;"';
-        $expected .= ' href="'.$CFG->wwwroot.'/local/onenote/onenote_actions.php?';
+        $expected .= ' href="' . $CFG->wwwroot . '/local/onenote/onenote_actions.php?';
         $expected .= 'action=openpage&cmid=1&wantfeedback&isteacher&submissionuserid&submissionid&gradeid"';
         $expected .= ' class="local_onenote_linkbutton">Onenote</a>';
         $button = $this->onenoteapi->render_action_button('Onenote', $this->cm->id);
@@ -193,14 +196,10 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
         $this->set_user(0);
 
         $itemlist = $this->onenoteapi->get_items_list();
-        $notesectionnames = array();
+        $notesectionnames = [];
         $course1 = $this->course1->fullname;
         $course2 = $this->course2->fullname;
-        $expectednames = array(
-            'Moodle Notebook',
-            $course1,
-            $course2
-        );
+        $expectednames = ['Moodle Notebook', $course1, $course2];
 
         foreach ($itemlist as $item) {
             if ($item['title'] == "Moodle Notebook") {
@@ -215,7 +214,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
         $this->assertTrue(in_array($course1, $notesectionnames), "Test course1 is not present");
         $this->assertTrue(in_array($course2, $notesectionnames), "Test course2 is  not present");
         $this->assertTrue(count($expectednames) == count(array_intersect($expectednames, $notesectionnames)),
-                "Same elements are not present");
+            "Same elements are not present");
         $this->assertNotEmpty($itemlist, "No value");
     }
 
@@ -294,10 +293,10 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
         $this->submission = $this->assign->get_user_submission($this->user1->id, true);
 
         $record = $DB->get_record('local_onenote_assign_pages',
-                array("assign_id" => $this->submission->assignment, "user_id" => $this->submission->userid));
+            ["assign_id" => $this->submission->assignment, "user_id" => $this->submission->userid]);
 
         $tempfolder = $this->onenoteapi->create_temp_folder();
-        $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        $tempfile = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_')]) . '.zip';
         $info = $this->onenoteapi->download_page($record->submission_student_page_id, $tempfile);
 
         $zip = new ZipArchive;
@@ -306,8 +305,8 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
             $zip->extractTo($tempfolder);
             $zip->close();
         }
-        $folder = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), '0'));
-        $pagefile = join(DIRECTORY_SEPARATOR, array(rtrim($folder, DIRECTORY_SEPARATOR), 'page.html'));
+        $folder = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), '0']);
+        $pagefile = join(DIRECTORY_SEPARATOR, [rtrim($folder, DIRECTORY_SEPARATOR), 'page.html']);
 
         $htmldom = new DomDocument;
         $htmldom->loadHTMLFile($pagefile);
@@ -374,8 +373,8 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
         $gradeassign = new assign_feedback_onenote($this->assign, '');
         $gradeassign = $gradeassign->save($this->grade, $data);
         $gradeid = $this->grade->grade;
-        $createfeedback = $this->create_submission_feedback($this->cm, true, true, $this->user1->id,
-                $this->submission->id, $gradeid);
+        $createfeedback =
+            $this->create_submission_feedback($this->cm, true, true, $this->user1->id, $this->submission->id, $gradeid);
 
         if (filter_var($createsubmission, FILTER_VALIDATE_URL)) {
             if (strpos($this->course1->fullname, urldecode($createsubmission))) {
@@ -423,6 +422,7 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
 
     /**
      * Method for creating submission page.
+     *
      * @param object $cm
      * @param bool $wantfeedbackpage
      * @param bool $isteacher
@@ -432,9 +432,9 @@ class local_onenote_onenoteapi_testcase extends advanced_testcase {
      * @return mixed
      */
     public function create_submission_feedback($cm, $wantfeedbackpage = false, $isteacher = false, $submissionuserid = null,
-                                               $submissionid = null, $gradeid = null) {
-        $submissionfeedback = $this->onenoteapi->get_page($cm->id, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid,
-                $gradeid);
+        $submissionid = null, $gradeid = null) {
+        $submissionfeedback =
+            $this->onenoteapi->get_page($cm->id, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid, $gradeid);
         return $submissionfeedback;
     }
 }

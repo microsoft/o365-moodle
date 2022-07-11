@@ -22,15 +22,16 @@
  * @copyright  Enovation Solutions Ltd. {@link https://enovation.ie}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 defined('MOODLE_INTERNAL') || die();
 
-$functions = array(
-        'mod_assign_feedback_onenote_delete' => array(
-            'classname'     => 'assignfeedback_onenote_external',
-            'methodname'    => 'feedback_onenote_delete_foruser',
-            'classpath'     => 'mod/assign/feedback/onenote/externallib.php',
-            'description'   => 'Delete a teachers feedback for a student.',
-            'type'          => 'write',
-            'ajax'         => true,
-        ),
-);
+$functions = [
+    'mod_assign_feedback_onenote_delete' => [
+        'classname' => 'assignfeedback_onenote_external',
+        'methodname' => 'feedback_onenote_delete_foruser',
+        'classpath' => 'mod/assign/feedback/onenote/externallib.php',
+        'description' => 'Delete a teachers feedback for a student.',
+        'type' => 'write',
+        'ajax' => true,
+    ],
+];
