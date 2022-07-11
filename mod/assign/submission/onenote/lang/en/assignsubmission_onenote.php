@@ -23,8 +23,10 @@
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maximum OneNote page size';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Enabled by default';
 $string['default_help'] = 'When set, this submission method is enabled by default for all new assignments.';
 $string['enabled'] = 'OneNote submissions';

@@ -16,11 +16,14 @@
 
 /**
  * This file contains the definition for the library class for onenote feedback plugin
+ *
  * @package   assignfeedback_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
+
+use local_onenote\api\base;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -48,7 +51,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      */
     public function get_onenote_feedback($gradeid) {
         global $DB;
-        return $DB->get_record('assignfeedback_onenote', array('grade' => $gradeid));
+        return $DB->get_record('assignfeedback_onenote', ['grade' => $gradeid]);
     }
 
     /**
@@ -59,12 +62,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     private function get_file_options() {
         global $COURSE;
 
-        $fileoptions = array(
-            'subdirs' => 1,
-            'maxbytes' => $COURSE->maxbytes,
-            'accepted_types' => '*',
-            'return_types' => FILE_INTERNAL
-        );
+        $fileoptions = ['subdirs' => 1, 'maxbytes' => $COURSE->maxbytes, 'accepted_types' => '*', 'return_types' => FILE_INTERNAL];
         return $fileoptions;
     }
 
@@ -83,7 +81,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return boolean
      */
     private function copy_area_files(file_storage $fs, $fromcontextid, $fromcomponent, $fromfilearea, $fromitemid, $tocontextid,
-                                     $tocomponent, $tofilearea, $toitemid) {
+        $tocomponent, $tofilearea, $toitemid) {
 
         $newfilerecord = new stdClass();
         $newfilerecord->contextid = $tocontextid;
@@ -125,9 +123,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $gradeid = $grade ? $grade->id : 0;
 
         try {
-            $onenoteapi = \local_onenote\api\base::getinstance();
+            $onenoteapi = base::getinstance();
         } catch (\Exception $e) {
-            $html = '<div>'.$e->getMessage().'</div>';
+            $html = '<div>' . $e->getMessage() . '</div>';
             $mform->addElement('html', $html);
             return false;
         }
@@ -137,24 +135,24 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if (!$isteacher) {
             return false;
         }
-        $o = '<hr/><b>'.get_string('onenoteactions', 'assignfeedback_onenote').'</b>&nbsp;&nbsp;&nbsp;&nbsp;';
+        $o = '<hr/><b>' . get_string('onenoteactions', 'assignfeedback_onenote') . '</b>&nbsp;&nbsp;&nbsp;&nbsp;';
 
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
             $o .= $onenoteapi->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
-                    $this->assignment->get_course_module()->id, true, true,
-                    $userid, $submission ? $submission->id : 0, $grade ? $grade->id : null);
+                $this->assignment->get_course_module()->id, true, true, $userid, $submission ? $submission->id : 0,
+                $grade ? $grade->id : null);
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
 
             // Show a view all link if the number of files is over this limit.
-            $count = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+            $count = $this->count_files($grade->id, base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
             // Check if feedback is already given.
-            if ($count <= \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES && $count > 0) {
-                $o .= '<button type="submit" class="btn btn-primary" gradeid="'.$grade->id.'" userid="'. $userid;
-                $o .= '" contextid="'.$this->assignment->get_context()->id;
+            if ($count <= base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES && $count > 0) {
+                $o .= '<button type="submit" class="btn btn-primary" gradeid="' . $grade->id . '" userid="' . $userid;
+                $o .= '" contextid="' . $this->assignment->get_context()->id;
                 $o .= '" id="deleteuserfeedback"  name="deleteuserfeedback">';
-                $o .= get_string('deletefeedbackforuser', 'assignfeedback_onenote').'</button>';
+                $o .= get_string('deletefeedbackforuser', 'assignfeedback_onenote') . '</button>';
             }
 
         } else {
@@ -196,11 +194,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
         $filefeedback = $this->get_onenote_feedback($grade->id);
         if ($filefeedback) {
-            $filefeedback->numfiles = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+            $filefeedback->numfiles = $this->count_files($grade->id, base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
             return $DB->update_record('assignfeedback_onenote', $filefeedback);
         } else {
             $filefeedback = new stdClass();
-            $filefeedback->numfiles = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+            $filefeedback->numfiles = $this->count_files($grade->id, base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
             $filefeedback->grade = $grade->id;
             $filefeedback->assignment = $this->assignment->get_instance()->id;
             return $DB->insert_record('assignfeedback_onenote', $filefeedback) > 0;
@@ -224,7 +222,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         }
 
         try {
-            $onenoteapi = \local_onenote\api\base::getinstance();
+            $onenoteapi = base::getinstance();
         } catch (\Exception $e) {
             // Display error.
             $this->set_error($e->getMessage());
@@ -232,14 +230,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         }
 
         $tempfolder = $onenoteapi->create_temp_folder();
-        $tempfile = join(DIRECTORY_SEPARATOR, array(rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_'))) . '.zip';
+        $tempfile = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_')]) . '.zip';
 
-        $o365userid = \local_o365\utils::get_o365_userid($USER->id);
         // Create zip file containing onenote page and related files.
-        $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile, $o365userid);
+        $downloadinfo = $onenoteapi->download_page($record->feedback_teacher_page_id, $tempfile);
 
         if ($downloadinfo) {
-
             // Get feedback zip size.
             $feedbacksize = filesize($downloadinfo['path']);
 
@@ -255,17 +251,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
             // Delete any previous feedbacks.
             $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote',
-                    \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
+                base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
 
             // Prepare file record object.
-            $fileinfo = array(
-                'contextid' => $this->assignment->get_context()->id,
-                'component' => 'assignfeedback_onenote',
-                'filearea' => \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-                'itemid' => $grade->id,
-                'filepath' => '/',
-                'filename' => 'OneNote_' . time() . '.zip'
-            );
+            $fileinfo = ['contextid' => $this->assignment->get_context()->id, 'component' => 'assignfeedback_onenote',
+                'filearea' => base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, 'itemid' => $grade->id, 'filepath' => '/',
+                'filename' => 'OneNote_' . time() . '.zip'];
 
             // Save it.
             $fs->create_file_from_pathname($fileinfo, $downloadinfo['path']);
@@ -289,9 +280,9 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return bool Whether the plugin is being added to the front page.
      */
     protected function isonfrontpage() {
-        if (!empty($this->assignment) && $this->assignment instanceof \assign) {
+        if (!empty($this->assignment) && $this->assignment instanceof assign) {
             $coursectx = $this->assignment->get_course_context();
-            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof \context_course) ? true : false;
+            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof context_course) ? true : false;
             if ($coursectxvalid === true && $coursectx->instanceid == SITEID) {
                 return true;
             }
@@ -330,30 +321,30 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @param bool $showviewlink - Set to true to show a link to see the full list of files
      * @return string
      */
-    public function view_summary(stdClass $grade, & $showviewlink) {
+    public function view_summary(stdClass $grade, &$showviewlink) {
         global $USER;
 
         // Show a view all link if the number of files is over this limit.
-        $count = $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
-        $showviewlink = $count > \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
+        $count = $this->count_files($grade->id, base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+        $showviewlink = $count > base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES;
 
         try {
-            $onenoteapi = \local_onenote\api\base::getinstance();
+            $onenoteapi = base::getinstance();
         } catch (\Exception $e) {
             return $e->getMessage();
         }
 
         $o = '';
 
-        if ($count <= \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
+        if ($count <= base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
 
             if ($onenoteapi->is_logged_in()) {
                 // Show a link to open the OneNote page.
                 $submission = $this->assignment->get_user_submission($grade->userid, false);
                 $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
                 $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
-                        $this->assignment->get_course_module()->id, true, $isteacher,
-                        $grade->userid, $submission ? $submission->id : 0, $grade->id);
+                    $this->assignment->get_course_module()->id, true, $isteacher, $grade->userid, $submission ? $submission->id : 0,
+                    $grade->id);
             } else {
                 $o .= $onenoteapi->render_signin_widget();
                 $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
@@ -361,7 +352,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
             // Show standard link to download zip package.
             $o .= '<p>Download:</p>';
-            $filearea = \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA;
+            $filearea = base::ASSIGNFEEDBACK_ONENOTE_FILEAREA;
             $o .= $this->assignment->render_area_files('assignfeedback_onenote', $filearea, $grade->id);
 
             return $o;
@@ -377,7 +368,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return string
      */
     public function view(stdClass $grade) {
-        $filearea = \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA;
+        $filearea = base::ASSIGNFEEDBACK_ONENOTE_FILEAREA;
         return $this->assignment->render_area_files('assignfeedback_onenote', $filearea, $grade->id);
     }
 
@@ -389,7 +380,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     public function delete_instance() {
         global $DB;
         // Will throw exception on failure.
-        $DB->delete_records('assignfeedback_onenote', array('assignment' => $this->assignment->get_instance()->id));
+        $DB->delete_records('assignfeedback_onenote', ['assignment' => $this->assignment->get_instance()->id]);
 
         return true;
     }
@@ -400,7 +391,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @param stdClass $grade
      */
     public function is_empty(stdClass $grade) {
-        return $this->count_files($grade->id, \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA) == 0;
+        return $this->count_files($grade->id, base::ASSIGNFEEDBACK_ONENOTE_FILEAREA) == 0;
     }
 
     /**
@@ -409,6 +400,6 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @return array - An array of fileareas (keys) and descriptions (values)
      */
     public function get_file_areas() {
-        return [\local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA => $this->get_name()];
+        return [base::ASSIGNFEEDBACK_ONENOTE_FILEAREA => $this->get_name()];
     }
 }

@@ -32,8 +32,6 @@ use auth_oidc\event\user_disconnected;
 use auth_oidc\event\user_loggedin;
 use auth_oidc\jwt;
 use backup;
-use context;
-use context_course;
 use context_system;
 use core\event\capability_assigned;
 use core\event\capability_unassigned;
@@ -45,13 +43,10 @@ use core\event\course_updated;
 use core\event\enrol_instance_updated;
 use core\event\notification_sent;
 use core\event\role_assigned;
-use core\event\role_capabilities_updated;
 use core\event\role_deleted;
 use core\event\role_unassigned;
 use core\event\user_created;
 use core\event\user_deleted;
-use core\event\user_enrolment_created;
-use core\event\user_enrolment_deleted;
 use core\event\user_enrolment_updated;
 use core\task\manager;
 use core_user;
@@ -60,13 +55,9 @@ use local_o365\feature\coursesync\main;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
-use local_o365\rest\azuread;
 use local_o365\rest\botframework;
-use local_o365\rest\discovery;
-use local_o365\rest\sharepoint;
 use local_o365\rest\unified;
 use local_o365\task\groupmembershipsync;
-use local_o365\task\sharepointaccesssync;
 use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
@@ -110,7 +101,6 @@ class observers {
                 ];
 
                 set_config('systemtokens', serialize($tokendata), 'local_o365');
-                set_config('sharepoint_initialized', '0', 'local_o365');
                 redirect(new moodle_url('/admin/settings.php?section=local_o365'));
                 break;
 
@@ -140,17 +130,9 @@ class observers {
                 $scope = $eventdata['other']['tokenparams']['scope'];
                 $res = $eventdata['other']['tokenparams']['resource'];
                 $token = new token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
-                if (unified::is_enabled() === true) {
-                    $tokenresource = unified::get_tokenresource();
-                } else {
-                    $tokenresource = discovery::get_tokenresource();
-                }
+                $tokenresource = unified::get_tokenresource();
                 $token = token::jump_tokenresource($token, $tokenresource, $clientdata, $httpclient);
-                if (unified::is_enabled() === true) {
-                    $apiclient = new unified($token, $httpclient);
-                } else {
-                    $apiclient = new discovery($token, $httpclient);
-                }
+                $apiclient = new unified($token, $httpclient);
                 $domainsfetched = false;
                 $domainnames = [];
                 try {
@@ -352,8 +334,8 @@ class observers {
         global $DB;
 
         try {
-            // Azure AD or Graph API must be configured for us to fetch data.
-            if (azuread::is_configured() !== true && unified::is_configured() !== true) {
+            // Graph API must be configured for us to fetch data.
+            if (unified::is_configured() !== true) {
                 return true;
             }
 
@@ -485,33 +467,10 @@ class observers {
     }
 
     /**
-     * Construct a sharepoint API client using the system API user.
-     *
-     * @return sharepoint|bool A constructed sharepoint API client, or false if error.
-     */
-    public static function construct_sharepoint_api_with_system_user() {
-        try {
-            $sharepointtokenresource = sharepoint::get_tokenresource();
-            if (!empty($sharepointtokenresource)) {
-                $httpclient = new httpclient();
-                $clientdata = clientdata::instance_from_oidc();
-                $sharepointtoken = utils::get_app_or_system_token($sharepointtokenresource, $clientdata, $httpclient);
-                if (!empty($sharepointtoken)) {
-                    return new sharepoint($sharepointtoken, $httpclient);
-                }
-            }
-        } catch (Exception $e) {
-            utils::debug($e->getMessage(), __METHOD__, $e);
-        }
-        return false;
-    }
-
-    /**
      * Handle course_created event.
      *
      * Does the following:
-     *  - enable sync on new courses if course sync is "custom", and the option to enable sync on new courses by default is set.
-     *  - create a sharepoint site and associated groups.
+     *  - enable sync on the new courses if course sync is "custom", and the option to enable sync on new courses by default is set.
      *
      * @param course_created $event The triggered event.
      * @return bool Success/Failure.
@@ -526,13 +485,6 @@ class observers {
         $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
         if ((get_config('local_o365', 'coursesync') === 'oncustom') && $syncnewcoursesetting) {
             \local_o365\feature\coursesync\utils::set_course_sync_enabled($event->objectid, true);
-        }
-
-        if (sharepoint::is_configured() === true) {
-            $sharepoint = static::construct_sharepoint_api_with_system_user();
-            if (!empty($sharepoint)) {
-                $sharepoint->create_course_site($event->objectid);
-            }
         }
 
         return true;
@@ -573,7 +525,6 @@ class observers {
      *
      * Does the following:
      *  - update Teams name, if the options are enabled.
-     *  - update associated sharepoint sites.
      *
      * @param course_updated $event The triggered event.
      * @return bool Success/Failure.
@@ -596,16 +547,6 @@ class observers {
                     $coursesycnmain->update_team_name($courseid);
                 }
             }
-
-            // Update sharepoint sites.
-            $shortname = $eventdata['other']['shortname'];
-            $fullname = $eventdata['other']['fullname'];
-            if (sharepoint::is_configured() === true) {
-                $sharepoint = static::construct_sharepoint_api_with_system_user();
-                if (!empty($sharepoint)) {
-                    $sharepoint->update_course_site($courseid, $shortname, $fullname);
-                }
-            }
         }
 
         return true;
@@ -618,7 +559,6 @@ class observers {
      *  - delete course connection records.
      *  - delete SDS connection records.
      *  - delete connect group if the option is enabled.
-     *  - delete sharepoint sites and groups, and local sharepoint site data.
      *
      * @param course_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -645,110 +585,13 @@ class observers {
         $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid]);
         $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $courseid]);
 
-        if (sharepoint::is_configured() !== true) {
-            return false;
-        }
-
-        $sharepoint = static::construct_sharepoint_api_with_system_user();
-        if (!empty($sharepoint)) {
-            $sharepoint->delete_course_site($courseid);
-        }
         return true;
-    }
-
-    /**
-     * Sync SharePoint course site access when a role was assigned or unassigned for a user.
-     *
-     * @param int $roleid The ID of the role that was assigned/unassigned.
-     * @param int $userid The ID of the user that it was assigned to or unassigned from.
-     * @param int $contextid The ID of the context the role was assigned/unassigned in.
-     * @return bool Success/Failure.
-     */
-    public static function sync_spsite_access_for_roleassign_change(int $roleid, int $userid, int $contextid) : bool {
-        global $DB;
-        $requiredcap = sharepoint::get_course_site_required_capability();
-
-        // Check if the role affected the required capability.
-        $rolecapsql = "SELECT *
-                         FROM {role_capabilities}
-                        WHERE roleid = ? AND capability = ?";
-        $capassignrec = $DB->get_record_sql($rolecapsql, [$roleid, $requiredcap]);
-
-        if (empty($capassignrec) || $capassignrec->permission == CAP_INHERIT) {
-            // Role doesn't affect required capability. Doesn't concern us.
-            return false;
-        }
-
-        $context = context::instance_by_id($contextid, IGNORE_MISSING);
-        if (empty($context)) {
-            // Invalid context, stop here.
-            return false;
-        }
-
-        if ($context->contextlevel == CONTEXT_COURSE) {
-            $courseid = $context->instanceid;
-            $user = $DB->get_record('user', ['id' => $userid]);
-            if (empty($user)) {
-                // Bad userid.
-                return false;
-            }
-
-            if (unified::is_configured()) {
-                $userupn = unified::get_muser_upn($user);
-            } else {
-                $userupn = azuread::get_muser_upn($user);
-            }
-            if (empty($userupn)) {
-                // No user UPN, can't continue.
-                return false;
-            }
-
-            $spgroupsql = 'SELECT *
-                             FROM {local_o365_coursespsite} site
-                             JOIN {local_o365_spgroupdata} grp ON grp.coursespsiteid = site.id
-                            WHERE site.courseid = ? AND grp.permtype = ?';
-            $spgrouprec = $DB->get_record_sql($spgroupsql, [$courseid, 'contribute']);
-            if (empty($spgrouprec)) {
-                // No sharepoint group, can't fix that here.
-                return false;
-            }
-
-            // If the context is a course context we can change SP access now.
-            $sharepoint = static::construct_sharepoint_api_with_system_user();
-            if (empty($sharepoint)) {
-                // O365 not configured.
-                return false;
-            }
-            $hascap = has_capability($requiredcap, $context, $user);
-            if ($hascap === true) {
-                // Add to group.
-                $sharepoint->add_user_to_group($userupn, $spgrouprec->groupid, $user->id);
-            } else {
-                // Remove from group.
-                $sharepoint->remove_user_from_group($userupn, $spgrouprec->groupid, $user->id);
-            }
-            return true;
-        } else if ($context->get_course_context(false) == false) {
-            // If the context is higher than a course, we have to run a sync in cron.
-            $spaccesssync = new sharepointaccesssync();
-            $spaccesssync->set_custom_data([
-                'roleid' => $roleid,
-                'userid' => $userid,
-                'contextid' => $contextid,
-            ]);
-            manager::queue_adhoc_task($spaccesssync);
-            return true;
-        }
-
-        return false;
     }
 
     /**
      * Handle role_assigned event.
      *
      * Does the following:
-     *  - check if the assigned role has the permission needed to access course sharepoint sites. If it does, add
-     *    the assigned user to the course sharepoint sites as a contributor.
      *  - sync group ownership/membership if the course is connected to a Microsoft 365 group.
      *
      * @param role_assigned $event The triggered event.
@@ -757,11 +600,6 @@ class observers {
     public static function handle_role_assigned(role_assigned $event) : bool {
         if (utils::is_connected() !== true) {
             return false;
-        }
-
-        // Update Sharepoint roles.
-        if (sharepoint::is_configured() === true) {
-            static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid, $event->contextid);
         }
 
         // Update group membership.
@@ -777,8 +615,6 @@ class observers {
      * Handle role_unassigned event.
      *
      * Does the following:
-     *  - check if, by unassigning this role, the related user no longer has the required capability to access course sharepoint
-     *    sites. If they don't, remove them from the sharepoint sites' contributor groups.
      *  - check if group sync is enabled for the course. If it does, remove the user as group owner if the user is a teacher.
      *
      * @param role_unassigned $event The triggered event.
@@ -787,11 +623,6 @@ class observers {
     public static function handle_role_unassigned(role_unassigned $event) : bool {
         if (utils::is_connected() !== true) {
             return false;
-        }
-
-        // Update Sharepoint roles.
-        if (sharepoint::is_configured() === true) {
-            static::sync_spsite_access_for_roleassign_change($event->objectid, $event->relateduserid, $event->contextid);
         }
 
         // Update group membership.
@@ -807,9 +638,6 @@ class observers {
     /**
      * Handle capability_assigned or capability_unassigned events.
      * Does the following:
-     *  - check if the required capability to access course sharepoint sites was removed. if it was, check if affected users
-     * no longer have the required capability to access course sharepoint sites. If they don't, remove them from the
-     * sharepoint sites' contributor groups.
      *  - check if capabilities related to users' team roles in connected teams are made, queue ad-hoc task to update user team
      * roles if needed.
      *
@@ -817,16 +645,7 @@ class observers {
      * @return bool
      */
     public static function handle_capability_change($event) {
-        global $DB;
-
         $roleid = $event->objectid;
-
-        // Role changes can be pretty heavy - run in adhoc task.
-        if (sharepoint::is_configured() === true) {
-            $spaccesssync = new sharepointaccesssync();
-            $spaccesssync->set_custom_data(['roleid' => $roleid, 'userid' => '*', 'contextid' => null]);
-            manager::queue_adhoc_task($spaccesssync);
-        }
 
         // Resync owners and members in the groups connected to enabled Moodle courses.
         if (utils::is_connected() === true) {
@@ -855,15 +674,8 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_deleted(role_deleted $event) : bool {
-        if (utils::is_connected() !== true && sharepoint::is_configured() !== true) {
+        if (utils::is_connected() !== true) {
             return false;
-        }
-
-        // Role deletions can be heavy - run in cron.
-        if (sharepoint::is_configured() === true) {
-            $spaccesssync = new sharepointaccesssync();
-            $spaccesssync->set_custom_data(['roleid' => '*', 'userid' => '*', 'contextid' => null]);
-            manager::queue_adhoc_task($spaccesssync);
         }
 
         // Resync owners and members in the groups connected to enabled Moodle courses.

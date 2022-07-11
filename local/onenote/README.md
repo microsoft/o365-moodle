@@ -59,7 +59,7 @@ This repository is updated with stable releases. To follow active development, s
 
 1. Unpack the plugin into /local/onenote within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
-3. Follow the on-screen instuctions to install the plugin.
+3. Follow the on-screen instructions to install the plugin.
 
 For more documentation, visit https://docs.moodle.org/34/en/Office365
 

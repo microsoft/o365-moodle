@@ -22,6 +22,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Taille maximale de la page OneNote';
 $string['countfiles'] = 'Pages OneNote : {$a}';
 $string['default'] = 'Activé par défaut';

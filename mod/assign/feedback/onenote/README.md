@@ -18,7 +18,7 @@ Note that the association between an assignment grade in Moodle and the associat
 - If the OneNote page associated with an assignment feedback gets deleted, the teacher can still click one a button in the plugin UI that will recreate the OneNote page from the zip package that was saved in Moodle.
 
 ### Plugin dependencies
-assignfeedback_onenote => local_onenote => local_msaccount
+assignfeedback_onenote => local_onenote => local_o365
 
 ### Configuration
 This plugin adds a radio button to the assignment creation form that allows a teacher to specify that the teacher may provide feedback on the assignment submission as a OneNote page.

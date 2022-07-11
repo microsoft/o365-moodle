@@ -22,6 +22,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'OneNote-sivun enimmäiskoko';
 $string['countfiles'] = 'OneNote-tiedostot: {$a}';
 $string['default'] = 'Käytössä oletuksena';
@@ -41,12 +43,12 @@ $string['siteuploadlimit'] = 'Sivuston latausrajoitus';
 $string['submissionfilearea'] = 'Palautukseen ladatut OneNote-sivut';
 $string['onenoteactions'] = 'OneNote-toiminnot: ';
 $string['workonthis'] = 'Käsittele tätä';
-$string['workonthishelp'] = 'Tee tehtävä OneNotessa napsauttamalla yllä olevaa painiketta. Muista palata tälle sivulle ja tallentaa työ Moodleen.';
+$string['workonthishelp'] = 'Tee tehtävä OneNote napsauttamalla yllä olevaa painiketta. Muista palata tälle sivulle ja tallentaa työ Moodleen.';
 $string['signinhelp'] = 'Kirjaudu OneNoteen napsauttamalla yllä olevaa painiketta, jotta voit käsitellä tehtävää siellä.';
-$string['submissiondownloadfailed'] = 'Palautusta ei voitu ladata OneNotesta. Yritä uudelleen.';
+$string['submissiondownloadfailed'] = 'Palautusta ei voitu ladata OneNote. Yritä uudelleen.';
 $string['notsignedin'] = 'Kirjaudu OneNoteen, ennen kuin yrität tallentaa muutokset.';
 $string['viewsubmission'] = 'Näytä palautus';
 $string['signinhelp1'] = 'Kirjaudu OneNoteen napsauttamalla yllä olevaa painiketta, jos haluat käsitellä palautusta siellä.';
 $string['signinhelp2'] = 'Kirjaudu OneNoteen napsauttamalla yllä olevaa painiketta, jos haluat tarkastella palautusta siellä.';
-$string['submissionnotstarted'] = 'Tee tehtävä OneNotessa ja tallenna sitten muutokset.';
+$string['submissionnotstarted'] = 'Tee tehtävä OneNote ja tallenna sitten muutokset.';
 $string['submissionlimitexceed'] = 'Palautuksen koko ylittää määritetyn rajan.';

@@ -22,8 +22,10 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Tamanho máximo de página do OneNote';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Ativado por padrão';
 $string['default_help'] = 'Quando configurado, esse método de envio é ativado por padrão para todas as novas tarefas.';
 $string['enabled'] = 'Envios do OneNote';

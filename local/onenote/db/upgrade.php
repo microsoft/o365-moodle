@@ -22,6 +22,8 @@
  * @copyright  Microsoft, Inc.
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Upgrade the local_onenote plugin.
  *
@@ -119,7 +121,8 @@ function xmldb_local_onenote_upgrade($oldversion) {
     if ($oldversion < 2021051716) {
         // Make sure teacher_lastviewed is a integer
         $table = new xmldb_table('local_onenote_assign_pages');
-        $field = new xmldb_field('teacher_lastviewed', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'feedback_teacher_page_id');
+        $field = new xmldb_field('teacher_lastviewed', XMLDB_TYPE_INTEGER, '10', null, null, null, null,
+            'feedback_teacher_page_id');
         $dbman->change_field_type($table, $field);
 
         // Onenote savepoint reached.

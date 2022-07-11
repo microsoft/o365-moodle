@@ -25,6 +25,10 @@
 
 namespace assignfeedback_onenote\privacy;
 
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\writer;
+use file_storage;
+use local_onenote\api\base;
 use mod_assign\privacy\assign_plugin_request_data;
 
 defined('MOODLE_INTERNAL') || die();
@@ -51,7 +55,6 @@ class provider_test extends \mod_assign\privacy\provider_test {
      * @return array   Feedback plugin object and the grade object.
      */
     protected function create_feedback($assign, $student, $teacher) {
-        $submission = $assign->get_user_submission($student->id, true);
         $this->setUser($teacher);
         $plugin = $assign->get_feedback_plugin_by_type('onenote');
         $grade = $assign->get_user_grade($student->id, true);
@@ -61,10 +64,9 @@ class provider_test extends \mod_assign\privacy\provider_test {
         $fileinfo = [
             'contextid' => $assign->get_context()->id,
             'component' => 'assignfeedback_onenote',
-            'filearea' => \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
-            'itemid' => $grade->id,
-            'filepath' => '/',
-            'filename' => 'OneNote_' . time() . '.zip'
+            'filearea' => base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+            'itemid' => $grade->id, 'filepath' => '/',
+            'filename' => 'OneNote_' . time() . '.zip',
         ];
 
         // Save it.
@@ -78,8 +80,8 @@ class provider_test extends \mod_assign\privacy\provider_test {
      * Quick test to make sure that get_metadata returns something.
      */
     public function test_get_metadata() {
-        $collection = new \core_privacy\local\metadata\collection('assignfeedback_onenote');
-        $collection = \assignfeedback_onenote\privacy\provider::get_metadata($collection);
+        $collection = new collection('assignfeedback_onenote');
+        $collection = provider::get_metadata($collection);
         $this->assertNotEmpty($collection);
     }
 
@@ -101,27 +103,23 @@ class provider_test extends \mod_assign\privacy\provider_test {
 
         $context = $assign->get_context();
 
-        list($plugin, $grade) = $this->create_feedback($assign, $user1, $user2);
+        [$plugin, $grade] = $this->create_feedback($assign, $user1, $user2);
 
-        $writer = \core_privacy\local\request\writer::with_context($context);
+        $writer = writer::with_context($context);
         $this->assertFalse($writer->has_any_data());
 
-        // The student should be able to see the teachers feedback.
-        $exportdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $grade, [], $user1);
-        \assignfeedback_onenote\privacy\provider::export_feedback_user_data($exportdata);
-        $exporteddata = $writer->get_data([
-            get_string('privacy:path', 'assignfeedback_onenote')
-        ]);
+        // The student should be able to see the teachers' feedback.
+        $exportdata = new assign_plugin_request_data($context, $assign, $grade, [], $user1);
+        provider::export_feedback_user_data($exportdata);
+        $exporteddata = $writer->get_data([get_string('privacy:path', 'assignfeedback_onenote')]);
         $this->assertEquals($grade->assignment, $exporteddata->assignment);
         $this->assertEquals($grade->id, $exporteddata->grade);
         $this->assertEquals('1', $exporteddata->numfiles);
 
         // The teacher should also be able to see the feedback that they provided.
-        $exportdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $grade, [], $user2);
-        \assignfeedback_onenote\privacy\provider::export_feedback_user_data($exportdata);
-        $exporteddata = $writer->get_data([
-            get_string('privacy:path', 'assignfeedback_onenote')
-        ]);
+        $exportdata = new assign_plugin_request_data($context, $assign, $grade, [], $user2);
+        provider::export_feedback_user_data($exportdata);
+        $exporteddata = $writer->get_data([get_string('privacy:path', 'assignfeedback_onenote')]);
         $this->assertEquals($grade->assignment, $exporteddata->assignment);
         $this->assertEquals($grade->id, $exporteddata->grade);
         $this->assertEquals('1', $exporteddata->numfiles);
@@ -153,8 +151,8 @@ class provider_test extends \mod_assign\privacy\provider_test {
 
         $context = $assign->get_context();
 
-        list($plugin1, $grade1) = $this->create_feedback($assign, $user1, $user3);
-        list($plugin2, $grade2) = $this->create_feedback($assign, $user2, $user3);
+        [$plugin1, $grade1] = $this->create_feedback($assign, $user1, $user3);
+        [$plugin2, $grade2] = $this->create_feedback($assign, $user2, $user3);
 
         // Check that we have data.
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
@@ -162,15 +160,14 @@ class provider_test extends \mod_assign\privacy\provider_test {
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
         $this->assertNotEmpty($feedbackonenotes);
 
-        $fs = new \file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+        $fs = new file_storage();
+        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote', base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         // 4 including directories.
         $this->assertEquals(4, count($files));
 
         // Delete all entries for this context.
-        $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign);
-        \assignfeedback_onenote\privacy\provider::delete_feedback_for_context($requestdata);
+        $requestdata = new assign_plugin_request_data($context, $assign);
+        provider::delete_feedback_for_context($requestdata);
 
         // Check that the data is now gone.
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
@@ -178,9 +175,8 @@ class provider_test extends \mod_assign\privacy\provider_test {
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
         $this->assertEmpty($feedbackonenotes);
 
-        $fs = new \file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+        $fs = new file_storage();
+        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote', base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         $this->assertEquals(0, count($files));
     }
 
@@ -203,8 +199,8 @@ class provider_test extends \mod_assign\privacy\provider_test {
 
         $context = $assign->get_context();
 
-        list($plugin1, $grade1) = $this->create_feedback($assign, $user1, $user3);
-        list($plugin2, $grade2) = $this->create_feedback($assign, $user2, $user3);
+        [$plugin1, $grade1] = $this->create_feedback($assign, $user1, $user3);
+        [$plugin2, $grade2] = $this->create_feedback($assign, $user2, $user3);
 
         // Check that we have data.
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
@@ -212,15 +208,14 @@ class provider_test extends \mod_assign\privacy\provider_test {
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
         $this->assertNotEmpty($feedbackonenotes);
 
-        $fs = new \file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+        $fs = new file_storage();
+        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote', base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         // 4 including directories.
         $this->assertEquals(4, count($files));
 
         // Delete all entries for this grade object.
-        $requestdata = new \mod_assign\privacy\assign_plugin_request_data($context, $assign, $grade1, [], $user1);
-        \assignfeedback_onenote\privacy\provider::delete_feedback_for_grade($requestdata);
+        $requestdata = new assign_plugin_request_data($context, $assign, $grade1, [], $user1);
+        provider::delete_feedback_for_grade($requestdata);
 
         // These entries should be gone.
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
@@ -229,9 +224,8 @@ class provider_test extends \mod_assign\privacy\provider_test {
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade2->id);
         $this->assertNotEmpty($feedbackonenotes);
 
-        $fs = new \file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+        $fs = new file_storage();
+        $files = $fs->get_area_files($assign->get_context()->id, 'assignfeedback_onenote', base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
         // 2 files that were not deleted.
         $this->assertEquals(2, count($files));
 
@@ -267,11 +261,11 @@ class provider_test extends \mod_assign\privacy\provider_test {
 
         $context = $assign1->get_context();
 
-        list($plugin1, $grade1) = $this->create_feedback($assign1, $user1, $user5);
-        list($plugin2, $grade2) = $this->create_feedback($assign1, $user2, $user5);
-        list($plugin3, $grade3) = $this->create_feedback($assign1, $user3, $user5);
-        list($plugin4, $grade4) = $this->create_feedback($assign2, $user3, $user5);
-        list($plugin5, $grade5) = $this->create_feedback($assign2, $user4, $user5);
+        [$plugin1, $grade1] = $this->create_feedback($assign1, $user1, $user5);
+        [$plugin2, $grade2] = $this->create_feedback($assign1, $user2, $user5);
+        [$plugin3, $grade3] = $this->create_feedback($assign1, $user3, $user5);
+        [$plugin4, $grade4] = $this->create_feedback($assign2, $user3, $user5);
+        [$plugin5, $grade5] = $this->create_feedback($assign2, $user4, $user5);
 
         // Check that we have data.
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
@@ -285,18 +279,18 @@ class provider_test extends \mod_assign\privacy\provider_test {
         $feedbackonenotes = $plugin5->get_onenote_feedback($grade5->id);
         $this->assertNotEmpty($feedbackonenotes);
 
-        $fs = new \file_storage();
+        $fs = new file_storage();
         // 6 including directories for assign 1.
         // 4 including directories for assign 2.
         $this->assertCount(6, $fs->get_area_files($assign1->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
+            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
         $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
+            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
 
         $deletedata = new assign_plugin_request_data($context, $assign1);
         $deletedata->set_userids([$user1->id, $user3->id]);
         $deletedata->populate_submissions_and_grades();
-        \assignfeedback_onenote\privacy\provider::delete_feedback_for_grades($deletedata);
+        provider::delete_feedback_for_grades($deletedata);
 
         // Check that grade 1 and grade 3 have been removed.
         $feedbackonenotes = $plugin1->get_onenote_feedback($grade1->id);
@@ -314,8 +308,8 @@ class provider_test extends \mod_assign\privacy\provider_test {
         // 2 including directories for assign 1.
         // 4 including directories for assign 2.
         $this->assertCount(2, $fs->get_area_files($assign1->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
+            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
         $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
+            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
     }
 }

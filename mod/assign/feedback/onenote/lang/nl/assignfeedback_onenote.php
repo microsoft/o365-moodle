@@ -22,16 +22,18 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maximum OneNote-formaat';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Standaard ingeschakeld';
 $string['default_help'] = 'Als deze optie is ingeschakeld, is deze feedbackmethode standaard ingeschakeld voor alle nieuwe opdrachten.';
 $string['enabled'] = 'OneNote-feedback';
 $string['enabled_help'] = 'Als deze optie is ingeschakeld, kan de leraar OneNote-pagina\'s met feedback uploaden tijdens de beoordeling van de opdrachten. Leraren kunnen de OneNote-inzending van een student van aantekeningen voorzien of een geheel nieuwe OneNote-pagina uploaden.';
-$string['onenote'] = 'Feedback-OneNotes';
-$string['filesadded'] = 'Feedback-OneNotes toegevoegd: {$a}';
+$string['onenote'] = 'Feedback-OneNote';
+$string['filesadded'] = 'Feedback-OneNote toegevoegd: {$a}';
 $string['maxbytes'] = 'Maximale grootte OneNote-pakket';
-$string['maxfiles'] = 'Maximaal aantal geüploade OneNotes';
+$string['maxfiles'] = 'Maximaal aantal geüploade OneNote';
 $string['maximumsize'] = 'Maximale grootte OneNote-pakket';
 $string['moreusers'] = '{$a} meer ...';
 $string['nochanges'] = 'Geen wijzigingen';

@@ -22,8 +22,10 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'OneNote最大ページサイズ';
-$string['countfiles'] = 'OneNotes : {$a}';
+$string['countfiles'] = 'OneNote : {$a}';
 $string['default'] = 'デフォルトで有効にする';
 $string['default_help'] = '設定した場合、すべての新しい課題において、この提出方法がデフォルトで有効になります。';
 $string['enabled'] = 'OneNote提出';

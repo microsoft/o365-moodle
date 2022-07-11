@@ -16,6 +16,7 @@
 
 /**
  * The assignsubmission_onenote assessable uploaded event.
+ *
  * @package    assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,6 +24,8 @@
  */
 
 namespace assignsubmission_onenote\event;
+
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,7 +42,7 @@ class assessable_uploaded extends \core\event\assessable_uploaded {
      *
      * @var array
      */
-    protected $legacyfiles = array();
+    protected $legacyfiles = [];
 
     /**
      * Returns description of what happened.
@@ -54,10 +57,10 @@ class assessable_uploaded extends \core\event\assessable_uploaded {
     /**
      * Legacy event data if get_legacy_eventname() is not empty.
      *
-     * @return \stdClass
+     * @return stdClass
      */
     protected function get_legacy_eventdata() {
-        $eventdata = new \stdClass();
+        $eventdata = new stdClass();
         $eventdata->modulename = 'assign';
         $eventdata->cmid = $this->contextinstanceid;
         $eventdata->itemid = $this->objectid;
@@ -95,7 +98,7 @@ class assessable_uploaded extends \core\event\assessable_uploaded {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/assign/view.php', array('id' => $this->contextinstanceid));
+        return new \moodle_url('/mod/assign/view.php', ['id' => $this->contextinstanceid]);
     }
 
     /**

@@ -16,6 +16,7 @@
 
 /**
  * General purpose utility class.
+ *
  * @package local_onenote
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,6 +25,8 @@
 
 namespace local_onenote;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * General purpose utility class.
  */
@@ -31,15 +34,15 @@ class utils {
     /**
      * Convert to a string.
      *
-     * @param  mixed $val The string to convert
+     * @param mixed $val The string to convert
      * @return string A string representation.
      */
     public static function tostring($val) {
         if (is_scalar($val)) {
             if (is_bool($val)) {
-                return '(bool)'.(string)(int)$val;
+                return '(bool)' . (string) (int) $val;
             } else {
-                return '('.gettype($val).')'.(string)$val;
+                return '(' . gettype($val) . ')' . (string) $val;
             }
         } else if (is_null($val)) {
             return '(null)';

@@ -22,8 +22,10 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Maximale grootte OneNote-pagina';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Standaard ingeschakeld';
 $string['default_help'] = 'Als deze optie is ingeschakeld, wordt deze inzendingsmethode standaard ingeschakeld voor alle nieuwe opdrachten.';
 $string['enabled'] = 'OneNote-inzendingen';
@@ -32,7 +34,7 @@ $string['eventassessableuploaded'] = 'Er is een OneNote-pagina geüpload.';
 $string['onenote'] = 'OneNote-inzendingen';
 $string['maxbytes'] = 'Maximale grootte OneNote-pagina';
 $string['maxfilessubmission'] = 'Maximum aantal geüploade OneNote-pagina\'s';
-$string['maxfilessubmission_help'] = 'Als bestanden insturen is ingeschakeld, kan elke student maximaal dit aantal OneNotes-pagina\'s uploaden als inzending.';
+$string['maxfilessubmission_help'] = 'Als bestanden insturen is ingeschakeld, kan elke student maximaal dit aantal OneNote-pagina\'s uploaden als inzending.';
 $string['maximumsubmissionsize'] = 'Grootte OneNote-pagina';
 $string['maximumsubmissionsize_help'] = 'Hiermee wordt de maximale inzendingsgrootte van OneNote-pagina\'s ingesteld.';
 $string['numfilesforlog'] = 'Het aantal OneNote-pagina\'s: {$a}';

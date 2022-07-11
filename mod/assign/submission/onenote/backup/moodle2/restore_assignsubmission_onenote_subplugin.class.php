@@ -16,6 +16,7 @@
 
 /**
  * This file contains the class for restore of this submission plugin
+ *
  * @package assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,7 +25,6 @@
 
 /**
  * Restore subplugin class.
- *
  * Provides the necessary information
  * needed to restore one assign_submission subplugin.
  *
@@ -34,11 +34,12 @@ class restore_assignsubmission_onenote_subplugin extends restore_subplugin {
 
     /**
      * Returns the paths to be handled by the subplugin at workshop level
+     *
      * @return array
      */
     protected function define_submission_subplugin_structure() {
 
-        $paths = array();
+        $paths = [];
 
         $elename = $this->get_namefor('submission');
         $elepath = $this->get_pathfor('/submission_onenote');
@@ -50,13 +51,14 @@ class restore_assignsubmission_onenote_subplugin extends restore_subplugin {
 
     /**
      * Processes one submission_onenote element
+     *
      * @param mixed $data
      * @return void
      */
     public function process_assignsubmission_onenote_submission($data) {
         global $DB;
 
-        $data = (object)$data;
+        $data = (object) $data;
         $data->assignment = $this->get_new_parentid('assign');
         $oldsubmissionid = $data->submission;
         // The mapping is set in the restore for the core assign activity
@@ -65,7 +67,7 @@ class restore_assignsubmission_onenote_subplugin extends restore_subplugin {
 
         $DB->insert_record('assignsubmission_onenote', $data);
 
-        $this->add_related_files('assignsubmission_onenote', 'submission_onenotes', 'submission', null, $oldsubmissionid);
+        $this->add_related_files('assignsubmission_onenote', 'submission_onenote', 'submission', null, $oldsubmissionid);
     }
 
 }

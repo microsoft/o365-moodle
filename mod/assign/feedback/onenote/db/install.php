@@ -22,7 +22,6 @@
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
-
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -42,5 +41,3 @@ function xmldb_assignfeedback_onenote_install() {
 
     return true;
 }
-
-

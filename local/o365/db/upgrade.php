@@ -583,8 +583,7 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($oldversion < 2017111301) {
-        mtrace('Warning! This version removes the legacy Microsoft 365 API. If you *absolutely* need it, ' .
-            'add "$CFG->local_o365_forcelegacyapi = true;" to your config.php. This option will be removed in the next version.');
+        mtrace('Warning! This version removes the legacy Microsoft 365 API.');
         upgrade_plugin_savepoint(true, '2017111301', 'local', 'o365');
     }
 
@@ -885,6 +884,39 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2022041901, 'local', 'o365');
+    }
+
+    if ($oldversion < 2022041906) {
+        // Remove SharePoint feature and settings.
+        unset_config('sharepointlink', 'local_o365');
+        unset_config('sharepointcourseselect', 'local_o365');
+
+        // Define table local_o365_spgroupdata to be dropped.
+        $table = new xmldb_table('local_o365_spgroupdata');
+
+        // Conditionally launch drop table for local_o365_spgroupdata.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Define table local_o365_spgroupassign to be dropped.
+        $table = new xmldb_table('local_o365_spgroupassign');
+
+        // Conditionally launch drop table for local_o365_spgroupassign.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Define table local_o365_coursespsite to be dropped.
+        $table = new xmldb_table('local_o365_coursespsite');
+
+        // Conditionally launch drop table for local_o365_coursespsite.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2022041906, 'local', 'o365');
     }
 
     return true;

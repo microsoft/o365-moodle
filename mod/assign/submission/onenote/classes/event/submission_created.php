@@ -16,6 +16,7 @@
 
 /**
  * The assignsubmission_onenote submission_created event.
+ *
  * @package    assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,6 +25,8 @@
 
 namespace assignsubmission_onenote\event;
 
+use coding_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -31,10 +34,8 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @property-read array $other {
  *      Extra information about the event.
- *
  *      - int filesubmissioncount: The number of files uploaded.
  * }
- *
  * @package    assignsubmission_onenote
  * @since      Moodle 2.7
  */
@@ -69,13 +70,13 @@ class submission_created extends \mod_assign\event\submission_created {
     /**
      * Custom validation.
      *
-     * @throws \coding_exception
      * @return void
+     * @throws coding_exception
      */
     protected function validate_data() {
         parent::validate_data();
         if (!isset($this->other['filesubmissioncount'])) {
-            throw new \coding_exception('The \'filesubmissioncount\' value must be set in other.');
+            throw new coding_exception('The \'filesubmissioncount\' value must be set in other.');
         }
     }
 }

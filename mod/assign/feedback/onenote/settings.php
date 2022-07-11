@@ -16,6 +16,7 @@
 
 /**
  * This file defines the admin settings for this plugin
+ *
  * @package   assignfeedback_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,6 +25,5 @@
 defined('MOODLE_INTERNAL') || die;
 
 $settings->add(new admin_setting_configcheckbox('assignfeedback_onenote/default',
-                   new lang_string('default', 'assignfeedback_onenote'),
-                   new lang_string('default_help', 'assignfeedback_onenote'), 0));
+    new lang_string('default', 'assignfeedback_onenote'), new lang_string('default_help', 'assignfeedback_onenote'), 0));
 

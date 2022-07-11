@@ -25,6 +25,8 @@
 
 namespace local_o365\rest;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -74,7 +76,6 @@ abstract class o365api {
 
     /**
      * Automatically construct an instance of the API class for a given user.
-     *
      * NOTE: Useful for one-offs, not efficient for bulk operations.
      *
      * @param int $userid The Moodle user ID to construct the API for.
@@ -92,7 +93,7 @@ abstract class o365api {
         if (!empty($token)) {
             return new static($token, $httpclient);
         } else {
-            throw new \moodle_exception('erroro365apinotoken', 'local_o365');
+            throw new moodle_exception('erroro365apinotoken', 'local_o365');
         }
     }
 
@@ -102,7 +103,7 @@ abstract class o365api {
      * @return string The resource for oauth2 tokens.
      */
     public static function get_tokenresource() {
-        throw new \moodle_exception('erroro365apinotimplemented', 'local_o365');
+        throw new moodle_exception('erroro365apinotimplemented', 'local_o365');
     }
 
     /**
@@ -111,7 +112,7 @@ abstract class o365api {
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
      */
     public function get_apiuri() {
-        throw new \moodle_exception('erroro365apinotimplemented', 'local_o365');
+        throw new moodle_exception('erroro365apinotimplemented', 'local_o365');
     }
 
     /**
@@ -144,7 +145,7 @@ abstract class o365api {
      * @param array $options Additional options for the request.
      * @return string|array The result of the API call.
      */
-    public function apicall($httpmethod, $apimethod, $params = '', $options = array()) {
+    public function apicall($httpmethod, $apimethod, $params = '', $options = []) {
         // Used if we have to retry due to rate limiting.
         $origparam = [
             'httpmethod' => $httpmethod,
@@ -155,17 +156,17 @@ abstract class o365api {
 
         $tokenvalid = $this->checktoken();
         if ($tokenvalid !== true) {
-            throw new \moodle_exception('erroro365apiinvalidtoken', 'local_o365');
+            throw new moodle_exception('erroro365apiinvalidtoken', 'local_o365');
         }
 
         $apiurl = $this->get_apiuri();
 
         $httpmethod = strtolower($httpmethod);
         if (!in_array($httpmethod, ['get', 'post', 'put', 'patch', 'merge', 'delete'], true)) {
-            throw new \moodle_exception('erroro365apiinvalidmethod', 'local_o365');
+            throw new moodle_exception('erroro365apiinvalidmethod', 'local_o365');
         }
 
-        $requesturi = $this->transform_full_request_uri($apiurl.$apimethod);
+        $requesturi = $this->transform_full_request_uri($apiurl . $apimethod);
 
         $contenttype = 'application/json;odata.metadata=full';
         if (isset($options['contenttype'])) {
@@ -186,25 +187,25 @@ abstract class o365api {
             unset($options['apiarea']);
         }
         if (!empty($apiarea)) {
-            $useragent .= '-'.$apiarea;
+            $useragent .= '-' . $apiarea;
         }
 
         // Add plugin version.
         $pluginversion = get_config('local_o365', 'version');
         if (!empty($pluginversion)) {
-            $useragent .= '-'.$pluginversion;
+            $useragent .= '-' . $pluginversion;
         }
         $options['CURLOPT_USERAGENT'] = $useragent;
 
         // Add headers.
         $header = [
             'Accept: application/json',
-            'Content-Type: '.$contenttype,
-            'Authorization: Bearer '.$this->token->get_token(),
+            'Content-Type: ' . $contenttype,
+            'Authorization: Bearer ' . $this->token->get_token(),
         ];
 
         if ($httpmethod !== 'put' && !empty($params) && is_string($params)) {
-            $header[] = 'Content-length: '.strlen($params);
+            $header[] = 'Content-length: ' . strlen($params);
         }
 
         $this->httpclient->resetheader();
@@ -244,7 +245,8 @@ abstract class o365api {
                 $ratelimitlevel++;
                 set_config('ratelimit', $ratelimitlevel . ':' . time(), 'local_o365');
 
-                return $this->apicall($origparam['httpmethod'], $origparam['apimethod'], $origparam['params'], $origparam['options']);
+                return $this->apicall($origparam['httpmethod'], $origparam['apimethod'], $origparam['params'],
+                    $origparam['options']);
             } else if ($this->httpclient->info['http_code'] == 202) {
                 // If response is 202 Accepted, return response.
                 return $this->httpclient->response;
@@ -260,7 +262,7 @@ abstract class o365api {
      * @param array $expectedstructure A structure to validate.
      * @return array|null Array if successful, null if not.
      */
-    public function process_apicall_response($response, array $expectedstructure = array()) {
+    public function process_apicall_response($response, array $expectedstructure = []) {
         $backtrace = debug_backtrace(0);
         $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
         $caller = __METHOD__ . ':' . $callingline;
@@ -268,16 +270,16 @@ abstract class o365api {
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             \local_o365\utils::debug('Bad response received', $caller, $response);
-            throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+            throw new moodle_exception('erroro365apibadcall', 'local_o365');
         }
         if (isset($result['odata.error'])) {
             $errmsg = 'Error response received.';
             \local_o365\utils::debug($errmsg, $caller, $result['odata.error']);
             if (isset($result['odata.error']['message']) && isset($result['odata.error']['message']['value'])) {
                 $apierrormessage = $result['odata.error']['message']['value'];
-                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
+                throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
             } else {
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+                throw new moodle_exception('erroro365apibadcall', 'local_o365');
             }
         }
         if (isset($result['error'])) {
@@ -290,25 +292,27 @@ abstract class o365api {
                 } else if (is_array($result['error']['message']) && isset($result['error']['message']['value'])) {
                     $apierrormessage = $result['error']['message']['value'];
                 }
-                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
+                throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
             } else {
-                throw new \moodle_exception('erroro365apibadcall', 'local_o365');
+                throw new moodle_exception('erroro365apibadcall', 'local_o365');
             }
         }
 
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
-                $errmsg = 'Invalid structure received. No "'.$key.'"';
+                $errmsg = 'Invalid structure received. No "' . $key . '"';
                 \local_o365\utils::debug($errmsg, $caller, $result);
-                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
+                throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
 
             if ($val !== null && $result[$key] !== $val) {
                 $strreceivedval = \local_o365\utils::tostring($result[$key]);
                 $strval = \local_o365\utils::tostring($val);
-                $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
+                $errmsg =
+                    'Invalid structure received. Invalid "' . $key . '". Received "' . $strreceivedval . '", expected "' . $strval .
+                    '"';
                 \local_o365\utils::debug($errmsg, $caller, $result);
-                throw new \moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
+                throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
         }
         return $result;
@@ -321,14 +325,12 @@ abstract class o365api {
      * @param array $options
      * @return string The result of the request.
      */
-    public function geturl($url, $options = array()) {
+    public function geturl($url, $options = []) {
         $tokenvalid = $this->checktoken();
         if ($tokenvalid !== true) {
-            throw new \moodle_exception('erroro365apiinvalidtoken', 'local_o365');
+            throw new moodle_exception('erroro365apiinvalidtoken', 'local_o365');
         }
-        $header = [
-            'Authorization: Bearer '.$this->token->get_token(),
-        ];
+        $header = ['Authorization: Bearer ' . $this->token->get_token(),];
         $this->httpclient->resetheader();
         $this->httpclient->setheader($header);
         return $this->httpclient->get($url, '', $options);
@@ -365,7 +367,7 @@ abstract class o365api {
                     'TeamSettings.ReadWrite.All' => [],
                     'TeamsTab.Create' => [],
                     'User.Read.All' => ['User.ReadWrite.All'],
-                 ],
+                ],
                 'requiredDelegatedPermissionsUsingAppPermissions' => [
                     'Files.ReadWrite.All' => [],
                     'Notes.ReadWrite.All' => [],
@@ -382,7 +384,7 @@ abstract class o365api {
         ];
         if (!empty($api)) {
             if (!isset($apis[$api])) {
-                throw new \Exception('No API with identifier '.$api.' found.');
+                throw new \Exception('No API with identifier ' . $api . ' found.');
             }
             return $apis[$api];
         } else {

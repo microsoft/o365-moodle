@@ -16,6 +16,7 @@
 
 /**
  * This file defines the admin settings for this plugin
+ *
  * @package   assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,8 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $settings->add(new admin_setting_configcheckbox('assignsubmission_onenote/default',
-                   new lang_string('default', 'assignsubmission_onenote'),
-                   new lang_string('default_help', 'assignsubmission_onenote'), 0));
+    new lang_string('default', 'assignsubmission_onenote'), new lang_string('default_help', 'assignsubmission_onenote'), 0));
 
 if (isset($CFG->maxbytes)) {
 
@@ -33,10 +33,7 @@ if (isset($CFG->maxbytes)) {
     $description = new lang_string('configmaxbytes', 'assignsubmission_onenote');
 
     $maxbytes = get_config('assignsubmission_onenote', 'maxbytes');
-    $element = new admin_setting_configselect('assignsubmission_onenote/maxbytes',
-                                              $name,
-                                              $description,
-                                              1048576,
-                                              get_max_upload_sizes($CFG->maxbytes, 0, 0, $maxbytes));
+    $element = new admin_setting_configselect('assignsubmission_onenote/maxbytes', $name, $description, 1048576,
+        get_max_upload_sizes($CFG->maxbytes, 0, 0, $maxbytes));
     $settings->add($element);
 }

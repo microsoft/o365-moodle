@@ -90,39 +90,10 @@ class ajax extends base {
     }
 
     /**
-     * Check if a given URL is a valid SharePoint site.
-     */
-    public function mode_checksharepointsite() {
-        $data = new \stdClass;
-        $success = false;
-
-        $uncleanurl = required_param('site', PARAM_TEXT);
-
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-
-        if (\local_o365\rest\unified::is_configured() === true) {
-            $tokenresource = \local_o365\rest\unified::get_tokenresource();
-            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
-            $apiclient = new \local_o365\rest\unified($token, $httpclient);
-            $data->result = $apiclient->sharepoint_validate_site($uncleanurl);
-        } else {
-            $data->result = \local_o365\rest\sharepoint::validate_site($uncleanurl, $clientdata, $httpclient);
-        }
-        $success = true;
-
-        echo $this->ajax_response($data, $success);
-    }
-
-    /**
      * Check if a service resource is valid.
      */
     public function mode_checkserviceresource() {
-        if (\local_o365\rest\unified::is_configured() === true) {
-            return $this->checkserviceresource_graph();
-        } else {
-            return $this->checkserviceresource_legacy();
-        }
+        return $this->checkserviceresource_graph();
     }
 
     /**
@@ -166,51 +137,10 @@ class ajax extends base {
     }
 
     /**
-     * Check is a service resource is valid using the legacy API.
-     */
-    protected function checkserviceresource_legacy() {
-        $data = new \stdClass;
-        $success = false;
-
-        $setting = required_param('setting', PARAM_TEXT);
-        $value = required_param('value', PARAM_TEXT);
-
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-
-        if ($setting === 'aadtenant') {
-            $tokenresource = \local_o365\rest\azuread::get_tokenresource();
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-            if (empty($token)) {
-                throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
-            }
-            $token->refresh();
-            try {
-                $apiclient = \local_o365\utils::get_api(null, true);
-                $data->valid = $apiclient->test_tenant($value);
-                $success = true;
-            } catch (\Exception $e) {
-                \local_o365\utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
-                $data->valid = false;
-                $success = true;
-            }
-        } else if ($setting === 'odburl') {
-            $data->valid = \local_o365\rest\onedrive::validate_resource($value, $clientdata, $httpclient);
-            $success = true;
-        }
-
-        echo $this->ajax_response($data, $success);
-    }
-
-    /**
      * Detect the correct value for a service resource.
      */
     public function mode_detectserviceresource() {
-        if (\local_o365\rest\unified::is_configured() === true) {
-            return $this->detectserviceresource_graph();
-        } else {
-            return $this->detectserviceresource_legacy();
-        }
+        return $this->detectserviceresource_graph();
     }
 
     /**
@@ -258,62 +188,6 @@ class ajax extends base {
     }
 
     /**
-     * Detect the correct value for a service resource using the legacy API.
-     */
-    protected function detectserviceresource_legacy() {
-        $data = new \stdClass;
-        $success = false;
-
-        $setting = required_param('setting', PARAM_TEXT);
-
-        $tokenresource = \local_o365\rest\discovery::get_tokenresource();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-        // Get service api currently requires system token to be used.
-        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-        if (empty($token)) {
-            throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
-        }
-        $token->refresh();
-
-        $discovery = new \local_o365\rest\discovery($token, $httpclient);
-
-        if ($setting === 'aadtenant') {
-            try {
-                $service = $discovery->get_default_domain_name_in_tenant();
-                if (!empty($service)) {
-                    $data->settingval = $service;
-                    $success = true;
-                } else {
-                    echo $this->error_response(get_string('settings_aadtenant_error', 'local_o365'));
-                    die();
-                }
-            } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant)', $e);
-                echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
-                die();
-            }
-        } else if ($setting === 'odburl') {
-            try {
-                $service = $discovery->get_odburl();
-                if (!empty($service)) {
-                    $data->settingval = $service;
-                    $success = true;
-                } else {
-                    echo $this->error_response(get_string('settings_odburl_error', 'local_o365'));
-                    die();
-                }
-            } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), __METHOD__  . ' (detect odburl)', $e);
-                echo $this->error_response(get_string('settings_serviceresourceabstract_noperms', 'local_o365'));
-                die();
-            }
-        }
-
-        echo $this->ajax_response($data, $success);
-    }
-
-    /**
      * Check setup in Azure.
      */
     public function mode_checksetup() {
@@ -331,63 +205,42 @@ class ajax extends base {
 
         $unifiedapi = new \stdClass;
         $unifiedapi->active = false;
-        $legacyapi = new \stdClass;
 
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
         $unifiedresource = \local_o365\rest\unified::get_tokenresource();
         $correctredirecturl = \auth_oidc\utils::get_redirecturl();
 
-        if (\local_o365\rest\unified::is_enabled() === true) {
-            // Microsoft Graph API.
-            try {
-                $token = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient, true);
-                if (empty($token)) {
-                    throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
-                }
-                $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
-
-                // Check app-only perms.
-                $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
-                if (!empty($apponlyenabled)) {
-                    $missingappperms = $unifiedapiclient->check_graph_apponly_permissions();
-                    $unifiedapi->missingappperms = $missingappperms;
-                    $unifiedapi->apptoken = ($token instanceof \local_o365\oauth2\apptoken) ? true : false;
-                }
-
-                // Check delegated (user) perms.
-                $missingdelegatedperms = $unifiedapiclient->check_graph_delegated_permissions();
-                if ($missingdelegatedperms === null) {
-                    $unifiedapi->active = false;
-                } else {
-                    $unifiedapi->active = true;
-                    $unifiedapi->missingperms = $missingdelegatedperms;
-                }
-                $appinfo = $unifiedapiclient->get_application_info();
-            } catch (\Exception $e) {
-                $unifiedapi->active = false;
-                \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
-                $unifiedapi->error = $e->getMessage();
-            }
-        } else {
-            // Legacy API.
-            $tokenresource = \local_o365\rest\azuread::get_tokenresource();
-            $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
+        // Microsoft Graph API.
+        try {
+            $token = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient, true);
             if (empty($token)) {
                 throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
-            try {
-                $aadapiclient = new \local_o365\rest\azuread($token, $httpclient);
-                $appinfo = $aadapiclient->get_application_info();
-                [$missingperms, $haswrite] = $aadapiclient->check_permissions();
-                $legacyapi->missingperms = $missingperms;
-                $legacyapi->haswrite = $haswrite;
-            } catch (\Exception $e) {
-                \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (legacy)', $e);
-                $appdata->error = $e->getMessage();
+            $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
+
+            // Check app-only perms.
+            $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
+            if (!empty($apponlyenabled)) {
+                $missingappperms = $unifiedapiclient->check_graph_apponly_permissions();
+                $unifiedapi->missingappperms = $missingappperms;
+                $unifiedapi->apptoken = ($token instanceof \local_o365\oauth2\apptoken) ? true : false;
             }
+
+            // Check delegated (user) perms.
+            $missingdelegatedperms = $unifiedapiclient->check_graph_delegated_permissions();
+            if ($missingdelegatedperms === null) {
+                $unifiedapi->active = false;
+            } else {
+                $unifiedapi->active = true;
+                $unifiedapi->missingperms = $missingdelegatedperms;
+            }
+            $appinfo = $unifiedapiclient->get_application_info();
+        } catch (\Exception $e) {
+            $unifiedapi->active = false;
+            \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
+            $unifiedapi->error = $e->getMessage();
         }
-        $data->legacyapi = $legacyapi;
 
         // Check reply url.
         $replyurls = [];
@@ -421,33 +274,6 @@ class ajax extends base {
         set_config('azuresetupresult', serialize($data), 'local_o365');
 
         $success = true;
-        echo $this->ajax_response($data, $success);
-    }
-
-    /**
-     * Attempt to fix application permissions.
-     */
-    public function mode_fixappperms() {
-        $data = new \stdClass;
-        $success = false;
-
-        $tokenresource = \local_o365\rest\azuread::get_tokenresource();
-        $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
-        $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\oauth2\systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-        if (empty($token)) {
-            throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
-        }
-
-        $apiclient = new \local_o365\rest\azuread($token, $httpclient);
-        $success = $apiclient->push_permissions();
-
-        $data->success = $success;
-
-        if ($success === true) {
-            set_config('detectperms', 1, 'local_o365');
-        }
-
         echo $this->ajax_response($data, $success);
     }
 

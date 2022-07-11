@@ -22,16 +22,18 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'Tamaño máximo de OneNote';
-$string['countfiles'] = 'OneNotes: {$a}';
+$string['countfiles'] = 'OneNote: {$a}';
 $string['default'] = 'Habilitado por defecto';
 $string['default_help'] = 'Si se ajusta esta opción, este método de retroalimentación se habilitará por defecto para todas las tareas nuevas.';
 $string['enabled'] = 'Comentario de OneNote';
 $string['enabled_help'] = 'Si está habilitado, el profesor podrá cargar páginas de OneNote con comentarios cuando marque las tareas. Los profesores pueden optar por anotar en la entrega de OneNote del alumno o cargar una página de OneNote completamente nueva.';
-$string['onenote'] = 'OneNotes de retroalimentación';
-$string['filesadded'] = 'OneNotes de retroalimentación agregados: {$a}';
+$string['onenote'] = 'OneNote de retroalimentación';
+$string['filesadded'] = 'OneNote de retroalimentación agregados: {$a}';
 $string['maxbytes'] = 'Tamaño de paquete máximo de OneNote';
-$string['maxfiles'] = 'Número máximo de OneNotes cargados';
+$string['maxfiles'] = 'Número máximo de OneNote cargados';
 $string['maximumsize'] = 'Tamaño de paquete máximo de OneNote';
 $string['moreusers'] = '{$a} más...';
 $string['nochanges'] = 'Sin cambios';

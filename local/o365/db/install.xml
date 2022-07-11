@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/o365/db" VERSION="20220210" COMMENT="XMLDB file for Moodle local/o365 plugin"
+<XMLDB PATH="local/o365/db" VERSION="20220708" COMMENT="XMLDB file for Moodle local/o365 plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -84,23 +84,6 @@
         <INDEX NAME="usrresscp" UNIQUE="false" FIELDS="user_id, tokenresource"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_o365_coursespsite" COMMENT="Stores information about sharepoint sites created for Moodle courses.">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle course id"/>
-        <FIELD NAME="siteid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="sharepoint site id"/>
-        <FIELD NAME="siteurl" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="sharepoint site url"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time site created"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time site modified"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>
-        <INDEX NAME="siteid" UNIQUE="false" FIELDS="siteid"/>
-      </INDEXES>
-    </TABLE>
     <TABLE NAME="local_o365_objects" COMMENT="Stores information about Microsoft 365 objects.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -120,39 +103,6 @@
       <INDEXES>
         <INDEX NAME="moodleid" UNIQUE="false" FIELDS="moodleid"/>
         <INDEX NAME="objectid" UNIQUE="false" FIELDS="objectid"/>
-      </INDEXES>
-    </TABLE>
-    <TABLE NAME="local_o365_spgroupdata" COMMENT="Stores information about sharepoint groups created for Moodle course sites.">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="coursespsiteid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="foreign key to local_o365_coursepsite table"/>
-        <FIELD NAME="groupid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="sharepoint group id"/>
-        <FIELD NAME="grouptitle" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="group title"/>
-        <FIELD NAME="permtype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the type of permissions granted to the group"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time group created"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time group modified"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="coursespsiteid" UNIQUE="false" FIELDS="coursespsiteid"/>
-        <INDEX NAME="groupid" UNIQUE="false" FIELDS="groupid"/>
-      </INDEXES>
-    </TABLE>
-    <TABLE NAME="local_o365_spgroupassign" COMMENT="Stores what users are assigned to what sharepoint groups.">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id"/>
-        <FIELD NAME="groupid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="sharepoint group id"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time record created"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
-        <INDEX NAME="groupid" UNIQUE="false" FIELDS="groupid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_appassign" COMMENT="Stores information on which accounts are assigned to the app.">

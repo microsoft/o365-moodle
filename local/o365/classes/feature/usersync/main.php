@@ -32,8 +32,6 @@ use local_o365\httpclient;
 use local_o365\oauth2\systemapiusertoken;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
-use local_o365\rest\azuread;
-use local_o365\rest\outlook;
 use local_o365\rest\unified;
 use local_o365\utils;
 
@@ -94,31 +92,15 @@ class main {
     /**
      * Construct a user API client, accounting for Microsoft Graph API presence, and fall back to system api user if desired.
      *
-     * @param bool $forcelegacy If true, force using the legacy API.
-     * @return \local_o365\rest\o365api|bool A constructed user API client (unified or legacy), or false if error.
+     * @return unified A constructed unified API client, or false if error.
      */
-    public function construct_user_api($forcelegacy = false) {
-        if ($forcelegacy === true) {
-            $uselegacy = true;
-        } else {
-            $uselegacy = (unified::is_configured() === true) ? false : true;
+    public function construct_user_api() {
+        $tokenresource = unified::get_tokenresource();
+        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+        if (empty($token)) {
+            throw new Exception('No token available for usersync');
         }
-
-        if ($uselegacy === true) {
-            $tokenresource = azuread::get_tokenresource();
-            $token = systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
-            if (empty($token)) {
-                throw new Exception('No token available for usersync');
-            }
-            return new azuread($token, $this->httpclient);
-        } else {
-            $tokenresource = unified::get_tokenresource();
-            $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
-            if (empty($token)) {
-                throw new Exception('No token available for usersync');
-            }
-            return new unified($token, $this->httpclient);
-        }
+        return new unified($token, $this->httpclient);
     }
 
     /**
@@ -126,15 +108,11 @@ class main {
      *
      * @param int $muserid The userid to get the outlook token for. Call with null to retrieve system token.
      * @param boolean $systemfallback Set to true to use system token as fall back.
-     * @return \local_o365\rest\o365api|bool A constructed calendar API client (unified or legacy), or false if error.
+     * @return unified A constructed unified API client, or false if error.
      */
     public function construct_outlook_api($muserid, $systemfallback = true) {
         $unifiedconfigured = unified::is_configured();
-        if ($unifiedconfigured === true) {
-            $tokenresource = unified::get_tokenresource();
-        } else {
-            $tokenresource = outlook::get_tokenresource();
-        }
+        $tokenresource = unified::get_tokenresource();
 
         $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token) && $systemfallback === true) {
@@ -146,11 +124,8 @@ class main {
             throw new Exception('No token available for user #'.$muserid);
         }
 
-        if ($unifiedconfigured === true) {
-            $apiclient = new unified($token, $this->httpclient);
-        } else {
-            $apiclient = new outlook($token, $this->httpclient);
-        }
+        $apiclient = new unified($token, $this->httpclient);
+
         return $apiclient;
     }
 

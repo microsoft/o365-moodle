@@ -32,7 +32,7 @@ global $CFG;
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
- * Admin setting to initialize sharepoint.
+ * Admin setting to perform health check.
  */
 class healthcheck extends \admin_setting {
     /** @var mixed int means PARAM_XXX type, string is a allowed format in regex */

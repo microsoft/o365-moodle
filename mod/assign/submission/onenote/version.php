@@ -16,7 +16,8 @@
 
 /**
  * This file contains the version information for the OneNote submission plugin
- * @package    assignsubmission_onenote
+ *
+ * @package assignsubmission_onenote
  * @author Vinayak (Vin) Bhalerao (v-vibhal@microsoft.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
@@ -24,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2022041900;
+$plugin->version = 2022041901;
 $plugin->requires = 2022041900;
 $plugin->release = '4.0.0';
 $plugin->component = 'assignsubmission_onenote';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'local_onenote' => 2022041900,
+    'local_onenote' => 2022041901,
 ];

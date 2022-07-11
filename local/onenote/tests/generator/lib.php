@@ -23,9 +23,10 @@
  * @copyright  Microsoft, Inc.
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class repository_onenote_generator
- *
  */
 class repository_onenote_generator extends testing_repository_generator {
 
@@ -47,6 +48,4 @@ class repository_onenote_generator extends testing_repository_generator {
         return $record;
 
     }
-
-
 }

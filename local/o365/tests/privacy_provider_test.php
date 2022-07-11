@@ -150,7 +150,6 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $this->assertCount(0, $DB->get_records('local_o365_connections', ['muserid' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_token', ['user_id' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_objects', ['moodleid' => $user1->id]));
-        $this->assertCount(0, $DB->get_records('local_o365_spgroupassign', ['userid' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_appassign', ['muserid' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_matchqueue', ['musername' => $user1->username]));
         $this->assertCount(0, $DB->get_records('local_o365_calsettings', ['user_id' => $user1->id]));
@@ -189,7 +188,6 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $this->assertCount(0, $DB->get_records('local_o365_connections', ['muserid' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_token', ['user_id' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_objects', ['moodleid' => $user1->id]));
-        $this->assertCount(0, $DB->get_records('local_o365_spgroupassign', ['userid' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_appassign', ['muserid' => $user1->id]));
         $this->assertCount(0, $DB->get_records('local_o365_matchqueue', ['musername' => $user1->username]));
         $this->assertCount(0, $DB->get_records('local_o365_calsettings', ['user_id' => $user1->id]));
@@ -273,7 +271,6 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
             'local_o365_connections' => self::create_connections($userid),
             'local_o365_token' => self::create_token($userid),
             'local_o365_objects' => self::create_objects($userid),
-            'local_o365_spgroupassign' => self::create_spgroupassign($userid),
             'local_o365_appassign' => self::create_appassign($userid),
             'local_o365_matchqueue' => self::create_matchqueue($userid),
             'local_o365_calsettings' => self::create_calsettings($userid),
@@ -377,23 +374,6 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->timecreated = 123456;
         $record->timemodified = 123457;
         $record->id = $DB->insert_record('local_o365_objects', $record);
-        return $record;
-    }
-
-    /**
-     * Create a spgroupassign record for the specified userid.
-     *
-     * @param int $userid
-     * @return stdClass
-     * @throws dml_exception
-     */
-    private static function create_spgroupassign(int $userid): \stdClass {
-        global $DB;
-        $record = new stdClass();
-        $record->userid = $userid;
-        $record->groupid = 'groupid123';
-        $record->timecreated = 123456;
-        $record->id = $DB->insert_record('local_o365_spgroupassign', $record);
         return $record;
     }
 

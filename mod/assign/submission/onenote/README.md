@@ -17,7 +17,7 @@ Note that the association between an assignment submission in Moodle and the ass
 - If the OneNote page associated with an assignment submission gets deleted, the student can still click one a button in the plugin UI that will recreate the OneNote page from the zip package that was saved in Moodle.
 
 ### Plugin dependencies
-assignsubmission_onenote => local_onenote => local_msaccount
+assignsubmission_onenote => local_onenote => local_o365
 
 ### Configuration
 This plugin adds a radio button to the assignment creation form that allows a teacher to specify that a student may submit their work as a OneNote page.

@@ -22,8 +22,10 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 $string['configmaxbytes'] = 'OneNoteの最大サイズ';
-$string['countfiles'] = 'OneNotes : {$a}';
+$string['countfiles'] = 'OneNote : {$a}';
 $string['default'] = 'デフォルトで有効にする';
 $string['default_help'] = '設定した場合、すべての新しい課題において、このフィードバック方法がデフォルトで有効になります。';
 $string['enabled'] = 'OneNoteフィードバック';
