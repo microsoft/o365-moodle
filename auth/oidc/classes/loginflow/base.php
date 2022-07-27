@@ -174,7 +174,7 @@ class base {
                 }
 
                 // Call the function in local_o365 to map fields.
-                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new stdClass(), 'login');
+                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new stdClass(), $eventtype);
                 $userinfo = (array)$updateduser;
             }
         }
@@ -217,7 +217,7 @@ class base {
                 }
             }
 
-            $updateduser = static::apply_configured_fieldmap_from_token($userdata, 'login');
+            $updateduser = static::apply_configured_fieldmap_from_token($userdata, $eventtype);
             $userinfo = (array)$updateduser;
         }
 
