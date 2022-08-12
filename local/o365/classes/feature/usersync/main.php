@@ -1410,13 +1410,21 @@ class main {
             return true;
         } else {
             // Match to o365 account, if enabled.
-            $matchrec = [
-                'muserid' => $existinguser->muserid,
-                'aadupn' => $aaduserdata['upnlower'],
-                'uselogin' => isset($syncoptions['matchswitchauth']) ? 1 : 0,
-            ];
-            $DB->insert_record('local_o365_connections', $matchrec);
-            $this->mtrace('Matched user, but did not switch them to OIDC.');
+            if ($existingconnectionrecord = $DB->get_record('local_o365_connections', ['aadupn' => $aaduserdata['upnlower']])) {
+                if ($existingconnectionrecord->muserid != $existinguser->muserid) {
+                    $existingconnectionrecord->muserid = $existinguser->muserid;
+                    $DB->update_record('local_o365_connections', $existingconnectionrecord);
+                }
+            } else {
+                $matchrec = [
+                    'muserid' => $existinguser->muserid,
+                    'aadupn' => $aaduserdata['upnlower'],
+                    'uselogin' => isset($syncoptions['matchswitchauth']) ? 1 : 0,
+                ];
+                $DB->insert_record('local_o365_connections', $matchrec);
+                $this->mtrace('Matched user, but did not switch them to OIDC.');
+            }
+
             return true;
         }
     }
