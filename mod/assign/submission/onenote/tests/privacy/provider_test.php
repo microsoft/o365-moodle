@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace assignfeedback_onenote\privacy;
+namespace assignsubmission_onenote\privacy;
 
 use core_privacy\local\metadata\collection;
 use file_storage;
