@@ -772,6 +772,9 @@ $string['o365:managegroups'] = 'View links to Microsoft 365 services and managem
 $string['o365:teammember'] = 'Team member';
 $string['o365:teamowner'] = 'Team owner';
 
+// Cache Stores.
+$string['cachedef_groups'] = 'Stores Microsoft 365 group data';
+
 // Web service errors.
 $string['webservices_error_assignnotfound'] = 'The received module\'s assignment record could not be found.';
 $string['webservices_error_invalidassignment'] = 'The received assignment ID cannot be used with this webservices function.';
