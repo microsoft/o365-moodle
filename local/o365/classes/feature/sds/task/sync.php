@@ -491,7 +491,7 @@ class sync extends scheduled_task {
      * @param int $level
      */
     public static function mtrace(string $str, int $level = 0) {
-        if (!PHPUNIT_TEST) {
+        if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
             $str = str_repeat('...', $level) . ' ' . $str;
             mtrace($str);
         }
