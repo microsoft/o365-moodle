@@ -35,6 +35,8 @@ use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/enrollib.php');
+
 /**
  * A utility class for the group / team sync feature.
  */
@@ -516,7 +518,7 @@ class utils {
      */
     public static function get_team_owner_user_ids_by_course_id(int $courseid) : array {
         $context = context_course::instance($courseid);
-        $teamownerusers = get_users_by_capability($context, 'local/o365:teamowner', 'u.id, u.deleted');
+        $teamownerusers = get_enrolled_users($context, 'local/o365:teamowner', 0, 'u.*', null, 0, 0, true);
         $teamowneruserids = [];
         foreach ($teamownerusers as $user) {
             if (!$user->deleted) {
@@ -551,7 +553,7 @@ class utils {
      */
     public static function get_team_member_user_ids_by_course_id(int $courseid) : array {
         $context = context_course::instance($courseid);
-        $teammemberusers = get_users_by_capability($context, 'local/o365:teammember', 'u.id, u.deleted');
+        $teammemberusers = get_enrolled_users($context, 'local/o365:teammember', 0, 'u.*', null, 0, 0, true);
         $teammemberuserids = [];
         foreach ($teammemberusers as $user) {
             if (!$user->deleted) {
