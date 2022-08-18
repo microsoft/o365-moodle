@@ -142,7 +142,8 @@ class table extends \table_sql {
         }
 
         if (!empty($customhaving)) {
-            $sql .= ' HAVING '.$customhaving;
+            // Move the "HAVING" part to a sub-query because it causes error in PostgreSQL.
+            $sql = "SELECT org.* FROM (" . $sql . ") AS org WHERE " . $customhaving;
             $params = array_merge($params, $customhavingparams);
         }
 
