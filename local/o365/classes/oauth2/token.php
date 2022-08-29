@@ -292,7 +292,7 @@ class token {
     }
 
     /**
-     * Get stored token for a user and resourse.
+     * Get stored token for a user and resource.
      *
      * @param int $userid The ID of the user to get the token for.
      * @param string $tokenresource The resource to get the token for.

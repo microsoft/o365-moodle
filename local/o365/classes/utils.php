@@ -38,6 +38,8 @@ use local_o365\rest\unified;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * General purpose utility class.
  */
@@ -48,14 +50,7 @@ class utils {
      * @return bool Whether the plugins are configured.
      */
     public static function is_configured() {
-        $cfg = get_config('auth_oidc');
-        if (empty($cfg) || !is_object($cfg)) {
-            return false;
-        }
-        if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
-            return false;
-        }
-        return true;
+        return auth_oidc_is_setup_complete();
     }
 
     /**
