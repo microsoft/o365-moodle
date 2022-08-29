@@ -28,7 +28,10 @@ namespace auth_oidc\loginflow;
 
 use auth_oidc\jwt;
 use auth_oidc\utils;
+use core\output\notification;
 use moodle_exception;
+use moodle_url;
+use pix_icon;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -42,18 +45,15 @@ class authcode extends base {
      * Returns a list of potential IdPs that this authentication plugin supports. Used to provide links on the login page.
      *
      * @param string $wantsurl The relative url fragment the user wants to get to.
-     * @return array Array of idps.
+     * @return array Array of IdPs.
      */
     public function loginpage_idp_list($wantsurl) {
-        if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
-            return [];
-        }
-        if (empty($this->config->authendpoint) || empty($this->config->tokenendpoint)) {
+        if (!auth_oidc_is_setup_complete()) {
             return [];
         }
 
         if (!empty($this->config->customicon)) {
-            $icon = new \pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+            $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
         } else {
             $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
             $icon = explode(':', $icon);
@@ -63,12 +63,12 @@ class authcode extends base {
                 $iconcomponent = 'auth_oidc';
                 $iconkey = 'o365';
             }
-            $icon = new \pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+            $icon = new pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
         }
 
         return [
             [
-                'url' => new \moodle_url('/auth/oidc/'),
+                'url' => new moodle_url('/auth/oidc/'),
                 'icon' => $icon,
                 'name' => $this->config->opname,
             ]
@@ -103,6 +103,20 @@ class authcode extends base {
     public function handleredirect() {
         global $CFG, $SESSION;
 
+        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            $adminconsent = optional_param('admin_consent', '', PARAM_TEXT);
+            if ($adminconsent) {
+                $state = $this->getoidcparam('state');
+                if (!empty($state)) {
+                    $requestparams = [
+                        'state' => $state,
+                        'error_description' => optional_param('error_description', '', PARAM_TEXT),
+                    ];
+                    $this->handlecertadminconsentresponse($requestparams);
+                }
+            }
+        }
+
         $state = $this->getoidcparam('state');
         $code = $this->getoidcparam('code');
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
@@ -122,7 +136,7 @@ class authcode extends base {
                     $urltogo = $SESSION->wantsurl;
                     unset($SESSION->wantsurl);
                 } else {
-                    $urltogo = new \moodle_url('/');
+                    $urltogo = new moodle_url('/');
                 }
                 redirect($urltogo);
                 die();
@@ -174,6 +188,59 @@ class authcode extends base {
     }
 
     /**
+     * Initiaite an admin consent request when using Microsoft Identity Platform.
+     *
+     * @param array $stateparams
+     * @param array $extraparams
+     * @return void
+     */
+    public function initiateadminconsentrequest(array $stateparams = [], array $extraparams = []) {
+        $client = $this->get_oidcclient();
+        $client->adminconsentrequest($stateparams, $extraparams);
+    }
+
+    protected function handlecertadminconsentresponse(array $authparams) {
+        global $CFG, $DB, $SESSION;
+
+        if (!empty($authparams['error_description'])) {
+            utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
+            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
+        }
+
+        if (!isset($authparams['state'])) {
+            utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
+            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
+
+        // Validate and expire state.
+        $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
+        if (empty($staterec)) {
+            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
+
+        $orignonce = $staterec->nonce;
+        $additionaldata = [];
+        if (!empty($staterec->additionaldata)) {
+            $additionaldata = @unserialize($staterec->additionaldata);
+            if (!is_array($additionaldata)) {
+                $additionaldata = [];
+            }
+        }
+        $SESSION->stateadditionaldata = $additionaldata;
+        $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
+
+        // Get token.
+        $client = $this->get_oidcclient();
+        $tokenparams = $client->app_access_token_request();
+        if (!isset($tokenparams['access_token'])) {
+            throw new moodle_exception('errorauthnoaccesstoken', 'auth_oidc');
+        }
+
+        $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
+        redirect(new moodle_url($redirect));
+    }
+
+    /**
      * Handle an authorization request response received from the configured OP.
      *
      * @param array $authparams Received parameters.
@@ -185,7 +252,7 @@ class authcode extends base {
 
         if (!empty($authparams['error_description'])) {
             utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
-            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, \core\output\notification::NOTIFY_ERROR);
+            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['code'])) {
@@ -203,6 +270,7 @@ class authcode extends base {
         if (empty($staterec)) {
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
+
         $orignonce = $staterec->nonce;
         $additionaldata = [];
         if (!empty($staterec->additionaldata)) {
@@ -251,11 +319,22 @@ class authcode extends base {
         if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
             // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
             // Check if that Microsoft 365 account already exists in moodle.
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                $upn = $idtoken->claim('preferred_username');
+                if (empty($upn)) {
+                    $upn = $idtoken->claim('email');
+                }
+            } else {
+                $upn = $idtoken->claim('upn');
+                if (empty($upn)) {
+                    $upn = $idtoken->claim('unique_name');
+                }
+            }
             $userrec = $DB->count_records_sql('SELECT COUNT(*)
                                                  FROM {user}
                                                 WHERE username = ?
                                                       AND id != ?',
-                    [$idtoken->claim('upn'), $USER->id]);
+                    [$upn, $USER->id]);
 
             if (!empty($userrec)) {
                 if (empty($additionaldata['redirect'])) {
@@ -265,7 +344,7 @@ class authcode extends base {
                 } else {
                     throw new moodle_exception('errorinvalidredirect_message', 'auth_oidc');
                 }
-                redirect(new \moodle_url($redirect));
+                redirect(new moodle_url($redirect));
             }
 
             // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
@@ -275,7 +354,7 @@ class authcode extends base {
             }
             $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
             $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
-            redirect(new \moodle_url($redirect));
+            redirect(new moodle_url($redirect));
         } else {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
@@ -483,8 +562,19 @@ class authcode extends base {
 
             // Generate a Moodle username.
             // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
-            $username = $idtoken->claim('upn');
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                $username = $idtoken->claim('preferred_username');
+                if (empty($username)) {
+                    $username = $idtoken->claim('email');
+                }
+            } else {
+                $username = $idtoken->claim('upn');
+                if (empty($username)) {
+                    $username = $idtoken->claim('unique_name');
+                }
+            }
             $originalupn = null;
+
             if (empty($username)) {
                 $username = $oidcuniqid;
 
@@ -545,7 +635,7 @@ class authcode extends base {
                     $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
                 }
 
-                redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, \core\output\notification::NOTIFY_ERROR);
+                redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
             }
 
         }
