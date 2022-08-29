@@ -27,6 +27,8 @@ namespace local_o365\oauth2;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 /**
  * Class representing oauth2 client data.
  */
@@ -96,12 +98,11 @@ class clientdata {
      */
     public static function instance_from_oidc($tenant = null) {
         $cfg = get_config('auth_oidc');
-        if (empty($cfg) || !is_object($cfg)) {
+
+        if (!auth_oidc_is_setup_complete()) {
             throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
         }
-        if (empty($cfg->clientid) || empty($cfg->clientsecret) || empty($cfg->authendpoint) || empty($cfg->tokenendpoint)) {
-            throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
-        }
+
         $apptokenendpoint = null;
         if (!empty($tenant)) {
             $apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenant);
