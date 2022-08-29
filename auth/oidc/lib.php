@@ -26,6 +26,20 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// IdP types.
+CONST AUTH_OIDC_IDP_TYPE_AZURE_AD = 1;
+CONST AUTH_OIDC_IDP_TYPE_MICROSOFT = 2;
+CONST AUTH_OIDC_IDP_TYPE_OTHER = 3;
+
+// Azure AD / Microsoft endpoint version.
+CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_UNKNOWN = 0;
+CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_1 = 1;
+CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_2 = 2;
+
+// OIDC application authentication method.
+CONST AUTH_OIDC_AUTH_METHOD_SECRET = 1;
+CONST AUTH_OIDC_AUTH_METHOD_CERTIFICATE = 2;
+
 /**
  * Initialize custom icon.
  *
@@ -502,4 +516,111 @@ function auth_oidc_get_all_user_fields() {
     $userfields = array_merge($userfields, $authplugin->get_custom_user_profile_fields());
 
     return $userfields;
+}
+
+/**
+ * Determine the endpoint version of the given Azure AD / Microsoft authorization or token endpoint.
+ *
+ * @return int
+ */
+function auth_oidc_determine_endpoint_version(string $endpoint) {
+    $endpointversion = AUTH_OIDC_AAD_ENDPOINT_VERSION_UNKNOWN;
+
+    if (strpos($endpoint, 'https://login.microsoftonline.com/') === 0) {
+        if (strpos($endpoint, 'oauth2/v2.0/') !== false) {
+            $endpointversion = AUTH_OIDC_AAD_ENDPOINT_VERSION_2;
+        } else if (strpos($endpoint, 'oauth2') !== false) {
+            $endpointversion = AUTH_OIDC_AAD_ENDPOINT_VERSION_1;
+        }
+    }
+
+    return $endpointversion;
+}
+
+/**
+ * Return formatted form element name to be used by configuration variables in custom forms.
+ *
+ * @param string $stringid
+ * @return string
+ */
+function auth_oidc_config_name_in_form(string $stringid) {
+    $formatedformitemname = get_string($stringid, 'auth_oidc') .
+        html_writer::span('auth_oidc | ' . $stringid, 'form-shortname d-block small text-muted');
+
+    return $formatedformitemname;
+}
+
+/**
+ * Check if the auth_oidc plugin has been configured with the minimum settings for the SSO integration to work.
+ *
+ * @return bool
+ */
+function auth_oidc_is_setup_complete() {
+    $pluginconfig = get_config('auth_oidc');
+    if (empty($pluginconfig->clientid) || empty($pluginconfig->idptype) || empty($pluginconfig->clientauthmethod) ||
+        empty($pluginconfig->tenantnameorguid)) {
+        return false;
+    }
+
+    switch ($pluginconfig->clientauthmethod) {
+        case AUTH_OIDC_AUTH_METHOD_SECRET:
+            if (empty($pluginconfig->clientsecret)) {
+                return false;
+            }
+            break;
+        case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+            if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
+                return false;
+            }
+            break;
+    }
+
+    if (empty($pluginconfig->authendpoint) || empty($pluginconfig->tokenendpoint)) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Return the name of the configured IdP type.
+ *
+ * @return lang_string|string
+ */
+function auth_oidc_get_idp_type_name() {
+    $idptypename = '';
+
+    switch (get_config('auth_oidc', 'idptype')) {
+        case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+            $idptypename = get_string('idp_type_azuread', 'auth_oidc');
+            break;
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+            $idptypename = get_string('idp_type_microsoft', 'auth_oidc');
+            break;
+        case AUTH_OIDC_IDP_TYPE_OTHER:
+            $idptypename = get_string('idp_type_other', 'auth_oidc');
+            break;
+    }
+
+    return $idptypename;
+}
+
+/**
+ * Return the name of the configured authentication method.
+ *
+ * @return lang_string|string
+ */
+function auth_oidc_get_client_auth_method_name() {
+    $authmethodname = '';
+
+    switch (get_config('auth_oidc', 'clientauthmethod')) {
+        case AUTH_OIDC_AUTH_METHOD_SECRET:
+            $authmethodname = get_string('auth_method_secret', 'auth_oidc');
+            break;
+        case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+            $authmethodname = get_string('auth_method_certificate', 'auth_oidc');
+            break;
+    }
+
+    return $authmethodname;
 }

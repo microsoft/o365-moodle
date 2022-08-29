@@ -64,7 +64,8 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/filelib.php');
+require_once($CFG->dirroot . '/lib/filelib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * Handles events.
@@ -124,14 +125,28 @@ class observers {
             case 'addtenant':
                 $clientdata = clientdata::instance_from_oidc();
                 $httpclient = new httpclient();
-                $token = $eventdata['other']['tokenparams']['access_token'];
-                $expiry = $eventdata['other']['tokenparams']['expires_on'];
-                $rtoken = $eventdata['other']['tokenparams']['refresh_token'];
-                $scope = $eventdata['other']['tokenparams']['scope'];
-                $res = $eventdata['other']['tokenparams']['resource'];
-                $token = new token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
-                $tokenresource = unified::get_tokenresource();
-                $token = token::jump_tokenresource($token, $tokenresource, $clientdata, $httpclient);
+                switch (get_config('auth_oidc', 'idptype')) {
+                    case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+                        $token = $eventdata['other']['tokenparams']['access_token'];
+                        $expiry = time() + $eventdata['other']['tokenparams']['expires_in'];
+                        $rtoken = '';
+                        $scope = '';
+                        $res = '';
+                        $token = new token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
+                        break;
+
+                    default:
+                        $token = $eventdata['other']['tokenparams']['access_token'];
+                        $expiry = $eventdata['other']['tokenparams']['expires_on'];
+                        $rtoken = $eventdata['other']['tokenparams']['refresh_token'];
+                        $scope = $eventdata['other']['tokenparams']['scope'];
+                        $res = $eventdata['other']['tokenparams']['resource'];
+                        $token = new token($token, $expiry, $rtoken, $scope, $res, null, $clientdata, $httpclient);
+                        $tokenresource = unified::get_tokenresource();
+                        $token = token::jump_tokenresource($token, $tokenresource, $clientdata, $httpclient);
+                        break;
+                }
+
                 $apiclient = new unified($token, $httpclient);
                 $domainsfetched = false;
                 $domainnames = [];

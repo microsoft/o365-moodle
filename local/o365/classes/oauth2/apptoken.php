@@ -19,13 +19,19 @@
  *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
 namespace local_o365\oauth2;
 
+use auth_oidc\jwt;
+use auth_oidc\oidcclient;
+
 defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * Represents an oauth2 token.
@@ -45,8 +51,7 @@ class apptoken extends \local_o365\oauth2\token {
     public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
         $token = static::get_app_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
-            static::store_new_token(null, $token['access_token'], $token['expires_on'], null, $token['scope'],
-                $token['resource']);
+            static::store_new_token(null, $token['access_token'], $token['expires_on'], null, $token['scope'], $token['resource']);
             return static::instance(null, $tokenresource, $clientdata, $httpclient);
         } else {
             return false;
@@ -66,14 +71,40 @@ class apptoken extends \local_o365\oauth2\token {
      * @return array|bool If successful, an array of token parameters. False if unsuccessful.
      */
     public static function get_app_token($tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $params = [
-            'client_id' => $clientdata->get_clientid(),
-            'client_secret' => $clientdata->get_clientsecret(),
-            'grant_type' => 'client_credentials',
-            'resource' => $tokenresource,
-        ];
+        $tokenendpoint = $clientdata->get_tokenendpoint();
+        $tokenendpoint = str_replace('/common/', '/' . get_config('auth_oidc', 'tenantnameorguid') . '/', $tokenendpoint);
+
+        switch (get_config('auth_oidc', 'idptype')) {
+            case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+                $params = [
+                    'client_id' => $clientdata->get_clientid(),
+                    'client_secret' => $clientdata->get_clientsecret(),
+                    'grant_type' => 'client_credentials',
+                    'resource' => $tokenresource,
+                ];
+                break;
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+                if (get_config('auth_oidc', 'clientauthmethod') == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
+                    $params = [
+                        'client_id' => $clientdata->get_clientid(),
+                        'scope' => 'https://graph.microsoft.com/.default',
+                        'client_assertion_type' => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+                        'client_assertion' => oidcclient::generate_client_assertion(),
+                        'grant_type' => 'client_credentials',
+                    ];
+                } else {
+                    // AUTH_OIDC_AUTH_METHOD_SECRET case.
+                    $params = [
+                        'client_id' => $clientdata->get_clientid(),
+                        'client_secret' => $clientdata->get_clientsecret(),
+                        'grant_type' => 'client_credentials',
+                        'scope' => 'https://graph.microsoft.com/.default',
+                    ];
+                }
+                break;
+        }
+
         $params = http_build_query($params, '', '&');
-        $tokenendpoint = $clientdata->get_apptokenendpoint();
         $header = [
             'Content-Type: application/x-www-form-urlencoded',
             'Content-Length: '.strlen($params)
@@ -116,10 +147,16 @@ class apptoken extends \local_o365\oauth2\token {
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $originaltokenresource = $this->tokenresource;
             $this->token = $result['access_token'];
-            $this->expiry = $result['expires_on'];
+            $expiry = '';
+            if (isset($result['expires_on'])) {
+                 $expiry = $result['expires_on'];
+            }
+            $this->expiry = $expiry;
             $this->refreshtoken = $result['access_token'];
             $this->scope = $result['scope'];
-            $this->tokenresource = $result['resource'];
+            if (isset($result['resource'])) {
+                $this->tokenresource = $result['resource'];
+            }
             $existingtoken = static::get_stored_token(null, $originaltokenresource);
             if (!empty($existingtoken)) {
                 $newtoken = [
@@ -213,6 +250,9 @@ class apptoken extends \local_o365\oauth2\token {
      * @return array Array of new token information.
      */
     public static function store_new_token($userid, $token, $expiry, $refreshtoken, $scope, $tokenresource) {
+        if (!$tokenresource) {
+            $tokenresource = 'https://graph.microsoft.com';
+        }
         $tokens = get_config('local_o365', 'apptokens');
         $tokens = unserialize($tokens);
         $newtoken = [
