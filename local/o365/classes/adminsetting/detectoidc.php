@@ -25,16 +25,19 @@
 
 namespace local_o365\adminsetting;
 
+use admin_setting;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/lib/adminlib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * Admin setting to detect whether oauth credentials are present in openid connect.
  */
-class detectoidc extends \admin_setting {
+class detectoidc extends admin_setting {
 
     /**
      * Constructor.
@@ -82,10 +85,7 @@ class detectoidc extends \admin_setting {
      * @return bool True if setup step has been completed, false otherwise.
      */
     public static function setup_step_complete() {
-        $oidcconfig = get_config('auth_oidc');
-        $clientcredspresent = (!empty($oidcconfig->clientid) && !empty($oidcconfig->clientsecret)) ? true : false;
-        $endpointspresent = (!empty($oidcconfig->authendpoint) && !empty($oidcconfig->tokenendpoint)) ? true : false;
-        return ($clientcredspresent === true && $endpointspresent === true) ? true : false;
+        return auth_oidc_is_setup_complete();
     }
 
     /**
