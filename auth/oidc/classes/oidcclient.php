@@ -25,6 +25,9 @@
 
 namespace auth_oidc;
 
+use moodle_exception;
+use moodle_url;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
@@ -143,7 +146,7 @@ class oidcclient {
     public function setendpoints($endpoints) {
         foreach ($endpoints as $type => $uri) {
             if (clean_param($uri, PARAM_URL) !== $uri) {
-                throw new \moodle_exception('erroroidcclientinvalidendpoint', 'auth_oidc');
+                throw new moodle_exception('erroroidcclientinvalidendpoint', 'auth_oidc');
             }
             $this->endpoints[$type] = $uri;
         }
@@ -168,16 +171,21 @@ class oidcclient {
      */
     protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         $nonce = 'N'.uniqid();
+
         $params = [
             'response_type' => 'code',
             'client_id' => $this->clientid,
             'scope' => $this->scope,
             'nonce' => $nonce,
             'response_mode' => 'form_post',
-            'resource' => $this->tokenresource,
             'state' => $this->getnewstate($nonce, $stateparams),
             'redirect_uri' => $this->redirecturi
         ];
+
+        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            $params['resource'] = $this->tokenresource;
+        }
+
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
         }
@@ -186,6 +194,28 @@ class oidcclient {
         if (!empty($domainhint)) {
             $params['domain_hint'] = $domainhint;
         }
+
+        $params = array_merge($params, $extraparams);
+
+        return $params;
+    }
+
+    /**
+     * Return params for an admin consent request.
+     *
+     * @param array $stateparams
+     * @param array $extraparams
+     * @return array
+     */
+    protected function getadminconsentrequestparams(array $stateparams = [], array $extraparams = []) {
+        $nonce = 'N'.uniqid();
+
+        $params = [
+            'client_id' => $this->clientid,
+            'scope' => 'https://graph.microsoft.com/.default',
+            'state' => $this->getnewstate($nonce, $stateparams),
+            'redirect_uri' => $this->redirecturi,
+        ];
 
         $params = array_merge($params, $extraparams);
 
@@ -220,15 +250,30 @@ class oidcclient {
      */
     public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
         if (empty($this->clientid)) {
-            throw new \moodle_exception('erroroidcclientnocreds', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnocreds', 'auth_oidc');
         }
 
         if (empty($this->endpoints['auth'])) {
-            throw new \moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
         }
 
         $params = $this->getauthrequestparams($promptlogin, $stateparams, $extraparams);
-        $redirecturl = new \moodle_url($this->endpoints['auth'], $params);
+        $redirecturl = new moodle_url($this->endpoints['auth'], $params);
+        redirect($redirecturl);
+    }
+
+    /**
+     * Perform an admin consent request when using a Microsoft Identity Platform type IdP.
+     *
+     * @param array $stateparams
+     * @param array $extraparams
+     * @return void
+     */
+    public function adminconsentrequest(array $stateparams = [], array $extraparams = []) {
+        $adminconsentendpoint = 'https://login.microsoftonline.com/' . get_config('auth_oidc', 'tenantnameorguid') .
+            '/v2.0/adminconsent';
+        $params = $this->getadminconsentrequestparams($stateparams, $extraparams);
+        $redirecturl = new moodle_url($adminconsentendpoint, $params);
         redirect($redirecturl);
     }
 
@@ -241,11 +286,11 @@ class oidcclient {
      */
     public function rocredsrequest($username, $password) {
         if (empty($this->endpoints['token'])) {
-            throw new \moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
         }
 
         if (strpos($this->endpoints['token'], 'https://') !== 0) {
-            throw new \moodle_exception('erroroidcclientinsecuretokenendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientinsecuretokenendpoint', 'auth_oidc');
         }
 
         $params = [
@@ -253,10 +298,13 @@ class oidcclient {
             'username' => $username,
             'password' => $password,
             'scope' => 'openid profile email',
-            'resource' => $this->tokenresource,
             'client_id' => $this->clientid,
             'client_secret' => $this->clientsecret,
         ];
+
+        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            $params['resource'] = $this->tokenresource;
+        }
 
         try {
             $returned = $this->httpclient->post($this->endpoints['token'], $params);
@@ -275,18 +323,79 @@ class oidcclient {
      */
     public function tokenrequest($code) {
         if (empty($this->endpoints['token'])) {
-            throw new \moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
         }
 
         $params = [
             'client_id' => $this->clientid,
-            'client_secret' => $this->clientsecret,
             'grant_type' => 'authorization_code',
             'code' => $code,
             'redirect_uri' => $this->redirecturi,
         ];
 
+        switch (get_config('auth_oidc', 'clientauthmethod')) {
+            case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+                $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+                $params['client_assertion'] = static::generate_client_assertion();
+                $params['tenant'] = 'common';
+                break;
+            default:
+                $params['client_secret'] = $this->clientsecret;
+        }
         $returned = $this->httpclient->post($this->endpoints['token'], $params);
         return utils::process_json_response($returned, ['id_token' => null]);
+    }
+
+    /**
+     * Request an access token in Microsoft Identity Platform.
+     *
+     * @return array
+     */
+    public function app_access_token_request() {
+        $params = [
+            'client_id' => $this->clientid,
+            'scope' => 'https://graph.microsoft.com/.default',
+            'grant_type' => 'client_credentials',
+        ];
+
+        switch (get_config('auth_oidc', 'clientauthmethod')) {
+            case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+                $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+                $params['client_assertion'] = static::generate_client_assertion();
+                break;
+            default:
+                $params['client_secret'] = $this->clientsecret;
+        }
+
+        $tokenendpoint = $this->endpoints['token'];
+        $tokenendpoint = str_replace('/common/' , '/' . get_config('auth_oidc', 'tenantnameorguid') . '/', $tokenendpoint);
+
+        $returned = $this->httpclient->post($tokenendpoint, $params);
+        return utils::process_json_response($returned, ['access_token' => null]);
+    }
+
+    /**
+     * Calculate the return the assertion used in the token request in certificate connection method.
+     *
+     * @return string
+     */
+    public static function generate_client_assertion() {
+        $jwt = new jwt();
+        $authoidcconfig = get_config('auth_oidc');
+        $cert = openssl_x509_read($authoidcconfig->clientcert);
+        $sh1hash = openssl_x509_fingerprint($cert);
+        $x5t = base64_encode(hex2bin($sh1hash));
+        $jwt->set_header(['alg' => 'RS256', 'typ' => 'JWT', 'x5t' => $x5t]);
+        $jwt->set_claims([
+            'aud' => $authoidcconfig->tokenendpoint,
+            'exp' => strtotime('+10min'),
+            'iss' => $authoidcconfig->clientid,
+            'jti' => bin2hex(openssl_random_pseudo_bytes(16)),
+            'nbf' => time(),
+            'sub' => $authoidcconfig->clientid,
+            'iat' => time(),
+        ]);
+
+        return $jwt->assert_token($authoidcconfig->clientprivatekey);
     }
 }

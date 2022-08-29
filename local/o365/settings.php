@@ -41,6 +41,7 @@ use local_o365\feature\coursesync\utils;
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/local/o365/lib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 if (!$PAGE->requires->is_head_done()) {
     $PAGE->requires->jquery();
@@ -68,30 +69,36 @@ if ($hassiteconfig) {
         $stepsenabled = 1;
 
         // Step 1: Registration.
-        $oidcsettings = new moodle_url('/admin/settings.php?section=authsettingoidc');
+        $oidcconfigpageurl = new moodle_url('/auth/oidc/manageapplication.php');
         $label = new lang_string('settings_setup_step1', 'local_o365');
         $desc = new lang_string('settings_setup_step1_desc', 'local_o365', $CFG->wwwroot);
         $settings->add(new admin_setting_heading('local_o365_setup_step1', $label, $desc));
 
-        $configdesc = new lang_string('settings_setup_step1clientcreds', 'local_o365');
+        $configdesc = new lang_string('settings_setup_step1clientcreds', 'local_o365', $oidcconfigpageurl->out());
         $settings->add(new admin_setting_heading('local_o365_setup_step1clientcreds', '', $configdesc));
 
-        $configkey = new lang_string('settings_clientid', 'local_o365');
-        $configdesc = new lang_string('settings_clientid_desc', 'local_o365');
-        $settings->add(new admin_setting_configtext('auth_oidc/clientid', $configkey, $configdesc, '', PARAM_TEXT));
-
-        $configkey = new lang_string('settings_clientsecret', 'local_o365');
-        $configdesc = new lang_string('settings_clientsecret_desc', 'local_o365');
-        $settings->add(new admin_setting_configtext('auth_oidc/clientsecret', $configkey, $configdesc, '', PARAM_TEXT));
-
         $configdesc = new lang_string('settings_setup_step1_credentials_end', 'local_o365',
-            (object)['oidcsettings' => $oidcsettings->out()]);
+            (object)['oidcsettings' => $oidcconfigpageurl->out()]);
         $settings->add(new admin_setting_heading('local_o365_setup_step1_credentialsend', '', $configdesc));
+
+        if (auth_oidc_is_setup_complete()) {
+            $settings->add(new admin_setting_heading('local_o365_existing_settings_heading', '',
+                get_string('settings_setup_step1_existing_settings', 'local_o365')));
+            // IdP type.
+            $settings->add(new admin_setting_description('local_o365_existing_settings_idp_type',
+                get_string('idptype', 'auth_oidc'), auth_oidc_get_idp_type_name()));
+            // Client ID.
+            $settings->add(new admin_setting_description('local_o365_existing_setting_client_id',
+                get_string('clientid', 'auth_oidc'), get_config('auth_oidc', 'clientid')));
+            // Authentication type.
+            $settings->add(new admin_setting_description('local_o365_existing_setting_client_auth_method',
+                get_string('clientauthmethod', 'auth_oidc'), auth_oidc_get_client_auth_method_name()));
+        }
 
         // Step 2: Connection Method.
         $clientid = get_config('auth_oidc', 'clientid');
         $clientsecret = get_config('auth_oidc', 'clientsecret');
-        if (!empty($clientid) && !empty($clientsecret)) {
+        if (auth_oidc_is_setup_complete()) {
             $stepsenabled = 2;
         } else {
             $configdesc = new lang_string('settings_setup_step1_continue', 'local_o365');
@@ -185,7 +192,7 @@ if ($hassiteconfig) {
         $settings->add(new usersynccreationrestriction($key, $label, $desc, $default));
 
         $label = new lang_string('settings_fieldmap', 'local_o365');
-        $oidcsettingspageurl = new moodle_url('/admin/settings.php', ['section' => 'authsettingoidc']);
+        $oidcsettingspageurl = new moodle_url('/admin/settings.php', ['section' => 'auth_oidc_field_mapping']);
         $desc = new lang_string('settings_fieldmap_details', 'local_o365', $oidcsettingspageurl->out(false));
         $settings->add(new auth_oidc_admin_setting_label('local_o365/fieldmap', $label, $desc, null));
 

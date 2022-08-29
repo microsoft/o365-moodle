@@ -27,6 +27,7 @@
 namespace auth_oidc\loginflow;
 
 use auth_oidc\jwt;
+use auth_oidc\oidcclient;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -126,8 +127,8 @@ class base {
 
             if (!$userfromadditionaltenant) {
                 if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
-                    // If local_o365 is installed, and field mapping uses fields not covered by token,
-                    // then call Graph API function to get user details.
+                    // If local_o365 is installed, and connects to Microsoft Identity Platform (v2.0),
+                    // or field mapping uses fields not covered by token, then call Graph API function to get user details.
                     $apiclient = \local_o365\utils::get_api($tokenrec->userid);
                     if ($apiclient) {
                         $fieldmappingfromtoken = false;
@@ -136,38 +137,61 @@ class base {
                 } else {
                     // If local_o365 is installed, but all field mapping fields are in token, then use token.
                     $fieldmappingfromtoken = false;
-                    $idtoken = jwt::instance_from_encoded($tokenrec->idtoken);
+                    // Process both ID token and access tokens.
+                    $tokenames = ['idtoken', 'token'];
 
-                    $oid = $idtoken->claim('oid');
-                    if (!empty($oid)) {
-                        $userdata['objectId'] = $oid;
-                    }
+                    foreach ($tokenames as $tokename) {
+                        $token = jwt::instance_from_encoded($tokenrec->$tokename);
 
-                    $upn = $idtoken->claim('upn');
-                    if (!empty($upn)) {
-                        $userdata['userPrincipalName'] = $upn;
-                    } else if (isset($tokenrec->oidcusername) && $tokenrec->oidcusername) {
-                        $userdata['userPrincipalName'] = $tokenrec->oidcusername;
-                    }
+                        if (!isset($userdata['objectId'])) {
+                            $objectid = $token->claim('oid');
+                            if (!$objectid) {
+                                $userdata['objectId'] = $objectid;
+                            }
+                        }
 
-                    $firstname = $idtoken->claim('given_name');
-                    if (!empty($firstname)) {
-                        $userdata['givenName'] = $firstname;
-                    }
+                        if (!isset($userdata['userPrincipalName'])) {
+                            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                                $upn = $token->claim('preferred_username');
+                                if (empty($upn)) {
+                                    $upn = $token->claim('email');
+                                }
+                            } else {
+                                $upn = $token->claim('upn');
+                                if (empty($upn)) {
+                                    $upn = $token->claim('unique_name');
+                                }
+                            }
+                            if (!empty($upn)) {
+                                $userdata['userPrincipalName'] = $upn;
+                            }
+                        }
 
-                    $lastname = $idtoken->claim('family_name');
-                    if (!empty($lastname)) {
-                        $userdata['surname'] = $lastname;
-                    }
+                        if (!isset($userdata['givenName'])) {
+                            $firstname = $token->claim('given_name');
+                            if (!empty($firstname)) {
+                                $userdata['givenName'] = $firstname;
+                            }
+                        }
 
-                    $email = $idtoken->claim('email');
-                    if (!empty($email)) {
-                        $userdata['mail'] = $email;
-                    } else {
-                        if (!empty($upn)) {
-                            $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                            if (!empty($aademailvalidateresult)) {
-                                $userdata['mail'] = $aademailvalidateresult;
+                        if (!isset($userdata['surname'])) {
+                            $lastname = $token->claim('family_name');
+                            if (!empty($lastname)) {
+                                $userdata['surname'] = $lastname;
+                            }
+                        }
+
+                        if (!isset($userdata['email'])) {
+                            $email = $token->claim('email');
+                            if (!empty($email)) {
+                                $userdata['mail'] = $email;
+                            } else {
+                                if (!empty($upn)) {
+                                    $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                                    if (!empty($aademailvalidateresult)) {
+                                        $userdata['mail'] = $aademailvalidateresult;
+                                    }
+                                }
                             }
                         }
                     }
@@ -183,36 +207,61 @@ class base {
             // If local_o365 is not installed, use information from user token.
             $userdata = [];
 
-            $idtoken = jwt::instance_from_encoded($tokenrec->idtoken);
+            // Process both ID token and access tokens.
+            $tokenames = ['idtoken', 'token'];
 
-            $objectid = $idtoken->claim('oid');
-            if (!$objectid) {
-                $userdata['objectId'] = $objectid;
-            }
+            foreach ($tokenames as $tokename) {
+                $token = jwt::instance_from_encoded($tokenrec->$tokename);
 
-            $upn = $idtoken->claim('upn');
-            if (!empty($upn)) {
-                $userdata['userPrincipalName'] = $upn;
-            }
+                if (!isset($userdata['objectId'])) {
+                    $objectid = $token->claim('oid');
+                    if (!$objectid) {
+                        $userdata['objectId'] = $objectid;
+                    }
+                }
 
-            $firstname = $idtoken->claim('given_name');
-            if (!empty($firstname)) {
-                $userdata['givenName'] = $firstname;
-            }
+                if (!isset($userdata['userPrincipalName'])) {
+                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                        $upn = $token->claim('preferred_username');
+                        if (empty($upn)) {
+                            $upn = $token->claim('email');
+                        }
+                    } else {
+                        $upn = $token->claim('upn');
+                        if (empty($upn)) {
+                            $upn = $token->claim('unique_name');
+                        }
+                    }
+                    if (!empty($upn)) {
+                        $userdata['userPrincipalName'] = $upn;
+                    }
+                }
 
-            $lastname = $idtoken->claim('family_name');
-            if (!empty($lastname)) {
-                $userdata['surname'] = $lastname;
-            }
+                if (!isset($userdata['givenName'])) {
+                    $firstname = $token->claim('given_name');
+                    if (!empty($firstname)) {
+                        $userdata['givenName'] = $firstname;
+                    }
+                }
 
-            $email = $idtoken->claim('email');
-            if (!empty($email)) {
-                $userdata['mail'] = $email;
-            } else {
-                if (!empty($upn)) {
-                    $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                    if (!empty($aademailvalidateresult)) {
-                        $userdata['mail'] = $aademailvalidateresult;
+                if (!isset($userdata['surname'])) {
+                    $lastname = $token->claim('family_name');
+                    if (!empty($lastname)) {
+                        $userdata['surname'] = $lastname;
+                    }
+                }
+
+                if (!isset($userdata['email'])) {
+                    $email = $token->claim('email');
+                    if (!empty($email)) {
+                        $userdata['mail'] = $email;
+                    } else {
+                        if (!empty($upn)) {
+                            $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                            if (!empty($aademailvalidateresult)) {
+                                $userdata['mail'] = $aademailvalidateresult;
+                            }
+                        }
                     }
                 }
             }
@@ -431,18 +480,16 @@ class base {
     /**
      * Construct the OpenID Connect client.
      *
-     * @return \auth_oidc\oidcclient The constructed client.
+     * @return oidcclient The constructed client.
      */
     protected function get_oidcclient() {
         global $CFG;
         if (empty($this->httpclient) || !($this->httpclient instanceof \auth_oidc\httpclientinterface)) {
             $this->httpclient = new \auth_oidc\httpclient();
         }
-        if (empty($this->config->clientid) || empty($this->config->clientsecret)) {
-            throw new \moodle_exception('errorauthnocreds', 'auth_oidc');
-        }
-        if (empty($this->config->authendpoint) || empty($this->config->tokenendpoint)) {
-            throw new \moodle_exception('errorauthnoendpoints', 'auth_oidc');
+
+        if (!auth_oidc_is_setup_complete()) {
+            throw new \moodle_exception('errorauthnocredsandendpoints', 'auth_oidc');
         }
 
         $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
@@ -452,7 +499,7 @@ class base {
         $tokenresource = (isset($this->config->oidcresource)) ? $this->config->oidcresource : null;
         $scope = (isset($this->config->oidcscope)) ? $this->config->oidcscope : null;
 
-        $client = new \auth_oidc\oidcclient($this->httpclient);
+        $client = new oidcclient($this->httpclient);
         $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
 
         $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
@@ -504,8 +551,19 @@ class base {
         $userpassed = false;
         if ($restrictions !== '') {
             $restrictions = explode("\n", $restrictions);
-            // Match "UPN" (Azure-specific) if available, otherwise match oidc-standard "sub".
-            $tomatch = $idtoken->claim('upn');
+            // Check main user identifier claim based on IdP type, and falls back to oidc-standard "sub" if still empty.
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                $tomatch = $idtoken->claim('preferred_username');
+                if (empty($tomatch)) {
+                    $tomatch = $idtoken->claim('email');
+                }
+            } else {
+                $tomatch = $idtoken->claim('upn');
+                if (empty($tomatch)) {
+                    $tomatch = $idtoken->claim('unique_name');
+                }
+            }
+
             if (empty($tomatch)) {
                 $tomatch = $idtoken->claim('sub');
             }
@@ -567,8 +625,19 @@ class base {
         if (!is_null($originalupn)) {
             $oidcusername = $originalupn;
         } else {
-            // Determine remote username. Use 'upn' if available (Azure-specific), or fall back to standard 'sub'.
-            $oidcusername = $idtoken->claim('upn');
+            // Determine remote username depending on IdP type, or fall back to standard 'sub'.
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                $oidcusername = $idtoken->claim('preferred_username');
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('email');
+                }
+            } else {
+                $oidcusername = $idtoken->claim('upn');
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('unique_name');
+                }
+            }
+
             if (empty($oidcusername)) {
                 $oidcusername = $idtoken->claim('sub');
             }
