@@ -953,36 +953,53 @@ class main {
 
         // In order to find existing user accounts using isset($existingusers[$aadupn]) we have to index the array
         // by email address if we match AAD UPNs against Moodle email addresses!
+        $basesql = " u.id as muserid,
+                     u.auth,
+                     u.suspended,
+                     tok.id as tokid,
+                     conn.id as existingconnectionid,
+                     assign.assigned assigned,
+                     assign.photoid photoid,
+                     assign.photoupdated photoupdated,
+                     obj.id AS objectid
+                FROM {user} u
+           LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
+           LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
+           LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
+           LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+               WHERE u.mnethostid = ? AND u.deleted = ? ";
+        $orderbysql = " ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@email.com before john.smith.
+
+        $fallbackusers = [];
         if (isset($aadsync['emailsync'])) {
-            if (local_o365_users_with_same_email_exist()) {
+            $select = "SELECT LOWER(u.email) AS email, LOWER(u.username) AS username, ";
+
+            $duplicateemailaddresses = local_o365_get_duplicate_emails();
+            if ($duplicateemailaddresses) {
                 // Match by email, but duplicate email exists, revert to match by username.
-                $select = "SELECT LOWER(u.username) AS username, LOWER(u.email) AS email, ";
-            } else {
-                $select = "SELECT LOWER(u.email) AS email, LOWER(u.username) AS username, ";
+                $fallbackselect = "SELECT LOWER(u.username) AS username, LOWER(u.email) AS email, ";
+                [$duplicateemailsql, $duplicateemailparams] = $DB->get_in_or_equal($duplicateemailaddresses);
+                $fallbackadditionalcondition = " AND LOWER(u.email) {$duplicateemailsql} ";
+                $sql = $fallbackselect . $basesql . $fallbackadditionalcondition . $orderbysql;
+                $fallbackparams = array_merge(['user'], [$CFG->mnet_localhost_id, '0'], $duplicateemailparams);
+                $fallbackusers = $DB->get_records_sql($sql, $fallbackparams);
             }
         } else {
-            $select = "SELECT LOWER(u.username) AS username, ";
+            $select = "SELECT LOWER(u.username) AS username, LOWER(u.email) AS email, ";
         }
 
-        $sql = "$select
-                       u.id as muserid,
-                       u.auth,
-                       u.suspended,
-                       tok.id as tokid,
-                       conn.id as existingconnectionid,
-                       assign.assigned assigned,
-                       assign.photoid photoid,
-                       assign.photoupdated photoupdated,
-                       obj.id AS objectid
-                  FROM {user} u
-             LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
-             LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
-             LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
-             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                 WHERE u.mnethostid = ? AND u.deleted = ?
-              ORDER BY CONCAT(u.username, '~')"; // Sort john.smith@email.com before john.smith.
-        $params = array_merge(['user'], [$CFG->mnet_localhost_id, '0']);
+        if ($fallbackusers) {
+            [$duplicateemailsql, $duplicateemailparams] = $DB->get_in_or_equal($duplicateemailaddresses, SQL_PARAMS_QM, 'param',
+                false);
+            $sql = $select . $basesql . " AND LOWER(u.email) {$duplicateemailsql} " . $orderbysql;
+            $params = array_merge(['user'], [$CFG->mnet_localhost_id, '0'], $duplicateemailparams);
+        } else {
+            $sql = $select . $basesql . $orderbysql;
+            $params = array_merge(['user'], [$CFG->mnet_localhost_id, '0']);
+        }
+
         $existingusers = $DB->get_records_sql($sql, $params);
+        $existingusers = array_merge($existingusers, $fallbackusers);
 
         foreach ($existingusers as $id => $existinguser) {
             if (isset($aadsync['emailsync'])) {
