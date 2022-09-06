@@ -31,6 +31,8 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
+require_once($CFG->libdir . '/enrollib.php');
+
 define('API_CALL_RETRY_LIMIT', 5);
 
 /**
@@ -765,7 +767,7 @@ class coursegroups {
      */
     public static function get_team_owner_ids_by_course_id($courseid) {
         $context = context_course::instance($courseid);
-        $teamownerusers = get_users_by_capability($context, 'local/o365:teamowner', 'u.id, u.deleted');
+        $teamownerusers = get_enrolled_users($context, 'local/o365:teamowner', 0, 'u.*', null, 0, 0, true);
         $teamowneruserids = [];
         foreach ($teamownerusers as $user) {
             if (!$user->deleted) {
@@ -785,10 +787,12 @@ class coursegroups {
      */
     public function get_team_member_ids_by_course_id($courseid) {
         $context = context_course::instance($courseid);
-        $teammemberusers = get_users_by_capability($context, 'local/o365:teammember', 'u.id, u.deleted');
+        $teammemberusers = get_enrolled_users($context, 'local/o365:teammember', 0, 'u.*', null, 0, 0, true);
         $teammemberuserids = [];
         foreach ($teammemberusers as $user) {
-            array_push($teammemberuserids, $user->id);
+            if (!$user->deleted) {
+                array_push($teammemberuserids, $user->id);
+            }
         }
 
         return $teammemberuserids;
