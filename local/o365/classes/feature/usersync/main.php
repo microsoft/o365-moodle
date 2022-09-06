@@ -42,6 +42,7 @@ global $CFG;
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * User sync feature.
@@ -621,15 +622,19 @@ class main {
 
         require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
-        $fieldmappings = auth_oidc_get_field_mappings();
+        // Microsoft Identity Platform can only get user profile from Graph API.
+        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            return true;
+        } else {
+            $fieldmappings = auth_oidc_get_field_mappings();
+            $idtokenfields = ['givenName', 'surname', 'mail', 'objectId', 'userPrincipalName'];
 
-        $idtokenfields = ['givenName', 'surname', 'mail', 'objectId', 'userPrincipalName'];
-
-        foreach ($fieldmappings as $fieldmapping) {
-            $remotefield = $fieldmapping['field_map'];
-            if (!in_array($remotefield, $idtokenfields)) {
-                if ($fieldmapping['update_local'] == 'always' || $fieldmapping['update_local'] == 'on' . $eventtype) {
-                    return true;
+            foreach ($fieldmappings as $fieldmapping) {
+                $remotefield = $fieldmapping['field_map'];
+                if (!in_array($remotefield, $idtokenfields)) {
+                    if ($fieldmapping['update_local'] == 'always' || $fieldmapping['update_local'] == 'on' . $eventtype) {
+                        return true;
+                    }
                 }
             }
         }

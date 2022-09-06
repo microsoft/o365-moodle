@@ -25,16 +25,20 @@
 
 namespace local_o365\adminsetting;
 
+use admin_setting_configtext;
+use html_writer;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
 require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
  * Admin setting to configure an o365 service.
  */
-class serviceresource extends \admin_setting_configtext {
+class serviceresource extends admin_setting_configtext {
     /**
      * Return an XHTML string for the setting.
      *
@@ -46,10 +50,6 @@ class serviceresource extends \admin_setting_configtext {
         global $OUTPUT;
         $settinghtml = '';
 
-        $oidcconfig = get_config('auth_oidc');
-        $clientcredspresent = (!empty($oidcconfig->clientid) && !empty($oidcconfig->clientsecret)) ? true : false;
-        $endpointspresent = (!empty($oidcconfig->authendpoint) && !empty($oidcconfig->tokenendpoint)) ? true : false;
-
         // Input + detect button.
         $inputattrs = [
             'type' => 'text',
@@ -59,22 +59,22 @@ class serviceresource extends \admin_setting_configtext {
             'name' => $this->get_full_name(),
             'value' => s($data),
         ];
-        $input = \html_writer::empty_tag('input', $inputattrs);
-        if ($clientcredspresent === true && $endpointspresent === true) {
+        $input = html_writer::empty_tag('input', $inputattrs);
+        if (auth_oidc_is_setup_complete()) {
             $buttonattrs = ['class' => 'detect'];
             $strdetect = get_string('settings_serviceresourceabstract_detect', 'local_o365');
-            $detectbutton = \html_writer::tag('button', $strdetect, $buttonattrs);
-            $settinghtml .= \html_writer::div($input.$detectbutton);
+            $detectbutton = html_writer::tag('button', $strdetect, $buttonattrs);
+            $settinghtml .= html_writer::div($input.$detectbutton);
             if (!empty($data)) {
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
                 $strvalid = get_string('settings_serviceresourceabstract_valid', 'local_o365', $this->visiblename);
-                $statusmessage = \html_writer::tag('span', $strvalid, ['class' => 'statusmessage']);
-                $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-success alert local_o365_statusmessage');
+                $statusmessage = html_writer::tag('span', $strvalid, ['class' => 'statusmessage']);
+                $settinghtml .= html_writer::div($icon.$statusmessage, 'alert-success alert local_o365_statusmessage');
             } else {
                 $icon = $OUTPUT->pix_icon('i/warning', 'valid', 'moodle');
                 $strnocreds = get_string('settings_serviceresourceabstract_empty', 'local_o365');
-                $statusmessage = \html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
-                $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
+                $statusmessage = html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
+                $settinghtml .= html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
             }
 
             // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
@@ -108,11 +108,11 @@ class serviceresource extends \admin_setting_configtext {
                                 });
                             </script>';
         } else {
-            $settinghtml .= \html_writer::div($input);
+            $settinghtml .= html_writer::div($input);
             $icon = $OUTPUT->pix_icon('i/warning', 'valid', 'moodle');
             $strnocreds = get_string('settings_serviceresourceabstract_nocreds', 'local_o365');
-            $statusmessage = \html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
-            $settinghtml .= \html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
+            $statusmessage = html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
+            $settinghtml .= html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
         }
 
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
