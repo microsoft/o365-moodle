@@ -65,7 +65,7 @@ class main {
      * @throws \moodle_exception
      */
     public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
-        if (!PHPUNIT_TEST) {
+        if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
             $this->clientdata = (!empty($clientdata))
                 ? $clientdata
                 : clientdata::instance_from_oidc();
@@ -148,7 +148,7 @@ class main {
      */
     public function assign_user($muserid, $userobjectid) {
         // Not supported in unit tests at the moment.
-        if (PHPUNIT_TEST) {
+        if (PHPUNIT_TEST || defined('BEHAT_SITE_RUNNING')) {
             return null;
         }
         $this->mtrace('Assigning Moodle user '.$muserid.' (objectid '.$userobjectid.') to application');
@@ -475,7 +475,7 @@ class main {
 
         require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
-        if (PHPUNIT_TEST) {
+        if (PHPUNIT_TEST || defined('BEHAT_SITE_RUNNING')) {
             $fieldmappings = [
                 'firstname' => [
                     'field_map' => 'givenName',
@@ -560,7 +560,7 @@ class main {
                 }
             }
 
-            if (!PHPUNIT_TEST) {
+            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 switch ($remotefield) {
                     case 'manager':
                         $user->$localfield = $usersync->get_user_manager($userobjectid);
@@ -859,7 +859,7 @@ class main {
      * @param string $msg The message.
      */
     public static function mtrace($msg) {
-        if (!PHPUNIT_TEST) {
+        if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
             mtrace('......... '.$msg);
         }
     }
@@ -1193,7 +1193,7 @@ class main {
 
         // User photo sync.
         if (!empty($syncoptions['photosync'])) {
-            if (!PHPUNIT_TEST) {
+            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     if (!empty($newmuser)) {
                         $this->assign_photo($newmuser->id, $aaduserdata['upnlower']);
@@ -1207,7 +1207,7 @@ class main {
 
         // User timezone.
         if (!empty($syncoptions['tzsync'])) {
-            if (!PHPUNIT_TEST) {
+            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     if (!empty($newmuser)) {
                         $this->sync_timezone($newmuser->id, $aaduserdata['upnlower']);
@@ -1279,7 +1279,7 @@ class main {
         if (isset($syncoptions['photosync'])) {
             if (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpiresec) < time()) {
                 try {
-                    if (!PHPUNIT_TEST) {
+                    if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                         $this->assign_photo($existinguser->muserid, $aaduserdata['upnlower']);
                     }
                 } catch (Exception $e) {
@@ -1292,7 +1292,7 @@ class main {
         // Perform timezone sync.
         if (isset($syncoptions['tzsync'])) {
             try {
-                if (!PHPUNIT_TEST) {
+                if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                     $this->sync_timezone($existinguser->muserid, $aaduserdata['upnlower']);
                 }
             } catch (Exception $e) {
