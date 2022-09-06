@@ -89,4 +89,13 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*'
     ],
+    [
+        'classname' => 'local_o365\task\notifysecretexpiry',
+        'blocking' => 0,
+        'minute' => 0,
+        'hour' => '3',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
 ];

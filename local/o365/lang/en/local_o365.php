@@ -755,6 +755,7 @@ $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh tok
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users with Azure AD';
 $string['task_processmatchqueue'] = 'Process Match Queue';
+$string['task_notifysecretexpiry'] = 'Notify site admin about Azure app secret expiry';
 $string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to a Microsoft 365 user.';
 $string['task_processmatchqueue_err_museralreadyo365'] = 'Moodle user is already connected to Microsoft 365.';
 $string['task_processmatchqueue_err_nomuser'] = 'No Moodle user found with this username.';
@@ -871,6 +872,26 @@ $string['tab_moodle'] = 'Moodle';
 $string['sso_login'] = 'Login to Microsoft 365';
 $string['other_login'] = 'Login manually';
 $string['course_selector_label'] = "Select existing course";
+
+// Notifications to site admin about Azure app secret.
+$string['notification_subject_secret_expired'] = 'Action required: Azure app secret expired';
+$string['notification_content_secret_expired'] = 'Dear site administrator,
+
+The Azure app secret used in your Moodle and Microsoft 365 integration has expired.
+Please create a new secret in Azure portal and update it in the integration configuration in order to restore the integration.';
+$string['notification_subject_secret_almost_expired'] = 'Action required: Azure app secret expiring soon';
+$string['notification_content_secret_almost_expired'] = 'Dear site administrator,
+
+The Azure app secret used in your Moodle and Microsoft 365 integration will expire in {$a}.
+Please create a new secret in Azure portal and update it in the integration configuration in order to avoid integration disruption.';
+$string['notification_days_less_than_one_day'] = 'less than 1 day';
+$string['notification_days_one_day'] = '1 day';
+$string['notification_days_days'] = '{$a} days';
+$string['notification_subject_invalid_secret'] = 'Action required: invalid Azure app secret found';
+$string['notification_content_invalid_secret'] = 'Dear site administrator,
+
+The Azure app secret used in your Moodle and Microsoft 365 integration seems to be invalid. This can either be caused by the secret expired, or it has been deleted.  
+Please review the secret to ensure the integration works as expected.';
 
 // Misc.
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
