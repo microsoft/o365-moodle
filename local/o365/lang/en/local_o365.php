@@ -40,14 +40,14 @@ $string['settings_header_moodle_app'] = 'Teams Moodle app';
 $string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Azure AD';
 $string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for your Microsoft 365 tenant by using Windows PowerShell:
 
-<a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download PowerShell Script</a>
+<a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download Windows PowerShell Script</a>
 
-<p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here </a> to read the instructions for running the script. When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
-$string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Application Key returned by script into the fields below:';
-$string['settings_setup_step1_credentials_end'] = 'If you are unable to setup the AzureAD app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.
-
-Note: These settings are saved in the OpenID Connect authentication plugin. To configure advanced login settings, go to the <a href="{$a->oidcsettings}">OpenID Connect settings page</a><br /><br />';
+<p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here</a> to read instructions on running the script.</p>
+<p>When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
+$string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Secret returned by the script into the <a href="{$a}">OpenID Connect authentication plugin configuration page</a>.';
+$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the AzureAD app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
+$string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/3: Choose connection method';
 $string['settings_setup_step2_desc'] = 'This section allows you to choose how the Microsoft 365 integration suite connects to Microsoft 365 services.<br />
 Historically the integration can connect to the Microsoft 365 services using "Application Access", or on behalf of a user you have dedicated as the "system" user.<br />
@@ -59,12 +59,6 @@ $string['settings_setup_step3'] = 'Step 3/3: Admin consent &amp; additional info
 $string['settings_setup_step3_desc'] = 'This last step allows you to give administrator consent to use some Azure permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
 $string['settings_setup_step4'] = 'Verify setup';
 $string['settings_setup_step4_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
-
-// Settings in the "Step 1/3" section of the "Setup" tab.
-$string['settings_clientid'] = 'Application ID';
-$string['settings_clientid_desc'] = '';
-$string['settings_clientsecret'] = 'Application Key';
-$string['settings_clientsecret_desc'] = '';
 
 // Settings in "Step 2/3" of the "Setup" tab.
 $string['settings_enableapponlyaccess'] = 'Application access';
