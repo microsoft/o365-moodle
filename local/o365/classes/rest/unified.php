@@ -2430,4 +2430,26 @@ class unified extends o365api {
 
         return in_array($httpclientinfo['http_code'], $expectedhttpcodes);
     }
+
+    /**
+     * Get the app credential details of the app with the given appID.
+     *
+     * @param string $appid
+     * @return array|null
+     * @throws moodle_exception
+     */
+    public function get_app_credentials(string $appid) {
+        $endpoint = '/applications';
+
+        $odataqueries = [
+            '$filter=appID%20eq%20\'' . $appid . '\'',
+            '$select=passwordCredentials',
+        ];
+        $endpoint .= '?' . implode('&', $odataqueries);
+
+        $response = $this->apicall('get', $endpoint);
+        $expectedparams = ['value' => null];
+
+        return $this->process_apicall_response($response, $expectedparams);
+    }
 }
