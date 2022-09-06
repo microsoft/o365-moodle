@@ -1003,7 +1003,7 @@ class observers {
     }
 
     /**
-     * If "clientid" value of "auth_oidc" is changed, clear all tokens reported to user.
+     * Action when certain configuration are changed.
      *
      * @param config_log_created $event
      *
@@ -1014,18 +1014,13 @@ class observers {
 
         $eventdata = $event->get_data();
 
+        // If Azure app is changed, all tokens need to be deleted.
         if ($eventdata['other']['plugin'] == 'auth_oidc' && $eventdata['other']['name'] == 'clientid') {
             // Clear local_o365_token table.
             $DB->delete_records('local_o365_token');
 
             // Clear auth_oidc_token table.
             $DB->delete_records('auth_oidc_token');
-
-            // Clear local_o365_connections table.
-            $DB->delete_records('local_o365_connections');
-
-            // Clear user records in local_o365_objects table.
-            $DB->delete_records('local_o365_objects', ['type' => 'user']);
 
             // Delete delta user token, and force a user sync task run.
             unset_config('local_o365', 'task_usersync_lastdeltatoken');
@@ -1036,8 +1031,18 @@ class observers {
             }
         }
 
-        if ($eventdata['other']['name'] == 'enableapponlyaccess' && $eventdata['other']['oldvalue'] == '0' &&
-            $eventdata['other']['value'] == '1') {
+        // If Azure tenant is changed, user manual matching and connection records need to be deleted.
+        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'aadtenant') {
+            // Clear local_o365_connections table.
+            $DB->delete_records('local_o365_connections');
+
+            // Clear user records in local_o365_objects table.
+            $DB->delete_records('local_o365_objects', ['type' => 'user']);
+        }
+
+        // If connection method is changed from system API user to applicationa access, system API user token needs to be deleted.
+        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'enableapponlyaccess' &&
+            $eventdata['other']['oldvalue'] == '0' && $eventdata['other']['value'] == '1') {
             unset_config('systemtokens', 'local_o365');
         }
 
