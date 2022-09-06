@@ -1004,6 +1004,7 @@ class main {
                        u.username as username,
                        u.id as muserid,
                        u.auth,
+                       u.suspended,
                        tok.id as tokid,
                        conn.id as existingconnectionid,
                        assign.assigned assigned,
