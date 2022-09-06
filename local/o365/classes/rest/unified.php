@@ -1009,11 +1009,11 @@ class unified extends o365api {
     /**
      * Get directory objects by passing objects ids.
      *
-     * @param string $ids - objects ids which data should be returned
+     * @param array $ids - objects ids which data should be returned
      * @param string|null $types - collection of resource types that specifies the set of resource collections to search (optional).
      * @return array|null
      */
-    public function get_directory_objects(string $ids, string $types = null) : ?array {
+    public function get_directory_objects(array $ids, string $types = null) : ?array {
         $endpoint = "directoryObjects/getByIds";
         $data = ['ids' => $ids];
         if (!empty($types)) {
