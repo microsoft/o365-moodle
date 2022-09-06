@@ -329,7 +329,10 @@ class utils {
         static::updatemultitenantssettings();
 
         $multitenantsconfig = get_config('local_o365', 'multitenants');
-        $additionaltenants = json_decode($multitenantsconfig);
+        $additionaltenants = json_decode($multitenantsconfig, true);
+        if (!is_array($additionaltenants)) {
+            $additionaltenants = [];
+        }
 
         if (!array_key_exists($tenantid, $additionaltenants)) {
             $additionaltenants[$tenantid] = $tenantdomainnames;
