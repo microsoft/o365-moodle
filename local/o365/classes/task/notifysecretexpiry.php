@@ -32,6 +32,8 @@ use local_o365\utils;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
 class notifysecretexpiry extends scheduled_task {
     /**
      * Return a descriptive name of the task.
@@ -57,6 +59,12 @@ class notifysecretexpiry extends scheduled_task {
         } catch (Exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             mtrace('Failed to get Graph API client');
+            return false;
+        }
+
+        $authenticationmethod = get_config('auth_oidc', 'clientauthmethod');
+        if ($authenticationmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
+            // Currently only support client secret authentication method.
             return false;
         }
 
