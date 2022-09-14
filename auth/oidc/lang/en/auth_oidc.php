@@ -46,7 +46,7 @@ $string['heading_display'] = 'Display';
 $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Debugging';
 $string['heading_debugging_desc'] = '';
-$string['idptype'] = 'Identify Provider (IdP) Type';
+$string['idptype'] = 'Identity Provider (IdP) Type';
 $string['idptype_help'] = 'Three types of IdP are current supports:
 <ul>
 <li><b>Azure AD (v1.0)</b>: Azure AD with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/authorize.</li>
