@@ -26,6 +26,7 @@
 
 namespace auth_oidc\loginflow;
 
+use auth_oidc\event\user_authed;
 use auth_oidc\jwt;
 use auth_oidc\utils;
 use core\output\notification;
@@ -199,6 +200,11 @@ class authcode extends base {
         $client->adminconsentrequest($stateparams, $extraparams);
     }
 
+    /**
+     * @param array $authparams
+     * @return void
+     * @throws moodle_exception
+     */
     protected function handlecertadminconsentresponse(array $authparams) {
         global $CFG, $DB, $SESSION;
 
@@ -235,6 +241,16 @@ class authcode extends base {
         if (!isset($tokenparams['access_token'])) {
             throw new moodle_exception('errorauthnoaccesstoken', 'auth_oidc');
         }
+
+        $eventdata = [
+            'other' => [
+                'authparams' => $authparams,
+                'tokenparams' => $tokenparams,
+                'statedata' => $additionaldata,
+            ]
+        ];
+        $event = user_authed::create($eventdata);
+        $event->trigger();
 
         $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
         redirect(new moodle_url($redirect));
@@ -309,7 +325,7 @@ class authcode extends base {
                     'statedata' => $additionaldata,
                 ]
             ];
-            $event = \auth_oidc\event\user_authed::create($eventdata);
+            $event = user_authed::create($eventdata);
             $event->trigger();
             return true;
         }

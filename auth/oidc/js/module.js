@@ -14,7 +14,7 @@ M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertifica
             $("#id_clientauthmethod option[value='" + authmethodcertificate + "']").each(function() {
                 $(this).remove();
             });
-            $(this).val(authmethodsecret);
+            $clientauthmethod.val(authmethodsecret);
             $clientsecret.prop('disabled', false);
             $clientcert.prop('disabled', true);
             $clientprivatekey.prop('disabled', true);

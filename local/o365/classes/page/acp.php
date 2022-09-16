@@ -319,8 +319,13 @@ class acp extends base {
         $auth->set_httpclient(new httpclient());
         $stateparams = ['redirect' => '/local/o365/acp.php?mode=tenantsadd', 'justauth' => true, 'forceflow' => 'authcode',
             'action' => 'addtenant', 'ignorerestrictions' => true,];
-        $extraparams = ['prompt' => 'admin_consent'];
-        $auth->initiateauthrequest(true, $stateparams, $extraparams);
+        $idptype = get_config('auth_oidc', 'idptype');
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            $auth->initiateadminconsentrequest($stateparams);
+        } else {
+            $extraparams = ['prompt' => 'admin_consent'];
+            $auth->initiateauthrequest(true, $stateparams, $extraparams);
+        }
     }
 
     /**
