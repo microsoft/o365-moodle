@@ -192,7 +192,7 @@ if ($hassiteconfig) {
         $settings->add(new usersynccreationrestriction($key, $label, $desc, $default));
 
         $label = new lang_string('settings_fieldmap', 'local_o365');
-        $oidcsettingspageurl = new moodle_url('/admin/settings.php', ['section' => 'authsettingoidc']);
+        $oidcsettingspageurl = new moodle_url('/admin/settings.php', ['section' => 'auth_oidc_field_mapping']);
         $desc = new lang_string('settings_fieldmap_details', 'local_o365', $oidcsettingspageurl->out(false));
         $settings->add(new auth_oidc_admin_setting_label('local_o365/fieldmap', $label, $desc, null));
 
