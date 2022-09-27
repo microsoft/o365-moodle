@@ -947,7 +947,7 @@ class utils {
 
         $coursepart = static::clean_up_group_mail_alias($coursepart);
 
-        $coursepartmaxlength = 64 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix) - strlen($grouppart);
+        $coursepartmaxlength = 64 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix) - strlen($grouppart) - 1;
         if (strlen($coursepart) > $coursepartmaxlength) {
             $coursepart = substr($coursepart, 0, $coursepartmaxlength);
         }
