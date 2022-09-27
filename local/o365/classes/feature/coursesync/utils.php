@@ -334,11 +334,10 @@ class utils {
      * Return the email alias of group for the given course according to configuration.
      *
      * @param stdClass $course
-     * @param stdClass|null $group
      *
      * @return string
      */
-    public static function get_group_mail_alias(stdClass $course, stdClass $group = null) : string {
+    public static function get_group_mail_alias(stdClass $course) : string {
         $groupmailaliasprefix = get_config('local_o365', 'group_mail_alias_prefix');
         if ($groupmailaliasprefix) {
             $groupmailaliasprefix = static::clean_up_group_mail_alias($groupmailaliasprefix);
@@ -367,25 +366,14 @@ class utils {
                 $coursepart = $course->shortname;
         }
 
-        if ($group) {
-            $grouppart = $group->id . '_' . $group->name;
-            $grouppart = static::clean_up_group_mail_alias($grouppart);
-            if (strlen($grouppart) > 16) {
-                $grouppart = substr($grouppart, 0, 16);
-            }
-            $grouppart = '-' . $grouppart;
-        } else {
-            $grouppart = '';
-        }
-
         $coursepart = static::clean_up_group_mail_alias($coursepart);
 
-        $coursepartmaxlength = 64 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix) - strlen($grouppart);
+        $coursepartmaxlength = 64 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix) - 1;
         if (strlen($coursepart) > $coursepartmaxlength) {
             $coursepart = substr($coursepart, 0, $coursepartmaxlength);
         }
 
-        return $groupmailaliasprefix . $coursepart . $grouppart . $groupmailaliassuffix;
+        return $groupmailaliasprefix . $coursepart . $groupmailaliassuffix;
     }
 
     /**
