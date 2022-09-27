@@ -1486,7 +1486,12 @@ class coursegroups {
                 }
                 $existinggroupname = \local_o365\feature\usergroups\utils::get_group_display_name($course, null,
                     $resetgroupnameprefix);
-                $exisinggroupmailnickname = \local_o365\feature\usergroups\utils::get_group_mail_alias($course) . '_' . time();
+                $timestamp = '_' . time();
+                $exisinggroupmailnickname = \local_o365\feature\usergroups\utils::get_group_mail_alias($course);
+                if (strlen($timestamp) + strlen($exisinggroupmailnickname) >= 63) {
+                    $exisinggroupmailnickname = substr($exisinggroupmailnickname, 0, 63 - strlen($timestamp));
+                }
+                $exisinggroupmailnickname .= $timestamp;
                 $updatedexistinggroup = [
                     'id' => $existinggroup['id'],
                     'displayName' => $existinggroupname,
