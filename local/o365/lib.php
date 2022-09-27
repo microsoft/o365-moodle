@@ -454,9 +454,8 @@ function local_o365_get_duplicate_emails() {
 
     $sql = 'SELECT DISTINCT LOWER(a.email)
               FROM {user} a
-              JOIN {user} b
-             WHERE a.email LIKE b.email 
-               AND a.id < b.id 
+              JOIN {user} b ON a.email LIKE b.email
+             WHERE a.id < b.id 
                AND a.deleted = 0
                AND b.deleted = 0
                AND a.suspended = 0
