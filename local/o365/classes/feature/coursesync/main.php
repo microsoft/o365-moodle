@@ -951,6 +951,9 @@ class main {
                     $resetgroupnameprefix = 'disconnected-';
                 }
                 $updatedmailnickname = $resetgroupnameprefix . utils::get_group_mail_alias($course);
+                if (strlen($updatedmailnickname) > 59) {
+                    $updatedmailnickname = substr($updatedmailnickname, 0, 59);
+                }
                 $updatedexistinggroup = [
                     'id' => $existinggroup['id'],
                     'mailNickname' => $updatedmailnickname,
