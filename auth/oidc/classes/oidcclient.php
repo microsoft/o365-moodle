@@ -355,10 +355,17 @@ class oidcclient {
         $params = [
             'client_id' => $this->clientid,
             'scope' => 'https://graph.microsoft.com/.default',
-            'client_assertion_type' => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            'client_assertion' => static::generate_client_assertion(),
             'grant_type' => 'client_credentials',
         ];
+
+        switch (get_config('auth_oidc', 'clientauthmethod')) {
+            case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+                $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+                $params['client_assertion'] = static::generate_client_assertion();
+                break;
+            default:
+                $params['client_secret'] = $this->clientsecret;
+        }
 
         $tokenendpoint = $this->endpoints['token'];
         $tokenendpoint = str_replace('/common/' , '/' . get_config('auth_oidc', 'tenantnameorguid') . '/', $tokenendpoint);
