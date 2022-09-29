@@ -368,7 +368,7 @@ class utils {
 
         $coursepart = static::clean_up_group_mail_alias($coursepart);
 
-        $coursepartmaxlength = 64 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix) - 1;
+        $coursepartmaxlength = 60 - strlen($groupmailaliasprefix) - strlen($groupmailaliassuffix);
         if (strlen($coursepart) > $coursepartmaxlength) {
             $coursepart = substr($coursepart, 0, $coursepartmaxlength);
         }
@@ -380,10 +380,19 @@ class utils {
      * Remove unsupported characters from the mail alias parts, and return the result.
      *
      * @param string $mailalias
-     * @return string|string[]|null
+     * @return string
      */
     public static function clean_up_group_mail_alias(string $mailalias) {
-        return preg_replace('/[^a-z0-9-_]+/iu', '', $mailalias);
+        $notallowedbasicchars = ['@', '(', ')', "\\", '[', ']', '"', ';', ':', '.', '<', '>', ' '];
+        $chars = preg_split( '//u', $mailalias, null, PREG_SPLIT_NO_EMPTY);
+        foreach($chars as $key => $char){
+            $charorder = ord($char);
+            if ($charorder < 0 || $charorder > 127 || in_array($char, $notallowedbasicchars)) {
+                unset($chars[$key]);
+            }
+        }
+
+        return implode($chars);
     }
 
     /**
