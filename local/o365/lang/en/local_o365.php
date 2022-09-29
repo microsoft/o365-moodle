@@ -207,7 +207,7 @@ $string['settings_secthead_team_group_name_desc'] = 'If a course is configured t
 <li>All spaces will be removed from the group mail alias.</li>
 <li>Only upper and lower case letters, numbers, - and _ are allowed in the group mail alias.</li>
 <li>Group mail alias, including prefix and suffix cannot exceed 64 characters.</li>
-<li>Mail alias of the group needs to be unique, otherwise a random 4 digit number will be appended to ensure uniqueness.</li>
+<li>Mail alias of the group needs to be unique, otherwise a random 4-digit number will be appended to ensure uniqueness.</li>
 </ul>';
 $string['settings_team_name_prefix'] = 'Teams name prefix';
 $string['settings_team_name_prefix_desc'] = '';
