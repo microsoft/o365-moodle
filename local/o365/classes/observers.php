@@ -841,25 +841,37 @@ class observers {
 
         $eventdata = $event->get_data();
 
-        if ($eventdata['other']['plugin'] == 'auth_oidc' && $eventdata['other']['name'] == 'clientid') {
-            // Clear local_o365_token table.
-            $DB->delete_records('local_o365_token');
+        if ($eventdata['other']['plugin'] == 'auth_oidc') {
+            switch ($eventdata['other']['name']) {
+                case 'clientid':
+                    // Clear local_o365_token table.
+                    $DB->delete_records('local_o365_token');
 
-            // Clear auth_oidc_token table.
-            $DB->delete_records('auth_oidc_token');
+                    // Clear auth_oidc_token table.
+                    $DB->delete_records('auth_oidc_token');
 
-            // Clear local_o365_connections table.
-            $DB->delete_records('local_o365_connections');
+                    // Clear local_o365_connections table.
+                    $DB->delete_records('local_o365_connections');
 
-            // Clear user records in local_o365_objects table.
-            $DB->delete_records('local_o365_objects', ['type' => 'user']);
+                    // Clear user records in local_o365_objects table.
+                    $DB->delete_records('local_o365_objects', ['type' => 'user']);
 
-            // Delete delta user token, and force a user sync task run.
-            unset_config('local_o365', 'task_usersync_lastdeltatoken');
-            if ($usersynctask = $DB->get_record('task_scheduled',
-                ['component' => 'local_o365', 'classname' => '\local_o365\task\usersync'])) {
-                $usersynctask->nextruntime = time();
-                $DB->update_record('task_scheduled', $usersynctask);
+                    // Delete delta user token, and force a user sync task run.
+                    unset_config('local_o365', 'task_usersync_lastdeltatoken');
+                    if ($usersynctask = $DB->get_record('task_scheduled',
+                        ['component' => 'local_o365', 'classname' => '\local_o365\task\usersync'])) {
+                        $usersynctask->nextruntime = time();
+                        $DB->update_record('task_scheduled', $usersynctask);
+                    }
+
+                    // No call to "break;" on purpose.
+                case 'idptype':
+                case 'clientauthmethod':
+                    // If client ID, IdP type, or authentication method has changed, unset token and verify setup results.
+                    // Azure admin needs to set up again.
+                    unset_config('apptokens', 'local_o365');
+                    unset_config('adminconsent', 'local_o365');
+                    unset_config('azuresetupresult', 'local_o365');
             }
         }
 
