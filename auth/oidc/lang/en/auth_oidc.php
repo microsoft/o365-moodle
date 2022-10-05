@@ -154,6 +154,8 @@ $string['settings_section_endpoints'] = 'Endpoints';
 $string['settings_section_other_params'] = 'Other parameters';
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
 $string['application_updated'] = 'OpenID Connect application setting was updated.';
+$string['application_updated_azure'] = 'OpenID Connect application setting was updated.<br/>
+<span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}" target="_blank">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 
 $string['event_debug'] = 'Debug message';
 

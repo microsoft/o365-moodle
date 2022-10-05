@@ -73,37 +73,41 @@ $form->set_data($formdata);
 if ($form->is_cancelled()) {
     redirect($url);
 } else if ($fromform = $form->get_data()) {
-    // Save idptype.
-    set_config('idptype', $fromform->idptype, 'auth_oidc');
-
-    // Save clientid.
-    set_config('clientid', $fromform->clientid, 'auth_oidc');
-
-    // Save tenantnameorguid.
-    set_config('tenantnameorguid', $fromform->tenantnameorguid, 'auth_oidc');
-
-    // Save clientauthmethod.
+    // Handle odd cases where clientauthmethod is not received.
     if (!isset($fromform->clientauthmethod)) {
         $fromform->clientauthmethod = optional_param('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, PARAM_INT);
     }
-    set_config('clientauthmethod', $fromform->clientauthmethod, 'auth_oidc');
+
+    // Prepare config settings to save.
+    $configstosave = ['idptype', 'clientid', 'tenantnameorguid', 'clientauthmethod', 'authendpoint', 'tokenendpoint'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {
         case AUTH_OIDC_AUTH_METHOD_SECRET:
-            set_config('clientsecret', $fromform->clientsecret, 'auth_oidc');
+            $configstosave[] = 'clientsecret';
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
-            set_config('clientprivatekey', $fromform->clientprivatekey, 'auth_oidc');
-            set_config('clientcert', $fromform->clientcert, 'auth_oidc');
+            $configstosave[] = 'clientprivatekey';
+            $configstosave[] = 'clientcert';
             break;
     }
 
-    // Save endpoints.
-    set_config('authendpoint', $fromform->authendpoint, 'auth_oidc');
-    set_config('tokenendpoint', $fromform->tokenendpoint, 'auth_oidc');
+    // Save config settings.
+    foreach ($configstosave as $config) {
+        $existingsetting = get_config('auth_oidc', $config);
+        if ($fromform->$config != $existingsetting) {
+            set_config($config, $fromform->$config, 'auth_oidc');
+            add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
+        }
+    }
 
-    redirect($url, get_string('application_updated', 'auth_oidc'));
+    // Redirect message depend on IdP type.
+    if ($fromform->idptype == AUTH_OIDC_IDP_TYPE_OTHER) {
+        redirect($url, get_string('application_updated', 'auth_oidc'));
+    } else {
+        $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
+        redirect($url, get_string('application_updated_azure', 'auth_oidc', $localo365configurl->out()));
+    }
 }
 
 echo $OUTPUT->header();
