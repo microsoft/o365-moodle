@@ -147,7 +147,6 @@ $string['cfg_field_mapping_desc'] = 'User profile data can be mapped from Open I
 <li>If Azure AD is used as the IdP, additional profile data can be made available by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
 <li>If SDS profile sync feature is enabled in the local_o365 plugin, certain profile fields can be synchronised from SDS to Moodle. when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.</li>
 </ul>';
-$string['error_incomplete_basic_settings'] = 'Missing basic settings.';
 $string['settings_section_basic'] = 'Basic settings';
 $string['settings_section_authentication'] = 'Authentication';
 $string['settings_section_endpoints'] = 'Endpoints';

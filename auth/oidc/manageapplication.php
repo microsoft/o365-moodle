@@ -52,12 +52,6 @@ require_admin();
 
 $oidcconfig = get_config('auth_oidc');
 
-// If "idptype" or "clientid" is not set, we are not ready to configure application authentication.
-if (!isset($oidcconfig->idptype) || empty($oidcconfig->idptype) || !isset($oidcconfig->clientid) || empty($oidcconfig->clientid)) {
-    redirect(new moodle_url('/admin/settings.php', ['section' => 'auth_oidc_basic_settings']),
-        get_string('error_incomplete_basic_settings', 'auth_oidc'));
-}
-
 $form = new application(null, ['oidcconfig' => $oidcconfig]);
 
 $formdata = [];
