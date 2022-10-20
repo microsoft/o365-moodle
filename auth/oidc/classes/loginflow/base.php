@@ -28,6 +28,7 @@ namespace auth_oidc\loginflow;
 
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
+use core_user;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -108,8 +109,10 @@ class base {
             return false;
         }
 
+        $originaluser = new stdClass();
         if ($DB->record_exists('user', ['username' => $username])) {
             $eventtype = 'login';
+            $originaluser = core_user::get_user_by_username($username);
         } else {
             $eventtype = 'create';
         }
@@ -198,7 +201,7 @@ class base {
                 }
 
                 // Call the function in local_o365 to map fields.
-                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, new stdClass(), $eventtype);
+                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, $originaluser, $eventtype);
                 $userinfo = (array)$updateduser;
             }
         }
