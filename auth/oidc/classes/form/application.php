@@ -67,7 +67,6 @@ class application extends moodleform {
         $mform->addElement('text', 'tenantnameorguid', auth_oidc_config_name_in_form('tenantnameorguid'), ['size' => 60]);
         $mform->setType('tenantnameorguid', PARAM_TEXT);
         $mform->addElement('static', 'tenantnameorguid_help', '', get_string('tenantnameorguid_help', 'auth_oidc'));
-        $mform->addRule('tenantnameorguid', null, 'required', null, 'client');
 
         // Authentication header.
         $mform->addElement('header', 'authentication', get_string('settings_section_authentication', 'auth_oidc'));
@@ -157,6 +156,16 @@ class application extends moodleform {
             $data['clientauthmethod'] = $this->optional_param('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, PARAM_INT);
         }
 
+        // Validate "tenantnameorguid".
+        switch ($data['idptype']) {
+            case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+                if (empty($data['tenantnameorguid'])) {
+                    $errors['tenantnameorguid'] = get_string('error_empty_tenantnameorguid', 'auth_oidc');
+                }
+                break;
+        }
+
         // Validate "clientauthmethod" according to "idptype".
         switch ($data['idptype']) {
             case AUTH_OIDC_IDP_TYPE_AZURE_AD:
@@ -172,7 +181,7 @@ class application extends moodleform {
                 break;
         }
 
-        // Validate authentication viables.
+        // Validate authentication variables.
         switch ($data['clientauthmethod']) {
             case AUTH_OIDC_AUTH_METHOD_SECRET:
                 if (empty(trim($data['clientsecret']))) {
