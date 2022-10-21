@@ -198,6 +198,7 @@ $string['errorucpinvalidaction'] = 'Invalid action received.';
 $string['erroroidccall'] = 'Error in OpenID Connect. Please check logs for more information.';
 $string['erroroidccall_message'] = 'Error in OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'The URL you are trying to redirect to does not exist.';
+$string['error_empty_tenantnameorguid'] = 'Tenant name or GUID cannot be empty when using Azure AD (v1.0) or Microsoft identity platform (v2.0) IdPs.';
 $string['error_invalid_client_authentication_method'] = "Invalid client authentication method";
 $string['error_empty_client_secret'] = 'Client secret cannot be empty when using "secret" authentication method';
 $string['error_empty_client_private_key'] = 'Client certificate private key cannot be empty when using "certificate" authentication method';

@@ -558,7 +558,8 @@ function auth_oidc_config_name_in_form(string $stringid) {
 function auth_oidc_is_setup_complete() {
     $pluginconfig = get_config('auth_oidc');
     if (empty($pluginconfig->clientid) || empty($pluginconfig->idptype) || empty($pluginconfig->clientauthmethod) ||
-        empty($pluginconfig->tenantnameorguid)) {
+        (in_array($pluginconfig->idptype, [AUTH_OIDC_IDP_TYPE_AZURE_AD, AUTH_OIDC_IDP_TYPE_MICROSOFT]) &&
+            empty($pluginconfig->tenantnameorguid))) {
         return false;
     }
 
