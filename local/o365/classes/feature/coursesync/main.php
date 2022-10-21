@@ -644,7 +644,7 @@ class main {
 
         // Add owners / members to the group.
         $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
-        $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id);
+        $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
         $owneradded = $this->add_group_owners_and_members_to_group($groupobject['objectid'], $ownerobjectids, $memberobjectids);
 
         // If owner exists, create team.
@@ -708,7 +708,7 @@ class main {
 
             // Check if the team has owners.
             $owners = utils::get_team_owner_object_ids_by_course_id($course->id);
-            $members = utils::get_team_member_object_ids_by_course_id($course->id);
+            $members = utils::get_team_member_object_ids_by_course_id($course->id, $owners);
 
             if ($owners) {
                 // Resync group owners and members, just in case.
@@ -1017,7 +1017,7 @@ class main {
 
             // Add owners to the group.
             $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
-            $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id);
+            $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
             $owneradded = $this->add_group_owners_and_members_to_group($groupobject['objectid'], $ownerobjectids, $memberobjectids);
 
             // If owner exists, create team.
@@ -1073,7 +1073,7 @@ class main {
 
         // Get intended group members.
         $intendedteamowners = utils::get_team_owner_object_ids_by_course_id($courseid);
-        $intendedteammembers = utils::get_team_member_object_ids_by_course_id($courseid);
+        $intendedteammembers = utils::get_team_member_object_ids_by_course_id($courseid, $intendedteamowners);
 
         if (!empty($currentowners)) {
             $toaddowners = array_diff($intendedteamowners, $currentowners);

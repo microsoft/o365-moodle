@@ -530,14 +530,17 @@ class utils {
      * Return the object IDs of users who have Team member capability in the course with the given ID.
      *
      * @param int $courseid
+     * @param array $teamownerobjectids
      * @return array
      */
-    public static function get_team_member_object_ids_by_course_id(int $courseid) : array {
+    public static function get_team_member_object_ids_by_course_id(int $courseid, array $teamownerobjectids = []) : array {
         $teammemberobjectids = [];
         $teammemberuserids = static::get_team_member_user_ids_by_course_id($courseid);
         if ($teammemberuserids) {
             $teammemberobjectids = static::get_user_object_ids_by_user_ids($teammemberuserids);
         }
+
+        $teammemberobjectids = array_diff($teammemberobjectids, $teamownerobjectids);
 
         return $teammemberobjectids;
     }
