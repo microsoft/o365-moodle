@@ -818,7 +818,7 @@ class main {
      *
      * @return \stdClass An object representing the created Moodle user.
      */
-    public function update_user_from_aaddata($aaddata, $fullexistinguser) {
+    public function update_user_from_aaddata($aaddata, $fullexistinguser, $idsync=false) {
         // Locate country code.
         if (isset($aaddata['country'])) {
             $countries = get_string_manager()->get_list_of_countries(true, 'en');
@@ -842,6 +842,17 @@ class main {
         } else {
             // Email is originally pulled (optionally) from UPN, so an empty email should not wipe out Moodle email.
             unset($existinguser->email);
+        }
+       
+        if ($idsync) {
+            if($existinguser->username !== $aaddata['convertedupn']) {
+                if(!\core_user::get_user_by_username($aaddata['convertedupn'],'id')){
+                    $this->mtrace(sprintf('Updated moodle username id %s from: %s  to: %s', $existinguser->id,$existinguser->username, $aaddata['convertedupn']));
+                    $existinguser->username = $aaddata['convertedupn'];
+                } else {
+                    $this->mtrace(sprintf('Cannot update moodle user id %s from: %s  to: %s . User already exists', $existinguser->id,$existinguser->username, $aaddata['convertedupn']));
+                }
+            }
         }
 
         $existinguser->timemodified = time();
@@ -908,6 +919,7 @@ class main {
 
         $usernames = [];
         $upns = [];
+        $aadids = [];
 
         $guestsync = array_key_exists('guestsync', $aadsync);
 
@@ -931,6 +943,7 @@ class main {
 
             $usernames[] = $upnlower;
             $upns[] = $upnlower;
+            $aadids[] = $user['id'];
 
             $upnsplit = explode('@', $upnlower);
             if (!empty($upnsplit[0])) {
@@ -966,7 +979,8 @@ class main {
                      assign.assigned assigned,
                      assign.photoid photoid,
                      assign.photoupdated photoupdated,
-                     obj.id AS objectid
+                     obj.id AS objectid,
+                     obj.objectid AS aadid
                 FROM {user} u
            LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
            LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
@@ -1005,23 +1019,26 @@ class main {
 
         $existingusers = $DB->get_records_sql($sql, $params);
         $existingusers = array_merge($existingusers, $fallbackusers);
-
+        
         foreach ($existingusers as $id => $existinguser) {
             if (isset($aadsync['emailsync'])) {
-                if (!in_array($existinguser->email, $usernames)) {
+                if (!in_array($existinguser->email, $usernames) && !in_array($existinguser->aadid,$aadids) ) {
                     unset($existingusers[$id]);
                 }
             } else {
-                if (!in_array($existinguser->username, $usernames)) {
+                if (!in_array($existinguser->username, $usernames) && !in_array($existinguser->aadid,$aadids)) {
                     unset($existingusers[$id]);
                 }
             }
         }
 
         // Fetch linked AAD user accounts.
-        if ($upns && $usernames) {
+        if ($upns && $usernames && $aadids) {
             [$upnsql, $upnparams] = $DB->get_in_or_equal($upns);
             [$usernamesql, $usernameparams] = $DB->get_in_or_equal($usernames, SQL_PARAMS_QM, 'param', false);
+            if(isset($aadsync['idsync'])){
+                [$aadidsql, $aadidparams] = $DB->get_in_or_equal($aadids);
+            }
             $sql = 'SELECT tok.oidcusername,
                        u.username as username,
                        u.id as muserid,
@@ -1032,17 +1049,36 @@ class main {
                        assign.assigned assigned,
                        assign.photoid photoid,
                        assign.photoupdated photoupdated,
-                       obj.id AS objectid
+                       obj.id AS objectid,
+                       obj.objectid AS aadid
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
-             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                 WHERE tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
-            $params = array_merge(['user'], $upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
+             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id ';
+             
+            if(isset($aadsync['idsync'])) {
+                $sql .= 'WHERE (( tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.') OR ( obj.objectid '.$aadidsql.' )) AND u.mnethostid = ? AND u.deleted = ? ';
+                $params = array_merge(['user'], $upnparams, $usernameparams, $aadidparams, [$CFG->mnet_localhost_id, '0']);
+            }else {
+                $sql .= 'WHERE  tok.oidcusername '.$upnsql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
+                $params = array_merge(['user'], $upnparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
+            }
             $linkedexistingusers = $DB->get_records_sql($sql, $params);
 
             $existingusers = $existingusers + $linkedexistingusers;
+        }
+        
+        if(isset($aadsync['idsync'])){
+            // Generate aadid indexes
+            $multiindexusers = [];
+            foreach ($existingusers as $key => $existinguser) {
+                if (isset($existinguser->aadid) && !empty($existinguser->aadid)) {
+                    $multiindexusers[$existinguser->aadid]= $existinguser;
+                }
+                $multiindexusers[$key] = $existinguser;
+            }
+            $existingusers = $multiindexusers;
         }
 
         $processedusers = [];
@@ -1061,7 +1097,7 @@ class main {
                 continue;
             }
 
-            $this->mtrace('Syncing user '.$aaduser['upnlower']);
+            $this->mtrace('Syncing user '.$aaduser['upnlower'].' ('.$userobjectid.')');
 
             // Process guest users.
             $aaduser['convertedupn'] = $aaduser['upnlower'];
@@ -1077,11 +1113,14 @@ class main {
             }
 
             if (!isset($existingusers[$aaduser['upnlower']]) && !isset($existingusers[$aaduser['upnsplit0']]) &&
-                !isset($existingusers[$aaduser['convertedupn']])) {
+                !isset($existingusers[$aaduser['convertedupn']]) && !isset($existingusers[$aaduser['id']])) {
                 $this->sync_new_user($aadsync, $aaduser, isset($aadsync['guestsync']));
             } else {
                 $existinguser = null;
-                if (isset($existingusers[$aaduser['upnlower']])) {
+                if (isset($aadsync['idsync']) && isset($existingusers[$aaduser['id']])) {
+                    $existinguser = $existingusers[$aaduser['id']];
+                    $exactmatch = true;
+                } else if (isset($existingusers[$aaduser['upnlower']])) {
                     $existinguser = $existingusers[$aaduser['upnlower']];
                     $exactmatch = true;
                 } else if (isset($existingusers[$aaduser['upnsplit0']])) {
@@ -1130,11 +1169,11 @@ class main {
                 if ($existinguser->auth === 'oidc') {
                     if (isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
-                        $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                        $fullexistinguser = get_complete_user_data('id', $existinguser->muserid);
                         if ($fullexistinguser) {
-                            $existingusercopy = \core_user::get_user_by_username($existinguser->username);
+                            $existingusercopy = \core_user::get_user($existinguser->muserid);
                             $fullexistinguser->description = $existingusercopy->description;
-                            $this->update_user_from_aaddata($aaduser, $fullexistinguser);
+                            $this->update_user_from_aaddata($aaduser, $fullexistinguser,isset($aadsync['idsync']));
                             $this->mtrace('User is now updated.');
                         } else {
                             $this->mtrace('Update failed for user with username "' . $existinguser->username . '".');
@@ -1343,9 +1382,10 @@ class main {
         }
 
         // Match user if needed.
-        if ($existinguser->auth !== 'oidc') {
+        if ($existinguser->auth !== 'oidc' 
+            || ( isset($syncoptions['idsync']) &&  $existinguser->username !== $aaduserdata['convertedupn'] ) )  {
             $this->mtrace('Found a user in Azure AD that seems to match a user in Moodle');
-            $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $aaduserdata['upnlower']));
+            $this->mtrace(sprintf('moodle username: %s, aad upn: %s', $existinguser->username, $aaduserdata['convertedupn']));
             return $this->sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch);
         } else {
             $this->mtrace('The user is already using OIDC for authentication.');
@@ -1365,13 +1405,16 @@ class main {
     protected function sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
         global $DB;
 
-        if (!isset($syncoptions['match'])) {
+        if (!isset($syncoptions['match']) && !isset($syncoptions['idsync']) ) {
             $this->mtrace('Not matching user because that sync option is disabled.');
             return true;
         }
-
-        if (isset($syncoptions['matchswitchauth']) && $exactmatch) {
+        $updateauth = ($existinguser->auth !== 'oidc') ;
+        $updateusernameandemail =  (isset($syncoptions['idsync']) && $existinguser->username !== $aaduserdata['convertedupn'] );
+               
+        if ((isset($syncoptions['matchswitchauth']) || isset($syncoptions['idsync']) )&& $exactmatch) {
             // Switch the user to OIDC authentication method, but only if this setting is enabled and full username matched.
+            // Also if Objectid based sync is activted use this routine to rename moodle user
             // Do not switch Moodle user to OIDC if another Moodle user is already using same Microsoft 365 account for logging in.
             $sql = 'SELECT u.username
                       FROM {user} u
@@ -1390,16 +1433,28 @@ class main {
                     // Delete existing connection before linking (in case matching was performed without auth switching previously).
                     $DB->delete_records_select('local_o365_connections', "id = {$existinguser->existingconnectionid}");
                 }
-                $fullexistinguser = get_complete_user_data('username', $existinguser->username);
+                $fullexistinguser = get_complete_user_data('id', $existinguser->muserid);
                 $existinguser->id = $fullexistinguser->id;
-                $existinguser->auth = 'oidc';
+                if ($updateauth) {
+                    $existinguser->auth = 'oidc';
+                }
+                if ($updateusernameandemail) {
+                    if(!\core_user::get_user_by_username($aaduserdata['convertedupn'],'id')){
+                        $this->mtrace(sprintf('Synced moodle username id %s from: %s  to: %s', $existinguser->id,$existinguser->username, $aaduserdata['convertedupn']));
+                        $existinguser->username = $aaduserdata['convertedupn'];
+                    } else {
+                        $this->mtrace(sprintf('Cannot sync moodle user id %s from: %s  to: %s . User already exists', $existinguser->id,$existinguser->username, $aaduserdata['convertedupn']));
+                    }
+                
+                }    
                 user_update_user($existinguser, true);
                 // Clear user's password.
-                $password = null;
-                $existinguser->password = $fullexistinguser->password;
-                update_internal_user_password($existinguser, $password);
-                $this->mtrace('Switched user to OIDC.');
-
+                if ($updateauth){
+                    $password = null;
+                    $existinguser->password = $fullexistinguser->password;
+                    update_internal_user_password($existinguser, $password);
+                    $this->mtrace('Switched user to OIDC.');
+                }
                 // Clear force password change preference.
                 unset_user_preference('auth_forcepasswordchange', $existinguser);
             }
