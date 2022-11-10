@@ -1307,9 +1307,9 @@ class main {
         // Check for user GUID changes.
         // There shouldn't be multiple token records, but just in case.
         $oidctokenrecords = $DB->get_records('auth_oidc_token',
-            ['userid' => $existinguser->muserid, 'oidcusername' => $existinguser->username]);
+            ['userid' => $existinguser->muserid]);
         foreach ($oidctokenrecords as $oidctokenrecord) {
-            if ($oidctokenrecord->oidcuniqid != $userobjectid) {
+            if ($oidctokenrecord->oidcuniqid != $userobjectid || $oidctokenrecord->oidcusername != $aaduserdata['upnlower'] || $oidctokenrecord->username != $aaduserdata['convertedupn']) {
                 $DB->delete_records('auth_oidc_token', ['id' => $oidctokenrecord->id]);
                 $this->mtrace('Deleted auth_oidc token due to conflicts.');
             }
