@@ -1103,9 +1103,9 @@ class main {
                     }
                 }
 
-                $this->sync_existing_user($aadsync, $aaduser, $existinguser, $exactmatch);
+                $connected = $this->sync_existing_user($aadsync, $aaduser, $existinguser, $exactmatch);
 
-                if ($existinguser->auth === 'oidc' || empty($existinguser->tokid)) {
+                if (($existinguser->auth === 'oidc' || empty($existinguser->tokid)) && $connected) {
                     // Create userobject if it does not exist.
                     if (empty($existinguser->objectid)) {
                         $this->mtrace('Adding o365 object record for user.');
@@ -1127,7 +1127,7 @@ class main {
                 }
 
                 // Update existing user on moodle from AD.
-                if ($existinguser->auth === 'oidc') {
+                if ($existinguser->auth === 'oidc' && $connected) {
                     if (isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
@@ -1360,14 +1360,14 @@ class main {
      * @param array $aaduserdata
      * @param object $existinguser
      * @param bool $exactmatch
-     * @return bool|void
+     * @return bool
      */
     protected function sync_users_matchuser($syncoptions, $aaduserdata, $existinguser, $exactmatch) {
         global $DB;
 
         if (!isset($syncoptions['match'])) {
             $this->mtrace('Not matching user because that sync option is disabled.');
-            return true;
+            return false;
         }
 
         if (isset($syncoptions['matchswitchauth']) && $exactmatch) {
@@ -1402,6 +1402,8 @@ class main {
 
                 // Clear force password change preference.
                 unset_user_preference('auth_forcepasswordchange', $existinguser);
+
+                return true;
             }
         } else if (!empty($existinguser->existingconnectionid)) {
             $this->mtrace('User is already matched.');
