@@ -622,6 +622,12 @@ class authcode extends base {
             if ($DB->record_exists('user', $existinguserparams) !== true) {
                 // User does not exist. Create user if site allows, otherwise fail.
                 if (empty($CFG->authpreventaccountcreation)) {
+                    if (!$CFG->allowaccountssameemail) {
+                        $userinfo = $this->get_userinfo($username);
+                        if ($DB->count_records('user', array('email' => $userinfo['email'], 'deleted' => 0)) > 0) {
+                            throw new moodle_exception('errorauthloginfaileddupemail', 'auth_oidc', null, null, '1');
+                        }
+                    }
                     $user = create_user_record($username, null, 'oidc');
                 } else {
                     // Trigger login failed event.
