@@ -1338,6 +1338,7 @@ class unified extends o365api {
      * @param array $updated Array of updated information. Keys are 'subject', 'body', 'starttime', 'endtime', and 'attendees'.
      * @param string $upn user's userPrincipalName
      * @return array|null Returned response, or null if error.
+     * @throws moodle_exception
      */
     public function update_event(string $outlookeventid, array $updated, string $upn) : ?array {
         if (empty($outlookeventid) || empty($updated)) {
