@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync\task;
 
+use core_date;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -100,10 +102,17 @@ class importfromoutlook extends \core\task\scheduled_task {
                             if (isset($event['isAllDay']) && $event['isAllDay'] == '1') {
                                 // Need to make the time the same as the user preference so no time conversion.
                                 $user = $DB->get_record('user', array('id' => $calsub->user_id));
+                                if ($user->timezone == 99) {
+                                    $user->timezone = core_date::get_server_timezone();
+                                }
                                 $userstart = strtotime(substr($event['Start'], 0, 10) . ' ' . $user->timezone);
-                                $eventparams['timestart'] = $userstart;
+                                if ($userstart) {
+                                    $eventparams['timestart'] = $userstart;
+                                }
                                 $userend = strtotime(substr($event['End'], 0, 10) . ' ' . $user->timezone);
-                                $eventparams['timeduration'] = $userend - $userstart - 1;
+                                if ($userstart && $userend) {
+                                    $eventparams['timeduration'] = $userend - $userstart - 1;
+                                }
                             }
 
                             if ($calsub->caltype === 'user') {
