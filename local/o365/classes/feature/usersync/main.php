@@ -371,17 +371,18 @@ class main {
     }
 
     /**
-     * Return the name of the manager of the Microsoft 365 user with the given oid.
+     * Return the $field of the manager of the Microsoft 365 user with the given oid.
      *
      * @param string $userobjectid
+     * @param string $field
      *
      * @return mixed|string
      */
-    public function get_user_manager($userobjectid) {
+    public function get_user_manager(string $userobjectid, string $field = 'displayName') {
         $apiclient = $this->construct_user_api();
         $result = $apiclient->get_user_manager($userobjectid);
-        if ($result && isset($result['displayName'])) {
-            return $result['displayName'];
+        if ($result && isset($result[$field])) {
+            return $result[$field];
         } else {
             return '';
         }
@@ -571,7 +572,10 @@ class main {
             if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 switch ($remotefield) {
                     case 'manager':
-                        $user->$localfield = $usersync->get_user_manager($userobjectid);
+                        $user->$localfield = $usersync->get_user_manager($userobjectid, 'displayName');
+                        break;
+                    case 'manager_email':
+                        $user->$localfield = $usersync->get_user_manager($userobjectid, 'mail');
                         break;
                     case 'groups':
                         $user->$localfield = $usersync->get_user_group_names($userobjectid);
