@@ -28,6 +28,7 @@ namespace local_o365\feature\calsync;
 use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -49,7 +50,7 @@ class main {
      *
      * @param \local_o365\oauth2\clientdata|null $clientdata
      * @param \local_o365\httpclient|null $httpclient
-     * @throws \moodle_exception
+     * @throws moodle_exception
      */
     public function __construct(\local_o365\oauth2\clientdata $clientdata = null, \local_o365\httpclient $httpclient = null) {
         $this->clientdata = (!empty($clientdata)) ? $clientdata : \local_o365\oauth2\clientdata::instance_from_oidc();
@@ -151,7 +152,8 @@ class main {
      * @param int $muserid The ID of the Moodle user to communicate as.
      * @param string $outlookeventid The event ID in o365 outlook.
      * @param array $updated Array of updated information. Keys are 'subject', 'body', 'starttime', 'endtime', and 'attendees'.
-     * @return array|null Returned response, or null if error.
+     * @return void
+     * @throws moodle_exception
      */
     public function update_event_raw($muserid, $outlookeventid, $updated) {
         $apiclient = $this->construct_calendar_api($muserid, true);
@@ -476,7 +478,11 @@ class main {
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
             $o365upn = utils::get_o365_upn($idmaprec->userid);
-            $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
+            try {
+                $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
+            } catch (moodle_exception $e) {
+                // Do nothing.
+            }
         }
         return true;
     }

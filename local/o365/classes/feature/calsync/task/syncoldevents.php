@@ -26,6 +26,7 @@
 namespace local_o365\feature\calsync\task;
 
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -99,7 +100,8 @@ class syncoldevents extends \core\task\adhoc_task {
                        ev.timestart AS eventtimestart,
                        ev.timeduration AS eventtimeduration,
                        idmap.outlookeventid,
-                       ev.userid AS eventuserid
+                       ev.userid AS eventuserid,
+                       idmap.id AS idmapid
                   FROM {event} ev
              LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
                  WHERE ev.courseid = ?';
@@ -119,8 +121,12 @@ class syncoldevents extends \core\task\adhoc_task {
                     try {
                         // If there's a stored outlookeventid we've already synced to o365 so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
-                            $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
-                                ['attendees' => $subscribersprimary]);
+                            try {
+                                $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
+                                    ['attendees' => $subscribersprimary]);
+                            } catch (moodle_exception $e) {
+                                // Do nothing.
+                            }
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
@@ -216,7 +222,8 @@ class syncoldevents extends \core\task\adhoc_task {
                        ev.timeduration AS eventtimeduration,
                        idmap.outlookeventid,
                        ev.userid AS eventuserid,
-                       ev.groupid
+                       ev.groupid,
+                       idmap.id AS idmapid
                   FROM {event} ev
              LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
                  WHERE ev.courseid = ? ';
@@ -253,8 +260,12 @@ class syncoldevents extends \core\task\adhoc_task {
 
                         // If there's a stored outlookeventid the event exists in o365, so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
-                            $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
-                                ['attendees' => $eventattendees]);
+                            try {
+                                $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
+                                    ['attendees' => $eventattendees]);
+                            } catch (moodle_exception $e) {
+                                // Do nothing.
+                            }
                         } else {
                             $calid = null;
                             if (!empty($subscribersprimary[$event->eventuserid])) {
