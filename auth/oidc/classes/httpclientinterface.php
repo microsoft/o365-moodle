@@ -31,6 +31,17 @@ defined('MOODLE_INTERNAL') || die();
  * Interface defining an HTTP client.
  */
 interface httpclientinterface {
+
+     /**
+      * HTTP GET method
+      *
+      * @param string $url
+      * @param array $params
+      * @param array $options
+      * @return bool
+      */
+      public function get($url, $params = array(), $options = array());
+
     /**
      * HTTP POST method
      *
@@ -40,4 +51,16 @@ interface httpclientinterface {
      * @return bool
      */
     public function post($url, $params = '', $options = array());
+
+    /**
+     * Set HTTP Request Header
+     *
+     * @param array $header
+     */
+    public function setheader($header);
+
+     /**
+      * Resets the HTTP Request headers (to prepare for the new request)
+      */
+    public function resetheader();
 }

@@ -15,18 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * Token.
  *
- * @package auth_oidc
- * @author James McQuillan <james.mcquillan@remote-learner.net>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @package    auth_oidc
+ * @copyright  2022 Murdoch University
+ * @author     Frédéric Massart <fred@branchup.tech>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace auth_oidc\local\token;
 
-$plugin->version = 2021051731;
-$plugin->requires = 2021051700;
-$plugin->release = '3.11.5';
-$plugin->component = 'auth_oidc';
-$plugin->maturity = MATURITY_STABLE;
+/**
+ * Token.
+ *
+ * @package    auth_oidc
+ * @copyright  2022 Murdoch University
+ * @author     Frédéric Massart <fred@branchup.tech>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+interface token {
+
+    /**
+     * Return an access token.
+     *
+     * @return string
+     */
+    public function get_access_token();
+
+}

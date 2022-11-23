@@ -91,11 +91,19 @@ class application extends moodleform {
         $mform->disabledIf('clientsecret', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
         $mform->addElement('static', 'clientsecret_help', '', get_string('clientsecret_help', 'auth_oidc'));
 
+        $mform->addElement('select', 'clientcertsource', auth_oidc_config_name_in_form('clientcertsource'), [
+            AUTH_OIDC_AUTH_CERT_SOURCE_TEXT => get_string('cert_source_text', 'auth_oidc'),
+            AUTH_OIDC_AUTH_CERT_SOURCE_KEYVAULT => get_string('cert_source_keyvault', 'auth_oidc')
+        ]);
+        $mform->setDefault('clientcertsource', 0);
+        $mform->addElement('static', 'clientcertsource_help', '', get_string('clientcertsource_help', 'auth_oidc'));
+
         // Certificate private key.
         $mform->addElement('textarea', 'clientprivatekey', auth_oidc_config_name_in_form('clientprivatekey'),
             ['rows' => 10, 'cols' => 80]);
         $mform->setType('clientprivatekey', PARAM_TEXT);
         $mform->disabledIf('clientprivatekey', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientprivatekey', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT);
         $mform->addElement('static', 'clientprivatekey_help', '', get_string('clientprivatekey_help', 'auth_oidc'));
 
         // Certificate certificate.
@@ -103,7 +111,42 @@ class application extends moodleform {
             ['rows' => 10, 'cols' => 80]);
         $mform->setType('clientcert', PARAM_TEXT);
         $mform->disabledIf('clientcert', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcert', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT);
         $mform->addElement('static', 'clientcert_help', '', get_string('clientcert_help', 'auth_oidc'));
+
+        // Certificate Azure Keyvault host.
+        $mform->addElement('text', 'clientcertkeyvaulthost', auth_oidc_config_name_in_form('clientcertkeyvaulthost'),
+            ['size' => 60]);
+        $mform->setType('clientcertkeyvaulthost', PARAM_TEXT);
+        $mform->disabledIf('clientcertkeyvaulthost', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcertkeyvaulthost', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_KEYVAULT);
+        $mform->addElement('static', 'clientcertkeyvaulthost_help', '', get_string('clientcertkeyvaulthost_help', 'auth_oidc'));
+
+        // Certificate Azure Keyvault secret name.
+        $mform->addElement('text', 'clientcertkeyvaultname', auth_oidc_config_name_in_form('clientcertkeyvaultname'),
+            ['size' => 60]);
+        $mform->setType('clientcertkeyvaultname', PARAM_TEXT);
+        $mform->disabledIf('clientcertkeyvaultname', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcertkeyvaultname', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_KEYVAULT);
+        $mform->addElement('static', 'clientcertkeyvaultname_help', '', get_string('clientcertkeyvaultname_help', 'auth_oidc'));
+
+        // Certificate Azure Keyvault secret version.
+        $mform->addElement('text', 'clientcertkeyvaultversion', auth_oidc_config_name_in_form('clientcertkeyvaultversion'),
+            ['size' => 60]);
+        $mform->setType('clientcertkeyvaultversion', PARAM_TEXT);
+        $mform->disabledIf('clientcertkeyvaultversion', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcertkeyvaultversion', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_KEYVAULT);
+        $mform->addElement('static', 'clientcertkeyvaultversion_help', '',
+            get_string('clientcertkeyvaultversion_help', 'auth_oidc'));
+
+        // Certificate Azure Keyvault managed identity client ID.
+        $mform->addElement('text', 'clientcertkeyvaultmanagedidclientid',
+            auth_oidc_config_name_in_form('clientcertkeyvaultmanagedidclientid'), ['size' => 60]);
+        $mform->setType('clientcertkeyvaultmanagedidclientid', PARAM_TEXT);
+        $mform->disabledIf('clientcertkeyvaultmanagedidclientid', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcertkeyvaultmanagedidclientid', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_KEYVAULT);
+        $mform->addElement('static', 'clientcertkeyvaultmanagedidclientid_help', '',
+            get_string('clientcertkeyvaultmanagedidclientid_help', 'auth_oidc'));
 
         // Endpoints header.
         $mform->addElement('header', 'endpoints', get_string('settings_section_endpoints', 'auth_oidc'));
