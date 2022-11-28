@@ -55,8 +55,9 @@ $oidcconfig = get_config('auth_oidc');
 $form = new application(null, ['oidcconfig' => $oidcconfig]);
 
 $formdata = [];
-foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert', 'tenantnameorguid',
-    'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope'] as $field) {
+foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert', 'clientcertsource',
+    'clientcertkeyvaulthost', 'clientcertkeyvaultname', 'clientcertkeyvaultversion', 'clientcertkeyvaultmanagedidclientid',
+    'tenantnameorguid', 'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope'] as $field) {
     if (isset($oidcconfig->$field)) {
         $formdata[$field] = $oidcconfig->$field;
     }
@@ -81,8 +82,19 @@ if ($form->is_cancelled()) {
             $configstosave[] = 'clientsecret';
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
-            $configstosave[] = 'clientprivatekey';
-            $configstosave[] = 'clientcert';
+            $configstosave[] = 'clientcertsource';
+            switch ($fromform->clientcertsource) {
+                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                    $configstosave[] = 'clientprivatekey';
+                    $configstosave[] = 'clientcert';
+                    break;
+                case AUTH_OIDC_AUTH_CERT_SOURCE_KEYVAULT:
+                    $configstosave[] = 'clientcertkeyvaulthost';
+                    $configstosave[] = 'clientcertkeyvaultname';
+                    $configstosave[] = 'clientcertkeyvaultversion';
+                    $configstosave[] = 'clientcertkeyvaultmanagedidclientid';
+                    break;
+            }
             break;
     }
 
