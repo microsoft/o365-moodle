@@ -368,32 +368,29 @@ class observers {
             $userobject = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
 
             if (empty($userobject)) {
-                // Skip field mapping if the user uses auth_oidc, and matching record is stored in local_o365_objects table.
-                if ($existinguserdata->auth != 'oidc') {
-                    // Create o365_object record if it does not exist.
-                    $tenant = utils::get_tenant_for_user($userid);
-                    $metadata = '';
-                    if (!empty($tenant)) {
-                        // Additional tenant - get ODB url.
-                        $odburl = utils::get_odburl_for_user($userid);
-                        if (!empty($odburl)) {
-                            $metadata = json_encode(['odburl' => $odburl]);
-                        }
+                // Create o365_object record if it does not exist.
+                $tenant = utils::get_tenant_for_user($userid);
+                $metadata = '';
+                if (!empty($tenant)) {
+                    // Additional tenant - get ODB url.
+                    $odburl = utils::get_odburl_for_user($userid);
+                    if (!empty($odburl)) {
+                        $metadata = json_encode(['odburl' => $odburl]);
                     }
-                    $now = time();
-                    $userobjectdata = (object)[
-                        'type' => 'user',
-                        'subtype' => '',
-                        'objectid' => $o365user->objectid,
-                        'o365name' => str_replace('#ext#', '#EXT#', $o365user->upn),
-                        'moodleid' => $userid,
-                        'tenant' => $tenant,
-                        'metadata' => $metadata,
-                        'timecreated' => $now,
-                        'timemodified' => $now,
-                    ];
-                    $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
                 }
+                $now = time();
+                $userobjectdata = (object)[
+                    'type' => 'user',
+                    'subtype' => '',
+                    'objectid' => $o365user->objectid,
+                    'o365name' => str_replace('#ext#', '#EXT#', $o365user->upn),
+                    'moodleid' => $userid,
+                    'tenant' => $tenant,
+                    'metadata' => $metadata,
+                    'timecreated' => $now,
+                    'timemodified' => $now,
+                ];
+                $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
             }
 
             // Sync profile photo and timezone.
