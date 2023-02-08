@@ -71,8 +71,7 @@ class apptoken extends \local_o365\oauth2\token {
      * @return array|bool If successful, an array of token parameters. False if unsuccessful.
      */
     public static function get_app_token($tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $tokenendpoint = $clientdata->get_tokenendpoint();
-        $tokenendpoint = str_replace('/common/', '/' . get_config('auth_oidc', 'tenantnameorguid') . '/', $tokenendpoint);
+        $tokenendpoint = $clientdata->get_apptokenendpoint();
 
         switch (get_config('auth_oidc', 'idptype')) {
             case AUTH_OIDC_IDP_TYPE_AZURE_AD:
