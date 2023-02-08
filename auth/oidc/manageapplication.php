@@ -55,7 +55,7 @@ $oidcconfig = get_config('auth_oidc');
 $form = new application(null, ['oidcconfig' => $oidcconfig]);
 
 $formdata = [];
-foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert', 'tenantnameorguid',
+foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
     'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope'] as $field) {
     if (isset($oidcconfig->$field)) {
         $formdata[$field] = $oidcconfig->$field;
@@ -73,7 +73,7 @@ if ($form->is_cancelled()) {
     }
 
     // Prepare config settings to save.
-    $configstosave = ['idptype', 'clientid', 'tenantnameorguid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
+    $configstosave = ['idptype', 'clientid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
         'oidcresource', 'oidcscope'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).

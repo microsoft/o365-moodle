@@ -87,7 +87,14 @@ class clientdata {
      * @return string
      */
     public static function get_apptokenendpoint_from_tenant($tenant) {
-        return 'https://login.microsoftonline.com/'.$tenant.'/oauth2/token';
+        $idptype = get_config('auth_oidc', 'idptype');
+        if ($idptype == AUTH_OIDC_IDP_TYPE_AZURE_AD) {
+            return 'https://login.microsoftonline.com/' . $tenant . '/oauth2/token';
+        } else if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            return 'https://login.microsoftonline.com/' . $tenant . '/oauth2/v2.0/token';
+        } else {
+            return '';
+        }
     }
 
     /**
