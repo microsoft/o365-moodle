@@ -63,12 +63,6 @@ class application extends moodleform {
         $mform->addElement('static', 'clientid_help', '', get_string('clientid_help', 'auth_oidc'));
         $mform->addRule('clientid', null, 'required', null, 'client');
 
-        // Tenant name or GUID.
-        $mform->addElement('text', 'tenantnameorguid', auth_oidc_config_name_in_form('tenantnameorguid'), ['size' => 60]);
-        $mform->setType('tenantnameorguid', PARAM_TEXT);
-        $mform->addElement('static', 'tenantnameorguid_help', '', get_string('tenantnameorguid_help', 'auth_oidc'));
-        $mform->addRule('tenantnameorguid', null, 'required', null, 'client');
-
         // Authentication header.
         $mform->addElement('header', 'authentication', get_string('settings_section_authentication', 'auth_oidc'));
         $mform->setExpanded('authentication');

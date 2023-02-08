@@ -270,8 +270,7 @@ class oidcclient {
      * @return void
      */
     public function adminconsentrequest(array $stateparams = [], array $extraparams = []) {
-        $adminconsentendpoint = 'https://login.microsoftonline.com/' . get_config('auth_oidc', 'tenantnameorguid') .
-            '/v2.0/adminconsent';
+        $adminconsentendpoint = 'https://login.microsoftonline.com/organizations/v2.0/adminconsent';
         $params = $this->getadminconsentrequestparams($stateparams, $extraparams);
         $redirecturl = new moodle_url($adminconsentendpoint, $params);
         redirect($redirecturl);
@@ -368,7 +367,6 @@ class oidcclient {
         }
 
         $tokenendpoint = $this->endpoints['token'];
-        $tokenendpoint = str_replace('/common/' , '/' . get_config('auth_oidc', 'tenantnameorguid') . '/', $tokenendpoint);
 
         $returned = $this->httpclient->post($tokenendpoint, $params);
         return utils::process_json_response($returned, ['access_token' => null]);
