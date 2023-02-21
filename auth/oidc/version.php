@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2022041910;
+$plugin->version = 2022041911;
 $plugin->requires = 2022041900;
 $plugin->release = '4.0.2';
 $plugin->component = 'auth_oidc';
