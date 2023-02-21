@@ -374,5 +374,13 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2021051726, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2021051731) {
+        // Update tenantnameorguid config.
+        unset_config('auth_oidc', 'tenantnameorguid');
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2021051731, 'auth', 'oidc');
+    }
+
     return true;
 }
