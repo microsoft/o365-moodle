@@ -33,7 +33,7 @@ $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin prov
 $string['settings_page_other_settings'] = 'Other options';
 $string['settings_page_application'] = 'IdP and authentication';
 $string['settings_page_cleanup_oidc_tokens'] = 'Cleanup OpenID Connect tokens';
-$string['settings_page_field_mapping'] = 'Filed mappings';
+$string['settings_page_field_mapping'] = 'Field mappings';
 $string['heading_basic'] = 'Basic settings';
 $string['heading_basic_desc'] = '';
 $string['heading_additional_options'] = 'Additional options';
@@ -47,7 +47,7 @@ $string['heading_display_desc'] = '';
 $string['heading_debugging'] = 'Debugging';
 $string['heading_debugging_desc'] = '';
 $string['idptype'] = 'Identity Provider (IdP) Type';
-$string['idptype_help'] = 'Three types of IdP are current supports:
+$string['idptype_help'] = 'Three types of IdP are currently supported:
 <ul>
 <li><b>Azure AD (v1.0)</b>: Azure AD with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/authorize.</li>
 <li><b>Microsoft identity platform (v2.0)</b>: Azure AD with oath2 v2.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize.</li>
