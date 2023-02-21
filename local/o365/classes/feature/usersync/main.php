@@ -613,7 +613,7 @@ class main {
                 $originallangsetting = $CFG->lang;
             }
 
-            if (!$user->lang) {
+            if (!isset($user->lang) || !$user->lang) {
                 // If the user's new language setting is empty, use original setting.
                 $user->lang = $originallangsetting;
             } else {
