@@ -170,6 +170,7 @@ $string['errorauthdisconnectinvalidmethod'] = 'Invalid login method received.';
 $string['errorauthgeneral'] = 'There was a problem logging you in. Please contact your administrator for assistance.';
 $string['errorauthinvalididtoken'] = 'Invalid id_token received.';
 $string['errorauthloginfailednouser'] = 'Invalid login: User not found in Moodle. If this site has the "authpreventaccountcreation" setting enabled, this may mean you need an administrator to create an account for you first.';
+$string['errorauthloginfaileddupemail'] = 'Invalid login: An existing account on this Moodle has the same email address as the account you try to create, and "Allow accounts with same email" (allowaccountssameemail) setting is disabled.';
 $string['errorauthnoauthcode'] = 'No authorization code was received from the identity server. The error logs may have more information.';
 $string['errorauthnocredsandendpoints'] = 'Please configure OpenID Connect client credentials and endpoints.';
 $string['errorauthnohttpclient'] = 'Please set an HTTP client.';
