@@ -521,9 +521,12 @@ class main {
         if (unified::is_configured() && (array_key_exists('id', $aaddata) && $aaddata['id'])) {
             $objectidfieldname = 'id';
             $userobjectid = $aaddata['id'];
-        } else {
+        } else if (array_key_exists('objectId', $aaddata) && $aaddata['objectId']) {
             $objectidfieldname = 'objectId';
             $userobjectid = $aaddata['objectId'];
+        } else {
+            $objectidfieldname = 'userPrincipalName';
+            $userobjectid = $aaddata['userPrincipalName'];
         }
 
         $usersync = new self();
