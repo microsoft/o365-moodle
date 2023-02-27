@@ -28,6 +28,7 @@ namespace auth_oidc\loginflow;
 
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
+use moodle_exception;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -211,7 +212,12 @@ class base {
             $tokenames = ['idtoken', 'token'];
 
             foreach ($tokenames as $tokename) {
-                $token = jwt::instance_from_encoded($tokenrec->$tokename);
+                try {
+                    $token = jwt::instance_from_encoded($tokenrec->$tokename);
+                } catch (moodle_exception $e) {
+                    // Error occurred when decoding a token, skip.
+                    continue;
+                }
 
                 if (!isset($userdata['objectId'])) {
                     $objectid = $token->claim('oid');
@@ -373,7 +379,7 @@ class base {
 
             // We need either the user's previous method or the manual login plugin to be enabled for disconnection.
             if (empty($prevauthmethod) && is_enabled_auth('manual') !== true) {
-                throw new \moodle_exception('errornodisconnectionauthmethod', 'auth_oidc');
+                throw new moodle_exception('errornodisconnectionauthmethod', 'auth_oidc');
             }
 
             // Check to see if the user has a username created by OIDC, or a self-created username.
@@ -396,18 +402,18 @@ class base {
             } else if ($fromform = $mform->get_data()) {
                 if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod &&
                         $fromform->newmethod !== 'manual')) {
-                    throw new \moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
+                    throw new moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
                 }
 
                 $updateduser = new stdClass;
 
                 if ($fromform->newmethod === 'manual') {
                     if (empty($fromform->password)) {
-                        throw new \moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
+                        throw new moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
                     }
                     if ($customdata['canchooseusername'] === true) {
                         if (empty($fromform->username)) {
-                            throw new \moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
+                            throw new moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
                         }
 
                         if (strtolower($fromform->username) !== $userrec->username) {
@@ -416,7 +422,7 @@ class base {
                             if ($DB->record_exists('user', $usercheck) === false) {
                                 $updateduser->username = $newusername;
                             } else {
-                                throw new \moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
+                                throw new moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
                             }
                         }
                     }
@@ -438,7 +444,7 @@ class base {
                 try {
                     user_update_user($updateduser);
                 } catch (\Exception $e) {
-                    throw new \moodle_exception($e->errorcode, '', $selfurl);
+                    throw new moodle_exception($e->errorcode, '', $selfurl);
                 }
 
                 // Delete token data.
@@ -489,7 +495,7 @@ class base {
         }
 
         if (!auth_oidc_is_setup_complete()) {
-            throw new \moodle_exception('errorauthnocredsandendpoints', 'auth_oidc');
+            throw new moodle_exception('errorauthnocredsandendpoints', 'auth_oidc');
         }
 
         $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
@@ -520,12 +526,12 @@ class base {
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
             \auth_oidc\utils::debug('Invalid idtoken', 'base::process_idtoken', $idtoken);
-            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
         $receivednonce = $idtoken->claim('nonce');
         if (!empty($orignonce) && (empty($receivednonce) || $receivednonce !== $orignonce)) {
             \auth_oidc\utils::debug('Invalid nonce', 'base::process_idtoken', $idtoken);
-            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
         // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
@@ -645,7 +651,7 @@ class base {
 
         // We should not fail here (idtoken was verified earlier to at least contain 'sub', but just in case...).
         if (empty($oidcusername)) {
-            throw new \moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
         // Cleanup old invalid token with the same oidcusername.
