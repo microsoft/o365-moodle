@@ -236,7 +236,7 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
  * @copyright  2018 Enovation Solutions
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class theme_boost_o365teams_mod_quiz_renderer extends mod_quiz_renderer {
+class theme_boost_o365teams_mod_quiz_renderer extends \mod_quiz\output\renderer {
     /**
      * Ouputs the form for making an attempt
      *

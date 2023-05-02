@@ -35,7 +35,7 @@ $THEME->yuicssmodules = array();
 $THEME->rendererfactory = 'theme_overridden_renderer_factory';
 $THEME->requiredblocks = '';
 $THEME->addblockposition = BLOCK_ADDBLOCK_POSITION_FLATNAV;
-$THEME->haseditswitch = false;
+$THEME->haseditswitch = true;
 
 $THEME->layouts = [
     // Most backwards compatible layout without the blocks - this is the layout used by default.
