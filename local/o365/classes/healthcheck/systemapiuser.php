@@ -43,6 +43,14 @@ class systemapiuser implements \local_o365\healthcheck\healthcheckinterface {
     public function run() {
         // Check that the system API user has a graph resource.
         $tokens = get_config('local_o365', 'systemtokens');
+        if (empty($tokens)) {
+            return [
+                'result' => false,
+                'severity' => static::SEVERITY_WARNING,
+                'message' => get_string('healthcheck_systemtoken_result_notokens', 'local_o365'),
+                'fixlink' => new \moodle_url('/local/o365/acp.php', ['mode' => 'setsystemuser']),
+            ];
+        }
         $tokens = unserialize($tokens);
         $graphresource = \local_o365\rest\unified::get_tokenresource();
         if (!isset($tokens[$graphresource])) {
