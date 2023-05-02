@@ -184,6 +184,9 @@ class apptoken extends \local_o365\oauth2\token {
      */
     protected static function get_stored_token($userid, $tokenresource) {
         $tokens = get_config('local_o365', 'apptokens');
+        if (empty($tokens)) {
+            return false;
+        }
         $tokens = unserialize($tokens);
         if (isset($tokens[$tokenresource])) {
             // App tokens do not have a user.
@@ -205,7 +208,11 @@ class apptoken extends \local_o365\oauth2\token {
      */
     protected function update_stored_token($existingtoken, $newtoken) {
         $tokens = get_config('local_o365', 'apptokens');
-        $tokens = unserialize($tokens);
+        if ($tokens) {
+            $tokens = unserialize($tokens);
+        } else {
+            $tokens = [];
+        }
         if (isset($tokens[$existingtoken['tokenresource']])) {
             unset($tokens[$existingtoken['tokenresource']]);
         }
@@ -227,6 +234,9 @@ class apptoken extends \local_o365\oauth2\token {
      */
     protected function delete_stored_token($existingtoken) {
         $tokens = get_config('local_o365', 'apptokens');
+        if (empty($tokens)) {
+            return true;
+        }
         $tokens = unserialize($tokens);
         if (isset($tokens[$existingtoken['tokenresource']])) {
             unset($tokens[$existingtoken['tokenresource']]);
@@ -253,7 +263,11 @@ class apptoken extends \local_o365\oauth2\token {
             $tokenresource = 'https://graph.microsoft.com';
         }
         $tokens = get_config('local_o365', 'apptokens');
-        $tokens = unserialize($tokens);
+        if (empty($tokens)) {
+            $tokens = [];
+        } else {
+            $tokens = unserialize($tokens);
+        }
         $newtoken = [
             'token' => $token,
             'expiry' => $expiry,

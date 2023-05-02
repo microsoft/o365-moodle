@@ -79,7 +79,11 @@ class usersynccreationrestriction extends \admin_setting {
      * @return mixed returns config if successful else null
      */
     public function get_setting() {
-        return unserialize($this->config_read($this->name));
+        $setting = $this->config_read($this->name);
+        if (is_null($setting)) {
+            $setting = '';
+        }
+        return unserialize($setting);
     }
 
     /**

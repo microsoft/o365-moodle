@@ -41,6 +41,9 @@ class systemapiusertoken extends \local_o365\oauth2\token {
      */
     protected static function get_stored_token($userid, $tokenresource) {
         $tokens = get_config('local_o365', 'systemtokens');
+        if (empty($tokens)) {
+            return false;
+        }
         $tokens = unserialize($tokens);
         if (isset($tokens[$tokenresource])) {
             $tokens[$tokenresource]['user_id'] = null;
@@ -59,7 +62,11 @@ class systemapiusertoken extends \local_o365\oauth2\token {
      */
     protected function update_stored_token($existingtoken, $newtoken) {
         $tokens = get_config('local_o365', 'systemtokens');
-        $tokens = unserialize($tokens);
+        if (empty($tokens)) {
+            $tokens = [];
+        } else {
+            $tokens = unserialize($tokens);
+        }
         if (isset($tokens[$existingtoken['tokenresource']])) {
             unset($tokens[$existingtoken['tokenresource']]);
         }
@@ -77,6 +84,9 @@ class systemapiusertoken extends \local_o365\oauth2\token {
      */
     protected function delete_stored_token($existingtoken) {
         $tokens = get_config('local_o365', 'systemtokens');
+        if (empty($tokens)) {
+            return true;
+        }
         $tokens = unserialize($tokens);
         if (isset($tokens[$existingtoken['tokenresource']])) {
             unset($tokens[$existingtoken['tokenresource']]);
@@ -100,7 +110,11 @@ class systemapiusertoken extends \local_o365\oauth2\token {
      */
     public static function store_new_token($userid, $token, $expiry, $refreshtoken, $scope, $tokenresource) {
         $tokens = get_config('local_o365', 'systemtokens');
-        $tokens = unserialize($tokens);
+        if (empty($tokens)) {
+            $tokens = [];
+        } else {
+            $tokens = unserialize($tokens);
+        }
         $newtoken = [
             'token' => $token,
             'expiry' => $expiry,

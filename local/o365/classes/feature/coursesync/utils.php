@@ -384,7 +384,7 @@ class utils {
      */
     public static function clean_up_group_mail_alias(string $mailalias) {
         $notallowedbasicchars = ['@', '(', ')', "\\", '[', ']', '"', ';', ':', '.', '<', '>', ' '];
-        $chars = preg_split( '//u', $mailalias, null, PREG_SPLIT_NO_EMPTY);
+        $chars = preg_split( '//u', $mailalias, -1, PREG_SPLIT_NO_EMPTY);
         foreach($chars as $key => $char){
             $charorder = ord($char);
             if ($charorder < 0 || $charorder > 127 || in_array($char, $notallowedbasicchars)) {
