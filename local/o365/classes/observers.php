@@ -728,6 +728,9 @@ class observers {
     public static function handle_notification_sent(notification_sent $event) : bool {
         global $CFG, $DB, $PAGE;
 
+        $debugmode = get_config('local_o365', 'debugmode');
+        $debuggingon = !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING') && $debugmode;
+
         // Check if we have the configuration to send proactive notifications.
         $aadtenant = get_config('local_o365', 'aadtenant');
         $botappid = get_config('local_o365', 'bot_app_id');
@@ -735,7 +738,7 @@ class observers {
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
             // Incomplete settings, exit.
-            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
+            if ($debuggingon) {
                 debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
             }
             return true;
@@ -745,20 +748,26 @@ class observers {
         $notification = $DB->get_record('notifications', ['id' => $notificationid]);
         if (!$notification) {
             // Notification cannot be found, exit.
-            debugging('SKIPPED: handle_notification_sent - notification cannot be found', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - notification cannot be found', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
         $user = $DB->get_record('user', ['id' => $notification->useridto]);
         if (!$user) {
             // Recipient user invalid, exit.
-            debugging('SKIPPED: handle_notification_sent - recipient user invalid', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - recipient user invalid', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
         if ($user->auth != 'oidc') {
             // Recipient user is not Microsoft 365 user, exit.
-            debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
@@ -766,26 +775,34 @@ class observers {
         $userrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
         if (!$userrecord) {
             // Recipient user doesn't have an object ID, exit.
-            debugging('SKIPPED: handle_notification_sent - recipient user doesn\'t have an object ID', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - recipient user doesn\'t have an object ID', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
         // Get course object record.
         if (!array_key_exists('courseid', $event->other)) {
             // Course doesn't exist, exit.
-            debugging('SKIPPED: handle_notification_sent - course doesn\'t exist', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - course doesn\'t exist', DEBUG_DEVELOPER);
+            }
             return true;
         }
         $courseid = $event->other['courseid'];
         if (!$courseid || $courseid == SITEID) {
             // Invalid course id, exit.
-            debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
+            }
             return true;
         }
         $course = $DB->get_record('course', ['id' => $courseid]);
         if (!$course) {
             // Invalid course, exit.
-            debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
@@ -794,7 +811,9 @@ class observers {
             ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
         if (!$courserecord) {
             // Course record doesn't have an object ID, exit.
-            debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
+            }
             return true;
         } else {
             $courseobjectid = $courserecord->objectid;
@@ -804,7 +823,9 @@ class observers {
         $botframework = new botframework();
         if (!$botframework->has_token()) {
             // Cannot get token, exit.
-            debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
