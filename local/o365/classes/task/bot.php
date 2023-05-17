@@ -62,6 +62,9 @@ class bot extends \core\task\scheduled_task {
             return false;
         }
 
+        $debugmode = get_config('local_o365', 'debugmode');
+        $debuggingon = !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING') && $debugmode;
+
         // Get all courses to be included.
         $sql = 'SELECT crs.id, crs.id AS id2
         			  FROM {course} crs
@@ -78,14 +81,18 @@ class bot extends \core\task\scheduled_task {
         $botframework = new \local_o365\rest\botframework();
         if (!$botframework->has_token()) {
             // Cannot get token, exit.
-            debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
+            }
             return true;
         }
         $this->botframework = $botframework;
 
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (empty($notificationendpoint)) {
-            debugging('SKIPPED: handle_notification_sent - incomplete settings, bot_webhook_endpoint empty', DEBUG_DEVELOPER);
+            if ($debuggingon) {
+                debugging('SKIPPED: handle_notification_sent - incomplete settings, bot_webhook_endpoint empty', DEBUG_DEVELOPER);
+            }
             return true;
         }
 
@@ -121,6 +128,9 @@ class bot extends \core\task\scheduled_task {
         $assignments = $DB->get_records_sql($sql, $params);
         mtrace(count($assignments). ' not processed assignment(s) after due date found.');
 
+        $debugmode = get_config('local_o365', 'debugmode');
+        $debuggingon = !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING') && $debugmode;
+
         require_once($CFG->dirroot . '/mod/assign/locallib.php');
         foreach ($assignments as $assignment) {
             [$course, $cm] = get_course_and_cm_from_instance($assignment->id, 'assign');
@@ -130,7 +140,9 @@ class bot extends \core\task\scheduled_task {
                     ['type' => 'group', 'subtype' => 'course', 'moodleid' => $course->id]);
             if (!$o365course) {
                 // Course record doesn't have an object ID can't send for this assignment.
-                debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
+                if ($debuggingon) {
+                    debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
+                }
                 continue;
             }
 
@@ -152,8 +164,10 @@ class bot extends \core\task\scheduled_task {
             foreach ($tonotify as $iduser) {
                 $o365user = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $iduser]);
                 if (!$o365user) {
-                    debugging("SKIPPED: handle_notification_sent - recipient user ID:$iduser doesn\'t have an object ID",
-                        DEBUG_DEVELOPER);
+                    if ($debuggingon) {
+                        debugging("SKIPPED: handle_notification_sent - recipient user ID:$iduser doesn\'t have an object ID",
+                            DEBUG_DEVELOPER);
+                    }
                     continue;
                 }
 
