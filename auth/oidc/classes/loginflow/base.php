@@ -228,7 +228,7 @@ class base {
                     if (empty($objectid)) {
                         $objectid = $token->claim('sub');
                     }
-                    if (!$objectid) {
+                    if (!empty($objectid)) {
                         $userdata['objectId'] = $objectid;
                     }
                 }
