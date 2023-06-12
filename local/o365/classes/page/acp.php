@@ -430,7 +430,7 @@ class acp extends base {
                 $finfo = new finfo();
                 $type = $finfo->file($datafile, FILEINFO_MIME);
                 $type = explode(';', $type);
-                if (strtolower($type[0]) === 'text/plain') {
+                if (strtolower($type[0]) === 'text/plain' || strtolower($type[0]) === 'text/csv' || strtolower($type[0]) === 'application/csv') {
                     try {
                         $fh = fopen($datafile, 'r');
                         if (!empty($fh)) {
