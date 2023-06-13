@@ -801,6 +801,11 @@ class main {
         if (isset($aaddata['convertedupn']) && $aaddata['convertedupn']) {
             $username = $aaddata['convertedupn'];
         }
+
+        if (isset($syncoptions['strip'])) {
+            $username = $aaddata['upnsplit0'];
+        }
+
         $newuser = (object)[
             'auth' => 'oidc',
             'username' => trim(\core_text::strtolower($username)),

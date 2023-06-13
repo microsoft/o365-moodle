@@ -51,6 +51,7 @@ class aadsyncoptions extends admin_setting_configmulticheckbox {
      */
     public function __construct($name, $visiblename, $description) {
         $choices = [
+            'strip' => new \lang_string('settings_aadsync_strip', 'local_o365'),
             'create' => new \lang_string('settings_aadsync_create', 'local_o365'),
             'update' => new \lang_string('settings_aadsync_update', 'local_o365'),
             'suspend' => new \lang_string('settings_aadsync_suspend', 'local_o365'),

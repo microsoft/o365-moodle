@@ -141,6 +141,7 @@ $string['settings_options_usersync_desc'] = 'The following settings control user
 $string['settings_aadsync'] = 'Sync users with Azure AD';
 $string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
+$string['settings_aadsync_strip'] = 'Remove "@domain.com" from the username when creating acocunts in Moodle';
 $string['settings_aadsync_update'] = 'Update all accounts in Moodle for users in Azure AD';
 $string['settings_aadsync_suspend'] = 'Suspend previously synced accounts in Moodle when they are deleted from Azure AD';
 $string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD (requires "suspend" option above)';
@@ -780,6 +781,8 @@ $string['webservices_error_couldnotsavegrade'] = 'Could not save grade.';
 // User sync task help text.
 $string['help_user_create'] = 'Create Accounts Help';
 $string['help_user_create_help'] = 'This will create users in Moodle from each user in the linked Azure Active Directory. Only users which do not currently have Moodle accounts will have accounts created. New accounts will be set up to use their Microsoft 365 credentials to log in to Moodle (using the OpenID Connect authentication plugin), and will be able to use all Microsoft 365/Moodle integration features.';
+$string['help_user_strip'] = 'Remove Domain Help';
+$string['help_user_strip_help'] = 'This will remove the "@domain.com" part of an Azure Active Directory UPN and use the user account name portion for the username of the Moodle user. This only works for creating new users in Moodle and will not update existing users.';
 $string['help_user_update'] = 'Update All Accounts Help';
 $string['help_user_update_help'] = 'This will update all users in Moodle from each user in the linked Azure Active Directory.';
 $string['help_user_suspend'] = 'Suspend Accounts Help';
