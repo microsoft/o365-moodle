@@ -285,6 +285,7 @@ class ajax extends base {
         require_once($CFG->libdir.'/adminlib.php');
         require_once($CFG->dirroot . '/webservice/lib.php');
         require_once($CFG->dirroot . '/lib/classes/component.php');
+        require_once($CFG->libdir . '/sessionlib.php');
 
         $systemcontext = \context_system::instance();
 
@@ -293,6 +294,17 @@ class ajax extends base {
         $data->errormessages = [];
         $data->info = [];
         $success = true;
+
+        // Check and enable Secure cookies only.
+
+        if (is_moodle_cookie_secure()) {
+            // Secure cookies only is enabled.
+            $data->info[] = get_string('settings_notice_cookiesecurealreadyenabled', 'local_o365');
+        } else {
+            // Secure cookies only is not enabled.
+            set_config('cookiesecure', 1);
+            $data->success[] = get_string('settings_notice_cookiesecureenabled', 'local_o365');
+        }
 
         // Check and enable Open ID authentication.
         $auth = 'oidc';
