@@ -589,6 +589,16 @@ class authcode extends base {
                     $username = $idtoken->claim('unique_name');
                 }
             }
+
+            $stripdomain = get_config('auth_oidc', 'stripdomain');
+            if ($stripdomain) {
+                $upnlower = \core_text::strtolower($username);
+
+                $upnsplit = explode('@', $upnlower);
+                if (!empty($upnsplit[0])) {
+                    $username = $upnsplit[0];
+                }
+            }
             $originalupn = null;
 
             if (empty($username)) {
