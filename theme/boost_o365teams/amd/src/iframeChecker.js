@@ -1,17 +1,8 @@
 define(['jquery'], function ($) {
     return {
         init: function() {
-            if (window.location == window.parent.location) {
-                // not in iframe, show page elements
-                $('nav.navbar').show();
-                $('nav.navbar').css('display', 'flex');
-                $('div#nav-drawer').show();
-                $('section[data-region="blocks-column"]').show();
-                $('footer#page-footer').show();
-                $('div#course_page_title').css('display', 'none');
-                $('.popupicon').css('display', 'none');
-            } else {
-                // in iframe, hide page elements
+            if (in_teams()) {
+                // In Teams, hide page elements.
                 $('body.drawer-open-left').css('margin-left', '0');
                 $('div#page').css('margin-top', '0');
                 $('section#region-main.has-blocks').css('width', '100%');
@@ -39,8 +30,21 @@ define(['jquery'], function ($) {
                     $(this).attr('target', '_blank');
                     $(this).attr('method', 'get');
                 });
+            } else {
+                // Not in Teams, show page elements.
+                $('nav.navbar').show();
+                $('nav.navbar').css('display', 'flex');
+                $('div#nav-drawer').show();
+                $('section[data-region="blocks-column"]').show();
+                $('footer#page-footer').show();
+                $('div#course_page_title').css('display', 'none');
+                $('.popupicon').css('display', 'none');
             }
             $("body").fadeIn(150);
         }
+    };
+
+    function in_teams() {
+        return ((window.location != window.parent.location) || (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)));
     };
 });
