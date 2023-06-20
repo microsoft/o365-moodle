@@ -919,5 +919,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022041906, 'local', 'o365');
     }
 
+    if ($oldversion < 2022041917) {
+        // This upgrade contains changes in the fields when calling the "GET /users" Graph API endpoint to get users.
+        // For delta sync, the list of fields are stored in the delta token, which is generated on the first call to the endpoint,
+        // therefore we need to delete the delta token to ensure the new fields are included in the delta token.
+        unset_config('task_usersync_lastdeltatoken', 'local_o365');
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2022041917, 'local', 'o365');
+    }
+
     return true;
 }
