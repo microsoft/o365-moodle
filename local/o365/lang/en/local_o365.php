@@ -523,6 +523,8 @@ $string['settings_teams_moodle_setup_heading'] = '<h4 class="local_o365_settings
 $string['settings_moodlesettingssetup'] = 'Configure Moodle';
 $string['settings_check_moodle_settings'] = 'Check Moodle settings';
 $string['settings_moodlesetup_checking'] = 'Checking...';
+$string['settings_notice_cookiesecureenabled'] = 'Secure cookies only enabled successfully';
+$string['settings_notice_cookiesecurealreadyenabled'] = 'Secure cookies only was already enabled';
 $string['settings_notice_oidcenabled'] = 'Open ID Connect enabled successfully';
 $string['settings_notice_oidcnotenabled'] = 'Open ID Connect could not be enabled';
 $string['settings_notice_oidcalreadyenabled'] = 'Open ID Connect was already enabled';
@@ -541,6 +543,7 @@ $string['settings_notice_restusagealreadyallowed'] = 'Permission to use REST Pro
 $string['settings_notice_restusagenotallowed'] = 'There was an issue giving permission to use REST Protocol';
 $string['settings_moodlesettingssetup_details'] = 'This will make sure that:
 <ul class="local_o365_settings_teams_horizontal_spacer">
+<li>Secure cookies only is enabled.</li>
 <li>Open ID is enabled.</li>
 <li>Frame Embedding is enabled.</li>
 <li>Web Services is enabled.</li>
