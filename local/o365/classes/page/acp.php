@@ -430,7 +430,10 @@ class acp extends base {
                 $finfo = new finfo();
                 $type = $finfo->file($datafile, FILEINFO_MIME);
                 $type = explode(';', $type);
-                if (strtolower($type[0]) === 'text/plain') {
+                $csvmimetypes = ['text/plain', 'text/csv', 'application/csv', 'application/vnd.ms-excel', 'text/x-csv',
+                    'text/comma-separated-values', 'text/x-comma-separated-values', 'text/tab-separated-values',
+                    'application/x-csv'];
+                if (in_array(strtolower($type[0]), $csvmimetypes)) {
                     try {
                         $fh = fopen($datafile, 'r');
                         if (!empty($fh)) {
