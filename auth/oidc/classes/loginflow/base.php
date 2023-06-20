@@ -223,7 +223,11 @@ class base {
                 }
 
                 if (!isset($userdata['objectId'])) {
+                    // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
                     $objectid = $token->claim('oid');
+                    if (empty($objectid)) {
+                        $objectid = $token->claim('sub');
+                    }
                     if (!$objectid) {
                         $userdata['objectId'] = $objectid;
                     }
