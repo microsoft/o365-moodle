@@ -242,6 +242,7 @@ function auth_oidc_get_remote_fields() {
             'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_oidc'),
             'surname' => get_string('settings_fieldmap_field_surname', 'auth_oidc'),
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
+            'onPremisesSamAccountName' => get_string('settings_fieldmap_field_onPremisesSamAccountName', 'auth_oidc'),
             'streetAddress' => get_string('settings_fieldmap_field_streetAddress', 'auth_oidc'),
             'city' => get_string('settings_fieldmap_field_city', 'auth_oidc'),
             'postalCode' => get_string('settings_fieldmap_field_postalCode', 'auth_oidc'),
