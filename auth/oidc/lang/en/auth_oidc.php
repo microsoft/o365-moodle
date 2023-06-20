@@ -313,6 +313,7 @@ $string['settings_fieldmap_field_manager_email'] = 'Manager email';
 $string['settings_fieldmap_field_teams'] = 'Teams';
 $string['settings_fieldmap_field_groups'] = 'Groups';
 $string['settings_fieldmap_field_roles'] = 'Roles';
+$string['settings_fieldmap_field_onPremisesSamAccountName'] = 'On-premises SAM account name';
 $string['settings_fieldmap_field_extensionattribute'] = 'Extension attribute {$a}';
 $string['settings_fieldmap_field_sds_school_id'] = 'SDS school ID ({$a})';
 $string['settings_fieldmap_field_sds_school_name'] = 'SDS school name ({$a})';
