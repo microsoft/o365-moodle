@@ -25,9 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_external\external_single_structure;
+
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/externallib.php');
+require_once($CFG->dirroot.'/webservice/tests/helpers.php');
 
 /**
  * Tests \local_o365\webservices\utils
@@ -35,7 +37,7 @@ require_once($CFG->dirroot.'/lib/externallib.php');
  * @group local_o365
  * @group office365
  */
-class local_o365_webservices_utils_testcase extends \advanced_testcase {
+class webservices_utils_test extends \externallib_advanced_testcase {
 
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
@@ -273,7 +275,7 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      * @param array $expectedreturn The expected return of the test method.
      */
     public function test_get_assignment_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
-        $expectedreturn) {
+                                             $expectedreturn) {
         global $DB;
 
         list($course, $modulerecord) = $this->create_assignment_info_testdata($createcourse, $modulerecords);
@@ -368,7 +370,7 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      * @param bool $addonenotesubmission Whether to add the OneNote submission record to this assignment.
      */
     public function test_verify_assignment($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
-        $expectedreturn, $grantcapability, $addonenotesubmission) {
+                                           $expectedreturn, $grantcapability, $addonenotesubmission) {
         global $DB;
 
         list($course, $modulerecord) = $this->create_assignment_info_testdata($createcourse, $modulerecords);
@@ -422,7 +424,7 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      */
     public function test_get_assignment_return_info_schema() {
         $schema = \local_o365\webservices\utils::get_assignment_return_info_schema();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -468,7 +470,7 @@ class local_o365_webservices_utils_testcase extends \advanced_testcase {
      * @param array $expectedreturn The expected return of the test method.
      */
     public function test_get_assignment_return_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
-        $expectedreturn) {
+                                                    $expectedreturn) {
         list($course, $modulerecord) = $this->create_assignment_info_testdata($createcourse, $modulerecords);
 
         if (!empty($expectedexception)) {

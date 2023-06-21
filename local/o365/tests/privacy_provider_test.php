@@ -35,7 +35,7 @@ use \local_o365\privacy\provider;
  * @group office365
  * @group office365_privacy
  */
-class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase {
+class privacy_provider_test extends \core_privacy\tests\provider_testcase {
     /**
      * Tests set up.
      */

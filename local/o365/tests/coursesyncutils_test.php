@@ -35,7 +35,7 @@ require_once($CFG->dirroot.'/webservice/tests/helpers.php');
  *
  * @group local_o365
  */
-class local_o365_coursesyncutils_testcase extends \externallib_advanced_testcase {
+class coursesyncutils_test extends \externallib_advanced_testcase {
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */

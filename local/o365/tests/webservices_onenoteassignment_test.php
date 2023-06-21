@@ -25,9 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_external\external_single_structure;
+use core_external\external_function_parameters;
+
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/externallib.php');
+require_once($CFG->dirroot.'/webservice/tests/helpers.php');
 
 /**
  * Tests \local_o365\webservices\utils
@@ -35,7 +38,7 @@ require_once($CFG->dirroot.'/lib/externallib.php');
  * @group local_o365
  * @group office365
  */
-class local_o365_webservices_onenoteassignment_testcase extends \advanced_testcase {
+class webservices_onenoteassignment_test extends \externallib_advanced_testcase {
 
     // Data structure elements of the array based on old Data Provider.
     const DBSTATE = 0;
@@ -56,7 +59,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_create_parameters() {
         $schema = \local_o365\webservices\create_onenoteassignment::assignment_create_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -133,7 +136,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_create_returns() {
         $schema = \local_o365\webservices\create_onenoteassignment::assignment_create_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -142,7 +145,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_read_parameters() {
         $schema = \local_o365\webservices\read_onenoteassignment::assignment_read_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -156,9 +159,9 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
         $course = $this->getDataGenerator()->create_course();
         $assign = $this->getDataGenerator()->create_module('assign', array('course' => $course->id,
-                                                           'section' => 1,
-                                                           'name' => 'OneNote Assignment',
-                                                           'intro' => 'This is a test assignment'));
+            'section' => 1,
+            'name' => 'OneNote Assignment',
+            'intro' => 'This is a test assignment'));
 
         // Enable OneNote submission for this assignment.
         $pluginconfigparams = [
@@ -274,8 +277,8 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                                 'name' => 'OneNote Assignment',
                                 'intro' => 'This is a test assignment',
                                 'section' => $DB->get_field('course_sections', 'id',
-                                                        array('course' => $parameters['params']['course'],
-                                                              'section' => 1)),
+                                    array('course' => $parameters['params']['course'],
+                                        'section' => 1)),
                                 'visible' => '1',
                             ],
                         ],
@@ -330,7 +333,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_read_returns() {
         $schema = \local_o365\webservices\read_onenoteassignment::assignment_read_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -339,7 +342,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_update_parameters() {
         $schema = \local_o365\webservices\update_onenoteassignment::assignment_update_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -356,18 +359,18 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
         foreach ($generaltests as $testkey => $parameters) {
             if ($testkey === 'All data correct, assignment is a OneNote assignment') {
                 $data = array(
-                            'name' => 'New OneNote Assignment',
-                            'intro' => 'This is a test assignment',
-                            'newintro' => 'This is a new test assignment',
-                            'section' => $DB->get_field('course_sections', 'id',
-                                                        array('course' => $parameters['params']['course'],
-                                                              'section' => 1)),
-                            'newsection' => $DB->get_field('course_sections', 'id',
-                                                        array('course' => $parameters['params']['course'],
-                                                              'section' => 0)),
-                            'visible' => 1,
-                            'newvisible' => 0,
-                            );
+                    'name' => 'New OneNote Assignment',
+                    'intro' => 'This is a test assignment',
+                    'newintro' => 'This is a new test assignment',
+                    'section' => $DB->get_field('course_sections', 'id',
+                        array('course' => $parameters['params']['course'],
+                            'section' => 1)),
+                    'newsection' => $DB->get_field('course_sections', 'id',
+                        array('course' => $parameters['params']['course'],
+                            'section' => 0)),
+                    'visible' => 1,
+                    'newvisible' => 0,
+                );
 
                 $return['Update name'] = [
                     $parameters['dbstate'],
@@ -500,7 +503,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_update_returns() {
         $schema = \local_o365\webservices\update_onenoteassignment::assignment_update_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -509,7 +512,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_delete_parameters() {
         $schema = \local_o365\webservices\delete_onenoteassignment::assignment_delete_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -570,7 +573,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_delete_returns() {
         $schema = \local_o365\webservices\delete_onenoteassignment::assignment_delete_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('result', $schema->keys);
     }
 }

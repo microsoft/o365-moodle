@@ -25,6 +25,11 @@
 
 namespace local_o365\webservices;
 
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_value;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -34,17 +39,17 @@ require_once($CFG->dirroot.'/course/modlib.php');
 /**
  * Read assignment API class.
  */
-class read_onenoteassignment extends \external_api {
+class read_onenoteassignment extends external_api {
     /**
      * Returns description of method parameters.
      *
      * @return external_function_parameters The parameters object for this webservice method.
      */
     public static function assignment_read_parameters() {
-        return new \external_function_parameters([
-            'data' => new \external_single_structure([
-                'coursemodule' => new \external_value(PARAM_INT, 'course module id'),
-                'course' => new \external_value(PARAM_INT, 'course id'),
+        return new external_function_parameters([
+            'data' => new external_single_structure([
+                'coursemodule' => new external_value(PARAM_INT, 'course module id'),
+                'course' => new external_value(PARAM_INT, 'course id'),
             ])
         ]);
     }

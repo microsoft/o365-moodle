@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @group office365
  * @codeCoverageIgnore
  */
-class local_o365_usersync_testcase extends \advanced_testcase {
+class usersync_test extends \advanced_testcase {
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */

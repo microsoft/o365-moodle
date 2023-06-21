@@ -25,7 +25,10 @@
 
 namespace local_o365\webservices;
 
-use \local_o365\webservices\exception as exception;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
+use local_o365\webservices\exception as exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -41,6 +44,11 @@ class utils {
      * @param int $coursemoduleid The course module ID.
      * @param int $courseid
      * @return array Whether we can proceed or not.
+     * @throws \dml_exception
+     * @throws \required_capability_exception
+     * @throws exception\assignnotfound
+     * @throws exception\invalidassignment
+     * @throws exception\modulenotfound
      */
     public static function verify_assignment($coursemoduleid, $courseid) {
         global $DB;
@@ -71,19 +79,19 @@ class utils {
      */
     public static function get_assignment_return_info_schema() {
         $params = [
-            'data' => new \external_multiple_structure(
-                new \external_single_structure([
-                    'course' => new \external_value(PARAM_INT, 'course id'),
-                    'coursemodule' => new \external_value(PARAM_INT, 'coursemodule id'),
-                    'name' => new \external_value(PARAM_TEXT, 'name'),
-                    'intro' => new \external_value(PARAM_TEXT, 'intro'),
-                    'section' => new \external_value(PARAM_INT, 'section'),
-                    'visible' => new \external_value(PARAM_INT, 'visible'),
-                    'instance' => new \external_value(PARAM_INT, 'instance id'),
+            'data' => new external_multiple_structure(
+                new external_single_structure([
+                    'course' => new external_value(PARAM_INT, 'course id'),
+                    'coursemodule' => new external_value(PARAM_INT, 'coursemodule id'),
+                    'name' => new external_value(PARAM_TEXT, 'name'),
+                    'intro' => new external_value(PARAM_TEXT, 'intro'),
+                    'section' => new external_value(PARAM_INT, 'section'),
+                    'visible' => new external_value(PARAM_INT, 'visible'),
+                    'instance' => new external_value(PARAM_INT, 'instance id'),
                 ])
             ),
         ];
-        return new \external_single_structure($params);
+        return new external_single_structure($params);
     }
 
     /**
@@ -92,6 +100,9 @@ class utils {
      * @param int $coursemoduleid The course module ID.
      * @param int $courseid The course id the module belongs to.
      * @return array Array of assignment information, following the same schema as get_assignment_info_schema.
+     * @throws \dml_exception
+     * @throws exception\assignnotfound
+     * @throws exception\modulenotfound
      */
     public static function get_assignment_info($coursemoduleid, $courseid) {
         global $DB;
@@ -115,6 +126,9 @@ class utils {
      * @param int $coursemoduleid The course module ID.
      * @param int $courseid The course id the module belongs to.
      * @return array Array of assignment information, following the same schema as get_assignment_info_schema.
+     * @throws \dml_exception
+     * @throws exception\assignnotfound
+     * @throws exception\modulenotfound
      */
     public static function get_assignment_return_info($coursemoduleid, $courseid) {
         list($course, $module, $assign) = static::get_assignment_info($coursemoduleid, $courseid);
