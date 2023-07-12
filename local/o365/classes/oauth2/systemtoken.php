@@ -39,10 +39,12 @@ class systemtoken extends \local_o365\oauth2\token {
      * @param string $tokenresource The new resource.
      * @param \local_o365\oauth2\clientdata $clientdata Client information.
      * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @param bool $forcecreate
      *
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function instance($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function instance($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient,
+                                    $forcecreate = false) {
     }
 
     /**
