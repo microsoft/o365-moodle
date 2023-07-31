@@ -380,7 +380,16 @@ class authcode extends base {
             if ($USER->id && $DB->record_exists('auth_oidc_token', ['userid' => $USER->id])) {
                 $DB->set_field('auth_oidc_token', 'sid', $sid, ['userid' => $USER->id]);
             }
-            redirect(core_login_get_return_url());
+
+            // PATCH - refs #1700609
+            // Redirects users to other site to cache the sites cookie in the browser session.
+            // URL encode the redirect URL because it may contain '&' or other restricted characters.
+            if (!empty(getenv('O365_CUSTOM_REDIRECT_URL'))) {
+                header("Location: ".getenv('O365_CUSTOM_REDIRECT_URL').urlencode(core_login_get_return_url()));
+                die();
+            } else {
+                redirect(core_login_get_return_url());
+            }
         }
     }
 
