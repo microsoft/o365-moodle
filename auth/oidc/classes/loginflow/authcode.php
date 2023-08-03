@@ -565,7 +565,13 @@ class authcode extends base {
 
         $usernamechanged = false;
         if ($oidcusername && $tokenrec && strtolower($oidcusername) !== strtolower($tokenrec->oidcusername)) {
-            $usernamechanged = true;
+            // PATCH - refs #2685838
+            // The tokenrec->oidcusername will never match the idtoken->upn,
+            // so never try to update it (leave $usernamechanged == false).
+            if (getenv('O365_ENABLE_EIN_PATCH') !== false) {
+            } else {
+                $usernamechanged = true;
+            }
         }
 
         $existingmatching = null;
@@ -573,7 +579,13 @@ class authcode extends base {
             if ($existingmatching = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $oidcuniqid])) {
                 $existinguser = core_user::get_user($existingmatching->moodleid);
                 if ($existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername)) {
-                    $usernamechanged = true;
+                    // PATCH - refs #2685838
+                    // The tokenrec->oidcusername will never match the idtoken->upn,
+                    // so never try to update it (leave $usernamechanged == false).
+                    if (getenv('O365_ENABLE_EIN_PATCH') !== false) {
+                    } else {
+                        $usernamechanged = true;
+                    }
                 }
             }
         }
@@ -756,9 +768,31 @@ class authcode extends base {
                     $username = $idtoken->claim('email');
                 }
             } else {
-                $username = $idtoken->claim('upn');
-                if (empty($username)) {
-                    $username = $idtoken->claim('unique_name');
+                // PATCH - refs #2754378
+                // If the token contains a claim for 'employeeNumber' (EIN), then
+                //   add the 'source' and create a reliable username
+                // else
+                //   let the original behavior suffice
+                if (getenv('O365_ENABLE_EIN_PATCH') !== false) {
+                    $username = $idtoken->claim('person_ein');
+                    if (!empty($username)) {
+                        $source = $idtoken->claim('person_source');
+                        if (empty($source)) {
+                            $source = 'unknown';
+                        }
+                        $username = $source . '_' . $username;
+                    }
+                    if (empty($username)) {
+                        $username = $idtoken->claim('upn');
+                    }
+                    if (empty($username)) {
+                        $username = $idtoken->claim('unique_name');
+                    }
+                } else {
+                    $username = $idtoken->claim('upn');
+                    if (empty($username)) {
+                        $username = $idtoken->claim('unique_name');
+                    }
                 }
             }
             $originalupn = null;
