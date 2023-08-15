@@ -69,6 +69,11 @@ class usersynccreationrestriction extends \admin_setting {
             'employeeId' => get_string('settings_fieldmap_field_employeeId', 'auth_oidc'),
             'o365group' => get_string('settings_usersynccreationrestriction_o365group', 'local_o365'),
         ];
+        $order = 0;
+        while ($order++ < 15) {
+            $this->remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_oidc',
+                $order);
+        }
 
         return parent::__construct($name, $visiblename, $description, $defaultsetting);
     }
