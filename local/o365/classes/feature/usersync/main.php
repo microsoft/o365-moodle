@@ -1137,7 +1137,7 @@ class main {
             if (!isset($existingusers[$aaduser['upnlower']]) && !isset($existingusers[$aaduser['upnsplit0']]) &&
                 !isset($existingusers[$aaduser['convertedupn']])) {
                 // Check if the user has been renamed.
-                $syncnewuser = true;
+                $syncnewuser = array_key_exists('create', $aadsync);
                 if (isset($aaduser['id']) && $aaduser['id'] && $existingusermatching = $DB->get_record('local_o365_objects',
                         ['type' => 'user', 'objectid' => $aaduser['id']])) {
                     // This is a previously connected user who has been renamed in Microsoft.
