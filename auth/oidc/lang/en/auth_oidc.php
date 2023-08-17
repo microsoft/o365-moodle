@@ -221,6 +221,7 @@ $string['eventusercreated'] = 'User created with OpenID Connect';
 $string['eventuserconnected'] = 'User connected to OpenID Connect';
 $string['eventuserloggedin'] = 'User Logged In with OpenID Connect';
 $string['eventuserdisconnected'] = 'User disconnected from OpenID Connect';
+$string['eventuserrenameattempt'] = 'The auth_oidc plugin attempted to rename a user';
 
 $string['oidc:manageconnection'] = 'Allow OpenID Connection and Disconnection';
 $string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
