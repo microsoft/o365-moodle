@@ -27,6 +27,7 @@
 namespace auth_oidc\loginflow;
 
 use auth_oidc\event\user_authed;
+use auth_oidc\event\user_rename_attempt;
 use auth_oidc\jwt;
 use auth_oidc\utils;
 use core\output\notification;
@@ -554,7 +555,7 @@ class authcode extends base {
         }
 
         $usernamechanged = false;
-        if ($oidcusername && $tokenrec && $oidcusername !== $tokenrec->oidcusername) {
+        if ($oidcusername && $tokenrec && strtolower($oidcusername) !== strtolower($tokenrec->oidcusername)) {
             $usernamechanged = true;
         }
 
@@ -562,7 +563,7 @@ class authcode extends base {
         if (auth_oidc_is_local_365_installed()) {
             if ($existingmatching = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $oidcuniqid])) {
                 $existinguser = core_user::get_user($existingmatching->moodleid);
-                if ($existinguser && $existingmatching->o365name != $oidcusername) {
+                if ($existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername)) {
                     $usernamechanged = true;
                 }
             }
@@ -617,6 +618,11 @@ class authcode extends base {
                         if ($user->auth == 'oidc') {
                             $user->username = $oidcusername;
                             user_update_user($user, false);
+
+                            $fullmessage = 'Attempt to change username of user ' . $user->id . ' from ' .
+                                $tokenrec->oidcusername . ' to ' . $oidcusername;
+                            $event = user_rename_attempt::create(['other' => $fullmessage, 'userid' => $user->id]);
+                            $event->trigger();
 
                             $tokenrec->username = $oidcusername;
                         }
@@ -689,8 +695,14 @@ class authcode extends base {
                 // Cannot rename user, username already exists.
                 throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_oidc', null, null, '2');
             } else {
+                $originalusername = $existinguser->username;
                 $existinguser->username = $username;
                 user_update_user($existinguser, false);
+
+                $fullmessage = 'Attempt to change username of user ' . $existinguser->id . ' from ' . $originalusername . ' to ' .
+                    $username;
+                $event = user_rename_attempt::create(['other' => $fullmessage, 'userid' => $existinguser->id]);
+                $event->trigger();
             }
 
             // Create token.
