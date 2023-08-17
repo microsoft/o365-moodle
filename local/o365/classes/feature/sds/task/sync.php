@@ -616,7 +616,11 @@ class sync extends scheduled_task {
 
         // Clean up schools.
         $enabledschools = get_config('local_o365', 'sdsschools');
-        $enabledschools = explode(',', $enabledschools);
+        if ($enabledschools) {
+            $enabledschools = explode(',', $enabledschools);
+        } else {
+            $enabledschools = [];
+        }
         foreach ($syncedsdsschools as $syncedsdsschool) {
             if (!in_array($syncedsdsschool->objectid, $enabledschools)) {
                 static::mtrace('Deleting SDS sync record for school ' . $syncedsdsschool->o365name . ' (' .
