@@ -149,7 +149,7 @@ class base {
 
                         if (!isset($userdata['objectId'])) {
                             $objectid = $token->claim('oid');
-                            if (!$objectid) {
+                            if (!empty($objectid)) {
                                 $userdata['objectId'] = $objectid;
                             }
                         }
