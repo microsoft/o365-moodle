@@ -179,27 +179,36 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
 
+        // User sync options.
         $label = new lang_string('settings_aadsync', 'local_o365');
         $scheduledtasks = new moodle_url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
         $aadsyncsettings = new aadsyncoptions('local_o365/aadsync', $label, $desc);
         $settings->add($aadsyncsettings);
 
+        // User creation restrictions.
         $key = 'local_o365/usersynccreationrestriction';
         $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
         $desc = new lang_string('settings_usersynccreationrestriction_details', 'local_o365');
         $default = [];
         $settings->add(new usersynccreationrestriction($key, $label, $desc, $default));
 
+        // Link to filter mapping settings.
         $label = new lang_string('settings_fieldmap', 'local_o365');
         $oidcsettingspageurl = new moodle_url('/admin/settings.php', ['section' => 'auth_oidc_field_mapping']);
         $desc = new lang_string('settings_fieldmap_details', 'local_o365', $oidcsettingspageurl->out(false));
         $settings->add(new auth_oidc_admin_setting_label('local_o365/fieldmap', $label, $desc, null));
 
+        // User suspension / deletion running time.
         $label = new lang_string('settings_suspend_delete_running_time', 'local_o365');
         $desc = new lang_string('settings_suspend_delete_running_time_desc', 'local_o365');
         $settings->add(new admin_setting_configtime('local_o365/usersync_suspension_h', 'usersync_suspension_m',
             $label, $desc, ['h' => 2, 'm' => 30]));
+
+        // Toggle to control whether to support upn change.
+        $label = new lang_string('settings_support_upn_change', 'local_o365');
+        $desc = new lang_string('settings_support_upn_change_desc', 'local_o365');
+        $settings->add(new admin_setting_configcheckbox('local_o365/support_upn_change', $label, $desc, '0'));
 
         // Course sync section.
         $label = new lang_string('settings_secthead_coursesync', 'local_o365');
