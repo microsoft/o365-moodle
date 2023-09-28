@@ -193,7 +193,7 @@ class observers {
     }
 
     /**
-     * Handle user_deleted event - clean up calendar subscriptions.
+     * Handle user_deleted event - clean up calendar subscriptions, mapping, and settings.
      *
      * @param \core\event\user_deleted $event The triggered event.
      * @return bool Success/Failure.
@@ -202,6 +202,9 @@ class observers {
         global $DB;
         $userid = $event->objectid;
         $DB->delete_records('local_o365_calsub', ['user_id' => $userid]);
+        $DB->delete_records('local_o365_calidmap', ['userid' => $userid]);
+        $DB->delete_records('local_o365_calsettings', ['user_id' => $userid]);
+
         return true;
     }
 }
