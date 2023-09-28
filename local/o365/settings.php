@@ -110,6 +110,12 @@ if ($hassiteconfig) {
             $desc = new lang_string('settings_setup_step2_desc', 'local_o365');
 
             $systemapiuser = get_config('local_o365', 'systemtokens');
+            $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
+            if (!empty($enableapponlyaccess) && !empty($systemapiuser)) {
+                // Both "Application access" and "System API user" are enabled - we simply disable "System API user".
+                unset_config('systemtokens', 'local_o365');
+                $systemapiuser = null;
+            }
             if (!empty($systemapiuser)) {
                 // Show option to convert to app only access.
                 $desc .= new lang_string('settings_setup_step2_desc_additional', 'local_o365');
