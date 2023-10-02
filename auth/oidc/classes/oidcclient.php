@@ -378,11 +378,27 @@ class oidcclient {
      * @return string
      */
     public static function generate_client_assertion() {
-        $jwt = new jwt();
         $authoidcconfig = get_config('auth_oidc');
-        $cert = openssl_x509_read($authoidcconfig->clientcert);
+        $certsource = $authoidcconfig->clientcertsource;
+        $cert = null;
+        $privatekey = null;
+
+        if ($certsource == AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
+            $cert = openssl_x509_read($authoidcconfig->clientcert);
+            $privatekey = $authoidcconfig->clientprivatekey;
+
+        } else if ($certsource == AUTH_OIDC_AUTH_CERT_SOURCE_FILE) {
+            $cert = openssl_x509_read(utils::get_certpath());
+            $privatekey = openssl_pkey_get_private(utils::get_keypath(), $authoidcconfig->clientcertpassphrase);
+        } else {
+            throw new \coding_exception('Unexpected certificate source.');
+        }
+
+        
         $sh1hash = openssl_x509_fingerprint($cert);
         $x5t = base64_encode(hex2bin($sh1hash));
+
+        $jwt = new jwt();
         $jwt->set_header(['alg' => 'RS256', 'typ' => 'JWT', 'x5t' => $x5t]);
         $jwt->set_claims([
             'aud' => $authoidcconfig->tokenendpoint,
@@ -394,6 +410,6 @@ class oidcclient {
             'iat' => time(),
         ]);
 
-        return $jwt->assert_token($authoidcconfig->clientprivatekey);
+        return $jwt->assert_token($privatekey);
     }
 }

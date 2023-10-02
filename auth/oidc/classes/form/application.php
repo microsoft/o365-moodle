@@ -25,6 +25,7 @@
 
 namespace auth_oidc\form;
 
+use auth_oidc\utils;
 use html_writer;
 use moodleform;
 use tool_brickfield\local\areas\mod_choice\option;
@@ -85,11 +86,21 @@ class application extends moodleform {
         $mform->disabledIf('clientsecret', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
         $mform->addElement('static', 'clientsecret_help', '', get_string('clientsecret_help', 'auth_oidc'));
 
+        // Certificate source.
+        $mform->addElement('select', 'clientcertsource', auth_oidc_config_name_in_form('clientcertsource'), [
+            AUTH_OIDC_AUTH_CERT_SOURCE_TEXT => get_string('cert_source_text', 'auth_oidc'),
+            AUTH_OIDC_AUTH_CERT_SOURCE_FILE => get_string('cert_source_path', 'auth_oidc')
+        ]);
+        $mform->setDefault('clientcertsource', 0);
+        $mform->disabledIf('clientcertsource', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->addElement('static', 'clientcertsource_help', '', get_string('clientcertsource_help', 'auth_oidc', utils::get_openssl_internal_path()));
+
         // Certificate private key.
         $mform->addElement('textarea', 'clientprivatekey', auth_oidc_config_name_in_form('clientprivatekey'),
             ['rows' => 10, 'cols' => 80]);
         $mform->setType('clientprivatekey', PARAM_TEXT);
         $mform->disabledIf('clientprivatekey', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientprivatekey', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT);
         $mform->addElement('static', 'clientprivatekey_help', '', get_string('clientprivatekey_help', 'auth_oidc'));
 
         // Certificate certificate.
@@ -97,7 +108,28 @@ class application extends moodleform {
             ['rows' => 10, 'cols' => 80]);
         $mform->setType('clientcert', PARAM_TEXT);
         $mform->disabledIf('clientcert', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcert', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT);
         $mform->addElement('static', 'clientcert_help', '', get_string('clientcert_help', 'auth_oidc'));
+
+        // Certificate file of private key.
+        $mform->addElement('text', 'clientprivatekeyfile', auth_oidc_config_name_in_form('clientprivatekeyfile'), ['size' => 60]);
+        $mform->setType('clientprivatekeyfile', PARAM_FILE);
+        $mform->disabledIf('clientprivatekeyfile', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientprivatekeyfile', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_FILE);
+        $mform->addElement('static', 'clientprivatekeyfile_help', '', get_string('clientprivatekeyfile_help', 'auth_oidc'));
+
+        // Certificate file of certificate or public key.
+        $mform->addElement('text', 'clientcertfile', auth_oidc_config_name_in_form('clientcertfile'), ['size' => 60]);
+        $mform->setType('clientcertfile', PARAM_FILE);
+        $mform->disabledIf('clientcertfile', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->disabledIf('clientcertfile', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_FILE);
+        $mform->addElement('static', 'clientcertfile_help', '', get_string('clientcertfile_help', 'auth_oidc'));
+
+        // Certificate file passphrase.
+        $mform->addElement('text', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), ['size' => 60]);
+        $mform->setType('clientcertpassphrase', PARAM_TEXT);
+        $mform->disabledIf('clientcertpassphrase', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+        $mform->addElement('static', 'clientcertpassphrase_help', '', get_string('clientcertpassphrase_help', 'auth_oidc'));
 
         // Endpoints header.
         $mform->addElement('header', 'endpoints', get_string('settings_section_endpoints', 'auth_oidc'));
@@ -174,11 +206,23 @@ class application extends moodleform {
                 }
                 break;
             case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
-                if (empty(trim($data['clientprivatekey']))) {
-                    $errors['clientprivatekey'] = get_string('error_empty_client_private_key', 'auth_oidc');
-                }
-                if (empty(trim($data['clientcert']))) {
-                    $errors['clientcert'] = get_string('error_empty_client_cert', 'auth_oidc');
+                switch ($data['clientcertsource']) {
+                    case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                        if (empty(trim($data['clientprivatekey']))) {
+                            $errors['clientprivatekey'] = get_string('error_empty_client_private_key', 'auth_oidc');
+                        }
+                        if (empty(trim($data['clientcert']))) {
+                            $errors['clientcert'] = get_string('error_empty_client_cert', 'auth_oidc');
+                        }
+                        break;
+                    case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
+                        if (empty(trim($data['clientprivatekeyfile']))) {
+                            $errors['clientprivatekeyfile'] = get_string('error_empty_client_private_key_file', 'auth_oidc');
+                        }
+                        if (empty(trim($data['clientcertfile']))) {
+                            $errors['clientcertfile'] = get_string('error_empty_client_cert_file', 'auth_oidc');
+                        }
+                        break;
                 }
                 break;
         }

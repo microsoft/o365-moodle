@@ -146,4 +146,48 @@ class utils {
         $logouturl = new \moodle_url('/auth/oidc/logout.php');
         return $logouturl->out(false);
     }
+
+    /**
+     * Get and check existence of OIDC client certificate path
+     *
+     * @return string|bool cert path if exists otherwise false
+     */
+    public static function get_certpath() {
+        $clientcertfile = get_config('auth_oidc', 'clientcertfile');
+        $certlocation = self::get_openssl_internal_path();
+        $certfile = "$certlocation/$clientcertfile";
+
+        if (is_file($certfile) && is_readable($certfile)) {
+            return "file://$certfile";
+        }
+
+        return false;
+    }
+
+    /**
+     * Get and check existence of OIDC client key path
+     *
+     * @return string|bool key path if exists otherwise false
+     */
+    public static function get_keypath() {
+        $clientprivatekeyfile = get_config('auth_oidc', 'clientprivatekeyfile');
+        $keylocation = self::get_openssl_internal_path();
+        $keyfile = "$keylocation/$clientprivatekeyfile";
+
+        if (is_file($keyfile) && is_readable($keyfile)) {
+            return "file://$keyfile";
+        }
+
+        return false;
+    }
+
+    /**
+     * Get openssl default certs dir plus "/azuread"
+     *
+     * @return string base path to put cert files
+     */
+    public static function get_openssl_internal_path() {
+        $certlocation = openssl_get_cert_locations()["default_cert_dir"];
+        return "$certlocation/azuread";
+    }
 }
