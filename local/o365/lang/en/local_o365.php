@@ -308,6 +308,14 @@ $string['acp_coursesynccustom_searchwarning'] = 'Note: Searches will lose any un
 $string['acp_coursesynccustom_confirm_all_action'] = 'Are you sure you want to change sync status of all courses? The action cannot be undone.';
 $string['acp_coursesynccustom_sds_course'] = 'Locked for SDS course';
 
+// Settings in the "Cohort sync" section of the "Sync settings" tab.
+$string['settings_secthead_cohortsync'] = 'Cohort sync';
+$string['settings_secthead_cohortsync_desc'] = 'This feature enables synchronization between Microsoft Groups and Moodle Cohorts.';
+$string['settings_cohortsync'] = 'Cohort synchronization';
+$string['settings_cohortsync_linktext'] = 'Manage Cohort sync';
+$string['settings_cohortsync_details'] = 'Review and manage synchronization between Moodle Cohorts and Microsoft Groups.';
+$string['settings_cohortsync_title'] = 'Cohort sync';
+
 // Settings in the "Team / group names" section of the "Sync settings" tab.
 $string['settings_secthead_team_group_name'] = 'Team / group names';
 $string['settings_secthead_team_group_name_desc'] = 'If a course is configured to be synced, the name of the Team and group will be constructed as follows.<br/>
@@ -926,6 +934,28 @@ $string['help_user_tzsynconlogin'] = 'Sync Outlook timezone (Login) Help';
 $string['help_user_tzsynconlogin_help'] = 'This will cause a user\'s Moodle timezone to get synced with their Outlook timezone preference. Note this requires user visiting a page containing the Microsoft block in Moodle.';
 $string['help_user_guestsync'] = 'Sync guest users Help';
 $string['help_user_guestsync_help'] = 'If enabled, guest users in Azure AD will be synced to Moodle in the user sync task.';
+
+// Cohort sync feature.
+$string['cohortsync_title'] = 'Cohort sync';
+$string['cohortsync_taskname'] = 'Cohort sync';
+$string['cohortsync_mappingadded'] = 'New connection successfully added';
+$string['cohortsync_mappingdeleted'] = 'Connection successfully deleted';
+$string['cohortsync_addmapping'] = 'Add connection';
+$string['cohortsync_deletemapping'] = 'Delete connection';
+$string['cohortsync_desc'] = 'This page allows one-way synchronisation from Microsoft groups to Moodle cohorts at system level context. Adding a new connection will initiate the synchronization process - users from the selected Microsoft Group who are connected with Microsoft will be added in the selected Moodle Cohort.';
+$string['cohortsync_tabledesc'] = 'Current connections between Microsoft Groups and Moodle Cohorts';
+$string['cohortsync_emptygroups'] = 'No available Microsoft Groups';
+$string['cohortsync_emptycohorts'] = 'No available Moodle Cohorts';
+$string['cohortsync_emptymatchings'] = 'No connections found';
+$string['cohortsync_select_cohort'] = 'Moodle cohort';
+$string['cohortsync_select_group'] = 'Microsoft Group';
+$string['cohortsync_tablehead_group'] = 'Microsoft Group';
+$string['cohortsync_tablehead_cohort'] = 'Moodle Cohort';
+$string['cohortsync_tablehead_actions'] = 'Actions';
+$string['cohortsync_mappingfailed'] = 'Error adding cohort and group connection. Possible reasons: group or cohort does not exist, group is already connected to another cohort, group is already connected to this cohort.';
+$string['cohortsync_connectionnotfound'] = 'Invalid request: connection not found.';
+$string['cohortsync_connectionnotcohortsync'] = 'Invalid request: mismatch connection type.';
+$string['cohortsync_unifiedapierror'] = 'Error getting list of groups from Microsoft.';
 
 // Bot feature.
 $string['list_of_absent_students'] = 'This is the list of students that were absent this month:';

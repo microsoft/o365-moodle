@@ -24,6 +24,7 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use local_o365\feature\cohortsync\main;
 use local_o365\utils;
 
 defined('MOODLE_INTERNAL') || die();
@@ -955,6 +956,35 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         upgrade_plugin_savepoint(true, 2023042407, 'local', 'o365');
+    }
+
+    if ($oldversion < 2023100901) {
+        // Define table local_o365_groups_cache to be created.
+        $table = new xmldb_table('local_o365_groups_cache');
+
+        // Adding fields to table local_o365_groups_cache.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('objectid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        // Adding keys to table local_o365_groups_cache.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for local_o365_groups_cache.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Update groups cache.
+        $graphclient = main::get_unified_api(__METHOD__);
+        if ($graphclient) {
+            $cohortsync = new main($graphclient);
+            $cohortsync->update_groups_cache();
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2023100901, 'local', 'o365');
     }
 
     return true;

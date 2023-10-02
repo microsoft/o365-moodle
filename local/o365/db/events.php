@@ -200,4 +200,10 @@ $observers = [
         'priority'    => 200,
         'internal'    => true,
     ],
+    [
+        'eventname'   => '\core\event\cohort_deleted',
+        'callback'    => '\local_o365\observers::handle_cohort_deleted',
+        'priority'    => 200,
+        'internal'    => true,
+    ],
 ];
