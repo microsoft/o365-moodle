@@ -569,6 +569,8 @@ class authcode extends base {
             }
         }
 
+        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change');
+
         if (!empty($tokenrec)) {
             // Already connected user.
             if (empty($tokenrec->userid)) {
@@ -607,6 +609,10 @@ class authcode extends base {
 
                 // Handle username change - update token, update connection.
                 if ($usernamechanged) {
+                    if ($supportupnchangeconfig != 1) {
+                        // Username change is not supported, throw exception.
+                        throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
+                    }
                     $potentialduplicateuser = core_user::get_user_by_username($oidcusername);
                     if ($potentialduplicateuser) {
                         // Username already exists, cannot change Moodle account username, throw exception.
@@ -621,7 +627,8 @@ class authcode extends base {
 
                             $fullmessage = 'Attempt to change username of user ' . $user->id . ' from ' .
                                 $tokenrec->oidcusername . ' to ' . $oidcusername;
-                            $event = user_rename_attempt::create(['other' => $fullmessage, 'userid' => $user->id]);
+                            $event = user_rename_attempt::create(['objectid' => $user->id, 'other' => $fullmessage,
+                                'userid' => $user->id]);
                             $event->trigger();
 
                             $tokenrec->username = $oidcusername;
@@ -657,6 +664,10 @@ class authcode extends base {
             //  1. attempt to update Moodle username,
             //  2. create token record,
             //  3. update connection record in local_o365_objects table.
+
+            if ($supportupnchangeconfig != 1) {
+                throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
+            }
 
             $existinguser = core_user::get_user($existingmatching->moodleid);
 
@@ -699,9 +710,11 @@ class authcode extends base {
                 $existinguser->username = $username;
                 user_update_user($existinguser, false);
 
-                $fullmessage = 'Attempt to change username of user ' . $existinguser->id . ' from ' . $originalusername . ' to ' .
+                $fullmessage =
+                    'Attempt to change username of user ' . $existinguser->id . ' from ' . $originalusername . ' to ' .
                     $username;
-                $event = user_rename_attempt::create(['other' => $fullmessage, 'userid' => $existinguser->id]);
+                $event = user_rename_attempt::create(['objectid' => $existinguser->id, 'other' => $fullmessage,
+                    'userid' => $existinguser->id]);
                 $event->trigger();
             }
 
