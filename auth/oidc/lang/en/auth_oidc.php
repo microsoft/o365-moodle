@@ -81,6 +81,18 @@ $string['clientprivatekey'] = 'Client certificate private key';
 $string['clientprivatekey_help'] = 'When using <b>certificate</b> authentication method, this is the private key of the certificate used to authenticate with IdP.';
 $string['clientcert'] = 'Client certificate public key';
 $string['clientcert_help'] = 'When using <b>certificate</b> authentication method, this is the public key, or certificate, used in to authenticate with IdP.';
+$string['clientcertsource'] = 'Certificate source';
+$string['clientcertsource_help'] = 'When using <b>certificate</b> authentication method, this is used to define where to retrieve the certificate from. Notes:
+<ul><li><b>Plain text</b> source require input content of certificate/private key file at subsequent text areas.</li>
+<li><b>File name</b> source require that these files exist at "{$a}" path.</li></ul>';
+$string['cert_source_text'] = 'Plain text';
+$string['cert_source_path'] = 'File name';
+$string['clientprivatekeyfile'] = 'File name of client certificate private key';
+$string['clientprivatekeyfile_help'] = 'This is the file name of private key used to authenticate with IdP.';
+$string['clientcertfile'] = 'File name of client certificate public key';
+$string['clientcertfile_help'] = 'This is the file name of public key, or certificate, used to authenticate with IdP.';
+$string['clientcertpassphrase'] = 'Client certificate passphrase';
+$string['clientcertpassphrase_help'] = 'Sometimes your private key will be protected by a password, at this field you\'ll supply this config.';
 $string['cfg_domainhint_key'] = 'Domain Hint';
 $string['cfg_domainhint_desc'] = 'When using the <b>Authorization Code</b> login flow, pass this value as the "domain_hint" parameter. "domain_hint" is used by some OpenID Connect IdP to make the login process easier for users. Check with your provider to see whether they support this parameter.';
 $string['cfg_err_invalidauthendpoint'] = 'Invalid Authorization Endpoint';
@@ -204,6 +216,8 @@ $string['error_invalid_client_authentication_method'] = "Invalid client authenti
 $string['error_empty_client_secret'] = 'Client secret cannot be empty when using "secret" authentication method';
 $string['error_empty_client_private_key'] = 'Client certificate private key cannot be empty when using "certificate" authentication method';
 $string['error_empty_client_cert'] = 'Client certificate public key cannot be empty when using "certificate" authentication method';
+$string['error_empty_client_private_key_file'] = 'Client certificate private key file cannot be empty when using "certificate" authentication method';
+$string['error_empty_client_cert_file'] = 'Client certificate public key file cannot be empty when using "certificate" authentication method';
 $string['error_empty_tenantname_or_guid'] = 'Tenant name or GUID cannot be empty when using "certificate" authentication method';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match configured IdP type.<br/>
 <ul>
