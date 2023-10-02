@@ -146,10 +146,10 @@ class jwt {
     /**
      * Calculate client assertion using the key provided.
      *
-     * @param string $privatekey
+     * @param \OpenSSLAsymmetricKey $privatekey
      * @return string
      */
-    public function assert_token(string $privatekey) {
+    public function assert_token(\OpenSSLAsymmetricKey $privatekey) {
         $assertion = \Firebase\JWT\JWT::encode($this->claims, $privatekey, 'RS256', null, $this->header);
 
         return $assertion;

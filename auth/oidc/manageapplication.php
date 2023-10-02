@@ -82,8 +82,18 @@ if ($form->is_cancelled()) {
             $configstosave[] = 'clientsecret';
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
-            $configstosave[] = 'clientprivatekey';
-            $configstosave[] = 'clientcert';
+            $configstosave[] = 'clientcertsource';
+            $configstosave[] = 'clientcertpassphrase';
+            switch ($fromform->clientcertsource) {
+                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                    $configstosave[] = 'clientprivatekey';
+                    $configstosave[] = 'clientcert';
+                    break;
+                case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
+                    $configstosave[] = 'clientprivatekeyfile';
+                    $configstosave[] = 'clientcertfile';
+                    break;
+            }
             break;
     }
 
