@@ -40,6 +40,10 @@ CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_2 = 2;
 CONST AUTH_OIDC_AUTH_METHOD_SECRET = 1;
 CONST AUTH_OIDC_AUTH_METHOD_CERTIFICATE = 2;
 
+// OIDC application auth certificate source.
+CONST AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 0;
+CONST AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 1;
+
 /**
  * Initialize custom icon.
  *
@@ -570,8 +574,17 @@ function auth_oidc_is_setup_complete() {
             }
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
-            if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
-                return false;
+            switch ($pluginconfig->clientcertsource) {
+                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                    if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
+                        return false;
+                    }
+                    break;
+                case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
+                    if (!\auth_oidc\utils::get_certpath() || !\auth_oidc\utils::get_keypath()) {
+                        return false;
+                    }
+                    break;
             }
             break;
     }
