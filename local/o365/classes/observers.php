@@ -48,6 +48,7 @@ use core\event\role_unassigned;
 use core\event\user_created;
 use core\event\user_deleted;
 use core\event\user_enrolment_updated;
+use core\event\cohort_deleted;
 use core\task\manager;
 use core_user;
 use Exception;
@@ -920,6 +921,22 @@ class observers {
         if ($cachespurgeneeded) {
             purge_all_caches();
         }
+
+        return true;
+    }
+
+    /**
+     * Handles actions to be performed when a cohort is deleted.
+     *
+     * @param cohort_deleted $event
+     *
+     * @return bool
+     */
+    public static function handle_cohort_deleted(cohort_deleted $event) : bool {
+        global $DB;
+
+        $cohortid = $event->objectid;
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort', 'moodleid' => $cohortid]);
 
         return true;
     }
