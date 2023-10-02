@@ -299,6 +299,18 @@ if ($hassiteconfig) {
             get_string('settings_team_name_sync', 'local_o365'),
             get_string('settings_team_name_sync_desc', 'local_o365'),
             0));
+
+        // Cohort Sync section
+        $label = new lang_string('settings_secthead_cohortsync', 'local_o365');
+        $desc = new lang_string('settings_secthead_cohortsync_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_section_cohortsync', $label, $desc));
+
+        // Cohort sync link.
+        $label = new lang_string('settings_cohortsync', 'local_o365');
+        $linktext = new lang_string('settings_cohortsync_linktext', 'local_o365');
+        $linkurl = new moodle_url('/local/o365/cohortsync.php');
+        $desc = new lang_string('settings_cohortsync_details', 'local_o365');
+        $settings->add(new toollink('local_o365/cohortsync', $label, $linktext, $linkurl, $desc));
     }
 
     if ($tab === LOCAL_O365_TAB_ADVANCED && empty($install)) {
