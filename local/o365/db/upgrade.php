@@ -929,5 +929,29 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023042402, 'local', 'o365');
     }
 
+    if ($oldversion < 2023042407) {
+        $deleteduserids = $DB->get_fieldset_select('user', 'id', 'deleted = 1');
+
+        if ($deleteduserids) {
+            // Delete records in local_o365_calidmap.
+            [$useridsql, $params] = $DB->get_in_or_equal($deleteduserids);
+            $sql = "DELETE FROM {local_o365_calidmap}
+                          WHERE userid {$useridsql}";
+            $DB->execute($sql, $params);
+
+            // Delete records in local_o365_calsettings.
+            $sql = "DELETE FROM {local_o365_calsettings}
+                          WHERE user_id {$useridsql}";
+            $DB->execute($sql, $params);
+
+            // Delete records in local_o365_calsub.
+            $sql = "DELETE FROM {local_o365_calsub}
+                          WHERE user_id {$useridsql}";
+            $DB->execute($sql, $params);
+        }
+
+        upgrade_plugin_savepoint(true, 2023042407, 'local', 'o365');
+    }
+
     return true;
 }
