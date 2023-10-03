@@ -27,14 +27,17 @@ namespace local_o365\webservices;
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_external\external_api;
+
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
+require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Get a list of courses where the current user is a teacher.
  */
-class read_teachercourses extends \external_api {
+class read_teachercourses extends external_api {
     /**
      * Returns description of method parameters
      *

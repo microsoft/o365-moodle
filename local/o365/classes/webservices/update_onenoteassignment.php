@@ -25,18 +25,20 @@
 
 namespace local_o365\webservices;
 
-use \local_o365\webservices\exception as exception;
-
 defined('MOODLE_INTERNAL') || die();
+
+use local_o365\webservices\exception as exception;
+use core_external\external_api;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
+require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Update assignment API class.
  */
-class update_onenoteassignment extends \external_api {
+class update_onenoteassignment extends external_api {
     /**
      * Returns description of method parameters.
      *
