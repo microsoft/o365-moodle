@@ -723,6 +723,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         if ($systemtokensconfig !== false) {
             $systemtokensconfig = unserialize($systemtokensconfig);
             foreach ($systemtokensconfig as $resource => $tokenconfig) {
+                // Make sure this is an array.
+                if (!is_array($tokenconfig)) {
+                    continue;
+                }
                 if (array_key_exists('resource', $tokenconfig)) {
                     $systemtokensconfig[$resource]['tokenresource'] = $tokenconfig['resource'];
                     unset($systemtokensconfig[$resource]['resource']);
