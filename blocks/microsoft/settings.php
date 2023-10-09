@@ -100,3 +100,8 @@ $label = new lang_string('settings_geto365link', 'block_microsoft');
 $desc = new lang_string('settings_geto365link_desc', 'block_microsoft');
 $default = new lang_string('settings_geto365link_default', 'block_microsoft');
 $settings->add(new admin_setting_configtext('block_microsoft/settings_geto365link', $label, $desc, $default, PARAM_TEXT));
+
+// Settings to show Request course from teams link in the block.
+$label = new lang_string('settings_courserequest', 'block_microsoft');
+$desc = new lang_string('settings_courserequest_desc', 'block_microsoft');
+$settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_courserequest', $label, $desc, 1));

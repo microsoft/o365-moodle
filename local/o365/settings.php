@@ -299,6 +299,32 @@ if ($hassiteconfig) {
             get_string('settings_team_name_sync', 'local_o365'),
             get_string('settings_team_name_sync_desc', 'local_o365'),
             0));
+
+        // Course request section.
+        $label = new lang_string('settings_secthead_course_request', 'local_o365');
+        $desc = new lang_string('settings_secthead_course_request_desc', 'local_o365');
+        $settings->add(new admin_setting_heading('local_o365_section_course_request', $label, $desc));
+
+        // Course request role selector.
+        $roleoptions = [];
+        $courseroles = get_roles_for_contextlevels(CONTEXT_COURSE);
+        $allroles = get_all_roles();
+        foreach ($courseroles as $courserole) {
+            $role = $allroles[$courserole];
+            $roleoptions[$courserole] = role_get_name($role);
+        }
+
+        // Course request Team owner role setting.
+        $label = new lang_string('settings_course_request_enrolment_owner_role', 'local_o365');
+        $desc = new lang_string('settings_course_request_enrolment_owner_role_desc', 'local_o365');
+        $settings->add(new admin_setting_configselect('local_o365/courserequestownerrole', $label, $desc, 3,
+            $roleoptions));
+
+        // Course request Team member role setting.
+        $label = new lang_string('settings_course_request_enrolment_member_role', 'local_o365');
+        $desc = new lang_string('settings_course_request_enrolment_member_role_desc', 'local_o365');
+        $settings->add(new admin_setting_configselect('local_o365/courserequestmemberrole', $label, $desc, 5,
+            $roleoptions));
     }
 
     if ($tab === LOCAL_O365_TAB_ADVANCED && empty($install)) {
