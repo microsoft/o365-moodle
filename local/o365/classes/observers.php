@@ -58,6 +58,7 @@ use local_o365\obj\o365user;
 use local_o365\rest\botframework;
 use local_o365\rest\unified;
 use local_o365\task\groupmembershipsync;
+use local_o365\task\processcourserequestapproval;
 use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
@@ -482,21 +483,51 @@ class observers {
      * Handle course_created event.
      *
      * Does the following:
+     *  - process custom course request from Microsoft Teams approval.
      *  - enable sync on the new courses if course sync is "custom", and the option to enable sync on new courses by default is set.
      *
      * @param course_created $event The triggered event.
      * @return bool Success/Failure.
      */
-    public static function handle_course_created(course_created $event) : bool {
+    public static function handle_course_created(course_created $event): bool {
+        global $DB;
+
         if (utils::is_connected() !== true) {
             return false;
         }
 
+        $coursecreatedfromcustomcourserequest = false;
+
+        // Process course request approval
+        $courseid = $event->objectid;
+        $course = get_course($courseid);
+        $shortnametocheck = $course->shortname;
+
+        // First, try to get a record with an exact match on shortname
+        $customrequest = $DB->get_record('local_o365_course_request',
+            ['courseshortname' => $shortnametocheck, 'requeststatus' => feature\courserequest\main::COURSE_REQUEST_STATUS_PENDING]);
+
+        // If no exact match, try removing the suffix _(number)
+        if (!$customrequest && preg_match('/^(.+)_(\d+)$/', $course->shortname, $matches)) {
+            $shortnametocheck = $matches[1];
+            $customrequest = $DB->get_record('local_o365_course_request', ['courseshortname' => $shortnametocheck,
+                'requeststatus' => feature\courserequest\main::COURSE_REQUEST_STATUS_PENDING]);
+        }
+
+        if ($customrequest && $DB->record_exists('course_request', ['shortname' => $shortnametocheck])) {
+            $coursecreatedfromcustomcourserequest = true;
+            $task = new processcourserequestapproval();
+            $task->set_custom_data(['customrequest' => $customrequest, 'courseid' => $courseid, 'shortname' => $shortnametocheck]);
+            manager::queue_adhoc_task($task);
+        }
+
         // Enable team sync for newly created courses if the create teams setting is "custom", and the option to enable sync on
         // new courses by default is on.
-        $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
-        if ((get_config('local_o365', 'coursesync') === 'oncustom') && $syncnewcoursesetting) {
-            \local_o365\feature\coursesync\utils::set_course_sync_enabled($event->objectid, true);
+        if (!$coursecreatedfromcustomcourserequest) {
+            $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
+            if ((get_config('local_o365', 'coursesync') === 'oncustom') && $syncnewcoursesetting) {
+                \local_o365\feature\coursesync\utils::set_course_sync_enabled($event->objectid, true);
+            }
         }
 
         return true;

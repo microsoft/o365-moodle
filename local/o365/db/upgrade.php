@@ -957,5 +957,29 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022112812, 'local', 'o365');
     }
 
+    if ($oldversion < 2022112817) {
+        // Define table local_o365_course_request to be created.
+        $table = new xmldb_table('local_o365_course_request');
+
+        // Adding fields to table local_o365_course_request.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('requestid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('teamoid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('teamname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseshortname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('requeststatus', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        // Adding keys to table local_o365_course_request.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for local_o365_course_request.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2022112817, 'local', 'o365');
+    }
+
     return true;
 }

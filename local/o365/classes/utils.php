@@ -501,4 +501,18 @@ class utils {
         }
         return '';
     }
+
+    /**
+     * Get the cached Microsoft account oid for the Moodle user with the given ID.
+     *
+     * @param int $userid The ID of the user.
+     * @return string The Microsoft account uid for the user.
+     */
+    public static function get_microsoft_account_oid_by_user_id(int $userid) {
+        global $DB;
+
+        $oid = $DB->get_field('local_o365_objects', 'objectid', ['moodleid' => $userid, 'type' => 'user']);
+
+        return $oid;
+    }
 }
