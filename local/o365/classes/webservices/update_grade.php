@@ -25,9 +25,10 @@
 
 namespace local_o365\webservices;
 
-use \local_o365\webservices\exception as exception;
-
 defined('MOODLE_INTERNAL') || die();
+
+use local_o365\webservices\exception as exception;
+use core_external\external_api;
 
 global $CFG;
 
@@ -39,7 +40,7 @@ require_once($CFG->dirroot.'/mod/assign/locallib.php');
 /**
  * Update a grade.
  */
-class update_grade extends \external_api {
+class update_grade extends external_api {
     /**
      * Returns description of method parameters.
      *

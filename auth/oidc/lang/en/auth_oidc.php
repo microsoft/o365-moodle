@@ -157,6 +157,8 @@ $string['cfg_field_mapping_desc'] = 'User profile data can be mapped from Open I
 <li>If Azure AD is used as the IdP, additional profile data can be made available by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
 <li>If SDS profile sync feature is enabled in the local_o365 plugin, certain profile fields can be synchronised from SDS to Moodle. when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.</li>
 </ul>';
+$string['cfg_cleanupoidctokens_key'] = 'Cleanup OpenID Connect Tokens';
+$string['cfg_cleanupoidctokens_desc'] = 'If your users are experiencing problems logging in using their Microsoft 365 account, trying cleaning up OpenID Connect tokens. This removes stray and incomplete tokens that can cause errors. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
 $string['settings_section_basic'] = 'Basic settings';
 $string['settings_section_authentication'] = 'Authentication';
 $string['settings_section_endpoints'] = 'Endpoints';
@@ -235,6 +237,7 @@ $string['eventusercreated'] = 'User created with OpenID Connect';
 $string['eventuserconnected'] = 'User connected to OpenID Connect';
 $string['eventuserloggedin'] = 'User Logged In with OpenID Connect';
 $string['eventuserdisconnected'] = 'User disconnected from OpenID Connect';
+$string['eventuserrenameattempt'] = 'The auth_oidc plugin attempted to rename a user';
 
 $string['oidc:manageconnection'] = 'Allow OpenID Connection and Disconnection';
 $string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
