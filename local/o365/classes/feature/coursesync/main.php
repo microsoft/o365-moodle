@@ -26,6 +26,7 @@
 
 namespace local_o365\feature\coursesync;
 
+use context_course;
 use Exception;
 use local_o365\rest\unified;
 use moodle_exception;
@@ -1041,28 +1042,24 @@ class main {
      * @param string $groupobjectid The object ID of the Microsoft 365 group.
      * @return array|false
      */
-    public function resync_group_owners_and_members(int $courseid, string $groupobjectid = '') {
+    public function process_course_team_user_sync_from_moodle_to_microsoft(int $courseid, string $groupobjectid = '') {
         global $DB;
 
-        $this->mtrace('Syncing group owners / members for course #'.$courseid);
+        $this->mtrace('Syncing Microsoft group owners / members for course #' . $courseid);
 
         if (!$groupobjectid) {
-            $params = [
-                'type' => 'group',
-                'subtype' => 'course',
-                'moodleid' => $courseid,
-            ];
-            $objectrec = $DB->get_record('local_o365_objects', $params);
-            if (empty($objectrec)) {
-                $errmsg = 'Could not find group object ID in local_o365_objects for course '.$courseid.'. ';
-                $errmsg .= 'Please ensure group exists first.';
-                $this->mtrace($errmsg);
+            $sql = "SELECT distinct objectid
+                      FROM {local_o365_objects}
+                     WHERE type = :type
+                       AND moodleid = :moodleid";
+            $teamobjectids = $DB->get_fieldset_sql($sql, ['type' => 'group', 'moodleid' => $courseid]);
+            if (empty($teamobjectids)) {
+                // Sync is enabled but no Team is connected to the course.
+                $this->mtrace('No Team is connected to the course. Skipping.', 2);
                 return false;
             }
-            $groupobjectid = $objectrec->objectid;
+            $groupobjectid = reset($teamobjectids);
         }
-
-        $this->mtrace('Resync users to group ' . $groupobjectid . ' for course #' . $courseid);
 
         // Get current group membership.
         $members = $this->get_group_members($groupobjectid);
@@ -1414,5 +1411,313 @@ class main {
             $this->graphclient->remove_member_from_group_using_group_api($groupobjectid, $userobjectid);
             $this->graphclient->remove_owner_from_group_using_group_api($groupobjectid, $userobjectid);
         }
+    }
+
+    /**
+     * Resync the membership of a Moodle course based on the users enrolled in the associated Microsoft 365 group.
+     *
+     * @param int $courseid The ID of the course.
+     * @param string $groupobjectid The object ID of the Microsoft 365 group.
+     * @param array|null $connectedusers An array of Moodle user IDs as keys and Microsoft 365 user object IDs as values.
+     * @return bool
+     */
+    public function process_course_team_user_sync_from_microsoft_to_moodle(int $courseid, string $groupobjectid = '',
+        array $connectedusers = null) : bool {
+        global $DB;
+
+        $coursecontext = context_course::instance($courseid);
+
+        $this->mtrace('Sync course teachers and students from Teams to Moodle for course #' . $courseid . ' ...', 1);
+
+        if (is_null($connectedusers)) {
+            $moodletomicrosoftusermappings = \local_o365\utils::get_connected_users();
+        } else {
+            $moodletomicrosoftusermappings = $connectedusers;
+        }
+        $microsofttomoodleusermappings = array_flip($moodletomicrosoftusermappings);
+
+        if (!$groupobjectid) {
+            $sql = "SELECT distinct objectid
+                      FROM {local_o365_objects}
+                     WHERE type = :type
+                       AND moodleid = :moodleid";
+            $teamobjectids = $DB->get_fieldset_sql($sql, ['type' => 'group', 'moodleid' => $courseid]);
+            if (empty($teamobjectids)) {
+                // Sync is enabled but no Team is connected to the course.
+                $this->mtrace('No Team is connected to the course. Skipping.', 2);
+                return false;
+            }
+            $groupobjectid = reset($teamobjectids);
+        }
+
+        // Get current group membership.
+        $groupmembers = $this->get_group_members($groupobjectid);
+        $groupowners = $this->get_group_owners($groupobjectid);
+
+        // Get Moodle IDs of connected group members.
+        $connectedgroupmembers = [];
+        foreach ($groupmembers as $objectid => $value) {
+            if (array_key_exists($objectid, $microsofttomoodleusermappings)) {
+                $connectedgroupmembers[$microsofttomoodleusermappings[$objectid]] = $value;
+            }
+        }
+        $connectedintendedcoursestudents = array_keys($connectedgroupmembers);
+
+        // Get Moodle IDs of connected group owners.
+        $connectedgroupowners = [];
+        foreach ($groupowners as $objectid => $value) {
+            if (array_key_exists($objectid, $microsofttomoodleusermappings)) {
+                $connectedgroupowners[$microsofttomoodleusermappings[$objectid]] = $value;
+            }
+        }
+        $connectedintendedcourseteachers = array_keys($connectedgroupowners);
+
+        // Remove owners from members list.
+        $connectedintendedcoursestudents = array_diff($connectedintendedcoursestudents, $connectedintendedcourseteachers);
+
+        // Get role IDs from config.
+        $ownerroleid = get_config('local_o365', 'coursesyncownerrole');
+        $memberroleid = get_config('local_o365', 'coursesyncmemberrole');
+
+        // Get Moodle IDs of connected course teachers.
+        $courseenrolleduserids = array_keys(get_enrolled_users($coursecontext));
+        $courseteacherids = array_keys(get_role_users($ownerroleid, $coursecontext));
+        $connectedcurrentcourseteachers = array_intersect($courseenrolleduserids, $courseteacherids,
+            array_keys($moodletomicrosoftusermappings));
+
+        // Get Moodle IDs of connected course students.
+        $coursestudentids = array_keys(get_role_users($memberroleid, $coursecontext));
+        $connectedcurrentcoursestudents = array_intersect($courseenrolleduserids, $coursestudentids,
+            array_keys($moodletomicrosoftusermappings));
+
+        // Sync teachers.
+        //  - $connectedcurrentcourseteachers contains the current teachers in the course.
+        //  - $connectedintendedcourseteachers contains the teachers that should be in the course.
+        $teacherstoenrol = array_diff($connectedintendedcourseteachers, $connectedcurrentcourseteachers);
+        if ($teacherstoenrol) {
+            $this->mtrace('Adding teacher role to ' . count($teacherstoenrol) . ' users...', 2);
+            foreach ($teacherstoenrol as $userid) {
+                $this->assign_role_by_user_id_role_id_and_course_context($userid, $ownerroleid, $coursecontext);
+            }
+        } else {
+            $this->mtrace('No user to have teacher role added.', 2);
+        }
+
+        $teacherstounenrol = array_diff($connectedcurrentcourseteachers, $connectedintendedcourseteachers);
+        if ($teacherstounenrol) {
+            $this->mtrace('Removing teacher role from ' . count($teacherstounenrol) . ' users...', 2);
+            foreach ($teacherstounenrol as $userid) {
+                $this->unassign_role_by_user_id_role_id_and_course_context($userid, $ownerroleid, $coursecontext,
+                    in_array($userid, $connectedintendedcoursestudents));
+            }
+        } else {
+            $this->mtrace('No user to have teacher role removed.', 2);
+        }
+
+        // Sync students.
+        //  - $connectedcurrentcoursestudents contains the current students in the course.
+        //  - $connectedintendedcoursestudents contains the students that should be in the course.
+        $studentstoenrol = array_diff($connectedintendedcoursestudents, $connectedcurrentcoursestudents);
+        if ($studentstoenrol) {
+            $this->mtrace('Adding student role to ' . count($studentstoenrol) . ' users...', 2);
+            foreach ($studentstoenrol as $userid) {
+                $this->assign_role_by_user_id_role_id_and_course_context($userid, $memberroleid, $coursecontext);
+            }
+        } else {
+            $this->mtrace('No user to have student role added.', 2);
+        }
+
+        $studentstounenrol = array_diff($connectedcurrentcoursestudents, $connectedintendedcoursestudents);
+        if ($studentstounenrol) {
+            $this->mtrace('Removing student role from ' . count($studentstounenrol) . ' users...', 2);
+            foreach ($studentstounenrol as $userid) {
+                $this->unassign_role_by_user_id_role_id_and_course_context($userid, $memberroleid, $coursecontext,
+                    in_array($userid, $connectedintendedcourseteachers));
+            }
+        } else {
+            $this->mtrace('No user to have student role removed.', 2);
+        }
+
+        return true;
+    }
+
+    /**
+     * Assign the role with the given ID to the user with the given ID in the course with the given context.
+     *
+     * @param int $userid The Moodle ID of the user.
+     * @param int $roleid The ID of the role.
+     * @param context_course $context The context of the course.
+     */
+    private function assign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, context_course $context) : void {
+        enrol_try_internal_enrol($context->instanceid, $userid, $roleid);
+        $this->mtrace('Assigned role #' . $roleid . ' to user #' . $userid . '.', 3);
+    }
+
+    /**
+     * Unassign the role with the given ID from the user with the given ID in the course with the given context.
+     * If the user doesn't have any other role assignment in the course, attempt to unenrol the user too.
+     *
+     * @param int $userid The Moodle ID of the user.
+     * @param int $roleid The ID of the role.
+     * @param context_course $context The context of the course.
+     * @param bool $hasotherrole Whether the user has other role.
+     */
+    private function unassign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, context_course $context,
+        bool $hasotherrole) : void {
+        role_unassign($roleid, $userid, $context->id);
+        $this->mtrace('Removed role #' . $roleid . ' from user #' . $userid . '.', 3);
+
+        // Check if the user has any other roles in the course.
+        $userroles = get_user_roles($context, $userid, false);
+        if (!$hasotherrole && empty($userroles)) {
+            $this->unenrol_user_by_user_id_and_course_id($userid, $context->instanceid);
+        }
+    }
+
+    /**
+     * Unenrol the user with the given ID from the course with the given ID.
+     *
+     * @param int $userid The Moodle ID of the user.
+     * @param int $courseid The ID of the course.
+     * @return bool
+     */
+    private function unenrol_user_by_user_id_and_course_id(int $userid, int $courseid) : bool {
+        global $DB;
+
+        $sql = "SELECT *
+                  FROM {user_enrolments} ue
+            INNER JOIN {enrol} e ON ue.enrolid = e.id
+                 WHERE ue.userid = :userid
+                   AND e.courseid = :courseid";
+        $userenrolments = $DB->get_records_sql($sql, ['userid' => $userid, 'courseid' => $courseid]);
+
+        if (empty($userenrolments)) {
+            return false;
+        }
+
+        $unenrolled = false;
+        foreach ($userenrolments as $userenrolment) {
+            $enrolinstance = $DB->get_record('enrol', ['id' => $userenrolment->enrolid]);
+            $plugin = enrol_get_plugin($enrolinstance->enrol);
+
+            if ($plugin->allow_unenrol($enrolinstance)) {
+                $plugin->unenrol_user($enrolinstance, $userid);
+                $unenrolled = true;
+            }
+        }
+
+        if ($unenrolled) {
+            $this->mtrace('Unenroled user #' . $userid . ' from course #' . $courseid . '.', 4);
+        }
+
+        return true;
+    }
+
+    /**
+     * Perform initial dual way Moodle course and Microsoft Teams user sync between course and Teams.
+     * In this mode:
+     *  - Moodle users with configured teacher role will be added as Team owners;
+     *  - Moodle users with configured student role will be added as Team members;
+     *  - Team owners will be added as Moodle users with configured teacher role;
+     *  - Team members will be added as Moodle users with configured student role.
+     * No role unassignment or Team owner/member removal will be performed.
+     *
+     * @param int $courseid The ID of the course.
+     * @param string $groupobjectid The object ID of the Microsoft 365 group.
+     */
+    public function process_initial_course_team_user_sync(int $courseid, string $groupobjectid) : void {
+        $coursecontext = context_course::instance($courseid);
+
+        $this->mtrace('Perform initial Moodle course and Microsoft Teams user sync between course #' . $courseid .
+            ' and Teams ' . $groupobjectid  . ' ...', 1);
+
+        $moodletomicrosoftusermappings = \local_o365\utils::get_connected_users();
+        $microsofttomoodleusermappings = array_flip($moodletomicrosoftusermappings);
+
+        $groupowners = $this->get_group_owners($groupobjectid);
+        $groupmembers = $this->get_group_members($groupobjectid);
+
+        // Get Moodle IDs of connected group owners.
+        $connectedgroupowners = [];
+        foreach ($groupowners as $objectid => $value) {
+            if (array_key_exists($objectid, $microsofttomoodleusermappings)) {
+                $connectedgroupowners[$microsofttomoodleusermappings[$objectid]] = $value;
+            }
+        }
+        $connectedintendedcourseteachers = array_keys($connectedgroupowners);
+
+        // Get Moodle IDs of connected group members.
+        $connectedgroupmembers = [];
+        foreach ($groupmembers as $objectid => $value) {
+            if (array_key_exists($objectid, $microsofttomoodleusermappings)) {
+                $connectedgroupmembers[$microsofttomoodleusermappings[$objectid]] = $value;
+            }
+        }
+        $connectedintendedcoursestudents = array_keys($connectedgroupmembers);
+
+        // Remove owners from members list.
+        $connectedintendedcoursestudents = array_diff($connectedintendedcoursestudents, $connectedintendedcourseteachers);
+
+        // Get role IDs from config.
+        $ownerroleid = get_config('local_o365', 'coursesyncownerrole');
+        $memberroleid = get_config('local_o365', 'coursesyncmemberrole');
+
+        // Get Moodle IDs of connected course teachers.
+        $courseteachers = get_role_users($ownerroleid, $coursecontext, true);
+        $connectedcurrentcourseteachers = [];
+        foreach ($courseteachers as $courseteacher) {
+            if (array_key_exists($courseteacher->id, $moodletomicrosoftusermappings)) {
+                $connectedcurrentcourseteachers[] = (int) $courseteacher->id;
+            }
+        }
+
+        // Get Moodle IDs of connected course students.
+        $coursestudents = get_role_users($memberroleid, $coursecontext, true);
+        $connectedcurrentcoursestudents = [];
+        foreach ($coursestudents as $coursestudent) {
+            if (array_key_exists($coursestudent->id, $moodletomicrosoftusermappings)) {
+                $connectedcurrentcoursestudents[] = (int) $coursestudent->id;
+            }
+        }
+
+        // Sync teachers from Microsoft Teams to Moodle course.
+        //  - $connectedcurrentcourseteachers contains the current teachers in the course.
+        //  - $connectedintendedcourseteachers contains the teachers that should be in the course.
+        $teacherstoenrol = array_diff($connectedintendedcourseteachers, $connectedcurrentcourseteachers);
+        if ($teacherstoenrol) {
+            $this->mtrace('Adding teacher role to ' . count($teacherstoenrol) . ' users...', 2);
+            foreach ($teacherstoenrol as $userid) {
+                $this->assign_role_by_user_id_role_id_and_course_context($userid, $ownerroleid, $coursecontext);
+            }
+        } else {
+            $this->mtrace('No user to have teacher role added.', 2);
+        }
+
+        // Sync students from Microsoft Teams to Moodle course.
+        //  - $connectedcurrentcoursestudents contains the current students in the course.
+        //  - $connectedintendedcoursestudents contains the students that should be in the course.
+        $studentstoenrol = array_diff($connectedintendedcoursestudents, $connectedcurrentcoursestudents);
+        if ($studentstoenrol) {
+            $this->mtrace('Adding student role to ' . count($studentstoenrol) . ' users...', 2);
+            foreach ($studentstoenrol as $userid) {
+                $this->assign_role_by_user_id_role_id_and_course_context($userid, $memberroleid, $coursecontext);
+            }
+        } else {
+            $this->mtrace('No user to have student role added.', 2);
+        }
+
+        // Sync owners and members from Moodle course to Microsoft Teams.
+        $ownerstoadd = array_diff($connectedcurrentcourseteachers, $connectedintendedcourseteachers);
+        $memberstoadd = array_diff($connectedcurrentcoursestudents, $connectedintendedcoursestudents);
+        $owneroids = [];
+        foreach ($ownerstoadd as $owneruid) {
+            $owneroids[] = $moodletomicrosoftusermappings[$owneruid];
+        }
+        $memberoids = [];
+        foreach ($memberstoadd as $memberuid) {
+            $memberoids[] = $moodletomicrosoftusermappings[$memberuid];
+        }
+        $this->mtrace('Add ' . count($owneroids) . ' owners and ' . count($memberoids) . ' members in bulk', 2);
+        $this->add_group_owners_and_members_to_group($groupobjectid, $owneroids, $memberoids);
     }
 }

@@ -48,6 +48,15 @@ if (!$PAGE->requires->is_head_done()) {
 }
 global $install;
 
+// Course role options.
+$courseroleoptions = [];
+$courseroles = get_roles_for_contextlevels(CONTEXT_COURSE);
+$allroles = get_all_roles();
+foreach ($courseroles as $courserole) {
+    $role = $allroles[$courserole];
+    $courseroleoptions[$courserole] = role_get_name($role);
+}
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_o365', new lang_string('pluginname', 'local_o365'));
     $ADMIN->add('localplugins', $settings);
@@ -240,6 +249,29 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_coursesync_courses_per_task', 'local_o365');
         $desc = new lang_string('settings_coursesync_courses_per_task_details', 'local_o365');
         $settings->add(new admin_setting_configtext('local_o365/courses_per_task', $label, $desc, 20, PARAM_INT));
+
+        // Sync direction setting.
+        $label = new lang_string('settings_coursesync_sync_direction', 'local_o365');
+        $desc = new lang_string('settings_coursesync_sync_direction_details', 'local_o365');
+        $options = [
+            COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS => new lang_string('settings_coursesync_sync_moodle_to_teams', 'local_o365'),
+            COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE => new lang_string('settings_coursesync_sync_teams_to_moodle', 'local_o365'),
+            COURSE_USER_SYNC_DIRECTION_BOTH => new lang_string('settings_coursesync_sync_both', 'local_o365'),
+        ];
+        $settings->add(new admin_setting_configselect('local_o365/courseusersyncdirection', $label, $desc,
+            COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS, $options));
+
+        // Course sync Team owner role setting.
+        $label = new lang_string('settings_coursesync_enrolment_owner_role', 'local_o365');
+        $desc = new lang_string('settings_coursesync_enrolment_owner_role_desc', 'local_o365');
+        $settings->add(new admin_setting_configselect('local_o365/coursesyncownerrole', $label, $desc, 3,
+            $courseroleoptions));
+
+        // Course sync Team member role setting.
+        $label = new lang_string('settings_coursesync_enrolment_member_role', 'local_o365');
+        $desc = new lang_string('settings_coursesync_enrolment_member_role_desc', 'local_o365');
+        $settings->add(new admin_setting_configselect('local_o365/coursesyncmemberrole', $label, $desc, 5,
+                $courseroleoptions));
 
         // Team / group name section.
         $settings->add(new admin_setting_heading('local_o365_section_team_name',
@@ -457,26 +489,17 @@ if ($hassiteconfig) {
                     $desc = new lang_string('settings_sds_sync_enrolment_to_sds_desc', 'local_o365');
                     $settings->add(new admin_setting_configcheckbox('local_o365/sdssyncenrolmenttosds', $label, $desc, '0'));
 
-                    // SDS course sync role selector.
-                    $roleoptions = [];
-                    $courseroles = get_roles_for_contextlevels(CONTEXT_COURSE);
-                    $allroles = get_all_roles();
-                    foreach ($courseroles as $courserole) {
-                        $role = $allroles[$courserole];
-                        $roleoptions[$courserole] = role_get_name($role);
-                    }
-
                     // SDS course sync teacher role setting.
                     $label = new lang_string('settings_sds_enrolment_teacher_role', 'local_o365');
                     $desc = new lang_string('settings_sds_enrolment_teacher_role_desc', 'local_o365');
                     $settings->add(new admin_setting_configselect('local_o365/sdsenrolmentteacherrole', $label, $desc, 3,
-                        $roleoptions));
+                        $courseroleoptions));
 
                     // SDS course sync student role setting.
                     $label = new lang_string('settings_sds_enrolment_student_role', 'local_o365');
                     $desc = new lang_string('settings_sds_enrolment_student_role_desc', 'local_o365');
                     $settings->add(new admin_setting_configselect('local_o365/sdsenrolmentstudentrole', $label, $desc, 5,
-                        $roleoptions));
+                        $courseroleoptions));
 
                     // SDS school sync disabled action.
                     $schooldisabledactionoptions = [

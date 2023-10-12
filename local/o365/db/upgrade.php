@@ -957,5 +957,49 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023042407, 'local', 'o365');
     }
 
+    if ($oldversion < 2023042413) {
+        // Set default course user sync direction.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if (!$courseusersyncdirection) {
+            set_config('courseusersyncdirection', COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS, 'local_o365');
+        }
+
+        // Set default Team owner role.
+        $coursesyncownerrole = get_config('local_o365', 'coursesyncownerrole');
+        if (!$coursesyncownerrole) {
+            $teacherroleid = 0;
+            if ($editingteacherrole = $DB->get_record('role', ['shortname' => 'editingteacher'])) {
+                $teacherroleid = $editingteacherrole->id;
+            } else {
+                $editingteacherroles = $DB->get_records('role', ['archetype' => 'editingteacher'], 'sortorder ASC');
+                if ($editingteacherroles) {
+                    $teacherroleid = reset($editingteacherroles)->id;
+                }
+            }
+            if ($teacherroleid) {
+                set_config('coursesyncownerrole', $teacherroleid, 'local_o365');
+            }
+        }
+
+        // Set default Team member role.
+        $coursesyncmemberrole = get_config('local_o365', 'coursesyncmemberrole');
+        if (!$coursesyncmemberrole) {
+            $studentroleid = 0;
+            if ($studentrole = $DB->get_record('role', ['shortname' => 'student'])) {
+                $studentroleid = $studentrole->id;
+            } else {
+                $studentroles = $DB->get_records('role', ['archetype' => 'student'], 'sortorder ASC');
+                if ($studentroles) {
+                    $studentroleid = reset($studentroles)->id;
+                }
+            }
+            if ($studentroleid) {
+                set_config('coursesyncmemberrole', $studentroleid, 'local_o365');
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2023042413, 'local', 'o365');
+    }
+
     return true;
 }
