@@ -289,6 +289,15 @@ $string['settings_coursesync_delete_group_on_course_sync_disabled'] = 'Delete Mi
 $string['settings_coursesync_delete_group_on_course_sync_disabled_details'] = 'If enabled, Moodle will try to delete the connected Microsoft 365 Group (and associated Team) when course sync is turned off for a Moodle course.';
 $string['settings_coursesync_courses_per_task'] = 'Courses to sync per task run';
 $string['settings_coursesync_courses_per_task_details'] = 'The number of courses whose Team/group sync status are to be processed at each task run.';
+$string['settings_coursesync_sync_direction'] = 'Course user sync behavior';
+$string['settings_coursesync_sync_direction_details'] = 'Select the direction in which you want the users to be synchronized between Moodle and Microsoft Teams.';
+$string['settings_coursesync_sync_moodle_to_teams'] = 'From Moodle to Teams';
+$string['settings_coursesync_sync_teams_to_moodle'] = 'From Teams to Moodle';
+$string['settings_coursesync_sync_both'] = 'Update both Teams and Moodle';
+$string['settings_coursesync_enrolment_owner_role'] = 'Team owner role';
+$string['settings_coursesync_enrolment_owner_role_desc'] = 'The role that will be assigned to the Team owner during sync.';
+$string['settings_coursesync_enrolment_member_role'] = 'Team member role';
+$string['settings_coursesync_enrolment_member_role_desc'] = 'The role that will be assigned to the Team members during sync.';
 
 // Settings in the "Course sync customization" page in the "Course sync" section of the "Sync settings" tab.
 $string['acp_coursesynccustom'] = 'Course sync customization';
@@ -861,6 +870,7 @@ $string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already con
 $string['task_bot'] = 'Bot message task';
 $string['task_calendarsyncin'] = 'Sync Microsoft 365 events in to Moodle';
 $string['task_coursesync'] = 'Sync Moodle courses to Microsoft Teams';
+$string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members to Moodle courses';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users with Azure AD';

@@ -501,4 +501,22 @@ class utils {
         }
         return '';
     }
+
+    /**
+     * Get the list of connected users with their Moodle user ID and Microsoft 365 user ID.
+     *
+     * @return array
+     */
+    public static function get_connected_users() : array {
+        global $DB;
+
+        $connectedusers = [];
+
+        $userobjectrecords = $DB->get_records('local_o365_objects', ['type' => 'user']);
+        foreach ($userobjectrecords as $userobjectrecord) {
+            $connectedusers[$userobjectrecord->moodleid] = $userobjectrecord->objectid;
+        }
+
+        return $connectedusers;
+    }
 }

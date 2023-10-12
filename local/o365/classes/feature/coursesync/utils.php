@@ -57,6 +57,8 @@ class utils {
      * @return bool|array Array of course IDs, or TRUE if all courses enabled.
      */
     public static function get_enabled_courses() {
+        global $DB;
+
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'onall') {
             return true;
@@ -64,9 +66,21 @@ class utils {
             $coursesenabled = get_config('local_o365', 'coursesynccustom');
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled)) {
+                $changed = false;
+                $courseids = array_keys($coursesenabled);
+                foreach ($courseids as $courseid => $value) {
+                    if (!$DB->record_exists('course', ['id' => $courseid])) {
+                        unset($coursesenabled[$courseid]);
+                        $changed = true;
+                    }
+                }
+                if ($changed) {
+                    set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
+                }
                 return array_keys($coursesenabled);
             }
         }
+
         return [];
     }
 
