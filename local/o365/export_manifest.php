@@ -42,5 +42,5 @@ if ($manifestfilepath) {
     header("Expires: 0");
     readfile($manifestfilepath);
 } else {
-    print_error($error);
+    throw new Exception($error);
 }
