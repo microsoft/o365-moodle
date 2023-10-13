@@ -522,13 +522,7 @@ if ($hassiteconfig) {
         $bannerhtml .= html_writer::img(new moodle_url('/local/o365/pix/teams_app.png'), '',
             ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_teams_app_img']);
         $bannerhtml .= html_writer::start_tag('p');
-        $bannerhtml .= get_string('settings_teams_banner_1', 'local_o365');
-        $bannerhtml .= html_writer::empty_tag('br');
-        $bannerhtml .= html_writer::empty_tag('br');
-        $bannerhtml .= html_writer::end_tag('p');
-        $bannerhtml .= html_writer::start_tag('p');
-        $bannerhtml .= get_string('settings_teams_banner_2', 'local_o365');
-        $bannerhtml .= html_writer::empty_tag('br');
+        $bannerhtml .= get_string('settings_teams_banner', 'local_o365');
         $bannerhtml .= html_writer::empty_tag('br');
         $bannerhtml .= html_writer::end_tag('p');
         $bannerhtml .= html_writer::end_div();
@@ -543,60 +537,6 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_moodlesettingssetup_details', 'local_o365');
         $settings->add(new moodlesetup('local_o365/moodlesetup', $label, $desc));
 
-        // Instructions.
-        $settings->add(new admin_setting_heading('local_o365/teams_setting_instructions', '',
-            get_string('settings_teams_additional_instructions', 'local_o365')));
-
-        // Setting bot_app_id.
-        $settings->add(new admin_setting_configtext_with_maxlength('local_o365/bot_app_id',
-            get_string('settings_bot_app_id', 'local_o365'),
-            get_string('settings_bot_app_id_desc', 'local_o365'),
-            '00000000-0000-0000-0000-000000000000', PARAM_TEXT, 38, 36));
-
-        // Setting bot_app_password.
-        $settings->add(new admin_setting_configpasswordunmask('local_o365/bot_app_password',
-            get_string('settings_bot_app_password', 'local_o365'),
-            get_string('settings_bot_app_password_desc', 'local_o365'),
-            ''));
-
-        // Setting bot_shared_secret.
-        $sharedsecretsetting = new admin_setting_configtext('local_o365/bot_sharedsecret',
-            get_string('settings_bot_sharedsecret', 'local_o365'),
-            get_string('settings_bot_sharedsecret_desc', 'local_o365'),
-            '');
-        $sharedsecretsetting->nosave = true;
-        $settings->add($sharedsecretsetting);
-
-        // Download JSON settings file.
-        $jsondownloadhtml = $OUTPUT->box_start('form-item row local_o365_settings_teams_banner_part_2');
-        $jsondownloadhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
-        $jsondownloadhtml .= get_string('settings_teams_download_json_desc', 'local_o365');
-        $jsondownloadhtml .= html_writer::end_tag('p');
-        $jsondownloadhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
-        $jsondownloadurl = new moodle_url('/local/o365/json_download.php', ['sesskey' => sesskey()]);
-        $jsondownloadhtml .= html_writer::link($jsondownloadurl, get_string('settings_teams_download_json', 'local_o365'),
-            ['class' => 'btn btn-primary']);
-        $jsondownloadhtml .= html_writer::end_tag('p');
-        $jsondownloadhtml .= $OUTPUT->box_end();
-        $settings->add(new admin_setting_heading('local_o365/teams_json_download', '', $jsondownloadhtml));
-
-        // Deploy button.
-        $deploybuttonhtml = html_writer::start_div('form-item row local_o365_settings_teams_banner_part_2',
-            ['id' => 'admin-teams-bot-deploy']);
-        $deploybuttonhtml .= html_writer::start_tag('p', ['class' => 'local_o365_settings_teams_horizontal_spacer']);
-        $deploybuttonhtml .= get_string('settings_teams_deploy_bot_1', 'local_o365');
-        $deploybuttonhtml .= html_writer::empty_tag('br');
-        $deploybuttonhtml .= html_writer::empty_tag('br');
-        $deploybuttonhtml .= html_writer::link('https://aka.ms/DeployMoodleTeamsBot',
-            html_writer::img(new moodle_url('/local/o365/pix/deploybutton.png'), get_string('settings_deploy_bot', 'local_o365')),
-            ['target' => '_blank']);
-        $deploybuttonhtml .= html_writer::empty_tag('br');
-        $deploybuttonhtml .= html_writer::link('https://aka.ms/MoodleTeamsBotHelp',
-            get_string('settings_teams_deploy_bot_2', 'local_o365'), ['target' => '_blank']);
-        $deploybuttonhtml .= html_writer::end_tag('p');
-        $deploybuttonhtml .= html_writer::end_div();
-        $settings->add(new admin_setting_heading('local_o365/teams_deploy_bot', '', $deploybuttonhtml));
-
         // Setting teams_moodle_app_external_id.
         $settings->add(new admin_setting_configtext('local_o365/teams_moodle_app_external_id',
             get_string('settings_teams_moodle_app_external_id', 'local_o365'),
@@ -608,29 +548,6 @@ if ($hassiteconfig) {
             get_string('settings_teams_moodle_app_short_name', 'local_o365'),
             get_string('settings_teams_moodle_app_short_name_desc', 'local_o365'),
             'Moodle'));
-
-        // Setting bot_feature_enabled.
-        $botfeatureenableddescription = '';
-        if (local_o365_is_lti_feature_included()) {
-            if (\local_o365\utils::is_connected() === true) {
-                $graphclient = utils::get_graphclient();
-                if ($graphclient) {
-                    if ($graphclient->has_education_license()) {
-                        $botfeatureenableddescription = get_string('settings_bot_feature_enabled_desc', 'local_o365');
-                    }
-                }
-            }
-        }
-        $settings->add(new admin_setting_configcheckbox('local_o365/bot_feature_enabled',
-            get_string('settings_bot_feature_enabled', 'local_o365'),
-            $botfeatureenableddescription,
-            '0'));
-
-        // Setting bot_webhook_endpoint.
-        $settings->add(new admin_setting_configtext('local_o365/bot_webhook_endpoint',
-            get_string('settings_bot_webhook_endpoint', 'local_o365'),
-            get_string('settings_bot_webhook_endpoint_desc', 'local_o365'),
-            ''));
 
         // Manifest download link.
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');

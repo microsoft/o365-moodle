@@ -183,12 +183,6 @@ $observers = [
         'internal'    => true,
     ],
     [
-        'eventname'   => '\core\event\notification_sent',
-        'callback'    => '\local_o365\observers::handle_notification_sent',
-        'priority'    => 200,
-        'internal'    => false,
-    ],
-    [
         'eventname'   => '\core\event\config_log_created',
         'callback'    => '\local_o365\observers::handle_config_log_created',
         'priority'    => 200,
