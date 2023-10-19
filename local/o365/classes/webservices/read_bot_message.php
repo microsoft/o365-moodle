@@ -34,6 +34,10 @@ use core_external\external_warnings;
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_external\external_api;
+
+require_once($CFG->libdir.'/externallib.php');
+
 /**
  * Get help card for user.
  */

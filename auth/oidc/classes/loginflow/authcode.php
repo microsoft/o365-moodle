@@ -27,9 +27,12 @@
 namespace auth_oidc\loginflow;
 
 use auth_oidc\event\user_authed;
+use auth_oidc\event\user_rename_attempt;
 use auth_oidc\jwt;
 use auth_oidc\utils;
 use core\output\notification;
+use core_text;
+use core_user;
 use moodle_exception;
 use moodle_url;
 use pix_icon;
@@ -37,6 +40,7 @@ use pix_icon;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/user/lib.php');
 
 /**
  * Login flow for the oauth2 authorization code grant.
@@ -533,11 +537,52 @@ class authcode extends base {
             throw new moodle_exception('erroroidcnotenabled', 'auth_oidc', null, null, '1');
         }
 
+        // Find the latest real Microsoft username.
+        // Determine remote username depending on IdP type, or fall back to standard 'sub'.
+        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            $oidcusername = $idtoken->claim('preferred_username');
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('email');
+            }
+        } else {
+            $oidcusername = $idtoken->claim('upn');
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('unique_name');
+            }
+        }
+        if (empty($oidcusername)) {
+            $oidcusername = $idtoken->claim('sub');
+        }
+
+        $usernamechanged = false;
+        if ($oidcusername && $tokenrec && strtolower($oidcusername) !== strtolower($tokenrec->oidcusername)) {
+            $usernamechanged = true;
+        }
+
+        $existingmatching = null;
+        if (auth_oidc_is_local_365_installed()) {
+            if ($existingmatching = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $oidcuniqid])) {
+                $existinguser = core_user::get_user($existingmatching->moodleid);
+                if ($existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername)) {
+                    $usernamechanged = true;
+                }
+            }
+        }
+
+        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change');
+
         if (!empty($tokenrec)) {
             // Already connected user.
             if (empty($tokenrec->userid)) {
                 // Existing token record, but missing the user ID.
-                $user = $DB->get_record('user', ['username' => $tokenrec->username]);
+                $user = null;
+                if ($usernamechanged) {
+                    $user = $DB->get_record('user', ['username' => $oidcusername]);
+                }
+                if (empty($user)) {
+                    $user = $DB->get_record('user', ['username' => $tokenrec->username]);
+                }
+
                 if (empty($user)) {
                     // Token exists, but it doesn't have a valid username.
                     // In this case, delete the token, and try to process login again.
@@ -545,6 +590,9 @@ class authcode extends base {
                     return $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
                 }
                 $tokenrec->userid = $user->id;
+                if ($usernamechanged) {
+                    $tokenrec->oidcusername = $oidcusername;
+                }
                 $DB->update_record('auth_oidc_token', $tokenrec);
             } else {
                 // Existing token with a user ID.
@@ -558,6 +606,47 @@ class authcode extends base {
                     $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
                     return $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
                 }
+
+                // Handle username change - update token, update connection.
+                if ($usernamechanged) {
+                    if ($supportupnchangeconfig != 1) {
+                        // Username change is not supported, throw exception.
+                        throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
+                    }
+                    $potentialduplicateuser = core_user::get_user_by_username($oidcusername);
+                    if ($potentialduplicateuser) {
+                        // Username already exists, cannot change Moodle account username, throw exception.
+                        throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_oidc', null, null, '2');
+                    } else {
+                        // Username does not exist:
+                        //  1. can change Moodle account username (if the user uses auth_oidc),
+                        //  2. can change token record.
+                        if ($user->auth == 'oidc') {
+                            $user->username = $oidcusername;
+                            user_update_user($user, false);
+
+                            $fullmessage = 'Attempt to change username of user ' . $user->id . ' from ' .
+                                $tokenrec->oidcusername . ' to ' . $oidcusername;
+                            $event = user_rename_attempt::create(['objectid' => $user->id, 'other' => $fullmessage,
+                                'userid' => $user->id]);
+                            $event->trigger();
+
+                            $tokenrec->username = $oidcusername;
+                        }
+
+                        $tokenrec->oidcusername = $oidcusername;
+                        $DB->update_record('auth_oidc_token', $tokenrec);
+                    }
+
+                    // Update local_o365_objects table.
+                    if (auth_oidc_is_local_365_installed()) {
+                        if ($o365objectrecord = $DB->get_record('local_o365_objects',
+                            ['moodleid' => $user->id, 'type' => 'user'])) {
+                            $o365objectrecord->o365name = $oidcusername;
+                            $DB->update_record('local_o365_objects', $o365objectrecord);
+                        }
+                    }
+                }
             }
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
@@ -569,7 +658,81 @@ class authcode extends base {
                 // There was a problem in authenticate_user_login.
                 throw new moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
             }
+        } else if ($usernamechanged) {
+            // User has connection record, but no token; and the user has been renamed in Microsoft.
+            // In this case, we need to:
+            //  1. attempt to update Moodle username,
+            //  2. create token record,
+            //  3. update connection record in local_o365_objects table.
 
+            if ($supportupnchangeconfig != 1) {
+                throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
+            }
+
+            $existinguser = core_user::get_user($existingmatching->moodleid);
+
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                $username = $idtoken->claim('preferred_username');
+                if (empty($username)) {
+                    $username = $idtoken->claim('email');
+                }
+            } else {
+                $username = $idtoken->claim('upn');
+                if (empty($username)) {
+                    $username = $idtoken->claim('unique_name');
+                }
+            }
+            $originalupn = null;
+
+            if (empty($username)) {
+                $username = $oidcuniqid;
+
+                // If upn claim is missing, it can mean either the IdP is not Azure AD, or it's a guest user.
+                if (auth_oidc_is_local_365_installed()) {
+                    $apiclient = \local_o365\utils::get_api();
+                    $userdetails = $apiclient->get_user($oidcuniqid, true);
+                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')) {
+                        $originalupn = $userdetails['userPrincipalName'];
+                        $username = $idtoken->claim('unique_name');
+                    }
+                }
+            }
+            $username = trim(core_text::strtolower($username));
+
+            // Update username.
+            $userwithduplicateusername = core_user::get_user_by_username($username);
+            if ($userwithduplicateusername) {
+                // Cannot rename user, username already exists.
+                throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_oidc', null, null, '2');
+            } else {
+                $originalusername = $existinguser->username;
+                $existinguser->username = $username;
+                user_update_user($existinguser, false);
+
+                $fullmessage =
+                    'Attempt to change username of user ' . $existinguser->id . ' from ' . $originalusername . ' to ' .
+                    $username;
+                $event = user_rename_attempt::create(['objectid' => $existinguser->id, 'other' => $fullmessage,
+                    'userid' => $existinguser->id]);
+                $event->trigger();
+            }
+
+            // Create token.
+            $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
+
+            // Update connection record in local_o365_objects table.
+            $existingmatching->o365name = $oidcusername;
+            $DB->update_record('local_o365_objects', $existingmatching);
+
+            $user = authenticate_user_login($username, null, true);
+
+            if (!empty($user)) {
+                complete_user_login($user);
+            } else {
+                // There was a problem in authenticate_user_login.
+                throw new moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
+            }
         } else {
             /* No existing token, user not connected. Possibilities:
                 - Matched user.
@@ -615,7 +778,7 @@ class authcode extends base {
                     throw new moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
                 }
             }
-            $username = trim(\core_text::strtolower($username));
+            $username = trim(core_text::strtolower($username));
             $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
 
             $existinguserparams = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id];

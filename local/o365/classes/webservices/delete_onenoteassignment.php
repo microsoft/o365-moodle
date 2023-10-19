@@ -32,9 +32,12 @@ use core_external\external_value;
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_external\external_api;
+
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
+require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Delete assignment API class.

@@ -26,6 +26,8 @@
 
 namespace local_o365\feature\usersync;
 
+use core_text;
+use core_user;
 use Exception;
 use local_o365\oauth2\clientdata;
 use local_o365\httpclient;
@@ -178,7 +180,7 @@ class main {
             if (!empty($result['odata.error']['message']['value'])) {
                 $error = $result['odata.error']['message']['value'];
             }
-            $user = \core_user::get_user($muserid);
+            $user = core_user::get_user($muserid);
             $this->mtrace('Error assigning users "'.$user->username.'" Reason: '.$code.' '.$error);
         } else {
             $this->mtrace('User assigned to application.');
@@ -205,7 +207,7 @@ class main {
             $upn = $o365user->upn;
         }
 
-        $muser = \core_user::get_user($muserid, 'id, picture', MUST_EXIST);
+        $muser = core_user::get_user($muserid, 'id, picture', MUST_EXIST);
         $context = \context_user::instance($muserid, MUST_EXIST);
 
         $image = $apiclient->get_photo($upn);
@@ -276,7 +278,7 @@ class main {
 
             if ($moodletimezone) {
                 validate_param($moodletimezone, PARAM_TIMEZONE);
-                $existinguser = \core_user::get_user($muserid);
+                $existinguser = core_user::get_user($muserid);
                 $existinguser->timezone = $moodletimezone;
                 user_update_user($existinguser, false, true);
             }
@@ -803,7 +805,7 @@ class main {
         }
         $newuser = (object)[
             'auth' => 'oidc',
-            'username' => trim(\core_text::strtolower($username)),
+            'username' => trim(core_text::strtolower($username)),
             'confirmed' => 1,
             'timecreated' => time(),
             'mnethostid' => $CFG->mnet_localhost_id,
@@ -982,7 +984,7 @@ class main {
                 }
             }
 
-            $upnlower = \core_text::strtolower($user['userPrincipalName']);
+            $upnlower = core_text::strtolower($user['userPrincipalName']);
             $aadusers[$i]['upnlower'] = $upnlower;
 
             $usernames[] = $upnlower;
@@ -996,7 +998,7 @@ class main {
 
             // Convert upn for guest users.
             if (stripos($upnlower, '#ext#') !== false) {
-                $upnlower = \core_text::strtolower($user['mail']);
+                $upnlower = core_text::strtolower($user['mail']);
 
                 $usernames[] = $upnlower;
                 $upns[] = $upnlower;
@@ -1103,9 +1105,9 @@ class main {
 
         $processedusers = [];
 
-        foreach ($aadusers as $aaduser) {
-            $this->mtrace(' ');
+        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change');
 
+        foreach ($aadusers as $aaduser) {
             if (unified::is_configured()) {
                 $userobjectid = $aaduser['id'];
             } else {
@@ -1132,63 +1134,196 @@ class main {
                 $processedusers[] = $aaduser['convertedupn'];
             }
 
+            $needsyncprofile = false;
+            $connected = false;
             if (!isset($existingusers[$aaduser['upnlower']]) && !isset($existingusers[$aaduser['upnsplit0']]) &&
                 !isset($existingusers[$aaduser['convertedupn']])) {
-                $this->sync_new_user($aadsync, $aaduser, isset($aadsync['guestsync']));
+                // Check if the user has been renamed.
+                $syncnewuser = array_key_exists('create', $aadsync);
+                if (isset($aaduser['id']) && $aaduser['id'] && $existingusermatching = $DB->get_record('local_o365_objects',
+                        ['type' => 'user', 'objectid' => $aaduser['id']])) {
+                    // This is a previously connected user who has been renamed in Microsoft.
+                    $needsyncprofile = true;
+
+                    $renamedmoodleuser = core_user::get_user($existingusermatching->moodleid);
+                    if ($renamedmoodleuser) {
+                        $this->mtrace('The user has been renamed in Microsoft...');
+                        $syncnewuser = false;
+
+                        if ($supportupnchangeconfig == 1) {
+                            // Check if manually matched users, who shouldn't be renamed.
+                            if ($DB->record_exists('local_o365_connections', ['muserid' => $renamedmoodleuser->id])) {
+                                $this->mtrace('The user is manually matched, skipping renaming...');
+                            } else {
+                                $this->mtrace('Updating Moodle username...');
+
+                                // Update user record.
+                                $username = $aaduser['userPrincipalName'];
+                                if (isset($aaduser['convertedupn']) && $aaduser['convertedupn']) {
+                                    $username = $aaduser['convertedupn'];
+                                }
+                                $username = trim(core_text::strtolower($username));
+                                $renamedmoodleuser->username = $username;
+                                user_update_user($renamedmoodleuser, false);
+
+                                // Update connection record.
+                                $existingusermatching->o365name = $aaduser['upnlower'];
+                                $DB->update_record('local_o365_objects', $existingusermatching);
+
+                                // Update token record.
+                                if ($existingtoken = $DB->get_record('auth_oidc_token', ['userid' => $renamedmoodleuser->id])) {
+                                    $existingtoken->oidcusername = $aaduser['userPrincipalName'];
+                                    $existingtoken->username = $username;
+                                    $DB->update_record('auth_oidc_token', $existingtoken);
+                                }
+
+                                if (in_array($username, [$aaduser['upnlower'], $aaduser['upnsplit0']])) {
+                                    $exactmatch = true;
+                                } else {
+                                    $exactmatch = false;
+                                }
+
+                                $existinguserrecord = new stdClass();
+                                $existinguserrecord->muserid = $renamedmoodleuser->id;
+                                $existinguserrecord->objectid = $existingusermatching->id;
+                                $existinguserrecord->username = $username;
+                                $existinguserrecord->suspended = $renamedmoodleuser->suspended;
+                                $existinguserrecord->auth = $renamedmoodleuser->auth;
+
+                                $connected = $this->sync_existing_user($aadsync, $aaduser, $existinguserrecord, $exactmatch);
+                                $existinguser = $renamedmoodleuser;
+                            }
+                        } else {
+                            $this->mtrace('The option to update Moodle username is disabled...');
+                        }
+                    }
+                }
+                if ($syncnewuser) {
+                    $this->sync_new_user($aadsync, $aaduser, isset($aadsync['guestsync']));
+                }
             } else {
-                $existinguser = null;
-                if (isset($existingusers[$aaduser['upnlower']])) {
-                    $existinguser = $existingusers[$aaduser['upnlower']];
-                    $exactmatch = true;
-                } else if (isset($existingusers[$aaduser['upnsplit0']])) {
-                    $existinguser = $existingusers[$aaduser['upnsplit0']];
-                    $exactmatch = strlen($aaduser['upnsplit0']) >= $switchauthminupnsplit0;
-                } else if (isset($existingusers[$aaduser['convertedupn']])) {
-                    $existinguser = $existingusers[$aaduser['convertedupn']];
-                    $exactmatch = true;
-                }
+                // AAD user details match existing user record.
+                $needsyncprofile = true;
 
-                // Process guest users.
-                if (stripos($aaduser['upnlower'], '_ext_') !== false) {
-                    $this->mtrace('The user is a guest user.');
-                    if (!isset($aadsync['guestsync'])) {
-                        $this->mtrace('The option to sync guest users is turned off.');
-                        $this->mtrace('User is already synced, but not updated.');
+                // First check if this is a previously connected user who has been renamed in Microsoft, but the new username
+                // matches an existing Moodle account.
+                $userrenamefailed = false;
+                $userrenamed = false;
+                $syncexistinguser = true;
+                if (isset($aaduser['id']) && $aaduser['id'] &&
+                    $existingusermatching = $DB->get_record('local_o365_objects',
+                        ['type' => 'user', 'objectid' => $aaduser['id']])) {
+                    if (!in_array($existingusermatching->o365name, [$aaduser['upnlower'], $aaduser['upnsplit0'],
+                        $aaduser['convertedupn'], $aaduser['userPrincipalName']])) {
+                        $syncexistinguser = false;
+                        $this->mtrace('The user has been renamed in Microsoft...');
+                        if ($supportupnchangeconfig == 1) {
+                            // Check if the user is manually matched, which shouldn't be renamed.
+                            if ($DB->record_exists('local_o365_connections', ['muserid' => $existingusermatching->moodleid])) {
+                                $this->mtrace('The user is manually matched, skipping renaming...');
+                            } else {
+                                // This is a previously connected user who has been renamed in Microsoft.
+                                $this->mtrace('Updating Moodle username...');
+                                $renamedmoodleuser = core_user::get_user($existingusermatching->moodleid);
+                                if ($renamedmoodleuser) {
+                                    // Update user record.
+                                    $username = $aaduser['userPrincipalName'];
+                                    if (isset($aaduser['convertedupn']) && $aaduser['convertedupn']) {
+                                        $username = $aaduser['convertedupn'];
+                                    }
+                                    $username = trim(core_text::strtolower($username));
+                                    // Check if existing user with same username exists.
+                                    $userwithduplicateusername = core_user::get_user_by_username($username);
+                                    if ($userwithduplicateusername) {
+                                        // User with same username exists, cannot rename.
+                                        $this->mtrace('User with same username exists; cannot rename.');
+                                        $userrenamefailed = true;
+                                        $needsyncprofile = false;
+                                    } else {
+                                        $userrenamed = true;
 
-                        continue;
+                                        $renamedmoodleuser->username = $username;
+                                        user_update_user($renamedmoodleuser, false);
+
+                                        // Update connection record.
+                                        $existingusermatching->o365name = $aaduser['upnlower'];
+                                        $DB->update_record('local_o365_objects', $existingusermatching);
+
+                                        // Update token record.
+                                        if ($existingtoken = $DB->get_record('auth_oidc_token', ['userid' => $renamedmoodleuser->id])) {
+                                            $existingtoken->oidcusername = $aaduser['userPrincipalName'];
+                                            $existingtoken->username = $username;
+                                            $DB->update_record('auth_oidc_token', $existingtoken);
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            $this->mtrace('The option to update Moodle username is disabled...');
+                        }
                     }
                 }
 
-                $connected = $this->sync_existing_user($aadsync, $aaduser, $existinguser, $exactmatch);
-
-                if (($existinguser->auth === 'oidc' || empty($existinguser->tokid)) && $connected) {
-                    // Create userobject if it does not exist.
-                    if (empty($existinguser->objectid)) {
-                        $this->mtrace('Adding o365 object record for user.');
-                        $now = time();
-                        $userobjectdata = (object)[
-                            'type' => 'user',
-                            'subtype' => '',
-                            'objectid' => $userobjectid,
-                            'o365name' => $aaduser['userPrincipalName'],
-                            'moodleid' => $existinguser->muserid,
-                            'tenant' => '',
-                            'timecreated' => $now,
-                            'timemodified' => $now,
-                        ];
-                        $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+                if (!$userrenamefailed || $userrenamed) {
+                    $existinguser = null;
+                    if (isset($existingusers[$aaduser['upnlower']])) {
+                        $existinguser = $existingusers[$aaduser['upnlower']];
+                        $exactmatch = true;
+                    } else if (isset($existingusers[$aaduser['upnsplit0']])) {
+                        $existinguser = $existingusers[$aaduser['upnsplit0']];
+                        $exactmatch = strlen($aaduser['upnsplit0']) >= $switchauthminupnsplit0;
+                    } else if (isset($existingusers[$aaduser['convertedupn']])) {
+                        $existinguser = $existingusers[$aaduser['convertedupn']];
+                        $exactmatch = true;
                     }
-                    // User already connected.
-                    $this->mtrace('User is now synced.');
-                }
 
+                    // Process guest users.
+                    if (stripos($aaduser['upnlower'], '_ext_') !== false) {
+                        $this->mtrace('The user is a guest user.');
+                        if (!isset($aadsync['guestsync'])) {
+                            $this->mtrace('The option to sync guest users is turned off.');
+                            $this->mtrace('User is already synced, but not updated.');
+
+                            continue;
+                        }
+                    }
+
+                    $connected = false;
+                    if ($syncexistinguser) {
+                        $connected = $this->sync_existing_user($aadsync, $aaduser, $existinguser, $exactmatch);
+                    }
+
+                    if (($existinguser->auth === 'oidc' || empty($existinguser->tokid)) && $connected) {
+                        // Create userobject if it does not exist.
+                        if (empty($existinguser->objectid)) {
+                            $this->mtrace('Adding o365 object record for user.');
+                            $now = time();
+                            $userobjectdata = (object) [
+                                'type' => 'user',
+                                'subtype' => '',
+                                'objectid' => $userobjectid,
+                                'o365name' => $aaduser['userPrincipalName'],
+                                'moodleid' => $existinguser->muserid,
+                                'tenant' => '',
+                                'timecreated' => $now,
+                                'timemodified' => $now,
+                            ];
+                            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
+                        }
+                        // User already connected.
+                        $this->mtrace('User is now synced.');
+                    }
+                }
+            }
+
+            if ($needsyncprofile) {
                 // Update existing user on moodle from AD.
                 if ($existinguser->auth === 'oidc' && $connected) {
                     if (isset($aadsync['update'])) {
                         $this->mtrace('Updating Moodle user data from Azure AD user data.');
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                         if ($fullexistinguser) {
-                            $existingusercopy = \core_user::get_user_by_username($existinguser->username);
+                            $existingusercopy = core_user::get_user_by_username($existinguser->username);
                             $fullexistinguser->description = $existingusercopy->description;
                             $this->update_user_from_aaddata($aaduser, $fullexistinguser);
                             $this->mtrace('User is now updated.');
@@ -1198,6 +1333,7 @@ class main {
                     }
                 }
             }
+            $this->mtrace(' ');
         }
 
         return true;
@@ -1384,13 +1520,13 @@ class main {
             if (isset($aaduserdata['accountEnabled'])) {
                 if ($aaduserdata['accountEnabled']) {
                     if ($existinguser->suspended == 1) {
-                        $completeexistinguser = \core_user::get_user($existinguser->muserid);
+                        $completeexistinguser = core_user::get_user($existinguser->muserid);
                         $completeexistinguser->suspended = 0;
                         user_update_user($completeexistinguser, false);
                     }
                 } else {
                     if ($existinguser->suspended == 0) {
-                        $completeexistinguser = \core_user::get_user($existinguser->muserid);
+                        $completeexistinguser = core_user::get_user($existinguser->muserid);
                         $completeexistinguser->suspended = 1;
                         user_update_user($completeexistinguser, false);
                     }

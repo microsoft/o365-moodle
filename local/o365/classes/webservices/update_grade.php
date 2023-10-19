@@ -34,6 +34,9 @@ use core_external\external_value;
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_o365\webservices\exception as exception;
+use core_external\external_api;
+
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');

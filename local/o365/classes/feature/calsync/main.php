@@ -158,7 +158,9 @@ class main {
     public function update_event_raw($muserid, $outlookeventid, $updated) {
         $apiclient = $this->construct_calendar_api($muserid, true);
         $o365upn = utils::get_o365_upn($muserid);
-        $apiclient->update_event($outlookeventid, $updated, $o365upn);
+        if ($o365upn) {
+            $apiclient->update_event($outlookeventid, $updated, $o365upn);
+        }
     }
 
     /**
@@ -174,7 +176,9 @@ class main {
         global $DB;
         $apiclient = $this->construct_calendar_api($muserid, true);
         $o365upn = utils::get_o365_upn($muserid);
-        $apiclient->delete_event($outlookeventid, $o365upn);
+        if ($o365upn) {
+            $apiclient->delete_event($outlookeventid, $o365upn);
+        }
         if (!empty($idmaprecid)) {
             $DB->delete_records('local_o365_calidmap', ['id' => $idmaprecid]);
         } else {
@@ -388,22 +392,26 @@ class main {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
         $o365upn = utils::get_o365_upn($USER->id);
-        $calendarresults = $apiclient->get_calendars($o365upn);
-        $calendars = $calendarresults['value'];
-        while (!empty($calendarresults['@odata.nextLink'])) {
-            $nextlink = parse_url($calendarresults['@odata.nextLink']);
-            $calendarresults = [];
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skip'])) {
-                    $calendarresults = $apiclient->get_calendars($o365upn, $query['$skip']);
-                    $calendars = array_merge($calendars, $calendarresults['value']);
+        if ($o365upn) {
+            $calendarresults = $apiclient->get_calendars($o365upn);
+            $calendars = $calendarresults['value'];
+            while (!empty($calendarresults['@odata.nextLink'])) {
+                $nextlink = parse_url($calendarresults['@odata.nextLink']);
+                $calendarresults = [];
+                if (isset($nextlink['query'])) {
+                    $query = [];
+                    parse_str($nextlink['query'], $query);
+                    if (isset($query['$skip'])) {
+                        $calendarresults = $apiclient->get_calendars($o365upn, $query['$skip']);
+                        $calendars = array_merge($calendars, $calendarresults['value']);
+                    }
                 }
             }
-        }
 
-        return (!empty($calendars) && is_array($calendars)) ? $calendars : [];
+            return (!empty($calendars) && is_array($calendars)) ? $calendars : [];
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -417,17 +425,20 @@ class main {
     public function get_events($muserid, $o365calid, $since = null) {
         $apiclient = $this->construct_calendar_api($muserid, false);
         $o365upn = utils::get_o365_upn($muserid);
-        $eventresults = $apiclient->get_events($o365calid, $since, $o365upn);
-        $events = $eventresults['value'];
-        while (!empty($eventresults['@odata.nextLink'])) {
-            $nextlink = parse_url($eventresults['@odata.nextLink']);
-            $eventresults = [];
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skip'])) {
-                    $eventresults = $apiclient->get_events($o365calid, $since, $o365upn, $query['$skip']);
-                    $events = array_merge($events, $eventresults['value']);
+        $events = [];
+        if ($o365upn) {
+            $eventresults = $apiclient->get_events($o365calid, $since, $o365upn);
+            $events = $eventresults['value'];
+            while (!empty($eventresults['@odata.nextLink'])) {
+                $nextlink = parse_url($eventresults['@odata.nextLink']);
+                $eventresults = [];
+                if (isset($nextlink['query'])) {
+                    $query = [];
+                    parse_str($nextlink['query'], $query);
+                    if (isset($query['$skip'])) {
+                        $eventresults = $apiclient->get_events($o365calid, $since, $o365upn, $query['$skip']);
+                        $events = array_merge($events, $eventresults['value']);
+                    }
                 }
             }
         }
@@ -478,10 +489,12 @@ class main {
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
             $o365upn = utils::get_o365_upn($idmaprec->userid);
-            try {
-                $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
-            } catch (moodle_exception $e) {
-                // Do nothing.
+            if ($o365upn) {
+                try {
+                    $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
+                } catch (moodle_exception $e) {
+                    // Do nothing.
+                }
             }
         }
         return true;
@@ -505,7 +518,9 @@ class main {
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
             $o365upn = utils::get_o365_upn($idmaprec->userid);
-            $apiclient->delete_event($idmaprec->outlookeventid, $o365upn);
+            if ($o365upn) {
+                $apiclient->delete_event($idmaprec->outlookeventid, $o365upn);
+            }
         }
 
         // Clean up idmap table.
@@ -573,7 +588,11 @@ class main {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
         $o365upn = utils::get_o365_upn($USER->id);
-        return $apiclient->create_calendar($name, $o365upn);
+        if ($o365upn) {
+            return $apiclient->create_calendar($name, $o365upn);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -587,7 +606,11 @@ class main {
         global $USER;
         $apiclient = $this->construct_calendar_api($USER->id, false);
         $o365upn = utils::get_o365_upn($USER->id);
-        return $apiclient->update_calendar($outlookcalendearid, $updated, $o365upn);
+        if ($o365upn) {
+            return $apiclient->update_calendar($outlookcalendearid, $updated, $o365upn);
+        } else {
+            return null;
+        }
     }
 
     /**

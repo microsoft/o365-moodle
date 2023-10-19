@@ -723,6 +723,10 @@ function xmldb_local_o365_upgrade($oldversion) {
         if ($systemtokensconfig !== false) {
             $systemtokensconfig = unserialize($systemtokensconfig);
             foreach ($systemtokensconfig as $resource => $tokenconfig) {
+                // Make sure this is an array.
+                if (!is_array($tokenconfig)) {
+                    continue;
+                }
                 if (array_key_exists('resource', $tokenconfig)) {
                     $systemtokensconfig[$resource]['tokenresource'] = $tokenconfig['resource'];
                     unset($systemtokensconfig[$resource]['resource']);
@@ -917,6 +921,40 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2022041906, 'local', 'o365');
+    }
+
+    if ($oldversion < 2023042402) {
+        // This upgrade contains changes in the fields when calling the "GET /users" Graph API endpoint to get users.
+        // For delta sync, the list of fields are stored in the delta token, which is generated on the first call to the endpoint,
+        // therefore we need to delete the delta token to ensure the new fields are included in the delta token.
+        unset_config('task_usersync_lastdeltatoken', 'local_o365');
+        purge_all_caches();
+
+        upgrade_plugin_savepoint(true, 2023042402, 'local', 'o365');
+    }
+
+    if ($oldversion < 2023042407) {
+        $deleteduserids = $DB->get_fieldset_select('user', 'id', 'deleted = 1');
+
+        if ($deleteduserids) {
+            // Delete records in local_o365_calidmap.
+            [$useridsql, $params] = $DB->get_in_or_equal($deleteduserids);
+            $sql = "DELETE FROM {local_o365_calidmap}
+                          WHERE userid {$useridsql}";
+            $DB->execute($sql, $params);
+
+            // Delete records in local_o365_calsettings.
+            $sql = "DELETE FROM {local_o365_calsettings}
+                          WHERE user_id {$useridsql}";
+            $DB->execute($sql, $params);
+
+            // Delete records in local_o365_calsub.
+            $sql = "DELETE FROM {local_o365_calsub}
+                          WHERE user_id {$useridsql}";
+            $DB->execute($sql, $params);
+        }
+
+        upgrade_plugin_savepoint(true, 2023042407, 'local', 'o365');
     }
 
     return true;

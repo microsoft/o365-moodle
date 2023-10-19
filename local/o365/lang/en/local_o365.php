@@ -158,6 +158,118 @@ $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on 
 $string['settings_aadsync_guestsync'] = 'Sync guest users';
 $string['settings_suspend_delete_running_time'] = 'User suspension/deletion running time';
 $string['settings_suspend_delete_running_time_desc'] = 'If the option is enabled, suspension/delete feature of user sync function will run once a day, at the time configured in the Moodle instance default time zone.';
+$string['settings_support_upn_change'] = 'Support Microsoft account UPN change';
+$string['settings_support_upn_change_desc'] = 'If enabled, Moodle will try to react when the UPN of a Microsoft account that is connected to a Moodle account is changed.</br>
+<table class="flexible table table-striped table-hover generaltable generalbox table-sm">
+    <tr>
+        <th>Case ID</th>
+        <th>The user with the old username has logged in already? (token created)<br/>
+        <span class="support_upn_change_case_detail">Whether a token is saved in the auth_oidc_token table</span>
+        </th>
+        <th>First action after UPN rename<br/>
+        <span class="support_upn_change_case_detail">Either Login or User sync task run</span>
+        </th>
+        <th>Has potential duplicate username<br/>
+        <span class="support_upn_change_case_detail">Whether renaming would cause a username conflicts in Moodle</span>
+        </th>
+        <th>Expected behaviours</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Yes</td>
+        <td>Login</td>
+        <td>No</td>
+        <td>
+            <ol>
+                <li>Rename the Moodle user.</li>
+                <li>auth_oidc_token updated with both new values for both "username" and "oidcusername" fields.</li>
+                <li>local_o365_objects user connection record "o365name" field updated to new value.</li>        
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Yes</td>
+        <td>User sync</td>
+        <td>No</td>
+        <td>
+            <ol>
+                <li>Rename the Moodle user.</li>
+                <li>local_o365_objects user connection record is updated.</li>
+                <li>auth_oidc_token updated.</li>        
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>No</td>
+        <td>Login</td>
+        <td>No</td>
+        <td>
+            <ol>
+                <li>Rename the Moodle user.</li>
+                <li>local_o365_objects user connection record is updated.</li>
+                <li>auth_oidc_token updated.</li>        
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>No</td>
+        <td>User sync</td>
+        <td>No</td>
+        <td>
+            <ol>
+                <li>Rename the Moodle user.</li>
+                <li>local_o365_objects user connection record is updated.</li>      
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>Yes</td>
+        <td>Login</td>
+        <td>Yes</td>
+        <td>
+            <ol>
+                <li>Throw exception and do not rename Moodle user.</li>
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>Yes</td>
+        <td>User sync</td>
+        <td>Yes</td>
+        <td>
+            <ol>
+                <li>Display error message saying rename attempt failed in user sync task run.</li>
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>No</td>
+        <td>Login</td>
+        <td>Yes</td>
+        <td>
+            <ol>
+                <li>Throw exception and do not rename Moodle user.</li>
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>No</td>
+        <td>Unser sync</td>
+        <td>Yes</td>
+        <td>
+            <ol>
+                <li>Display error message saying rename attempt failed in user sync task run.</li>
+            </ol>
+        </td>
+    </tr>
+</table>';
 
 // User field mapping.
 $string['settings_fieldmap'] = 'User field mapping';
@@ -523,6 +635,8 @@ $string['settings_teams_moodle_setup_heading'] = '<h4 class="local_o365_settings
 $string['settings_moodlesettingssetup'] = 'Configure Moodle';
 $string['settings_check_moodle_settings'] = 'Check Moodle settings';
 $string['settings_moodlesetup_checking'] = 'Checking...';
+$string['settings_notice_cookiesecureenabled'] = 'Secure cookies only enabled successfully';
+$string['settings_notice_cookiesecurealreadyenabled'] = 'Secure cookies only was already enabled';
 $string['settings_notice_oidcenabled'] = 'Open ID Connect enabled successfully';
 $string['settings_notice_oidcnotenabled'] = 'Open ID Connect could not be enabled';
 $string['settings_notice_oidcalreadyenabled'] = 'Open ID Connect was already enabled';
@@ -541,6 +655,7 @@ $string['settings_notice_restusagealreadyallowed'] = 'Permission to use REST Pro
 $string['settings_notice_restusagenotallowed'] = 'There was an issue giving permission to use REST Protocol';
 $string['settings_moodlesettingssetup_details'] = 'This will make sure that:
 <ul class="local_o365_settings_teams_horizontal_spacer">
+<li>Secure cookies only is enabled.</li>
 <li>Open ID is enabled.</li>
 <li>Frame Embedding is enabled.</li>
 <li>Web Services is enabled.</li>
@@ -627,6 +742,7 @@ $string['erroro365apinotoken'] = 'Did not have a token for the given resource an
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
 $string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 $string['eventapifail'] = 'API failure';
+$string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';
