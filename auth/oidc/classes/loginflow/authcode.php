@@ -650,7 +650,7 @@ class authcode extends base {
             }
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
-            $user = authenticate_user_login($username, null, true);
+            $user = authenticate_user_login($username, '', true);
 
             if (!empty($user)) {
                 complete_user_login($user);
