@@ -650,7 +650,7 @@ class authcode extends base {
             }
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
-            $user = authenticate_user_login($username, null, true);
+            $user = authenticate_user_login($username, '', true);
 
             if (!empty($user)) {
                 complete_user_login($user);
@@ -725,7 +725,7 @@ class authcode extends base {
             $existingmatching->o365name = $oidcusername;
             $DB->update_record('local_o365_objects', $existingmatching);
 
-            $user = authenticate_user_login($username, null, true);
+            $user = authenticate_user_login($username, '', true);
 
             if (!empty($user)) {
                 complete_user_login($user);
@@ -791,7 +791,7 @@ class authcode extends base {
                             throw new moodle_exception('errorauthloginfaileddupemail', 'auth_oidc', null, null, '1');
                         }
                     }
-                    $user = create_user_record($username, null, 'oidc');
+                    $user = create_user_record($username, '', 'oidc');
                 } else {
                     // Trigger login failed event.
                     $failurereason = AUTH_LOGIN_NOUSER;
@@ -802,7 +802,7 @@ class authcode extends base {
                 }
             }
 
-            $user = authenticate_user_login($username, null, true);
+            $user = authenticate_user_login($username, '', true);
 
             if (!empty($user)) {
                 $tokenrec = $DB->get_record('auth_oidc_token', ['id' => $tokenrec->id]);

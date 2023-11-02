@@ -820,7 +820,7 @@ class main {
 
         $newuser = static::apply_configured_fieldmap($aaddata, $newuser, 'create');
 
-        $password = null;
+        $password = '';
         if (!isset($newuser->idnumber)) {
             $newuser->idnumber = $newuser->username;
         }
@@ -1587,7 +1587,7 @@ class main {
                 $existinguser->auth = 'oidc';
                 user_update_user($existinguser, true);
                 // Clear user's password.
-                $password = null;
+                $password = '';
                 $existinguser->password = $fullexistinguser->password;
                 update_internal_user_password($existinguser, $password);
                 $this->mtrace('Switched user to OIDC.');
