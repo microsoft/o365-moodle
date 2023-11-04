@@ -564,7 +564,13 @@ class authcode extends base {
 
         $usernamechanged = false;
         if ($oidcusername && $tokenrec && $oidcusername !== $tokenrec->oidcusername) {
-            $usernamechanged = true;
+            // PATCH - refs #2685838
+            // The tokenrec->oidcusername will never match the idtoken->upn,
+            // so never try to update it (leave $usernamechanged == false).
+            if (getenv('O365_ENABLE_EIN_PATCH') !== false) {
+            } else {
+                $usernamechanged = true;
+            }
         }
 
         $existingmatching = null;
