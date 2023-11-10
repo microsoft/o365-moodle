@@ -49,15 +49,15 @@ $string['heading_debugging_desc'] = '';
 $string['idptype'] = 'Identity Provider (IdP) Type';
 $string['idptype_help'] = 'Three types of IdP are currently supported:
 <ul>
-<li><b>Azure AD (v1.0)</b>: Azure AD with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/authorize.</li>
-<li><b>Microsoft identity platform (v2.0)</b>: Azure AD with oath2 v2.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize.</li>
-<li><b>Other</b>: any non Azure AD IdP.</li>
+<li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/authorize.</li>
+<li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID with oath2 v2.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize.</li>
+<li><b>Other</b>: any non Microsoft IdP.</li>
 </ul>
-The differences between <b>Azure AD (v1.0)</b> and <b>Microsoft identity platform (v2.0)</b> options can be found at <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
+The differences between <b>Microsoft Entra ID (v1.0)</b> and <b>Microsoft identity platform (v2.0)</b> options can be found at <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
 Notably, the configured application can use <b>certificate</b> besides <b>secret</b> for authentication when using <b>Microsoft identity platform (v2.0)</b> IdP.<br/>
 Authorization and token endpoints need to be configured according to the configured IdP type.';
-$string['idp_type_azuread'] = 'Azure AD (v1.0)';
-$string['idp_type_microsoft'] = 'Microsoft identity platform (v2.0)';
+$string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
+$string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Other';
 $string['cfg_authenticationlink_desc'] = '<a href="{$a}" target="_blank">Link to IdP and authentication configuration</a>';
 $string['authendpoint'] = 'Authorization Endpoint';
@@ -133,17 +133,17 @@ $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensi
 $string['cfg_userrestrictionscasesensitive_desc'] = 'This controls if the "/i" option in regular expression is used in the user restriction match.<br/>If enabled, all user restriction checks will be performed as with case sensitive. Note if this is disabled, any patterns on letter cases will be ignored.';
 $string['cfg_signoffintegration_key'] = 'Single Sign Out (from Moodle to IdP)';
 $string['cfg_signoffintegration_desc'] = 'If the option is enabled, when a Moodle user connected to the configured IdP logs out of Moodle, the integration will trigger a request at the logout endpiont below, attempting to log the user off from IdP as well.<br/>
-Note for integration with Microsoft Azure AD, the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle and Microsoft 365 integration.';
+Note for integration with Microsoft Entra ID, the URL of Moodle site ({$a}) needs to be added as a redirect URI in the Azure app created for Moodle and Microsoft 365 integration.';
 $string['cfg_logoutendpoint_key'] = 'IdP Logout Endpoint';
 $string['cfg_logoutendpoint_desc'] = 'The URI of the logout endpoint from your IdP to use.';
 $string['cfg_frontchannellogouturl_key'] = 'Front-channel Logout URL';
 $string['cfg_frontchannellogouturl_desc'] = 'This is the URL that your IdP needs to trigger when it tries to log users out of Moodle.<br/>
-For Microsoft Azure AD / Microsoft identity platform, the setting is called "Front-channel logout URL" and is configurable in the Azure app.';
+For Microsoft Entra ID / Microsoft identity platform, the setting is called "Front-channel logout URL" and is configurable in the Azure app.';
 $string['cfg_field_mapping_desc'] = 'User profile data can be mapped from Open ID Connect IdP to Moodle.<br/>
 <ul>
 <li>Basic profile data is available from ID tokens from all IdP.</li>
-<li>If Azure AD is used as the IdP, additional profile data can be made available by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
-<li>If SDS profile sync feature is enabled in the local_o365 plugin, certain profile fields can be synchronised from SDS to Moodle. when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.</li>
+<li>If Microsoft Entra ID is used as the IdP, additional profile data can be made available by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
+<li>If SDS profile sync feature is enabled in the local_o365 plugin, certain profile fields can be synchronised from SDS to Moodle. when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Microsoft Entra ID" scheduled task, nor when user logs in.</li>
 </ul>';
 $string['cfg_cleanupoidctokens_key'] = 'Cleanup OpenID Connect Tokens';
 $string['cfg_cleanupoidctokens_desc'] = 'If your users are experiencing problems logging in using their Microsoft 365 account, trying cleaning up OpenID Connect tokens. This removes stray and incomplete tokens that can cause errors. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
@@ -153,7 +153,7 @@ $string['settings_section_endpoints'] = 'Endpoints';
 $string['settings_section_other_params'] = 'Other parameters';
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
 $string['application_updated'] = 'OpenID Connect application setting was updated.';
-$string['application_updated_azure'] = 'OpenID Connect application setting was updated.<br/>
+$string['application_updated_microsoft'] = 'OpenID Connect application setting was updated.<br/>
 <span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}" target="_blank">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 
 $string['event_debug'] = 'Debug message';
@@ -199,7 +199,7 @@ $string['errorucpinvalidaction'] = 'Invalid action received.';
 $string['erroroidccall'] = 'Error in OpenID Connect. Please check logs for more information.';
 $string['erroroidccall_message'] = 'Error in OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'The URL you are trying to redirect to does not exist.';
-$string['error_empty_tenantnameorguid'] = 'Tenant name or GUID cannot be empty when using Azure AD (v1.0) or Microsoft identity platform (v2.0) IdPs.';
+$string['error_empty_tenantnameorguid'] = 'Tenant name or GUID cannot be empty when using Microsoft Entra ID (v1.0) or Microsoft identity platform (v2.0) IdPs.';
 $string['error_invalid_client_authentication_method'] = "Invalid client authentication method";
 $string['error_empty_client_secret'] = 'Client secret cannot be empty when using "secret" authentication method';
 $string['error_empty_client_private_key'] = 'Client certificate private key cannot be empty when using "certificate" authentication method';
@@ -207,15 +207,15 @@ $string['error_empty_client_cert'] = 'Client certificate public key cannot be em
 $string['error_empty_tenantname_or_guid'] = 'Tenant name or GUID cannot be empty when using "certificate" authentication method';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match configured IdP type.<br/>
 <ul>
-<li>When using "Azure AD (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/authorize</li>
+<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/authorize</li>
 <li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize</li>
 </ul>';
 $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoint does not match configured IdP type.<br/>
 <ul>
-<li>When using "Azure AD (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/token</li>
+<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/token</li>
 <li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize</li>
 </ul>';
-$string['error_empty_oidcresource'] = 'Resource cannot be empty when using Azure AD (v1.0) or other types of IdP.';
+$string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';
 
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';
@@ -279,7 +279,7 @@ $string['table_action'] = 'Action';
 $string['token_deleted'] = 'Token was deleted successfully';
 $string['no_token_to_cleanup'] = 'There are no OIDC token to cleanup.';
 
-$string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
+$string['errorusermatched'] = 'The Microsoft 365 account "{$a->entraidupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 
 // User mapping options.
 $string['update_oncreate_and_onlogin'] = 'On creation and every login';

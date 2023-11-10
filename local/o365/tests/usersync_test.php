@@ -83,12 +83,12 @@ class local_o365_usersync_testcase extends \advanced_testcase {
     }
 
     /**
-     * Get sample Azure AD userdata.
+     * Get sample Microsoft Entra ID userdata.
      *
      * @param int $i A counter to generate unique data.
-     * @return array Array of Azure AD user data.
+     * @return array Array of Microsoft Entra ID user data.
      */
-    protected function get_aad_userinfo($i = 0) {
+    protected function get_entra_id_userinfo($i = 0) {
         return [
             'odata.type' => 'Microsoft.WindowsAzure.ActiveDirectory.User',
             'objectType' => 'User',
@@ -106,11 +106,11 @@ class local_o365_usersync_testcase extends \advanced_testcase {
     }
 
     /**
-     * Dataprovider for test_create_user_from_aaddata.
+     * Dataprovider for test_create_user_from_entra_id_data.
      *
      * @return array Array of test parameters.
      */
-    public function dataprovider_create_user_from_aaddata() {
+    public function dataprovider_create_user_from_entra_id_data() {
         global $CFG;
         $tests = [];
 
@@ -232,21 +232,21 @@ class local_o365_usersync_testcase extends \advanced_testcase {
     }
 
     /**
-     * Test create_user_from_aaddata method.
+     * Test create_user_from_entra_id_data method.
      *
-     * @dataProvider dataprovider_create_user_from_aaddata
-     * @param array $aaddata The Azure AD user data to create the user from.
+     * @dataProvider dataprovider_create_user_from_entra_id_data
+     * @param array $entraiddata The Microsoft Entra ID user data to create the user from.
      * @param array $expecteduser The expected user data to be created.
      */
-    public function test_create_user_from_aaddata($aaddata, $expecteduser) {
+    public function test_create_user_from_entra_id_data($entraiddata, $expecteduser) {
         global $DB;
         $httpclient = new \local_o365\tests\mockhttpclient();
         $clientdata = $this->get_mock_clientdata();
         $apiclient = new \local_o365\feature\usersync\main($clientdata, $httpclient);
-        $apiclient->create_user_from_aaddata($aaddata, []);
+        $apiclient->create_user_from_entra_id_data($entraiddata, []);
 
-        $userparams = ['auth' => 'oidc', 'username' => $aaddata['mail'], 'firstname' => $aaddata['givenName'],
-            'lastname' => $aaddata['surname']];
+        $userparams = ['auth' => 'oidc', 'username' => $entraiddata['mail'], 'firstname' => $entraiddata['givenName'],
+            'lastname' => $entraiddata['surname']];
         $this->assertTrue($DB->record_exists('user', $userparams));
         $createduser = $DB->get_record('user', $userparams);
 
@@ -260,7 +260,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
      */
     public function test_sync_users_create() {
         global $CFG, $DB;
-        set_config('aadsync', 'create', 'local_o365');
+        set_config('usersync', 'create', 'local_o365');
         for ($i = 1; $i <= 2; $i++) {
             $muser = [
                 'auth' => 'oidc',
@@ -291,8 +291,8 @@ class local_o365_usersync_testcase extends \advanced_testcase {
 
         $response = [
             'value' => [
-                $this->get_aad_userinfo(1),
-                $this->get_aad_userinfo(3),
+                $this->get_entra_id_userinfo(1),
+                $this->get_entra_id_userinfo(3),
             ],
         ];
         $response = json_encode($response);

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Azure AD user sync scheduled task.
+ * Microsoft Entra ID user sync scheduled task.
  *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -33,7 +33,7 @@ use local_o365\utils;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Scheduled task to sync users with Azure AD.
+ * Scheduled task to sync users with Microsoft Entra ID.
  */
 class usersync extends scheduled_task {
     /**
@@ -91,7 +91,7 @@ class usersync extends scheduled_task {
         }
 
         if (main::is_enabled() !== true) {
-            $this->mtrace('Azure AD cron sync disabled. Nothing to do.');
+            $this->mtrace('Microsoft Entra ID user sync disabled. Nothing to do.');
 
             return true;
         }
@@ -114,7 +114,7 @@ class usersync extends scheduled_task {
             }
 
             $this->mtrace('Forcing full sync.');
-            $this->mtrace('Contacting Azure AD...');
+            $this->mtrace('Contacting Microsoft Entra ID...');
             $users = [];
             try {
                 $continue = true;
@@ -130,7 +130,7 @@ class usersync extends scheduled_task {
                 $this->mtrace('Resetting skip and delta tokens.');
                 $skiptoken = null;
             }
-            $this->mtrace('Got response from Azure AD');
+            $this->mtrace('Got response from Microsoft Entra ID');
 
             // Store skiptoken.
             if (!empty($skiptoken)) {
@@ -155,7 +155,7 @@ class usersync extends scheduled_task {
             }
 
             $this->mtrace('Using delta sync.');
-            $this->mtrace('Contacting Azure AD...');
+            $this->mtrace('Contacting Microsoft Entra ID...');
             $users = [];
             try {
                 $continue = true;
@@ -172,7 +172,7 @@ class usersync extends scheduled_task {
                 $deltatoken = null;
             }
 
-            $this->mtrace('Got response from Azure AD');
+            $this->mtrace('Got response from Microsoft Entra ID');
 
             // Store deltatoken.
             if (!empty($deltatoken)) {
@@ -239,7 +239,7 @@ class usersync extends scheduled_task {
             if ($rundelete) {
                 $this->mtrace('Start suspend/delete users feature...');
                 if (main::sync_option_enabled('nodelta') !== true) {
-                    // Make sure $users contains all aad users - if delta sync was used, do a full sync.
+                    // Make sure $users contains all Entra ID users - if delta sync was used, do a full sync.
                     $skiptoken = '';
                     $users = [];
 

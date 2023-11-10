@@ -32,7 +32,6 @@ use core_text;
 use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
-use local_o365\rest\azuread;
 use local_o365\rest\unified;
 use local_o365\utils;
 use stdClass;
@@ -98,7 +97,7 @@ class processmatchqueue extends scheduled_task {
                   FROM {local_o365_matchqueue} mq
              LEFT JOIN {user} u ON mq.musername = u.username
              LEFT JOIN {local_o365_connections} muserconn ON muserconn.muserid = u.id
-             LEFT JOIN {local_o365_connections} officeconn ON officeconn.aadupn = mq.o365username
+             LEFT JOIN {local_o365_connections} officeconn ON officeconn.entraidupn = mq.o365username
              LEFT JOIN {local_o365_objects} officeobj ON officeobj.moodleid = u.id AND officeobj.o365name = mq.o365username
              LEFT JOIN {auth_oidc_token} oidctok ON oidctok.oidcusername = mq.o365username
                  WHERE mq.completed = ? AND mq.errormessage = ?
@@ -198,7 +197,7 @@ class processmatchqueue extends scheduled_task {
                     // Match validated.
                     $connectionrec = new stdClass;
                     $connectionrec->muserid = $matchrec->muserid;
-                    $connectionrec->aadupn = core_text::strtolower($o365user['userPrincipalName']);
+                    $connectionrec->entraidupn = core_text::strtolower($o365user['userPrincipalName']);
                     $connectionrec->uselogin = 0;
                     $DB->insert_record('local_o365_connections', $connectionrec);
                 } else {

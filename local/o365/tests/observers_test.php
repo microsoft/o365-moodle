@@ -83,7 +83,7 @@ class local_o365_observers_testcase extends \advanced_testcase {
             'refreshtoken' => time() + 100000,
         ];
         $DB->insert_record('local_o365_token', $token);
-        $aaduserdata = (object)[
+        $entraiduserdata = (object)[
             'type' => 'user',
             'subtype' => '',
             'objectid' => '',
@@ -92,7 +92,7 @@ class local_o365_observers_testcase extends \advanced_testcase {
             'timecreated' => time(),
             'timemodified' => time(),
         ];
-        $DB->insert_record('local_o365_objects', $aaduserdata);
+        $DB->insert_record('local_o365_objects', $entraiduserdata);
         $DB->insert_record('local_o365_connections', ['muserid' => $userid]);
         $object = (object)[
             'muserid' => $userid,

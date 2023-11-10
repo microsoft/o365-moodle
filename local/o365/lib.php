@@ -113,7 +113,7 @@ function local_o365_create_deploy_json() {
     $appsecret = get_config('auth_oidc', 'clientsecret');
     $appsecretval = (empty($appsecret) ? null : $appsecret);
     $data->parameters->azureADApplicationKey = ['value' => $appsecretval];
-    $apptenant = get_config('local_o365', 'aadtenant');
+    $apptenant = get_config('local_o365', 'entratenant');
     $apptenantval = (empty($apptenant) ? null : $apptenant);
     $data->parameters->azureADTenant = ['value' => $apptenantval];
     $botsharedsecret = get_config('local_o365', 'bot_sharedsecret');

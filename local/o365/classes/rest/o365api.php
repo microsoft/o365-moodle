@@ -340,7 +340,7 @@ abstract class o365api {
      * Get an array of the current required permissions.
      *
      * @param string $api An API to get information on, or empty for all.
-     * @return array Array of required Azure AD application permissions.
+     * @return array Array of required application permissions.
      */
     public function get_required_permissions($api = null) {
         $apis = [

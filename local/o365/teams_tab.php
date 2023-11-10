@@ -56,7 +56,7 @@ $ssologinurl = new moodle_url('/local/o365/sso_login.php');
 
 // Output login pages.
 echo html_writer::start_div('local_o365_manual_login');
-// Azure AD login box.
+// Microsoft Entra ID login box.
 echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
     array('onclick' => 'login()', 'class' => 'local_o365_manual_login_button'));
 // Manual login link.
@@ -70,7 +70,7 @@ if ($USER->id) {
     redirect($coursepageurl);
 }
 
-$tenantid = get_config('local_o365', 'aadtenantid');
+$tenantid = get_config('local_o365', 'entratenantid');
 if (!$tenantid) {
     $tenantid = 'common';
 }

@@ -22,7 +22,7 @@
 
 $(function() {
 
-    $.fn.azuresetup = function(options) {
+    $.fn.verifysetup = function(options) {
         var defaultopts = {
             url: 'localhost',
             iconsuccess: '',
@@ -36,12 +36,11 @@ $(function() {
             strpermscorrect: 'Permissions correct.',
             strapppermscorrect: 'Application Permissions correct.',
             strfixperms: 'Fix Permissions',
-            strfixprereq: '',
             strerrorfix: 'An error occurred trying to fix permissions.',
             strerrorcheck: 'An error occurred trying to check Azure setup.',
             strnoinfo: 'We don\'t have any information about your Azure setup yet. Please click the Update button to check.',
 
-            strappdataheader: 'Azure Application',
+            strappdataheader: 'Azure app',
             strappdatadesc: 'Verifies the correct parameters are set up in Azure.',
             strappdatareplyurlcorrect: 'Reply URL Correct',
             strappdatareplyurlincorrect: 'Reply URL Incorrect',
@@ -53,13 +52,13 @@ $(function() {
             strcorrectval: 'Correct Value:',
 
             strunifiedheader: 'Unified API',
-            strunifieddesc: 'The unified API replaces the existing application-specific APIs. If available, you should add this to your Azure application.',
+            strunifieddesc: 'The unified API replaces the existing application-specific APIs. If available, you should add this to your Azure app.',
             strunifiederror: 'There was an error checking Unified API settings.',
             strunifiedpermerror: 'There was an error checking Unified API permissions.',
             strunifiedmissing: 'The unified API was not found in this application.',
             strunifiedactive: 'Unified API active.',
 
-            strtenanterror: 'Please use the detect button to set your Azure AD Tenant before updating Azure Setup.',
+            strtenanterror: 'Please use the detect button to set your Microsoft Tenant before updating Azure Setup.',
         };
         var opts = $.extend({}, defaultopts, options);
         var main = this;
@@ -197,7 +196,7 @@ $(function() {
          * @param object results Results object.
          */
         this.renderresults = function(results) {
-            var content = $('<div class="local_o365_adminsetting_azuresetup_results"></div>');
+            var content = $('<div class="local_o365_adminsetting_verifysetup_results"></div>');
             if (results === false) {
                 content.append(main.renderinfobox(opts.strnoinfo));
                 main.updatedisplay(content);
@@ -205,7 +204,7 @@ $(function() {
             }
             if (typeof(results.success) != 'undefined') {
                 if (results.success === true && typeof(results.data) != 'undefined') {
-                    // Azure application check.
+                    // Azure app check.
                     if (typeof(results.data.appdata) !== 'undefined') {
                         var appdata = $('<section></section>');
                         appdata.append('<h5>'+opts.strappdataheader+'</h5>');
@@ -269,8 +268,8 @@ $(function() {
         }
 
         this.checksetup = function() {
-            // Check to see if Azure AD Tenant is set.
-            if ($('#id_s_local_o365_aadtenant').val().length == 0) {
+            // Check to see if Microsoft tenant is set.
+            if ($('#id_s_local_o365_entratenant').val().length == 0) {
                  main.refreshbutton.html(opts.strupdate);
                 var content = main.rendererrorbox(opts.strerrorcheck + ' (' + opts.strtenanterror + ')');
                 main.updatedisplay(content);
@@ -282,7 +281,7 @@ $(function() {
                 type: 'GET',
                 data: {
                     mode: 'checksetup',
-                    aadtenant: $('#id_s_local_o365_aadtenant').val(),
+                    entratenant: $('#id_s_local_o365_entratenant').val(),
                     odburl: $('#id_s_local_o365_odburl').val(),
                 },
                 dataType: 'json',

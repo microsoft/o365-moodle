@@ -182,7 +182,7 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi
         ];
 
-        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $params['resource'] = $this->tokenresource;
         }
 
@@ -301,7 +301,7 @@ class oidcclient {
             'client_secret' => $this->clientsecret,
         ];
 
-        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $params['resource'] = $this->tokenresource;
         }
 

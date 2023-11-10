@@ -123,7 +123,7 @@ class acp extends base {
         $stateparams = ['redirect' => '/admin/settings.php?section=local_o365', 'justauth' => true, 'forceflow' => 'authcode',
             'action' => 'adminconsent',];
         $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
         } else {
             $extraparams = ['prompt' => 'admin_consent'];
@@ -151,7 +151,7 @@ class acp extends base {
      */
     public function checktenantsetup() : bool {
         $config = get_config('local_o365');
-        if (empty($config->aadtenant)) {
+        if (empty($config->entratenant)) {
             return false;
         }
         if (utils::is_configured_apponlyaccess() === true || !empty($config->systemtokens)) {
@@ -186,7 +186,7 @@ class acp extends base {
         echo html_writer::div($multitenantdesc, 'alert alert-info');
 
         echo html_writer::empty_tag('br');
-        $hosttenantstr = get_string('acp_tenants_hosttenant', 'local_o365', $config->aadtenant);
+        $hosttenantstr = get_string('acp_tenants_hosttenant', 'local_o365', $config->entratenant);
         $hosttenanthtml = html_writer::tag('h4', $hosttenantstr);
         echo html_writer::div($hosttenanthtml);
         echo html_writer::empty_tag('br');
@@ -320,7 +320,7 @@ class acp extends base {
         $stateparams = ['redirect' => '/local/o365/acp.php?mode=tenantsadd', 'justauth' => true, 'forceflow' => 'authcode',
             'action' => 'addtenant', 'ignorerestrictions' => true,];
         $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
         } else {
             $extraparams = ['prompt' => 'admin_consent'];
@@ -1516,10 +1516,10 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'apptokens',
                 'systemtokens',
                 'systemapiuser',
-                'aadsync',
-                'aadtenant',
-                'aadtenantid',
-                'azuresetupresult',
+                'usersync',
+                'entratenant',
+                'entratenantid',
+                'verifysetupresult',
                 'chineseapi',
                 'coursesync',
                 'coursesynccustom',
@@ -1769,7 +1769,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             throw new moodle_exception('acp_userconnections_resync_nodata', 'local_o365');
         }
 
-        // Get aad data.
+        // Get Entra ID data.
         $usersync = new \local_o365\feature\usersync\main();
         $userdata = $usersync->get_user($objectrecord->objectid, $isguestuser);
         echo '<pre>';
@@ -1810,7 +1810,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $o365username = trim($fromform->o365username);
 
             // Check existing matches for Microsoft user.
-            $existingmatchforo365user = $DB->get_record('local_o365_connections', ['aadupn' => $o365username]);
+            $existingmatchforo365user = $DB->get_record('local_o365_connections', ['entraidupn' => $o365username]);
             if (!empty($existingmatchforo365user)) {
                 throw new moodle_exception('acp_userconnections_manualmatch_error_o365usermatched', 'local_o365');
             }
@@ -1829,7 +1829,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
 
             $uselogin = (!empty($fromform->uselogin)) ? 1 : 0;
-            $matchrec = (object) ['muserid' => $userid, 'aadupn' => $o365username, 'uselogin' => $uselogin,];
+            $matchrec = (object) ['muserid' => $userid, 'entraidupn' => $o365username, 'uselogin' => $uselogin,];
             $DB->insert_record('local_o365_connections', $matchrec);
             redirect(new moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']));
             die();
