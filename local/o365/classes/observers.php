@@ -68,6 +68,7 @@ global $CFG;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Handles events.
@@ -241,13 +242,17 @@ class observers {
                         $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
 
                         // Enrol user to all courses he was enrolled prior to connecting.
-                        if ($userobjectdata->id && \local_o365\feature\coursesync\utils::is_enabled() === true) {
-                            $courses = enrol_get_users_courses($userid, true);
+                        // Do nothing if sync direction is Teams to Moodle.
+                        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+                        if ($courseusersyncdirection != COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+                            if ($userobjectdata->id && \local_o365\feature\coursesync\utils::is_enabled() === true) {
+                                $courses = enrol_get_users_courses($userid, true);
 
-                            foreach ($courses as $courseid => $course) {
-                                if (\local_o365\feature\coursesync\utils::is_course_sync_enabled($courseid) == true) {
-                                    \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($userid, $courseid,
-                                        $userobjectdata->id);
+                                foreach ($courses as $courseid => $course) {
+                                    if (\local_o365\feature\coursesync\utils::is_course_sync_enabled($courseid) == true) {
+                                        \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($userid, $courseid,
+                                                $userobjectdata->id);
+                                    }
                                 }
                             }
                         }
@@ -424,6 +429,12 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_updated(user_enrolment_updated $event) : bool {
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
+
         if (utils::is_connected() !== true || \local_o365\feature\coursesync\utils::is_enabled() !== true ||
             \local_o365\feature\coursesync\utils::is_course_sync_enabled($event->courseid) !== true) {
             return false;
@@ -444,6 +455,12 @@ class observers {
      */
     public static function handle_enrol_instance_updated(enrol_instance_updated $event) : bool {
         global $DB;
+
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
 
         $courseid = $event->courseid;
 
@@ -642,6 +659,12 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_assigned(role_assigned $event) : bool {
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
+
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -665,6 +688,11 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_unassigned(role_unassigned $event) : bool {
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
         if (utils::is_connected() !== true) {
             return false;
         }

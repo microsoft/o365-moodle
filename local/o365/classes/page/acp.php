@@ -1168,8 +1168,20 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
             $coursesync = new main($graphclient);
 
-            // Sync users.
-            $coursesync->resync_group_owners_and_members($courseid, $teamcacherecord->objectid);
+            // Sync users based on course user sync direction.
+            $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+
+            switch ($courseusersyncdirection) {
+                case COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS:
+                    $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($courseid, $teamcacherecord->objectid);
+                    break;
+                case COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE:
+                    $coursesync->process_course_team_user_sync_from_microsoft_to_moodle($courseid, $teamcacherecord->objectid);
+                    break;
+                case COURSE_USER_SYNC_DIRECTION_BOTH:
+                    $coursesync->process_initial_course_team_user_sync($courseid, $teamcacherecord->objectid);
+                    break;
+            }
 
             // Provision app, add tab.
             $coursesync->install_moodle_app_in_team($teamcacherecord->objectid, $courseid);
@@ -1285,8 +1297,15 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
             $coursesync = new main($graphclient);
 
-            // Sync users.
-            $coursesync->resync_group_owners_and_members($courseid, $teamcacherecord->objectid);
+            // Sync users based on course user sync direction.
+            $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+
+            if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS ||
+                $courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_BOTH) {
+                $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($courseid, $teamcacherecord->objectid);
+            } else if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+                $coursesync->process_course_team_user_sync_from_microsoft_to_moodle($courseid, $teamcacherecord->objectid);
+            }
 
             // Provision app, add tab.
             $coursesync->install_moodle_app_in_team($teamcacherecord->objectid, $courseid);
@@ -1433,7 +1452,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $courseitem['link'] = html_writer::link(new moodle_url('/course/view.php', ['id' => $course->id]), $course->fullname);
             try {
                 ob_start();
-                $coursesync->resync_group_owners_and_members($course->id, $course->groupobjectid);
+                $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($course->id, $course->groupobjectid);
                 $courseitem['output'] = ob_get_contents();
                 ob_clean();
                 $courseitem['output'] = '<pre>' . $courseitem['output'] . '</pre>';

@@ -116,4 +116,13 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*'
     ],
+    [
+        'classname' => 'local_o365\task\coursemembershipsync',
+        'blocking' => 0,
+        'minute' => '*/5',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
 ];
