@@ -136,3 +136,8 @@ $string['error_site_course_sync_disabled'] = 'Course sync is not enabled';
 $string['error_reset_setting_not_managed_per_course'] = 'Reset action configuration is centrally managed by site administrators.';
 $string['error_connected_team_missing'] = 'The course is configured to be synced, but the Team cannot be found.';
 $string['error_course_sync_disabled'] = 'The course is not configured to be synced.';
+
+// Course request
+$string['linkcourserequest'] = 'Request course from Teams';
+$string['settings_courserequest'] = 'Request course from Teams';
+$string['settings_courserequest_desc'] = 'Request a new course from Microsoft Teams. After approval, the course will be created and connected to a Team. Microsoft Team members will be enrolled in the course.';

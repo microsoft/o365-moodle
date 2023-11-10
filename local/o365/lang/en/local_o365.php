@@ -357,6 +357,14 @@ $string['settings_main_name_option_id_number'] = 'ID number';
 $string['settings_team_name_sync'] = 'Update Teams name on course update';
 $string['settings_team_name_sync_desc'] = 'If enabled, when Moodle course is updated, the name of the Team will be updated according to the latest Teams name settings.';
 
+// Settings in the "Course request" section of the "Sync settings" tab.
+$string['settings_secthead_course_request'] = 'Course request';
+$string['settings_secthead_course_request_desc'] = 'Settings for role mappings in the course request from Teams feature.';
+$string['settings_course_request_enrolment_owner_role'] = 'Team owner role';
+$string['settings_course_request_enrolment_owner_role_desc'] = 'The role that will be assigned to the Team owner when the course request is approved.';
+$string['settings_course_request_enrolment_member_role'] = 'Team member role';
+$string['settings_course_request_enrolment_member_role_desc'] = 'The role that will be assigned to the Team members when the course request is approved.';
+
 // Settings section headings of the "Advanced" tab.
 $string['settings_header_tools'] = 'Tools';
 $string['settings_secthead_advanced'] = 'Advanced Settings';
@@ -956,6 +964,18 @@ $string['cohortsync_mappingfailed'] = 'Error adding cohort and group connection.
 $string['cohortsync_connectionnotfound'] = 'Invalid request: connection not found.';
 $string['cohortsync_connectionnotcohortsync'] = 'Invalid request: mismatch connection type.';
 $string['cohortsync_unifiedapierror'] = 'Error getting list of groups from Microsoft.';
+
+// Course request.
+$string['courserequest_teams'] = 'Microsoft Team';
+$string['courserequest_teams_help'] = 'Select the Microsoft Team that will be connected to the course. Existing Team owners and members will be enroled in the created course once the course request is approved.';
+$string['courserequest_emptyteams'] = 'No available Microsoft Teams';
+$string['courserequest_title'] = 'Request course from Teams';
+$string['courserequest_updatecourserequeststatus_taskname'] = 'Update course request status';
+$string['courserequest_customrequestnote'] = '
+| This request is made from the Microsoft Teams course request page and will be connected to Team: "{$a->name}" with URL {$a->url} on approval.';
+$string['courserequest_graphapi_disabled'] = 'Microsoft Teams connection is unavailable. Please contact your site administrator.';
+$string['courserequest_invalid_team'] = 'Invalid Team used in the course request.';
+$string['courserequest_duplicate'] = 'A pending or approved course request from the same Team already exists.';
 
 // Bot feature.
 $string['list_of_absent_students'] = 'This is the list of students that were absent this month:';
