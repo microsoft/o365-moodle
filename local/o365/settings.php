@@ -25,9 +25,9 @@
  */
 
 use auth_oidc\adminsetting\auth_oidc_admin_setting_label;
-use local_o365\adminsetting\aadsyncoptions;
+use local_o365\adminsetting\usersyncoptions;
 use local_o365\adminsetting\adminconsent;
-use local_o365\adminsetting\azuresetup;
+use local_o365\adminsetting\verifysetup;
 use local_o365\adminsetting\courseresetteams;
 use local_o365\adminsetting\moodlesetup;
 use local_o365\adminsetting\serviceresource;
@@ -149,11 +149,11 @@ if ($hassiteconfig) {
             $desc = new lang_string('settings_adminconsent_details', 'local_o365');
             $settings->add(new adminconsent('local_o365/adminconsent', $label, $desc, '', PARAM_RAW));
 
-            $label = new lang_string('settings_aadtenant', 'local_o365');
-            $desc = new lang_string('settings_aadtenant_details', 'local_o365');
+            $label = new lang_string('settings_entratenant', 'local_o365');
+            $desc = new lang_string('settings_entratenant_details', 'local_o365');
             $default = '';
             $paramtype = PARAM_URL;
-            $settings->add(new serviceresource('local_o365/aadtenant', $label, $desc, $default, $paramtype));
+            $settings->add(new serviceresource('local_o365/entratenant', $label, $desc, $default, $paramtype));
 
             $label = new lang_string('settings_odburl', 'local_o365');
             $desc = new lang_string('settings_odburl_details', 'local_o365');
@@ -161,9 +161,9 @@ if ($hassiteconfig) {
             $paramtype = PARAM_URL;
             $settings->add(new serviceresource('local_o365/odburl', $label, $desc, $default, $paramtype));
 
-            $aadtenant = get_config('local_o365', 'aadtenant');
+            $entratenant = get_config('local_o365', 'entratenant');
             $odburl = get_config('local_o365', 'odburl');
-            if (!empty($aadtenant) && !empty($odburl)) {
+            if (!empty($entratenant) && !empty($odburl)) {
                 $stepsenabled = 4;
             }
         }
@@ -174,9 +174,9 @@ if ($hassiteconfig) {
             $desc = new lang_string('settings_setup_step4_desc', 'local_o365');
             $settings->add(new admin_setting_heading('local_o365_setup_step4', $label, $desc));
 
-            $label = new lang_string('settings_azuresetup', 'local_o365');
-            $desc = new lang_string('settings_azuresetup_details', 'local_o365');
-            $settings->add(new azuresetup('local_o365/azuresetup', $label, $desc));
+            $label = new lang_string('settings_verifysetup', 'local_o365');
+            $desc = new lang_string('settings_verifysetup_details', 'local_o365');
+            $settings->add(new verifysetup('local_o365/verifysetup', $label, $desc));
         }
     }
 
@@ -186,11 +186,11 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
 
         // User sync options.
-        $label = new lang_string('settings_aadsync', 'local_o365');
+        $label = new lang_string('settings_usersync', 'local_o365');
         $scheduledtasks = new moodle_url('/admin/tool/task/scheduledtasks.php');
-        $desc = new lang_string('settings_aadsync_details', 'local_o365', $scheduledtasks->out());
-        $aadsyncsettings = new aadsyncoptions('local_o365/aadsync', $label, $desc);
-        $settings->add($aadsyncsettings);
+        $desc = new lang_string('settings_usersync_details', 'local_o365', $scheduledtasks->out());
+        $usersyncsettings = new usersyncoptions('local_o365/usersync', $label, $desc);
+        $settings->add($usersyncsettings);
 
         // User creation restrictions.
         $key = 'local_o365/usersynccreationrestriction';

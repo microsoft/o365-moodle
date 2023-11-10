@@ -81,7 +81,7 @@ class block_microsoft extends block_base {
                 if (!empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
                         local_o365_connectioncapability($USER->id, 'link'))) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
-                    $this->content->text .= $this->get_user_content_matched($connection->aadupn, $uselogin);
+                    $this->content->text .= $this->get_user_content_matched($connection->entraidupn, $uselogin);
                 } else {
                     $this->content->text .= $this->get_user_content_not_connected();
                 }
@@ -98,17 +98,17 @@ class block_microsoft extends block_base {
     /**
      * Get block content for an unconnected but matched user.
      *
-     * @param string $o365account The o365 account the user was matched to.
+     * @param string $entraidupn The UPN of the Microsoft Entra ID account the user was matched to.
      * @param bool $uselogin Whether the match includes login change.
      * @return string Block content about user.
      */
-    protected function get_user_content_matched($o365account, $uselogin = false) {
+    protected function get_user_content_matched($entraidupn, $uselogin = false) {
         $html = '';
 
         $langmatched = get_string('o365matched_title', 'block_microsoft');
         $html .= '<h5>' . $langmatched . '</h5>';
 
-        $langmatcheddesc = get_string('o365matched_desc', 'block_microsoft', $o365account);
+        $langmatcheddesc = get_string('o365matched_desc', 'block_microsoft', $entraidupn);
         $html .= '<p>' . $langmatcheddesc . '</p>';
 
         $langlogin = get_string('logintoo365', 'block_microsoft');

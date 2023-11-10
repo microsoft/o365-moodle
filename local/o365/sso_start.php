@@ -31,7 +31,7 @@ echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/ad
 $js = '
 microsoftTeams.initialize();
 
-// Get the tab context, and use the information to navigate to Azure AD login page
+// Get the tab context, and use the information to navigate to Microsoft login page
 microsoftTeams.getContext(function (context) {
     // ADAL.js configuration
     let config = {
@@ -47,7 +47,7 @@ microsoftTeams.getContext(function (context) {
         extraQueryParameters: "scope=openid+profile&login_hint=" + encodeURIComponent(context.loginHint),
     };
 
-    // Navigate to the AzureAD login page
+    // Navigate to the Entra ID login page
     let authContext = new AuthenticationContext(config);
     authContext.login();
 });

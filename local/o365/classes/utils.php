@@ -156,9 +156,9 @@ class utils {
         if (empty($apponlyenabled)) {
             return false;
         }
-        $aadtenant = get_config('local_o365', 'aadtenant');
-        $aadtenantid = get_config('local_o365', 'aadtenantid');
-        if (empty($aadtenant) && empty($aadtenantid)) {
+        $entratenant = get_config('local_o365', 'entratenant');
+        $entratenantid = get_config('local_o365', 'entratenantid');
+        if (empty($entratenant) && empty($entratenantid)) {
             return false;
         }
         return true;
@@ -184,7 +184,7 @@ class utils {
         if (empty($userids)) {
             return [];
         }
-        $aadresource = unified::get_tokenresource();
+        $tokenresource = unified::get_tokenresource();
         [$idsql, $idparams] = $DB->get_in_or_equal($userids);
         $sql = 'SELECT u.id as userid
                   FROM {user} u
@@ -192,7 +192,7 @@ class utils {
              LEFT JOIN {auth_oidc_token} authtok ON authtok.tokenresource = ? AND authtok.userid = u.id
                  WHERE u.id ' . $idsql . '
                        AND (localtok.id IS NOT NULL OR authtok.id IS NOT NULL)';
-        $params = [$aadresource];
+        $params = [$tokenresource];
         $params = array_merge($params, $idparams);
         $records = $DB->get_recordset_sql($sql, $params);
         $return = [];
@@ -340,7 +340,7 @@ class utils {
         }
 
         // Update restrictions.
-        $hostingtenant = get_config('local_o365', 'aadtenant');
+        $hostingtenant = get_config('local_o365', 'entratenant');
         $newrestrictions = ['@' . str_replace('.', '\.', $hostingtenant) . '$'];
         foreach ($additionaltenants as $configuredtenantdomains) {
             foreach ($configuredtenantdomains as $configuredtenantdomain) {
@@ -470,7 +470,7 @@ class utils {
                 $apiclient = new unified($token, $httpclient);
                 $tenant = $apiclient->get_default_domain_name_in_tenant();
                 $tenant = clean_param($tenant, PARAM_TEXT);
-                return ($tenant != get_config('local_o365', 'aadtenant')) ? $tenant : '';
+                return ($tenant != get_config('local_o365', 'entratenant')) ? $tenant : '';
             }
         } catch (Exception $e) {
             // Do nothing.

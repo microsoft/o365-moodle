@@ -957,5 +957,48 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023042407, 'local', 'o365');
     }
 
+    if ($oldversion < 2023100905) {
+        // Step 1: Update configuration settings.
+        $renamedconfigs = [
+            'aadsync' => 'usersync',
+            'aadtenant' => 'entratenant',
+            'aadtenantid' => 'entratenantid',
+        ];
+        foreach ($renamedconfigs as $originalconfigname => $newconfigname) {
+            if ($config = get_config('local_o365', $originalconfigname)) {
+                set_config($newconfigname, $config, 'local_o365');
+                unset_config($originalconfigname, 'local_o365');
+            }
+        }
+
+        // Step 2: Rename "aadupn" column to "entraidupn" in local_o365_connections table.
+        $table = new xmldb_table('local_o365_connections');
+
+        // Drop "aadupn" index.
+        $index = new xmldb_index('aadupn', XMLDB_INDEX_UNIQUE, ['aadupn']);
+        // Conditionally launch drop index aadupn.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Rename "aadupn" column to "entraidupn".
+        $field = new xmldb_field('aadupn', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'muserid');
+        // Conditionally launch rename field "aadupn" to "entraidupn".
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'entraidupn');
+        }
+
+        // Recreate "entraidupn" index.
+        $index = new xmldb_index('entraidupn', XMLDB_INDEX_UNIQUE, ['aadupn']);
+        // Conditionally launch add index entraidupn.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2023100905, 'local', 'o365');
+    }
+
+
     return true;
 }

@@ -114,7 +114,7 @@ class observers {
                         if (!empty($idtoken)) {
                             $tenant = utils::get_tenant_from_idtoken($idtoken);
                             if (!empty($tenant)) {
-                                set_config('aadtenantid', $tenant, 'local_o365');
+                                set_config('entratenantid', $tenant, 'local_o365');
                             }
                         }
                     }
@@ -126,7 +126,7 @@ class observers {
                 $clientdata = clientdata::instance_from_oidc();
                 $httpclient = new httpclient();
                 switch (get_config('auth_oidc', 'idptype')) {
-                    case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+                    case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
                         $token = $eventdata['other']['tokenparams']['access_token'];
                         $expiry = time() + $eventdata['other']['tokenparams']['expires_in'];
                         $rtoken = '';
@@ -268,7 +268,7 @@ class observers {
      *
      * Does the following:
      *  - Check if user is using OpenID Connect auth plugin.
-     *  - If so, gets additional information from Azure AD and updates the user.
+     *  - If so, gets additional information from Microsoft Entra ID and updates the user.
      *
      * @param user_created $event The triggered event.
      * @return bool Success/Failure.
@@ -340,9 +340,9 @@ class observers {
     }
 
     /**
-     * Get additional information about a user from Azure AD.
+     * Get additional information about a user from Microsoft Entra ID.
      *
-     * @param int $userid The ID of the user we want more information about..
+     * @param int $userid The ID of the user we want more information about.
      * @return bool Success/Failure.
      */
     public static function get_additional_user_info(int $userid) : bool {
@@ -356,7 +356,7 @@ class observers {
 
             $o365user = o365user::instance_from_muserid($userid);
             if (empty($o365user)) {
-                // No OIDC token for this user and resource - maybe not an Azure AD user.
+                // No OIDC token for this user and resource - maybe not a Microsoft Entra ID user.
                 return false;
             }
 
@@ -394,13 +394,13 @@ class observers {
             }
 
             // Sync profile photo and timezone.
-            $aadsync = get_config('local_o365', 'aadsync');
-            $aadsync = array_flip(explode(',', $aadsync));
+            $usersyncsettings = get_config('local_o365', 'usersync');
+            $usersyncsettings = array_flip(explode(',', $usersyncsettings));
             $usersync = new feature\usersync\main();
-            if (isset($aadsync['photosynconlogin'])) {
+            if (isset($usersyncsettings['photosynconlogin'])) {
                 $usersync->assign_photo($userid);
             }
-            if (isset($aadsync['tzsynconlogin'])) {
+            if (isset($usersyncsettings['tzsynconlogin'])) {
                 $usersync->sync_timezone($userid);
             }
 
@@ -732,11 +732,11 @@ class observers {
         $debuggingon = !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING') && $debugmode;
 
         // Check if we have the configuration to send proactive notifications.
-        $aadtenant = get_config('local_o365', 'aadtenant');
+        $entratenant = get_config('local_o365', 'entratenant');
         $botappid = get_config('local_o365', 'bot_app_id');
         $botappsecret = get_config('local_o365', 'bot_app_password');
         $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
-        if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
+        if (empty($entratenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
             // Incomplete settings, exit.
             if ($debuggingon) {
                 debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
@@ -888,17 +888,17 @@ class observers {
                 case 'idptype':
                 case 'clientauthmethod':
                     // If client ID, IdP type, or authentication method has changed, unset token and verify setup results.
-                    // Azure admin needs to set up again.
+                    // Azure admin needs to provide consent again.
                     unset_config('apptokens', 'local_o365');
                     unset_config('adminconsent', 'local_o365');
-                    unset_config('azuresetupresult', 'local_o365');
+                    unset_config('verifysetupresult', 'local_o365');
 
                     $cachespurgeneeded = true;
             }
         }
 
-        // If Azure tenant is changed, user manual matching and connection records need to be deleted.
-        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'aadtenant') {
+        // If Entra tenant is changed, user manual matching and connection records need to be deleted.
+        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'entratenant') {
             // Clear local_o365_connections table.
             $DB->delete_records('local_o365_connections');
 

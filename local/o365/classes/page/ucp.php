@@ -185,7 +185,7 @@ class ucp extends base {
         $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
         if (!empty($connection)) {
             // Matched user.
-            $extraparams['login_hint'] = $connection->aadupn;
+            $extraparams['login_hint'] = $connection->entraidupn;
             $promptlogin = true;
         }
         $auth = new \auth_oidc\loginflow\authcode;
@@ -291,10 +291,10 @@ class ucp extends base {
         }
 
         switch ($connectiontype) {
-            case 'aadlogin':
+            case 'entraidlogin':
                 $statusclasses = 'alert alert-success';
                 $o365upn = \local_o365\utils::get_o365_upn($USER->id);
-                $statusstring = get_string('ucp_connection_aadlogin_active', 'local_o365', $o365upn);
+                $statusstring = get_string('ucp_connection_entraidlogin_active', 'local_o365', $o365upn);
                 break;
 
             case 'linked':
@@ -308,10 +308,10 @@ class ucp extends base {
         $howconnected = (\local_o365\utils::is_o365_connected($USER->id) === true) ? $connectiontype : false;
         // If the user cannot connect and is not already connected they cannot do anything.
         $canconnectnotconnected = (($canconnect || $canlink) && $howconnected === false) ||
-                ($canconnect && $canunlink && $howconnected != 'aadlogin') ||
+                ($canconnect && $canunlink && $howconnected != 'entraidlogin') ||
                 ($candisconnect && $canlink && $howconnected != 'linked');
         // If the user cannot disconnect and is connected, they cannot do anything.
-        $candisconnectconnected = ($canunlink && $howconnected == 'linked') || ($candisconnect && $howconnected == 'aadlogin');
+        $candisconnectconnected = ($canunlink && $howconnected == 'linked') || ($candisconnect && $howconnected == 'entraidlogin');
         $cannotdoanything = !($candisconnect || $canconnect || $canlink || $canunlink) ||
             !($canconnectnotconnected || $candisconnectconnected);
         if (!$cannotdoanything) {
@@ -329,23 +329,23 @@ class ucp extends base {
 
         echo html_writer::tag('h5', get_string('ucp_connection_options', 'local_o365'));
 
-        // AAD Login.
+        // Entra ID Login.
         if (is_enabled_auth('oidc')) {
             $options = html_writer::start_div('local_o365_connectionoption');
-            $header = html_writer::tag('h4', get_string('ucp_connection_aadlogin', 'local_o365'));
+            $header = html_writer::tag('h4', get_string('ucp_connection_entraidlogin', 'local_o365'));
             $loginflow = get_config('auth_oidc', 'loginflow');
             switch ($loginflow) {
                 case 'authcode':
                 case 'rocreds':
-                    $header .= get_string('ucp_connection_aadlogin_desc_'.$loginflow, 'local_o365', $opname);
+                    $header .= get_string('ucp_connection_entraidlogin_desc_'.$loginflow, 'local_o365', $opname);
                     break;
             }
 
             switch ($connectiontype) {
-                case 'aadlogin';
+                case 'entraidlogin';
                     if (is_enabled_auth('manual') === true && $candisconnect) {
                         $disconnectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'disconnectlogin']);
-                        $strdisconnect = get_string('ucp_connection_aadlogin_stop', 'local_o365', $opname);
+                        $strdisconnect = get_string('ucp_connection_entraidlogin_stop', 'local_o365', $opname);
                         $linkhtml = html_writer::link($disconnectlinkurl, $strdisconnect);
                         echo $options.$header. html_writer::tag('h5', $linkhtml);
                         $options = '';
@@ -356,7 +356,7 @@ class ucp extends base {
                     if ($canconnect && ($howconnected != 'linked' || $canunlink)) {
                         $connectlinkurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connectlogin']);
                         $linkhtml = html_writer::link($connectlinkurl,
-                            get_string('ucp_connection_aadlogin_start', 'local_o365', $opname));
+                            get_string('ucp_connection_entraidlogin_start', 'local_o365', $opname));
                         echo $options.$header. html_writer::tag('h5', $linkhtml);
                         $options = '';
                     }
@@ -379,7 +379,7 @@ class ucp extends base {
                 }
                 break;
 
-            case 'aadlogin':
+            case 'entraidlogin':
                 if ($canlink && auth_oidc_connectioncapability($USER->id, 'disconnect')) {
                     $connecttokenurl = new \moodle_url('/local/o365/ucp.php', ['action' => 'migratetolinked']);
                     $linkhtml = html_writer::link($connecttokenurl,
@@ -405,10 +405,10 @@ class ucp extends base {
     }
 
     /**
-     * Azure AD Login status page.
+     * Microsoft Entra ID login status page.
      */
-    public function mode_aadlogin() {
-        redirect(new \moodle_url('/local/o365/ucp.php?action=connection'));
+    public function mode_entraidlogin() {
+        redirect(new \moodle_url('/local/o365/ucp.php', ['action' => 'connection']));
     }
 
     /**
@@ -444,7 +444,7 @@ class ucp extends base {
         global $USER;
 
         if ($this->o365connected === true) {
-            return (isset($USER->auth) && $USER->auth === 'oidc') ? 'aadlogin' : 'linked';
+            return (isset($USER->auth) && $USER->auth === 'oidc') ? 'entraidlogin' : 'linked';
         } else {
             return 'notconnected';
         }
@@ -498,7 +498,7 @@ class ucp extends base {
                         $msg .= html_writer::link($refreshurl, get_string('ucp_index_connectionstatus_reconnect', 'local_o365'));
                         break;
 
-                    case 'aadlogin':
+                    case 'entraidlogin':
                         $msg = get_string('ucp_index_connectionstatus_connected', 'local_o365');
                         $msg .= '<br /><br />';
                         $msg .= get_string('ucp_index_connectionstatus_usinglogin', 'local_o365');
@@ -516,7 +516,7 @@ class ucp extends base {
                 if ($canmanage === true || $canlink) {
                     $matchrec = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
                     $classes .= ' alert-info';
-                    $msg = get_string('ucp_index_connectionstatus_matched', 'local_o365', $matchrec->aadupn);
+                    $msg = get_string('ucp_index_connectionstatus_matched', 'local_o365', $matchrec->ipdupn);
                     $connecturl = new \moodle_url('/local/o365/ucp.php', ['action' => 'connecttoken']);
                     $msg .= '<br /><br />';
                     $msg .= html_writer::link($connecturl, get_string('ucp_index_connectionstatus_login', 'local_o365'));

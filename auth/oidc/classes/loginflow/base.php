@@ -123,7 +123,7 @@ class base {
         if (auth_oidc_is_local_365_installed()) {
             // Check if multi tenants is enabled. User from additional tenants can only sync fields from token.
             $userfromadditionaltenant = false;
-            $hostingtenantid = get_config('local_o365', 'aadtenantid');
+            $hostingtenantid = get_config('local_o365', 'microsofttenantid');
             $token = jwt::instance_from_encoded($tokenrec->token);
             if ($token->claim('tid') != $hostingtenantid) {
                 $userfromadditionaltenant = true;
@@ -155,7 +155,7 @@ class base {
                         }
 
                         if (!isset($userdata['userPrincipalName'])) {
-                            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                                 $upn = $token->claim('preferred_username');
                                 if (empty($upn)) {
                                     $upn = $token->claim('email');
@@ -191,9 +191,9 @@ class base {
                                 $userdata['mail'] = $email;
                             } else {
                                 if (!empty($upn)) {
-                                    $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                                    if (!empty($aademailvalidateresult)) {
-                                        $userdata['mail'] = $aademailvalidateresult;
+                                    $entraidemailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                                    if (!empty($entraidemailvalidateresult)) {
+                                        $userdata['mail'] = $entraidemailvalidateresult;
                                     }
                                 }
                             }
@@ -223,7 +223,7 @@ class base {
                 }
 
                 if (!isset($userdata['objectId'])) {
-                    // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
+                    // Use 'oid' if available (Microsoft-specific), or fall back to standard "sub" claim.
                     $objectid = $token->claim('oid');
                     if (empty($objectid)) {
                         $objectid = $token->claim('sub');
@@ -234,7 +234,7 @@ class base {
                 }
 
                 if (!isset($userdata['userPrincipalName'])) {
-                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                         $upn = $token->claim('preferred_username');
                         if (empty($upn)) {
                             $upn = $token->claim('email');
@@ -270,9 +270,9 @@ class base {
                         $userdata['mail'] = $email;
                     } else {
                         if (!empty($upn)) {
-                            $aademailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                            if (!empty($aademailvalidateresult)) {
-                                $userdata['mail'] = $aademailvalidateresult;
+                            $entraidemailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
+                            if (!empty($entraidemailvalidateresult)) {
+                                $userdata['mail'] = $entraidemailvalidateresult;
                             }
                         }
                     }
@@ -541,7 +541,7 @@ class base {
             throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
-        // Use 'oid' if available (Azure-specific), or fall back to standard "sub" claim.
+        // Use 'oid' if available (Microsoft-specific), or fall back to standard "sub" claim.
         $oidcuniqid = $idtoken->claim('oid');
         if (empty($oidcuniqid)) {
             $oidcuniqid = $idtoken->claim('sub');
@@ -565,7 +565,7 @@ class base {
         if ($restrictions !== '') {
             $restrictions = explode("\n", $restrictions);
             // Check main user identifier claim based on IdP type, and falls back to oidc-standard "sub" if still empty.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $tomatch = $idtoken->claim('preferred_username');
                 if (empty($tomatch)) {
                     $tomatch = $idtoken->claim('email');
@@ -639,7 +639,7 @@ class base {
             $oidcusername = $originalupn;
         } else {
             // Determine remote username depending on IdP type, or fall back to standard 'sub'.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $oidcusername = $idtoken->claim('preferred_username');
                 if (empty($oidcusername)) {
                     $oidcusername = $idtoken->claim('email');

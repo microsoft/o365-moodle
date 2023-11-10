@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Azure AD user sync options.
+ * Microsoft Entra ID user sync options.
  *
  * @package local_o365
  * @author Nagesh Tembhurnikar <nagesh@introp.net>
@@ -35,9 +35,9 @@ global $CFG;
 require_once($CFG->dirroot . '/lib/adminlib.php');
 
 /**
- * Azure AD sync options.
+ * Microsoft Entra ID user sync options.
  */
-class aadsyncoptions extends admin_setting_configmulticheckbox {
+class usersyncoptions extends admin_setting_configmulticheckbox {
     /** @var array Array of choices value=>label */
     public $choices;
 
@@ -51,22 +51,22 @@ class aadsyncoptions extends admin_setting_configmulticheckbox {
      */
     public function __construct($name, $visiblename, $description) {
         $choices = [
-            'create' => new \lang_string('settings_aadsync_create', 'local_o365'),
-            'update' => new \lang_string('settings_aadsync_update', 'local_o365'),
-            'suspend' => new \lang_string('settings_aadsync_suspend', 'local_o365'),
-            'delete' => new \lang_string('settings_aadsync_delete', 'local_o365'),
-            'reenable' => new \lang_string('settings_aadsync_reenable', 'local_o365'),
-            'disabledsync' => new \lang_string('settings_aadsync_disabledsync', 'local_o365'),
-            'match' => new \lang_string('settings_aadsync_match', 'local_o365'),
-            'matchswitchauth' => new \lang_string('settings_aadsync_matchswitchauth', 'local_o365'),
-            'appassign' => new \lang_string('settings_aadsync_appassign', 'local_o365'),
-            'photosync' => new \lang_string('settings_aadsync_photosync', 'local_o365'),
-            'photosynconlogin' => new \lang_string('settings_aadsync_photosynconlogin', 'local_o365'),
+            'create' => new \lang_string('settings_usersync_create', 'local_o365'),
+            'update' => new \lang_string('settings_usersync_update', 'local_o365'),
+            'suspend' => new \lang_string('settings_usersync_suspend', 'local_o365'),
+            'delete' => new \lang_string('settings_usersync_delete', 'local_o365'),
+            'reenable' => new \lang_string('settings_usersync_reenable', 'local_o365'),
+            'disabledsync' => new \lang_string('settings_usersync_disabledsync', 'local_o365'),
+            'match' => new \lang_string('settings_usersync_match', 'local_o365'),
+            'matchswitchauth' => new \lang_string('settings_usersync_matchswitchauth', 'local_o365'),
+            'appassign' => new \lang_string('settings_usersync_appassign', 'local_o365'),
+            'photosync' => new \lang_string('settings_usersync_photosync', 'local_o365'),
+            'photosynconlogin' => new \lang_string('settings_usersync_photosynconlogin', 'local_o365'),
             'tzsync' => new \lang_string('settings_addsync_tzsync', 'local_o365'),
             'tzsynconlogin' => new \lang_string('settings_addsync_tzsynconlogin', 'local_o365'),
-            'nodelta' => new \lang_string('settings_aadsync_nodelta', 'local_o365'),
-            'emailsync' => new \lang_string('settings_aadsync_emailsync', 'local_o365'),
-            'guestsync' => new \lang_string('settings_aadsync_guestsync', 'local_o365'),
+            'nodelta' => new \lang_string('settings_usersync_nodelta', 'local_o365'),
+            'emailsync' => new \lang_string('settings_usersync_emailsync', 'local_o365'),
+            'guestsync' => new \lang_string('settings_usersync_guestsync', 'local_o365'),
         ];
         parent::__construct($name, $visiblename, $description, [], $choices);
     }
