@@ -69,7 +69,7 @@ class provider implements
             ],
             'local_o365_connections' => [
                 'muserid',
-                'aadupn',
+                'entraidupn',
                 'uselogin',
             ],
             'local_o365_token' => [

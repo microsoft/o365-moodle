@@ -37,15 +37,15 @@ $string['settings_header_teams'] = 'Teams Settings';
 $string['settings_header_moodle_app'] = 'Teams Moodle app';
 
 // Setting sections in the "Setup" tab.
-$string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Azure AD';
-$string['settings_setup_step1_desc'] = 'Register a new AzureAD Application for your Microsoft 365 tenant by using Windows PowerShell:
+$string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Microsoft Entra ID';
+$string['settings_setup_step1_desc'] = 'Register a new Azure App for your Microsoft Entra tenant using Windows PowerShell:
 
 <a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download Windows PowerShell Script</a>
 
 <p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here</a> to read instructions on running the script.</p>
 <p>When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Secret returned by the script into the <a href="{$a}">OpenID Connect authentication plugin configuration page</a>.';
-$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the AzureAD app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.';
+$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the Azure app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/3: Choose connection method';
@@ -56,7 +56,7 @@ $string['settings_setup_step2_desc_additional'] = '<br /><br />
 <span class="error">You are currently using "System API user" connection method, which is not supported from March 2022. Please change to "Application Access" connection method.</span>';
 $string['settings_setup_step2_continue'] = '<b>Choose a connection method, then click "Save changes" to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step3'] = 'Step 3/3: Admin consent &amp; additional information';
-$string['settings_setup_step3_desc'] = 'This last step allows you to give administrator consent to use some Azure permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
+$string['settings_setup_step3_desc'] = 'This last step allows you to give administrator consent to use some permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
 $string['settings_setup_step4'] = 'Verify setup';
 $string['settings_setup_step4_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
 
@@ -70,50 +70,48 @@ It requires you enable a few extra permissions in the Azure app.<br />';
 $string['settings_adminconsent'] = 'Admin Consent';
 $string['settings_adminconsent_btn'] = 'Provide Admin Consent';
 $string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with an Azure administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Azure.';
-$string['settings_aadtenant'] = 'Azure AD Tenant';
-$string['settings_aadtenant_details'] = 'Used to Identify your organization within Azure AD. For example: "contoso.onmicrosoft.com".';
-$string['settings_aadtenant_error'] = 'We could not detect your Azure AD tenant.<br />Please ensure "Windows Azure Active Directory" has been added to your registered Azure AD application, and that the "Read directory data" permission is enabled.';
+$string['settings_entratenant'] = 'Microsoft Entra tenant';
+$string['settings_entratenant_details'] = 'Used to Identify your organization within Microsoft. For example: "contoso.onmicrosoft.com".';
 $string['settings_odburl'] = 'OneDrive for Business URL';
-$string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your Azure AD tenant. For example, if your Azure AD tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
-$string['settings_odburl_error'] = 'We could not determine your OneDrive for Business URL.<br />Please make sure "Microsoft 365 SharePoint Online" has been added to your registered application in Azure AD.';
+$string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your Microsoft Entra tenant. For example, if your Microsoft Entra tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
+$string['settings_odburl_error'] = 'We could not determine your OneDrive for Business URL.';
 $string['settings_odburl_error_graph'] = 'We could not determine your OneDrive for Business URL, please enter manually. This can usually be determined by using the URL you use to access OneDrive.';
 $string['settings_serviceresourceabstract_detect'] = 'Detect';
 $string['settings_serviceresourceabstract_detecting'] = 'Detecting...';
 $string['settings_serviceresourceabstract_error'] = 'An error occurred detecting setting. Please set manually.';
-$string['settings_serviceresourceabstract_noperms'] = 'We experienced a problem detecting this setting.<br />Please ensure "Windows Azure Active Directory" has been added to your registered Azure AD application, and that the "Read directory data" permission is enabled.';
 $string['settings_serviceresourceabstract_valid'] = '{$a} is usable.';
 $string['settings_serviceresourceabstract_invalid'] = 'This value doesn\'t seem to be usable.';
 $string['settings_serviceresourceabstract_nocreds'] = 'Please set application credentials first.';
 $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or click "Detect" to attempt to detect correct value.';
 
 // Settings in "Verify setup" section of the "Setup" tab.
-$string['settings_azuresetup'] = 'Azure AD setup';
-$string['settings_azuresetup_appdataheader'] = 'Azure AD Application Registration';
-$string['settings_azuresetup_appdatadesc'] = 'Verifies the correct parameters are set up in Azure AD.';
-$string['settings_azuresetup_appdatareplyurlcorrect'] = 'Reply URL Correct';
-$string['settings_azuresetup_appdatareplyurlincorrect'] = 'Reply URL Incorrect';
-$string['settings_azuresetup_appdatareplyurlgeneralerror'] = 'Could not check reply url.';
-$string['settings_azuresetup_appdatasignonurlcorrect'] = 'Sign-on URL Correct.';
-$string['settings_azuresetup_appdatasignonurlincorrect'] = 'Sign-on URL Incorrect';
-$string['settings_azuresetup_appdatasignonurlgeneralerror'] = 'Could not check sign-on url.';
-$string['settings_azuresetup_apppermscorrect'] = 'Application Permissions are correct.';
-$string['settings_azuresetup_details'] = 'This tool checks with Azure AD to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure AD can take a moment to appear here. If you have made a change in Azure AD and do not see it reflected here, wait a moment and try again.';
-$string['settings_azuresetup_correctval'] = 'Correct Value:';
-$string['settings_azuresetup_detectedval'] = 'Detected Value:';
-$string['settings_azuresetup_update'] = 'Update';
-$string['settings_azuresetup_checking'] = 'Checking...';
-$string['settings_azuresetup_missingappperms'] = 'Missing Application Permissions:';
-$string['settings_azuresetup_missingperms'] = 'Missing Delegated Permissions:';
-$string['settings_azuresetup_permscorrect'] = 'Delegated Permissions are correct.';
-$string['settings_azuresetup_errorcheck'] = 'An error occurred trying to check Azure AD setup.';
-$string['settings_azuresetup_noinfo'] = 'We don\'t have any information about your Azure AD setup yet. Please click the Update button to check.';
-$string['settings_azuresetup_strunifiedpermerror'] = 'There was an error checking Microsoft Graph API permissions.';
-$string['settings_azuresetup_strtenanterror'] = 'Please use the dectect button to set your Azure AD Tenant before updating Azure AD setup.';
-$string['settings_azuresetup_unifiedheader'] = 'Microsoft Graph API';
-$string['settings_azuresetup_unifieddesc'] = 'The Microsoft Graph API allows communication between Moodle and Microsoft 365.';
-$string['settings_azuresetup_unifiederror'] = 'There was an error checking for Microsoft Graph API support.';
-$string['settings_azuresetup_unifiedactive'] = 'Microsoft Graph API active.';
-$string['settings_azuresetup_unifiedmissing'] = 'The Microsoft Graph API was not found in this application.';
+$string['settings_verifysetup'] = 'Verify setup';
+$string['settings_verifysetup_appdataheader'] = 'Azure App Registration';
+$string['settings_verifysetup_appdatadesc'] = 'Verifies the correct parameters are set up in Azure app.';
+$string['settings_verifysetup_appdatareplyurlcorrect'] = 'Reply URL Correct';
+$string['settings_verifysetup_appdatareplyurlincorrect'] = 'Reply URL Incorrect';
+$string['settings_verifysetup_appdatareplyurlgeneralerror'] = 'Could not check reply url.';
+$string['settings_verifysetup_appdatasignonurlcorrect'] = 'Sign-on URL Correct.';
+$string['settings_verifysetup_appdatasignonurlincorrect'] = 'Sign-on URL Incorrect';
+$string['settings_verifysetup_appdatasignonurlgeneralerror'] = 'Could not check sign-on url.';
+$string['settings_verifysetup_apppermscorrect'] = 'Application Permissions are correct.';
+$string['settings_verifysetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure app can take a moment to appear here. If you have made a change in the Azure app and do not see it reflected here, wait a moment and try again.';
+$string['settings_verifysetup_correctval'] = 'Correct Value:';
+$string['settings_verifysetup_detectedval'] = 'Detected Value:';
+$string['settings_verifysetup_update'] = 'Update';
+$string['settings_verifysetup_checking'] = 'Checking...';
+$string['settings_verifysetup_missingappperms'] = 'Missing Application Permissions:';
+$string['settings_verifysetup_missingperms'] = 'Missing Delegated Permissions:';
+$string['settings_verifysetup_permscorrect'] = 'Delegated Permissions are correct.';
+$string['settings_verifysetup_errorcheck'] = 'An error occurred trying to check setup.';
+$string['settings_verifysetup_noinfo'] = 'We don\'t have any information about your Azure app setup yet. Please click the Update button to check.';
+$string['settings_verifysetup_strunifiedpermerror'] = 'There was an error checking Microsoft Graph API permissions.';
+$string['settings_verifysetup_strtenanterror'] = 'Please use the dectect button to set your Microsoft Entra tenant before updating Azure app setup.';
+$string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
+$string['settings_verifysetup_unifieddesc'] = 'The Microsoft Graph API allows communication between Moodle and Microsoft 365.';
+$string['settings_verifysetup_unifiederror'] = 'There was an error checking for Microsoft Graph API support.';
+$string['settings_verifysetup_unifiedactive'] = 'Microsoft Graph API active.';
+$string['settings_verifysetup_unifiedmissing'] = 'The Microsoft Graph API was not found in this application.';
 
 // Additional settings in the "Verify setup" section of the "Setup" tab.
 $string['settings_detectoidc'] = 'Application Credentials';
@@ -123,39 +121,38 @@ $string['settings_detectoidc_credsvalid_link'] = 'Change';
 $string['settings_detectoidc_credsinvalid'] = 'Credentials have not been set or are incomplete.';
 $string['settings_detectoidc_credsinvalid_link'] = 'Set Credentials';
 $string['settings_detectperms'] = 'Application Permissions';
-$string['settings_detectperms_details'] = 'The use the plugin features, correct permissions must be set up for the application in Azure AD.';
+$string['settings_detectperms_details'] = 'To use the plugin features, correct permissions must be set up in the Azure app.';
 $string['settings_detectperms_nocreds'] = 'Application credentials need to be set first. See above setting.';
 $string['settings_detectperms_missing'] = 'Missing:';
-$string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please set manually in Azure AD.';
+$string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please fix manually in Azure.';
 $string['settings_detectperms_fixperms'] = 'Fix permissions';
-$string['settings_detectperms_fixprereq'] = 'To fix this automatically, your system API user must be an administrator, and the "Access your organization\'s directory" permission must be enabled in Azure AD for the "Windows Azure Active Directory" application.';
 $string['settings_detectperms_nounified'] = 'Microsoft Graph API not present, some new features may not work.';
 $string['settings_detectperms_unifiednomissing'] = 'All unified permissions present.';
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
-$string['settings_detectperms_invalid'] = 'Check permissions in Azure AD';
+$string['settings_detectperms_invalid'] = 'Check permissions in Azure';
 
 // Settings in "User sync" section of the "Sync settings" tab.
 $string['settings_options_usersync'] = 'User Sync';
 $string['settings_options_usersync_desc'] = 'The following settings control user synchronization between Microsoft 365 and Moodle.';
-$string['settings_aadsync'] = 'Sync users with Azure AD';
-$string['settings_aadsync_details'] = 'When enabled, Moodle and Azure AD users are synced according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users with Azure AD</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
-$string['settings_aadsync_create'] = 'Create accounts in Moodle for users in Azure AD';
-$string['settings_aadsync_update'] = 'Update all accounts in Moodle for users in Azure AD';
-$string['settings_aadsync_suspend'] = 'Suspend previously synced accounts in Moodle when they are deleted from Azure AD';
-$string['settings_aadsync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Azure AD (requires "suspend" option above)';
-$string['settings_aadsync_reenable'] = 'Re-enable suspended accounts for users in Azure AD';
-$string['settings_aadsync_disabledsync'] = 'Sync disabled status';
-$string['settings_aadsync_match'] = 'Match preexisting Moodle users with same-named accounts in Azure AD';
-$string['settings_aadsync_matchswitchauth'] = 'Switch matched users to Microsoft 365 (OpenID Connect) authentication';
-$string['settings_aadsync_appassign'] = 'Assign users to application during sync';
-$string['settings_aadsync_photosync'] = 'Sync Microsoft 365 profile photos to Moodle in cron job';
-$string['settings_aadsync_photosynconlogin'] = 'Sync Microsoft 365 profile photos to Moodle on login';
-$string['settings_aadsync_nodelta'] = 'Perform a full sync each run';
-$string['settings_aadsync_emailsync'] = 'Match Azure usernames to moodle emails instead of moodle usernames during the sync';
+$string['settings_usersync'] = 'Sync users from Microsoft Entra ID';
+$string['settings_usersync_details'] = 'When enabled, Moodle synchronises users from Microsoft Entra ID according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users from Microsoft Entra ID</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
+$string['settings_usersync_create'] = 'Create accounts in Moodle for users in Microsoft Entra ID';
+$string['settings_usersync_update'] = 'Update accounts in Moodle for users in Microsoft Entra ID';
+$string['settings_usersync_suspend'] = 'Suspend previously synced accounts in Moodle when they are deleted from Microsoft Entra ID';
+$string['settings_usersync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Microsoft Entra ID (requires "suspend" option above)';
+$string['settings_usersync_reenable'] = 'Re-enable suspended accounts for users in Microsoft Entra ID';
+$string['settings_usersync_disabledsync'] = 'Sync disabled status';
+$string['settings_usersync_match'] = 'Match preexisting Moodle users with same-named accounts in Microsoft Entra ID';
+$string['settings_usersync_matchswitchauth'] = 'Switch matched users to Microsoft 365 (OpenID Connect) authentication';
+$string['settings_usersync_appassign'] = 'Assign users to application during sync';
+$string['settings_usersync_photosync'] = 'Sync Microsoft 365 profile photos to Moodle in cron job';
+$string['settings_usersync_photosynconlogin'] = 'Sync Microsoft 365 profile photos to Moodle on login';
+$string['settings_usersync_nodelta'] = 'Perform a full sync each run';
+$string['settings_usersync_emailsync'] = 'Match Microsoft Entra ID usernames to moodle emails instead of moodle usernames during the sync';
 $string['settings_addsync_tzsync'] = 'Sync Outlook timezone to Moodle in cronjob';
 $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on login';
-$string['settings_aadsync_guestsync'] = 'Sync guest users';
+$string['settings_usersync_guestsync'] = 'Sync guest users';
 $string['settings_suspend_delete_running_time'] = 'User suspension/deletion running time';
 $string['settings_suspend_delete_running_time_desc'] = 'If the option is enabled, suspension/delete feature of user sync function will run once a day, at the time configured in the Moodle instance default time zone.';
 $string['settings_support_upn_change'] = 'Support Microsoft account UPN change';
@@ -314,7 +311,7 @@ $string['settings_secthead_team_group_name_desc'] = 'If a course is configured t
 <ul>
 <li>Group mail alias and team display names can be defined.</li>
 <li>Microsoft 365 group will be created first using the group mailNickname and team display name configured first, and a Team will be created from the group.</li>
-<li>If Azure AD group naming policies are used, groups will not be created if the display name created according to the configuration does not match the policies.</li>
+<li>If Microsoft Entra ID naming policy for Microsoft 365 Groups are used, groups will not be created if the display name created according to the configuration does not match the policies.</li>
 <li>Changes made here will only affect future Team creation, and not existing ones.</li>
 <li>All spaces will be removed from the group mail alias.</li>
 <li>Only upper and lower case letters, numbers, - and _ are allowed in the group mail alias.</li>
@@ -357,7 +354,7 @@ $string['settings_secthead_advanced_desc'] = 'These settings control other featu
 // Settings in the "Tools" section of the "Advanced" tab.
 $string['settings_tools_tenants'] = 'Tenants';
 $string['settings_tools_tenants_linktext'] = 'Configure additional tenants';
-$string['settings_tools_tenants_details'] = 'Manage access to additional Microsoft 365 tenants.';
+$string['settings_tools_tenants_details'] = 'Manage access to additional Microsoft Entra tenants.';
 $string['settings_healthcheck'] = 'Health Check';
 $string['settings_healthcheck_details'] = 'If something isn\'t working correctly, performing a health check can usually identify the problem and propose solutions';
 $string['settings_healthcheck_linktext'] = 'Perform health check';
@@ -370,7 +367,7 @@ $string['settings_teamconnections_details'] = 'Review and manage connections bet
 $string['settings_usermatch'] = 'User Matching';
 $string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Microsoft 365 users based on a custom uploaded data file.';
 $string['settings_usersynccreationrestriction'] = 'User creation restriction';
-$string['settings_usersynccreationrestriction_details'] = 'If enabled, only users that have the specified value for the specified Azure AD field will be created during user sync.';
+$string['settings_usersynccreationrestriction_details'] = 'If enabled, only Microsoft Entra ID users matching the condition will be created during user sync.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Field value';
 $string['settings_usersynccreationrestriction_o365group'] = 'Microsoft 365 Group Membership';
 $string['settings_usersynccreationrestriction_regex'] = 'Value is a regular expression';
@@ -385,22 +382,22 @@ $string['acp_tenants_title_desc'] = 'This page helps you set up multitenant acce
 $string['acp_tenants_add'] = 'Add New Tenant';
 $string['acp_tenants_errornotsetup'] = 'Please complete the plugin setup process before adding additional tenants.';
 $string['acp_tenants_hosttenant'] = 'Host Tenant: {$a}';
-$string['acp_tenants_intro'] = '<b>How Multitenancy Works:</b><br />Multitenancy allows multiple Microsoft 365 tenants to access your Moodle site. <br /><br />
+$string['acp_tenants_intro'] = '<b>How Multitenancy Works:</b><br />Multitenancy allows multiple Microsoft Entra tenants to access your Moodle site. <br /><br />
     Here\'s how to get set up:
     <ol>
         <li>Log in to Moodle as a site administrator user that is not using the OpenID Connect authentication plugin.</li>
         <li>Ensure the <b>Authorization Endpoint</b> and <b>Token Endpoint</b> settings of the OpenID Connect authentication plugin are using the default non-tenant specific settings.</li>
         <li>Disable the OpenID Connect authentication plugin in Moodle. (Use <a href="{$a}/admin/settings.php?section=manageauths">the authentication plugins administration page</a>.)</li>
-        <li>Navigate to Azure AD, and find the application you configured for Moodle.</li>
-        <li>Enable multitenancy in the Azure AD application and save changes.</li>
+        <li>Navigate to Azure portal and find the application you configured for Moodle.</li>
+        <li>Enable multitenancy in the Azure app and save changes.</li>
         <li>Give at least one of the following Graph Delegated permissions to the app: <b>Directory.Read.All</b>, <b>Domain.Read.All</b>, or <b>Domain.ReadWrite.All</b>. Admin consent for your organisation is not required.</li>
         <li>If you are already signed in using your Microsoft account from the additional tenant, log out completely and log back in.</li>
         <li>For each tenant you want to enable, click "Add New Tenant" and log in with an administrator account from the tenant you want to enable.</li>
         <li>Once you have added all the tenants you want, re-enable the OpenID Connect authentication plugin in Moodle.</li>
         <li>You\'re done! To add additional tenants in the future, just click the "Add New Tenant" button and log in with an administrator account from that tenant.</li>
     </ol>
-    <b>Important Note:</b> Azure AD multitenancy allows all Microsoft 365 tenants to access your application when enabled. Adding the tenants here allows us to restrict Moodle access to tenants you configure. <b>If you remove all the tenants from this list before disabling multitenancy in Azure AD, or enable OpenID Connect authentication in Moodle with an empty list, your Moodle site will be open to all Microsoft 365 tenants.</b>';
-$string['acp_tenants_none'] = 'You have not configured any tenants. If you have enabled multitenancy in Azure AD, you\'re Moodle site may be open to all Microsoft 365 users.';
+    <b>Important Note:</b> Enabling multitenancy in Azure app allows all Microsoft Entra tenants to access your application when enabled. Adding the tenants here allows us to restrict Moodle access to tenants you configure. <b>If you remove all the tenants from this list before disabling multitenancy in Azure app, or enable OpenID Connect authentication in Moodle with an empty list, your Moodle site will be open to all Microsoft Entra tenants.</b>';
+$string['acp_tenants_none'] = 'You have not configured any tenants. If you have enabled multitenancy in Azure app, your Moodle site may be open to all Microsoft 365 users.';
 $string['acp_tenants_revokeaccess'] = 'Revoke Access';
 $string['acp_tenants_tenant'] = 'Tenant';
 $string['acp_tenants_actions'] = 'Actions';
@@ -455,7 +452,7 @@ $string['acp_userconnections_table_match'] = 'Match';
 $string['acp_userconnections_table_matched'] = 'Matched with existing user.<br />Awaiting completion.';
 $string['acp_userconnections_table_noconnection'] = 'No Connection';
 $string['acp_userconnections_table_resync'] = 'Resync';
-$string['acp_userconnections_table_synced'] = 'Synced from Azure AD.<br />Awaiting initial login.';
+$string['acp_userconnections_table_synced'] = 'Synced from Microsoft Entra ID.<br />Awaiting initial login.';
 $string['acp_userconnections_table_unmatch'] = 'Unmatch';
 $string['acp_userconnections_table_unmatch_confirmmsg'] = 'This will unmatch the Moodle user "{$a}" from Microsoft 365. Click the link below to proceed.';
 
@@ -578,7 +575,7 @@ $string['settings_o365china_details'] = 'Check this if you are using Microsoft 3
 $string['settings_debugmode'] = 'Record debug messages';
 $string['settings_debugmode_details'] = 'If enabled, information will be logged to the Moodle log that can help in identifying problems. <a href="{$a}">View recorded log messages.</a>';
 $string['settings_switchauthminupnsplit0'] = 'Minimum inexact username length to switch to Microsoft 365';
-$string['settings_switchauthminupnsplit0_details'] = 'If you enable the "Switch matched users to Microsoft 365 authentication" setting, this sets the minimum length for usernames without a tenant (the @example.onmicrosoft.com part) which will be switched. This helps to avoid switching accounts with generic names, like "admin", which aren\'t necessarily same in Moodle and Azure AD.';
+$string['settings_switchauthminupnsplit0_details'] = 'If you enable the "Switch matched users to Microsoft 365 authentication" setting, this sets the minimum length for usernames without a tenant (the @example.onmicrosoft.com part) which will be switched. This helps to avoid switching accounts with generic names, like "admin", which aren\'t necessarily same in Moodle and Microsoft Entra ID.';
 $string['settings_photoexpire'] = 'Profile photo refresh time';
 $string['settings_photoexpire_details'] = 'The number of hours to wait before refreshing profile photos. Longer times can increase performance.';
 $string['settings_customtheme'] = 'Custom theme (Advanced)';
@@ -588,7 +585,7 @@ Please note that a custom theme set at either course or category level would tak
 // Settings in the "School Data Sync" tab.
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';
-$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Azure AD from external SIS systems into Moodle. <a href="https://sis.microsoft.com/" target="_blank">Learn More</a><br/>
+$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Microsoft from external SIS systems into Moodle. <a href="https://sds.microsoft.com/" target="_blank">Learn More</a><br/>
 <br/>
 SDS sync feature requires <b>"Application access"</b> connection method to work.<br/>
 Please also ensure the Azure app used for the integration has <b>EduRoster.Read.All</b> and <b>Member.Read.Hidden</b> Microsoft Graph application permissions, which are not automatically added by the default set up. Admin consent needs to be granted for them too.<br/>
@@ -619,7 +616,7 @@ $string['settings_sds_profilesync_header_desc'] = 'These options control profile
 $string['settings_sds_profilesync_disabled'] = 'Disabled';
 $string['settings_sds_profilesync'] = 'Sync profile data from school';
 $string['settings_sds_profilesync_desc'] = 'Select the SDS school from which Moodle synchronises SDS specific profile data.<br/>
-Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.<br/>
+Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users from Microsoft Entra ID" scheduled task, nor when user logs in.<br/>
 Note there is a known issue in Microsoft Graph API used by this feature that certain student and teacher school profile fields are not returned, therefore are unavilable to sync even when configured.';
 $string['settings_sds_noschools'] = '<div class="alert alert-info">You do not have any schools available in School data sync.</div>';
 $string['settings_sds_get_schools_error'] = '<div class="alert alert-info error">Failed to get SDS schools. Check the Azure app has required permission.</div>';
@@ -630,7 +627,7 @@ $string['settings_sds_school_disabled_action_disconnect'] = 'Disconnect the Mood
 
 // Settings in the "Teams Settings" tab.
 $string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
-$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Microsoft 365 tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
+$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Microsoft Entra tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
 $string['settings_teams_moodle_setup_heading'] = '<h4 class="local_o365_settings_teams_h4_spacer">Setup your Moodle app for Microsoft Teams</h4>';
 $string['settings_moodlesettingssetup'] = 'Configure Moodle';
 $string['settings_check_moodle_settings'] = 'Check Moodle settings';
@@ -726,7 +723,7 @@ $string['errorhttpclientbadtempfileloc'] = 'Could not open temporary location to
 $string['errorhttpclientnofileinput'] = 'No file parameter in httpclient::put';
 $string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
 $string['errorchecksystemapiuser'] = 'Could not get a system API user token, please run the health check, ensure that your Moodle cron is running, and refresh the system API user if necessary.';
-$string['erroracpapcantgettenant'] = 'Could not get Azure AD tenant, please enter manually.';
+$string['erroracpapcantgettenant'] = 'Could not get Microsoft Entra tenant, please enter manually.';
 $string['erroracpcantgettenant'] = 'Could not get OneDrive URL, please enter manually.';
 $string['errorprovisioningapp'] = 'Could not provision the Moodle app in the Team.';
 $string['erroro365apibadcall'] = 'Error in API call.';
@@ -740,7 +737,7 @@ $string['erroro365apinoparentinfo'] = 'Could not find parent folder information'
 $string['erroro365apinotimplemented'] = 'This should be overridden.';
 $string['erroro365apinotoken'] = 'Did not have a token for the given resource and user, and could not get one. Is the user\'s refresh token expired?';
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
-$string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
+$string['errorusermatched'] = 'The Microsoft 365 account "{$a->entraidupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 $string['eventapifail'] = 'API failure';
 $string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
 
@@ -761,7 +758,7 @@ $string['privacy:metadata:local_o365_calsub:syncbehav'] = 'The sync behaviour (i
 $string['privacy:metadata:local_o365_calsub:timecreated'] = 'The time the subscription was created.';
 $string['privacy:metadata:local_o365_connections'] = 'Information about connections between Moodle and Microsoft 365 users that have not yet been confirmed';
 $string['privacy:metadata:local_o365_connections:muserid'] = 'The ID of the Moodle user';
-$string['privacy:metadata:local_o365_connections:aadupn'] = 'The UPN of the Microsoft 365 user.';
+$string['privacy:metadata:local_o365_connections:entraidupn'] = 'The UPN of the Microsoft Entra ID user.';
 $string['privacy:metadata:local_o365_connections:uselogin'] = 'Whether to switch the user\'s authentication method when completed.';
 $string['privacy:metadata:local_o365_token'] = 'Information about Microsoft 365 API tokens for users';
 $string['privacy:metadata:local_o365_token:user_id'] = 'The ID of the Moodle user';
@@ -808,12 +805,12 @@ $string['ucp_connection_start'] = 'Connect to Microsoft 365';
 $string['ucp_connection_stop'] = 'Disconnect from Microsoft 365';
 $string['ucp_connection_options'] = 'Connection Options:';
 $string['ucp_connection_desc'] = 'Here you can configure how you connect to Microsoft 365. To use Microsoft 365 features, you must be connected to a Microsoft 365 account. This can be accomplished as outlined below.';
-$string['ucp_connection_aadlogin'] = 'Use your Microsoft 365 credentials to log in to Moodle<br />';
-$string['ucp_connection_aadlogin_desc_rocreds'] = 'Instead of your Moodle username and password, you will enter your Microsoft 365 username and password on the Moodle login page.';
-$string['ucp_connection_aadlogin_desc_authcode'] = 'Instead of entering a username and password on the Moodle login page, you will see a section that says "Login using your account on {$a}" on the login page. You will click the link and be redirected to Microsoft 365 to log in. After you have logged in to Microsoft 365 successfully, you will be returned to Moodle and logged in to your account.';
-$string['ucp_connection_aadlogin_start'] = 'Start using Microsoft 365 to log in to Moodle.';
-$string['ucp_connection_aadlogin_stop'] = 'Stop using Microsoft 365 to log in to Moodle.';
-$string['ucp_connection_aadlogin_active'] = 'You are using the Microsoft 365 account "{$a}" to log in to Moodle.';
+$string['ucp_connection_entraidlogin'] = 'Use your Microsoft 365 credentials to log in to Moodle<br />';
+$string['ucp_connection_entraidlogin_desc_rocreds'] = 'Instead of your Moodle username and password, you will enter your Microsoft 365 username and password on the Moodle login page.';
+$string['ucp_connection_entraidlogin_desc_authcode'] = 'Instead of entering a username and password on the Moodle login page, you will see a section that says "Login using your account on {$a}" on the login page. You will click the link and be redirected to Microsoft 365 to log in. After you have logged in to Microsoft 365 successfully, you will be returned to Moodle and logged in to your account.';
+$string['ucp_connection_entraidlogin_start'] = 'Start using Microsoft 365 to log in to Moodle.';
+$string['ucp_connection_entraidlogin_stop'] = 'Stop using Microsoft 365 to log in to Moodle.';
+$string['ucp_connection_entraidlogin_active'] = 'You are using the Microsoft 365 account "{$a}" to log in to Moodle.';
 $string['ucp_connection_linked'] = 'Link your Moodle and Microsoft 365 accounts';
 $string['ucp_connection_linked_desc'] = 'Linking your Moodle and Microsoft 365 accounts allows you to use Microsoft 365 Moodle features without changing how you log in to Moodle. <br />Clicking the link below will send you to Microsoft 365 to perform a one-time login, after which you will be returned here. You will be able to use all the Microsoft 365 features without making any other changes to your Moodle account - you will log in to Moodle as you always have.';
 $string['ucp_connection_linked_active'] = 'You are linked to Microsoft 365 account "{$a}".';
@@ -825,10 +822,10 @@ $string['ucp_features'] = 'Microsoft 365 Features';
 $string['ucp_features_intro'] = 'Below is a list of the features you can use to enhance Moodle with Microsoft 365.';
 $string['ucp_features_intro_notconnected'] = ' Some of these may not be available until you are connected to Microsoft 365.';
 $string['ucp_general_intro_notconnected_nopermissions'] = 'To connect to Microsoft 365 you will need to contact your site administrator.';
-$string['ucp_index_aadlogin_title'] = 'Microsoft 365 Login';
-$string['ucp_index_aadlogin_desc'] = 'You can use your Microsoft 365 credentials to log in to Moodle. ';
-$string['ucp_index_aadlogin_active'] = 'You are currently using Microsoft 365 to log in to Moodle';
-$string['ucp_index_aadlogin_inactive'] = 'You are not currently using Microsoft 365 to log in to Moodle';
+$string['ucp_index_entraidlogin_title'] = 'Microsoft 365 Login';
+$string['ucp_index_entraidlogin_desc'] = 'You can use your Microsoft 365 credentials to log in to Moodle. ';
+$string['ucp_index_entraidlogin_active'] = 'You are currently using Microsoft 365 to log in to Moodle';
+$string['ucp_index_entraidlogin_inactive'] = 'You are not currently using Microsoft 365 to log in to Moodle';
 $string['ucp_index_calendar_title'] = 'Outlook Calendar sync settings';
 $string['ucp_index_calendar_desc'] = 'Here you can set up syncing between your Moodle and Outlook calendars. You can export Moodle calendar events to Outlook, and bring Outlook events into Moodle.';
 $string['ucp_index_connection_title'] = 'Microsoft 365 connection settings';
@@ -863,7 +860,7 @@ $string['task_calendarsyncin'] = 'Sync Microsoft 365 events in to Moodle';
 $string['task_coursesync'] = 'Sync Moodle courses to Microsoft Teams';
 $string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_sds_sync'] = 'Sync with SDS';
-$string['task_syncusers'] = 'Sync users with Azure AD';
+$string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_processmatchqueue'] = 'Process Match Queue';
 $string['task_notifysecretexpiry'] = 'Notify site admin about Azure app secret expiry';
 $string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to a Microsoft 365 user.';
@@ -895,37 +892,37 @@ $string['webservices_error_couldnotsavegrade'] = 'Could not save grade.';
 
 // User sync task help text.
 $string['help_user_create'] = 'Create Accounts Help';
-$string['help_user_create_help'] = 'This will create users in Moodle from each user in the linked Azure Active Directory. Only users which do not currently have Moodle accounts will have accounts created. New accounts will be set up to use their Microsoft 365 credentials to log in to Moodle (using the OpenID Connect authentication plugin), and will be able to use all Microsoft 365/Moodle integration features.';
+$string['help_user_create_help'] = 'This will create users in Moodle from each user in the linked Microsoft Entra ID. Only users which do not currently have Moodle accounts will have accounts created. New accounts will be set up using the OpenID Connect authentication method using their Microsoft Entra ID profile, and they will be able to use all Microsoft 365/Moodle integration features.';
 $string['help_user_update'] = 'Update All Accounts Help';
-$string['help_user_update_help'] = 'This will update all users in Moodle from each user in the linked Azure Active Directory.';
+$string['help_user_update_help'] = 'This will update all users in Moodle from each user in the linked Microsoft Entra ID.';
 $string['help_user_suspend'] = 'Suspend Accounts Help';
-$string['help_user_suspend_help'] = 'This will suspend users from Moodle if they are marked as deleted in Azure Active Directory.';
+$string['help_user_suspend_help'] = 'This will suspend users from Moodle if they are marked as deleted in Microsoft Entra ID.';
 $string['help_user_delete'] = 'Delete Accounts Help';
-$string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Azure Active Directory. This will only work if the suspend user option is enabled. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful!';
+$string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Microsoft Entra ID. This will only work if the suspend user option is enabled. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful!';
 $string['help_user_reenable'] = 'Re-enable Accounts Help';
-$string['help_user_reenable_help'] = 'This will re-enable suspended Moodle accounts if they are returned from Azure Active Directory.';
+$string['help_user_reenable_help'] = 'This will re-enable suspended Moodle accounts if they are returned from Microsoft Entra ID.';
 $string['help_user_disabledsync'] = 'Sync disabled status help';
-$string['help_user_disabledsync_help'] = 'This will suspend/unsuspend users in Moodle if their connected accounts in Azure Active Directory are marked prevented/allowed from login.';
+$string['help_user_disabledsync_help'] = 'This will suspend/unsuspend users in Moodle if their connected accounts in Microsoft Entra ID are marked prevented/allowed from login.';
 $string['help_user_match'] = 'Match Accounts Help';
-$string['help_user_match_help'] = 'This will look at the each user in the linked Azure Active Directory and try to match them with a user in Moodle. This match is based on usernames in Azure AD and Moodle. Matches are case-insentitive and ignore the Microsoft 365 tenant. For example, "BoB.SmiTh" in Moodle would match "bob.smith@example.onmicrosoft.com". Users who are matched will have their Moodle and Microsoft 365 accounts connected and will be able to use all Microsoft 365/Moodle integration features. The user\'s authentication method will not change unless the setting below is enabled.';
+$string['help_user_match_help'] = 'This will look at each user in the linked Microsoft Entra ID and try to match them with a user in Moodle. This match is based on Microsoft Entra ID UPN and Moodle username. Matches are case-insensitive and ignore the domain part of Microsoft Entra ID UPN. For example, "BoB.SmiTh" in Moodle would match "bob.smith@example.onmicrosoft.com". Users who are matched will have their Moodle and Microsoft Entra ID accounts connected and will be able to use all Microsoft 365 and Moodle integration features. The user\'s authentication method will not change unless the setting below is enabled.';
 $string['help_user_matchswitchauth'] = 'Switch Matched Accounts Help';
 $string['help_user_matchswitchauth_help'] = 'This requires the "Match preexisting Moodle users" setting above to be enabled. When a user is matched, enabling this setting will switch their authentication method to OpenID Connect. They will then be able to log in to Moodle with their Microsoft 365 credentials. Note: Please ensure that the OpenID Connect authentication plugin is enabled if you want to use this setting.';
 $string['help_user_appassign'] = 'Assign Users To Application Help';
-$string['help_user_appassign_help'] = 'This will cause all the Azure AD accounts with matching Moodle accounts to be assigned to the Azure application created for this Moodle installation, if not already assigned.';
+$string['help_user_appassign_help'] = 'This will cause all the Microsoft Entra ID accounts with matching Moodle accounts to be assigned to the Azure app created for this Moodle installation, if not already assigned.';
 $string['help_user_photosync'] = 'Sync Microsoft 365 Profile Photos (Cron) Help';
 $string['help_user_photosync_help'] = 'This will cause all users\' Moodle profile photos to get synced with their Microsoft 365 profile photos.';
 $string['help_user_photosynconlogin'] = 'Sync Microsoft 365 Profile Photos (Login) Help';
 $string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle profile photo to get synced with their Microsoft 365 profile photo when that user logs in. Note this requires user visiting a page containing the Microsoft block in Moodle.';
 $string['help_user_nodelta'] = 'Perform a full sync help';
-$string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Azure AD. Checking this option will force a full user sync each time.';
-$string['help_user_emailsync'] = 'Sync azure usernames to moodle emails Help';
-$string['help_user_emailsync_help'] = 'Enabling this option will match azure usernames to moodle emails, instead of the default behaviour which is azure usernames to moodle usernames.';
+$string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Microsoft Entra ID from the last time the sync is run. Checking this option will force a full user sync each time.';
+$string['help_user_emailsync'] = 'Sync Microsoft Entra ID usernames to moodle emails Help';
+$string['help_user_emailsync_help'] = 'Enabling this option will match Microsoft Entra ID usernames to moodle emails, instead of the default behaviour which is azure usernames to moodle usernames.';
 $string['help_user_tzsync'] = 'Sync Outlook timezone (Cron) Help';
 $string['help_user_tzsync_help'] = 'This will cause all users\' Moodle timezone to get synced with their Outlook timezone preference.';
 $string['help_user_tzsynconlogin'] = 'Sync Outlook timezone (Login) Help';
 $string['help_user_tzsynconlogin_help'] = 'This will cause a user\'s Moodle timezone to get synced with their Outlook timezone preference. Note this requires user visiting a page containing the Microsoft block in Moodle.';
 $string['help_user_guestsync'] = 'Sync guest users Help';
-$string['help_user_guestsync_help'] = 'If enabled, guest users in Azure AD will be synced to Moodle in the user sync task.';
+$string['help_user_guestsync_help'] = 'If enabled, guest users in Microsoft Entra ID will be synced to Moodle in the user sync task.';
 
 // Bot feature.
 $string['list_of_absent_students'] = 'This is the list of students that were absent this month:';

@@ -247,13 +247,13 @@ class token {
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
     public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $aadgraphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
-        if (!empty($aadgraphtoken)) {
+        $graphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
+        if (!empty($graphtoken)) {
             $params = [
                 'client_id' => $clientdata->get_clientid(),
                 'client_secret' => $clientdata->get_clientsecret(),
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $aadgraphtoken->get_refreshtoken(),
+                'refresh_token' => $graphtoken->get_refreshtoken(),
                 'resource' => $tokenresource,
             ];
             $params = http_build_query($params, '', '&');

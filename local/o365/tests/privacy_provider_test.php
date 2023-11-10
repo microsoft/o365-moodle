@@ -328,7 +328,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         global $DB;
         $record = new stdClass();
         $record->muserid = $userid;
-        $record->aadupn = "user".$userid."@example.com";
+        $record->entraidupn = "user".$userid."@example.com";
         $record->uselogin = 1;
         $record->id = $DB->insert_record('local_o365_connections', $record);
         return $record;

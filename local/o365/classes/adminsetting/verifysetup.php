@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin setting to detect and set permissions in Azure AD.
+ * Admin setting to detect and set permissions in Azure.
  *
  * @package local_o365
  * @author James McQuillan <james.mcquillan@remote-learner.net>
@@ -32,9 +32,9 @@ global $CFG;
 require_once($CFG->dirroot.'/lib/adminlib.php');
 
 /**
- * Admin setting to detect and set permissions in Azure AD.
+ * Admin setting to detect and set permissions in Azure.
  */
-class azuresetup extends \admin_setting {
+class verifysetup extends \admin_setting {
 
     /**
      * Constructor.
@@ -104,10 +104,10 @@ class azuresetup extends \admin_setting {
         }
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
-        $scripturl = new \moodle_url('/local/o365/classes/adminsetting/azuresetup.js');
+        $scripturl = new \moodle_url('/local/o365/classes/adminsetting/verifysetup.js');
         $settinghtml .= '<script src="'.$scripturl->out().'"></script>';
 
-        $lastresults = get_config('local_o365', 'azuresetupresult');
+        $lastresults = get_config('local_o365', 'verifysetupresult');
         if (!empty($lastresults)) {
             $lastresults = @unserialize($lastresults);
             $lastresults = (!empty($lastresults) && is_object($lastresults)) ? $lastresults : false;
@@ -128,41 +128,40 @@ $(function() {
         iconinfo: "'.addslashes($OUTPUT->pix_icon('i/warning', 'information', 'moodle')).'",
         iconerror: "'.addslashes($OUTPUT->pix_icon('t/delete', 'error', 'moodle')).'",
 
-        strupdate: "'.addslashes(get_string('settings_azuresetup_update', 'local_o365')).'",
-        strchecking: "'.addslashes(get_string('settings_azuresetup_checking', 'local_o365')).'",
-        strmissingperms: "'.addslashes(get_string('settings_azuresetup_missingperms', 'local_o365')).'",
-        strmissingappperms: "'.addslashes(get_string('settings_azuresetup_missingappperms', 'local_o365')).'",
-        strpermscorrect: "'.addslashes(get_string('settings_azuresetup_permscorrect', 'local_o365')).'",
-        strapppermscorrect: "'.addslashes(get_string('settings_azuresetup_apppermscorrect', 'local_o365')).'",
+        strupdate: "'.addslashes(get_string('settings_verifysetup_update', 'local_o365')).'",
+        strchecking: "'.addslashes(get_string('settings_verifysetup_checking', 'local_o365')).'",
+        strmissingperms: "'.addslashes(get_string('settings_verifysetup_missingperms', 'local_o365')).'",
+        strmissingappperms: "'.addslashes(get_string('settings_verifysetup_missingappperms', 'local_o365')).'",
+        strpermscorrect: "'.addslashes(get_string('settings_verifysetup_permscorrect', 'local_o365')).'",
+        strapppermscorrect: "'.addslashes(get_string('settings_verifysetup_apppermscorrect', 'local_o365')).'",
         strfixperms: "'.addslashes(get_string('settings_detectperms_fixperms', 'local_o365')).'",
-        strfixprereq: "'.addslashes(get_string('settings_detectperms_fixprereq', 'local_o365')).'",
         strerrorfix: "'.addslashes(get_string('settings_detectperms_errorfix', 'local_o365')).'",
-        strerrorcheck: "'.addslashes(get_string('settings_azuresetup_errorcheck', 'local_o365')).'",
-        strnoinfo: "'.addslashes(get_string('settings_azuresetup_noinfo', 'local_o365')).'",
+        strerrorcheck: "'.addslashes(get_string('settings_verifysetup_errorcheck', 'local_o365')).'",
+        strnoinfo: "'.addslashes(get_string('settings_verifysetup_noinfo', 'local_o365')).'",
 
-        strappdataheader: "'.addslashes(get_string('settings_azuresetup_appdataheader', 'local_o365')).'",
-        strappdatadesc: "'.addslashes(get_string('settings_azuresetup_appdatadesc', 'local_o365')).'",
-        strappdatareplyurlcorrect: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlcorrect', 'local_o365')).'",
-        strappdatareplyurlincorrect: "'.addslashes(get_string('settings_azuresetup_appdatareplyurlincorrect', 'local_o365')).'",
+        strappdataheader: "'.addslashes(get_string('settings_verifysetup_appdataheader', 'local_o365')).'",
+        strappdatadesc: "'.addslashes(get_string('settings_verifysetup_appdatadesc', 'local_o365')).'",
+        strappdatareplyurlcorrect: "'.addslashes(get_string('settings_verifysetup_appdatareplyurlcorrect', 'local_o365')).'",
+        strappdatareplyurlincorrect: "'.addslashes(get_string('settings_verifysetup_appdatareplyurlincorrect', 'local_o365')).'",
         strappdatareplyurlgeneralerror: "'.
-            addslashes(get_string('settings_azuresetup_appdatareplyurlgeneralerror', 'local_o365')).'",
-        strappdatasignonurlcorrect: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlcorrect', 'local_o365')).'",
-        strappdatasignonurlincorrect: "'.addslashes(get_string('settings_azuresetup_appdatasignonurlincorrect', 'local_o365')).'",
+            addslashes(get_string('settings_verifysetup_appdatareplyurlgeneralerror', 'local_o365')).'",
+        strappdatasignonurlcorrect: "'.addslashes(get_string('settings_verifysetup_appdatasignonurlcorrect', 'local_o365')).'",
+        strappdatasignonurlincorrect: "'.addslashes(get_string('settings_verifysetup_appdatasignonurlincorrect', 'local_o365')).'",
         strappdatasignonurlgeneralerror: "'.
-            addslashes(get_string('settings_azuresetup_appdatasignonurlgeneralerror', 'local_o365')).'",
-        strdetectedval: "'.addslashes(get_string('settings_azuresetup_detectedval', 'local_o365')).'",
-        strcorrectval: "'.addslashes(get_string('settings_azuresetup_correctval', 'local_o365')).'",
+            addslashes(get_string('settings_verifysetup_appdatasignonurlgeneralerror', 'local_o365')).'",
+        strdetectedval: "'.addslashes(get_string('settings_verifysetup_detectedval', 'local_o365')).'",
+        strcorrectval: "'.addslashes(get_string('settings_verifysetup_correctval', 'local_o365')).'",
 
-        strunifiedheader: "'.addslashes(get_string('settings_azuresetup_unifiedheader', 'local_o365')).'",
-        strunifieddesc: "'.addslashes(get_string('settings_azuresetup_unifieddesc', 'local_o365')).'",
-        strunifiederror: "'.addslashes(get_string('settings_azuresetup_unifiederror', 'local_o365')).'",
-        strunifiedpermerror: "'.addslashes(get_string('settings_azuresetup_strunifiedpermerror', 'local_o365')).'",
-        strunifiedmissing: "'.addslashes(get_string('settings_azuresetup_unifiedmissing', 'local_o365')).'",
-        strunifiedactive: "'.addslashes(get_string('settings_azuresetup_unifiedactive', 'local_o365')).'",
+        strunifiedheader: "'.addslashes(get_string('settings_verifysetup_unifiedheader', 'local_o365')).'",
+        strunifieddesc: "'.addslashes(get_string('settings_verifysetup_unifieddesc', 'local_o365')).'",
+        strunifiederror: "'.addslashes(get_string('settings_verifysetup_unifiederror', 'local_o365')).'",
+        strunifiedpermerror: "'.addslashes(get_string('settings_verifysetup_strunifiedpermerror', 'local_o365')).'",
+        strunifiedmissing: "'.addslashes(get_string('settings_verifysetup_unifiedmissing', 'local_o365')).'",
+        strunifiedactive: "'.addslashes(get_string('settings_verifysetup_unifiedactive', 'local_o365')).'",
 
-        strtenanterror: "'.addslashes(get_string('settings_azuresetup_strtenanterror', 'local_o365')).'"
+        strtenanterror: "'.addslashes(get_string('settings_verifysetup_strtenanterror', 'local_o365')).'"
     };
-    $("#admin-'.$this->name.'").azuresetup(opts);
+    $("#admin-'.$this->name.'").verifysetup(opts);
 });
                         </script>';
 

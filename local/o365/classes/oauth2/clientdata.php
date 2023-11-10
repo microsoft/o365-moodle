@@ -65,11 +65,11 @@ class clientdata {
         if (!empty($apptokenendpoint)) {
             $this->apptokenendpoint = $apptokenendpoint;
         } else {
-            $tenant = get_config('local_o365', 'aadtenant');
+            $tenant = get_config('local_o365', 'entratenant');
             if (!empty($tenant)) {
                 $this->apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenant);
             } else {
-                $tenantid = get_config('local_o365', 'aadtenantid');
+                $tenantid = get_config('local_o365', 'entratenantid');
                 if (!empty($tenantid)) {
                     $this->apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenantid);
                 } else {
@@ -88,9 +88,9 @@ class clientdata {
      */
     public static function get_apptokenendpoint_from_tenant($tenant) {
         $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype == AUTH_OIDC_IDP_TYPE_AZURE_AD) {
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
             return 'https://login.microsoftonline.com/' . $tenant . '/oauth2/token';
-        } else if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        } else if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             return 'https://login.microsoftonline.com/' . $tenant . '/oauth2/v2.0/token';
         } else {
             return '';
