@@ -37,7 +37,6 @@ $string['maxfilessubmission'] = 'Ladattavien OneNote-sivujen enimmäismäärä';
 $string['maxfilessubmission_help'] = 'Jos tiedostojen palautus on käytössä, kukin opiskelija voi ladata palautukseensa enintään tähän lukumäärään asti tiedostoja.';
 $string['maximumsubmissionsize'] = 'OneNote-sivun koko';
 $string['maximumsubmissionsize_help'] = 'Määrittää palautettavien OneNote-sivujen enimmäiskoon.';
-$string['numfilesforlog'] = 'OneNote-sivujen määrä: {$a}';
 $string['pluginname'] = 'OneNote-palautukset';
 $string['siteuploadlimit'] = 'Sivuston latausrajoitus';
 $string['submissionfilearea'] = 'Palautukseen ladatut OneNote-sivut';
@@ -52,3 +51,6 @@ $string['signinhelp1'] = 'Kirjaudu OneNoteen napsauttamalla yllä olevaa painike
 $string['signinhelp2'] = 'Kirjaudu OneNoteen napsauttamalla yllä olevaa painiketta, jos haluat tarkastella palautusta siellä.';
 $string['submissionnotstarted'] = 'Tee tehtävä OneNote ja tallenna sitten muutokset.';
 $string['submissionlimitexceed'] = 'Palautuksen koko ylittää määritetyn rajan.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'OneNote-sivujen määrä: {$a}';

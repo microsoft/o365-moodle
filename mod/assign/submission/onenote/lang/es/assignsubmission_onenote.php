@@ -37,7 +37,6 @@ $string['maxfilessubmission'] = 'Cantidad máxima de páginas de OneNote cargada
 $string['maxfilessubmission_help'] = 'Si las entregas de OneNote están habilitadas, cada estudiante será capaz de subir hasta este número de páginas de OneNote en su entrega.';
 $string['maximumsubmissionsize'] = 'Tamaño de página de OneNote';
 $string['maximumsubmissionsize_help'] = 'Establece el tamaño de entrega máximo de las páginas de OneNote.';
-$string['numfilesforlog'] = 'La cantidad de página(s) de OneNote: {$a}';
 $string['pluginname'] = 'Entregas de OneNote';
 $string['siteuploadlimit'] = 'Límite de subida del sitio';
 $string['submissionfilearea'] = 'Páginas de entregas de OneNote cargadas';
@@ -52,3 +51,6 @@ $string['signinhelp1'] = 'Haga clic en el botón de arriba para iniciar sesión 
 $string['signinhelp2'] = 'Haga clic en el botón de arriba para iniciar sesión en OneNote si desea ver la entrega allí.';
 $string['submissionnotstarted'] = 'Trabaje en la tarea en OneNote y luego guarde los cambios.';
 $string['submissionlimitexceed'] = 'El tamaño de la entrega excede el límite aceptable.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'La cantidad de página(s) de OneNote: {$a}';

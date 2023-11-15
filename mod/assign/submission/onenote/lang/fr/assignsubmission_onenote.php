@@ -37,7 +37,6 @@ $string['maxfilessubmission'] = 'Nombre maximal de pages OneNote téléchargées
 $string['maxfilessubmission_help'] = 'Si la remise de travaux OneNote est activée, chaque étudiant pourra télécharger au maximum ce nombre de pages OneNote pour son travail.';
 $string['maximumsubmissionsize'] = 'Taille de page OneNote';
 $string['maximumsubmissionsize_help'] = 'Définit la taille maximale de la remise de pages OneNote.';
-$string['numfilesforlog'] = 'Nombre de pages OneNote : {$a}';
 $string['pluginname'] = 'Remises OneNote';
 $string['siteuploadlimit'] = 'Limite de téléchargement du site';
 $string['submissionfilearea'] = 'Pages de remise OneNote téléchargées';
@@ -52,3 +51,6 @@ $string['signinhelp1'] = 'Cliquez sur le bouton ci-dessus pour vous inscrire à 
 $string['signinhelp2'] = 'Cliquez sur le bouton ci-dessus pour vous inscrire à OneNote si vous souhaitez afficher la remise de travaux à cet endroit.';
 $string['submissionnotstarted'] = 'Travaillez sur le devoir dans OneNote, puis enregistrez vos modifications.';
 $string['submissionlimitexceed'] = 'La taille de votre remise de travaux dépasse la limite acceptable.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'Nombre de pages OneNote : {$a}';

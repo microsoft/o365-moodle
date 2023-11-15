@@ -38,7 +38,6 @@ $string['maxfilessubmission'] = 'Maximum number of uploaded OneNote pages';
 $string['maxfilessubmission_help'] = 'If OneNote submissions are enabled, each student will be able to upload up to this number of OneNote pages for their submission.';
 $string['maximumsubmissionsize'] = 'OneNote page size';
 $string['maximumsubmissionsize_help'] = 'Sets the maximum submission size of OneNote pages.';
-$string['numfilesforlog'] = 'The number of OneNote page(s) : {$a}';
 $string['pluginname'] = 'OneNote submissions';
 $string['siteuploadlimit'] = 'Site upload limit';
 $string['submissionfilearea'] = 'Uploaded submission OneNote pages';
@@ -60,3 +59,6 @@ $string['privacy:metadata:assignmentid'] = 'Assignment identifier';
 $string['privacy:metadata:submissionpurpose'] = 'The submission ID that links to submissions for the user';
 $string['privacy:metadata:numfiles'] = 'Number of files';
 $string['privacy:metadata:tablepurpose'] = 'Stores the number of files used for the submission.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'The number of OneNote page(s) : {$a}';

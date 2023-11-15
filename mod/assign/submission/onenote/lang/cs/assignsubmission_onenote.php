@@ -37,7 +37,6 @@ $string['maxfilessubmission'] = 'Maximální počet nahraných stránek OneNote'
 $string['maxfilessubmission_help'] = 'Jsou-li povoleny příspěvky ve formě OneNote, každý student může jako svůj příspěvek nahrát maximálně tento počet stránek OneNote.';
 $string['maximumsubmissionsize'] = 'Velikost stránky OneNote';
 $string['maximumsubmissionsize_help'] = 'Nastavuje maximální velikost příspěvku stránek OneNote.';
-$string['numfilesforlog'] = 'Počet stránek OneNote: {$a}';
 $string['pluginname'] = 'Příspěvky ve formě OneNote';
 $string['siteuploadlimit'] = 'Limit pro nahrávání na těchto stránkách';
 $string['submissionfilearea'] = 'Nahrané stránky OneNote příspěvku';
@@ -52,3 +51,6 @@ $string['signinhelp1'] = 'Kliknutím na tlačítko výše se přihlásíte do On
 $string['signinhelp2'] = 'Kliknutím na tlačítko výše se přihlásíte do OneNote, pokud chcete příspěvek zobrazit tam.';
 $string['submissionnotstarted'] = 'Pracujte na úkolu ve OneNote a potom uložte změny.';
 $string['submissionlimitexceed'] = 'Váš příspěvek překračuje povolený limit velikosti.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'Počet stránek OneNote: {$a}';

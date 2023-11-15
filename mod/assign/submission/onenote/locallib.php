@@ -470,22 +470,10 @@ class assign_submission_onenote extends assign_submission_plugin {
     }
 
     /**
-     * Formatting for log info
-     *
-     * @param stdClass $submission The submission
-     * @return string
-     */
-    public function format_for_log(stdClass $submission) {
-        // Format the info for each submission plugin (will be added to log).
-        $filecount = $this->count_files($submission->id, base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
-
-        return get_string('numfilesforlog', 'assignsubmission_onenote', $filecount);
-    }
-
-    /**
      * Return true if there are no submission OneNote files
      *
      * @param stdClass $submission
+     * @return bool
      */
     public function is_empty(stdClass $submission) {
         return $this->count_files($submission->id, base::ASSIGNSUBMISSION_ONENOTE_FILEAREA) == 0;

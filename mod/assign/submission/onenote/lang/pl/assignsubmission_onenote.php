@@ -37,7 +37,6 @@ $string['maxfilessubmission'] = 'Maksymalna liczba przesłanych stron programu O
 $string['maxfilessubmission_help'] = 'Jeżeli opcja przesyłania prac w programie OneNote jest włączona, każdy student będzie mógł przesłać maksymalnie tyle stron programu OneNote jako swoją przesłaną pracę.';
 $string['maximumsubmissionsize'] = 'Rozmiar strony programu OneNote';
 $string['maximumsubmissionsize_help'] = 'Umożliwia ustawienie maksymalnego rozmiaru przesyłanych stron programu OneNote.';
-$string['numfilesforlog'] = 'Liczba stron programu OneNote: {$a}';
 $string['pluginname'] = 'Przesłane prace w programie OneNote';
 $string['siteuploadlimit'] = 'Limit przesyłania';
 $string['submissionfilearea'] = 'Przesłane strony programu OneNote jako praca';
@@ -52,3 +51,6 @@ $string['signinhelp1'] = 'Kliknij przycisk powyżej, aby zalogować się do prog
 $string['signinhelp2'] = 'Kliknij przycisk powyżej, aby zalogować się do programu OneNote, jeżeli chcesz w nim wyświetlić przesłaną pracę.';
 $string['submissionnotstarted'] = 'Pracuj nad zadaniem w programie OneNote, a następnie zapisz zmiany.';
 $string['submissionlimitexceed'] = 'Rozmiar przesłanej pracy przekracza dopuszczalny limit.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'Liczba stron programu OneNote: {$a}';

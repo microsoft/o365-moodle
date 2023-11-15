@@ -37,7 +37,6 @@ $string['maxfilessubmission'] = 'Maximum aantal geüploade OneNote-pagina\'s';
 $string['maxfilessubmission_help'] = 'Als bestanden insturen is ingeschakeld, kan elke student maximaal dit aantal OneNote-pagina\'s uploaden als inzending.';
 $string['maximumsubmissionsize'] = 'Grootte OneNote-pagina';
 $string['maximumsubmissionsize_help'] = 'Hiermee wordt de maximale inzendingsgrootte van OneNote-pagina\'s ingesteld.';
-$string['numfilesforlog'] = 'Het aantal OneNote-pagina\'s: {$a}';
 $string['pluginname'] = 'OneNote-inzendingen';
 $string['siteuploadlimit'] = 'Uploadlimiet site';
 $string['submissionfilearea'] = 'OneNote-pagina\'s geüploade inzending';
@@ -52,3 +51,6 @@ $string['signinhelp1'] = 'Klik op de knop hierboven als je je wilt aanmelden bij
 $string['signinhelp2'] = 'Klik op de knop hierboven als je je wilt aanmelden bij OneNote om daar aan de inzending weer te geven.';
 $string['submissionnotstarted'] = 'Werk aan de opdracht in OneNote en sla je wijzigingen op.';
 $string['submissionlimitexceed'] = 'Je inzending overschrijdt de geaccepteerde limiet.';
+
+// Deprecated since Moodle 4.3.
+$string['numfilesforlog'] = 'Het aantal OneNote-pagina\'s: {$a}';
