@@ -370,16 +370,24 @@ class block_microsoft extends block_base {
             }
         }
 
-        // Microsoft Stream.
-        if (!empty($this->globalconfig->settings_showmsstream)) {
-            $streamurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
+        // Microsoft Stream (on SharePoint).
+        if (!empty($this->globalconfig->settings_showmsstreamonsharepoint)) {
+            $streamurl = 'https://www.microsoft365.com/launch/stream';
             $streamattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
             $items[] = html_writer::link($streamurl, get_string('linkmsstream', 'block_microsoft'), $streamattrs);
         }
 
+        // Microsoft Stream (Classic).
+        if (!empty($this->globalconfig->settings_showmsstream)) {
+            $streamclassicurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
+            $streamclassicattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
+            $items[] = html_writer::link($streamclassicurl, get_string('linkmsstreamclassic', 'block_microsoft'),
+                $streamclassicattrs);
+        }
+
         // Microsoft Teams.
         if (!empty($this->globalconfig->settings_showmsteams)) {
-            $teamsurl = 'https://teams.microsoft.com/_';
+            $teamsurl = 'https://teams.microsoft.com';
             $teamsattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msteams'];
             $items[] = html_writer::link($teamsurl, get_string('linkmsteams', 'block_microsoft'), $teamsattrs);
         }
