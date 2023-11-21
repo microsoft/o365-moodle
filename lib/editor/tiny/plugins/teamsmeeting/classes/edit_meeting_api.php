@@ -13,13 +13,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Tiny Teams Meeting edit meeting web service function.
+ *
+ * @package     tiny_teamsmeeting
+ * @copyright   2023 Enovation Solutions
+ * @author      Oliwer Banach <oliwer.banach@enovation.ie>
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace tiny_teamsmeeting;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/externallib.php');
+
 use external_api;
 use external_function_parameters;
 use external_value;
+use moodle_url;
 
 /**
  * Get existing meeting from database.
@@ -31,21 +44,42 @@ use external_value;
  */
 class edit_meeting_api extends external_api {
 
+    /**
+     * Returns description of method parameters.
+     *
+     * @return external_function_parameters
+     */
     public static function edit_meeting_parameters() {
         return new external_function_parameters([
             'url' => new external_value(PARAM_URL, 'URL link', true),
         ]);
     }
 
+    /**
+     * Returns url whether the operation was successful.
+     *
+     * @param string $url
+     * @return string
+     */
     public static function edit_meeting($url) {
-        global $DB, $CFG;
+        global $DB;
 
-        $record = $DB->get_record_sql('SELECT * FROM {tiny_teamsmeeting} WHERE ' . $DB->sql_compare_text('link') . ' = ' . $DB->sql_compare_text(':url'), array('url' => $url), IGNORE_MISSING);
-        $result = $CFG->wwwroot.'/lib/editor/tiny/plugins/teamsmeeting/result.php?title=' . urlencode($record->title) . '&link=' . urlencode($record->link) . '&options=' . urlencode($record->options);
+        $sql = 'SELECT *
+                  FROM {tiny_teamsmeeting}
+                 WHERE ' . $DB->sql_compare_text('link') . ' = ' . $DB->sql_compare_text(':url');
+        $record = $DB->get_record_sql($sql, ['url' => $url]);
+        $url = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
+            'title' => $record->title, 'link' => $record->link, 'options' => $record->options]);
+        $result = $url->out();
 
         return $result;
     }
 
+    /**
+     * Returns description of method result value.
+     *
+     * @return external_value
+     */
     public static function edit_meeting_returns() {
         return new external_value(PARAM_URL, 'Returns url whether the operation was successful');
     }
