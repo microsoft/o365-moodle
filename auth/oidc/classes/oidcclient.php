@@ -389,7 +389,12 @@ class oidcclient {
 
         } else if ($certsource == AUTH_OIDC_AUTH_CERT_SOURCE_FILE) {
             $cert = openssl_x509_read(utils::get_certpath());
-            $privatekey = openssl_pkey_get_private(utils::get_keypath(), $authoidcconfig->clientcertpassphrase);
+            $clientcertpassphrase = null;
+            if (property_exists($authoidcconfig, 'clientcertpassphrase')) {
+                $clientcertpassphrase = $authoidcconfig->clientcertpassphrase;
+            }
+
+            $privatekey = openssl_pkey_get_private(utils::get_keypath(), $clientcertpassphrase);
         } else {
             throw new \coding_exception('Unexpected certificate source.');
         }
