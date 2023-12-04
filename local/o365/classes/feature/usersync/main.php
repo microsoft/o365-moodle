@@ -139,7 +139,7 @@ class main {
      * @return array|null Array of app service information, or null if failure.
      */
     public function get_application_serviceprincipal_info() {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         return $apiclient->get_application_serviceprincipal_info();
     }
 
@@ -198,10 +198,8 @@ class main {
     public function assign_photo(int $muserid, string $upn = '') {
         global $DB, $CFG;
 
-        require_once("$CFG->libdir/gdlib.php");
-        $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
         $result = false;
-        $apiclient = $this->construct_outlook_api($muserid, true);
+        $apiclient = $this->construct_user_api();
         if (empty($upn)) {
             $o365user = o365user::instance_from_muserid($muserid);
             $upn = $o365user->upn;
@@ -231,6 +229,7 @@ class main {
                 }
                 fwrite($fp, $image);
                 fclose($fp);
+                require_once("$CFG->libdir/gdlib.php");
                 $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                 if ($newpicture != $muser->picture) {
                     $DB->set_field('user', 'picture', $newpicture, array('id' => $muser->id));
@@ -239,6 +238,9 @@ class main {
                 @unlink($tempfile);
             }
         }
+
+        $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+
         if (empty($record)) {
             $record = new stdClass();
             $record->muserid = $muserid;
@@ -261,12 +263,7 @@ class main {
      * @param string $upn
      */
     public function sync_timezone(int $muserid, string $upn = '') {
-        $tokenresource = unified::get_tokenresource();
-        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
-        if (empty($token)) {
-            throw new Exception('No token available for usersync');
-        }
-        $apiclient = new unified($token, $this->httpclient);
+        $apiclient = $this->construct_user_api();
         if (empty($upn)) {
             $o365user = o365user::instance_from_muserid($muserid);
             $upn = $o365user->upn;
@@ -358,8 +355,8 @@ class main {
      * Return the users search delta, along with skip token and delta tokens.
      *
      * @param string $params
-     * @param null $skiptoken
-     * @param null $deltatoken
+     * @param string|null $skiptoken
+     * @param string|null $deltatoken
      * @return array
      */
     public function get_users_delta($params = 'default', $skiptoken = null, $deltatoken = null) {
@@ -773,7 +770,7 @@ class main {
      *
      * @param array $aaddata Array of Azure AD user data.
      * @param array $syncoptions
-     * @return stdClass An object representing the created Moodle user.
+     * @return stdClass|bool An object representing the created Moodle user.
      */
     public function create_user_from_aaddata($aaddata, $syncoptions) {
         global $CFG, $DB;
@@ -874,7 +871,7 @@ class main {
      * @param array $aaddata Array of Azure AD user data.
      * @param object $fullexistinguser
      *
-     * @return stdClass An object representing the created Moodle user.
+     * @return bool An boolean indicating that was created Moodle user.
      */
     public function update_user_from_aaddata($aaddata, $fullexistinguser) {
         // Locate country code.
