@@ -399,8 +399,7 @@ class main {
      */
     public function get_user_group_names($userobjectid) {
         $apiclient = $this->construct_user_api();
-        $usergroupsresults = $apiclient->get_user_groups($userobjectid);
-        $usergroups = $usergroupsresults['value'];
+        $usergroups = $apiclient->get_user_groups($userobjectid);
         $groupnames = [];
         foreach ($usergroups as $usergroup) {
             $groupnames[] = $usergroup['displayName'];
@@ -419,8 +418,7 @@ class main {
     public function get_user_teams($userobjectid) {
         $apiclient = $this->construct_user_api();
 
-        $userteamsresults = $apiclient->get_user_teams($userobjectid);
-        $userteams = $userteamsresults['value'];
+        $userteams = $apiclient->get_user_teams($userobjectid);
         $teamnames = [];
         foreach ($userteams as $userteam) {
             $teamnames[] = $userteam['displayName'];
@@ -439,7 +437,7 @@ class main {
         $apiclient = $this->construct_user_api();
         $objectsids = $apiclient->get_user_objects($userobjectid);
         $roles = [];
-        if ($objectsids) {
+        if (!empty($objectsids)) {
             $results = $apiclient->get_directory_objects($objectsids);
             foreach ($results as $result) {
                 if (stripos($result['@odata.type'], 'role') !== false) {
@@ -734,8 +732,7 @@ class main {
                     utils::debug('Could not find group (1)', __METHOD__, $group);
                     return false;
                 }
-                $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
-                $usergroups = $usergroupsresults['value'];
+                $usergroups = $apiclient->get_user_transitive_groups($aaddata['id']);
 
                 foreach ($usergroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
