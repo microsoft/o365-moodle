@@ -149,6 +149,52 @@ class unified extends o365api {
     }
 
     /**
+     * Make an Paginated API call.
+     *
+     * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
+     * @param string $apimethod The API endpoint/method to call.
+     * @param string $params Additional parameters to include.
+     * @param array $options Additional options for the request.
+     * @return array The result of the API call.
+     */
+    public function paginatedapicall($httpmethod, $apimethod, $params = '', $options = []) {
+        $content = [];
+        $containsqueries = str_contains($apimethod, '?');
+
+        $continue = true;
+        while ($continue) {
+            if (!empty($skiptoken)) {
+                if ($containsqueries) {
+                    $apimethod .= '&$skiptoken=' . $skiptoken;
+                } else {
+                    $apimethod .= '?$skiptoken=' . $skiptoken;
+                }
+            }
+
+            $response = self::apicall($httpmethod, $apimethod, $params, $options);
+            $result = $this->process_apicall_response($response, ['value' => null]);
+
+            if (!empty($result) && is_array($result)) {
+                if (!empty($result['value']) && is_array($result['value'])) {
+                    $content = array_merge($content, $result['value']);
+                }
+    
+                if (isset($result['odata.nextLink'])) {
+                    $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], '$skiptoken');
+                } else if (isset($result['@odata.nextLink'])) {
+                    $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
+                } else {
+                    $skiptoken = null;
+                }
+            }
+  
+            $continue = (!empty($skiptoken));
+        }
+       
+        return $content;
+    }
+
+    /**
      * Test a tenant value.
      *
      * @param string $tenant A tenant string to test.
@@ -954,41 +1000,33 @@ class unified extends o365api {
      * Get Microsoft 365 groups by passing user AD id.
      *
      * @param string $userobjectid - user AD id
-     * @return array|null
+     * @return array
      */
-    public function get_user_groups(string $userobjectid) : ?array {
+    public function get_user_groups(string $userobjectid) : array {
         $endpoint = "users/$userobjectid/transitiveMemberOf/microsoft.graph.group";
-
-        $response = $this->apicall('get', $endpoint);
-        if ($this->check_expected_http_code(['200'])) {
-            return $this->process_apicall_response($response, ['value' => null]);
-        } else {
-            return ['value' => []];
-        }
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
      * Get Microsoft 365 groups, including transitive groups, by passing user AD ID.
      *
      * @param string $userobjectid
-     * @return array|null
+     * @return array
      */
     public function get_user_transitive_groups(string $userobjectid) : ?array {
         $endpoint = "users/$userobjectid/getMemberGroups";
-        $response = $this->apicall('post', $endpoint, json_encode(['securityEnabledOnly' => false]));
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('post', $endpoint, json_encode(['securityEnabledOnly' => false]));
     }
 
     /**
      * Get user teams by passing user AD id
      *
      * @param string $userobjectid - user AD id
-     * @return array|null
+     * @return array
      */
-    public function get_user_teams(string $userobjectid) : ?array {
+    public function get_user_teams(string $userobjectid) : array {
         $endpoint = "users/$userobjectid/joinedTeams";
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
@@ -996,14 +1034,12 @@ class unified extends o365api {
      *
      * @param string $userobjectid - user AD id
      * @param bool $securityenabledonly - return only secure groups
-     * @return array|null
+     * @return array
      */
-    public function get_user_objects(string $userobjectid, bool $securityenabledonly = true) : ?array {
+    public function get_user_objects(string $userobjectid, bool $securityenabledonly = true) : array {
         $endpoint = "users/$userobjectid/getMemberObjects";
         $data = ['securityEnabledOnly' => $securityenabledonly];
-        $response = $this->apicall('post', $endpoint, json_encode($data));
-        $result = $this->process_apicall_response($response, ['value' => null]);
-        return $result['value'];
+        return $this->paginatedapicall('post', $endpoint, json_encode($data));
     }
 
     /**
