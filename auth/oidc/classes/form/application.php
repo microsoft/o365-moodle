@@ -64,6 +64,28 @@ class application extends moodleform {
         $mform->addElement('static', 'clientid_help', '', get_string('clientid_help', 'auth_oidc'));
         $mform->addRule('clientid', null, 'required', null, 'client');
 
+        // Add the new selector for "Binding username claim"
+        $bindingusernameoptions = [
+                'auto' => get_string('binding_username_auto', 'auth_oidc'), // Use current logic
+                'preferred_username' => get_string('binding_username_preferred_username', 'auth_oidc'),
+                'email' => get_string('binding_username_email', 'auth_oidc'),
+                'upn' => get_string('binding_username_upn', 'auth_oidc'),
+                'unique_name' => get_string('binding_username_unique_name', 'auth_oidc'),
+                'sub' => get_string('binding_username_sub', 'auth_oidc'),
+                'custom' => get_string('binding_username_custom', 'auth_oidc'), // Custom value
+        ];
+        $mform->addElement('select', 'bindingusernameclaim', auth_oidc_config_name_in_form('bindingusernameclaim'), $bindingusernameoptions);
+        $mform->setDefault('bindingusernameclaim', 'auto');
+        $mform->addElement('static', 'bindingusernameclaim_help', '', get_string('bindingusernameclaim_help', 'auth_oidc'));
+
+        // Add a text field for custom claim name
+        $mform->addElement('text', 'customclaimname', auth_oidc_config_name_in_form('customclaimname'), ['size' => 40]);
+        $mform->setType('customclaimname', PARAM_TEXT);
+        $mform->disabledIf('customclaimname', 'bindingusernameclaim', 'neq', 'custom'); // Enable only if "Custom" is selected
+
+        $mform->addElement('static', 'customclaimname_description', '', get_string('customclaimname_description', 'auth_oidc'));
+        $mform->disabledIf('customclaimname_description', 'bindingusernameclaim', 'neq', 'custom');
+
         // Authentication header.
         $mform->addElement('header', 'authentication', get_string('settings_section_authentication', 'auth_oidc'));
         $mform->setExpanded('authentication');
