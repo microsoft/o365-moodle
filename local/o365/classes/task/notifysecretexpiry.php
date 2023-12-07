@@ -45,7 +45,7 @@ class notifysecretexpiry extends scheduled_task {
     }
 
     /**
-     * Run the task to check on the expiry date of the secret, and send notiifation if needed.
+     * Run the task to check on the expiry date of the secret, and send notification if needed.
      *
      * @return bool
      */

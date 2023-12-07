@@ -405,7 +405,7 @@ abstract class base {
 
                     $items[] = ['title' => $itemname, 'path' => $path . '/' . urlencode($item['id']),
                         'date' => strtotime($itemlastmodified),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname, 90))->out(false), 'source' => $item['id'],
+                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false), 'source' => $item['id'],
                         'url' => $item['links']['oneNoteWebUrl']['href'], 'author' => $item['createdBy'], 'id' => $item['id'],
                         'children' => [],];
                     break;
@@ -422,7 +422,7 @@ abstract class base {
 
                     $items[] = ['title' => $itemname, 'path' => $path . '/' . urlencode($item['id']),
                         'date' => strtotime($itemlastmodified),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname, 90))->out(false), 'source' => $item['id'],
+                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false), 'source' => $item['id'],
                         'url' => $item['self'], 'author' => $item['createdBy'], 'id' => $item['id'], 'children' => [],];
                     break;
 
@@ -434,7 +434,7 @@ abstract class base {
 
                     $items[] = ['title' => $item['title'] . ".zip", 'path' => $path . '/' . urlencode($item['id']),
                         'date' => strtotime($itemcreatedtime),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($item['title'], 90))->out(false),
+                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($item['title']))->out(false),
                         'source' => $item['id'], 'url' => $item['links']['oneNoteWebUrl']['href'],
                         'author' => $item['createdByAppId'], 'id' => $item['id'],];
                     break;
