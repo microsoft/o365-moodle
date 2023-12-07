@@ -33,6 +33,8 @@ use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_configuration;
 
+require_once($CFG->dirroot . '/repository/url/lib.php');
+
 /**
  * Tiny Teams Meeting plugin info.
  *
