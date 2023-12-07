@@ -335,6 +335,7 @@ $string['update_onlogin_and_usersync'] = 'On every login and every user sync tas
 
 // Remote fields.
 $string['settings_fieldmap_feild_not_mapped'] = '(not mapped)';
+$string['settings_fieldmap_field_bindingusernameclaim'] = 'Binding Username Claim';
 $string['settings_fieldmap_field_city'] = 'City';
 $string['settings_fieldmap_field_companyName'] = 'Company Name';
 $string['settings_fieldmap_field_objectId'] = 'Object ID';
@@ -352,7 +353,7 @@ $string['settings_fieldmap_field_postalCode'] = 'Postal Code';
 $string['settings_fieldmap_field_preferredLanguage'] = 'Language';
 $string['settings_fieldmap_field_state'] = 'State';
 $string['settings_fieldmap_field_streetAddress'] = 'Street Address';
-$string['settings_fieldmap_field_userPrincipalName'] = 'Username (UPN)';
+$string['settings_fieldmap_field_userPrincipalName'] = 'User Principal Name';
 $string['settings_fieldmap_field_employeeId'] = 'Employee ID';
 $string['settings_fieldmap_field_businessPhones'] = 'Office phone';
 $string['settings_fieldmap_field_mobilePhone'] = 'Mobile phone';
@@ -375,3 +376,25 @@ $string['settings_fieldmap_field_sds_student_graduationYear'] = 'SDS student gra
 $string['settings_fieldmap_field_sds_student_studentNumber'] = 'SDS student number';
 $string['settings_fieldmap_field_sds_teacher_externalId'] = 'SDS teacher external ID';
 $string['settings_fieldmap_field_sds_teacher_teacherNumber'] = 'SDS teacher number';
+
+// Binding username claim options.
+$string['binding_username_auto'] = 'Choose automatically';
+$string['binding_username_preferred_username'] = 'preferred_username';
+$string['binding_username_email'] = 'email';
+$string['binding_username_upn'] = 'upn';
+$string['binding_username_unique_name'] = 'unique_name';
+$string['binding_username_sub'] = 'sub';
+$string['binding_username_custom'] = 'Custom';
+
+$string['bindingusernameclaim'] = 'Binding Username Claim';
+$string['customclaimname'] = 'Custom claim name';
+$string['customclaimname_description'] = 'This field is used only when <b>Binding Username Claim</b> is set to <b>Custom</b>.';
+
+$string['bindingusernameclaim_help'] = 'This is an advanced feature. Select the ID token claim to be used for binding the username. The options include:<br/>
+- <b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.<br/>
+- <b>preferred_username</b>: Default for Microsoft identity platform (v2.0) IdP type.<br/>
+- <b>email</b>: Fallback for Microsoft identity platform (v2.0).<br/>
+- <b>upn</b>: Default for Microsoft Entra ID (v1.0) and other IdP types.<br/>
+- <b>unique_name</b>: Fallback for Microsoft Entra ID (v1.0) and other IdP types.<br/>
+- <b>sub</b>: Fallback if no other claims are present.<br/>
+- <b>Custom</b>: Allows the site admin to enter a custom value.';

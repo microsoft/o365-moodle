@@ -173,6 +173,7 @@ class base {
                                     $upn = $token->claim('unique_name');
                                 }
                             }
+
                             if (!empty($upn)) {
                                 $userdata['userPrincipalName'] = $upn;
                             }
@@ -252,6 +253,7 @@ class base {
                             $upn = $token->claim('unique_name');
                         }
                     }
+
                     if (!empty($upn)) {
                         $userdata['userPrincipalName'] = $upn;
                     }
@@ -572,21 +574,7 @@ class base {
         if ($restrictions !== '') {
             $restrictions = explode("\n", $restrictions);
             // Check main user identifier claim based on IdP type, and falls back to oidc-standard "sub" if still empty.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                $tomatch = $idtoken->claim('preferred_username');
-                if (empty($tomatch)) {
-                    $tomatch = $idtoken->claim('email');
-                }
-            } else {
-                $tomatch = $idtoken->claim('upn');
-                if (empty($tomatch)) {
-                    $tomatch = $idtoken->claim('unique_name');
-                }
-            }
-
-            if (empty($tomatch)) {
-                $tomatch = $idtoken->claim('sub');
-            }
+            $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
             foreach ($restrictions as $restriction) {
                 $restriction = trim($restriction);
                 if ($restriction !== '') {
@@ -597,7 +585,7 @@ class base {
                         if (isset($this->config->userrestrictionscasesensitive) && !$this->config->userrestrictionscasesensitive) {
                             $pattern .= 'i';
                         }
-                        $count = @preg_match($pattern, $tomatch, $matches);
+                        $count = @preg_match($pattern, $oidcusername, $matches);
                         if (!empty($count)) {
                             $userpassed = true;
                             break;
@@ -606,7 +594,7 @@ class base {
                         $debugdata = [
                             'exception' => $e,
                             'restriction' => $restriction,
-                            'tomatch' => $tomatch,
+                            'tomatch' => $oidcusername,
                         ];
                         utils::debug('Error running user restrictions.', __METHOD__, $debugdata);
                     }
@@ -616,7 +604,7 @@ class base {
                         $debugdata = [
                             'contents' => $contents,
                             'restriction' => $restriction,
-                            'tomatch' => $tomatch,
+                            'tomatch' => $oidcusername,
                         ];
                         utils::debug('Output while running user restrictions.', __METHOD__, $debugdata);
                     }
@@ -646,21 +634,7 @@ class base {
             $oidcusername = $originalupn;
         } else {
             // Determine remote username depending on IdP type, or fall back to standard 'sub'.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                $oidcusername = $idtoken->claim('preferred_username');
-                if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('email');
-                }
-            } else {
-                $oidcusername = $idtoken->claim('upn');
-                if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('unique_name');
-                }
-            }
-
-            if (empty($oidcusername)) {
-                $oidcusername = $idtoken->claim('sub');
-            }
+            $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
         }
 
         // We should not fail here (idtoken was verified earlier to at least contain 'sub', but just in case...).
@@ -726,4 +700,43 @@ class base {
         $tokenrec->idtoken = $tokenparams['id_token'];
         $DB->update_record('auth_oidc_token', $tokenrec);
     }
+
+    /**
+     * Get OIDC username from token claims based on configured claim.
+     *
+     * @param jwt $idtoken The OIDC ID token.
+     * @return string|null The OIDC username if found, null otherwise.
+     */
+    protected function get_oidc_username_from_token_claim($idtoken) {
+        if (empty($idtoken)) {
+            return null;
+        }
+
+        $bindingclaim = get_config('auth_oidc', 'bindingusernameclaim');
+        if ($bindingclaim === 'custom') {
+            $bindingclaim = get_config('auth_oidc', 'custombindingclaim');
+        }
+        $oidcusername = $idtoken->claim($bindingclaim);
+
+        if (empty($oidcusername) || $bindingclaim === 'auto') {
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                $oidcusername = $idtoken->claim('preferred_username');
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('email');
+                }
+            } else {
+                $oidcusername = $idtoken->claim('upn');
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('unique_name');
+                }
+            }
+
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('sub');
+            }
+        }
+
+        return $oidcusername;
+    }
+
 }
