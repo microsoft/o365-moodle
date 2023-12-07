@@ -57,12 +57,24 @@ $form = new application(null, ['oidcconfig' => $oidcconfig]);
 $formdata = [];
 foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
     'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
-    'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope', 'secretexpiryrecipients'] as $field) {
+    'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope', 'secretexpiryrecipients'
+    'bindingusernameclaim', 'customclaimname'] as $field) {
     if (isset($oidcconfig->$field)) {
         $formdata[$field] = $oidcconfig->$field;
     }
 }
 
+
+$bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
+
+$predefinedoptions = ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub'];
+
+if (!in_array($bindingusernameclaim, $predefinedoptions)) {
+    $formdata['bindingusernameclaim'] = 'custom';
+    $formdata['customclaimname'] = $bindingusernameclaim;
+} else {
+    $formdata['bindingusernameclaim'] = $bindingusernameclaim;
+}
 $form->set_data($formdata);
 
 if ($form->is_cancelled()) {
@@ -73,9 +85,13 @@ if ($form->is_cancelled()) {
         $fromform->clientauthmethod = optional_param('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, PARAM_INT);
     }
 
+    if ($fromform->bindingusernameclaim === 'custom') {
+        $fromform->bindingusernameclaim = $fromform->customclaimname;
+    }
+
     // Prepare config settings to save.
     $configstosave = ['idptype', 'clientid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
-        'oidcresource', 'oidcscope'];
+        'oidcresource', 'oidcscope', 'bindingusernameclaim', 'customclaimname'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {
