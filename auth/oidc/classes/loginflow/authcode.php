@@ -362,22 +362,13 @@ class authcode extends base {
         if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
             // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
             // Check if that Microsoft 365 account already exists in moodle.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                $upn = $idtoken->claim('preferred_username');
-                if (empty($upn)) {
-                    $upn = $idtoken->claim('email');
-                }
-            } else {
-                $upn = $idtoken->claim('upn');
-                if (empty($upn)) {
-                    $upn = $idtoken->claim('unique_name');
-                }
-            }
+            $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
+
             $userrec = $DB->count_records_sql('SELECT COUNT(*)
                                                  FROM {user}
                                                 WHERE username = ?
                                                       AND id != ?',
-                    [$upn, $USER->id]);
+                    [$oidcusername, $USER->id]);
 
             if (!empty($userrec)) {
                 if (empty($additionaldata['redirect'])) {
@@ -562,20 +553,7 @@ class authcode extends base {
 
         // Find the latest real Microsoft username.
         // Determine remote username depending on IdP type, or fall back to standard 'sub'.
-        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            $oidcusername = $idtoken->claim('preferred_username');
-            if (empty($oidcusername)) {
-                $oidcusername = $idtoken->claim('email');
-            }
-        } else {
-            $oidcusername = $idtoken->claim('upn');
-            if (empty($oidcusername)) {
-                $oidcusername = $idtoken->claim('unique_name');
-            }
-        }
-        if (empty($oidcusername)) {
-            $oidcusername = $idtoken->claim('sub');
-        }
+        $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
 
         $usernamechanged = false;
         if ($oidcusername && $tokenrec && strtolower($oidcusername) !== strtolower($tokenrec->oidcusername)) {
@@ -695,17 +673,8 @@ class authcode extends base {
 
             $existinguser = core_user::get_user($existingmatching->moodleid);
 
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                $username = $idtoken->claim('preferred_username');
-                if (empty($username)) {
-                    $username = $idtoken->claim('email');
-                }
-            } else {
-                $username = $idtoken->claim('upn');
-                if (empty($username)) {
-                    $username = $idtoken->claim('unique_name');
-                }
-            }
+            $username = $this->get_oidc_username_from_token_claim($idtoken);
+
             $originalupn = null;
 
             if (empty($username)) {
@@ -764,18 +733,9 @@ class authcode extends base {
             */
 
             // Generate a Moodle username.
-            // Use 'upn' if available for username (Microsoft-specific), or fall back to lower-case oidcuniqid.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                $username = $idtoken->claim('preferred_username');
-                if (empty($username)) {
-                    $username = $idtoken->claim('email');
-                }
-            } else {
-                $username = $idtoken->claim('upn');
-                if (empty($username)) {
-                    $username = $idtoken->claim('unique_name');
-                }
-            }
+            // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
+            $username = $this->get_oidc_username_from_token_claim($idtoken);
+
             $originalupn = null;
 
             if (empty($username)) {
