@@ -31,6 +31,7 @@ require_once($CFG->libdir . '/externallib.php');
 
 use external_api;
 use external_function_parameters;
+use external_single_structure;
 use external_value;
 use moodle_url;
 
@@ -51,7 +52,7 @@ class edit_meeting_api extends external_api {
      */
     public static function edit_meeting_parameters() {
         return new external_function_parameters([
-            'url' => new external_value(PARAM_URL, 'URL link', true),
+                'url' => new external_value(PARAM_URL, 'URL link', true),
         ]);
     }
 
@@ -59,28 +60,82 @@ class edit_meeting_api extends external_api {
      * Returns url whether the operation was successful.
      *
      * @param string $url
-     * @return string
+     * @return array
      */
     public static function edit_meeting($url) {
-        global $DB;
+        $record = self::get_meeting($url);
+        $url = self::get_meeting_url($record);
 
+        if ($record == null) {
+            return [
+                    'status' => false,
+                    'url' => $url
+            ];
+        }
+
+        return [
+                'status' => true,
+                'url' => $url
+        ];
+    }
+
+    /**
+     * Retrieve a meeting record from the database based on the URL.
+     *
+     * @param string $url The URL of the meeting.
+     * @return mixed|null The meeting record if found, or null if not found.
+     */
+    private static function get_meeting($url) {
+        global $DB;
         $sql = 'SELECT *
                   FROM {tiny_teamsmeeting}
-                 WHERE ' . $DB->sql_compare_text('link') . ' = ' . $DB->sql_compare_text(':url');
-        $record = $DB->get_record_sql($sql, ['url' => $url]);
-        $url = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
-            'title' => $record->title, 'link' => $record->link, 'options' => $record->options]);
-        $result = $url->out();
+                 WHERE ' . $DB->sql_compare_text('link') . ' = ' . $DB->sql_compare_text(':url') . ' ORDER BY id ASC';
+        $records = $DB->get_records_sql($sql, ['url' => $url]);
+
+        $count = count($records);
+        if ($count == 0) {
+            return null;
+        }
+
+        $result = reset($records);
+        if ($count > 1) {
+            array_shift($records);
+            $ids = [];
+            foreach ($records as $record) {
+                $ids[] = $record->id;
+            }
+            $DB->delete_records_list('tiny_teamsmeeting', 'id', $ids);
+        }
 
         return $result;
     }
 
     /**
+     * Returns the URL for a meeting record.
+     *
+     * @param object $record The meeting record object.
+     * @return string The URL link for the meeting.
+     */
+    private static function get_meeting_url($record) {
+        if ($record == null) {
+            return (new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/error.php'))->out();
+        }
+
+        return (new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
+                'title' => $record->title, 'link' => $record->link, 'options' => $record->options]))->out();
+    }
+
+    /**
      * Returns description of method result value.
      *
-     * @return external_value
+     * @return external_single_structure
      */
     public static function edit_meeting_returns() {
-        return new external_value(PARAM_URL, 'Returns url whether the operation was successful');
+        return new external_single_structure(
+                [
+                        'status' => new external_value(PARAM_BOOL, 'Status of the operation'),
+                        'url' => new external_value(PARAM_URL, 'URL link')
+                ]
+        );
     }
 }

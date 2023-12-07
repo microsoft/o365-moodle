@@ -36,6 +36,7 @@ $string['settings_meetings_app_link_desc'] = 'Link do aplikacji Teams Meeting';
 $string['iframe_meeting_options'] = 'Opcje spotkania';
 $string['iframe_meeting_created'] = 'Spotkanie online "{$a}" utworzone!';
 $string['iframe_go_to_meeting'] = 'Go to meeting';
+$string['iframe_not_found'] = 'Nie znaleziono spotkania';
 
 // TinyMCE strings.
 $string['tiny_modal_title'] = 'Utwórz Teams Meeting';
