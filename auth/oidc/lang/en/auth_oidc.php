@@ -32,6 +32,8 @@ $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin prov
 // Configuration pages.
 $string['settings_page_other_settings'] = 'Other options';
 $string['settings_page_application'] = 'IdP and authentication';
+$string['settings_page_binding_username_claim'] = 'Binding Username Claim';
+$string['settings_page_change_binding_username_claim_tool'] = 'Change binding username claim tool';
 $string['settings_page_cleanup_oidc_tokens'] = 'Cleanup OpenID Connect tokens';
 $string['settings_page_field_mapping'] = 'Field mappings';
 $string['heading_basic'] = 'Basic settings';
@@ -190,6 +192,7 @@ $string['cfg_cleanupoidctokens_desc'] = 'If your users are experiencing problems
 $string['settings_section_basic'] = 'Basic settings';
 $string['settings_section_authentication'] = 'Authentication';
 $string['settings_section_endpoints'] = 'Endpoints';
+$string['settings_section_binding_username_claim'] = 'Binding Username Claim';
 $string['settings_section_other_params'] = 'Other parameters';
 $string['settings_section_secret_expiry_notification'] = 'Secret expiry notification';
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
@@ -287,6 +290,7 @@ $string['privacy:metadata:auth_oidc_token:oidcuniqid'] = 'The OIDC unique user i
 $string['privacy:metadata:auth_oidc_token:username'] = 'The username of the Moodle user';
 $string['privacy:metadata:auth_oidc_token:userid'] = 'The user ID of the Moodle user';
 $string['privacy:metadata:auth_oidc_token:oidcusername'] = 'The username of the OIDC user';
+$string['privacy:metadata:auth_oidc_token:useridentifier'] = 'The user identifier of the OIDC user';
 $string['privacy:metadata:auth_oidc_token:scope'] = 'The scope of the token';
 $string['privacy:metadata:auth_oidc_token:tokenresource'] = 'The resource of the token';
 $string['privacy:metadata:auth_oidc_token:authcode'] = 'The auth code for the token';
@@ -320,6 +324,7 @@ $string['mismatched_details'] = 'Token record contains username "{$a->tokenusern
 $string['delete_token_and_reference'] = 'Delete token and reference';
 $string['table_token_id'] = 'Token record ID';
 $string['table_oidc_username'] = 'OIDC username';
+$string['table_oidc_unique_identifier'] = 'OIDC unique identifier';
 $string['table_token_unique_id'] = 'OIDC unique ID';
 $string['table_matching_status'] = 'Matching status';
 $string['table_matching_details'] = 'Details';
@@ -336,7 +341,7 @@ $string['update_onlogin_and_usersync'] = 'On every login and every user sync tas
 
 // Remote fields.
 $string['settings_fieldmap_feild_not_mapped'] = '(not mapped)';
-$string['settings_fieldmap_field_bindingusernameclaim'] = 'Binding Username Claim';
+$string['settings_fieldmap_field_bindingusernameclaim'] = 'Binding Username Claim (can only be mapped during login)';
 $string['settings_fieldmap_field_city'] = 'City';
 $string['settings_fieldmap_field_companyName'] = 'Company Name';
 $string['settings_fieldmap_field_objectId'] = 'Object ID';
@@ -379,23 +384,92 @@ $string['settings_fieldmap_field_sds_teacher_externalId'] = 'SDS teacher externa
 $string['settings_fieldmap_field_sds_teacher_teacherNumber'] = 'SDS teacher number';
 
 // Binding username claim options.
+$string['binding_username_claim_heading'] = 'Binding Username Claim';
+$string['binding_username_claim_description'] = '<p class="warning_header">This is an advanced feature!</p>
+<p>This page allows site administrators to select the token claim to use for binding with Moodle username.</p>
+<p class="warning">Be very cautious when changing this setting. Follow the steps below to change this setting on Moodle sites with existing users using OpenID Connect authentication method. Failure to do so may result in users being logged out and/or duplicate accounts being created.</p>
+<ol>
+<li>Make sure you have a manual site administrator account, i.e. not using OpenID Connect authentication method.</li>
+<li>Schedule enough downtime and put the Moodle site into maintenance mode.</li>
+<li>Backup Moodle database, in particular <span class="code">user</span> and <span class="code">auth_oidc_tokens</span> tables. If local_o365 plugin is installed, backup <span class="code">local_o365_objects</span> table too.</li>
+<li>Use the <a href="{$a}" target="_blank">update binding username tool</a> to update Moodle username, auth_oidc token, and other connection records of the existing user to match the value of the claim to be changed to.</li>
+<li>Update the binding username token setting on this page.</li>
+<li>Purge caches.</li>
+<li>Move the Moodle site out of maintenance mode.</li>
+</ol>
+<p>In most cases this setting should be set to the default option "Choose automatically", meaning the plugin will try to determine the token to use depending on IdP type. Misconfiguration or unexpected change of this setting will result in SSO failure.</p>';
+$string['binding_username_claim_description_existing_claims'] = 'The following claims are present in existing user ID tokens. Choose claims not on the list may results in SSO failure.<br/>
+<div class="existing_claims">{$a}</div>';
 $string['binding_username_auto'] = 'Choose automatically';
-$string['binding_username_preferred_username'] = 'preferred_username';
-$string['binding_username_email'] = 'email';
-$string['binding_username_upn'] = 'upn';
-$string['binding_username_unique_name'] = 'unique_name';
-$string['binding_username_sub'] = 'sub';
 $string['binding_username_custom'] = 'Custom';
-
-$string['bindingusernameclaim'] = 'Binding Username Claim';
+$string['binding_username_claim'] = 'Binding username claim';
 $string['customclaimname'] = 'Custom claim name';
-$string['customclaimname_description'] = 'This field is used only when <b>Binding Username Claim</b> is set to <b>Custom</b>.';
-
-$string['bindingusernameclaim_help'] = 'This is an advanced feature. Select the ID token claim to be used for binding the username. The options include:<br/>
-- <b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.<br/>
-- <b>preferred_username</b>: Default for Microsoft identity platform (v2.0) IdP type.<br/>
-- <b>email</b>: Fallback for Microsoft identity platform (v2.0).<br/>
-- <b>upn</b>: Default for Microsoft Entra ID (v1.0) and other IdP types.<br/>
-- <b>unique_name</b>: Fallback for Microsoft Entra ID (v1.0) and other IdP types.<br/>
-- <b>sub</b>: Fallback if no other claims are present.<br/>
-- <b>Custom</b>: Allows the site admin to enter a custom value.';
+$string['customclaimname_description'] = 'This field is used only when the <b>Binding Username Claim</b> setting is set to <b>Custom</b>.';
+$string['binding_username_claim_help_ms_no_user_sync'] = 'The options for non Microsoft IdPs include:
+<ul>
+<li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
+<li><b>preferred_username</b>: Default for Microsoft identity platform (v2.0) IdP type. <span class="not_support_user_sync">Does not support user sync.</span></li>
+<li><b>email</b>: Fallback for Microsoft identity platform (v2.0).</li>
+<li><b>upn</b>: Default for Microsoft Entra ID (v1.0) and other IdP types.</li>
+<li><b>unique_name</b>: Fallback for Microsoft Entra ID (v1.0) and other IdP types. <span class="not_support_user_sync">Does not support user sync.</span></li>
+<li><b>oid</b>: Fallback if no other claims are present. Only present in Microsoft IdP.</li>
+<li><b>sub</b>: Fallback if no other claims are present. <span class="not_support_user_sync">Does not support user sync.</span></li>
+<li><b>samaccountname</b>: Custom claim.</li>
+<li><b>Custom</b>: Allows the site admin to enter a custom value. <span class="not_support_user_sync">Does not support user sync.</span></li>
+</ul>
+Note some options do not support user sync.';
+$string['binding_username_claim_help_ms_with_user_sync'] = 'The options for Microsoft IdP with user sync feature enabled include:
+<ul>
+<li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
+<li><b>email</b>: Fallback for Microsoft identity platform (v2.0).</li>
+<li><b>upn</b>: Default for Microsoft Entra ID (v1.0) and other IdP types.</li>
+<li><b>oid</b>: Fallback if no other claims are present. Only present in Microsoft IdP.</li>
+<li><b>samaccountname</b>: Custom claim.</li>
+</ul>';
+$string['binding_username_claim_help_non_ms'] = 'The options for Microsoft IdP without user sync feature enabled include:
+<ul>
+<li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
+<li><b>preferred_username</b></li>
+<li><b>email</b></li>
+<li><b>unique_name</b></li>
+<li><b>sub</b></li>
+<li><b>samaccountname</b></li>
+<li><b>custom</b>: Custom claim.</li>
+</ul>';
+$string['binding_username_claim_updated'] = 'Binding Username Claim was updated successfully.';
+$string['examplecsv'] = 'Example upload file';
+$string['usernamefile'] = 'File';
+$string['csvdelimiter'] = 'CSV separator';
+$string['encoding'] = 'Encoding';
+$string['rowpreviewnum'] = 'Preview rows';
+$string['upload_usernames'] = 'Update binding usernames';
+$string['update_stats_users_updated'] = '{$a} users were updated';
+$string['update_stats_users_errors'] = '{$a} users had errors';
+$string['update_error_incomplete_line'] = 'The line does not contain required fields.';
+$string['update_error_user_not_found'] = 'No user found matching the username.';
+$string['update_error_user_not_oidc'] = 'The user is not using OpenID Connect authentication method.';
+$string['update_error_invalid_new_username'] = 'New username is invalid.';
+$string['update_error_user_update_failed'] = 'Failed to update user.';
+$string['update_success'] = 'Username updated successfully.';
+$string['error_invalid_upload_file'] = 'Invalid upload file.';
+$string['csvline'] = 'CSV line';
+$string['change_binding_username_claim_tool'] = 'Change binding username claim tool';
+$string['change_binding_username_claim_tool_description'] = '<p class="warning_header">This is an advanced feature!</p>
+<p>This tool allows site administrators to bulk update usernames, binding usernames in stored OpenID Connect ID tokens, and Moodle and Microsoft account connection records.</p>
+<p>This should only be used when changing the <b>Binding username claim</b> settings.</p>
+<p class="warning">Be very cautious when using this feature, and follow the steps on the <a href="{$a}" target="_blank">Binding username claim configuration page</a>. Misuse of this tool will result in Moodle user records being damaged and/or SSO failure.</p>
+<p>The tool accepts a simple CSV file with two columns:</p>
+<ul>
+<li><b><span class="code">username</span></b>: The current username of the Moodle account to be updated.</li>
+<li><b><span class="code">new_username</span></b>: The case-sensitive value of the new token claim to be used as the binding username claim. The lowercase of this value will be used as Moodle username.</li>
+</ul>
+<p>When the file is uploaded, the tool will perform the following actions:</p>
+<ol>
+<li>Find an existing Moodle user with the given <span class="code">username</span> and using the OpenID Connect authentication method, and if one is found, update the username of the user to be the lowercase of <span class="code">new_username</span>.</li>
+<li>Find the token record in the <span class="code">auth_oidc_token</span> table for the Moodle user found in the action above, update <span class="code">username</span> column to be the lowercase of <span class="code">new_username</span>, and <span class="code">oidcusername</span> column to be the same as <span class="code">new_username</span>.</li>
+<li>If the <span class="code">local_365</span> plugin is installed, find the connection record of the user in the <span class="code">local_o365_objects</span> table, and update the <span class="code">o365name</span> column to be the same as <span class="code">new_username</span>.</li>
+</ol>
+<p>The example file below would change the binding username claim from <span class="code">upn</span> or <span class="code">email</span> to <span class="code">oid</span>.</p>';
+$string['change_binding_username_claim_tool_result'] = 'Update results';
+$string['update_username_results'] = 'Update username results';
+$string['new_username'] = 'New username';

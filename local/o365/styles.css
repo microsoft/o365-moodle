@@ -288,7 +288,7 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
     padding-top: 10px;
 }
 
-.support_upn_change_case_detail {
+.support_user_identifier_change_case_detail {
     font-weight: normal;
     font-size: 0.8rem;
 }

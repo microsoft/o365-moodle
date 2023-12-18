@@ -142,19 +142,19 @@ $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on 
 $string['settings_usersync_guestsync'] = 'Sync guest users';
 $string['settings_suspend_delete_running_time'] = 'User suspension/deletion running time';
 $string['settings_suspend_delete_running_time_desc'] = 'If the option is enabled, suspension/delete feature of user sync function will run once a day, at the time configured in the Moodle instance default time zone.';
-$string['settings_support_upn_change'] = 'Support Microsoft account UPN change';
-$string['settings_support_upn_change_desc'] = 'If enabled, Moodle will try to react when the UPN of a Microsoft account that is connected to a Moodle account is changed.</br>
+$string['settings_support_user_identifier_change'] = 'Support Microsoft account binding username claim value change';
+$string['settings_support_user_identifier_change_desc'] = 'If enabled, Moodle will try to react when the binding username claim value, which is normally UPN, of a Microsoft account that is connected to a Moodle account is changed.</br>
 <table class="flexible table table-striped table-hover generaltable generalbox table-sm">
     <tr>
         <th>Case ID</th>
         <th>The user with the old username has logged in already? (token created)<br/>
-        <span class="support_upn_change_case_detail">Whether a token is saved in the auth_oidc_token table</span>
+        <span class="support_user_identifier_change_case_detail">Whether a token is saved in the auth_oidc_token table</span>
         </th>
         <th>First action after UPN rename<br/>
-        <span class="support_upn_change_case_detail">Either Login or User sync task run</span>
+        <span class="support_user_identifier_change_case_detail">Either Login or User sync task run</span>
         </th>
         <th>Has potential duplicate username<br/>
-        <span class="support_upn_change_case_detail">Whether renaming would cause a username conflicts in Moodle</span>
+        <span class="support_user_identifier_change_case_detail">Whether renaming would cause a username conflicts in Moodle</span>
         </th>
         <th>Expected behaviours</th>
     </tr>

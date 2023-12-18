@@ -62,6 +62,7 @@ class provider implements
                 'username',
                 'userid',
                 'oidcusername',
+                'useridentifier',
                 'scope',
                 'tokenresource',
                 'authcode',

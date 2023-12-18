@@ -206,6 +206,13 @@ class base {
                                 }
                             }
                         }
+
+                        if (!isset($userdata['bindingusernameclaim'])) {
+                            $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                            if (!empty($bindingusernameclaim)) {
+                                $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
+                            }
+                        }
                     }
                 }
 
@@ -284,6 +291,13 @@ class base {
                                 $userdata['mail'] = $entraidemailvalidateresult;
                             }
                         }
+                    }
+                }
+
+                if (!isset($userdata['bindingusernameclaim'])) {
+                    $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                    if (!empty($bindingusernameclaim)) {
+                        $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
                     }
                 }
             }
@@ -619,7 +633,7 @@ class base {
      *
      * @param string $oidcuniqid A unique identifier for the user.
      * @param array $username The username of the Moodle user to link to.
-     * @param array $authparams Parameters receieved from the auth request.
+     * @param array $authparams Parameters received from the auth request.
      * @param array $tokenparams Parameters received from the token request.
      * @param jwt $idtoken A JWT object representing the received id_token.
      * @param int $userid
@@ -634,11 +648,13 @@ class base {
             $oidcusername = $originalupn;
         } else {
             // Determine remote username depending on IdP type, or fall back to standard 'sub'.
-            $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
+            $oidcusername = $this->get_oidc_username_from_token_claim($idtoken, 'auto');
         }
 
+        $useridentifier = $this->get_oidc_username_from_token_claim($idtoken);
+
         // We should not fail here (idtoken was verified earlier to at least contain 'sub', but just in case...).
-        if (empty($oidcusername)) {
+        if (empty($oidcusername) || empty($useridentifier)) {
             throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
@@ -658,7 +674,7 @@ class base {
         $tokenrec->username = $username;
         $tokenrec->userid = $userid;
         $tokenrec->oidcusername = $oidcusername;
-        $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : 'openid profile email';
+        $tokenrec->useridentifier = $useridentifier;
         $tokenrec->tokenresource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : $this->config->oidcresource;
         $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : $this->config->oidcscope;
         $tokenrec->authcode = $authparams['code'];
@@ -680,7 +696,7 @@ class base {
      * Update a token with a new auth code and access token data.
      *
      * @param int $tokenid The database record ID of the token to update.
-     * @param array $authparams Parameters receieved from the auth request.
+     * @param array $authparams Parameters received from the auth request.
      * @param array $tokenparams Parameters received from the token request.
      */
     protected function updatetoken($tokenid, $authparams, $tokenparams) {
@@ -705,38 +721,56 @@ class base {
      * Get OIDC username from token claims based on configured claim.
      *
      * @param jwt $idtoken The OIDC ID token.
+     * @param string $bindingusernameclaim The configured binding username claim.
      * @return string|null The OIDC username if found, null otherwise.
      */
-    protected function get_oidc_username_from_token_claim($idtoken) {
+    protected function  get_oidc_username_from_token_claim(jwt $idtoken, string $bindingusernameclaim = '') : ?string {
         if (empty($idtoken)) {
-            return null;
+            return '';
         }
 
-        $bindingclaim = get_config('auth_oidc', 'bindingusernameclaim');
-        if ($bindingclaim === 'custom') {
-            $bindingclaim = get_config('auth_oidc', 'custombindingclaim');
+        if (empty($bindingusernameclaim)) {
+            $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
         }
-        $oidcusername = $idtoken->claim($bindingclaim);
 
-        if (empty($oidcusername) || $bindingclaim === 'auto') {
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                $oidcusername = $idtoken->claim('preferred_username');
-                if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('email');
+        switch ($bindingusernameclaim) {
+            case 'custom':
+                $bindingusernameclaim = get_config('auth_oidc', 'custombindingclaim');
+            case 'preferred_username':
+            case 'email':
+            case 'upn':
+            case 'unique_name':
+            case 'sub':
+            case 'oid':
+            case 'samaccountname':
+                $oidcusername = $idtoken->claim($bindingusernameclaim);
+                break;
+            case 'auto':
+                if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                    $oidcusername = $idtoken->claim('preferred_username');
+                    if (empty($oidcusername)) {
+                        $oidcusername = $idtoken->claim('email');
+                    }
+                } else {
+                    $oidcusername = $idtoken->claim('upn');
+                    if (empty($oidcusername)) {
+                        $oidcusername = $idtoken->claim('unique_name');
+                    }
                 }
-            } else {
-                $oidcusername = $idtoken->claim('upn');
-                if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('unique_name');
-                }
-            }
 
-            if (empty($oidcusername)) {
-                $oidcusername = $idtoken->claim('sub');
-            }
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('oid'); // Azure-specific.
+                }
+
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('sub');
+                }
+
+                break;
+            default:
+                $oidcusername = '';
         }
 
         return $oidcusername;
     }
-
 }

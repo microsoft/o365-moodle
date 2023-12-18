@@ -24,6 +24,7 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use auth_oidc\jwt;
 use auth_oidc\utils;
 
 defined('MOODLE_INTERNAL') || die();
@@ -154,6 +155,7 @@ function auth_oidc_get_tokens_with_empty_ids() {
         $item = new stdClass();
         $item->id = $record->id;
         $item->oidcusername = $record->oidcusername;
+        $item->useriditifier = $record->useridentifier;
         $item->moodleusername = $record->username;
         $item->userid = 0;
         $item->oidcuniqueid = $record->oidcuniqid;
@@ -179,7 +181,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
     $mismatchedtokens = [];
 
     $sql = 'SELECT tok.id AS id, tok.userid AS tokenuserid, tok.username AS tokenusername, tok.oidcusername AS oidcusername,
-                   tok.oidcuniqid as oidcuniqid, u.id AS muserid, u.username AS musername
+                   tok.useridentifier, tok.oidcuniqid as oidcuniqid, u.id AS muserid, u.username AS musername
               FROM {auth_oidc_token} tok
               JOIN {user} u ON u.id = tok.userid
              WHERE tok.userid != 0
@@ -189,6 +191,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
         $item = new stdClass();
         $item->id = $record->id;
         $item->oidcusername = $record->oidcusername;
+        $item->useridentifier = $record->useridentifier;
         $item->userid = $record->muserid;
         $item->oidcuniqueid = $record->oidcuniqid;
         $item->matchingstatus = get_string('mismatched', 'auth_oidc');
@@ -239,20 +242,10 @@ function auth_oidc_delete_token(int $tokenid): void {
  * @return array
  */
 function auth_oidc_get_remote_fields() {
-    $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
-
-    if (empty($bindingusernameclaim) || $bindingusernameclaim === 'auto') {
-        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-            $bindingusernameclaim = 'preferred_username';
-        } else {
-            $bindingusernameclaim = 'upn';
-        }
-    }
-
     if (auth_oidc_is_local_365_installed()) {
         $remotefields = [
             '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_oidc'),
-            $bindingusernameclaim => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_oidc'),
+            'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_oidc'),
             'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_oidc'),
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
             'displayName' => get_string('settings_fieldmap_field_displayName', 'auth_oidc'),
@@ -310,7 +303,7 @@ function auth_oidc_get_remote_fields() {
     } else {
         $remotefields = [
             '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_oidc'),
-            $bindingusernameclaim => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_oidc'),
+            'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_oidc'),
             'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_oidc'),
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
             'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_oidc'),
@@ -655,4 +648,71 @@ function auth_oidc_get_client_auth_method_name() {
     }
 
     return $authmethodname;
+}
+
+/**
+ * Return the name of the configured binding username claim.
+ *
+ * @return string
+ */
+function auth_oidc_get_binding_username_claim() {
+    $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
+
+    if (empty($bindingusernameclaim)) {
+        $bindingusernameclaim = 'auto';
+    } else if ($bindingusernameclaim === 'custom') {
+        $bindingusernameclaim = get_config('auth_oidc', 'customclaimname');
+    } else if (!in_array($bindingusernameclaim, ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid',
+        'samaccountname'])) {
+        $bindingusernameclaim = 'auto';
+    }
+
+    return $bindingusernameclaim;
+}
+
+/**
+ * Return the claims that presents in the existing tokens.
+ *
+ * @return array
+ * @throws dml_exception
+ * @throws moodle_exception
+ */
+function auth_oidc_get_existing_claims() {
+    global $DB;
+
+    $tokens = $DB->get_records('auth_oidc_token', null, 'expiry DESC');
+    $tokenrecord = array_shift($tokens);
+
+    $excludedclaims = ['appid', 'appidacr', 'app_displayname', 'ipaddr', 'scp', 'tenant_region_scope', 'ver', 'aud', 'iss',
+        'iat', 'nbf', 'exp', 'idtyp', 'plantf', 'xms_tcdt', 'xms_tdbr'];
+
+    $decodedtoken = jwt::decode($tokenrecord->idtoken);
+    if (is_array($decodedtoken) && count($decodedtoken) > 1) {
+        $tokenclaims = [];
+        foreach ($decodedtoken[1] as $claim => $value) {
+            if (!in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value))) {
+                $tokenclaims[] = $claim;
+            }
+        }
+    }
+
+    asort($tokenclaims);
+
+    return $tokenclaims;
+}
+
+/**
+ * Return if the user sync feature in local_o365 plugin is enabled.
+ *
+ * @return bool|void
+ */
+function auth_oidc_is_user_sync_enabled() {
+    global $CFG;
+
+    if (auth_oidc_is_local_365_installed()) {
+        require_once($CFG->dirroot . '/local/o365/classes/feature/usersync/main.php');
+        return local_o365\feature\usersync\main::is_enabled();
+    }
+
+    return false;
 }
