@@ -1188,5 +1188,16 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023100917, 'local', 'o365');
     }
 
+    if ($oldversion < 2023100922) {
+        /* Rename "support_upn_change" to "support_user_identifier_change" */
+        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change');
+        if ($supportupnchangeconfig === false) {
+            set_config('support_user_identifier_change', $supportupnchangeconfig, 'local_o365');
+            unset_config('support_upn_change', 'local_o365');
+        }
+
+        upgrade_plugin_savepoint(true, 2023100922, 'local', 'o365');
+    }
+
     return true;
 }

@@ -99,7 +99,7 @@ class processmatchqueue extends scheduled_task {
              LEFT JOIN {local_o365_connections} muserconn ON muserconn.muserid = u.id
              LEFT JOIN {local_o365_connections} officeconn ON officeconn.entraidupn = mq.o365username
              LEFT JOIN {local_o365_objects} officeobj ON officeobj.moodleid = u.id AND officeobj.o365name = mq.o365username
-             LEFT JOIN {auth_oidc_token} oidctok ON oidctok.oidcusername = mq.o365username
+             LEFT JOIN {auth_oidc_token} oidctok ON oidctok.useridentifier = mq.o365username
                  WHERE mq.completed = ? AND mq.errormessage = ?
               ORDER BY mq.id ASC';
         $params = ['0', ''];
