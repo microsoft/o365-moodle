@@ -1990,7 +1990,7 @@ class unified extends o365api {
      * @param string $upn
      * @return array|null|false
      */
-    public function get_user_timezone_by_upn(string $upn) {
+    public function get_timezone(string $upn) {
         $endpoint = '/users/' . $upn . '/mailboxSettings/timeZone';
         try {
             $response = $this->betaapicall('get', $endpoint);
