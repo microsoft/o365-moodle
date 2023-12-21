@@ -143,36 +143,17 @@ function local_o365_rmdir($path) {
 }
 
 /**
- * Create manifest file and return its contents in string.
- *
- * @return false|string
- * @throws coding_exception
- * @throws dml_exception
- */
-function local_o365_get_manifest_file_content() {
-    $filecontent = '';
-
-    $manifestfilepath = local_o365_create_manifest_file();
-
-    if ($manifestfilepath) {
-        $filecontent = file_get_contents($manifestfilepath);
-    }
-
-    return $filecontent;
-}
-
-/**
  * Attempt to create manifest file. Return error details and/or path to the manifest file.
  *
- * @return string
+ * @return string[]
  * @throws coding_exception
  * @throws dml_exception
  */
-function local_o365_create_manifest_file() {
+function local_o365_create_manifest_file() : array {
     global $CFG;
     require_once($CFG->libdir . '/filestorage/zip_archive.php');
 
-    $error = '';
+    $errorcode = '';
     $zipfilename = '';
 
     // Task 1: check if bot settings are consistent.
@@ -181,17 +162,17 @@ function local_o365_create_manifest_file() {
     if ($botfeatureenabled) {
         if (!$botappid || $botappid == '00000000-0000-0000-0000-000000000000') {
             // Bot id not configured, cannot create manifest file.
-            $error = get_string('error_missing_app_id', 'local_o365');
+            $errorcode = 'error_missing_app_id';
 
-            return [$error, $zipfilename];
+            return [$errorcode, $zipfilename];
         }
 
         $botapppassword = get_config('local_o365', 'bot_app_password');
         $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
         if (!$botapppassword || !$botwebhookendpoint) {
-            $error = get_string('error_missing_bot_settings', 'local_o365');
+            $errorcode = 'error_missing_bot_settings';
 
-            return [$error, $zipfilename];
+            return [$errorcode, $zipfilename];
         }
     }
 
@@ -315,7 +296,7 @@ function local_o365_create_manifest_file() {
     }
     $ziparchive->close();
 
-    return [$error, $zipfilename];
+    return [$errorcode, $zipfilename];
 }
 
 /**

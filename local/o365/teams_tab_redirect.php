@@ -26,4 +26,4 @@
 require_once(__DIR__ . '/../../config.php');
 
 unset($SESSION->theme);
-print_error('errornodirectaccess', 'local_o365');
+throw new moodle_exception('errornodirectaccess', 'local_o365');

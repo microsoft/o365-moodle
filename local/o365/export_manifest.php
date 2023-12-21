@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/local/o365/lib.php');
 set_config('manifest_downloaded', true, 'local_o365');
 purge_all_caches();
 
-list($error, $manifestfilepath) = local_o365_create_manifest_file();
+[$errorcode, $manifestfilepath] = local_o365_create_manifest_file();
 
 if ($manifestfilepath) {
     // Download manifest file.
@@ -42,5 +42,5 @@ if ($manifestfilepath) {
     header("Expires: 0");
     readfile($manifestfilepath);
 } else {
-    print_error($error);
+    throw new moodle_exception($errorcode, 'local_o365');
 }
