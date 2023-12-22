@@ -422,6 +422,15 @@ class block_microsoft extends block_base {
             $items[] = $link;
         }
 
+        if (has_capability('moodle/course:request', $this->page->context)) {
+            if (!empty($this->globalconfig->settings_courserequest)) {
+                $courserequesturl = new moodle_url('/local/o365/courserequest.php');
+                $courserequestattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_courserequest'];
+                $courserequeststr = get_string('linkcourserequest', 'block_microsoft');
+                $items[] = html_writer::link($courserequesturl, $courserequeststr, $courserequestattrs);
+            }
+        }
+
         $html .= html_writer::alist($items);
 
         return $html;
