@@ -69,6 +69,11 @@ const EDUCATION_LICENSE_IDS = ['c33802dd-1b50-4b9a-8bb9-f13d2cdeadac', '500b6a2a
 const SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED = 1;
 const SDS_SCHOOL_DISABLED_ACTION_DISCONNECT = 2;
 
+// Course user sync directions.
+const COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS = 1;
+const COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE = 2;
+const COURSE_USER_SYNC_DIRECTION_BOTH = 3;
+
 /**
  * Check for link connection capabilities.
  *
