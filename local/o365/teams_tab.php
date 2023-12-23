@@ -34,8 +34,8 @@ if (!empty($customtheme) && get_config('theme_' . $customtheme, 'version')) {
 }
 
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"styles.css\">";
-echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.9.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
-echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
+echo "<script src=\"https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
+echo "<script src=\"https://alcdn.msauth.net/browser/2.37.1/js/msal-browser.min.js\" crossorigin=\"anonymous\"></script>";
 echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anonymous\"></script>";
 
 $id = required_param('id', PARAM_INT);
