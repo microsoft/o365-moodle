@@ -79,6 +79,10 @@ if ($hassiteconfig) {
     $settings->add(new auth_oidc_admin_setting_loginflow('auth_oidc/loginflow',
         get_string('cfg_loginflow_key', 'auth_oidc'), '', 'authcode'));
 
+    // Strip domain.
+    $settings->add(new admin_setting_configcheckbox('auth_oidc/stripdomain',
+    get_string('cfg_stripdomain_key', 'auth_oidc'), get_string('cfg_stripdomain_desc', 'auth_oidc'), 0));
+
     // User restrictions heading.
     $settings->add(new admin_setting_heading('auth_oidc/user_restrictions_heading',
         get_string('heading_user_restrictions', 'auth_oidc'), get_string('heading_user_restrictions_desc', 'auth_oidc')));
