@@ -28,11 +28,13 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
-require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Delete assignment API class.
@@ -44,10 +46,10 @@ class delete_onenoteassignment extends external_api {
      * @return external_function_parameters The parameters object for this webservice method.
      */
     public static function assignment_delete_parameters() {
-        return new \external_function_parameters([
-            'data' => new \external_single_structure([
-                'coursemodule' => new \external_value(PARAM_INT, 'course module id'),
-                'course' => new \external_value(PARAM_INT, 'course id'),
+        return new external_function_parameters([
+            'data' => new external_single_structure([
+                'coursemodule' => new external_value(PARAM_INT, 'course module id'),
+                'course' => new external_value(PARAM_INT, 'course id'),
             ])
         ]);
     }
@@ -82,8 +84,8 @@ class delete_onenoteassignment extends external_api {
      */
     public static function assignment_delete_returns() {
         $params = [
-            'result' => new \external_value(PARAM_BOOL, 'success/failure'),
+            'result' => new external_value(PARAM_BOOL, 'success/failure'),
         ];
-        return new \external_single_structure($params);
+        return new external_single_structure($params);
     }
 }
