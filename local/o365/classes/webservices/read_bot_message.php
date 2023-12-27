@@ -28,8 +28,11 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
-
-require_once($CFG->libdir.'/externallib.php');
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
+use core_external\external_warnings;
 
 /**
  * Get help card for user.
@@ -42,14 +45,14 @@ class read_bot_message extends external_api {
      * @return external_function_parameters
      */
     public static function bot_message_read_parameters() {
-        return new \external_function_parameters([
-            'intent' => new \external_value(
+        return new external_function_parameters([
+            'intent' => new external_value(
                 PARAM_TEXT,
                 'Bot intent',
                 VALUE_DEFAULT,
                 'en'
             ),
-            'entities' => new \external_value(
+            'entities' => new external_value(
                 PARAM_RAW,
                 'Intent entities',
                 VALUE_DEFAULT,
@@ -84,13 +87,13 @@ class read_bot_message extends external_api {
      * @return external_single_structure
      */
     private static function get_cards_structure() {
-        return new \external_single_structure(
+        return new external_single_structure(
             array(
-                'title' => new \external_value(PARAM_TEXT, 'list item title'),
-                'subtitle' => new \external_value(PARAM_RAW, 'list item subtitle'),
-                'icon' => new \external_value(PARAM_URL, 'list item icon url'),
-                'action' => new \external_value(PARAM_TEXT, 'list item action url or text'),
-                'actionType' => new \external_value(PARAM_TEXT, 'list item action type'),
+                'title' => new external_value(PARAM_TEXT, 'list item title'),
+                'subtitle' => new external_value(PARAM_RAW, 'list item subtitle'),
+                'icon' => new external_value(PARAM_URL, 'list item icon url'),
+                'action' => new external_value(PARAM_TEXT, 'list item action url or text'),
+                'actionType' => new external_value(PARAM_TEXT, 'list item action type'),
             ), 'listcard list item data'
         );
     }
@@ -101,17 +104,17 @@ class read_bot_message extends external_api {
      * @return external_single_structure
      */
     public static function bot_message_read_returns() {
-        return new \external_single_structure(
+        return new external_single_structure(
             array(
-                'message' => new \external_value(PARAM_TEXT, 'message to be returned', VALUE_DEFAULT, ''),
-                'listTitle' => new \external_value(PARAM_TEXT, 'title that is showed below the message and above
+                'message' => new external_value(PARAM_TEXT, 'message to be returned', VALUE_DEFAULT, ''),
+                'listTitle' => new external_value(PARAM_TEXT, 'title that is showed below the message and above
                     the list cards', VALUE_DEFAULT, ''),
-                'listItems' => new \external_multiple_structure(self::get_cards_structure(), 'list of cards to beshowed
+                'listItems' => new external_multiple_structure(self::get_cards_structure(), 'list of cards to beshowed
                     with message', VALUE_DEFAULT, []),
-                'warnings'  => new \external_warnings('warning messages that occured when getting data',
+                'warnings'  => new external_warnings('warning messages that occured when getting data',
                     'Item id is mod or user id and if not possible to define 0 by default',
                     ''),
-                'language' => new \external_value(PARAM_TEXT, 'message language', VALUE_DEFAULT, 'en'),
+                'language' => new external_value(PARAM_TEXT, 'message language', VALUE_DEFAULT, 'en'),
             )
         );
     }

@@ -28,11 +28,13 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
-require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Create assignment API class.
@@ -44,14 +46,14 @@ class create_onenoteassignment extends external_api {
      * @return external_function_parameters The parameters object for this webservice method.
      */
     public static function assignment_create_parameters() {
-        return new \external_function_parameters([
-            'data' => new \external_single_structure([
-                'name' => new \external_value(PARAM_TEXT, 'name'),
-                'course' => new \external_value(PARAM_INT, 'course id'),
-                'intro' => new \external_value(PARAM_TEXT, 'intro', VALUE_DEFAULT, ''),
-                'section' => new \external_value(PARAM_INT, 'section', VALUE_DEFAULT, 0),
-                'visible' => new \external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, false),
-                'duedate' => new \external_value(PARAM_INT, 'duedate', VALUE_DEFAULT, 0),
+        return new external_function_parameters([
+            'data' => new external_single_structure([
+                'name' => new external_value(PARAM_TEXT, 'name'),
+                'course' => new external_value(PARAM_INT, 'course id'),
+                'intro' => new external_value(PARAM_TEXT, 'intro', VALUE_DEFAULT, ''),
+                'section' => new external_value(PARAM_INT, 'section', VALUE_DEFAULT, 0),
+                'visible' => new external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, false),
+                'duedate' => new external_value(PARAM_INT, 'duedate', VALUE_DEFAULT, 0),
             ])
         ]);
     }
