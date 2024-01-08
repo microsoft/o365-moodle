@@ -49,7 +49,7 @@ class utils {
         try {
             $clientdata = clientdata::instance_from_oidc();
             $unifiedresource = unified::get_tokenresource();
-            $unifiedtoken = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient, false, false);
+            $unifiedtoken = \local_o365\utils::get_application_token($unifiedresource, $clientdata, $httpclient, false, false);
 
             if (!empty($unifiedtoken)) {
                 $apiclient = new unified($unifiedtoken, $httpclient);

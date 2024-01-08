@@ -957,5 +957,15 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022112812, 'local', 'o365');
     }
 
+    if ($oldversion < 2022112822) {
+        // Unset "systemtokens" config.
+        unset_config('systemtokens', 'local_o365');
+
+        // Unset "enableapponlyaccess" config.
+        unset_config('enableapponlyaccess', 'local_o365');
+
+        upgrade_plugin_savepoint(true, 2022112822, 'local', 'o365');
+    }
+
     return true;
 }

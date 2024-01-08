@@ -31,7 +31,6 @@ use Exception;
 use local_o365\event\api_call_failed;
 use local_o365\oauth2\apptoken;
 use local_o365\oauth2\clientdata;
-use local_o365\oauth2\systemapiusertoken;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
@@ -64,7 +63,7 @@ class utils {
             $clientdata = clientdata::instance_from_oidc();
             $graphresource = unified::get_tokenresource();
             try {
-                $token = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+                $token = utils::get_application_token($graphresource, $clientdata, $httpclient);
                 if ($token) {
                     return true;
                 }
@@ -77,17 +76,17 @@ class utils {
     }
 
     /**
-     * Get an app token if available or fall back to system API user token.
+     * Get an application token if available.
      *
      * @param string $tokenresource The desired resource.
      * @param clientdata $clientdata Client credentials.
      * @param httpclientinterface $httpclient An HTTP client.
      * @param bool $forcecreate
      * @param bool $throwexception
-     * @return apptoken|systemapiusertoken|null An app or system token.
+     * @return bool|token|null A token, or null if none available.
      * @throws Exception
      */
-    public static function get_app_or_system_token(string $tokenresource, clientdata $clientdata, httpclientinterface $httpclient,
+    public static function get_application_token(string $tokenresource, clientdata $clientdata, httpclientinterface $httpclient,
         bool $forcecreate = false, bool $throwexception = true) {
         $token = null;
         try {
@@ -98,19 +97,11 @@ class utils {
             static::debug($e->getMessage(), __METHOD__ . ' (app)', $e);
         }
 
-        if (empty($token)) {
-            try {
-                $token = systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-            } catch (Exception $e) {
-                static::debug($e->getMessage(), __METHOD__ . ' (system)', $e);
-            }
-        }
-
         if (!empty($token)) {
             return $token;
         } else {
             if ($throwexception) {
-                throw new Exception('Could not get app or system token');
+                throw new Exception('Could not get application token');
             } else {
                 return $token;
             }
@@ -136,26 +127,11 @@ class utils {
     }
 
     /**
-     * Determine whether app-only access is enabled.
-     *
-     * @return bool Enabled/disabled.
-     */
-    public static function is_enabled_apponlyaccess() {
-        $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
-        return (!empty($apponlyenabled)) ? true : false;
-    }
-
-    /**
      * Determine whether the app only access is configured.
      *
      * @return bool Whether the app only access is configured.
      */
     public static function is_configured_apponlyaccess() {
-        // App only access requires unified api to be enabled.
-        $apponlyenabled = static::is_enabled_apponlyaccess();
-        if (empty($apponlyenabled)) {
-            return false;
-        }
         $aadtenant = get_config('local_o365', 'aadtenant');
         $aadtenantid = get_config('local_o365', 'aadtenantid');
         if (empty($aadtenant) && empty($aadtenantid)) {
@@ -298,7 +274,7 @@ class utils {
         if (!empty($userid)) {
             $token = token::instance($userid, $tokenresource, $clientdata, $httpclient);
         } else {
-            $token = static::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+            $token = static::get_application_token($tokenresource, $clientdata, $httpclient);
         }
         if (empty($token)) {
             throw new Exception('No token available for system user. Please run local_o365 health check.');
