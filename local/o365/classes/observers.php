@@ -89,36 +89,19 @@ class observers {
         $action = (!empty($eventdata['other']['statedata']['action'])) ? $eventdata['other']['statedata']['action'] : null;
 
         switch ($action) {
-            case 'setsystemapiuser':
-                $tokendata = [
-                    'idtoken' => $eventdata['other']['tokenparams']['id_token'],
-                    $eventdata['other']['tokenparams']['resource'] => [
-                        'token' => $eventdata['other']['tokenparams']['access_token'],
-                        'scope' => $eventdata['other']['tokenparams']['scope'],
-                        'refreshtoken' => $eventdata['other']['tokenparams']['refresh_token'],
-                        'tokenresource' => $eventdata['other']['tokenparams']['resource'],
-                        'expiry' => $eventdata['other']['tokenparams']['expires_on'],
-                    ]
-                ];
-
-                set_config('systemtokens', serialize($tokendata), 'local_o365');
-                redirect(new moodle_url('/admin/settings.php?section=local_o365'));
-                break;
-
             case 'adminconsent':
-                // Get tenant if using app-only access.
-                if (utils::is_enabled_apponlyaccess() === true) {
-                    if (isset($eventdata['other']['tokenparams']['id_token'])) {
-                        $idtoken = $eventdata['other']['tokenparams']['id_token'];
-                        $idtoken = jwt::instance_from_encoded($idtoken);
-                        if (!empty($idtoken)) {
-                            $tenant = utils::get_tenant_from_idtoken($idtoken);
-                            if (!empty($tenant)) {
-                                set_config('aadtenantid', $tenant, 'local_o365');
-                            }
+                // Get tenant.
+                if (isset($eventdata['other']['tokenparams']['id_token'])) {
+                    $idtoken = $eventdata['other']['tokenparams']['id_token'];
+                    $idtoken = jwt::instance_from_encoded($idtoken);
+                    if (!empty($idtoken)) {
+                        $tenant = utils::get_tenant_from_idtoken($idtoken);
+                        if (!empty($tenant)) {
+                            set_config('aadtenantid', $tenant, 'local_o365');
                         }
                     }
                 }
+
                 redirect(new moodle_url('/admin/settings.php?section=local_o365'));
                 break;
 
@@ -904,14 +887,6 @@ class observers {
 
             // Clear user records in local_o365_objects table.
             $DB->delete_records('local_o365_objects', ['type' => 'user']);
-
-            $cachespurgeneeded = true;
-        }
-
-        // If connection method is changed from system API user to application access, system API user token needs to be deleted.
-        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'enableapponlyaccess' &&
-            $eventdata['other']['oldvalue'] == '0' && $eventdata['other']['value'] == '1') {
-            unset_config('systemtokens', 'local_o365');
 
             $cachespurgeneeded = true;
         }

@@ -71,7 +71,7 @@ class repository_office365 extends repository {
         global $USER;
         $resource = unified::get_tokenresource();
         if ($system === true) {
-            return utils::get_app_or_system_token($resource, $this->clientdata, $this->httpclient);
+            return utils::get_application_token($resource, $this->clientdata, $this->httpclient);
         } else {
             $userid = (!empty($userid)) ? $userid : $USER->id;
             return token::instance($userid, $resource, $this->clientdata, $this->httpclient);
