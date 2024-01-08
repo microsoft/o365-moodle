@@ -106,7 +106,7 @@ class utils {
         $httpclient = new httpclient();
         $clientdata = clientdata::instance_from_oidc();
         $tokenresource = unified::get_tokenresource();
-        $unifiedtoken = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+        $unifiedtoken = \local_o365\utils::get_application_token($tokenresource, $clientdata, $httpclient);
 
         if (empty($unifiedtoken)) {
             return false;
@@ -599,7 +599,7 @@ class utils {
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
         $tokenresource = unified::get_tokenresource();
-        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+        $token = \local_o365\utils::get_application_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
             return new unified($token, $httpclient);
         } else {
