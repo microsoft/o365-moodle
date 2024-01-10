@@ -24,6 +24,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use auth_oidc\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 // IdP types.
@@ -41,8 +43,8 @@ CONST AUTH_OIDC_AUTH_METHOD_SECRET = 1;
 CONST AUTH_OIDC_AUTH_METHOD_CERTIFICATE = 2;
 
 // OIDC application auth certificate source.
-CONST AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 0;
-CONST AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 1;
+CONST AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
+CONST AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
 
 /**
  * Initialize custom icon.
@@ -574,14 +576,18 @@ function auth_oidc_is_setup_complete() {
             }
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+            if (!isset($pluginconfig->clientcertsource)) {
+                set_config('clientcertsource', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+                $pluginconfig->clientcertsource = AUTH_OIDC_AUTH_CERT_SOURCE_TEXT;
+            }
             switch ($pluginconfig->clientcertsource) {
-                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
-                    if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
+                case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
+                    if (!utils::get_certpath() || !utils::get_keypath()) {
                         return false;
                     }
                     break;
-                case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
-                    if (!\auth_oidc\utils::get_certpath() || !\auth_oidc\utils::get_keypath()) {
+                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                    if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
                         return false;
                     }
                     break;

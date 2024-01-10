@@ -382,5 +382,14 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022112801, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2022112817) {
+        // Set initial value for "clientcertsource" config.
+        if (empty(get_config('auth_oidc', 'clientcertsource'))) {
+            set_config('clientcertsource', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+        }
+
+        upgrade_plugin_savepoint(true, 2022112817, 'auth', 'oidc');
+    }
+
     return true;
 }
