@@ -87,14 +87,14 @@ class application extends moodleform {
 
         // Certificate private key.
         $mform->addElement('textarea', 'clientprivatekey', auth_oidc_config_name_in_form('clientprivatekey'),
-            ['rows' => 10, 'cols' => 80]);
+            ['rows' => 10, 'cols' => 80, 'class' => 'cert_textarea']);
         $mform->setType('clientprivatekey', PARAM_TEXT);
         $mform->disabledIf('clientprivatekey', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
         $mform->addElement('static', 'clientprivatekey_help', '', get_string('clientprivatekey_help', 'auth_oidc'));
 
         // Certificate certificate.
         $mform->addElement('textarea', 'clientcert', auth_oidc_config_name_in_form('clientcert'),
-            ['rows' => 10, 'cols' => 80]);
+            ['rows' => 10, 'cols' => 80, 'class' => 'cert_textarea']);
         $mform->setType('clientcert', PARAM_TEXT);
         $mform->disabledIf('clientcert', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
         $mform->addElement('static', 'clientcert_help', '', get_string('clientcert_help', 'auth_oidc'));
