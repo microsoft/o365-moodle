@@ -148,7 +148,7 @@ class utils {
     }
 
     /**
-     * Get and check existence of OIDC client certificate path
+     * Get and check existence of OIDC client certificate path.
      *
      * @return string|bool cert path if exists otherwise false
      */
@@ -165,7 +165,7 @@ class utils {
     }
 
     /**
-     * Get and check existence of OIDC client key path
+     * Get and check existence of OIDC client key path.
      *
      * @return string|bool key path if exists otherwise false
      */
@@ -182,12 +182,13 @@ class utils {
     }
 
     /**
-     * Get openssl default certs dir plus "/azuread"
+     * Get openssl cert base path, which is dataroot/microsoft_certs.
      *
      * @return string base path to put cert files
      */
     public static function get_openssl_internal_path() {
-        $certlocation = openssl_get_cert_locations()["default_cert_dir"];
-        return "$certlocation/azuread";
+        global $CFG;
+
+        return $CFG->dataroot . '/microsoft_certs';
     }
 }
