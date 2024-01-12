@@ -88,33 +88,39 @@ if ($form->is_cancelled()) {
     }
 
     // Save config settings.
+    $updateapplicationtokenrequired = false;
     foreach ($configstosave as $config) {
         $existingsetting = get_config('auth_oidc', $config);
         if ($fromform->$config != $existingsetting) {
             set_config($config, $fromform->$config, 'auth_oidc');
             add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
+            $updateapplicationtokenrequired = true;
         }
     }
 
-    // Redirect message depend on IdP type.
-    $showprovideadminconsentnotification = false;
-
+    // Redirect destination and message depend on IdP type.
+    $isgraphapiconnected = false;
     if ($fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
         if (auth_oidc_is_local_365_installed()) {
-            require_once($CFG->dirroot . '/local/o365/classes/utils.php');
-            if (method_exists('\local_o365\utils', 'is_connected')) {
-                if (\local_o365\utils::is_connected()) {
-                    $showprovideadminconsentnotification = true;
-                }
-            }
+            $isgraphapiconnected = true;
         }
     }
 
-    if ($showprovideadminconsentnotification) {
-        $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
-        redirect($url, get_string('application_updated_azure', 'auth_oidc', $localo365configurl->out()));
+    if ($updateapplicationtokenrequired) {
+        if ($isgraphapiconnected) {
+            // First, delete the existing application token and purge cache.
+            unset_config('apptokens', 'local_o365');
+            unset_config('azuresetupresult', 'local_o365');
+            purge_all_caches();
+
+            // Then show the message to the user with instructions to update the application token.
+            $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
+            redirect($localo365configurl, get_string('application_updated_azure', 'auth_oidc'));
+        } else {
+            redirect($url, get_string('application_updated', 'auth_oidc'));
+        }
     } else {
-        redirect($url, get_string('application_updated', 'auth_oidc'));
+        redirect($url, get_string('application_not_changed', 'auth_oidc'));
     }
 }
 
