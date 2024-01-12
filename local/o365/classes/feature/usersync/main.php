@@ -108,32 +108,6 @@ class main {
     }
 
     /**
-     * Construct a outlook API client using the system API user.
-     *
-     * @param int $muserid The userid to get the outlook token for. Call with null to retrieve system token.
-     * @param boolean $systemfallback Set to true to use system token as fall back.
-     * @return unified A constructed unified API client, or false if error.
-     */
-    public function construct_outlook_api($muserid, $systemfallback = true) {
-        $unifiedconfigured = unified::is_configured();
-        $tokenresource = unified::get_tokenresource();
-
-        $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
-        if (empty($token) && $systemfallback === true) {
-            $token = ($unifiedconfigured === true)
-                ? utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient)
-                : systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
-        }
-        if (empty($token)) {
-            throw new Exception('No token available for user #'.$muserid);
-        }
-
-        $apiclient = new unified($token, $this->httpclient);
-
-        return $apiclient;
-    }
-
-    /**
      * Get information on the app.
      *
      * @return array|null Array of app service information, or null if failure.
