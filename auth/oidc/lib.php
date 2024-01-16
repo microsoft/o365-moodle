@@ -213,7 +213,7 @@ function auth_oidc_delete_token(int $tokenid): void {
                  WHERE obj.type = :type AND tok.id = :tokenid';
         if ($objectrecord = $DB->get_record_sql($sql, ['type' => 'user', 'tokenid' => $tokenid], IGNORE_MULTIPLE)) {
             // Delete record from local_o365_objects.
-            $DB->get_records('local_o365_objects', ['id' => $objectrecord->id]);
+            $DB->delete_records('local_o365_objects', ['id' => $objectrecord->id]);
 
             // Delete record from local_o365_token.
             $DB->delete_records('local_o365_token', ['user_id' => $objectrecord->userid]);
