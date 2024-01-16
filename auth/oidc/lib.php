@@ -202,7 +202,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
  *
  * @param int $tokenid
  */
-function auth_oidc_delete_token(int $tokenid) {
+function auth_oidc_delete_token(int $tokenid): void {
     global $DB;
 
     if (auth_oidc_is_local_365_installed()) {
