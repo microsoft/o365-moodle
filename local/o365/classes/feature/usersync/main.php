@@ -752,25 +752,26 @@ class main {
             if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
                 if (isset($aaddata['onPremisesExtensionAttributes']) &&
                     isset($aaddata['onPremisesExtensionAttributes'][$restriction['remotefield']])) {
+                    $fieldval = $aaddata['onPremisesExtensionAttributes'][$restriction['remotefield']];
+                    $restrictionval = $restriction['value'];
 
-                        $fieldval = $aaddata['onPremisesExtensionAttributes'][$restriction['remotefield']];
-                        $restrictionval = $restriction['value'];
-
-                        if ($useregex === true) {
-                            $count = @preg_match('/'.$restrictionval.'/', $fieldval, $matches);
-                            if (!empty($count)) {
-                                return true;
-                            }
-                        } else {
-                            if ($fieldval === $restrictionval) {
-                                return true;
-                            }
+                    if ($useregex === true) {
+                        $count = @preg_match('/' . $restrictionval . '/', $fieldval, $matches);
+                        if (!empty($count)) {
+                            return true;
                         }
-
-                    
+                    } else {
+                        if ($fieldval === $restrictionval) {
+                            return true;
+                        }
+                    }
                 }
+
+                return false;
+            } else {
+                utils:debug('Invalid extension attribute ID', __METHOD__);
+                return false;
             }
-            return false;
         } else {
             if (!isset($aaddata[$restriction['remotefield']])) {
                 return false;
@@ -779,7 +780,7 @@ class main {
             $restrictionval = $restriction['value'];
 
             if ($useregex === true) {
-                $count = @preg_match('/'.$restrictionval.'/', $fieldval, $matches);
+                $count = @preg_match('/' . $restrictionval . '/', $fieldval, $matches);
                 if (!empty($count)) {
                     return true;
                 }
@@ -805,7 +806,7 @@ class main {
         $creationallowed = $this->check_usercreationrestriction($aaddata);
 
         if ($creationallowed !== true) {
-            mtrace('Cannot create user because they do not meet the configured user creation restrictions.');
+            $this->mtrace('Cannot create user because they do not meet the configured user creation restrictions.');
             return false;
         }
 
