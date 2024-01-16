@@ -201,6 +201,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
  * Delete the auth_oidc token with the ID.
  *
  * @param int $tokenid
+ * @throws dml_exception
  */
 function auth_oidc_delete_token(int $tokenid): void {
     global $DB;
