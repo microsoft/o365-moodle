@@ -86,7 +86,7 @@ class ucp extends base {
             $customdata['o365calendarcheck'] = true;
             $updatecalendar = true;
             foreach ($o365calendars as $o365calendar) {
-                if ($o365calendar['Name'] === $SITE->fullname) {
+                if ($o365calendar['name'] === $SITE->fullname) {
                     $updatecalendar = false;
                 }
             }
@@ -99,11 +99,11 @@ class ucp extends base {
 
         foreach ($o365calendars as $o365calendar) {
             $customdata['o365calendars'][] = [
-                'id' => $o365calendar['Id'],
-                'name' => $o365calendar['Name'],
+                'id' => $o365calendar['id'],
+                'name' => $o365calendar['name'],
             ];
-            if ($o365calendar['Name'] === $SITE->fullname) {
-                $customdata['sitecalendarexists'] = $o365calendar['Id'];
+            if ($o365calendar['name'] === $SITE->fullname) {
+                $customdata['sitecalendarexists'] = $o365calendar['id'];
             }
         }
         $primarycalid = $customdata['o365calendars'][0]['id'];
@@ -119,7 +119,7 @@ class ucp extends base {
         $fromform = $mform->get_data();
 
         if (empty($customdata['sitecalendarexists']) && !empty($fromform->settingcal)) {
-            // Create new outlook calender with site name.
+            // Create new outlook calendar with site name.
             $sitecalendar = $calsync->create_outlook_calendar($SITE->fullname);
             array_push($customdata['o365calendars'], ['id' => $sitecalendar['Id'], 'name' => $sitecalendar['Name']]);
         }

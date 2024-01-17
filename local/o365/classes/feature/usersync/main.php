@@ -325,51 +325,30 @@ class main {
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
-     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
-     *
      * @return array Array of user information.
      */
-    public function get_users($params = 'default', $skiptoken = '') {
-        if (empty($skiptoken)) {
-            $skiptoken = '';
-        }
-
+    public function get_users($params = 'default') {
         $apiclient = $this->construct_user_api();
-        $result = $apiclient->get_users($params, $skiptoken);
-        $users = [];
-        $skiptoken = null;
+        $users = $apiclient->get_users($params);
 
-        if (!empty($result) && is_array($result)) {
-            if (!empty($result['value']) && is_array($result['value'])) {
-                $users = $result['value'];
-            }
-
-            if (isset($result['odata.nextLink'])) {
-                $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], '$skiptoken');
-            } else if (isset($result['@odata.nextLink'])) {
-                $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
-            }
-        }
-
-        return [$users, $skiptoken];
+        return $users;
     }
 
     /**
      * Return the users search delta, along with skip token and delta tokens.
      *
      * @param string $params
-     * @param null $skiptoken
      * @param null $deltatoken
      * @return array
      */
-    public function get_users_delta($params = 'default', $skiptoken = null, $deltatoken = null) {
+    public function get_users_delta($params = 'default', $deltatoken = null) {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
             throw new Exception('No token available for usersync');
         }
         $apiclient = new unified($token, $this->httpclient);
-        return $apiclient->get_users_delta($params, $skiptoken, $deltatoken);
+        return $apiclient->get_users_delta($params, $deltatoken);
     }
 
     /**
@@ -1650,20 +1629,8 @@ class main {
 
         try {
             $deletedusersids = [];
-            $deleteduserresults = $apiclient->list_deleted_users();
-            $deletedusers = $deleteduserresults['value'];
-            while (!empty($deleteduserresults['@odata.nextLink'])) {
-                $nextlink = parse_url($deleteduserresults['@odata.nextLink']);
-                $deleteduserresults = [];
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skiptoken'])) {
-                        $deleteduserresults = $apiclient->list_deleted_users($query['$skiptoken']);
-                        $deletedusers = array_merge($deletedusers, $deleteduserresults['value']);
-                    }
-                }
-            }
+
+            $deletedusers = $apiclient->list_deleted_users();
             foreach ($deletedusers as $deleteduser) {
                 if (!empty($deleteduser) && isset($deleteduser['id'])) {
                     // Check for synced user.

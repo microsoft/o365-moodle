@@ -1531,8 +1531,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'usersynccreationrestriction',
                 'task_usersync_lastdelete',
                 'task_usersync_lastdeltatoken',
-                'task_usersync_lastskiptokendelta',
-                'task_usersync_lastskiptokenfull',
                 'unifiedapiactive',
                 'delete_group_on_course_deletion',
                 'delete_group_on_course_sync_disabled',
@@ -1698,7 +1696,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $this->set_title(get_string('acp_maintenance_cleandeltatoken', 'local_o365'));
 
         set_config('task_usersync_lastdeltatoken', '', 'local_o365');
-        set_config('task_usersync_lastskiptokendelta', '', 'local_o365');
 
         $url = new moodle_url($this->url, ['mode' => 'cleandeltatoken']);
         $PAGE->navbar->add(get_string('acp_maintenance_cleandeltatoken', 'local_o365'), $url);
