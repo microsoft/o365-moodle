@@ -149,30 +149,53 @@ class unified extends o365api {
     }
 
     /**
-     * Make an Paginated API call.
+     * Make paginated API call.
      *
      * @param string $httpmethod The HTTP method to use. get/post/patch/merge/delete.
      * @param string $apimethod The API endpoint/method to call.
+     * @param array $odataqueries The OData queries to use.
+     * @param array $expectedstructure The expected structure of the response.
+     * @param bool $betaapi Whether to use the beta API.
      * @param string $params Additional parameters to include.
      * @param array $options Additional options for the request.
+     * @param string $skipparam The name of the skip parameter to use.
+     * @param string $deltalink The parameter name of an additional parameter to return.
+     * @param string $deltatokenparam The name of the additional parameter to return.
      * @return array The result of the API call.
      */
-    public function paginatedapicall($httpmethod, $apimethod, $params = '', $options = []) {
+    public function paginatedapicall($httpmethod, $apimethod, $odataqueries = [], $expectedstructure = ['value' => null],
+        $betaapi = false, $params = '', $options = [], $skipparam = '$skiptoken', $deltalink = '', $deltatokenparam = '') {
         $content = [];
-        $containsqueries = str_contains($apimethod, '?');
+
+        $originalapimethod = $apimethod;
+
+        $deltatokenvalue = null;
 
         $continue = true;
+
         while ($continue) {
             if (!empty($skiptoken)) {
-                if ($containsqueries) {
-                    $apimethod .= '&$skiptoken=' . $skiptoken;
-                } else {
-                    $apimethod .= '?$skiptoken=' . $skiptoken;
+                $odataqueries[$skipparam] = $skiptoken;
+            }
+
+            $odataquerystring = '';
+            if ($odataqueries) {
+                foreach ($odataqueries as $odataqueryname => $odataqueryvalue) {
+                    $odataquerystring .= $odataqueryname . '=' . $odataqueryvalue . '&';
                 }
             }
 
-            $response = self::apicall($httpmethod, $apimethod, $params, $options);
-            $result = $this->process_apicall_response($response, ['value' => null]);
+            if ($odataquerystring) {
+                $apimethod = $originalapimethod . '?' . rtrim($odataquerystring, '&');
+            }
+
+            if ($betaapi) {
+                $response = self::betaapicall($httpmethod, $apimethod, $params, $options);
+            } else {
+                $response = self::apicall($httpmethod, $apimethod, $params, $options);
+            }
+
+            $result = $this->process_apicall_response($response, $expectedstructure);
 
             if (!empty($result) && is_array($result)) {
                 if (!empty($result['value']) && is_array($result['value'])) {
@@ -180,18 +203,26 @@ class unified extends o365api {
                 }
     
                 if (isset($result['odata.nextLink'])) {
-                    $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], '$skiptoken');
+                    $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], $skipparam);
                 } else if (isset($result['@odata.nextLink'])) {
-                    $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
+                    $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], $skipparam);
                 } else {
                     $skiptoken = null;
                 }
+
+                if ($deltalink && $deltatokenparam && isset($result[$deltalink])) {
+                    $deltatokenvalue = $this->extract_param_from_link($result[$deltalink], $deltatokenparam);
+                }
             }
-  
+
             $continue = (!empty($skiptoken));
         }
-       
-        return $content;
+
+        if ($deltatokenvalue) {
+            return [$content, $deltatokenvalue];
+        } else {
+            return $content;
+        }
     }
 
     /**
@@ -325,24 +356,12 @@ class unified extends o365api {
     /**
      * Get a list of groups.
      *
-     * @param string $skiptoken Skip token.
      * @return array List of groups.
      */
-    public function get_groups(string $skiptoken = '') : array {
+    public function get_groups() : array {
         $endpoint = '/groups';
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-        $response = $this->apicall('get', $endpoint);
-        $expectedparams = ['value' => null];
-        return $this->process_apicall_response($response, $expectedparams);
+
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
@@ -541,25 +560,12 @@ class unified extends o365api {
     /**
      * Get a list of recently deleted groups.
      *
-     * @param string $skiptoken
      * @return array Array of returned information.
      */
-    public function list_deleted_groups(string $skiptoken = '') : array {
+    public function list_deleted_groups() : array {
         $endpoint = '/directory/deleteditems/Microsoft.Graph.Group';
 
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->betaapicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint, [], ['value' => null], true);
     }
 
     /**
@@ -577,54 +583,24 @@ class unified extends o365api {
      * Get a list of group members.
      *
      * @param string $groupobjectid The object ID of the group.
-     * @param string $skiptoken
      * @return array Array of returned members.
      */
-    public function get_group_members(string $groupobjectid, string $skiptoken = '') : array {
+    public function get_group_members(string $groupobjectid) : array {
         $endpoint = '/groups/' . $groupobjectid . '/members';
-        $odataqueries = [];
 
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        $expectedparams = ['value' => null];
-
-        return $this->process_apicall_response($response, $expectedparams);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
      * Get a list of group owners.
      *
      * @param string $groupobjectid The object ID of the group.
-     * @param string $skiptoken
-     * @return array|null
+     * @return array Array of returned owners.
      */
-    public function get_group_owners(string $groupobjectid, string $skiptoken = '') : ?array {
+    public function get_group_owners(string $groupobjectid) : ?array {
         $endpoint = '/groups/' . $groupobjectid . '/owners';
 
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        $expectedparams = ['value' => null];
-
-        return $this->process_apicall_response($response, $expectedparams);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
@@ -880,10 +856,9 @@ class unified extends o365api {
      * Get all users in the configured directory.
      *
      * @param string|array $params Requested user parameters.
-     * @param string $skiptoken A skiptoken param from a previous get_users query. For pagination.
      * @return array|null Array of user information, or null if failure.
      */
-    public function get_users($params = 'default', string $skiptoken = '') : ?array {
+    public function get_users($params = 'default') : ?array {
         $endpoint = "/users";
         $odataqueries = [];
 
@@ -898,35 +873,26 @@ class unified extends o365api {
                     unset($params[$key]);
                 }
             }
-            $odataqueries[] = '$select=' . implode(',', $params);
+            $odataqueries['$select'] = implode(',', $params);
         }
 
-        // Skip token.
-        if (!empty($skiptoken) && is_string($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-
-        // Process and append odata params.
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint, $odataqueries);
     }
 
     /**
      * Return users delta.
      *
      * @param array|string $params
-     * @param string|null $skiptoken
      * @param string|null $deltatoken
      * @return array
-     * @throws moodle_exception
      */
-    public function get_users_delta($params, string $skiptoken = null, string $deltatoken = null) : array {
+    public function get_users_delta($params, string $deltatoken = null) : array {
         $endpoint = "/users/delta";
         $odataqueries = [];
+
+        if (!empty($deltatoken)) {
+            $odataqueries['$deltatoken'] = $deltatoken;
+        }
 
         // Select params.
         if ($params === 'default') {
@@ -939,43 +905,28 @@ class unified extends o365api {
                     unset($params[$key]);
                 }
             }
-            $odataqueries[] = '$select=' . implode(',', $params);
+            $odataqueries['$select'] = implode(',', $params);
         }
-        // Delta/skip tokens.
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        } else {
-            if (!empty($deltatoken)) {
-                $odataqueries[] = '$deltatoken=' . $deltatoken;
+
+        [$users, $deltatoken] = $this->paginatedapicall('get', $endpoint, $odataqueries, ['value' => null], false, '', [],
+            '$skiptoken', '@odata.deltaLink', '$deltatoken');
+
+        $knownids = [];
+        foreach ($users as $key => $user) {
+            // There is a known issue in delta queries where the same user can be returned multiple times in the initial run.
+            if (in_array($user['id'], $knownids)) {
+                unset($users[$key]);
+            } else {
+                $knownids[] = $user['id'];
+            }
+
+            // Remove deleted users.
+            if (isset($user['@removed'])) {
+                unset($users[$key]);
             }
         }
 
-        // Process and append odata params.
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        $result = $this->process_apicall_response($response, ['value' => null]);
-        $users = [];
-        $skiptoken = null;
-        $deltatoken = null;
-
-        if (!empty($result) && is_array($result)) {
-            if (!empty($result['value']) && is_array($result['value'])) {
-                $users = $result['value'];
-            }
-
-            if (isset($result['@odata.nextLink'])) {
-                $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
-            }
-
-            if (isset($result['@odata.deltaLink'])) {
-                $deltatoken = $this->extract_param_from_link($result['@odata.deltaLink'], '$deltatoken');
-            }
-        }
-
-        return [$users, $skiptoken, $deltatoken];
+        return [$users, $deltatoken];
     }
 
     /**
@@ -1015,7 +966,8 @@ class unified extends o365api {
      */
     public function get_user_transitive_groups(string $userobjectid) : ?array {
         $endpoint = "users/$userobjectid/getMemberGroups";
-        return $this->paginatedapicall('post', $endpoint, json_encode(['securityEnabledOnly' => false]));
+        return $this->paginatedapicall('post', $endpoint, [], ['value' => null], false,
+            json_encode(['securityEnabledOnly' => false]));
     }
 
     /**
@@ -1039,7 +991,7 @@ class unified extends o365api {
     public function get_user_objects(string $userobjectid, bool $securityenabledonly = true) : array {
         $endpoint = "users/$userobjectid/getMemberObjects";
         $data = ['securityEnabledOnly' => $securityenabledonly];
-        return $this->paginatedapicall('post', $endpoint, json_encode($data));
+        return $this->paginatedapicall('post', $endpoint, [], ['value' => null], false, json_encode($data));
     }
 
     /**
@@ -1082,25 +1034,12 @@ class unified extends o365api {
     /**
      * Get a list of recently deleted users in the last 30 days.
      *
-     * @param string $skiptoken
      * @return array Array of returned information.
      */
-    public function list_deleted_users(string $skiptoken = '') : array {
+    public function list_deleted_users() : array {
         $endpoint = '/directory/deleteditems/Microsoft.Graph.User';
 
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->betaapicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint, [], ['value' => null], true);
     }
 
     /**
@@ -1120,36 +1059,12 @@ class unified extends o365api {
      * Get a list of the user's o365 calendars.
      *
      * @param string $upn The user's userPrincipalName
-     * @param string $skip
-     * @return array|null Returned response, or null if error.
+     * @return array Returned response
      */
-    public function get_calendars(string $upn, string $skip = '') : ?array {
+    public function get_calendars(string $upn) : ?array {
         $endpoint = '/users/' . $upn . '/calendars';
 
-        $odataqueries = [];
-        if (empty($skip) || !is_string($skip)) {
-            $skip = '';
-        }
-        if (!empty($skip)) {
-            $odataqueries[] = '$skip=' . $skip;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        $expectedparams = ['value' => null];
-        $return = $this->process_apicall_response($response, $expectedparams);
-        foreach ($return['value'] as $i => $calendar) {
-            // Set legacy values.
-            if (!isset($calendar['Id']) && isset($calendar['id'])) {
-                $return['value'][$i]['Id'] = $calendar['id'];
-            }
-            if (!isset($calendar['Name']) && isset($calendar['name'])) {
-                $return['value'][$i]['Name'] = $calendar['name'];
-            }
-        }
-        return $return;
+        return $this->paginatedapicall('get', $endpoint, [], ['value' => null], false, '', [], '$skip');
     }
 
     /**
@@ -1306,65 +1221,22 @@ class unified extends o365api {
      * @param string $calendarid The calendar ID to get events from. If empty, primary calendar used.
      * @param string $since datetime date('c') to get events since.
      * @param string $upn user's userPrincipalName
-     * @param string $skip
      * @return array Array of events.
      */
-    public function get_events(string $calendarid, string $since, string $upn, string $skip = '') : array {
+    public function get_events(string $calendarid, string $since, string $upn) : array {
         core_date::set_default_server_timezone();
         $endpoint = (!empty($calendarid)) ? '/users/' . $upn . '/calendars/' . $calendarid . '/events' :
             '/users/' . $upn . '/calendar/events';
 
         $odataqueries = [];
-        if (empty($skip) || !is_string($skip)) {
-            $skip = '';
-        }
-        if (!empty($skip)) {
-            $odataqueries[] = '$skip=' . $skip;
-        }
         if (!empty($since)) {
             // Pass datetime in UTC, regardless of Moodle timezone setting.
             $sincedt = new DateTime('@' . $since);
             $since = urlencode($sincedt->format('Y-m-d\TH:i:s\Z'));
-            $odataqueries[] = '$filter=CreatedDateTime%20ge%20' . $since;
+            $odataqueries['$filter'] = 'CreatedDateTime%20ge%20' . $since;
         }
 
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        $expectedparams = ['value' => null];
-        $return = $this->process_apicall_response($response, $expectedparams);
-        foreach ($return['value'] as $i => $event) {
-            // Converts params to the old legacy parameter used by the rest of the code from the new unified parameter.
-            if (!isset($event['Id']) && isset($event['id'])) {
-                $return['value'][$i]['Id'] = $event['id'];
-            }
-            if (!isset($event['Subject']) && isset($event['subject'])) {
-                $return['value'][$i]['Subject'] = $event['subject'];
-            }
-            if (!isset($event['Body']) && isset($event['body'])) {
-                $return['value'][$i]['Body'] = $event['body'];
-                if (!isset($return['value'][$i]['Body']['Content']) && isset($return['value'][$i]['body']['content'])) {
-                    $return['value'][$i]['Body']['Content'] = $return['value'][$i]['body']['content'];
-                }
-            }
-            if (!isset($event['Start']) && isset($event['start'])) {
-                if (is_array($event['start'])) {
-                    $return['value'][$i]['Start'] = $event['start']['dateTime'] . ' ' . $event['start']['timeZone'];
-                } else {
-                    $return['value'][$i]['Start'] = $event['start'];
-                }
-            }
-            if (!isset($event['End']) && isset($event['end'])) {
-                if (is_array($event['end'])) {
-                    $return['value'][$i]['End'] = $event['end']['dateTime'] . ' ' . $event['end']['timeZone'];
-                } else {
-                    $return['value'][$i]['End'] = $event['end'];
-                }
-            }
-        }
-        return $return;
+        return $this->paginatedapicall('get', $endpoint, $odataqueries, ['value' => null], false, '', [], '$skip');
     }
 
     /**
@@ -2111,154 +1983,74 @@ class unified extends o365api {
     /**
      * Get a list of teams.
      *
-     * @param string $skiptoken
      * @return array|null
      */
-    public function get_teams(string $skiptoken = '') : ?array {
-        $endpoint = '/groups?$filter=resourceProvisioningOptions/Any(x:x%20eq%20\'Team\')';
-        $odataqueries = [];
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-        if (!empty($odataqueries)) {
-            $endpoint .= '&' . implode('&', $odataqueries);
-        }
-        $response = $this->betaapicall('get', $endpoint);
-        $expectedparams = ['value' => null];
+    public function get_teams() : ?array {
+        $endpoint = '/groups';
+        $odataqueries = [
+            '$filter' => 'resourceProvisioningOptions/Any(x:x%20eq%20\'Team\')',
+        ];
 
-        return $this->process_apicall_response($response, $expectedparams);
+        return $this->paginatedapicall('get', $endpoint, $odataqueries, ['value' => null], true);
     }
 
     /**
      * Return the list of SDS schools.
      *
-     * @param string $skiptoken
-     * @return array|null
+     * @return array
      */
-    public function get_schools(string $skiptoken = '') : ?array {
+    public function get_schools() : ?array {
         $endpoint = '/education/schools';
-        $odataqueries = [];
 
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
      * Return the list of classes in the SDS school with the given object ID.
      *
      * @param string $schoolobjectid
-     * @param string $skiptoken
-     * @return array|null
+     * @return array
      */
-    public function get_school_classes(string $schoolobjectid, string $skiptoken = '') : ?array {
+    public function get_school_classes(string $schoolobjectid) : ?array {
         $endpoint = '/education/schools/' . $schoolobjectid . '/classes';
-        $odataquries = [];
 
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataquries[] = '$skiptoken=' . $skiptoken;
-        }
-
-        if (!empty($odataquries)) {
-            $endpoint .= '?' . implode('&', $odataquries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
      * Return the list of teachers in the class with the given object ID.
      *
      * @param string $classobjectid
-     * @param string $skiptoken
-     * @return array|null
+     * @return array
      */
-    public function get_school_class_teachers(string $classobjectid, string $skiptoken = '') : ?array {
+    public function get_school_class_teachers(string $classobjectid) : ?array {
         $endpoint = '/education/classes/' . $classobjectid . '/teachers';
-        $odataqueries = [];
 
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
      * Return the list of members in the class with the given object ID.
      *
      * @param string $classobjectid
-     * @param string $skiptoken
      * @return array|null
      */
-    public function get_school_class_members(string $classobjectid, string $skiptoken = '') : ?array {
+    public function get_school_class_members(string $classobjectid) : ?array {
         $endpoint = '/education/classes/' . $classobjectid . '/members';
-        $odataqueries = [];
 
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
      * Return the list of users in the SDS school with the given object ID.
      *
      * @param string $schoolobjectid
-     * @param string $skiptoken
-     * @return array|null
+     * @return array
      */
-    public function get_school_users(string $schoolobjectid, string $skiptoken = '') : ?array {
+    public function get_school_users(string $schoolobjectid) : ?array {
         $endpoint = '/education/schools/' . $schoolobjectid . '/users';
-        $odataqueries = [];
 
-        if (empty($skiptoken) || !is_string($skiptoken)) {
-            $skiptoken = '';
-        }
-        if (!empty($skiptoken)) {
-            $odataqueries[] = '$skiptoken=' . $skiptoken;
-        }
-
-        if (!empty($odataqueries)) {
-            $endpoint .= '?' . implode('&', $odataqueries);
-        }
-
-        $response = $this->apicall('get', $endpoint);
-        return $this->process_apicall_response($response, ['value' => null]);
+        return $this->paginatedapicall('get', $endpoint);
     }
 
     /**
