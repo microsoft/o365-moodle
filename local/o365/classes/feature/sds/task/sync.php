@@ -76,20 +76,7 @@ class sync extends scheduled_task {
                 $processedschoolusers = [];
                 if ($additionalprofilemappings) {
                     static::mtrace('Additional SDS profile data required', 2);
-                    $schooluserresults = $apiclient->get_school_users($schoolid);
-                    $rawschoolusers = $schooluserresults['value'];
-                    while (!empty($schooluserresults['@odata.nextLink'])) {
-                        $nextlink = parse_url($schooluserresults['@odata.nextLink']);
-                        $schooluserresults = [];
-                        if (isset($nextlink['query'])) {
-                            $query = [];
-                            parse_str($nextlink['query'], $query);
-                            if (isset($query['$skiptoken'])) {
-                                $schooluserresults = $apiclient->get_school_users($schoolid, $query['$skiptoken']);
-                                $rawschoolusers = array_merge($rawschoolusers, $schooluserresults['value']);
-                            }
-                        }
-                    }
+                    $rawschoolusers = $apiclient->get_school_users($schoolid);
 
                     foreach ($rawschoolusers as $rawschooluser) {
                         if ($userobjectrecord = $DB->get_record('local_o365_objects', ['type' => 'user',
@@ -247,20 +234,7 @@ class sync extends scheduled_task {
         }
 
         $syncedschools = [];
-        $schoolresults = $apiclient->get_schools();
-        $schools = $schoolresults['value'];
-        while (!empty($schoolresults['@odata.nextLink'])) {
-            $nextlink = parse_url($schoolresults['@odata.nextLink']);
-            $schoolresults = [];
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $schoolresults = $apiclient->get_schools($query['$skiptoken']);
-                    $schools = array_merge($schools, $schoolresults['value']);
-                }
-            }
-        }
+        $schools = $apiclient->get_schools();
 
         foreach ($schools as $school) {
             if (in_array($school['id'], $schoolobjectids)) {
@@ -272,20 +246,7 @@ class sync extends scheduled_task {
             $coursecat = static::get_or_create_school_coursecategory($syncedschool['id'], $syncedschool['displayName']);
             static::mtrace('Processing school ' . $syncedschool['displayName'], 2);
 
-            $schoolclassresults = $apiclient->get_school_classes($schoolid);
-            $schoolclasses = $schoolclassresults['value'];
-            while (!empty($schoolclassresults['@odata.nextLink'])) {
-                $nextlink = parse_url($schoolclassresults['@odata.nextLink']);
-                $schoolclassresults = [];
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skiptoken'])) {
-                        $schoolclassresults = $apiclient->get_school_classes($schoolid, $query['$skiptoken']);
-                        $schoolclasses = array_merge($schoolclasses, $schoolclassresults['value']);
-                    }
-                }
-            }
+            $schoolclasses = $apiclient->get_school_classes($schoolid);
 
             foreach ($schoolclasses as $schoolclass) {
                 static::mtrace('Processing school section ' . $schoolclass['displayName'], 3);
@@ -335,22 +296,7 @@ class sync extends scheduled_task {
                     }
 
                     $teachersobjectids = [];
-                    $classteacherresults = $apiclient->get_school_class_teachers($schoolclass['id']);
-                    $classteachers = $classteacherresults['value'];
-                    while (!empty($classteacherresults['@odata.nextLink'])) {
-                        $nextlink = parse_url($classteacherresults['@odata.nextLink']);
-                        $classteacherresults = [];
-                        if (isset($nextlink['query'])) {
-                            $query = [];
-                            parse_str($nextlink['query'], $query);
-                            if (isset($query['$skiptoken'])) {
-                                $classteacherresults = $apiclient->get_school_class_teachers($schoolclass['id'],
-                                    $query['$skiptoken']);
-                                $classteachers = array_merge($classteachers, $classteacherresults['value']);
-                            }
-                        }
-                    }
-
+                    $classteachers = $apiclient->get_school_class_teachers($schoolclass['id']);
                     foreach ($classteachers as $classteacher) {
                         $classuserids[] = $classteacher['id'];
                         $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classteacher['id']]);
@@ -390,22 +336,7 @@ class sync extends scheduled_task {
                         }
                     }
 
-                    $classmemberresults = $apiclient->get_school_class_members($schoolclass['id']);
-                    $classmembers = $classmemberresults['value'];
-                    while (!empty($classmemberresults['@odata.nextLink'])) {
-                        $nextlink = parse_url($classmemberresults['@odata.nextLink']);
-                        $classmemberresults = [];
-                        if (isset($nextlink['query'])) {
-                            $query = [];
-                            parse_str($nextlink['query'], $query);
-                            if (isset($query['$skiptoken'])) {
-                                $classmemberresults = $apiclient->get_school_class_members($schoolclass['id'],
-                                    $query['$skiptoken']);
-                                $classmembers = array_merge($classmembers, $classmemberresults['value']);
-                            }
-                        }
-                    }
-
+                    $classmembers = $apiclient->get_school_class_members($schoolclass['id']);
                     foreach ($classmembers as $classmember) {
                         if (!in_array($classmember['id'], $teachersobjectids)) {
                             $classuserids[] = $classmember['id'];
@@ -638,20 +569,7 @@ class sync extends scheduled_task {
         }
         foreach ($enabledschools as $schoolobjectid) {
             try {
-                $schoolclassresults = $apiclient->get_school_classes($schoolobjectid);
-                $schoolclasses = $schoolclassresults['value'];
-                while (!empty($schoolclassresults['@odata.nextLink'])) {
-                    $nextlink = parse_url($schoolclassresults['@odata.nextLink']);
-                    $schoolclassresults = [];
-                    if (isset($nextlink['query'])) {
-                        $query = [];
-                        parse_str($nextlink['query'], $query);
-                        if (isset($query['$skiptoken'])) {
-                            $schoolclassresults = $apiclient->get_school_classes($schoolobjectid, $query['$skiptoken']);
-                            $schoolclasses = array_merge($schoolclasses, $schoolclassresults['value']);
-                        }
-                    }
-                }
+                $schoolclasses = $apiclient->get_school_classes($schoolobjectid);
                 $sectionsinenabledschools = array_merge($sectionsinenabledschools, $schoolclasses);
             } catch (Exception $e) {
                 // Do nothing.
