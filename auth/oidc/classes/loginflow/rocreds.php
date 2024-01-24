@@ -176,7 +176,7 @@ class rocreds extends base {
                 $originalupn = null;
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
-                    $userdetails = $apiclient->get_user($oidcuniqid, true);
+                    $userdetails = $apiclient->get_user($oidcuniqid);
                     if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
                         stripos($userdetails['userPrincipalName'], '#EXT#') !== false) {
                         $originalupn = $userdetails['userPrincipalName'];

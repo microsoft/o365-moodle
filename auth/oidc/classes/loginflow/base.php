@@ -133,10 +133,10 @@ class base {
                 if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
                     // If local_o365 is installed, and connects to Microsoft Identity Platform (v2.0),
                     // or field mapping uses fields not covered by token, then call Graph API function to get user details.
-                    $apiclient = \local_o365\utils::get_api($tokenrec->userid);
+                    $apiclient = \local_o365\utils::get_api();
                     if ($apiclient) {
                         $fieldmappingfromtoken = false;
-                        $userdata = $apiclient->get_user($tokenrec->oidcuniqid, true);
+                        $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
                     }
                 } else {
                     // If local_o365 is installed, but all field mapping fields are in token, then use token.
