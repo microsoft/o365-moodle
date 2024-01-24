@@ -277,10 +277,16 @@ class utils {
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('local_o365', 'debugmode');
         if ($debugmode === true) {
-            $fullmessage = (!empty($where)) ? $where : 'Unknown function';
-            $fullmessage .= ': '.$message;
-            $fullmessage .= ' Data: '.static::tostring($debugdata);
-            $event = api_call_failed::create(['other' => $fullmessage]);
+            $backtrace = debug_backtrace();
+            $otherdata = [
+                'other' => [
+                    'message' => $message,
+                    'where' => $where,
+                    'debugdata' => $debugdata,
+                    'backtrace' => $backtrace,
+                ],
+            ];
+            $event = api_call_failed::create($otherdata);
             $event->trigger();
         }
     }

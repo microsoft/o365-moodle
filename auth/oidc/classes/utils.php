@@ -25,6 +25,8 @@
 
 namespace auth_oidc;
 
+use auth_oidc\event\action_failed;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -39,19 +41,15 @@ class utils {
      * @return array The parsed JSON.
      */
     public static function process_json_response($response, array $expectedstructure = array()) {
-        $backtrace = debug_backtrace(0);
-        $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-        $caller = __METHOD__ . ':' . $callingline;
-
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
-            self::debug('Bad response received', $caller, $response);
+            self::debug('Bad response received', __METHOD__, $response);
             throw new \moodle_exception('erroroidccall', 'auth_oidc');
         }
 
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
-            self::debug($errmsg, $caller, $result);
+            self::debug($errmsg, __METHOD__, $result);
             if (isset($result['error_description'])) {
                 throw new \moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
             } else {
@@ -62,7 +60,7 @@ class utils {
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "'.$key.'"';
-                self::debug($errmsg, $caller, $result);
+                self::debug($errmsg, __METHOD__, $result);
                 throw new \moodle_exception('erroroidccall', 'auth_oidc');
             }
 
@@ -70,7 +68,7 @@ class utils {
                 $strreceivedval = self::tostring($result[$key]);
                 $strval = self::tostring($val);
                 $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
-                self::debug($errmsg, $caller, $result);
+                self::debug($errmsg, __METHOD__, $result);
                 throw new \moodle_exception('erroroidccall', 'auth_oidc');
             }
         }
@@ -119,10 +117,16 @@ class utils {
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('auth_oidc', 'debugmode');
         if ($debugmode === true) {
-            $fullmessage = (!empty($where)) ? $where : 'Unknown function';
-            $fullmessage .= ': '.$message;
-            $fullmessage .= ' Data: '.static::tostring($debugdata);
-            $event = \auth_oidc\event\action_failed::create(['other' => $fullmessage]);
+            $backtrace = debug_backtrace();
+            $otherdata = [
+                'other' => [
+                    'message' => $message,
+                    'where' => $where,
+                    'debugdata' => $debugdata,
+                    'backtrace' => $backtrace,
+                ],
+            ];
+            $event = action_failed::create($otherdata);
             $event->trigger();
         }
     }
