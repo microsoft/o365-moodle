@@ -2065,8 +2065,12 @@ class unified extends o365api {
         $endpoint = '/users/' . $upn . '/mailboxSettings/timeZone';
         try {
             $response = $this->betaapicall('get', $endpoint);
-            $expectedparams = ['value' => null];
-            return $this->process_apicall_response($response, $expectedparams);
+            if ($response) {
+                $expectedparams = ['value' => null];
+                return $this->process_apicall_response($response, $expectedparams);
+            } else {
+                return false;
+            }
         } catch (Exception $e) {
             return false;
         }
