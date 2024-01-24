@@ -264,17 +264,15 @@ abstract class o365api {
      */
     public function process_apicall_response($response, array $expectedstructure = []) {
         $backtrace = debug_backtrace(0);
-        $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-        $caller = __METHOD__ . ':' . $callingline;
 
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
-            \local_o365\utils::debug('Bad response received', $caller, $response);
+            \local_o365\utils::debug('Bad response received', __METHOD__, $response);
             throw new moodle_exception('erroro365apibadcall', 'local_o365');
         }
         if (isset($result['odata.error'])) {
             $errmsg = 'Error response received.';
-            \local_o365\utils::debug($errmsg, $caller, $result['odata.error']);
+            \local_o365\utils::debug($errmsg, __METHOD__, $result['odata.error']);
             if (isset($result['odata.error']['message']) && isset($result['odata.error']['message']['value'])) {
                 $apierrormessage = $result['odata.error']['message']['value'];
                 throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
@@ -284,7 +282,7 @@ abstract class o365api {
         }
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
-            \local_o365\utils::debug($errmsg, $caller, $result['error']);
+            \local_o365\utils::debug($errmsg, __METHOD__, $result['error']);
             if (isset($result['error']['message'])) {
                 $apierrormessage = 'Unknown error, check logs for more information.';
                 if (is_string($result['error']['message'])) {
@@ -301,7 +299,7 @@ abstract class o365api {
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "' . $key . '"';
-                \local_o365\utils::debug($errmsg, $caller, $result);
+                \local_o365\utils::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
 
@@ -311,7 +309,7 @@ abstract class o365api {
                 $errmsg =
                     'Invalid structure received. Invalid "' . $key . '". Received "' . $strreceivedval . '", expected "' . $strval .
                     '"';
-                \local_o365\utils::debug($errmsg, $caller, $result);
+                \local_o365\utils::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
         }
