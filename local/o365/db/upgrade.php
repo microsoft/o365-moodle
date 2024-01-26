@@ -934,24 +934,27 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($oldversion < 2022112812) {
+        // Delete records in local_o365_calidmap for deleted users.
         $deleteduserids = $DB->get_fieldset_select('user', 'id', 'deleted = 1');
 
         if ($deleteduserids) {
-            // Delete records in local_o365_calidmap.
-            [$useridsql, $params] = $DB->get_in_or_equal($deleteduserids);
-            $sql = "DELETE FROM {local_o365_calidmap}
+            $chunk = array_chunk($deleteduserids, 10000);
+            foreach ($chunk as $chunkdeleteduserids) {
+                [$useridsql, $params] = $DB->get_in_or_equal($chunkdeleteduserids);
+                $sql = "DELETE FROM {local_o365_calidmap}
                           WHERE userid {$useridsql}";
-            $DB->execute($sql, $params);
+                $DB->execute($sql, $params);
 
-            // Delete records in local_o365_calsettings.
-            $sql = "DELETE FROM {local_o365_calsettings}
+                // Delete records in local_o365_calsettings.
+                $sql = "DELETE FROM {local_o365_calsettings}
                           WHERE user_id {$useridsql}";
-            $DB->execute($sql, $params);
+                $DB->execute($sql, $params);
 
-            // Delete records in local_o365_calsub.
-            $sql = "DELETE FROM {local_o365_calsub}
+                // Delete records in local_o365_calsub.
+                $sql = "DELETE FROM {local_o365_calsub}
                           WHERE user_id {$useridsql}";
-            $DB->execute($sql, $params);
+                $DB->execute($sql, $params);
+            }
         }
 
         upgrade_plugin_savepoint(true, 2022112812, 'local', 'o365');
