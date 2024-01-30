@@ -2066,7 +2066,7 @@ class unified extends o365api {
         try {
             $response = $this->betaapicall('get', $endpoint);
             $expectedparams = ['value' => null];
-            return $this->process_apicall_response($response, $expectedparams);
+            return $this->process_apicall_response($response, $expectedparams, true);
         } catch (Exception $e) {
             return false;
         }
