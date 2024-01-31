@@ -52,7 +52,7 @@ class edit_meeting_api extends external_api {
      */
     public static function edit_meeting_parameters() {
         return new external_function_parameters([
-                'url' => new external_value(PARAM_URL, 'URL link', true),
+                'url' => new external_value(PARAM_URL, 'URL link', VALUE_REQUIRED),
         ]);
     }
 
