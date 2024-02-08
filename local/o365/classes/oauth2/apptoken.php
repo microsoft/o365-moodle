@@ -28,6 +28,7 @@ namespace local_o365\oauth2;
 
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -139,6 +140,7 @@ class apptoken extends \local_o365\oauth2\token {
      * Refresh the application only token.
      *
      * @return bool Success/Failure.
+     * @throws moodle_exception
      */
     public function refresh() {
         $result = static::get_app_token($this->tokenresource, $this->clientdata, $this->httpclient);
@@ -170,7 +172,7 @@ class apptoken extends \local_o365\oauth2\token {
             }
             return true;
         } else {
-            throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
+            throw new moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
         }
     }
 

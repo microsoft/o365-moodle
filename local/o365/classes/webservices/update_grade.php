@@ -113,6 +113,7 @@ class update_grade extends external_api {
      * @param array $plugindata Custom data used by plugins
      * @param array $advancedgradingdata Advanced grading data
      * @return null
+     * @throws exception\couldnotsavegrade
      * @since Moodle 2.6
      */
     public static function grade_update($assignmentid,

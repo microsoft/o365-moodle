@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync;
 
+use local_o365\httpclient;
+use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use local_o365\utils;
@@ -37,24 +39,24 @@ defined('MOODLE_INTERNAL') || die();
  */
 class main {
     /**
-     * @var \local_o365\oauth2\clientdata|null
+     * @var clientdata|null
      */
     protected $clientdata = null;
     /**
-     * @var \local_o365\httpclient|null
+     * @var httpclient|null
      */
     protected $httpclient = null;
 
     /**
      * Constructor.
      *
-     * @param \local_o365\oauth2\clientdata|null $clientdata
-     * @param \local_o365\httpclient|null $httpclient
+     * @param clientdata|null $clientdata
+     * @param httpclient|null $httpclient
      * @throws moodle_exception
      */
-    public function __construct(\local_o365\oauth2\clientdata $clientdata = null, \local_o365\httpclient $httpclient = null) {
-        $this->clientdata = (!empty($clientdata)) ? $clientdata : \local_o365\oauth2\clientdata::instance_from_oidc();
-        $this->httpclient = (!empty($httpclient)) ? $httpclient : new \local_o365\httpclient();
+    public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
+        $this->clientdata = (!empty($clientdata)) ? $clientdata : clientdata::instance_from_oidc();
+        $this->httpclient = (!empty($httpclient)) ? $httpclient : new httpclient();
     }
 
     /**
@@ -64,6 +66,7 @@ class main {
      * @param bool $systemfallback
      *
      * @return unified A constructed unified API client, or false if error.
+     * @throws moodle_exception
      */
     public function construct_calendar_api($muserid, $systemfallback = true) {
         $tokenresource = unified::get_tokenresource();
@@ -73,7 +76,7 @@ class main {
             $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
-            throw new \Exception('No token available for user #'.$muserid);
+            throw new moodle_exception('errornotoken', 'local_o365', '', $muserid);
         }
 
         $apiclient = new unified($token, $this->httpclient);
@@ -299,7 +302,7 @@ class main {
                             ];
                             $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
                         }
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         // No token found, nothing to do.
                     }
                 }

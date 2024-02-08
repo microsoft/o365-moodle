@@ -743,6 +743,15 @@ $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not f
 $string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
 $string['eventapifail'] = 'API failure';
 $string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
+$string['errortenantvaluenotstring'] = 'Tenant value must be a string';
+$string['errorunabletofindgraphapi'] = 'Unable to find graph api in application.';
+$string['errorcannotgettoken'] = 'Could not get app or system token.';
+$string['errornotokenforsysmemuser'] = 'No token available for system user. Please run local_o365 health check.';
+$string['errornotoken'] = 'No token available for user #{$a}';
+$string['errornotokenforusersync'] = 'No token available for usersync.';
+$string['errorcouldnotgettoken'] = 'Could not get App or System API User token. If you have not yet provided admin consent, please do that first.';
+$string['errornoapifound'] = 'No API with identifier {$a} found.';
+$string['errornoresponsesavailable'] = 'No responses available.';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';

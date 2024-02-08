@@ -29,6 +29,7 @@ namespace local_o365\task;
 use core\task\scheduled_task;
 use local_o365\feature\usersync\main;
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -123,7 +124,7 @@ class usersync extends scheduled_task {
                     $users = array_merge($users, $returnedusers);
                     $continue = (!empty($skiptoken));
                 }
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 $fullsyncfailed = true;
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), __METHOD__, $e);
@@ -164,7 +165,7 @@ class usersync extends scheduled_task {
                     $users = array_merge($users, $returnedusers);
                     $continue = (empty($deltatoken) && !empty($skiptoken));
                 }
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Error in delta usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting skip and delta tokens.');
@@ -250,7 +251,7 @@ class usersync extends scheduled_task {
                             $users = array_merge($users, $returnedusers);
                             $continue = (!empty($skiptoken));
                         }
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         $fullsyncfailed = true;
                         $this->mtrace('Error in full usersync: ' . $e->getMessage());
                         utils::debug($e->getMessage(), __METHOD__, $e);

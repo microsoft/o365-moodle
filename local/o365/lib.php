@@ -146,8 +146,6 @@ function local_o365_rmdir($path) {
  * Create manifest file and return its contents in string.
  *
  * @return false|string
- * @throws coding_exception
- * @throws dml_exception
  */
 function local_o365_get_manifest_file_content() {
     $filecontent = '';
@@ -164,9 +162,7 @@ function local_o365_get_manifest_file_content() {
 /**
  * Attempt to create manifest file. Return error details and/or path to the manifest file.
  *
- * @return string
- * @throws coding_exception
- * @throws dml_exception
+ * @return array|string[]
  */
 function local_o365_create_manifest_file() {
     global $CFG;

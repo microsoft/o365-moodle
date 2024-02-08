@@ -27,8 +27,8 @@ namespace local_o365\task;
 
 use core\task\scheduled_task;
 use core_user;
-use Exception;
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -56,7 +56,7 @@ class notifysecretexpiry extends scheduled_task {
 
         try {
             $graphclient = utils::get_api();
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             mtrace('Failed to get Graph API client');
             return false;
@@ -72,7 +72,7 @@ class notifysecretexpiry extends scheduled_task {
         $appsecret = get_config('auth_oidc', 'clientsecret');
         try {
             $appcredentials = $graphclient->get_app_credentials($appid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             mtrace ('Failed to get secrets');
             $this->notify_invalid_secret();

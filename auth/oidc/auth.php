@@ -45,6 +45,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Constructor.
      *
      * @param null $forceloginflow
+     * @throws moodle_exception
      */
     public function __construct($forceloginflow = null) {
         global $SESSION;
@@ -67,7 +68,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         if (class_exists($loginflowclass)) {
             $this->loginflow = new $loginflowclass($this->config);
         } else {
-            throw new \coding_exception(get_string('errorbadloginflow', 'auth_oidc'));
+            throw new moodle_exception('errorbadloginflow', 'auth_oidc');
         }
         $this->config = $this->loginflow->config;
     }
@@ -109,7 +110,6 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * Determines if we will redirect to the redirecturi.
      *
      * @return bool If this returns true then redirect
-     * @throws \coding_exception
      */
     public function should_login_redirect() {
         global $SESSION;

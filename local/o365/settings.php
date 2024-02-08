@@ -509,7 +509,7 @@ if ($hassiteconfig) {
                     $desc = new lang_string('settings_sds_noschools', 'local_o365');
                     $settings->add(new admin_setting_heading('local_o365_sds_noschools', '', $desc));
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $desc = new lang_string('settings_sds_get_schools_error', 'local_o365');
                 $settings->add(new admin_setting_heading('local_o365_sds_get_schools_error', '', $desc));
             }
@@ -667,7 +667,7 @@ if ($hassiteconfig) {
                 // Check Moodle app ID using default externalId provided in Moodle application.
                 try {
                     $moodleappid = $graphclient->get_catalog_app_id($teamsmoodleappexternalid);
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     mtrace('Error getting catalog app ID. Details: ' . $e->getMessage());
                 }
 

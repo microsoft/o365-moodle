@@ -79,7 +79,8 @@ abstract class o365api {
      * NOTE: Useful for one-offs, not efficient for bulk operations.
      *
      * @param int $userid The Moodle user ID to construct the API for.
-     * @return \local_o365\rest\o365api An instance of the requested API class with dependencies met for a given user.
+     * @return o365api An instance of the requested API class with dependencies met for a given user.
+     * $throws moodle_exception If the token cannot be retrieved.
      */
     public static function instance_for_user($userid = null) {
         $httpclient = new \local_o365\httpclient();
@@ -101,6 +102,7 @@ abstract class o365api {
      * Get the API client's oauth2 resource.
      *
      * @return string The resource for oauth2 tokens.
+     * @throws moodle_exception If the resource is not implemented.
      */
     public static function get_tokenresource() {
         throw new moodle_exception('erroro365apinotimplemented', 'local_o365');
@@ -110,6 +112,7 @@ abstract class o365api {
      * Get the base URI that API calls should be sent to.
      *
      * @return string|bool The URI to send API calls to, or false if a precondition failed.
+     * @throws moodle_exception If the URI is not implemented.
      */
     public function get_apiuri() {
         throw new moodle_exception('erroro365apinotimplemented', 'local_o365');
@@ -144,6 +147,7 @@ abstract class o365api {
      * @param string $params Additional parameters to include.
      * @param array $options Additional options for the request.
      * @return string|array The result of the API call.
+     * @throws moodle_exception If the token is invalid, the method is invalid, or the API call fails.
      */
     public function apicall($httpmethod, $apimethod, $params = '', $options = []) {
         // Used if we have to retry due to rate limiting.
@@ -261,6 +265,7 @@ abstract class o365api {
      * @param string $response The raw response from an API call.
      * @param array $expectedstructure A structure to validate.
      * @return array|null Array if successful, null if not.
+     * @throws moodle_exception If the response is invalid.
      */
     public function process_apicall_response($response, array $expectedstructure = []) {
         $backtrace = debug_backtrace(0);
@@ -323,7 +328,8 @@ abstract class o365api {
      *
      * @param string $url A full URL to get.
      * @param array $options
-     * @return string The result of the request.
+     * @return bool The result of the request.
+     * @throws moodle_exception If the token is invalid.
      */
     public function geturl($url, $options = []) {
         $tokenvalid = $this->checktoken();
@@ -341,6 +347,7 @@ abstract class o365api {
      *
      * @param string $api An API to get information on, or empty for all.
      * @return array Array of required Azure AD application permissions.
+     * @throws moodle_exception If the API is not found.
      */
     public function get_required_permissions($api = null) {
         $apis = [
@@ -384,7 +391,7 @@ abstract class o365api {
         ];
         if (!empty($api)) {
             if (!isset($apis[$api])) {
-                throw new \Exception('No API with identifier ' . $api . ' found.');
+                throw new moodle_exception('errornoapifound', 'local_o365', '', $api);
             }
             return $apis[$api];
         } else {
