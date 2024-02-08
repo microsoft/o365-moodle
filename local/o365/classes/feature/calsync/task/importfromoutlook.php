@@ -26,6 +26,7 @@
 namespace local_o365\feature\calsync\task;
 
 use core_date;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -137,7 +138,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                 } else {
                     mtrace('No new events to sync in.');
                 }
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 \local_o365\utils::debug('Error syncing events: ' . $e->getMessage(), __METHOD__, $e);
                 mtrace('Error: '.$e->getMessage());
             }

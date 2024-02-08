@@ -25,6 +25,8 @@
 
 namespace local_o365\oauth2;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
@@ -101,13 +103,14 @@ class clientdata {
      * Get an instance from auth_oidc config.
      *
      * @param string|null $tenant
-     * @return \local_o365\oauth2\clientdata The constructed client data creds.
+     * @return clientdata The constructed client data creds.
+     * @throws moodle_exception
      */
     public static function instance_from_oidc($tenant = null) {
         $cfg = get_config('auth_oidc');
 
         if (!auth_oidc_is_setup_complete()) {
-            throw new \moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
+            throw new moodle_exception('erroracpauthoidcnotconfig', 'local_o365');
         }
 
         $apptokenendpoint = null;

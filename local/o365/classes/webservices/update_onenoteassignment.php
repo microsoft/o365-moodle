@@ -60,6 +60,7 @@ class update_onenoteassignment extends \external_api {
      *
      * @param array $data The incoming data parameter.
      * @return array An array of parameters, if successful.
+     * @throws exception\sectionnotfound
      */
     public static function assignment_update($data) {
         global $DB;

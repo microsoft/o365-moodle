@@ -25,11 +25,11 @@
 
 namespace local_onenote\api;
 
-use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\rest\unified;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -55,7 +55,7 @@ class o365 extends base {
             $apiclient = unified::instance_for_user($USER->id);
             $apimethod = '/me/onenote' . $apimethod;
             return $apiclient->apicall($httpmethod, $apimethod, $params, $options);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             return json_encode(['error' => $e->getMessage()]);
         }
     }

@@ -25,6 +25,8 @@
 
 namespace local_o365\adminsetting;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -98,7 +100,7 @@ class systemapiuser extends \admin_setting {
                 try {
                     $idtoken = \auth_oidc\jwt::instance_from_encoded($tokens['idtoken']);
                     $setuser = $idtoken->claim('upn');
-                } catch (\Exception $e) {
+                } catch (moodle_exception $e) {
                     // There is a check below for an empty $setuser.
                 }
             }

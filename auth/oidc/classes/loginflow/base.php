@@ -450,7 +450,7 @@ class base {
                 $updateduser->id = $userrec->id;
                 try {
                     user_update_user($updateduser);
-                } catch (\Exception $e) {
+                } catch (moodle_exception $e) {
                     throw new moodle_exception($e->errorcode, '', $selfurl);
                 }
 
@@ -595,7 +595,7 @@ class base {
                             $userpassed = true;
                             break;
                         }
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         $debugdata = [
                             'exception' => $e,
                             'restriction' => $restriction,

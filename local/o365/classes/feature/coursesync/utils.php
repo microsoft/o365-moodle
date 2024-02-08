@@ -27,10 +27,10 @@
 namespace local_o365\feature\coursesync;
 
 use context_course;
-use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
+use moodle_exception;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -156,7 +156,7 @@ class utils {
             } else {
                 return null;
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             \local_o365\utils::debug('Exception while retrieving group urls: groupid ' . $object->objectid . ' ' .
                 $e->getMessage(), __METHOD__);
             return null;
@@ -641,7 +641,7 @@ class utils {
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             // Cannot get graph client, nothing to do.
         }
     }
@@ -743,7 +743,7 @@ class utils {
                 // Remove owner and member from the Microsoft 365 group.
                 $coursesync->remove_member_from_group($groupobjectid, $userobjectid);
                 $coursesync->remove_owner_from_group($groupobjectid, $userobjectid);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 \local_o365\utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
                 return false;
             }
@@ -755,7 +755,7 @@ class utils {
                     // Remove user as owner and member from the Microsoft 365 group.
                     $coursesync->remove_member_from_group($groupobjectid, $userobjectid);
                     $coursesync->remove_owner_from_group($groupobjectid, $userobjectid);
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     \local_o365\utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
                     return false;
                 }
@@ -773,7 +773,7 @@ class utils {
                             $coursesync->add_member_to_group($groupobjectid, $userobjectid);
                             break;
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     \local_o365\utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
                     return false;
                 }

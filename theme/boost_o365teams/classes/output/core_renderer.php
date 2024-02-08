@@ -16,24 +16,8 @@
 
 namespace theme_boost_o365teams\output;
 
-use coding_exception;
 use html_writer;
-use tabobject;
-use tabtree;
-use custom_menu_item;
-use custom_menu;
-use block_contents;
-use navigation_node;
-use action_link;
-use stdClass;
 use moodle_url;
-use preferences_groups;
-use action_menu;
-use help_icon;
-use single_button;
-use paging_bar;
-use context_course;
-use pix_icon;
 
 defined('MOODLE_INTERNAL') || die;
 
