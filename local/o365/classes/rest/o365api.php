@@ -144,6 +144,7 @@ abstract class o365api {
      * @param string $params Additional parameters to include.
      * @param array $options Additional options for the request.
      * @return string|array The result of the API call.
+     * @throws moodle_exception If the API call fails.
      */
     public function apicall($httpmethod, $apimethod, $params = '', $options = []) {
         // Used if we have to retry due to rate limiting.

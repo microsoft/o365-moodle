@@ -36,6 +36,7 @@ use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -66,7 +67,7 @@ class main {
      * @param clientdata|null $clientdata $clientdata The client data to use for API construction.
      * @param httpclient|null $httpclient $httpclient The HTTP client to use for API construction.
      *
-     * @throws \moodle_exception
+     * @throws moodle_exception
      */
     public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
         if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
@@ -210,17 +211,9 @@ class main {
         $muser = core_user::get_user($muserid, 'id, picture', MUST_EXIST);
         $context = \context_user::instance($muserid, MUST_EXIST);
 
-        $image = $apiclient->get_photo($upn);
-        if (!$image) {
-            // Profile photo has been deleted.
-            if (!empty($muser->picture)) {
-                // User has no photo. Deleting previous profile photo.
-                $fs = \get_file_storage();
-                $fs->delete_area_files($context->id, 'user', 'icon');
-                $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
-            }
-            $result = false;
-        } else {
+        try {
+            $image = $apiclient->get_photo($upn);
+
             // Check if json error message was returned.
             if (!preg_match('/^{/', $image)) {
                 // Update profile picture.
@@ -238,17 +231,30 @@ class main {
                 }
                 @unlink($tempfile);
             }
-        }
-        if (empty($record)) {
-            $record = new stdClass();
-            $record->muserid = $muserid;
-            $record->assigned = 0;
-        }
-        $record->photoupdated = time();
-        if (empty($record->id)) {
-            $DB->insert_record('local_o365_appassign', $record);
-        } else {
-            $DB->update_record('local_o365_appassign', $record);
+
+            // Update appassign record.
+            $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+            if (empty($record)) {
+                $record = new stdClass();
+                $record->muserid = $muserid;
+                $record->assigned = 0;
+            }
+            $record->photoupdated = time();
+            if (empty($record->id)) {
+                $DB->insert_record('local_o365_appassign', $record);
+            } else {
+                $DB->update_record('local_o365_appassign', $record);
+            }
+        } catch (moodle_exception $e) {
+            if ($e->getMessage() === get_string('erroro365nophoto', 'local_o365')) {
+                // User has no photo - if the user has an existing photo in Moodle profile, delete it.
+                if (!empty($muser->picture)) {
+                    // User has no photo. Deleting previous profile photo.
+                    $fs = \get_file_storage();
+                    $fs->delete_area_files($context->id, 'user', 'icon');
+                    $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
+                }
+            }
         }
 
         return $result;
