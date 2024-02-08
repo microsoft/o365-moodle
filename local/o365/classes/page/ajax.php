@@ -25,6 +25,9 @@
 
 namespace local_o365\page;
 
+use local_o365\utils;
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -56,7 +59,7 @@ class ajax extends base {
                 $methodname = 'mode_default';
             }
             $this->$methodname();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             echo $this->error_response($e->getMessage());
         }
     }
@@ -107,7 +110,7 @@ class ajax extends base {
         $tokenresource = \local_o365\rest\unified::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+        $token = utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
 
         switch ($setting) {
@@ -115,8 +118,8 @@ class ajax extends base {
                 try {
                     $data->valid = $apiclient->test_tenant($value);
                     $success = true;
-                } catch (\Exception $e) {
-                    \local_o365\utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
+                } catch (moodle_exception $e) {
+                    utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                     $data->valid = false;
                     $success = true;
                 }
@@ -126,8 +129,8 @@ class ajax extends base {
                 try {
                     $data->valid = $apiclient->validate_resource($value, $clientdata);
                     $success = true;
-                } catch (\Exception $e) {
-                    \local_o365\utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
+                } catch (moodle_exception $e) {
+                    utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                     $data->valid = false;
                     $success = true;
                 }
@@ -153,12 +156,7 @@ class ajax extends base {
         $tokenresource = \local_o365\rest\unified::get_tokenresource();
         $clientdata = \local_o365\oauth2\clientdata::instance_from_oidc();
         $httpclient = new \local_o365\httpclient();
-        try {
-            $token = \local_o365\utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient, true);
-        } catch (\Exception $e) {
-            $err = 'Could not get App or System API User token. If you have not yet provided admin consent, please do that first.';
-            throw new \Exception($err);
-        }
+        $token = utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient, true);
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
         switch ($setting) {
             case 'aadtenant':
@@ -167,8 +165,8 @@ class ajax extends base {
                     $data->settingval = $service;
                     $success = true;
                     echo $this->ajax_response($data, $success);
-                } catch (\Exception $e) {
-                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
+                } catch (moodle_exception $e) {
+                    utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
                     echo $this->error_response($e->getMessage());
                 }
                 die();
@@ -179,8 +177,8 @@ class ajax extends base {
                     $data->settingval = $service;
                     $success = true;
                     echo $this->ajax_response($data, $success);
-                } catch (\Exception $e) {
-                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
+                } catch (moodle_exception $e) {
+                    utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
                     echo $this->error_response(get_string('settings_odburl_error_graph', 'local_o365'));
                 }
                 die();
@@ -189,6 +187,8 @@ class ajax extends base {
 
     /**
      * Check setup in Azure.
+     *
+     * @throws moodle_exception
      */
     public function mode_checksetup() {
         $data = new \stdClass;
@@ -213,9 +213,9 @@ class ajax extends base {
 
         // Microsoft Graph API.
         try {
-            $token = \local_o365\utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient, true);
+            $token = utils::get_app_or_system_token($unifiedresource, $clientdata, $httpclient, true);
             if (empty($token)) {
-                throw new \moodle_exception('errorchecksystemapiuser', 'local_o365');
+                throw new moodle_exception('errorchecksystemapiuser', 'local_o365');
             }
             $unifiedapiclient = new \local_o365\rest\unified($token, $httpclient);
 
@@ -236,9 +236,9 @@ class ajax extends base {
                 $unifiedapi->missingperms = $missingdelegatedperms;
             }
             $appinfo = $unifiedapiclient->get_application_info();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             $unifiedapi->active = false;
-            \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
+            utils::debug($e->getMessage(), __METHOD__ . ' (unified)', $e);
             $unifiedapi->error = $e->getMessage();
         }
 

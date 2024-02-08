@@ -35,6 +35,7 @@ use local_o365\oauth2\systemapiusertoken;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -68,7 +69,7 @@ class utils {
                 if ($token) {
                     return true;
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 return false;
             }
         }
@@ -84,8 +85,8 @@ class utils {
      * @param httpclientinterface $httpclient An HTTP client.
      * @param bool $forcecreate
      * @param bool $throwexception
-     * @return apptoken|systemapiusertoken|null An app or system token.
-     * @throws Exception
+     * @return bool|token|null An app or system token.
+     * @throws moodle_exception
      */
     public static function get_app_or_system_token(string $tokenresource, clientdata $clientdata, httpclientinterface $httpclient,
         bool $forcecreate = false, bool $throwexception = true) {
@@ -94,14 +95,14 @@ class utils {
             if (static::is_configured_apponlyaccess() === true) {
                 $token = apptoken::instance(null, $tokenresource, $clientdata, $httpclient, $forcecreate);
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             static::debug($e->getMessage(), __METHOD__ . ' (app)', $e);
         }
 
         if (empty($token)) {
             try {
                 $token = systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 static::debug($e->getMessage(), __METHOD__ . ' (system)', $e);
             }
         }
@@ -110,7 +111,7 @@ class utils {
             return $token;
         } else {
             if ($throwexception) {
-                throw new Exception('Could not get app or system token');
+                throw new moodle_exception('errorcannotgettoken', 'local_o365');
             } else {
                 return $token;
             }
@@ -256,7 +257,7 @@ class utils {
                 'line' => $val->getLine(),
                 'message' => $val->getMessage(),
             ];
-            if ($val instanceof \moodle_exception) {
+            if ($val instanceof moodle_exception) {
                 $valinfo['debuginfo'] = $val->debuginfo;
                 $valinfo['errorcode'] = $val->errorcode;
                 $valinfo['module'] = $val->module;
@@ -290,6 +291,7 @@ class utils {
      *
      * @param int|null $userid
      * @return unified A constructed unified API client, or throw an error.
+     * @throws moodle_exception
      */
     public static function get_api(int $userid = null) {
         $tokenresource = unified::get_tokenresource();
@@ -301,7 +303,7 @@ class utils {
             $token = static::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
         }
         if (empty($token)) {
-            throw new Exception('No token available for system user. Please run local_o365 health check.');
+            throw new moodle_exception('errornotokenforsysmemuser', 'local_o365');
         }
 
         $apiclient = new unified($token, $httpclient);
@@ -472,7 +474,7 @@ class utils {
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 return ($tenant != get_config('local_o365', 'aadtenant')) ? $tenant : '';
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             // Do nothing.
         }
         return '';
@@ -496,7 +498,7 @@ class utils {
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 return ($tenant != get_config('local_o365', 'odburl')) ? $tenant : '';
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             // Do nothing.
         }
         return '';

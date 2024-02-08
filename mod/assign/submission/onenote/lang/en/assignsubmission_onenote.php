@@ -59,6 +59,7 @@ $string['privacy:metadata:assignmentid'] = 'Assignment identifier';
 $string['privacy:metadata:submissionpurpose'] = 'The submission ID that links to submissions for the user';
 $string['privacy:metadata:numfiles'] = 'Number of files';
 $string['privacy:metadata:tablepurpose'] = 'Stores the number of files used for the submission.';
+$string['erroremptyothervalue'] = 'The \'filesubmissioncount\' value must be set in other.';
 
 // Deprecated since Moodle 4.3.
 $string['numfilesforlog'] = 'The number of OneNote page(s) : {$a}';

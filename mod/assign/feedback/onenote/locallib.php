@@ -124,7 +124,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
         try {
             $onenoteapi = base::getinstance();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             $html = '<div>' . $e->getMessage() . '</div>';
             $mform->addElement('html', $html);
             return false;
@@ -223,7 +223,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
         try {
             $onenoteapi = base::getinstance();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             // Display error.
             $this->set_error($e->getMessage());
             return false;
@@ -330,7 +330,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
         try {
             $onenoteapi = base::getinstance();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             return $e->getMessage();
         }
 

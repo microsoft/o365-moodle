@@ -233,6 +233,7 @@ class repository_office365 extends repository {
      * @param string $saveasfilename
      * @param int $maxbytes
      * @return array Array of uploaded file information.
+     * @throws moodle_exception
      */
     public function upload($saveasfilename, $maxbytes) {
         global $CFG, $USER, $SESSION, $DB;
@@ -308,7 +309,7 @@ class repository_office365 extends repository {
                     $result = $apiclient->create_group_file($group->objectid, $filename, $content);
                     $source = $this->pack_reference(['id' => $result['id'], 'source' => $clienttype,
                         'groupid' => $group->objectid]);
-                } catch (\Exception $e) {
+                } catch (moodle_exception $e) {
                     $errmsg = 'Exception when uploading share point files for group';
                     $debugdata = [
                         'fullpath' => $filepath,
@@ -488,7 +489,7 @@ class repository_office365 extends repository {
                             }
 
                             $list = $this->contents_api_response_to_list($contents, $path, 'unifiedgroup', $group->objectid, true);
-                        } catch (\Exception $e) {
+                        } catch (moodle_exception $e) {
                             $errmsg = 'Exception when retrieving share point files for group';
                             $debugdata = [
                                 'fullpath' => $path,
@@ -549,7 +550,7 @@ class repository_office365 extends repository {
                 }
 
                 $list = $this->contents_api_response_to_list($contents, $realpath, 'unified');
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 $errmsg = 'Exception when retrieving personal onedrive files for folder';
                 $debugdata = [
                     'fullpath' => $path,
@@ -619,7 +620,7 @@ class repository_office365 extends repository {
             }
 
             $list = $this->contents_api_response_to_list($contents, $realpath, 'trendingaround', null, false);
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             $errmsg = 'Exception when retrieving personal trending files';
             $debugdata = [
                 'fullpath' => $path,
@@ -939,7 +940,7 @@ class repository_office365 extends repository {
                     }
                 }
 
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 $errmsg = 'There was a problem making the API call.';
                 $debugdata = [
                     'source' => $filesource,
@@ -1086,7 +1087,7 @@ class repository_office365 extends repository {
                     try {
                         $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
                         $embedurl = (isset($embedurl['value'])) ? $embedurl['value'] : '';
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         // Note: exceptions will already be logged in get_embed_url.
                         $embedurl = '';
                     }

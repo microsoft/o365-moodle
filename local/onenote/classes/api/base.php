@@ -27,10 +27,8 @@ namespace local_onenote\api;
 
 use context;
 use context_module;
-use curl;
 use DOMDocument;
 use DOMXPath;
-use Exception;
 use html_writer;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
@@ -135,6 +133,7 @@ abstract class base {
      * Gets the instance of the correct api class. Use this method to get an instance of the api class.
      *
      * @return base An implementation of the OneNote API.
+     * @throws moodle_exception If no suitable API is found.
      */
     public static function getinstance() {
         global $USER;
@@ -162,7 +161,7 @@ abstract class base {
                         $debugtracker .= '5';
                         $isconnecteduser = false;
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     \local_onenote\utils::debug($e->getMessage(), $debugcaller, $debugtracker);
                     $debugtracker .= '4';
                     $isconnecteduser = false;
@@ -200,6 +199,7 @@ abstract class base {
      * @param string $response The raw response from an API call.
      * @param array $expectedstructure A structure to validate.
      * @return array|null Array if successful, null if not.
+     * @throws moodle_exception If the response is invalid.
      */
     public function process_apicall_response(string $response, array $expectedstructure = []) {
         $backtrace = debug_backtrace(0);
@@ -321,7 +321,7 @@ abstract class base {
                     if ($imgnode->attributes->getNamedItem("data-fullres-src")) {
                         $imgnode->removeAttribute("data-fullres-src");
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Skip image if there is a problem.
                     \local_onenote\utils::debug('Problem saving image', 'onenote\api\download_page', $e);
                 }
@@ -380,7 +380,7 @@ abstract class base {
         $response = $this->apicall('get', $endpoint);
         try {
             $response = $this->process_apicall_response($response, ['value' => null]);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             \local_onenote\utils::debug($e->getMessage(), 'onenote\api\base::get_items_list', $e);
             return [];
         }
@@ -464,7 +464,7 @@ abstract class base {
                 $notebookdata = json_encode(['displayName' => $notebookname]);
                 $creatednotebook = $this->apicall('post', '/notebooks', $notebookdata);
                 $creatednotebook = $this->process_apicall_response($creatednotebook, ['id' => null]);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 \local_onenote\utils::debug('Could not create Moodle notebook', 'sync_notebook_data', $e);
                 return false;
             }
@@ -763,7 +763,7 @@ abstract class base {
                         // We have a record and the page exists in OneNote.
                         return $page['links']['oneNoteWebUrl']['href'];
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $debugdata = ['pageid' => $pagerecord->$requestedpageidfield, 'e' => $e];
                     \local_onenote\utils::debug('Error getting page', 'onenote\api\get_page', $debugdata);
                 }
@@ -850,7 +850,7 @@ abstract class base {
                 if (!empty($onenotesection)) {
                     return $section;
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 // Process apicall response will log any errors.
                 return null;
             }
@@ -1076,7 +1076,7 @@ abstract class base {
 
                 return $response;
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             \local_onenote\utils::debug($e->getMessage(), 'create_page_from_postdata', $e);
         }
 
@@ -1294,7 +1294,7 @@ abstract class base {
     public function get_page_metadata($pageid) {
         try {
             $page = $this->apicall('get', '/pages/' . $pageid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $debugdata = ['pageid' => $pageid, 'e' => $e];
             \local_onenote\utils::debug('Error getting page', 'onenote\api\get_page', $debugdata);
         }
