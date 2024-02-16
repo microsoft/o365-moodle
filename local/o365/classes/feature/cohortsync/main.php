@@ -31,11 +31,11 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/cohort/lib.php');
 
 use context_system;
-use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 use stdClass;
 
 /**
@@ -217,7 +217,7 @@ class main {
 
         try {
             $this->fetch_groups_from_microsoft();
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             mtrace("...... Failed to fetch groups. Error: " . $e->getMessage());
 
             return false;
@@ -262,34 +262,7 @@ class main {
      * @return void
      */
     public function fetch_groups_from_microsoft() : void {
-        $this->grouplist = [];
-        $fetchgroupsfromrecords = function($records) {
-            if (empty($records['value'])) {
-                return;
-            }
-            $this->grouplist = array_merge($this->grouplist, $records['value']);
-        };
-
-        if (empty($this->graphclient)) {
-            return;
-        }
-
-        $grouprecords = $this->graphclient->get_groups();
-        $fetchgroupsfromrecords($grouprecords);
-
-        while (!empty($grouprecords['@odata.nextLink'])) {
-            $nextlink = parse_url($grouprecords['@odata.nextLink']);
-            if (!isset($nextlink['query'])) {
-                continue;
-            }
-            $query = [];
-            parse_str($nextlink['query'], $query);
-            if (!isset($query['$skiptoken'])) {
-                continue;
-            }
-            $grouprecords = $this->graphclient->get_groups($query['$skiptoken']);
-            $fetchgroupsfromrecords($grouprecords);
-        }
+        $this->grouplist = $this->graphclient->get_groups();
     }
 
     /**
@@ -323,51 +296,9 @@ class main {
         }
 
         try {
-            $getmembers = function($records) use (&$groupmembers) {
-                if (empty($records['value'])) {
-                    return;
-                }
-                foreach ($records['value'] as $memberrecord) {
-                    $groupmembers[$memberrecord['id']] = $memberrecord;
-                }
-            };
-
             $memberrecords = $this->graphclient->get_group_members($groupoid);
             $ownerrecords = $this->graphclient->get_group_owners($groupoid);
-            if (!empty($ownerrecords['value'])) {
-                $memberrecords['value'] = array_merge($memberrecords['value'], $ownerrecords['value']);
-            }
-
-            $getmembers($memberrecords);
-
-            while (!empty($memberrecords['@odata.nextLink'])) {
-                $nextlink = parse_url($memberrecords['@odata.nextLink']);
-                if (!isset($nextlink['query'])) {
-                    continue;
-                }
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (!isset($query['$skiptoken'])) {
-                    continue;
-                }
-                $memberrecords = $this->graphclient->get_group_members($groupoid, $query['$skiptoken']);
-                $getmembers($memberrecords);
-            }
-
-            while (!empty($ownerrecords['@odata.nextLink'])) {
-                $nextlink = parse_url($ownerrecords['@odata.nextLink']);
-                if (!isset($nextlink['query'])) {
-                    continue;
-                }
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (!isset($query['$skiptoken'])) {
-                    continue;
-                }
-                $ownerrecords = $this->graphclient->get_group_owners($groupoid, $query['$skiptoken']);
-                $getmembers($ownerrecords);
-            }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             if (strpos($e->getMessage(), self::GROUP_DOES_NOT_EXIST_ERROR) !== false) {
                 $DB->delete_records('local_o365_objects', ['objectid' => $groupoid]);
                 mtrace("...... Deleted mapping for non-existing group ID $groupoid.");
@@ -376,6 +307,17 @@ class main {
             }
 
             return false;
+        }
+
+        foreach ($memberrecords as $memberrecord) {
+            if (!array_key_exists($memberrecord['id'], $groupmembers)) {
+                $groupmembers[$memberrecord['id']] = $memberrecord;
+            }
+        }
+        foreach ($ownerrecords as $ownerrecord) {
+            if (!array_key_exists($ownerrecord['id'], $groupmembers)) {
+                $groupmembers[$ownerrecord['id']] = $ownerrecord;
+            }
         }
 
         return $groupmembers;

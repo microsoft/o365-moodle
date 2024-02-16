@@ -30,11 +30,11 @@ defined('MOODLE_INTERNAL') || die();
 use context_course;
 use core_user;
 use course_request;
-use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 use stdClass;
 
 class main {
@@ -162,9 +162,8 @@ class main {
      */
     private function get_user_teams_by_user_oid(string $userobjectid) {
         try {
-            $userteamsresults = $this->graphclient->get_user_teams($userobjectid);
-            $userteams = $userteamsresults['value'];
-        } catch (Exception $e) {
+            $userteams = $this->graphclient->get_user_teams($userobjectid);
+        } catch (moodle_exception $e) {
             $this->mtrace('Error fetching Microsoft Teams for user OID ' . $userobjectid . ': ' . $e->getMessage());
             $userteams = false;
         }
@@ -187,7 +186,7 @@ class main {
                 'url' => $teamurl,
                 'id' => $team['id'],
             ];
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $this->mtrace('Error fetching Microsoft Team details for Team OID ' . $teamoid . ': ' . $e->getMessage());
         }
 
@@ -310,49 +309,19 @@ class main {
 
         try {
             $ownerrecords = $this->graphclient->get_group_owners($teamoid);
-            foreach ($ownerrecords['value'] as $ownerrecord) {
+            foreach ($ownerrecords as $ownerrecord) {
                 $teamowners[$ownerrecord['id']] = $ownerrecord;
             }
-            while (!empty($ownerrecords['@odata.nextLink'])) {
-                $nextlink = parse_url($ownerrecords['@odata.nextLink']);
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skiptoken'])) {
-                        $ownerrecords = $this->graphclient->get_group_owners($teamoid, $query['$skiptoken']);
-                        foreach ($ownerrecords['value'] as $ownerrecord) {
-                            if (!array_key_exists($ownerrecords['id'], $teamoid)) {
-                                $groupowners[$ownerrecords['id']] = $ownerrecord;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             mtrace("...... Error fetching Microsoft Team owners for Team OID $teamoid: " . $e->getMessage());
         }
 
         try {
             $memberrecords = $this->graphclient->get_group_members($teamoid);
-            foreach ($memberrecords['value'] as $memberrecord) {
+            foreach ($memberrecords as $memberrecord) {
                 $teammembers[$memberrecord['id']] = $memberrecord;
             }
-            while (!empty($memberrecords['@odata.nextLink'])) {
-                $nextlink = parse_url($memberrecords['@odata.nextLink']);
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skiptoken'])) {
-                        $memberrecords = $this->graphclient->get_group_members($teamoid, $query['$skiptoken']);
-                        foreach ($memberrecords['value'] as $memberrecord) {
-                            if (!array_key_exists($memberrecord['id'], $teamoid)) {
-                                $groupmembers[$memberrecord['id']] = $memberrecord;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             mtrace("...... Error fetching Microsoft Team members for Team OID $teamoid: " . $e->getMessage());
         }
 
