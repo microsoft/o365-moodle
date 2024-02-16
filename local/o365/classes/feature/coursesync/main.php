@@ -749,19 +749,7 @@ class main {
     private function restore_group(int $objectrecid, string $objectid, array $objectrecmetadata) : bool {
         global $DB;
 
-        $deletedgroupsresults = $this->graphclient->list_deleted_groups();
-        $deletedgroups = $deletedgroupsresults['value'];
-        while (!empty($deletedgroupsresults['@odata.nextLink'])) {
-            $nextlink = parse_url($deletedgroupsresults['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $deletedgroupsresults = $this->graphclient->list_deleted_groups($query['$skiptoken']);
-                    $deletedgroups = array_merge($deletedgroups, $deletedgroupsresults['value']);
-                }
-            }
-        }
+        $deletedgroups = $this->graphclient->list_deleted_groups();
 
         foreach ($deletedgroups as $deletedgroup) {
             if (!empty($deletedgroup) && isset($deletedgroup['id']) && $deletedgroup['id'] == $objectid) {
@@ -807,28 +795,7 @@ class main {
         }
 
         // Fetch teams from Graph API.
-        $teams = [];
-        $teamspart = $this->graphclient->get_teams();
-        foreach ($teamspart['value'] as $teamitem) {
-            $teams[$teamitem['id']] = $teamitem;
-        }
-        while (!empty($teamspart['@odata.nextLink'])) {
-            $nextlink = parse_url($teamspart['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $teamspart = $this->graphclient->get_teams($query['$skiptoken']);
-                    foreach ($teamspart['value'] as $teamitem) {
-                        if (!array_key_exists($teamitem['id'], $teams)) {
-                            $teams[$teamitem['id']] = $teamitem;
-                        }
-                    }
-                } else {
-                    $teamspart = [];
-                }
-            }
-        }
+        $teams = $this->graphclient->get_teams();
 
         // Build existing teams records cache.
         $this->mtrace('Building existing teams cache records', 1);
@@ -1162,24 +1129,8 @@ class main {
         $groupmembers = [];
 
         $memberrecords = $this->graphclient->get_group_members($groupobjectid);
-        foreach ($memberrecords['value'] as $memberrecord) {
+        foreach ($memberrecords as $memberrecord) {
             $groupmembers[$memberrecord['id']] = $memberrecord;
-        }
-
-        while (!empty($memberrecords['@odata.nextLink'])) {
-            $nextlink = parse_url($memberrecords['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $memberrecords = $this->graphclient->get_group_members($groupobjectid, $query['$skiptoken']);
-                    foreach ($memberrecords['value'] as $memberrecord) {
-                        if (!array_key_exists($memberrecord['id'], $groupmembers)) {
-                            $groupmembers[$memberrecord['id']] = $memberrecord;
-                        }
-                    }
-                }
-            }
         }
 
         return $groupmembers;
@@ -1195,24 +1146,8 @@ class main {
         $groupowners = [];
 
         $ownerresults = $this->graphclient->get_group_owners($groupobjectid);
-        foreach ($ownerresults['value'] as $ownerresult) {
+        foreach ($ownerresults as $ownerresult) {
             $groupowners[$ownerresult['id']] = $ownerresult;
-        }
-
-        while (!empty($ownerresults['@odata.nextLink'])) {
-            $nextlink = parse_url($ownerresults['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $ownerresults = $this->graphclient->get_group_owners($groupobjectid, $query['$skiptoken']);
-                    foreach ($ownerresults['value'] as $ownerresult) {
-                        if (!array_key_exists($ownerresult['id'], $groupowners)) {
-                            $groupowners[$ownerresult['id']] = $ownerresult;
-                        }
-                    }
-                }
-            }
         }
 
         return $groupowners;
@@ -1225,28 +1160,12 @@ class main {
      */
     public function get_all_group_ids() : array {
         $groupids = [];
+
         $groups = $this->graphclient->get_groups();
-        foreach ($groups['value'] as $group) {
+        foreach ($groups as $group) {
             $groupids[] = $group['id'];
         }
-        while (!empty($groups['@odata.nextLink'])) {
-            // Extract skiptoken.
-            $nextlink = parse_url($groups['@odata.nextLink']);
-            if (isset($nextlink['query'])) {
-                $query = [];
-                parse_str($nextlink['query'], $query);
-                if (isset($query['$skiptoken'])) {
-                    $groups = $this->graphclient->get_groups($query['$skiptoken']);
-                    foreach ($groups['value'] as $group) {
-                        if (!in_array($group['id'], $groupids)) {
-                            $groupids[] = $group['id'];
-                        }
-                    }
-                } else {
-                    $groups = [];
-                }
-            }
-        }
+
         return $groupids;
     }
 
