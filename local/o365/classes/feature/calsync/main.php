@@ -392,22 +392,7 @@ class main {
         $apiclient = $this->construct_calendar_api($USER->id, false);
         $o365upn = utils::get_o365_upn($USER->id);
         if ($o365upn) {
-            $calendarresults = $apiclient->get_calendars($o365upn);
-            $calendars = $calendarresults['value'];
-            while (!empty($calendarresults['@odata.nextLink'])) {
-                $nextlink = parse_url($calendarresults['@odata.nextLink']);
-                $calendarresults = [];
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skip'])) {
-                        $calendarresults = $apiclient->get_calendars($o365upn, $query['$skip']);
-                        $calendars = array_merge($calendars, $calendarresults['value']);
-                    }
-                }
-            }
-
-            return (!empty($calendars) && is_array($calendars)) ? $calendars : [];
+            return $apiclient->get_calendars($o365upn);
         } else {
             return [];
         }
@@ -424,22 +409,10 @@ class main {
     public function get_events($muserid, $o365calid, $since = null) {
         $apiclient = $this->construct_calendar_api($muserid, false);
         $o365upn = utils::get_o365_upn($muserid);
+
         $events = [];
         if ($o365upn) {
-            $eventresults = $apiclient->get_events($o365calid, $since, $o365upn);
-            $events = $eventresults['value'];
-            while (!empty($eventresults['@odata.nextLink'])) {
-                $nextlink = parse_url($eventresults['@odata.nextLink']);
-                $eventresults = [];
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skip'])) {
-                        $eventresults = $apiclient->get_events($o365calid, $since, $o365upn, $query['$skip']);
-                        $events = array_merge($events, $eventresults['value']);
-                    }
-                }
-            }
+            $events = $apiclient->get_events($o365calid, $since, $o365upn);
         }
 
         return $events;

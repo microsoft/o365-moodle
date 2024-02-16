@@ -84,20 +84,7 @@ class utils {
 
             if ($apiclient) {
                 try {
-                    $schoolresults = $apiclient->get_schools();
-                    $schools = $schoolresults['value'];
-                    while (!empty($schoolresults['@odata.nextLink'])) {
-                        $nextlink = parse_url($schoolresults['@odata.nextLink']);
-                        $schoolresults = [];
-                        if (isset($nextlink['query'])) {
-                            $query = [];
-                            parse_str($nextlink['query'], $query);
-                            if (isset($query['$skiptoken'])) {
-                                $schoolresults = $apiclient->get_schools($query['$skiptoken']);
-                                $schools = array_merge($schools, $schoolresults['value']);
-                            }
-                        }
-                    }
+                    $schools = $apiclient->get_schools();
 
                     foreach ($schools as $school) {
                         if ($school['id'] == $sdsprofilesyncconfig) {
