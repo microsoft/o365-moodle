@@ -68,6 +68,7 @@ class usersynccreationrestriction extends \admin_setting {
             'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'auth_oidc'),
             'employeeId' => get_string('settings_fieldmap_field_employeeId', 'auth_oidc'),
             'o365group' => get_string('settings_usersynccreationrestriction_o365group', 'local_o365'),
+            'o365groupid' => get_string('settings_usersynccreationrestriction_o365groupid', 'local_o365'),
         ];
 
         return parent::__construct($name, $visiblename, $description, $defaultsetting);
@@ -127,9 +128,9 @@ class usersynccreationrestriction extends \admin_setting {
 
         $html = \html_writer::start_tag('div');
         $onchange = 'document.getElementById(\'usercreationrestriction_useregex_wrapper\').style.visibility ' .
-            '= (this.value == \'o365group\') ? \'hidden\' : \'visible\'';
+            '= (this.value == \'o365group\' || this.value == \'o365groupid\') ? \'hidden\' : \'visible\'';
         $selectattrs = [
-            'style' => 'width: 250px;vertical-align: top;margin-right: 0.25rem;margin-top:0.25rem;',
+            'style' => 'width: 350px;vertical-align: top;margin-right: 0.25rem;margin-top:0.25rem;',
             'onchange' => $onchange,
         ];
         $html .= \html_writer::select($this->remotefields,
