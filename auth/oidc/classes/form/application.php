@@ -133,6 +133,21 @@ class application extends moodleform {
         $mform->setDefault('oidcscope', 'openid profile email');
         $mform->addElement('static', 'oidcscope_help', '', get_string('oidcscope_help', 'auth_oidc'));
 
+        // Secret expiry notifications recipients.
+        if (auth_oidc_is_local_365_installed()) {
+            $mform->addElement('header', 'secretexpirynotification',
+                get_string('settings_section_secret_expiry_notification', 'auth_oidc'));
+            $mform->setExpanded('secretexpirynotification');
+
+            $mform->addElement('text', 'secretexpiryrecipients', auth_oidc_config_name_in_form('secretexpiryrecipients'),
+                ['size' => 256]);
+            $mform->setType('secretexpiryrecipients', PARAM_TEXT);
+            $mform->disabledIf('secretexpiryrecipients', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
+            $mform->disabledIf('secretexpiryrecipients', 'idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER);
+
+            $mform->addElement('static', 'secretexpiryrecipients_help', '', get_string('secretexpiryrecipients_help', 'auth_oidc'));
+        }
+
         // Save buttons.
         $this->add_action_buttons();
     }

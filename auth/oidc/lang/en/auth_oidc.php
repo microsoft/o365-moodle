@@ -120,6 +120,9 @@ $string['oidcresource_help'] = 'The OpenID Connect resource for which to send th
 <b>Note</b> this is paramater is not supported in <b>Microsoft identity platform (v2.0)</b> IdP type.';
 $string['oidcscope'] = 'Scope';
 $string['oidcscope_help'] = 'The OIDC Scope to use.';
+$string['secretexpiryrecipients'] = 'Secret Expiry Notification Recipients';
+$string['secretexpiryrecipients_help'] = 'A comma-separated list of email addresses to send secret expiry notifications to.<br/>
+If no email address is entered, the main site administrator will be notified.';
 $string['cfg_opname_key'] = 'Provider Display Name';
 $string['cfg_opname_desc'] = 'This is an end-user-facing label that identifies the type of credentials the user must use to login. This label is used throughout the user-facing portions of this plugin to identify your provider.';
 $string['cfg_redirecturi_key'] = 'Redirect URI';
@@ -151,6 +154,7 @@ $string['settings_section_basic'] = 'Basic settings';
 $string['settings_section_authentication'] = 'Authentication';
 $string['settings_section_endpoints'] = 'Endpoints';
 $string['settings_section_other_params'] = 'Other parameters';
+$string['settings_section_secret_expiry_notification'] = 'Secret expiry notification';
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
 $string['application_updated'] = 'OpenID Connect application setting was updated.';
 $string['application_updated_azure'] = 'OpenID Connect application setting was updated.<br/>
