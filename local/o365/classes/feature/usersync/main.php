@@ -36,6 +36,7 @@ use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -66,7 +67,7 @@ class main {
      * @param clientdata|null $clientdata $clientdata The client data to use for API construction.
      * @param httpclient|null $httpclient $httpclient The HTTP client to use for API construction.
      *
-     * @throws \moodle_exception
+     * @throws moodle_exception
      */
     public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
         if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
@@ -723,6 +724,7 @@ class main {
         if ($restriction['remotefield'] === 'o365group') {
             if (unified::is_configured() !== true) {
                 utils::debug('graph api is not configured.', __METHOD__);
+
                 return false;
             }
 
@@ -732,6 +734,7 @@ class main {
                 $group = $apiclient->get_group_by_name($restriction['value']);
                 if (empty($group) || !isset($group['id'])) {
                     utils::debug('Could not find group (1)', __METHOD__, $group);
+
                     return false;
                 }
                 $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
@@ -742,9 +745,42 @@ class main {
                         return true;
                     }
                 }
+
                 return false;
             } catch (Exception $e) {
                 utils::debug('Could not find group (2)', __METHOD__, $e);
+
+                return false;
+            }
+        } else if ($restriction['remotefield'] === 'o365groupid') {
+            if (unified::is_configured() !== true) {
+                utils::debug('graph api is not configured.', __METHOD__);
+
+                return false;
+            }
+
+            $apiclient = $this->construct_user_api();
+
+            try {
+                $group = $apiclient->get_group($restriction['value']);
+                if (empty($group) || !isset($group['id'])) {
+                    utils::debug('Could not find group (1)', __METHOD__, $group);
+
+                    return false;
+                }
+                $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
+                $usergroups = $usergroupsresults['value'];
+
+                foreach ($usergroups as $usergroup) {
+                    if ($group['id'] === $usergroup) {
+                        return true;
+                    }
+                }
+
+                return false;
+            } catch (moodle_exception $e) {
+                utils::debug('Could not find group (2)', __METHOD__, $e);
+
                 return false;
             }
         } else {
