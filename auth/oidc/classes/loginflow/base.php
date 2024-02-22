@@ -185,7 +185,7 @@ class base {
                             }
                         }
 
-                        if (!isset($userdata['email'])) {
+                        if (!isset($userdata['mail'])) {
                             $email = $token->claim('email');
                             if (!empty($email)) {
                                 $userdata['mail'] = $email;
@@ -264,7 +264,7 @@ class base {
                     }
                 }
 
-                if (!isset($userdata['email'])) {
+                if (!isset($userdata['mail'])) {
                     $email = $token->claim('email');
                     if (!empty($email)) {
                         $userdata['mail'] = $email;
