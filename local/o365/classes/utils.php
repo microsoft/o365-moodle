@@ -50,7 +50,16 @@ class utils {
      * @return bool Whether the plugins are configured.
      */
     public static function is_configured() {
-        return auth_oidc_is_setup_complete();
+        $authoidcsetupcomplete = auth_oidc_is_setup_complete();
+
+        if ($authoidcsetupcomplete) {
+            $idptype = get_config('auth_oidc', 'idptype');
+            if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_AZURE_AD, AUTH_OIDC_IDP_TYPE_MICROSOFT])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
