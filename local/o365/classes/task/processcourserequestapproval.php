@@ -95,6 +95,14 @@ class processcourserequestapproval extends adhoc_task {
         // Save course sync status.
         utils::set_course_sync_enabled($coursedata->courseid);
 
+        // Update teams cache record status.
+        if ($teamcacherecord = $DB->get_record('local_o365_teams_cache', ['objectid' => $courserequestdata->teamoid])) {
+            if ($teamcacherecord->locked != TEAM_LOCKED) {
+                $teamcacherecord->locked = TEAM_LOCKED;
+                $DB->update_record('local_o365_teams_cache', $teamcacherecord);
+            }
+        }
+
         return true;
     }
 }
