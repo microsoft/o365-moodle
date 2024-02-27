@@ -1379,7 +1379,11 @@ class main {
         array $connectedusers = null) : bool {
         global $DB;
 
-        $coursecontext = context_course::instance($courseid);
+        $coursecontext = context_course::instance($courseid, IGNORE_MISSING);
+        if (!$coursecontext) {
+            $this->mtrace('Course context not found for course #' . $courseid . '. Skipping.', 1);
+            return false;
+        }
 
         $this->mtrace('Sync course teachers and students from Teams to Moodle for course #' . $courseid . ' ...', 1);
 
