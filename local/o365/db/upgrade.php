@@ -1116,7 +1116,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         // Recreate "entraidupn" index.
-        $index = new xmldb_index('entraidupn', XMLDB_INDEX_UNIQUE, ['aadupn']);
+        $index = new xmldb_index('entraidupn', XMLDB_INDEX_UNIQUE, ['entraidupn']);
         // Conditionally launch add index entraidupn.
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
