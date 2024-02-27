@@ -260,11 +260,19 @@ abstract class o365api {
      *
      * @param string $response The raw response from an API call.
      * @param array $expectedstructure A structure to validate.
-     * @return array|null Array if successful, null if not.
+     * @param bool $allowempty Whether to allow empty responses.
+     * @return array|null|string Array if successful, null if not, empty string if empty response allowed.
+     * @throws moodle_exception
      */
-    public function process_apicall_response($response, array $expectedstructure = []) {
-        $backtrace = debug_backtrace(0);
-
+    public function process_apicall_response($response, array $expectedstructure = [], bool $allowempty = false) {
+        if (empty($response)) {
+            if ($allowempty === true) {
+                return $response;
+            } else {
+                \local_o365\utils::debug('Empty response received', __METHOD__);
+                throw new moodle_exception('erroro365apibadcall', 'local_o365');
+            }
+        }
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             \local_o365\utils::debug('Bad response received', __METHOD__, $response);
