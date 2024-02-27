@@ -149,7 +149,7 @@ class jwt {
      * @param string $privatekey
      * @return string
      */
-    public function assert_token(string $privatekey) {
+    public function assert_token($privatekey) {
         $assertion = \Firebase\JWT\JWT::encode($this->claims, $privatekey, 'RS256', null, $this->header);
 
         return $assertion;

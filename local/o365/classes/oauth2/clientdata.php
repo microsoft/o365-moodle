@@ -114,7 +114,12 @@ class clientdata {
         if (!empty($tenant)) {
             $apptokenendpoint = static::get_apptokenendpoint_from_tenant($tenant);
         }
-        return new static($cfg->clientid, $cfg->clientsecret, $cfg->authendpoint, $cfg->tokenendpoint, $apptokenendpoint);
+        $clientsecret = null;
+        if (property_exists($cfg, 'clientsecret')) {
+            $clientsecret = $cfg->clientsecret;
+        }
+
+        return new static($cfg->clientid, $clientsecret, $cfg->authendpoint, $cfg->tokenendpoint, $apptokenendpoint);
     }
 
     /**
