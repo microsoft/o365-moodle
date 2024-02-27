@@ -26,6 +26,7 @@
 
 namespace local_o365\feature\coursesync;
 
+use context_course;
 use local_o365\rest\unified;
 use moodle_exception;
 use stdClass;
