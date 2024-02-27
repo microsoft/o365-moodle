@@ -745,6 +745,9 @@ $string['errorusermatched'] = 'The Microsoft 365 account "{$a->entraidupn}" is a
 $string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['eventapifail'] = 'API failure';
+$string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
+$string['erroro365badphoto'] = 'Invalid profile photo received from Microsoft 365.';
+$string['erroro365nophoto'] = 'This user does not have a photo in Microsoft 365.';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';
