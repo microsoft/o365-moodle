@@ -85,7 +85,7 @@ class main {
      * @return bool Enabled/disabled.
      */
     public static function is_enabled() {
-        $usersyncsettings = get_config('local_o365', 'usesync');
+        $usersyncsettings = get_config('local_o365', 'usersync');
         if (empty($usersyncsettings) || $usersyncsettings === 'photosynconlogin' || $usersyncsettings === 'tzsynconlogin') {
             return false;
         }
