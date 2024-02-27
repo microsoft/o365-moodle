@@ -104,7 +104,7 @@ if ($hassiteconfig) {
                 get_string('clientauthmethod', 'auth_oidc'), auth_oidc_get_client_auth_method_name()));
         }
 
-        // Step 2: Connection Method.
+        // Step 2: Consent and additional information.
         $clientid = get_config('auth_oidc', 'clientid');
         $clientsecret = get_config('auth_oidc', 'clientsecret');
         if (auth_oidc_is_setup_complete()) {
@@ -115,41 +115,6 @@ if ($hassiteconfig) {
         }
 
         if ($stepsenabled === 2) {
-            $label = new lang_string('settings_setup_step2', 'local_o365');
-            $desc = new lang_string('settings_setup_step2_desc', 'local_o365');
-
-            $systemapiuser = get_config('local_o365', 'systemtokens');
-            $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
-            if (!empty($enableapponlyaccess) && !empty($systemapiuser)) {
-                // Both "Application access" and "System API user" are enabled - we simply disable "System API user".
-                unset_config('systemtokens', 'local_o365');
-                $systemapiuser = null;
-            }
-            if (!empty($systemapiuser)) {
-                // Show option to convert to app only access.
-                $desc .= new lang_string('settings_setup_step2_desc_additional', 'local_o365');
-                $settings->add(new admin_setting_heading('local_o365_setup_step2', $label, $desc));
-
-                $label = new lang_string('settings_enableapponlyaccess', 'local_o365');
-                $desc = new lang_string('settings_enableapponlyaccess_details', 'local_o365');
-                $settings->add(new admin_setting_configcheckbox('local_o365/enableapponlyaccess', $label, $desc, '1'));
-            } else {
-                $settings->add(new admin_setting_heading('local_o365_setup_step2', $label, $desc));
-
-                $label = new lang_string('settings_enableapponlyaccess', 'local_o365');
-                $desc = new lang_string('settings_enableapponlyaccess_details', 'local_o365');
-                $settings->add(new admin_setting_configcheckbox('local_o365/enableapponlyaccess', $label, $desc, '1'));
-
-                $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
-
-                if ($enableapponlyaccess) {
-                    $stepsenabled = 3;
-                }
-            }
-        }
-
-        // Step 3: Consent and additional information.
-        if ($stepsenabled === 3) {
             $label = new lang_string('settings_setup_step3', 'local_o365');
             $desc = new lang_string('settings_setup_step3_desc', 'local_o365');
             $settings->add(new admin_setting_heading('local_o365_setup_step3', $label, $desc));
@@ -173,12 +138,12 @@ if ($hassiteconfig) {
             $entratenant = get_config('local_o365', 'entratenant');
             $odburl = get_config('local_o365', 'odburl');
             if (!empty($entratenant) && !empty($odburl)) {
-                $stepsenabled = 4;
+                $stepsenabled = 3;
             }
         }
 
-        // Step 4: Verify.
-        if ($stepsenabled === 4) {
+        // Step 3: Verify.
+        if ($stepsenabled === 3) {
             $label = new lang_string('settings_setup_step4', 'local_o365');
             $desc = new lang_string('settings_setup_step4_desc', 'local_o365');
             $settings->add(new admin_setting_heading('local_o365_setup_step4', $label, $desc));

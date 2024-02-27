@@ -319,7 +319,7 @@ class unified extends o365api {
             return false;
         }
         $fullcleanresource = 'https://' . $cleanresource;
-        $token = utils::get_app_or_system_token($fullcleanresource, $clientdata, $this->httpclient);
+        $token = utils::get_application_token($fullcleanresource, $clientdata, $this->httpclient);
         return !empty($token);
     }
 
