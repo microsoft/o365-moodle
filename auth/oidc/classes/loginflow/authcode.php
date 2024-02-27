@@ -577,7 +577,7 @@ class authcode extends base {
                 // Existing token record, but missing the user ID.
                 $user = null;
                 if ($usernamechanged) {
-                    $user = $DB->get_record('user', ['username' => $oidcusername]);
+                    $user = $DB->get_record('user', ['username' => strtolower($oidcusername)]);
                 }
                 if (empty($user)) {
                     $user = $DB->get_record('user', ['username' => $tokenrec->username]);
@@ -591,7 +591,7 @@ class authcode extends base {
                 }
                 $tokenrec->userid = $user->id;
                 if ($usernamechanged) {
-                    $tokenrec->oidcusername = $oidcusername;
+                    $tokenrec->oidcusername = strtolower($oidcusername);
                 }
                 $DB->update_record('auth_oidc_token', $tokenrec);
             } else {
@@ -613,7 +613,7 @@ class authcode extends base {
                         // Username change is not supported, throw exception.
                         throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
                     }
-                    $potentialduplicateuser = core_user::get_user_by_username($oidcusername);
+                    $potentialduplicateuser = core_user::get_user_by_username(strtolower($oidcusername));
                     if ($potentialduplicateuser) {
                         // Username already exists, cannot change Moodle account username, throw exception.
                         throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_oidc', null, null, '2');
@@ -622,16 +622,16 @@ class authcode extends base {
                         //  1. can change Moodle account username (if the user uses auth_oidc),
                         //  2. can change token record.
                         if ($user->auth == 'oidc') {
-                            $user->username = $oidcusername;
+                            $user->username = strtolower($oidcusername);
                             user_update_user($user, false);
 
                             $fullmessage = 'Attempt to change username of user ' . $user->id . ' from ' .
-                                $tokenrec->oidcusername . ' to ' . $oidcusername;
+                                $tokenrec->oidcusername . ' to ' . strtolower($oidcusername);
                             $event = user_rename_attempt::create(['objectid' => $user->id, 'other' => $fullmessage,
                                 'userid' => $user->id]);
                             $event->trigger();
 
-                            $tokenrec->username = $oidcusername;
+                            $tokenrec->username = strtolower($oidcusername);
                         }
 
                         $tokenrec->oidcusername = $oidcusername;
