@@ -1113,7 +1113,7 @@ class main {
         }
 
         $existingusers = $DB->get_records_sql($sql, $params);
-        $existingusers = array_merge($existingusers, $fallbackusers);
+        $existingusers = $existingusers + $fallbackusers;
 
         foreach ($existingusers as $id => $existinguser) {
             if (isset($usersyncsettings['emailsync'])) {
