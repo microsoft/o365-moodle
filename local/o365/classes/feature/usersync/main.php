@@ -107,35 +107,12 @@ class main {
     }
 
     /**
-     * Construct an outlook API client using the system API user.
-     *
-     * @param int $muserid The userid to get the outlook token for. Call with null to retrieve system token.
-     * @return unified A constructed unified API client, or false if error.
-     */
-    public function construct_outlook_api($muserid) {
-        $unifiedconfigured = unified::is_configured();
-        $tokenresource = unified::get_tokenresource();
-
-        $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
-        if (empty($token)) {
-            $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
-        }
-        if (empty($token)) {
-            throw new Exception('No token available for user #'.$muserid);
-        }
-
-        $apiclient = new unified($token, $this->httpclient);
-
-        return $apiclient;
-    }
-
-    /**
      * Get information on the app.
      *
      * @return array|null Array of app service information, or null if failure.
      */
     public function get_application_serviceprincipal_info() {
-        $apiclient = $this->construct_user_api(false);
+        $apiclient = $this->construct_user_api();
         return $apiclient->get_application_serviceprincipal_info();
     }
 
@@ -194,10 +171,8 @@ class main {
     public function assign_photo(int $muserid, string $upn = '') {
         global $DB, $CFG;
 
-        require_once("$CFG->libdir/gdlib.php");
-        $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
         $result = false;
-        $apiclient = $this->construct_outlook_api($muserid);
+        $apiclient = $this->construct_user_api();
         if (empty($upn)) {
             $o365user = o365user::instance_from_muserid($muserid);
             $upn = $o365user->upn;
@@ -227,6 +202,7 @@ class main {
                 }
                 fwrite($fp, $image);
                 fclose($fp);
+                require_once("$CFG->libdir/gdlib.php");
                 $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                 if ($newpicture != $muser->picture) {
                     $DB->set_field('user', 'picture', $newpicture, array('id' => $muser->id));
@@ -235,6 +211,9 @@ class main {
                 @unlink($tempfile);
             }
         }
+
+        $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+
         if (empty($record)) {
             $record = new stdClass();
             $record->muserid = $muserid;
@@ -745,7 +724,7 @@ class main {
      *
      * @param array $entraiduserdata Array of Microsoft Entra ID user data.
      * @param array $syncoptions
-     * @return stdClass An object representing the created Moodle user.
+     * @return stdClass|bool An object representing the created Moodle user.
      */
     public function create_user_from_entra_id_data($entraiduserdata, $syncoptions) {
         global $CFG, $DB;
@@ -846,7 +825,7 @@ class main {
      * @param array $entraiduserdata Array of Microsoft Entra ID user data.
      * @param object $fullexistinguser
      *
-     * @return stdClass An object representing the created Moodle user.
+     * @return bool An boolean indicating that was created Moodle user.
      */
     public function update_user_from_entra_id_data($entraiduserdata, $fullexistinguser) {
         // Locate country code.
