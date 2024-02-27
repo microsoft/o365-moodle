@@ -41,7 +41,6 @@ use core\event\course_deleted;
 use core\event\course_restored;
 use core\event\course_updated;
 use core\event\enrol_instance_updated;
-use core\event\notification_sent;
 use core\event\role_assigned;
 use core\event\role_deleted;
 use core\event\role_unassigned;
@@ -56,7 +55,6 @@ use local_o365\feature\coursesync\main;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
-use local_o365\rest\botframework;
 use local_o365\rest\unified;
 use local_o365\task\groupmembershipsync;
 use local_o365\task\processcourserequestapproval;
@@ -775,135 +773,6 @@ class observers {
         $DB->delete_records('local_o365_objects', ['type' => 'user', 'moodleid' => $userid]);
         $DB->delete_records('local_o365_connections', ['muserid' => $userid]);
         $DB->delete_records('local_o365_appassign', ['muserid' => $userid]);
-        return true;
-    }
-
-    /**
-     * Send proactive notifications to o365 users when a notification is sent to the Moodle user.
-     *
-     * @param notification_sent $event
-     *
-     * @return bool
-     */
-    public static function handle_notification_sent(notification_sent $event) : bool {
-        global $CFG, $DB, $PAGE;
-
-        $debugmode = get_config('local_o365', 'debugmode');
-        $debuggingon = !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING') && $debugmode;
-
-        // Check if we have the configuration to send proactive notifications.
-        $aadtenant = get_config('local_o365', 'aadtenant');
-        $botappid = get_config('local_o365', 'bot_app_id');
-        $botappsecret = get_config('local_o365', 'bot_app_password');
-        $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
-        if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
-            // Incomplete settings, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        $notificationid = $event->objectid;
-        $notification = $DB->get_record('notifications', ['id' => $notificationid]);
-        if (!$notification) {
-            // Notification cannot be found, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - notification cannot be found', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        $user = $DB->get_record('user', ['id' => $notification->useridto]);
-        if (!$user) {
-            // Recipient user invalid, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - recipient user invalid', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        if ($user->auth != 'oidc') {
-            // Recipient user is not Microsoft 365 user, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Get user object record.
-        $userrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
-        if (!$userrecord) {
-            // Recipient user doesn't have an object ID, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - recipient user doesn\'t have an object ID', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Get course object record.
-        if (!array_key_exists('courseid', $event->other)) {
-            // Course doesn't exist, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - course doesn\'t exist', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-        $courseid = $event->other['courseid'];
-        if (!$courseid || $courseid == SITEID) {
-            // Invalid course id, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-        $course = $DB->get_record('course', ['id' => $courseid]);
-        if (!$course) {
-            // Invalid course, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Get course object record.
-        $courserecord = $DB->get_record('local_o365_objects',
-            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
-        if (!$courserecord) {
-            // Course record doesn't have an object ID, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
-            }
-            return true;
-        } else {
-            $courseobjectid = $courserecord->objectid;
-        }
-
-        // Passed all tests, need to send notification.
-        $botframework = new botframework();
-        if (!$botframework->has_token()) {
-            // Cannot get token, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Check if we need to add activity details.
-        $listitems = [];
-        if ((strpos($notification->component, 'mod_') !== false) && !empty($notification->contexturl)) {
-            $PAGE->theme->force_svg_use(null);
-            $listitems[] = [
-                'title' => $notification->contexturlname,
-                'subtitle' => '',
-                'icon' => $CFG->wwwroot . '/local/o365/pix/moodle.png',
-                'action' => $notification->contexturl,
-                'actionType' => 'openUrl'
-            ];
-        }
-        $message = (empty($notification->smallmessage) ? $notification->fullmessage : $notification->smallmessage);
-        // Send notification.
-        $botframework->send_notification($courseobjectid, $userrecord->objectid, $message, $listitems, $notificationendpoint);
         return true;
     }
 

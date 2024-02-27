@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/filestorage/zip_archive.php');
+
 /**
  * TEAMS_MOODLE_APP_EXTERNAL_ID - app ID used to create Teams Moodle app.
  */
@@ -95,40 +97,6 @@ function local_o365_connectioncapability($userid, $mode = 'link', $require = fal
 }
 
 /**
- * Creates json data file for application deployment.
- */
-function local_o365_create_deploy_json() {
-    global $CFG;
-    $data = new stdClass();
-    $data->{'$schema'} = 'https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#';
-    $data->contentVersion = "1.0.0.0";
-    $data->parameters = new stdClass();
-    $data->parameters->LUISPricingTier = ['value' => null];
-    $data->parameters->LUISRegion = ['value' => null];
-    $botappid = get_config('local_o365', 'bot_app_id');
-    $botappidval = (empty($botappid) ? null : $botappid);
-    $data->parameters->botApplicationID = ['value' => $botappidval];
-    $botapppass = get_config('local_o365', 'bot_app_password');
-    $botapppassval = (empty($botapppass) ? null : $botapppass);
-    $data->parameters->botApplicationPassword = ['value' => $botapppassval];
-    $data->parameters->moodleURL = ['value' => $CFG->wwwroot];
-    $appid = get_config('auth_oidc', 'clientid');
-    $appidval = (empty($appid) ? null : $appid);
-    $data->parameters->azureADApplicationID = ['value' => $appidval];
-    $appsecret = get_config('auth_oidc', 'clientsecret');
-    $appsecretval = (empty($appsecret) ? null : $appsecret);
-    $data->parameters->azureADApplicationKey = ['value' => $appsecretval];
-    $apptenant = get_config('local_o365', 'aadtenant');
-    $apptenantval = (empty($apptenant) ? null : $apptenant);
-    $data->parameters->azureADTenant = ['value' => $apptenantval];
-    $botsharedsecret = get_config('local_o365', 'bot_sharedsecret');
-    $botsharedsecretval = (empty($botsharedsecret) ? null : $botsharedsecret);
-    $data->parameters->sharedMoodleSecret = ['value' => $botsharedsecretval];
-
-    return json_encode($data);
-}
-
-/**
  * Recursively delete content of the folder and all its contents.
  *
  * @param string $path Path to the deleted
@@ -148,66 +116,23 @@ function local_o365_rmdir($path) {
 }
 
 /**
- * Create manifest file and return its contents in string.
- *
- * @return false|string
- * @throws coding_exception
- * @throws dml_exception
- */
-function local_o365_get_manifest_file_content() {
-    $filecontent = '';
-
-    $manifestfilepath = local_o365_create_manifest_file();
-
-    if ($manifestfilepath) {
-        $filecontent = file_get_contents($manifestfilepath);
-    }
-
-    return $filecontent;
-}
-
-/**
  * Attempt to create manifest file. Return error details and/or path to the manifest file.
  *
- * @return string
- * @throws coding_exception
- * @throws dml_exception
+ * @return string[]
  */
-function local_o365_create_manifest_file() {
+function local_o365_create_manifest_file() : array {
     global $CFG;
-    require_once($CFG->libdir . '/filestorage/zip_archive.php');
 
     $error = '';
-    $zipfilename = '';
 
-    // Task 1: check if bot settings are consistent.
-    $botappid = get_config('local_o365', 'bot_app_id');
-    $botfeatureenabled = get_config('local_o365', 'bot_feature_enabled');
-    if ($botfeatureenabled) {
-        if (!$botappid || $botappid == '00000000-0000-0000-0000-000000000000') {
-            // Bot id not configured, cannot create manifest file.
-            $error = get_string('error_missing_app_id', 'local_o365');
-
-            return [$error, $zipfilename];
-        }
-
-        $botapppassword = get_config('local_o365', 'bot_app_password');
-        $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
-        if (!$botapppassword || !$botwebhookendpoint) {
-            $error = get_string('error_missing_bot_settings', 'local_o365');
-
-            return [$error, $zipfilename];
-        }
-    }
-
-    // Task 2: prepare manifest folder.
+    // Task 1: prepare manifest folder.
     $pathtomanifestfolder = $CFG->dataroot . '/temp/ms_teams_manifest';
     if (file_exists($pathtomanifestfolder)) {
         local_o365_rmdir($pathtomanifestfolder);
     }
     mkdir($pathtomanifestfolder, 0777, true);
 
-    // Task 2.1: prepare manifest params.
+    // Task 2: prepare manifest params.
     $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
     if (!$teamsmoodleappexternalid) {
         $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
@@ -219,89 +144,54 @@ function local_o365_create_manifest_file() {
     }
 
     // Task 3: prepare manifest file.
-    $manifest = array(
+    $manifest = [
         '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.7/MicrosoftTeams.schema.json',
         'manifestVersion' => '1.7',
-        'version' => '1.3',
+        'version' => '1.4',
         'id' => $teamsmoodleappexternalid,
         'packageName' => 'ie.enovation.microsoft.o365',
-        'developer' => array(
+        'developer' => [
             'name' => 'Enovation Solutions',
             'websiteUrl' => 'https://enovation.ie',
             'privacyUrl' => 'https://enovation.ie/moodleteamsapp-privacy',
             'termsOfUseUrl' => 'https://enovation.ie/moodleteamsapp-termsofuse',
             'mpnId' => '1718735',
-        ),
-        'icons' => array(
+        ],
+        'icons' => [
             'color' => 'color.png',
             'outline' => 'outline.png',
-        ),
-        'name' => array(
+        ],
+        'name' => [
             'short' => $teamsmoodleappnameshortname,
             'full' => 'Moodle integration with Microsoft Teams for ' . $CFG->wwwroot,
-        ),
-        'description' => array(
+        ],
+        'description' => [
             'short' => 'Access your Moodle courses and ask questions to your Moodle Assistant in Teams.',
             'full' => 'The Moodle app for Microsoft Teams allows you to easily access and collaborate around your Moodle ' .
-                'courses from within your teams through tabs. You can also get regular notifications from Moodle and ask ' .
-                'questions about your courses, assignments, grades and students using the Moodle Assistant bot.',
-        ),
+                'courses from within your teams through tabs.',
+        ],
         'accentColor' => '#FF7A00',
-        'configurableTabs' => array(
-            array(
+        'configurableTabs' => [
+            [
                 'configurationUrl' => $CFG->wwwroot . '/local/o365/teams_tab_configuration.php',
                 'canUpdateConfiguration' => false,
-                'scopes' => array(
+                'scopes' => [
                     'team',
-                ),
-            ),
-        ),
-        'permissions' => array(
+                ],
+            ],
+        ],
+        'permissions' => [
             'identity',
             'messageTeamMembers',
-        ),
-        'validDomains' => array(
+        ],
+        'validDomains' => [
             parse_url($CFG->wwwroot, PHP_URL_HOST),
-            'token.botframework.com',
-        ),
-        'webApplicationInfo' => array(
+        ],
+        'webApplicationInfo' => [
             'id' => get_config('auth_oidc', 'clientid'),
             'resource' => 'api://' . preg_replace("(^https?://)", "", $CFG->wwwroot) . '/' . get_config('auth_oidc', 'clientid'),
-        )
-    );
-
-    // Task 4: add bot part to manifest if enabled.
-    if ($botfeatureenabled) {
-        $manifest['bots'] = array(
-            array(
-                'botId' => $botappid,
-                'needsChannelSelector' => false,
-                'isNotificationOnly' => false,
-                'scopes' => array(
-                    'team',
-                    'personal',
-                ),
-                'commandLists' => array(
-                    array(
-                        'scopes' => array(
-                            'team',
-                            'personal',
-                        ),
-                        'commands' => array(
-                            array(
-                                'title' => 'Help',
-                                'description' => 'Displays help dialog'
-                            ),
-                            array(
-                                'title' => 'Feedback',
-                                'description' => 'Displays feedback dialog'
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        );
-    }
+        ],
+    ];
 
     $file = $pathtomanifestfolder . '/manifest.json';
     file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -314,7 +204,7 @@ function local_o365_create_manifest_file() {
     $ziparchive = new zip_archive();
     $zipfilename = $pathtomanifestfolder . '/manifest.zip';
     $ziparchive->open($zipfilename);
-    $filenames = array('manifest.json', 'color.png', 'outline.png');
+    $filenames = ['manifest.json', 'color.png', 'outline.png'];
     foreach ($filenames as $filename) {
         $ziparchive->add_file_from_pathname($filename, $pathtomanifestfolder . '/' . $filename);
     }
@@ -335,35 +225,6 @@ function local_o365_base64urldecode($data) {
     $paddeddata = str_pad($urlunsafedata, strlen($data) % 4, '=', STR_PAD_RIGHT);
 
     return base64_decode($paddeddata);
-}
-
-/**
- *  Checks if bot shared secret is set and if not generates new secret
- */
-function local_o365_check_sharedsecret() {
-    $sharedsecret = get_config('local_o365', 'bot_sharedsecret');
-    if (empty($sharedsecret)) {
-        $secret = local_o365_generate_sharedsecret();
-        set_config('bot_sharedsecret', $secret, 'local_o365');
-    }
-}
-
-/**
- * Generates shared secret of random symbols
- *
- * @param int $length
- *
- * @return string
- */
-function local_o365_generate_sharedsecret($length = 36) {
-    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`-=~!@#$%^&*()_+,./<>?;:[]{}\|';
-    $sharedsecret = '';
-    $max = strlen($chars) - 1;
-    for ($i = 0; $i < $length; $i++) {
-        $sharedsecret .= $chars[random_int(0, $max)];
-    }
-
-    return $sharedsecret;
 }
 
 /**
@@ -399,39 +260,6 @@ function local_o365_get_auth_token() {
     }
 
     return $authtoken;
-}
-
-/**
- * Check Moodle and local_o365 versions to see if LTI feature is included in the plugin.
- *
- * @return bool
- */
-function local_o365_is_lti_feature_included() {
-    global $CFG;
-
-    $hasltifeature = false;
-
-    $releaseparts = explode(' ', $CFG->release);
-    $release = $releaseparts[0];
-    $localo365version = get_config('local_o365', 'version');
-    switch ($release) {
-        case '3.10':
-            if ($localo365version >= 2020110935) {
-                $hasltifeature = true;
-            }
-            break;
-        case '3.11':
-            if ($localo365version >= 2021051720) {
-                $hasltifeature = true;
-            }
-            break;
-        default:
-            if (substr($release, 0, 1) >= 4) {
-                $hasltifeature = true;
-            }
-    }
-
-    return $hasltifeature;
 }
 
 /**
