@@ -690,7 +690,7 @@ class authcode extends base {
                 // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
-                    $userdetails = $apiclient->get_user($oidcuniqid, true);
+                    $userdetails = $apiclient->get_user($oidcuniqid);
                     if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
                         stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')) {
                         $originalupn = $userdetails['userPrincipalName'];
