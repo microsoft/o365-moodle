@@ -208,7 +208,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
  *
  * @param int $tokenid
  */
-function auth_oidc_delete_token(int $tokenid) {
+function auth_oidc_delete_token(int $tokenid): void {
     global $DB;
 
     if (auth_oidc_is_local_365_installed()) {
@@ -216,10 +216,10 @@ function auth_oidc_delete_token(int $tokenid) {
                   FROM {local_o365_objects} obj
                   JOIN {auth_oidc_token} tok ON obj.o365name = tok.username
                   JOIN {user} u ON obj.moodleid = u.id
-                 WHERE type = :type AND tok.id = :tokenid';
+                 WHERE obj.type = :type AND tok.id = :tokenid';
         if ($objectrecord = $DB->get_record_sql($sql, ['type' => 'user', 'tokenid' => $tokenid], IGNORE_MULTIPLE)) {
             // Delete record from local_o365_objects.
-            $DB->get_records('local_o365_objects', ['id' => $objectrecord->id]);
+            $DB->delete_records('local_o365_objects', ['id' => $objectrecord->id]);
 
             // Delete record from local_o365_token.
             $DB->delete_records('local_o365_token', ['user_id' => $objectrecord->userid]);
