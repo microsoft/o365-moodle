@@ -25,6 +25,8 @@
 
 namespace auth_oidc\tests;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -75,7 +77,7 @@ class mockhttpclient extends \auth_oidc\httpclient {
         } else {
             $this->curresponse = 0;
             if (!isset($this->mockresponse[$this->curresponse])) {
-                throw new \moodle_exception('No responses available.');
+                throw new moodle_exception('error_no_response_available', 'auth_oidc');
             }
             return $this->mockresponse[$this->curresponse];
         }

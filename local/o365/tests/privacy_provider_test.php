@@ -283,9 +283,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_calidmap(int $userid): \stdClass {
+    private static function create_calidmap(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->eventid = 123;
@@ -301,9 +300,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_calsub(int $userid): \stdClass {
+    private static function create_calsub(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->user_id = $userid;
@@ -322,9 +320,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_connections(int $userid): \stdClass {
+    private static function create_connections(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->muserid = $userid;
@@ -339,9 +336,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_token(int $userid): \stdClass {
+    private static function create_token(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->user_id = $userid;
@@ -359,9 +355,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_objects(int $userid): \stdClass {
+    private static function create_objects(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->type = 'user';
@@ -382,9 +377,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_appassign(int $userid): \stdClass {
+    private static function create_appassign(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->muserid = $userid;
@@ -400,9 +394,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_matchqueue(int $userid): \stdClass {
+    private static function create_matchqueue(int $userid): stdClass {
         global $DB;
         $user = $DB->get_record('user', ['id' => $userid]);
         $record = new stdClass();
@@ -420,9 +413,8 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
      *
      * @param int $userid
      * @return stdClass
-     * @throws dml_exception
      */
-    private static function create_calsettings(int $userid): \stdClass {
+    private static function create_calsettings(int $userid): stdClass {
         global $DB;
         $record = new stdClass();
         $record->user_id = $userid;

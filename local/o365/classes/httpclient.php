@@ -26,6 +26,8 @@
 
 namespace local_o365;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -149,7 +151,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      */
     public function put($url, $params = array(), $options = array()) {
         if (!isset($params['file'])) {
-            throw new \moodle_exception('errorhttpclientnofileinput', 'local_o365');
+            throw new moodle_exception('errorhttpclientnofileinput', 'local_o365');
         }
         if (is_file($params['file'])) {
             $fp = fopen($params['file'], 'r');
@@ -158,7 +160,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
             $fp = fopen('php://temp', 'w+');
             $size = strlen($params['file']);
             if (!$fp) {
-                throw new \moodle_exception('errorhttpclientbadtempfileloc', 'local_o365');
+                throw new moodle_exception('errorhttpclientbadtempfileloc', 'local_o365');
             }
             fwrite($fp, $params['file']);
             fseek($fp, 0);
