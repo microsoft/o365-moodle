@@ -758,7 +758,7 @@ $string['errornoapifound'] = 'No API with identifier {$a} found.';
 $string['errornoresponsesavailable'] = 'No responses available.';
 $string['erroro365badphoto'] = 'Invalid profile photo received from Microsoft 365.';
 $string['erroro365nophoto'] = 'This user does not have a photo in Microsoft 365.';
-$string['errorcannotgetapiclient'] = 'Cannot get Graph API clinet.';
+$string['errorcannotgetapiclient'] = 'Cannot get Graph API client.';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';
