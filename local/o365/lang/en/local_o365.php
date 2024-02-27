@@ -32,7 +32,7 @@ $string['pluginname'] = 'Microsoft 365 Integration';
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_syncsettings'] = 'Sync Settings';
 $string['settings_header_advanced'] = 'Advanced';
-$string['settings_header_sds'] = 'School Data Sync';
+$string['settings_header_sds'] = 'SDS sync';
 $string['settings_header_teams'] = 'Teams Settings';
 $string['settings_header_moodle_app'] = 'Teams Moodle app';
 
@@ -607,24 +607,27 @@ $string['settings_customtheme'] = 'Custom theme (Advanced)';
 $string['settings_customtheme_desc'] = 'Recommended theme is "boost_o365teams". However, you can select different theme if you have a custom theme which is adapted to be used in the Teams tab.<br/>
 Please note that a custom theme set at either course or category level would take precedence over settings here, i.e. a course would use course or category theme in Moodle app in Teams by default. This can be fixed by updating $CFG->themeorder in config.php to be "array(\'session\', \'course\', \'category\', \'user\', \'cohort\', \'site\');".';
 
-// Settings in the "School Data Sync" tab.
+// Settings in the "SDS sync" tab.
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';
-$string['settings_sds_intro_desc'] = 'The school data sync ("SDS") tool allows you to sync information imported into Microsoft from external SIS systems into Moodle. <a href="https://sds.microsoft.com/" target="_blank">Learn More</a><br/>
+$string['settings_sds_intro_desc'] = 'The Microsoft School Data Sync ("SDS") simplifies class management in Microsoft 365, by reading rosters from external SIS and create classes and groups in Microsoft 365. <a href="https://sds.microsoft.com/" target="_blank">Learn More</a><br/>
 <br/>
-SDS sync feature requires <b>"Application access"</b> connection method to work.<br/>
-Please also ensure the Azure app used for the integration has <b>EduRoster.Read.All</b> and <b>Member.Read.Hidden</b> Microsoft Graph application permissions, which are not automatically added by the default set up. Admin consent needs to be granted for them too.<br/>
+The SDS sync feature is capable of synchronising roster data from SDS to Moodle, including courses, teachers and students.<br/>
 <br/>
-By default, the school data sync process happens in the Moodle cron, at 3am local server time. To change this schedule, please visit the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
-$string['settings_sds_coursecreation'] = 'Course Creation';
-$string['settings_sds_coursecreation_desc'] = 'These options control course creation in Moodle based on information in SDS.';
+In order to use the SDS sync feature, please ensure the Azure app used for the integration has <b>EduRoster.Read.All</b> and <b>Member.Read.Hidden</b> Microsoft Graph application permissions, which are not automatically added by the default set up. Admin consent needs to be granted for them too.<br/>
+<br/>
+By default, the SDS sync process happens daily in the Moodle cron, at 3am server time. To change this schedule, please visit the <a href="{$a}">scheduled tasks management page.</a><br/><br/>';
+$string['settings_sds_coursecreation'] = 'Course Sync';
+$string['settings_sds_coursecreation_desc'] = 'These options control creating Moodle courses based on SDS school classes.';
 $string['settings_sds_coursecreation_enabled'] = 'Synced schools';
 $string['settings_sds_coursecreation_enabled_desc'] = 'Create courses for these schools.';
-$string['settings_sds_teams_enabled'] = 'Teams creation enabled';
-$string['settings_sds_teams_enabled_desc'] = 'This controls if Moodle courses created from syncing SDS classes are automatically connected to the Microsoft Teams of the SDS class. This should be enabled only if Teams are automatically created from the SDS classes.';
-$string['settings_sds_enrolment_enabled'] = 'Enrol users';
-$string['settings_sds_enrolment_enabled_desc'] = 'Enrol SDS class teachers and members into Moodle courses created from the classes.<br />
-Note in order to sync SDS class teacher/member role changes to Moodle classes, <b>Advanced enrolments sync with SDS classes</b> option has to be enabled, and <b>Teacher role</b> and <b>Member role</b> settings have to be confgured.';
+$string['settings_sds_teams_enabled'] = 'SDS classes already have Teams?';
+$string['settings_sds_teams_enabled_desc'] = 'Check this if the SDS classes already have Teams created by the SDS configuration. If checked, Moodle will not try to create Teams from the Moodle courses created from SDS classes to avoid conflicts.';
+$string['settings_sds_courseenrolsync'] = 'Course Enrolment Sync';
+$string['settings_sds_courseenrolsync_desc'] = 'These options control synchronising course enrolments from SDS school classes.';
+$string['settings_sds_enrolment_enabled'] = 'Sync enrolments from SDS classes to Moodle courses at course creation';
+$string['settings_sds_enrolment_enabled_desc'] = 'Enrol SDS class teachers and students into Moodle courses created from the SDS classes when syncing a SDS class initially.<br />
+Note this is a once-off sync when creating a Moodle course from a SDS class for the first time. In order to continuously sync SDS class teacher/member role changes to Moodle courses, <b>Advanced enrolments sync with SDS classes</b> option has to be enabled, and <b>Teacher role</b> and <b>Member role</b> settings have to be configured.';
 $string['settings_sds_sync_enrolment_to_sds'] = 'Advanced enrolments sync with SDS classes';
 $string['settings_sds_sync_enrolment_to_sds_desc'] = 'This option requires <b>Enrol users</b> option to be enabled to work.<br />
 If this setting is enabled, the SDS class sync will do the following:
@@ -636,14 +639,18 @@ $string['settings_sds_enrolment_teacher_role'] = 'Teacher role';
 $string['settings_sds_enrolment_teacher_role_desc'] = 'If the "Enrol users" option is enabled, teachers in SDS class will be enrolled in connected Moodle course with this role.';
 $string['settings_sds_enrolment_student_role'] = 'Member role';
 $string['settings_sds_enrolment_student_role_desc'] = 'If the "Enrol users" option is enabled, students in SDS class will be enrolled in connected Moodle course with this role.';
-$string['settings_sds_profilesync_header'] = 'Profile Data Sync';
-$string['settings_sds_profilesync_header_desc'] = 'These options control profile data syncing between SDS data and Moodle.';
+$string['settings_sds_profilesync_header'] = 'User Profile Sync';
+$string['settings_sds_profilesync_header_desc'] = 'Each SDS school may store user profile for teachers and members of the school. The field is school-specific, i.e. different schools may have different values in the same field for the same user.<br/>
+If a school is selected in this section, the SDS user profile fields can be configured in user field mapping.
+<ul>
+<li>Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.</li>
+<li>Note there is a known issue in Microsoft Graph API used by this feature that certain student and teacher school profile fields are not returned, therefore are unavilable to sync even when configured.</li>
+</ul>
+';
 $string['settings_sds_profilesync_disabled'] = 'Disabled';
 $string['settings_sds_profilesync'] = 'Sync profile data from school';
-$string['settings_sds_profilesync_desc'] = 'Select the SDS school from which Moodle synchronises SDS specific profile data.<br/>
-Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users from Microsoft Entra ID" scheduled task, nor when user logs in.<br/>
-Note there is a known issue in Microsoft Graph API used by this feature that certain student and teacher school profile fields are not returned, therefore are unavilable to sync even when configured.';
-$string['settings_sds_noschools'] = '<div class="alert alert-info">You do not have any schools available in School data sync.</div>';
+$string['settings_sds_profilesync_desc'] = 'Select the SDS school from which Moodle synchronises SDS specific profile data.';
+$string['settings_sds_noschools'] = '<div class="alert alert-info">You do not have any schools available in SDS.</div>';
 $string['settings_sds_get_schools_error'] = '<div class="alert alert-info error">Failed to get SDS schools. Check the Azure app has required permission.</div>';
 $string['settings_sds_school_disabled_action'] = 'School sync disabled action';
 $string['settings_sds_school_disabled_action_desc'] = 'Action to the already connected Moodle courses when sync is disabled on an SDS school.';
