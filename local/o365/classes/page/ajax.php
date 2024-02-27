@@ -111,7 +111,7 @@ class ajax extends base {
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
 
         switch ($setting) {
-            case 'aadtenant':
+            case 'entratenant':
                 try {
                     $data->valid = $apiclient->test_tenant($value);
                     $success = true;
@@ -161,14 +161,14 @@ class ajax extends base {
         }
         $apiclient = new \local_o365\rest\unified($token, $httpclient);
         switch ($setting) {
-            case 'aadtenant':
+            case 'entratenant':
                 try {
                     $service = $apiclient->get_default_domain_name_in_tenant();
                     $data->settingval = $service;
                     $success = true;
                     echo $this->ajax_response($data, $success);
                 } catch (\Exception $e) {
-                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
+                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect entratenant graph)', $e);
                     echo $this->error_response($e->getMessage());
                 }
                 die();
@@ -180,7 +180,7 @@ class ajax extends base {
                     $success = true;
                     echo $this->ajax_response($data, $success);
                 } catch (\Exception $e) {
-                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect aadtenant graph)', $e);
+                    \local_o365\utils::debug($e->getMessage(), __METHOD__ . ' (detect entratenant graph)', $e);
                     echo $this->error_response(get_string('settings_odburl_error_graph', 'local_o365'));
                 }
                 die();
@@ -194,8 +194,8 @@ class ajax extends base {
         $data = new \stdClass;
         $success = false;
 
-        $aadtenant = required_param('aadtenant', PARAM_TEXT);
-        set_config('aadtenant', $aadtenant, 'local_o365');
+        $entratenant = required_param('entratenant', PARAM_TEXT);
+        set_config('entratenant', $entratenant, 'local_o365');
 
         $odburl = required_param('odburl', PARAM_TEXT);
         set_config('odburl', $odburl, 'local_o365');
@@ -271,7 +271,7 @@ class ajax extends base {
         $data->appdata = $appdata;
         $data->unifiedapi = $unifiedapi;
         set_config('unifiedapiactive', (int)$unifiedapi->active, 'local_o365');
-        set_config('azuresetupresult', serialize($data), 'local_o365');
+        set_config('verifysetupresult', serialize($data), 'local_o365');
 
         $success = true;
         echo $this->ajax_response($data, $success);

@@ -247,18 +247,18 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         }
 
         // Part 2: update Authorization and token end point URL.
-        $aadtenant = get_config('local_o365', 'aadtenant');
+        $entratenant = get_config('local_o365', 'aadtenant');
 
-        if ($aadtenant) {
+        if ($entratenant) {
             $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
             if ($authorizationendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
-                $authorizationendpoint = str_replace('common', $aadtenant, $authorizationendpoint);
+                $authorizationendpoint = str_replace('common', $entratenant, $authorizationendpoint);
                 set_config('authendpoint', $authorizationendpoint, 'auth_oidc');
             }
 
             $tokenendpoint = get_config('auth_oidc', 'tokenendpoint');
             if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
-                $tokenendpoint = str_replace('common', $aadtenant, $tokenendpoint);
+                $tokenendpoint = str_replace('common', $entratenant, $tokenendpoint);
                 set_config('tokenendpoint', $tokenendpoint, 'auth_oidc');
             }
         }
@@ -332,15 +332,15 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
         if (empty($idptypeconfig)) {
             if (!$authorizationendpoint) {
-                set_config('idptype', AUTH_OIDC_IDP_TYPE_AZURE_AD, 'auth_oidc');
+                set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
             } else {
                 $endpointversion = auth_oidc_determine_endpoint_version($authorizationendpoint);
                 switch ($endpointversion) {
-                    case AUTH_OIDC_AAD_ENDPOINT_VERSION_1:
-                        set_config('idptype', AUTH_OIDC_IDP_TYPE_AZURE_AD, 'auth_oidc');
+                    case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1:
+                        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
                         break;
-                    case AUTH_OIDC_AAD_ENDPOINT_VERSION_2:
-                        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT, 'auth_oidc');
+                    case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2:
+                        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
                         break;
                     default:
                         set_config('idptype', AUTH_OIDC_IDP_TYPE_OTHER, 'auth_oidc');
@@ -364,9 +364,9 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         // Update tenantnameorguid config.
         $tenantnameorguidconfig = get_config('auth_oidc', 'tenantnameorguid');
         if (empty($tenantnameorguidconfig)) {
-            $aadtenantconfig = get_config('local_o365', 'aadtenant');
-            if ($aadtenantconfig) {
-                set_config('tenantnameorguid', $aadtenantconfig, 'auth_oidc');
+            $entratenant = get_config('local_o365', 'aadtenant');
+            if ($entratenant) {
+                set_config('tenantnameorguid', $entratenant, 'auth_oidc');
             }
         }
 
