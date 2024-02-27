@@ -1735,16 +1735,32 @@ class unified extends o365api {
      * Get a users photo.
      *
      * @param string $user User to retrieve photo.
-     * @return string|false Returned binary photo data, false if there is no photo.
+     * @return string Returned binary photo data.
+     * @throws moodle_exception
      */
     public function get_photo(string $user) {
         $photo = $this->apicall('get', "/users/$user/photo/\$value");
 
-        // Check if response is binary.
-        if (preg_match('~[^\x20-\x7E\t\r\n]~', $photo) > 0) {
-            return $photo;
+        // Process responses.
+        if ($this->check_expected_http_code(['200'])) {
+            // Successful response.
+            // Return value needs to be binary.
+            if (preg_match('~[^\x20-\x7E\t\r\n]~', $photo) > 0) {
+                // Return value is a valid photo.
+                return $photo;
+            } else {
+                // Return value isn't a valid photo.
+                utils::debug('Invalid photo received', __METHOD__, $photo);
+                throw new moodle_exception('erroro365badphoto', 'local_o365');
+            }
+        } else if ($this->check_expected_http_code(['404'])) {
+            // No photo found.
+            utils::debug('No photo found', __METHOD__, $photo);
+            throw new moodle_exception('erroro365nophoto', 'local_o365');
         } else {
-            return false;
+            // Unexpected response.
+            utils::debug('Unexpected response', __METHOD__, $photo);
+            throw new moodle_exception('erroro365apibadcall', 'local_o365');
         }
     }
 
@@ -1782,14 +1798,18 @@ class unified extends o365api {
             $endpoint .= '?' . implode('&', $odataqueries);
         }
 
-        $response = $this->apicall('get', $endpoint);
-        $expectedparams = ['@odata.context' => $context, 'id' => null, 'userPrincipalName' => null,];
+        try {
+            $response = $this->apicall('get', $endpoint);
+            $expectedparams = ['@odata.context' => $context, 'id' => null, 'userPrincipalName' => null,];
 
-        $result = $this->process_apicall_response($response, $expectedparams);
-        if (!empty($result['id'])) {
-            $result['objectId'] = $result['id'];
+            $result = $this->process_apicall_response($response, $expectedparams);
+            if (!empty($result['id'])) {
+                $result['objectId'] = $result['id'];
+            }
+            return $result;
+        } catch (moodle_exception $e) {
+            return null;
         }
-        return $result;
     }
 
     /**
@@ -1832,6 +1852,10 @@ class unified extends o365api {
                 $isguestuser = true;
             }
             $userdata = $apiclient->get_user($o365user->objectid, $isguestuser);
+            if (is_null($userdata)) {
+                utils:debug('Could not retrieve user data from API.', __METHOD__, $user->username);
+                return false;
+            }
 
             if (static::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
                 $userdata['objectId'] = $userdata['id'];
