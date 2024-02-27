@@ -66,21 +66,34 @@ Note if the site is to be configured to allow users from other tenants to access
 $string['cfg_autoappend_key'] = 'Auto-Append';
 $string['cfg_autoappend_desc'] = 'Automatically append this string when logging in users using the "Resource Owner Password Credentials" authentication method. This is useful when your IdP requires a common domain, but don\'t want to require users to type it in when logging in. For example, if the full OpenID Connect user is "james@example.com" and you enter "@example.com" here, the user will only have to enter "james" as their username. <br /><b>Note:</b> In the case where conflicting usernames exist - i.e. a Moodle user exists wth the same name, the priority of the authentication plugin is used to determine which user wins out.';
 $string['clientid'] = 'Application ID';
-$string['clientid_help'] = 'Your registered Application / Client ID on the IdP.';
+$string['clientid_help'] = 'The registered Application / Client ID on the IdP.';
 $string['clientauthmethod'] = 'Client authentication method';
 $string['clientauthmethod_help'] = '<ul>
 <li>IdP in all types can use "<b>Secret</b>" authentication method.</li>
 <li>IdP in <b>Microsoft identity platform (v2.0)</b> type can additionally use <b>Certificate</b> authentication method.</li>
-</ul>
-Note <b>Certificate</b> authentication method is not supported in <b>Resource Owner Password Credentials Grant</b> login flow.';
+</ul>';
 $string['auth_method_secret'] = 'Secret';
 $string['auth_method_certificate'] = 'Certificate';
 $string['clientsecret'] = 'Client Secret';
 $string['clientsecret_help'] = 'When using <b>secret</b> authentication method, this is the client secret on the IdP. On some providers, it is also referred to as a key.';
 $string['clientprivatekey'] = 'Client certificate private key';
-$string['clientprivatekey_help'] = 'When using <b>certificate</b> authentication method, this is the private key of the certificate used to authenticate with IdP.';
+$string['clientprivatekey_help'] = 'When using <b>certificate</b> authentication method and <b>Plain text</b> certificate source, this is the private key of the certificate used to authenticate with IdP.';
 $string['clientcert'] = 'Client certificate public key';
-$string['clientcert_help'] = 'When using <b>certificate</b> authentication method, this is the public key, or certificate, used in to authenticate with IdP.';
+$string['clientcert_help'] = 'When using <b>certificate</b> authentication method and <b>Plain text</b> certificate source, this is the public key, or certificate, used in to authenticate with IdP.';
+$string['clientcertsource'] = 'Certificate source';
+$string['clientcertsource_help'] = 'When using <b>certificate</b> authentication method, this is used to define where to retrieve the certificate from.
+<ul>
+<li><b>Plain text</b> source requires the certificate/private key file contents to be configured in the subsequent text area settings.</li>
+<li><b>File name</b> source requires the certificate/private key files exist in a folder <b>microsoft_certs</b> in the Moodle data folder.</li>
+</ul>';
+$string['cert_source_text'] = 'Plain text';
+$string['cert_source_path'] = 'File name';
+$string['clientprivatekeyfile'] = 'File name of client certificate private key';
+$string['clientprivatekeyfile_help'] = 'When using <b>certificate</b> authentication method and <b>File name</b> certificate source, this is the file name of private key used to authenticate with IdP. The file needs to present in a folder <b>microsoft_certs</b> in the Moodle data folder.';
+$string['clientcertfile'] = 'File name of client certificate public key';
+$string['clientcertfile_help'] = 'When using <b>certificate</b> authentication method and <b>File name</b> certificate source, this is the file name of public key, or certificate, used to authenticate with IdP. The file needs to present in a folder <b>microsoft_certs</b> in the Moodle data folder.';
+$string['clientcertpassphrase'] = 'Client certificate passphrase';
+$string['clientcertpassphrase_help'] = 'If the client certificate private key is encrypted, this is the passphrase to decrypt it.';
 $string['cfg_domainhint_key'] = 'Domain Hint';
 $string['cfg_domainhint_desc'] = 'When using the <b>Authorization Code</b> login flow, pass this value as the "domain_hint" parameter. "domain_hint" is used by some OpenID Connect IdP to make the login process easier for users. Check with your provider to see whether they support this parameter.';
 $string['cfg_err_invalidauthendpoint'] = 'Invalid Authorization Endpoint';
@@ -199,11 +212,14 @@ $string['errorucpinvalidaction'] = 'Invalid action received.';
 $string['erroroidccall'] = 'Error in OpenID Connect. Please check logs for more information.';
 $string['erroroidccall_message'] = 'Error in OpenID Connect: {$a}';
 $string['errorinvalidredirect_message'] = 'The URL you are trying to redirect to does not exist.';
+$string['errorinvalidcertificatesource'] = 'Invalid certificate source';
 $string['error_empty_tenantnameorguid'] = 'Tenant name or GUID cannot be empty when using Microsoft Entra ID (v1.0) or Microsoft identity platform (v2.0) IdPs.';
 $string['error_invalid_client_authentication_method'] = "Invalid client authentication method";
 $string['error_empty_client_secret'] = 'Client secret cannot be empty when using "secret" authentication method';
 $string['error_empty_client_private_key'] = 'Client certificate private key cannot be empty when using "certificate" authentication method';
 $string['error_empty_client_cert'] = 'Client certificate public key cannot be empty when using "certificate" authentication method';
+$string['error_empty_client_private_key_file'] = 'Client certificate private key file cannot be empty when using "certificate" authentication method';
+$string['error_empty_client_cert_file'] = 'Client certificate public key file cannot be empty when using "certificate" authentication method';
 $string['error_empty_tenantname_or_guid'] = 'Tenant name or GUID cannot be empty when using "certificate" authentication method';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match configured IdP type.<br/>
 <ul>
