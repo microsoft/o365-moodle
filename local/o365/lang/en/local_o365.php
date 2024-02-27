@@ -253,7 +253,16 @@ $string['settings_support_upn_change_desc'] = 'If enabled, Moodle will try to re
             </ol>
         </td>
     </tr>
-</table>';
+</table>
+Note there is a known issue that if
+<ol>
+<li>Moodle and Microsoft 365 is connected using "Microsoft Identity Platform (v2.0)" connection method, and
+<li>Microsoft Entra is configured to allow use "Email as an alternate login ID", and</li>
+<li>this option is enabled, and</li>
+<li>the username and email address of the Microsoft account are different, and</li>
+<li>the Microsoft user logs in using email address rather than username</li>
+</ol>
+then the auth_oidc plugin will treat the email address as the username of the Microsoft account and update Moodle username.';
 
 // User field mapping.
 $string['settings_fieldmap'] = 'User field mapping';
