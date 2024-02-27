@@ -54,7 +54,7 @@ class utils {
 
         if ($authoidcsetupcomplete) {
             $idptype = get_config('auth_oidc', 'idptype');
-            if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_AZURE_AD, AUTH_OIDC_IDP_TYPE_MICROSOFT])) {
+            if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
                 return true;
             }
         }
