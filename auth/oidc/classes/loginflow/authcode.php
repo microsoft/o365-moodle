@@ -94,7 +94,7 @@ class authcode extends base {
         $val = trim($val);
         $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
         if ($valclean !== $val) {
-            utils::debug('Authorization error.', 'authcode::cleanoidcparam', $name);
+            utils::debug('Authorization error.', __METHOD__, $name);
             throw new moodle_exception('errorauthgeneral', 'auth_oidc');
         }
         return $valclean;
@@ -213,12 +213,12 @@ class authcode extends base {
         global $CFG, $DB, $SESSION;
 
         if (!empty($authparams['error_description'])) {
-            utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('Authorization error.', __METHOD__, $authparams);
             redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['state'])) {
-            utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('No state received.', __METHOD__, $authparams);
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
@@ -271,17 +271,17 @@ class authcode extends base {
         $sid = optional_param('session_state', '', PARAM_TEXT);
 
         if (!empty($authparams['error_description'])) {
-            utils::debug('Authorization error.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('Authorization error.', __METHOD__, $authparams);
             redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['code'])) {
-            utils::debug('No auth code received.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('No auth code received.', __METHOD__, $authparams);
             throw new moodle_exception('errorauthnoauthcode', 'auth_oidc');
         }
 
         if (!isset($authparams['state'])) {
-            utils::debug('No state received.', 'authcode::handleauthresponse', $authparams);
+            utils::debug('No state received.', __METHOD__, $authparams);
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
@@ -316,7 +316,7 @@ class authcode extends base {
         $passed = $this->checkrestrictions($idtoken);
         if ($passed !== true && empty($additionaldata['ignorerestrictions'])) {
             $errstr = 'User prevented from logging in due to restrictions.';
-            utils::debug($errstr, 'handleauthresponse', $idtoken);
+            utils::debug($errstr, __METHOD__, $idtoken);
             throw new moodle_exception('errorrestricted', 'auth_oidc');
         }
 
