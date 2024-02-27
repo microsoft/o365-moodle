@@ -35,7 +35,6 @@ use core_course_category;
 use core_php_time_limit;
 use core_plugin_manager;
 use core_user;
-use Exception;
 use finfo;
 use html_table;
 use html_writer;
@@ -441,7 +440,7 @@ class acp extends base {
                         } else {
                             $errors[] = get_string('acp_usermatch_upload_err_fileopen', 'local_o365');
                         }
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $errors[] = $e->getMessage();
                     }
                 } else {
@@ -1439,7 +1438,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 $courseitem['output'] = ob_get_contents();
                 ob_clean();
                 $courseitem['output'] = '<pre>' . $courseitem['output'] . '</pre>';
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $courseitem['output'] = 'Could not sync course ' . $course->id . '. Reason: ' . $e->getMessage();
             }
             $outputsbycourse[] = $courseitem;
@@ -1737,6 +1736,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * Resync action from the userconnections tool.
      *
      * @return bool
+     * @throws moodle_exception
      */
     public function mode_userconnections_resync() : bool {
         global $DB;
@@ -1773,6 +1773,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
     /**
      * Manual match action from the userconnections tool.
+     *
+     * @throws moodle_exception
      */
     public function mode_userconnections_manualmatch() {
         global $DB, $PAGE;

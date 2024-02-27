@@ -28,7 +28,6 @@ namespace local_o365\feature\usersync;
 
 use core_text;
 use core_user;
-use Exception;
 use local_o365\oauth2\clientdata;
 use local_o365\httpclient;
 use local_o365\oauth2\token;
@@ -97,12 +96,13 @@ class main {
      * Construct a user API client, accounting for Microsoft Graph API presence, and fall back to system api user if desired.
      *
      * @return unified A constructed unified API client, or false if error.
+     * @throws moodle_exception
      */
     public function construct_user_api() {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
-            throw new Exception('No token available for usersync');
+            throw new moodle_exception('errornotokenforusersync', 'local_o365');
         }
         return new unified($token, $this->httpclient);
     }
@@ -237,12 +237,14 @@ class main {
      *
      * @param int $muserid
      * @param string $upn
+     * @return void
+     * @throws moodle_exception
      */
     public function sync_timezone(int $muserid, string $upn = '') {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
-            throw new Exception('No token available for usersync');
+            throw new moodle_exception('errornotokenforusersync', 'local_o365');
         }
         $apiclient = new unified($token, $this->httpclient);
         if (empty($upn)) {
@@ -352,12 +354,13 @@ class main {
      * @param string $params
      * @param null $deltatoken
      * @return array
+     * @throws moodle_exception
      */
     public function get_users_delta($params = 'default', $deltatoken = null) {
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
-            throw new Exception('No token available for usersync');
+            throw new moodle_exception('errornotokenforusersync', 'local_o365');
         }
         $apiclient = new unified($token, $this->httpclient);
         return $apiclient->get_users_delta($params, $deltatoken);
@@ -731,7 +734,7 @@ class main {
                     }
                 }
                 return false;
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 utils::debug('Could not find group (2)', __METHOD__, $e);
                 return false;
             }
@@ -1394,7 +1397,7 @@ class main {
             if (!empty($newmuser)) {
                 $this->mtrace('Created user #' . $newmuser->id);
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             if (isset($syncoptions['emailsync'])) {
                 if ($DB->record_exists('user', ['username' => $entraiduserdata['userPrincipalName']])) {
                     $this->mtrace('Could not create user "' . $entraiduserdata['userPrincipalName'] .
@@ -1414,7 +1417,7 @@ class main {
                 if (!empty($newmuser) && !empty($userobjectid)) {
                     $this->assign_user($newmuser->id, $userobjectid);
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Could not assign user "'.$entraiduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
             }
         }
@@ -1426,7 +1429,7 @@ class main {
                     if (!empty($newmuser)) {
                         $this->assign_photo($newmuser->id, $entraiduserdata['upnlower']);
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not assign photo to user "' . $entraiduserdata['userPrincipalName'] . '" Reason: ' .
                         $e->getMessage());
                 }
@@ -1440,7 +1443,7 @@ class main {
                     if (!empty($newmuser)) {
                         $this->sync_timezone($newmuser->id, $entraiduserdata['upnlower']);
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not sync timezone for user "' . $entraiduserdata['userPrincipalName'] . '" Reason: ' .
                         $e->getMessage());
                 }
@@ -1497,7 +1500,7 @@ class main {
                     if (!empty($existinguser->muserid) && !empty($userobjectid)) {
                         $this->assign_user($existinguser->muserid, $userobjectid);
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not assign user "'.$entraiduserdata['userPrincipalName'].'" Reason: '.$e->getMessage());
                 }
             }
@@ -1510,7 +1513,7 @@ class main {
                     if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                         $this->assign_photo($existinguser->muserid, $entraiduserdata['upnlower']);
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not assign profile photo to user "' . $entraiduserdata['userPrincipalName'] . '" Reason: ' .
                         $e->getMessage());
                 }
@@ -1523,7 +1526,7 @@ class main {
                 if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                     $this->sync_timezone($existinguser->muserid, $entraiduserdata['upnlower']);
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Could not sync timezone for user "' . $entraiduserdata['userPrincipalName'] . '" Reason: ' .
                     $e->getMessage());
             }
@@ -1734,7 +1737,7 @@ class main {
             }
 
             return true;
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug('Could not delete users', __METHOD__, $e);
 
             return false;

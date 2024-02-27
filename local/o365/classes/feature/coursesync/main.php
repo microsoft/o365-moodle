@@ -26,8 +26,6 @@
 
 namespace local_o365\feature\coursesync;
 
-use context_course;
-use Exception;
 use local_o365\rest\unified;
 use moodle_exception;
 use stdClass;
@@ -219,7 +217,7 @@ class main {
         try {
             $response = $this->graphclient->create_educationclass_group($displayname, $mailnickname, $description, $externalid,
                 $externalname);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $this->mtrace('Could not create educationClass group for course #' . $course->id . '. Reason: ' . $e->getMessage(), 3);
             return false;
         }
@@ -265,7 +263,7 @@ class main {
                 $this->graphclient->update_education_group_with_lms_data($groupobjectid, $lmsattributes);
                 $success = true;
                 break;
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Error setting LMS attributes in group ' . $groupobjectid . '. Reason: ' . $e->getMessage(), 3);
                 $retrycounter++;
             }
@@ -305,7 +303,7 @@ class main {
 
         try {
             $response = $this->graphclient->create_group($displayname, $mailnickname, ['description' => $description]);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $this->mtrace('Could not create standard group for course #' . $course->id . '. Reason: ' . $e->getMessage(), 3);
             return false;
         }
@@ -338,14 +336,14 @@ class main {
         // Remove existing owners and members.
         try {
             $existingowners = $this->get_group_owners($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $this->mtrace('Could not get existing owners of group with ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(), 3);
             $existingowners = [];
         }
 
         try {
             $existingmembers = $this->get_group_members($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $this->mtrace('Could not get existing members of group with ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(), 3);
             $existingmembers = [];
         }
@@ -379,7 +377,7 @@ class main {
                         $this->mtrace('Invalid bulk group owners/members addition request', 3);
                     }
                     break;
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Error: ' . $e->getMessage(), 3);
                     $retrycounter++;
                 }
@@ -420,7 +418,7 @@ class main {
                 $this->mtrace('Created class team from class group with ID ' . $groupobjectid, 3);
                 $subtype = 'teamfromgroup';
                 break;
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 if (strpos($e->a, 'The group is already provisioned') !== false) {
                     $this->mtrace('Found existing team from class group with ID ' . $groupobjectid, 3);
                     $response = true;
@@ -477,7 +475,7 @@ class main {
             try {
                 $response = $this->graphclient->create_standard_team_from_group($groupobjectid);
                 break;
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Could not create standard team from group. Reason: '. $e->getMessage(), 3);
                 $retrycounter++;
             }
@@ -528,7 +526,7 @@ class main {
                         $moodleappprovisioned = true;
                         break;
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not add app to team with object ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(),
                         4);
                     $retrycounter++;
@@ -540,7 +538,7 @@ class main {
                 try {
                     $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
                     $this->mtrace('Located general channel in the team with object ID ' . $groupobjectid, 4);
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not list channels of team with object ID ' . $groupobjectid . '. Reason: ' .
                         $e->getMessage(), 4);
                     $generalchanelid = false;
@@ -551,7 +549,7 @@ class main {
                     try {
                         $this->add_moodle_tab_to_channel($groupobjectid, $generalchanelid, $moodleappid, $courseid);
                         $this->mtrace('Installed Moodle tab in the general channel of team with object ID ' . $groupobjectid, 4);
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $this->mtrace('Could not add Moodle tab to channel in team with ID ' . $groupobjectid . '. Reason : ' .
                             $e->getMessage(), 4);
                     }
@@ -827,7 +825,7 @@ class main {
                     // Need to update lock status.
                     try {
                         [$rawteam, $teamurl, $lockstatus] = $this->graphclient->get_team($team['id']);
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         continue;
                     }
                 } else {
@@ -844,7 +842,7 @@ class main {
             } else {
                 try {
                     [$rawteam, $teamurl, $lockstatus] = $this->graphclient->get_team($team['id']);
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Cannot get Team URL or locked status, most likely an invalid Team.
                     continue;
                 }
@@ -941,7 +939,7 @@ class main {
                 ];
                 $this->graphclient->update_group($updatedexistinggroup);
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             // Cannot find existing group. Skip rename.
             $this->mtrace('Could not update mailnickname of the existing group with ID ' . $o365object->objectid . ' for course #' .
                 $course->id . '. Reason: ' . $e->getMessage());
@@ -956,7 +954,7 @@ class main {
                 }
                 $existingteamname = utils::get_team_display_name($course, $resetteamnameprefix);
                 $this->graphclient->update_team_name($o365object->objectid, $existingteamname);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Could not update name of the existing Team for course #' . $course->id . '. Reason: ' .
                     $e->getMessage());
             }
@@ -966,7 +964,7 @@ class main {
         if ($teamexists) {
             try {
                 $this->graphclient->archive_team($o365object->objectid);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Could not archive Team for course #' . $course->id . '. Reason: ' . $e->getMessage());
             }
         }
@@ -1047,7 +1045,7 @@ class main {
         $members = [];
         try {
             $members = $this->get_group_members($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $skip = true;
             $this->mtrace('Failed to get group members. Details: ' . $e->getMessage(), 2);
         }
@@ -1055,7 +1053,7 @@ class main {
         $owners = [];
         try {
             $owners = $this->get_group_owners($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $skip = true;
             $this->mtrace('Failed to get group owners. Details: ' . $e->getMessage(), 2);
         }
@@ -1105,7 +1103,7 @@ class main {
                     $this->mtrace('Failed. Details: ' . \local_o365\utils::tostring($result), 2);
                     $retrycounter++;
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Failed. Details: ' . $e->getMessage(), 2);
                 $retrycounter++;
             }
@@ -1119,7 +1117,7 @@ class main {
             try {
                 $this->remove_owner_from_group($groupobjectid, $userobjectid);
                 $this->mtrace('Removed ownership.', 3);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Error removing ownership. Details: ' . $e->getMessage(), 3);
             }
         }
@@ -1137,7 +1135,7 @@ class main {
             try {
                 $this->remove_member_from_group($groupobjectid, $userobjectid);
                 $this->mtrace('Removed membership.', 3);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $this->mtrace('Error removing membership. Details: ' . $e->getMessage(), 3);
             }
         }
@@ -1157,6 +1155,7 @@ class main {
      *
      * @param string $groupobjectid
      * @return array
+     * @throws moodle_exception
      */
     public function get_group_members(string $groupobjectid) : array {
         $groupmembers = [];
@@ -1174,6 +1173,7 @@ class main {
      *
      * @param string $groupobjectid
      * @return array
+     * @throws moodle_exception
      */
     public function get_group_owners(string $groupobjectid) : array {
         $groupowners = [];
@@ -1206,7 +1206,7 @@ class main {
      * Check the lock status of the team with the given object ID.
      *
      * @param string $groupobjectid
-     * @return int
+     * @return bool
      */
     public function is_team_locked(string $groupobjectid) {
         global $DB;
@@ -1217,7 +1217,7 @@ class main {
                     try {
                         [$team, $teamurl, $lockstatus] = $this->graphclient->get_team($groupobjectid);
                         $DB->set_field('local_o365_teams_cache', 'locked', $lockstatus, ['objectid' => $groupobjectid]);
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $lockstatus = TEAM_UNLOCKED;
                     }
 
@@ -1228,7 +1228,7 @@ class main {
                         if ($lockstatus == TEAM_UNLOCKED) {
                             $DB->set_field('local_o365_teams_cache', 'locked', $lockstatus, ['objectid' => $groupobjectid]);
                         }
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $lockstatus = TEAM_UNLOCKED;
                     }
 
@@ -1242,7 +1242,7 @@ class main {
             // Team cache record doesn't exist, we need to create one.
             try {
                 [$team, $teamurl, $lockstatus] = $this->graphclient->get_team($groupobjectid);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $lockstatus = TEAM_UNLOCKED;
             }
         }
@@ -1266,7 +1266,7 @@ class main {
             } else {
                 try {
                     $this->graphclient->add_member_to_group_using_teams_api($groupobjectid, $userobjectid);
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Fallback to use group API to add members.
                     $this->graphclient->add_member_to_group_using_group_api($groupobjectid, $userobjectid);
                 }
@@ -1282,12 +1282,13 @@ class main {
      *
      * @param string $groupobjectid
      * @param string $userobjectid
+     * @throws moodle_exception
      */
     public function add_owner_to_group(string $groupobjectid, string $userobjectid) {
         if (utils::is_team_created_from_group($groupobjectid)) {
             try {
                 $this->graphclient->add_owner_to_group_using_teams_api($groupobjectid, $userobjectid);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 // Fallback to use group API to add owners.
                 $this->graphclient->add_owner_to_group_using_group_api($groupobjectid, $userobjectid);
                 $this->graphclient->add_member_to_group_using_group_api($groupobjectid, $userobjectid);
@@ -1313,7 +1314,7 @@ class main {
                 try {
                     $aaduserconversationmemberid =
                         $this->graphclient->get_aad_user_conversation_member_id($groupobjectid, $userobjectid);
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Do nothing.
                 }
                 if ($aaduserconversationmemberid) {
@@ -1321,7 +1322,7 @@ class main {
                         $this->graphclient->remove_owner_and_member_from_group_using_teams_api($groupobjectid,
                             $aaduserconversationmemberid);
                         $removed = true;
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         // Do nothing.
                     }
                 }
@@ -1346,7 +1347,7 @@ class main {
             try {
                 $aaduserconversationmemberid =
                     $this->graphclient->get_aad_user_conversation_member_id($groupobjectid, $userobjectid);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 // Do nothing.
             }
             if ($aaduserconversationmemberid) {
@@ -1354,7 +1355,7 @@ class main {
                     $this->graphclient->remove_owner_and_member_from_group_using_teams_api($groupobjectid,
                         $aaduserconversationmemberid);
                     $removed = true;
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Do nothing.
                 }
             }
@@ -1406,14 +1407,14 @@ class main {
         $skip = false;
         try {
             $groupmembers = $this->get_group_members($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $skip = true;
             $this->mtrace('Failed to get group members. Details: ' . $e->getMessage(), 2);
         }
 
         try {
             $groupowners = $this->get_group_owners($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $skip = true;
             $this->mtrace('Failed to get group owners. Details: ' . $e->getMessage(), 2);
         }
@@ -1606,7 +1607,7 @@ class main {
         try {
             $groupowners = $this->get_group_owners($groupobjectid);
             $groupmembers = $this->get_group_members($groupobjectid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $this->mtrace('Error getting owners and members from Teams ' . $groupobjectid  . '. Exit...', 1);
             return;
         }

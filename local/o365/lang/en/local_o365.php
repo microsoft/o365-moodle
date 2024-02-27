@@ -746,8 +746,18 @@ $string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has change
 $string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 $string['eventapifail'] = 'API failure';
 $string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
+$string['errortenantvaluenotstring'] = 'Tenant value must be a string';
+$string['errorunabletofindgraphapi'] = 'Unable to find graph api in application.';
+$string['errorcannotgettoken'] = 'Could not get app or system token.';
+$string['errornotokenforsysmemuser'] = 'No token available for system user. Please run local_o365 health check.';
+$string['errornotoken'] = 'No token available for user #{$a}';
+$string['errornotokenforusersync'] = 'No token available for usersync.';
+$string['errorcouldnotgettoken'] = 'Could not get App or System API User token. If you have not yet provided admin consent, please do that first.';
+$string['errornoapifound'] = 'No API with identifier {$a} found.';
+$string['errornoresponsesavailable'] = 'No responses available.';
 $string['erroro365badphoto'] = 'Invalid profile photo received from Microsoft 365.';
 $string['erroro365nophoto'] = 'This user does not have a photo in Microsoft 365.';
+$string['errorcannotgetapiclient'] = 'Cannot get Graph API client.';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';

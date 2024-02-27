@@ -27,6 +27,7 @@
 namespace local_o365\feature\coursesync;
 
 use core\event\course_reset_started;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -85,7 +86,7 @@ class observers {
                     if ($teamresponse) {
                         $connectedtoteam = true;
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Do nothing.
                 }
             }

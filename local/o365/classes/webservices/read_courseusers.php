@@ -25,6 +25,9 @@
 
 namespace local_o365\webservices;
 
+use moodle_exception;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
@@ -70,6 +73,7 @@ class read_courseusers extends external_api {
      * @param int $limitnumber
      * @param array $userids
      * @return array
+     * @throws moodle_exception
      */
     public static function courseusers_read($courseid, $limitfrom = 0, $limitnumber = 0, $userids = []) {
         global $CFG, $DB;
@@ -113,11 +117,11 @@ class read_courseusers extends external_api {
 
         try {
             self::validate_context($context);
-        } catch (\Exception $e) {
-            $exceptionparam = new \stdClass();
+        } catch (moodle_exception $e) {
+            $exceptionparam = new stdClass();
             $exceptionparam->message = $e->getMessage();
             $exceptionparam->courseid = $params['courseid'];
-            throw new \moodle_exception('errorcoursecontextnotvalid' , 'webservice', '', $exceptionparam);
+            throw new moodle_exception('errorcoursecontextnotvalid' , 'webservice', '', $exceptionparam);
         }
 
         require_capability('moodle/course:viewparticipants', $context);

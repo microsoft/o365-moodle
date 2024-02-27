@@ -28,9 +28,9 @@ namespace local_o365\task;
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
-use Exception;
 use local_o365\feature\courserequest\main;
 use local_o365\feature\coursesync\utils;
+use moodle_exception;
 use stdClass;
 
 /**
@@ -62,7 +62,7 @@ class processcourserequestapproval extends adhoc_task {
 
         $apiclient = main::get_unified_api();
         if (empty($apiclient)) {
-            throw new Exception('Failed to get Graph API client.');
+            throw new moodle_exception('errorcannotgetapiclient', 'local_o365');
         }
         $courserequest = new main($apiclient);
 

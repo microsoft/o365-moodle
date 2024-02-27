@@ -29,6 +29,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use \local_o365\webservices\exception as exception;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -44,11 +45,12 @@ class utils {
      * @param int $coursemoduleid The course module ID.
      * @param int $courseid
      * @return array Whether we can proceed or not.
+     * @throws exception\invalidassignment If the assignment is not a OneNote assignment.
      */
     public static function verify_assignment($coursemoduleid, $courseid) {
         global $DB;
 
-        list($course, $module, $assign) = static::get_assignment_info($coursemoduleid, $courseid);
+        [$course, $module, $assign] = static::get_assignment_info($coursemoduleid, $courseid);
 
         require_capability('moodle/course:manageactivities', \context_module::instance($module->id));
 
@@ -95,6 +97,7 @@ class utils {
      * @param int $coursemoduleid The course module ID.
      * @param int $courseid The course id the module belongs to.
      * @return array Array of assignment information, following the same schema as get_assignment_info_schema.
+     * @throws moodle_exception
      */
     public static function get_assignment_info($coursemoduleid, $courseid) {
         global $DB;
@@ -120,7 +123,7 @@ class utils {
      * @return array Array of assignment information, following the same schema as get_assignment_info_schema.
      */
     public static function get_assignment_return_info($coursemoduleid, $courseid) {
-        list($course, $module, $assign) = static::get_assignment_info($coursemoduleid, $courseid);
+        [$course, $module, $assign] = static::get_assignment_info($coursemoduleid, $courseid);
         return [
             'course' => $course->id,
             'coursemodule' => $module->id,

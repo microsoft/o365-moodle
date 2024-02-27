@@ -26,6 +26,7 @@
 namespace local_o365\page;
 
 use html_writer;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -58,6 +59,8 @@ class ucp extends base {
 
     /**
      * Manage calendar syncing.
+     *
+     * @throws moodle_exception
      */
     public function mode_calendar() {
         global $DB, $USER, $OUTPUT, $PAGE, $SITE;
@@ -65,7 +68,7 @@ class ucp extends base {
         $PAGE->navbar->add(get_string('ucp_calsync_title', 'local_o365'), new \moodle_url('/local/o365/ucp.php?action=calendar'));
 
         if (empty($this->o365connected)) {
-            throw new \moodle_exception('ucp_notconnected', 'local_o365');
+            throw new moodle_exception('ucp_notconnected', 'local_o365');
         }
 
         $calsync = new \local_o365\feature\calsync\main();
