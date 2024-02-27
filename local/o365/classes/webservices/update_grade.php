@@ -29,11 +29,14 @@ defined('MOODLE_INTERNAL') || die();
 
 use local_o365\webservices\exception as exception;
 use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
-require_once($CFG->libdir.'/externallib.php');
 require_once($CFG->dirroot.'/user/externallib.php');
 require_once($CFG->dirroot.'/mod/assign/locallib.php');
 
@@ -71,30 +74,30 @@ class update_grade extends external_api {
                 foreach ($details as $key => $value) {
                     $value->required = VALUE_OPTIONAL;
                     unset($value->content->keys['id']);
-                    $items[$key] = new \external_multiple_structure (new \external_single_structure(
+                    $items[$key] = new external_multiple_structure (new external_single_structure(
                         array(
-                            'criterionid' => new \external_value(PARAM_INT, 'criterion id'),
+                            'criterionid' => new external_value(PARAM_INT, 'criterion id'),
                             'fillings' => $value
                         )
                     ));
                 }
-                $advancedgradingdata[$method] = new \external_single_structure($items, 'items', VALUE_OPTIONAL);
+                $advancedgradingdata[$method] = new external_single_structure($items, 'items', VALUE_OPTIONAL);
             }
         }
 
-        return new \external_function_parameters(
+        return new external_function_parameters(
             array(
-                'assignmentid' => new \external_value(PARAM_INT, 'The assignment id to operate on'),
-                'userid' => new \external_value(PARAM_INT, 'The student id to operate on'),
-                'grade' => new \external_value(PARAM_FLOAT, 'The new grade for this user. Ignored if advanced grading used'),
-                'attemptnumber' => new \external_value(PARAM_INT, 'The attempt number (-1 means latest attempt)'),
-                'addattempt' => new \external_value(PARAM_BOOL, 'Allow another attempt if the attempt reopen method is manual'),
-                'workflowstate' => new \external_value(PARAM_ALPHA, 'The next marking workflow state'),
-                'applytoall' => new \external_value(PARAM_BOOL, 'If true, this grade will be applied ' .
+                'assignmentid' => new external_value(PARAM_INT, 'The assignment id to operate on'),
+                'userid' => new external_value(PARAM_INT, 'The student id to operate on'),
+                'grade' => new external_value(PARAM_FLOAT, 'The new grade for this user. Ignored if advanced grading used'),
+                'attemptnumber' => new external_value(PARAM_INT, 'The attempt number (-1 means latest attempt)'),
+                'addattempt' => new external_value(PARAM_BOOL, 'Allow another attempt if the attempt reopen method is manual'),
+                'workflowstate' => new external_value(PARAM_ALPHA, 'The next marking workflow state'),
+                'applytoall' => new external_value(PARAM_BOOL, 'If true, this grade will be applied ' .
                                                                'to all members ' .
                                                                'of the group (for group assignments).'),
-                'plugindata' => new \external_single_structure($pluginfeedbackparams, 'plugin data', VALUE_DEFAULT, array()),
-                'advancedgradingdata' => new \external_single_structure($advancedgradingdata, 'advanced grading data',
+                'plugindata' => new external_single_structure($pluginfeedbackparams, 'plugin data', VALUE_DEFAULT, array()),
+                'advancedgradingdata' => new external_single_structure($advancedgradingdata, 'advanced grading data',
                                                                        VALUE_DEFAULT, array())
             )
         );
@@ -192,9 +195,9 @@ class update_grade extends external_api {
      * @return external_single_structure Object describing return parameters for this webservice method.
      */
     public static function grade_update_returns() {
-        return new \external_single_structure([
-            'id' => new \external_value(PARAM_INT, 'id of grade'),
-            'itemid' => new \external_value(PARAM_INT, 'id of grade item'),
+        return new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'id of grade'),
+            'itemid' => new external_value(PARAM_INT, 'id of grade item'),
         ]);
     }
 }
