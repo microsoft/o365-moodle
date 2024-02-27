@@ -50,8 +50,8 @@ class application extends moodleform {
 
         // IdP type.
         $idptypeoptions = [
-            AUTH_OIDC_IDP_TYPE_AZURE_AD => get_string('idp_type_azuread', 'auth_oidc'),
-            AUTH_OIDC_IDP_TYPE_MICROSOFT => get_string('idp_type_microsoft', 'auth_oidc'),
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID => get_string('idp_type_microsoft_entra_id', 'auth_oidc'),
+            AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM => get_string('idp_type_microsoft_identity_platform', 'auth_oidc'),
             AUTH_OIDC_IDP_TYPE_OTHER => get_string('idp_type_other', 'auth_oidc'),
         ];
         $mform->addElement('select', 'idptype', auth_oidc_config_name_in_form('idptype'), $idptypeoptions);
@@ -72,7 +72,7 @@ class application extends moodleform {
             AUTH_OIDC_AUTH_METHOD_SECRET => get_string('auth_method_secret', 'auth_oidc'),
         ];
         if (isset($this->_customdata['oidcconfig']->idptype) &&
-            $this->_customdata['oidcconfig']->idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            $this->_customdata['oidcconfig']->idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $authmethodoptions[AUTH_OIDC_AUTH_METHOD_CERTIFICATE] = get_string('auth_method_certificate', 'auth_oidc');
         }
         $mform->addElement('select', 'clientauthmethod', auth_oidc_config_name_in_form('clientauthmethod'), $authmethodoptions);
@@ -153,13 +153,13 @@ class application extends moodleform {
 
         // Validate "clientauthmethod" according to "idptype".
         switch ($data['idptype']) {
-            case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
             case AUTH_OIDC_IDP_TYPE_OTHER:
                 if ($data['clientauthmethod'] != AUTH_OIDC_AUTH_METHOD_SECRET) {
                     $errors['clientauthmethod'] = get_string('error_invalid_client_authentication_method', 'auth_oidc');
                 }
                 break;
-            case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
                 if (!in_array($data['clientauthmethod'], [AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE])) {
                     $errors['clientauthmethod'] = get_string('error_invalid_client_authentication_method', 'auth_oidc');
                 }
@@ -184,7 +184,7 @@ class application extends moodleform {
         }
 
         // Validate endpoints.
-        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_AZURE_AD, AUTH_OIDC_IDP_TYPE_MICROSOFT])) {
+        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
             // Validate authendpoint.
             $authendpointidptype = auth_oidc_determine_endpoint_version($data['authendpoint']);
             if ($authendpointidptype != $data['idptype']) {
@@ -199,7 +199,7 @@ class application extends moodleform {
         }
 
         // Validate oidcresource.
-        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_AZURE_AD, AUTH_OIDC_IDP_TYPE_OTHER])) {
+        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_OTHER])) {
             if (empty(trim($data['oidcresource']))) {
                 $errors['oidcresource'] = get_string('error_empty_oidcresource', 'auth_oidc');
             }

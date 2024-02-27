@@ -74,7 +74,7 @@ class apptoken extends \local_o365\oauth2\token {
         $tokenendpoint = $clientdata->get_apptokenendpoint();
 
         switch (get_config('auth_oidc', 'idptype')) {
-            case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
                 $params = [
                     'client_id' => $clientdata->get_clientid(),
                     'client_secret' => $clientdata->get_clientsecret(),
@@ -82,7 +82,7 @@ class apptoken extends \local_o365\oauth2\token {
                     'resource' => $tokenresource,
                 ];
                 break;
-            case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
                 if (get_config('auth_oidc', 'clientauthmethod') == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
                     $params = [
                         'client_id' => $clientdata->get_clientid(),

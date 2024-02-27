@@ -108,7 +108,7 @@ class authcode extends base {
     public function handleredirect() {
         global $CFG, $SESSION;
 
-        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $adminconsent = optional_param('admin_consent', '', PARAM_TEXT);
             if ($adminconsent) {
                 $state = $this->getoidcparam('state');
@@ -339,7 +339,7 @@ class authcode extends base {
         if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
             // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
             // Check if that Microsoft 365 account already exists in moodle.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $upn = $idtoken->claim('preferred_username');
                 if (empty($upn)) {
                     $upn = $idtoken->claim('email');
@@ -478,16 +478,16 @@ class authcode extends base {
     }
 
     /**
-     * Determines whether the given Azure AD UPN is already matched to a Moodle user (and has not been completed).
+     * Determines whether the given Microsoft Entra ID UPN is already matched to a Moodle user (and has not been completed).
      *
-     * @param $aadupn
+     * @param $entraidupn
      * @return false|stdClass Either the matched Moodle user record, or false if not matched.
      */
-    protected function check_for_matched($aadupn) {
+    protected function check_for_matched($entraidupn) {
         global $DB;
 
         if (auth_oidc_is_local_365_installed()) {
-            $match = $DB->get_record('local_o365_connections', ['aadupn' => $aadupn]);
+            $match = $DB->get_record('local_o365_connections', ['entraidupn' => $entraidupn]);
             if (!empty($match) && \local_o365\utils::is_o365_connected($match->muserid) !== true) {
                 return $DB->get_record('user', ['id' => $match->muserid]);
             }
@@ -539,7 +539,7 @@ class authcode extends base {
 
         // Find the latest real Microsoft username.
         // Determine remote username depending on IdP type, or fall back to standard 'sub'.
-        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $oidcusername = $idtoken->claim('preferred_username');
             if (empty($oidcusername)) {
                 $oidcusername = $idtoken->claim('email');
@@ -671,7 +671,7 @@ class authcode extends base {
 
             $existinguser = core_user::get_user($existingmatching->moodleid);
 
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $username = $idtoken->claim('preferred_username');
                 if (empty($username)) {
                     $username = $idtoken->claim('email');
@@ -687,7 +687,7 @@ class authcode extends base {
             if (empty($username)) {
                 $username = $oidcuniqid;
 
-                // If upn claim is missing, it can mean either the IdP is not Azure AD, or it's a guest user.
+                // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid, true);
@@ -740,8 +740,8 @@ class authcode extends base {
             */
 
             // Generate a Moodle username.
-            // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
-            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            // Use 'upn' if available for username (Microsoft-specific), or fall back to lower-case oidcuniqid.
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $username = $idtoken->claim('preferred_username');
                 if (empty($username)) {
                     $username = $idtoken->claim('email');
@@ -757,7 +757,7 @@ class authcode extends base {
             if (empty($username)) {
                 $username = $oidcuniqid;
 
-                // If upn claim is missing, it can mean either the IdP is not Azure AD, or it's a guest user.
+                // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid, true);
@@ -774,7 +774,7 @@ class authcode extends base {
             $matchedwith = $this->check_for_matched($username);
             if (!empty($matchedwith)) {
                 if ($matchedwith->auth != 'oidc') {
-                    $matchedwith->aadupn = $username;
+                    $matchedwith->entraidupn = $username;
                     throw new moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
                 }
             }
