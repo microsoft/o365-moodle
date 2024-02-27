@@ -450,11 +450,11 @@ class main {
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
         $tokenresource = unified::get_tokenresource();
-        $token = utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+        $token = utils::get_application_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
             return new unified($token, $httpclient);
         } else {
-            $msg = 'Couldn\'t construct Microsoft Graph API client because we didn\'t have a system API user token.';
+            $msg = 'Couldn\'t construct Microsoft Graph API client because we don\'t have an application token.';
             utils::debug($msg, $caller);
 
             return false;

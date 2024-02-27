@@ -132,19 +132,6 @@ class acp extends base {
     }
 
     /**
-     * Set the system API user.
-     */
-    public function mode_setsystemuser() {
-        set_config('enableapponlyaccess', '0', 'local_o365');
-        $auth = new authcode;
-        $auth->set_httpclient(new httpclient());
-        $stateparams = ['redirect' => '/admin/settings.php?section=local_o365', 'justauth' => true, 'forceflow' => 'authcode',
-            'action' => 'setsystemapiuser',];
-        $extraparams = ['prompt' => 'admin_consent'];
-        $auth->initiateauthrequest(true, $stateparams, $extraparams);
-    }
-
-    /**
      * This function ensures setup is sufficiently complete to add additional tenants.
      *
      * @return bool
@@ -154,7 +141,7 @@ class acp extends base {
         if (empty($config->entratenant)) {
             return false;
         }
-        if (utils::is_configured_apponlyaccess() === true || !empty($config->systemtokens)) {
+        if (utils::is_configured_apponlyaccess() === true) {
             return true;
         }
         return false;
@@ -340,12 +327,8 @@ class acp extends base {
 
         $this->standard_header();
 
-        $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
-        if (empty($enableapponlyaccess)) {
-            $healthchecks = ['systemapiuser', 'ratelimit'];
-        } else {
-            $healthchecks = ['ratelimit'];
-        }
+        $healthchecks = ['ratelimit'];
+
         foreach ($healthchecks as $healthcheck) {
             $healthcheckclass = '\local_o365\healthcheck\\' . $healthcheck;
             $healthcheck = new $healthcheckclass();
@@ -1531,10 +1514,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'settings_showcoursegroup',
             ],
             'local_o365' => [
-                'enableapponlyaccess',
                 'apptokens',
-                'systemtokens',
-                'systemapiuser',
                 'usersync',
                 'entratenant',
                 'entratenantid',

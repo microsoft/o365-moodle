@@ -37,7 +37,7 @@ $string['settings_header_teams'] = 'Teams Settings';
 $string['settings_header_moodle_app'] = 'Teams Moodle app';
 
 // Setting sections in the "Setup" tab.
-$string['settings_setup_step1'] = 'Step 1/3: Register Moodle with Microsoft Entra ID';
+$string['settings_setup_step1'] = 'Step 1/2: Register Moodle with Microsoft Entra ID';
 $string['settings_setup_step1_desc'] = 'Register a new Azure App for your Microsoft Entra tenant using Windows PowerShell:
 
 <a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download Windows PowerShell Script</a>
@@ -48,25 +48,12 @@ $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfu
 $string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the Azure app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
-$string['settings_setup_step2'] = 'Step 2/3: Choose connection method';
-$string['settings_setup_step2_desc'] = 'This section allows you to choose how the Microsoft 365 integration suite connects to Microsoft 365 services.<br />
-Historically the integration can connect to the Microsoft 365 services using "Application Access", or on behalf of a user you have dedicated as the "system" user.<br />
-<b>From March 2022, only "Application Access" is supported. All future new functions will only be implemented and tested using the "Application Access" connection method.</b>';
-$string['settings_setup_step2_desc_additional'] = '<br /><br />
-<span class="error">You are currently using "System API user" connection method, which is not supported from March 2022. Please change to "Application Access" connection method.</span>';
-$string['settings_setup_step2_continue'] = '<b>Choose a connection method, then click "Save changes" to continue.</b><br /><br /><br /><br /><br />';
-$string['settings_setup_step3'] = 'Step 3/3: Admin consent &amp; additional information';
-$string['settings_setup_step3_desc'] = 'This last step allows you to give administrator consent to use some permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
-$string['settings_setup_step4'] = 'Verify setup';
-$string['settings_setup_step4_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
+$string['settings_setup_step2'] = 'Step 2/2: Admin consent &amp; additional information';
+$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some Azure permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
+$string['settings_setup_step3'] = 'Verify setup';
+$string['settings_setup_step3_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
 
-// Settings in "Step 2/3" of the "Setup" tab.
-$string['settings_enableapponlyaccess'] = 'Application access';
-$string['settings_enableapponlyaccess_details'] = '<b>Recommended</b><br />
-Using this method, the integration accesses Microsoft 365 directly using "Application Permissions", which is the easiest and the only recommended way to connect to Microsoft 365.<br />
-It requires you enable a few extra permissions in the Azure app.<br />';
-
-// Settings in "Step 3/3" section of the "Setup" tab.
+// Settings in "Step 2/2" section of the "Setup" tab.
 $string['settings_adminconsent'] = 'Admin Consent';
 $string['settings_adminconsent_btn'] = 'Provide Admin Consent';
 $string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with an Azure administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Azure.';
@@ -437,11 +424,6 @@ Please use the "Add New Tenant" button above to add again.';
 // Settings in the "Health check" feature of the "Advanced" tab.
 $string['acp_healthcheck'] = 'Health Check';
 $string['healthcheck_fixlink'] = 'Click here to fix it.';
-$string['healthcheck_systemapiuser_title'] = 'System API User';
-$string['healthcheck_systemtoken_result_notoken'] = 'Moodle does not have a token to communicate with Microsoft 365 as the system API user. This can usually be resolved by resetting the system API user.';
-$string['healthcheck_systemtoken_result_noclientcreds'] = 'There are not application credentials present in the OpenID Connect plugin. Without these credentials, Moodle cannot perform any communication with Microsoft 365. Click here to visit the settings page and enter your credentials.';
-$string['healthcheck_systemtoken_result_badtoken'] = 'There was a problem communicating with Microsoft 365 as the system API user. This can usually be resolved by resetting the system API user.';
-$string['healthcheck_systemtoken_result_passed'] = 'Moodle can communicate with Microsoft 365 as the system API user.';
 $string['healthcheck_ratelimit_title'] = 'API Throttling';
 $string['healthcheck_ratelimit_result_notice'] = 'Slight throttling has been enabled to handle increased Moodle site load. <br /><br />All Microsoft 365 features are functional, this just spaces out requests slightly to prevent interruption of Microsoft 365 services. Once Moodle activity decreases, everything will return to normal. <br />(Level {$a->level} / started {$a->timestart})';
 $string['healthcheck_ratelimit_result_warning'] = 'Increased throttling has been enabled to handle significant Moodle site load. <br /><br />All Microsoft 365 features are still functional, but Microsoft 365 requests may take longer to complete. Once Moodle site activity has decreased, everything will return to normal. <br />(Level {$a->level} / started {$a->timestart})';
@@ -735,7 +717,7 @@ $string['erroracplocalo365notconfig'] = 'Please configure local_o365 first.';
 $string['errorhttpclientbadtempfileloc'] = 'Could not open temporary location to store file.';
 $string['errorhttpclientnofileinput'] = 'No file parameter in httpclient::put';
 $string['errorcouldnotrefreshtoken'] = 'Could not refresh token';
-$string['errorchecksystemapiuser'] = 'Could not get a system API user token, please run the health check, ensure that your Moodle cron is running, and refresh the system API user if necessary.';
+$string['errorgetapplicationtoken'] = 'Could not get application token. Please verify your integration configuration.';
 $string['erroracpapcantgettenant'] = 'Could not get Microsoft Entra tenant, please enter manually.';
 $string['erroracpcantgettenant'] = 'Could not get OneDrive URL, please enter manually.';
 $string['errorprovisioningapp'] = 'Could not provision the Moodle app in the Team.';
@@ -872,7 +854,6 @@ $string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already con
 $string['task_calendarsyncin'] = 'Sync Microsoft 365 events in to Moodle';
 $string['task_coursesync'] = 'Sync Moodle courses to Microsoft Teams';
 $string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members to Moodle courses';
-$string['task_refreshsystemrefreshtoken'] = 'Refresh system API user refresh token';
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_processmatchqueue'] = 'Process Match Queue';

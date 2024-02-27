@@ -70,7 +70,7 @@ class main {
 
         $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token) && $systemfallback === true) {
-            $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+            $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
             throw new \Exception('No token available for user #'.$muserid);

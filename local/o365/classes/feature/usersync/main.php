@@ -31,7 +31,6 @@ use core_user;
 use Exception;
 use local_o365\oauth2\clientdata;
 use local_o365\httpclient;
-use local_o365\oauth2\systemapiusertoken;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
@@ -100,7 +99,7 @@ class main {
      */
     public function construct_user_api() {
         $tokenresource = unified::get_tokenresource();
-        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+        $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
             throw new Exception('No token available for usersync');
         }
@@ -108,21 +107,18 @@ class main {
     }
 
     /**
-     * Construct a outlook API client using the system API user.
+     * Construct an outlook API client using the system API user.
      *
      * @param int $muserid The userid to get the outlook token for. Call with null to retrieve system token.
-     * @param boolean $systemfallback Set to true to use system token as fall back.
      * @return unified A constructed unified API client, or false if error.
      */
-    public function construct_outlook_api($muserid, $systemfallback = true) {
+    public function construct_outlook_api($muserid) {
         $unifiedconfigured = unified::is_configured();
         $tokenresource = unified::get_tokenresource();
 
         $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
-        if (empty($token) && $systemfallback === true) {
-            $token = ($unifiedconfigured === true)
-                ? utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient)
-                : systemapiusertoken::instance(null, $tokenresource, $this->clientdata, $this->httpclient);
+        if (empty($token)) {
+            $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
             throw new Exception('No token available for user #'.$muserid);
@@ -201,7 +197,7 @@ class main {
         require_once("$CFG->libdir/gdlib.php");
         $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
         $result = false;
-        $apiclient = $this->construct_outlook_api($muserid, true);
+        $apiclient = $this->construct_outlook_api($muserid);
         if (empty($upn)) {
             $o365user = o365user::instance_from_muserid($muserid);
             $upn = $o365user->upn;
@@ -262,7 +258,7 @@ class main {
      */
     public function sync_timezone(int $muserid, string $upn = '') {
         $tokenresource = unified::get_tokenresource();
-        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+        $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
             throw new Exception('No token available for usersync');
         }
@@ -343,7 +339,7 @@ class main {
      */
     public function get_users_delta($params = 'default', $deltatoken = null) {
         $tokenresource = unified::get_tokenresource();
-        $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+        $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token)) {
             throw new Exception('No token available for usersync');
         }
