@@ -309,7 +309,7 @@ class oidcclient {
             $returned = $this->httpclient->post($this->endpoints['token'], $params);
             return utils::process_json_response($returned, ['token_type' => null, 'id_token' => null]);
         } catch (\Exception $e) {
-            utils::debug('Error in rocredsrequest request', 'oidcclient::rocredsrequest', $e->getMessage());
+            utils::debug('Error in rocredsrequest request', __METHOD__, $e->getMessage());
             return false;
         }
     }

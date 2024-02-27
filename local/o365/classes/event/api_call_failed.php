@@ -46,7 +46,11 @@ class api_call_failed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return $this->data['other'];
+        $description = $this->data['other']['message'];
+        if (!empty($this->data['other']['debugdata'])) {
+            $description .= ': ' . $this->data['other']['debugdata'];
+        }
+        return $description;
     }
 
     /**
