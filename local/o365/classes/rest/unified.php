@@ -160,6 +160,7 @@ class unified extends o365api {
      * @param string $deltalink The parameter name of an additional parameter to return.
      * @param string $deltatokenparam The name of the additional parameter to return.
      * @return array The result of the API call.
+     * @throws moodle_exception
      */
     public function paginatedapicall($httpmethod, $apimethod, $odataqueries = [], $expectedstructure = ['value' => null],
         $betaapi = false, $params = '', $options = [], $skipparam = '$skiptoken', $deltalink = '', $deltatokenparam = '') {
