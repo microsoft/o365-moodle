@@ -228,17 +228,29 @@ class application extends moodleform {
         }
 
         // Validate endpoints.
-        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
-            // Validate authendpoint.
+        if (in_array($data['idptype'], AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
+            // Ensure authendpoint version matches IdP type.
             $authendpointidptype = auth_oidc_determine_endpoint_version($data['authendpoint']);
             if ($authendpointidptype != $data['idptype']) {
                 $errors['authendpoint'] = get_string('error_endpoint_mismatch_auth_endpoint', 'auth_oidc');
             }
 
-            // Validate tokenendpoint.
+            // Ensure tokenendpoint version matches IdP type.
             $tokenendpointtype = auth_oidc_determine_endpoint_version($data['tokenendpoint']);
             if ($tokenendpointtype != $data['idptype']) {
                 $errors['tokenendpoint'] = get_string('error_endpoint_mismatch_token_endpoint', 'auth_oidc');
+            }
+
+            // If "certificate" authentication method is used, ensure tenant specific endpoints are used.
+            if ($data['idptype'] == AUTH_OIDC_IDP_TYPE_MICROSOFT && $data['clientauthmethod'] == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
+                if (str_pos($data['authendpoint'], '/common/') !== false || str_pos($data['authendpoint'], '/organizations/') !== false ||
+                    str_pos($data['authendpoint'], '/consumers/') !== false) {
+                    $errors['authendpoint'] = get_string('error_tenant_specific_endpoint_required', 'auth_oidc');
+                }
+                if (str_pos($data['tokenendpoint'], '/common/') !== false || str_pos($data['tokenendpoint'], '/organizations/') !== false ||
+                    str_pos($data['tokenendpoint'], '/consumers/') !== false) {
+                    $errors['tokenendpoint'] = get_string('error_tenant_specific_endpoint_required', 'auth_oidc');
+                }
             }
         }
 
