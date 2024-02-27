@@ -210,7 +210,7 @@ function local_o365_create_manifest_file() : array {
     }
     $ziparchive->close();
 
-    return [$error, $zipfilename];
+    return [$errorcode, $zipfilename];
 }
 
 /**
