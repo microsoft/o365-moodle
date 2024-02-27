@@ -38,7 +38,7 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_heading(get_string('settings_page_application', 'auth_oidc'));
 $PAGE->set_title(get_string('settings_page_application', 'auth_oidc'));
 
-$jsparams = [AUTH_OIDC_IDP_TYPE_MICROSOFT, AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
+$jsparams = [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
     get_string('auth_method_certificate', 'auth_oidc')];
 $jsmodule = [
     'name' => 'auth_oidc',
@@ -112,7 +112,7 @@ if ($form->is_cancelled()) {
 
     if ($showprovideadminconsentnotification) {
         $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
-        redirect($url, get_string('application_updated_azure', 'auth_oidc', $localo365configurl->out()));
+        redirect($url, get_string('application_updated_microsoft', 'auth_oidc', $localo365configurl->out()));
     } else {
         redirect($url, get_string('application_updated', 'auth_oidc'));
     }

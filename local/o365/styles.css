@@ -10,15 +10,15 @@
     vertical-align: middle;
 }
 
-#local_o365_admin-azuresetup button.refreshperms {
+#local_o365_admin-verifysetup button.refreshperms {
     margin: 0 0 0.75rem;
 }
 
-.local_o365_adminsetting_azuresetup_results section {
+.local_o365_adminsetting_verifysetup_results section {
     margin-bottom: 1rem;
 }
 
-.local_o365_adminsetting_azuresetup_results section h5 {
+.local_o365_adminsetting_verifysetup_results section h5 {
     margin: 0 0 0.25rem;
 }
 

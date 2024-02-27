@@ -56,7 +56,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="muserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id"/>
-        <FIELD NAME="aadupn" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="aad upn"/>
+        <FIELD NAME="entraidupn" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="entra ID upn"/>
         <FIELD NAME="uselogin" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="whether the connection uses login"/>
       </FIELDS>
       <KEYS>
@@ -64,7 +64,7 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="muserid" UNIQUE="true" FIELDS="muserid"/>
-        <INDEX NAME="aadupn" UNIQUE="true" FIELDS="aadupn"/>
+        <INDEX NAME="entraidupn" UNIQUE="true" FIELDS="entraidupn"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_token" COMMENT="Stores tokens.">

@@ -514,10 +514,10 @@ class main {
         // Assemble Moodle course data and reconstruct the o365 group email.
         $groupprefix = $DB->get_field('course', 'shortname', ['id' => SITEID]);
         $groupname = $DB->get_field('course', 'shortname', ['id' => $courseid]);
-        $tenant = get_config('local_o365', 'aadtenant');
+        $tenant = get_config('local_o365', 'entratenant');
         $groupemail = '';
 
-        // If the course shortname and the Azure AD tenant are not empty.
+        // If the course shortname and the Microsoft tenant are not empty.
         if (!empty($groupprefix) && !empty($tenant)) {
             $mailnickprefix = \core_text::strtolower($groupprefix);
             $mailnickprefix = preg_replace('/[^a-z0-9]+/iu', '', $mailnickprefix);

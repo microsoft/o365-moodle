@@ -1596,9 +1596,9 @@ class unified extends o365api {
     }
 
     /**
-     * Get an array of the current required permissions for the graph api.
+     * Get an array of the required delegated permissions for the graph api.
      *
-     * @return array Array of required Azure AD permissions.
+     * @return array Array of required delegated permissions.
      */
     public function get_graph_required_permissions() : array {
         $allperms = $this->get_required_permissions();
@@ -1612,7 +1612,7 @@ class unified extends o365api {
     /**
      * Get required app-only permissions for the graph api.
      *
-     * @return array Array of required Azure AD application permissions.
+     * @return array Array of required application permissions.
      */
     public function get_graph_required_apponly_permissions() : array {
         $allperms = $this->get_required_permissions();
@@ -1793,10 +1793,10 @@ class unified extends o365api {
     }
 
     /**
-     * Get the Azure AD UPN of a connected Moodle user.
+     * Get the Microsoft Entra ID account UPN of a connected Moodle user.
      *
      * @param stdClass|int $user The Moodle user.
-     * @return string|bool The user's Azure AD UPN, or false if failure.
+     * @return string|bool The user's Microsoft Entra ID account UPN, or false if failure.
      */
     public static function get_muser_upn($user) {
         global $DB;
