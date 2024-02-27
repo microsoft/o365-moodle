@@ -336,8 +336,21 @@ class main {
         }
 
         // Remove existing owners and members.
-        $existingownerids = array_keys($this->get_group_owners($groupobjectid));
-        $existingmemberids = array_keys($this->get_group_members($groupobjectid));
+        try {
+            $existingowners = $this->get_group_owners($groupobjectid);
+        } catch (Exception $e) {
+            $this->mtrace('Could not get existing owners of group with ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(), 3);
+            $existingowners = [];
+        }
+
+        try {
+            $existingmembers = $this->get_group_members($groupobjectid);
+        } catch (Exception $e) {
+            $this->mtrace('Could not get existing members of group with ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(), 3);
+            $existingmembers = [];
+        }
+        $existingownerids = array_keys($existingowners);
+        $existingmemberids = array_keys($existingmembers);
         $owners = array_diff($owners, $existingownerids);
         $members = array_diff($members, $existingmemberids);
 
@@ -1014,6 +1027,8 @@ class main {
 
         $this->mtrace('Syncing Microsoft group owners / members for course #' . $courseid);
 
+        $skip = false;
+
         if (!$groupobjectid) {
             $sql = "SELECT distinct objectid
                       FROM {local_o365_objects}
@@ -1029,10 +1044,28 @@ class main {
         }
 
         // Get current group membership.
-        $members = $this->get_group_members($groupobjectid);
-        $currentmembers = array_keys($members);
+        $members = [];
+        try {
+            $members = $this->get_group_members($groupobjectid);
+        } catch (Exception $e) {
+            $skip = true;
+            $this->mtrace('Failed to get group members. Details: ' . $e->getMessage(), 2);
+        }
 
-        $owners = $this->get_group_owners($groupobjectid);
+        $owners = [];
+        try {
+            $owners = $this->get_group_owners($groupobjectid);
+        } catch (Exception $e) {
+            $skip = true;
+            $this->mtrace('Failed to get group owners. Details: ' . $e->getMessage(), 2);
+        }
+
+        if ($skip) {
+            $this->mtrace('Skipping syncing group owners / members for course');
+            return false;
+        }
+
+        $currentmembers = array_keys($members);
         $currentowners = array_keys($owners);
 
         // Get intended group members.
@@ -1370,8 +1403,25 @@ class main {
         }
 
         // Get current group membership.
-        $groupmembers = $this->get_group_members($groupobjectid);
-        $groupowners = $this->get_group_owners($groupobjectid);
+        $skip = false;
+        try {
+            $groupmembers = $this->get_group_members($groupobjectid);
+        } catch (Exception $e) {
+            $skip = true;
+            $this->mtrace('Failed to get group members. Details: ' . $e->getMessage(), 2);
+        }
+
+        try {
+            $groupowners = $this->get_group_owners($groupobjectid);
+        } catch (Exception $e) {
+            $skip = true;
+            $this->mtrace('Failed to get group owners. Details: ' . $e->getMessage(), 2);
+        }
+
+        if ($skip) {
+            $this->mtrace('Skipping syncing group owners / members for course');
+            return false;
+        }
 
         // Get Moodle IDs of connected group members.
         $connectedgroupmembers = [];
@@ -1553,8 +1603,13 @@ class main {
         $moodletomicrosoftusermappings = \local_o365\utils::get_connected_users();
         $microsofttomoodleusermappings = array_flip($moodletomicrosoftusermappings);
 
-        $groupowners = $this->get_group_owners($groupobjectid);
-        $groupmembers = $this->get_group_members($groupobjectid);
+        try {
+            $groupowners = $this->get_group_owners($groupobjectid);
+            $groupmembers = $this->get_group_members($groupobjectid);
+        } catch (Exception $e) {
+            $this->mtrace('Error getting owners and members from Teams ' . $groupobjectid  . '. Exit...', 1);
+            return;
+        }
 
         // Get Moodle IDs of connected group owners.
         $connectedgroupowners = [];
