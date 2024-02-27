@@ -28,11 +28,14 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
-require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Get a list of students in a course by course id.
@@ -41,16 +44,16 @@ class read_courseusers extends external_api {
     /**
      * Return description of method parameters.
      *
-     * @return \external_function_parameters
+     * @return external_function_parameters
      */
     public static function courseusers_read_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'courseid' => new \external_value(PARAM_INT, 'course id'),
-                'limitfrom' => new \external_value(PARAM_INT, 'sql limit from', VALUE_DEFAULT, 0),
-                'limitnumber' => new \external_value(PARAM_INT, 'maximum number of returned users', VALUE_DEFAULT, 0),
-                'userids' => new \external_multiple_structure(
-                    new \external_value(PARAM_INT, 'user id, empty to retrieve all users'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'limitfrom' => new external_value(PARAM_INT, 'sql limit from', VALUE_DEFAULT, 0),
+                'limitnumber' => new external_value(PARAM_INT, 'maximum number of returned users', VALUE_DEFAULT, 0),
+                'userids' => new external_multiple_structure(
+                    new external_value(PARAM_INT, 'user id, empty to retrieve all users'),
                     '0 or more user ids',
                     VALUE_DEFAULT,
                     []
@@ -175,23 +178,23 @@ class read_courseusers extends external_api {
      * @return external_description
      */
     public static function courseusers_read_returns() {
-        return new \external_multiple_structure(
-            new \external_single_structure(
+        return new external_multiple_structure(
+            new external_single_structure(
                 [
-                    'id' => new \external_value(PARAM_INT, 'ID of the user'),
-                    'username' => new \external_value(PARAM_RAW, 'Username policy is defined in Moodle security config',
+                    'id' => new external_value(PARAM_INT, 'ID of the user'),
+                    'username' => new external_value(PARAM_RAW, 'Username policy is defined in Moodle security config',
                         VALUE_OPTIONAL),
-                    'fullname' => new \external_value(PARAM_NOTAGS, 'The fullname of the user'),
-                    'firstname' => new \external_value(PARAM_NOTAGS, 'The first name(s) of the user', VALUE_OPTIONAL),
-                    'lastname' => new \external_value(PARAM_NOTAGS, 'The family name of the user', VALUE_OPTIONAL),
-                    'email' => new \external_value(PARAM_TEXT, 'An email address - allow email as root@localhost', VALUE_OPTIONAL),
-                    'idnumber' => new \external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
+                    'fullname' => new external_value(PARAM_NOTAGS, 'The fullname of the user'),
+                    'firstname' => new external_value(PARAM_NOTAGS, 'The first name(s) of the user', VALUE_OPTIONAL),
+                    'lastname' => new external_value(PARAM_NOTAGS, 'The family name of the user', VALUE_OPTIONAL),
+                    'email' => new external_value(PARAM_TEXT, 'An email address - allow email as root@localhost', VALUE_OPTIONAL),
+                    'idnumber' => new external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
                         VALUE_OPTIONAL),
-                    'lang' => new \external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
+                    'lang' => new external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
                         VALUE_OPTIONAL),
-                    'profileimageurlsmall' => new \external_value(PARAM_URL, 'User image profile URL - small version',
+                    'profileimageurlsmall' => new external_value(PARAM_URL, 'User image profile URL - small version',
                         VALUE_OPTIONAL),
-                    'profileimageurl' => new \external_value(PARAM_URL, 'User image profile URL - big version', VALUE_OPTIONAL),
+                    'profileimageurl' => new external_value(PARAM_URL, 'User image profile URL - big version', VALUE_OPTIONAL),
                 ]
             )
         );
