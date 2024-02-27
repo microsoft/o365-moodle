@@ -28,6 +28,7 @@ namespace auth_oidc\loginflow;
 
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
+use auth_oidc\utils;
 use core_user;
 use moodle_exception;
 use stdClass;
@@ -532,12 +533,12 @@ class base {
         $idtoken = jwt::instance_from_encoded($idtoken);
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
-            \auth_oidc\utils::debug('Invalid idtoken', 'base::process_idtoken', $idtoken);
+            utils::debug('Invalid idtoken', __METHOD__, $idtoken);
             throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
         $receivednonce = $idtoken->claim('nonce');
         if (!empty($orignonce) && (empty($receivednonce) || $receivednonce !== $orignonce)) {
-            \auth_oidc\utils::debug('Invalid nonce', 'base::process_idtoken', $idtoken);
+            utils::debug('Invalid nonce', __METHOD__, $idtoken);
             throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
         }
 
@@ -601,7 +602,7 @@ class base {
                             'restriction' => $restriction,
                             'tomatch' => $tomatch,
                         ];
-                        \auth_oidc\utils::debug('Error running user restrictions.', 'handleauthresponse', $debugdata);
+                        utils::debug('Error running user restrictions.', __METHOD__, $debugdata);
                     }
                     $contents = ob_get_contents();
                     ob_end_clean();
@@ -611,7 +612,7 @@ class base {
                             'restriction' => $restriction,
                             'tomatch' => $tomatch,
                         ];
-                        \auth_oidc\utils::debug('Output while running user restrictions.', 'handleauthresponse', $debugdata);
+                        utils::debug('Output while running user restrictions.', __METHOD__, $debugdata);
                     }
                 }
             }
