@@ -115,9 +115,9 @@ if ($hassiteconfig) {
         }
 
         if ($stepsenabled === 2) {
-            $label = new lang_string('settings_setup_step3', 'local_o365');
-            $desc = new lang_string('settings_setup_step3_desc', 'local_o365');
-            $settings->add(new admin_setting_heading('local_o365_setup_step3', $label, $desc));
+            $label = new lang_string('settings_setup_step2', 'local_o365');
+            $desc = new lang_string('settings_setup_step2_desc', 'local_o365');
+            $settings->add(new admin_setting_heading('local_o365_setup_step2', $label, $desc));
 
             $label = new lang_string('settings_adminconsent', 'local_o365');
             $desc = new lang_string('settings_adminconsent_details', 'local_o365');
@@ -144,9 +144,9 @@ if ($hassiteconfig) {
 
         // Step 3: Verify.
         if ($stepsenabled === 3) {
-            $label = new lang_string('settings_setup_step4', 'local_o365');
-            $desc = new lang_string('settings_setup_step4_desc', 'local_o365');
-            $settings->add(new admin_setting_heading('local_o365_setup_step4', $label, $desc));
+            $label = new lang_string('settings_setup_step3', 'local_o365');
+            $desc = new lang_string('settings_setup_step3_desc', 'local_o365');
+            $settings->add(new admin_setting_heading('local_o365_setup_step3', $label, $desc));
 
             $label = new lang_string('settings_verifysetup', 'local_o365');
             $desc = new lang_string('settings_verifysetup_details', 'local_o365');
