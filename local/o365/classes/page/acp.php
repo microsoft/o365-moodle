@@ -1514,7 +1514,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
             ],
             'local_o365' => [
                 'apptokens',
-                'systemtokens',
                 'usersync',
                 'entratenant',
                 'entratenantid',
