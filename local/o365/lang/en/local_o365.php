@@ -654,8 +654,7 @@ $string['settings_sds_school_disabled_action_keep_connected'] = 'Keep the Moodle
 $string['settings_sds_school_disabled_action_disconnect'] = 'Disconnect the Moodle course with the Team';
 
 // Settings in the "Teams Settings" tab.
-$string['settings_teams_banner_1'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams. The Moodle app also consists of a Moodle Assistant bot, which will send Moodle notifications to students and teachers and answer questions about their courses, assignments, grades and students -- right within Teams!';
-$string['settings_teams_banner_2'] = 'To provision the Moodle Assistant Bot for your Microsoft 365 tenant, you need to deploy it to <a href="https://aka.ms/MoodleLearnAzure" target="_blank">Microsoft Azure</a>. If you don\'t have an active Azure subscription, you can <a href="https://aka.ms/MoodleTeamsAzureFree" target="_blank">get one for free</a> today!';
+$string['settings_teams_banner'] = 'The Moodle app for <a href="https://aka.ms/MoodleLearnTeams" target="_blank">Microsoft Teams</a> allows you to easily access and collaborate around your Moodle courses in Teams.';
 $string['settings_teams_moodle_setup_heading'] = '<h4 class="local_o365_settings_teams_h4_spacer">Setup your Moodle app for Microsoft Teams</h4>';
 $string['settings_moodlesettingssetup'] = 'Configure Moodle';
 $string['settings_check_moodle_settings'] = 'Check Moodle settings';
@@ -689,31 +688,13 @@ $string['settings_moodlesettingssetup_details'] = 'This will make sure that:
 <li>Authenticated user has permission to create a web service token.</li>
 <li>Authenticated user has permission to use Rest Protocol.</li>
 </ul>';
-$string['settings_teams_additional_instructions'] = '<p class="local_o365_settings_teams_horizontal_spacer">
-Go to the <a href="https://aka.ms/MoodleBotRegistration" target="_blank">App registrations section of Azure Portal</a> and register a new app. Enter the application ID and client secret below:
-</p>';
-$string['settings_teams_deploy_bot_1'] = 'Once you have completed the above steps and have an active Azure subscription, click here to deploy the bot:';
-$string['settings_teams_deploy_bot_2'] = 'Need help?';
-$string['settings_bot_feature_enabled'] = 'Bot feature enabled';
-$string['settings_bot_feature_enabled_desc'] = '<span class="warning">NOTE: There is a known issue in which if the bot feature is enabled in the Teams app, the Moodle Teams app cannot be provisioned to class teams unless the team is manually activated.</span>';
-$string['settings_bot_app_id'] = 'Application ID';
-$string['settings_bot_app_id_desc'] = '';
-$string['settings_bot_app_password'] = 'Client Secret';
-$string['settings_bot_app_password_desc'] = 'Go to \'Certificates & secrets\' section under \'Manage\' in application settings, and click \'New client secret\', and paste the one-time secret';
-$string['settings_teams_download_json_desc'] = 'After entering client id and secret above, click on the button below to download JSON file for deployment.';
-$string['settings_teams_download_json'] = 'Download JSON';
-$string['settings_bot_webhook_endpoint'] = 'Bot webhook end point';
-$string['settings_bot_webhook_endpoint_desc'] = 'Format: https://<moodlebotname\>.azurewebsites.net/api/webhook';
 $string['settings_teams_moodle_app_external_id'] = 'Microsoft app ID for the Moodle Teams app';
 $string['settings_teams_moodle_app_external_id_desc'] = 'This should be set to the default value, unless multiple Moodle Teams apps are required in your tenant to connect to different Moodle sites.';
 $string['settings_teams_moodle_app_short_name'] = 'Teams app name';
 $string['settings_teams_moodle_app_short_name_desc'] = 'This can be set as default, unless multiple Moodle Teams apps are required in your tenant to connect to different Moodle sites.';
-$string['settings_bot_sharedsecret'] = 'Shared Moodle Secret';
-$string['settings_bot_sharedsecret_desc'] = 'This shared secret will be also added to the \'Shared Moodle Secret\' field in the Azure Bot template to secure communication between Moodle and Bot.';
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
-$string['settings_deploy_bot'] = 'Deploy bot to Azure';
 
 // Settings in the "Teams Moodle app" tab.
 $string['settings_moodle_app_id'] = 'Moodle app ID';
@@ -766,8 +747,9 @@ $string['erroro365apinotimplemented'] = 'This should be overridden.';
 $string['erroro365apinotoken'] = 'Did not have a token for the given resource and user, and could not get one. Is the user\'s refresh token expired?';
 $string['erroro365apisiteexistsnolocal'] = 'Site already exists, but could not find local record.';
 $string['errorusermatched'] = 'The Microsoft 365 account "{$a->aadupn}" is already matched with Moodle user "{$a->username}". To complete the connection, please log in as that Moodle user first and follow the instructions in the Microsoft block.';
-$string['eventapifail'] = 'API failure';
 $string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
+$string['errornodirectaccess'] = 'Direct access to the page is prohibited';
+$string['eventapifail'] = 'API failure';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';
@@ -883,7 +865,6 @@ $string['ucp_options'] = 'Options';
 $string['ucp_o365accountconnected'] = 'This Microsoft 365 account is already connected with another Moodle account.';
 
 // Tasks.
-$string['task_bot'] = 'Bot message task';
 $string['task_calendarsyncin'] = 'Sync Microsoft 365 events in to Moodle';
 $string['task_coursesync'] = 'Sync Moodle courses to Microsoft Teams';
 $string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members to Moodle courses';
@@ -900,8 +881,6 @@ $string['task_processmatchqueue_err_o365useralreadymatched'] = 'Microsoft 365 us
 $string['task_processmatchqueue_err_o365useralreadyconnected'] = 'Microsoft 365 user is already connected to a Moodle user.';
 
 // Capabilities.
-$string['o365:accessbotstudentdata'] = 'Access student bot data';
-$string['o365:accessbotteacherdata'] = 'Access teacher bot data';
 $string['o365:manageconnectionlink'] = 'Manage Connection Link';
 $string['o365:manageconnectionunlink'] = 'Manage Connection Unlink';
 $string['o365:viewgroups'] = 'View links to Microsoft 365 services in the Microsoft block in courses with sync enabled';
@@ -986,57 +965,6 @@ $string['courserequest_customrequestnote'] = '
 $string['courserequest_graphapi_disabled'] = 'Microsoft Teams connection is unavailable. Please contact your site administrator.';
 $string['courserequest_invalid_team'] = 'Invalid Team used in the course request.';
 $string['courserequest_duplicate'] = 'A pending or approved course request from the same Team already exists.';
-
-// Bot feature.
-$string['list_of_absent_students'] = 'This is the list of students that were absent this month:';
-$string['list_of_assignments_grades_compared'] = 'This is the list of your assignments grades compared with class average:';
-$string['list_of_assignments_needs_grading'] = 'This is the list of the assignments that need grading:';
-$string['list_of_due_assignments'] = 'This is the list of due assignments';
-$string['list_of_incomplete_assignments'] = 'This is the list of the assignments that are incomplete:';
-$string['list_of_last_logged_students'] = 'This is the list of last logged students:';
-$string['list_of_late_submissions'] = 'This is the list of students who made late submissions:';
-$string['list_of_latest_logged_students'] = 'This is the list of latest logged students:';
-$string['list_of_recent_grades'] = 'This is the list of your recent grades:';
-$string['list_of_students_with_least_score'] = 'This is the list of students with least score in the latest assignment:';
-$string['list_of_students_with_name'] = 'These are the students with the name {$a}:';
-$string['assignment'] = 'Assignment';
-$string['course_assignment_submitted_due'] = 'Course - {$a->course} &nbsp; |  &nbsp; Assignment -{$a->assignment} <br />
-                        Submitted on - {$a->submittedon} &nbsp; |  &nbsp; Due date - {$a->duedate}';
-$string['due_date'] = 'Due date - {$a}';
-$string['grade_date'] = 'Grade - {$a->grade} &nbsp; | &nbsp; Date - {$a->date}';
-$string['help_message'] = 'Hi there! I am your Moodle assistant. You can ask me the following questions:';
-$string['last_login_date'] = 'Last login date - {$a}';
-$string['never'] = 'Never';
-$string['no_absent_users_found'] = 'No absent users found';
-$string['no_assignments_for_grading_found'] = 'No assignments for grading found';
-$string['no_assignments_found'] = 'No assignments found';
-$string['no_due_assignments_found'] = 'No due assignments found';
-$string['no_due_incomplete_assignments_found'] = 'No due and incomplete assignments found';
-$string['no_graded_assignments_found'] = 'No graded assignments found';
-$string['no_grades_found'] = 'No grades found';
-$string['no_late_submissions_found'] = 'No late submissions found';
-$string['no_users_found'] = 'No users found';
-$string['no_user_with_name_found'] = 'No user with such name found';
-$string['participants_submitted_needs_grading'] = 'Participants - {$a->participants}  &nbsp; |  &nbsp; Submitted - {$a->submitted}  &nbsp; |  &nbsp;
-                        Needs grading - {$a->needsgrading}';
-$string['pending_submissions_due_date'] = 'Pending submissions - {$a->incomplete} / {$a->total} &nbsp; |  &nbsp; Due - {$a->duedate}';
-$string['sorry_do_not_understand'] = 'Sorry, I do not understand';
-$string['question_student_assignments_compared'] = "How did I do in my latest assignments compared to the class?";
-$string['question_student_assignments_due'] = "Which assignments are due next?";
-$string['question_student_latest_grades'] = "What are the latest grades I've received?";
-$string['question_teacher_absent_students'] = "Which students have been absent this month?";
-$string['question_teacher_assignments_incomplete_submissions'] = "How many assignments have incomplete submissions?";
-$string['question_teacher_assignments_for_grading'] = "Which assignments are yet to be graded?";
-$string['question_teacher_last_logged_students'] = "Which students have logged into Moodle (most recent first)?";
-$string['question_teacher_late_submissions'] = "Which students have made late submissions?";
-$string['question_teacher_latest_logged_students'] = "Which students have logged into Moodle (oldest first)?";
-$string['question_teacher_least_scored_in_assignment'] = "Which students scored the least in the last assignment?";
-$string['question_teacher_student_last_logged'] = "When did Firstname Lastname last log into moodle?";
-$string['your_grade'] = 'Your grade - {$a}';
-$string['your_grade_class_grade'] = 'Your grade - {$a->usergrade} &nbsp; |  &nbsp; Class average grade - {$a->classgrade}';
-$string['error_missing_app_id'] = 'Missing Application ID setting.';
-$string['error_missing_bot_settings'] = 'Bot feature is enabled, but bot settings are missing.';
-$string['errornodirectaccess'] = 'Direct access to the page is prohibited';
 
 // Teams page.
 $string['teams_no_course'] = 'You don\'t have any course to add.';

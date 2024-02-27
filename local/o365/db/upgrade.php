@@ -595,14 +595,19 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
     if ($oldversion < 2018051703) {
+        // Commented out since the bot feature has been removed.
+        /*
         if (!$dbman->table_exists('local_o365_notif')) {
             $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_o365_notif');
         }
+        */
 
         upgrade_plugin_savepoint(true, '2018051703', 'local', 'o365');
     }
 
     if ($oldversion < 2018051704) {
+        // Commented out since the bot feature has been removed.
+        /*
         $botappid = get_config('local_o365', 'bot_app_id');
         $botapppassword = get_config('local_o365', 'bot_app_password');
         $botwebhookendpoint = get_config('local_o365', 'bot_webhook_endpoint');
@@ -611,11 +616,13 @@ function xmldb_local_o365_upgrade($oldversion) {
         } else {
             set_config('bot_feature_enabled', '0', 'local_o365');
         }
+        */
         upgrade_plugin_savepoint(true, '2018051704', 'local', 'o365');
     }
 
     if ($oldversion < 2018051705) {
-        local_o365_check_sharedsecret();
+        // Commented out since the bot feature has been removed.
+        // local_o365_check_sharedsecret();
         upgrade_plugin_savepoint(true, '2018051705', 'local', 'o365');
     }
 
@@ -1053,6 +1060,25 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         upgrade_plugin_savepoint(true, 2023042413, 'local', 'o365');
+    }
+
+    if ($oldversion < 2023042414) {
+        // Remove bot integration feature.
+        unset_config('bot_app_id', 'local_o365');
+        unset_config('bot_app_password', 'local_o365');
+        unset_config('bot_sharedsecret', 'local_o365');
+        unset_config('bot_feature_enabled', 'local_o365');
+        unset_config('bot_webhook_endpoint', 'local_o365');
+
+        // Define table local_o365_notif to be dropped.
+        $table = new xmldb_table('local_o365_notif');
+
+        // Conditionally launch drop table for local_o365_notif.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2023042414, 'local', 'o365');
     }
 
     return true;
