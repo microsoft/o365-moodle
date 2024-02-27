@@ -51,7 +51,7 @@ $string['eventapifail'] = 'Falha na API';
 $string['eventcalendarsubscribed'] = 'O usuário se inscreveu em um calendário';
 $string['eventcalendarunsubscribed'] = 'O usuário cancelou a inscrição em um calendário';
 $string['healthcheck_fixlink'] = 'Clique aqui para corrigir.';
-$string['settings_usersync'] = 'Verifique a configuração';
+$string['settings_usersync'] = 'Sincronize usuários com o Microsoft Entra ID';
 $string['settings_usersync_details'] = 'Quando essa configuração estiver ativada, os usuários do Moodle e do AD do Azure serão sincronizados de acordo com as opções acima.<br /><br /><b>Observação: </b>o trabalho de sincronização é executado no cron do Moodle. Por padrão, ele é executado uma vez ao dia, à 1h no fuso horário local do seu servidor. Para sincronizar grandes conjuntos de usuários com mais agilidade, você pode aumentar a frequência da tarefa <b>Sincronizar usuários com o AD do Azure</b> usando a <a href="{$a}">página de gerenciamento de tarefas agendadas.</a><br /><br />Para obter instruções mais detalhadas, consulte a <a href="https://docs.moodle.org/30/en/Office365#User_sync">documentação de sincronização de usuários</a><br /><br />';
 $string['settings_usersync_create'] = 'Criar contas no Moodle para usuários no AD do Azure';
 $string['settings_usersync_delete'] = 'Excluir contas sincronizadas anteriormente no Moodle quando elas forem excluídas do AD do Azure';
