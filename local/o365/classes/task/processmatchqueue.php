@@ -65,7 +65,7 @@ class processmatchqueue extends scheduled_task {
 
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
-        $token = utils::get_app_or_system_token($tokenresource, $clientdata, $httpclient, false, false);
+        $token = utils::get_application_token($tokenresource, $clientdata, $httpclient, false, false);
         if (empty($token)) {
             mtrace('No token available for system user. Please run local_o365 health check.');
             return false;
