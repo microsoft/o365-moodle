@@ -29,11 +29,11 @@ namespace local_o365\task;
 use auth_plugin_oidc;
 use core\task\scheduled_task;
 use core_text;
-use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -178,7 +178,7 @@ class processmatchqueue extends scheduled_task {
                 try {
                     $o365user = $apiclient->get_user_by_upn($matchrec->o365username);
                     $userfound = true;
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $o365user = [];
                     $userfound = false;
                 }
@@ -238,7 +238,7 @@ class processmatchqueue extends scheduled_task {
                 mtrace('Match record created for userid #' . $matchrec->muserid . ' and o365 user ' .
                     core_text::strtolower($o365user['userPrincipalName']));
 
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $exceptionstring = $e->getMessage().': '.$e->debuginfo;
                 $updatedrec = new stdClass;
                 $updatedrec->id = $matchrec->id;

@@ -145,7 +145,7 @@ class syncoldevents extends \core\task\adhoc_task {
                             $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
                                     $subscribersprimary, [], $calid);
                         }
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         mtrace('ERROR: '.$e->getMessage());
                     }
                 }
@@ -179,7 +179,7 @@ class syncoldevents extends \core\task\adhoc_task {
                     }
                 }
 
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 // Could not sync this site event. Log and continue.
                 mtrace('Error syncing site event #'.$event->eventid.': '.$e->getMessage());
             }
@@ -284,7 +284,7 @@ class syncoldevents extends \core\task\adhoc_task {
                             $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
                                     $eventattendees, [], $calid);
                         }
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         mtrace('ERROR: '.$e->getMessage());
                     }
                 }
@@ -321,7 +321,7 @@ class syncoldevents extends \core\task\adhoc_task {
                             $calid);
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 // Could not sync this course event. Log and continue.
                 mtrace('Error syncing course event #'.$event->eventid.': '.$e->getMessage());
             }

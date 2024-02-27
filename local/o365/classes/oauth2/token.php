@@ -25,6 +25,8 @@
 
 namespace local_o365\oauth2;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -393,6 +395,7 @@ class token {
      * Refresh the token.
      *
      * @return bool Success/Failure.
+     * @throws moodle_exception
      */
     public function refresh() {
         $result = '';
@@ -453,7 +456,7 @@ class token {
                 $this->tokenresource = $token->get_tokenresource();
                 return true;
             } else {
-                throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
+                throw new moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
                 return false;
             }
         }

@@ -25,7 +25,6 @@
 
 namespace local_o365\feature\sds;
 
-use Exception;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
@@ -94,7 +93,7 @@ class utils {
                             break;
                         }
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // School invalid, reset settings.
                     set_config('sdsprofilesync', '', 'local_o365');
                 }

@@ -25,6 +25,8 @@
 
 namespace local_o365\webservices;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -145,7 +147,7 @@ class read_assignments extends \external_api {
                 if (!isset($courses[$cid])) {
                     $courses[$cid] = get_course($cid);
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 unset($courses[$cid]);
                 $warnings[] = array(
                     'item' => 'course',
@@ -201,7 +203,7 @@ class read_assignments extends \external_api {
                     try {
                         self::validate_context($context);
                         require_capability('mod/assign:view', $context);
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $warnings[] = array(
                             'item' => 'module',
                             'itemid' => $module->id,
@@ -258,7 +260,7 @@ class read_assignments extends \external_api {
 
                     if ($assign->show_intro()) {
 
-                        list($assignment['intro'], $assignment['introformat']) = external_format_text($module->intro,
+                        [$assignment['intro'], $assignment['introformat']] = external_format_text($module->intro,
                             $module->introformat, $context->id, 'mod_assign', 'intro', null);
 
                         $fs = get_file_storage();

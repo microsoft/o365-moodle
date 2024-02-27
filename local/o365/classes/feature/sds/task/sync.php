@@ -29,9 +29,9 @@ namespace local_o365\feature\sds\task;
 use context_course;
 use core\task\scheduled_task;
 use core_course_category;
-use Exception;
 use local_o365\rest\unified;
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -571,7 +571,7 @@ class sync extends scheduled_task {
             try {
                 $schoolclasses = $apiclient->get_school_classes($schoolobjectid);
                 $sectionsinenabledschools = array_merge($sectionsinenabledschools, $schoolclasses);
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 // Do nothing.
             }
         }

@@ -88,7 +88,7 @@ class block_microsoft extends block_base {
             }
 
             $this->content->text .= $this->get_course_content();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             $this->content->text = $e->getMessage();
         }
 
@@ -273,7 +273,7 @@ class block_microsoft extends block_base {
      * @return string Block content.
      */
     protected function get_user_content_connected() {
-        global $DB, $CFG, $SESSION, $USER, $OUTPUT;
+        global $DB, $USER, $OUTPUT;
         $o365config = get_config('local_o365');
         $html = '';
 
@@ -579,7 +579,7 @@ class block_microsoft extends block_base {
                 }
             }
             return $output;
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             if (class_exists('\local_o365\utils')) {
                 \local_o365\utils::debug($e->getMessage(), __METHOD__, $e);
             }

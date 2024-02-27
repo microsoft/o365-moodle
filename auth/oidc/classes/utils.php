@@ -25,7 +25,8 @@
 
 namespace auth_oidc;
 
-use auth_oidc\event\action_failed;
+use Exception;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,21 +40,22 @@ class utils {
      * @param string $response The received JSON.
      * @param array $expectedstructure
      * @return array The parsed JSON.
+     * @throws moodle_exception
      */
     public static function process_json_response($response, array $expectedstructure = array()) {
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             self::debug('Bad response received', __METHOD__, $response);
-            throw new \moodle_exception('erroroidccall', 'auth_oidc');
+            throw new moodle_exception('erroroidccall', 'auth_oidc');
         }
 
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
             self::debug($errmsg, __METHOD__, $result);
             if (isset($result['error_description'])) {
-                throw new \moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
+                throw new moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
             } else {
-                throw new \moodle_exception('erroroidccall', 'auth_oidc');
+                throw new moodle_exception('erroroidccall', 'auth_oidc');
             }
         }
 
@@ -61,7 +63,7 @@ class utils {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "'.$key.'"';
                 self::debug($errmsg, __METHOD__, $result);
-                throw new \moodle_exception('erroroidccall', 'auth_oidc');
+                throw new moodle_exception('erroroidccall', 'auth_oidc');
             }
 
             if ($val !== null && $result[$key] !== $val) {
@@ -69,7 +71,7 @@ class utils {
                 $strval = self::tostring($val);
                 $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
                 self::debug($errmsg, __METHOD__, $result);
-                throw new \moodle_exception('erroroidccall', 'auth_oidc');
+                throw new moodle_exception('erroroidccall', 'auth_oidc');
             }
         }
         return $result;
@@ -90,13 +92,13 @@ class utils {
             }
         } else if (is_null($val)) {
             return '(null)';
-        } else if ($val instanceof \Exception) {
+        } else if ($val instanceof Exception) {
             $valinfo = [
                 'file' => $val->getFile(),
                 'line' => $val->getLine(),
                 'message' => $val->getMessage(),
             ];
-            if ($val instanceof \moodle_exception) {
+            if ($val instanceof moodle_exception) {
                 $valinfo['debuginfo'] = $val->debuginfo;
                 $valinfo['errorcode'] = $val->errorcode;
                 $valinfo['module'] = $val->module;

@@ -116,7 +116,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                         $DB->update_record('auth_oidc_token', $updatedtoken);
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 continue;
             }
         }

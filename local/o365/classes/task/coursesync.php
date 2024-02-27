@@ -27,6 +27,7 @@ namespace local_o365\task;
 
 use local_o365\feature\coursesync\main;
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -60,7 +61,7 @@ class coursesync extends \core\task\scheduled_task {
 
         try {
             $graphclient = utils::get_api();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             return false;
         }

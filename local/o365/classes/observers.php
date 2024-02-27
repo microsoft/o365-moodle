@@ -50,7 +50,6 @@ use core\event\user_enrolment_updated;
 use core\event\cohort_deleted;
 use core\task\manager;
 use core_user;
-use Exception;
 use local_o365\feature\coursesync\main;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
@@ -58,6 +57,7 @@ use local_o365\obj\o365user;
 use local_o365\rest\unified;
 use local_o365\task\groupmembershipsync;
 use local_o365\task\processcourserequestapproval;
+use moodle_exception;
 use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
@@ -140,7 +140,7 @@ class observers {
                         $domainsfetched = true;
 
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Do nothing.
                 }
 
@@ -196,7 +196,7 @@ class observers {
                                 utils::debug('Failed to get user data using Graph API.', __METHOD__);
                                 return true;
                             }
-                        } catch (Exception $e) {
+                        } catch (moodle_exception $e) {
                             utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                             return true;
                         }
@@ -247,7 +247,7 @@ class observers {
                 }
 
                 return true;
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 utils::debug($e->getMessage(), __METHOD__, $e);
                 return false;
             }
@@ -397,7 +397,7 @@ class observers {
             }
 
             return true;
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug($e->getMessage(), __METHOD__, $e);
         }
         return false;
