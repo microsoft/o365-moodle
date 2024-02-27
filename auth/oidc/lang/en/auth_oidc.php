@@ -165,7 +165,7 @@ $string['settings_section_authentication'] = 'Authentication';
 $string['settings_section_endpoints'] = 'Endpoints';
 $string['settings_section_other_params'] = 'Other parameters';
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
-$string['application_updated'] = 'OpenID Connect application setting was updated.';
+$string['application_updated'] = 'OpenID Connect application setting have been updated.';
 $string['application_updated_microsoft'] = 'OpenID Connect application setting was updated.<br/>
 <span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}" target="_blank">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 
@@ -231,6 +231,7 @@ $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoi
 <li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/token</li>
 <li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize</li>
 </ul>';
+$string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
 $string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';
 
