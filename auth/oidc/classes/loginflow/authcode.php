@@ -340,7 +340,12 @@ class authcode extends base {
             // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
             // Check if that Microsoft 365 account already exists in moodle.
             if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                $upn = $idtoken->claim('preferred_username');
+                if (isset($this->config->useupn) && $this->config->useupn) {
+                    $upn = $idtoken->claim('upn');
+                }
+                if (empty($upn)) {
+                    $upn = $idtoken->claim('preferred_username');
+                }
                 if (empty($upn)) {
                     $upn = $idtoken->claim('email');
                 }
@@ -540,7 +545,12 @@ class authcode extends base {
         // Find the latest real Microsoft username.
         // Determine remote username depending on IdP type, or fall back to standard 'sub'.
         if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-            $oidcusername = $idtoken->claim('preferred_username');
+            if (isset($this->config->useupn) && $this->config->useupn) {
+                $oidcusername = $idtoken->claim('upn');
+            }
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('preferred_username');
+            }
             if (empty($oidcusername)) {
                 $oidcusername = $idtoken->claim('email');
             }
@@ -672,7 +682,12 @@ class authcode extends base {
             $existinguser = core_user::get_user($existingmatching->moodleid);
 
             if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                $username = $idtoken->claim('preferred_username');
+                if (isset($this->config->useupn) && $this->config->useupn) {
+                    $username = $idtoken->claim('upn');
+                }
+                if (empty($username)) {
+                    $username = $idtoken->claim('preferred_username');
+                }
                 if (empty($username)) {
                     $username = $idtoken->claim('email');
                 }
@@ -742,7 +757,12 @@ class authcode extends base {
             // Generate a Moodle username.
             // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
             if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                $username = $idtoken->claim('preferred_username');
+                if (isset($this->config->useupn) && $this->config->useupn) {
+                    $username = $idtoken->claim('upn');
+                }
+                if (empty($username)) {
+                    $username = $idtoken->claim('preferred_username');
+                }
                 if (empty($username)) {
                     $username = $idtoken->claim('email');
                 }
