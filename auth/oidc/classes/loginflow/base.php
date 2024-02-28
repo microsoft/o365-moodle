@@ -156,7 +156,12 @@ class base {
 
                         if (!isset($userdata['userPrincipalName'])) {
                             if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                                $upn = $token->claim('preferred_username');
+                                if (isset($this->config->useupn) && $this->config->useupn) {
+                                    $upn = $idtoken->claim('upn');
+                                }
+                                if (empty($upn)) {
+                                    $upn = $idtoken->claim('preferred_username');
+                                }
                                 if (empty($upn)) {
                                     $upn = $token->claim('email');
                                 }
@@ -235,7 +240,12 @@ class base {
 
                 if (!isset($userdata['userPrincipalName'])) {
                     if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                        $upn = $token->claim('preferred_username');
+                        if (isset($this->config->useupn) && $this->config->useupn) {
+                            $upn = $idtoken->claim('upn');
+                        }
+                        if (empty($upn)) {
+                            $upn = $idtoken->claim('preferred_username');
+                        }
                         if (empty($upn)) {
                             $upn = $token->claim('email');
                         }
@@ -566,7 +576,12 @@ class base {
             $restrictions = explode("\n", $restrictions);
             // Check main user identifier claim based on IdP type, and falls back to oidc-standard "sub" if still empty.
             if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                $tomatch = $idtoken->claim('preferred_username');
+                if (isset($this->config->useupn) && $this->config->useupn) {
+                    $tomatch = $idtoken->claim('upn');
+                }
+                if (empty($tomatch)) {
+                    $tomatch = $idtoken->claim('preferred_username');
+                }
                 if (empty($tomatch)) {
                     $tomatch = $idtoken->claim('email');
                 }
@@ -640,7 +655,12 @@ class base {
         } else {
             // Determine remote username depending on IdP type, or fall back to standard 'sub'.
             if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
-                $oidcusername = $idtoken->claim('preferred_username');
+                if (isset($this->config->useupn) && $this->config->useupn) {
+                    $oidcusername = $idtoken->claim('upn');
+                }
+                if (empty($oidcusername)) {
+                    $oidcusername = $idtoken->claim('preferred_username');
+                }
                 if (empty($oidcusername)) {
                     $oidcusername = $idtoken->claim('email');
                 }

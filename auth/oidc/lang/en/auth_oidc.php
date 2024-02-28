@@ -89,6 +89,8 @@ $string['cfg_err_invalidclientid'] = 'Invalid client ID';
 $string['cfg_err_invalidclientsecret'] = 'Invalid client secret';
 $string['cfg_forceredirect_key'] = 'Force redirect';
 $string['cfg_forceredirect_desc'] = 'If enabled, will skip the login index page and redirect to the OpenID Connect page. Can be bypassed with ?noredirect=1 URL param';
+$string['cfg_useupn_key'] = 'Always use UPN';
+$string['cfg_useupn_desc'] = 'If enabled and IdP type is Microsoft, UPN will be used for login flow instead of preferred name.';
 $string['cfg_icon_key'] = 'Icon';
 $string['cfg_icon_desc'] = 'An icon to display next to the provider name on the login page.';
 $string['cfg_iconalt_o365'] = 'Microsoft 365 icon';
