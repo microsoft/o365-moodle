@@ -987,10 +987,14 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         // Update groups cache.
-        $graphclient = main::get_unified_api(__METHOD__);
-        if ($graphclient) {
-            $cohortsync = new main($graphclient);
-            $cohortsync->update_groups_cache();
+        try {
+            $graphclient = main::get_unified_api(__METHOD__);
+            if ($graphclient) {
+                $cohortsync = new main($graphclient);
+                $cohortsync->update_groups_cache();
+            }
+        } catch (moodle_exception $e) {
+            // Do nothing.
         }
 
         // O365 savepoint reached.
