@@ -52,7 +52,7 @@ class apptoken extends \local_o365\oauth2\token {
     public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
         $token = static::get_app_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
-            if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+            if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $token['resource'] = $tokenresource;
                 $token['expires_on'] = null;
             }
