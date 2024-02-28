@@ -259,14 +259,14 @@ class application extends moodleform {
             // If "certificate" authentication method is used, ensure tenant specific endpoints are used.
             if ($data['idptype'] == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
                 $data['clientauthmethod'] == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
-                if (str_pos($data['authendpoint'], '/common/') !== false ||
-                    str_pos($data['authendpoint'], '/organizations/') !== false ||
-                    str_pos($data['authendpoint'], '/consumers/') !== false) {
+                if (strpos($data['authendpoint'], '/common/') !== false ||
+                    strpos($data['authendpoint'], '/organizations/') !== false ||
+                    strpos($data['authendpoint'], '/consumers/') !== false) {
                     $errors['authendpoint'] = get_string('error_tenant_specific_endpoint_required', 'auth_oidc');
                 }
-                if (str_pos($data['tokenendpoint'], '/common/') !== false ||
-                    str_pos($data['tokenendpoint'], '/organizations/') !== false ||
-                    str_pos($data['tokenendpoint'], '/consumers/') !== false) {
+                if (strpos($data['tokenendpoint'], '/common/') !== false ||
+                    strpos($data['tokenendpoint'], '/organizations/') !== false ||
+                    strpos($data['tokenendpoint'], '/consumers/') !== false) {
                     $errors['tokenendpoint'] = get_string('error_tenant_specific_endpoint_required', 'auth_oidc');
                 }
             }
