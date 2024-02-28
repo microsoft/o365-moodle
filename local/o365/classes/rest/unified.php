@@ -1854,63 +1854,6 @@ class unified extends o365api {
     }
 
     /**
-     * Get the Microsoft Entra ID account UPN of a connected Moodle user.
-     *
-     * @param stdClass|int $user The Moodle user.
-     * @return string|bool The user's Microsoft Entra ID account UPN, or false if failure.
-     */
-    public static function get_muser_upn($user) {
-        global $DB;
-        $now = time();
-
-        if (is_numeric($user)) {
-            $user = $DB->get_record('user', ['id' => $user]);
-            if (empty($user)) {
-                utils::debug('User not found', __METHOD__, $user);
-                return false;
-            }
-        }
-
-        // Get user UPN.
-        $userobjectdata = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
-        if (empty($userobjectdata)) {
-            // Get user data.
-            $o365user = o365user::instance_from_muserid($user->id);
-            if (empty($o365user)) {
-                // No o365 user data for the user is available.
-                utils::debug('Could not construct o365user class for user.', __METHOD__, $user->username);
-                return false;
-            }
-            try {
-                $apiclient = utils::get_api();
-            } catch (moodle_exception $e) {
-                utils::debug($e->getMessage(), __METHOD__, $e);
-                return false;
-            }
-
-            $isguestuser = false;
-            if (stripos($user->username, '_ext_') !== false) {
-                $isguestuser = true;
-            }
-            $userdata = $apiclient->get_user($o365user->objectid, $isguestuser);
-            if (is_null($userdata)) {
-                utils:debug('Could not retrieve user data from API.', __METHOD__, $user->username);
-                return false;
-            }
-
-            if (static::is_configured() && empty($userdata['objectId']) && !empty($userdata['id'])) {
-                $userdata['objectId'] = $userdata['id'];
-            }
-            $userobjectdata = (object) ['type' => 'user', 'subtype' => '', 'objectid' => $userdata['objectId'],
-                'o365name' => $userdata['userPrincipalName'], 'moodleid' => $user->id, 'timecreated' => $now,
-                'timemodified' => $now,];
-            $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
-        }
-
-        return $userobjectdata->o365name;
-    }
-
-    /**
      * Provision an app in a team.
      *
      * @param string $groupobjectid
