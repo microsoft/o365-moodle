@@ -67,6 +67,10 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox('auth_oidc/forceredirect',
         get_string('cfg_forceredirect_key', 'auth_oidc'), get_string('cfg_forceredirect_desc', 'auth_oidc'), 0));
 
+    // Use UPN.
+    $settings->add(new admin_setting_configcheckbox('auth_oidc/useupn',
+        get_string('cfg_useupn_key', 'auth_oidc'), get_string('cfg_useupn_desc', 'auth_oidc'), 0));
+
     // Auto-append.
     $settings->add(new admin_setting_configtext('auth_oidc/autoappend',
         get_string('cfg_autoappend_key', 'auth_oidc'), get_string('cfg_autoappend_desc', 'auth_oidc'), '', PARAM_TEXT));
