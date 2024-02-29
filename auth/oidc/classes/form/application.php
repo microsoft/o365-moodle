@@ -243,7 +243,7 @@ class application extends moodleform {
         }
 
         // Validate endpoints.
-        if (in_array($data['idptype'], AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
+        if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
             // Ensure authendpoint version matches IdP type.
             $authendpointidptype = auth_oidc_determine_endpoint_version($data['authendpoint']);
             if ($authendpointidptype != $data['idptype']) {
