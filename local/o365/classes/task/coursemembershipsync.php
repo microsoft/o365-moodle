@@ -78,7 +78,7 @@ class coursemembershipsync extends scheduled_task {
 
         if ($graphclient) {
             $coursesync = new main($graphclient, true);
-            $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses();
+            $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
 
             $connectedusers = utils::get_connected_users();
 

@@ -373,7 +373,7 @@ class repository_office365 extends repository {
 
         if ($path === '/') {
             // Show available courses.
-            $enabledcourses = \local_o365\feature\coursesync\utils::get_enabled_courses();
+            $enabledcourses = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
             foreach ($coursesbyid as $course) {
                 if ($enabledcourses === true || in_array($course->id, $enabledcourses)) {
                     $list[] = [

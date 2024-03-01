@@ -54,14 +54,20 @@ class utils {
     /**
      * Get an array of enabled courses.
      *
+     * @param bool $returnallids Whether to return all course IDs. If set to false and sync is on all courses, TRUE is returned.
      * @return bool|array Array of course IDs, or TRUE if all courses enabled.
      */
-    public static function get_enabled_courses() {
+    public static function get_enabled_courses(bool $returnallids = false) {
         global $DB;
 
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'onall') {
-            return true;
+            if ($returnallids) {
+                $courseids = $DB->get_fieldset_select('course', 'id', 'id != ?', [SITEID]);
+                return $courseids;
+            } else {
+                return true;
+            }
         } else if ($coursesyncsetting === 'oncustom') {
             $coursesenabled = get_config('local_o365', 'coursesynccustom');
             $coursesenabled = @json_decode($coursesenabled, true);
@@ -637,7 +643,7 @@ class utils {
                 $coursesync = new main($graphclient);
                 if ($coursesync) {
                     if ($coursesync->has_education_license()) {
-                        $syncedcourses = static::get_enabled_courses();
+                        $syncedcourses = static::get_enabled_courses(true);
                         // Exclude SDS synced courses.
                         $sdscourseids = $DB->get_fieldset_select('local_o365_objects', 'moodleid',
                             'type = ? AND subtype = ?', ['sdssection', 'course']);
