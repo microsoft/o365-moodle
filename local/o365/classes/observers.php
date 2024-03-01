@@ -517,6 +517,7 @@ class observers {
             $coursecreatedfromcustomcourserequest = true;
             $task = new processcourserequestapproval();
             $task->set_custom_data(['customrequest' => $customrequest, 'courseid' => $courseid, 'shortname' => $shortnametocheck]);
+            $task->set_next_run_time(time() + 1);
             manager::queue_adhoc_task($task);
         }
 
