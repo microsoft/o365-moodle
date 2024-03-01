@@ -61,7 +61,7 @@ class groupmembershipsync extends adhoc_task {
         if ($graphclient) {
             $coursesync = new main($graphclient);
 
-            $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses();
+            $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
             foreach ($coursesenabled as $courseid) {
                 $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($courseid);
             }
