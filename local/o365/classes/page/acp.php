@@ -1314,7 +1314,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $this->set_title(get_string('acp_maintenance_recreatedeletedgroups', 'local_o365'));
 
-        $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses();
+        $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         $coursesync = new main($graphclient, true);
