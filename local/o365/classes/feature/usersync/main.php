@@ -758,8 +758,7 @@ class main {
 
                     return false;
                 }
-                $usergroupsresults = $apiclient->get_user_transitive_groups($entraiduserdata['id']);
-                $usergroups = $usergroupsresults['value'];
+                $usergroups = $apiclient->get_user_transitive_groups($entraiduserdata['id']);
 
                 foreach ($usergroups as $usergroup) {
                     if ($group['id'] === $usergroup) {
