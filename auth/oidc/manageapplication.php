@@ -57,7 +57,7 @@ $form = new application(null, ['oidcconfig' => $oidcconfig]);
 $formdata = [];
 foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
     'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
-    'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope'] as $field) {
+    'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope', 'secretexpiryrecipients'] as $field) {
     if (isset($oidcconfig->$field)) {
         $formdata[$field] = $oidcconfig->$field;
     }
@@ -81,6 +81,7 @@ if ($form->is_cancelled()) {
     switch ($fromform->clientauthmethod) {
         case AUTH_OIDC_AUTH_METHOD_SECRET:
             $configstosave[] = 'clientsecret';
+            $configstosave[] = 'secretexpiryrecipients';
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
             $configstosave[] = 'clientcertsource';
@@ -100,12 +101,16 @@ if ($form->is_cancelled()) {
 
     // Save config settings.
     $updateapplicationtokenrequired = false;
+    $settingschanged = false;
     foreach ($configstosave as $config) {
         $existingsetting = get_config('auth_oidc', $config);
         if ($fromform->$config != $existingsetting) {
             set_config($config, $fromform->$config, 'auth_oidc');
             add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
-            $updateapplicationtokenrequired = true;
+            $settingschanged = true;
+            if ($config != 'secretexpiryrecipients') {
+                $updateapplicationtokenrequired = true;
+            }
         }
     }
 
@@ -130,6 +135,8 @@ if ($form->is_cancelled()) {
         } else {
             redirect($url, get_string('application_updated', 'auth_oidc'));
         }
+    } else if ($settingschanged) {
+        redirect($url, get_string('application_updated', 'auth_oidc'));
     } else {
         redirect($url, get_string('application_not_changed', 'auth_oidc'));
     }
