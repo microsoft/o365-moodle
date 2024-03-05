@@ -155,12 +155,20 @@ $string['cfg_logoutendpoint_desc'] = 'The URI of the logout endpoint from your I
 $string['cfg_frontchannellogouturl_key'] = 'Front-channel Logout URL';
 $string['cfg_frontchannellogouturl_desc'] = 'This is the URL that your IdP needs to trigger when it tries to log users out of Moodle.<br/>
 For Microsoft Entra ID / Microsoft identity platform, the setting is called "Front-channel logout URL" and is configurable in the Azure app.';
-$string['cfg_field_mapping_desc'] = 'User profile data can be mapped from Open ID Connect IdP to Moodle.<br/>
+$string['cfg_field_mapping_desc'] = 'User profile data can be mapped from Open ID Connect IdP to Moodle. The remote fields available to map heavily depends on the IdP type.<br/>
 <ul>
-<li>Basic profile data is available from ID tokens from all IdP.</li>
-<li>If Microsoft Entra ID is used as the IdP, additional profile data can be made available by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
+<li>Some basic profile fields are available from access token and ID token claims from all IdP types.</li>
+<li>If Microsoft IdP type is configured (either v1.0 or v2.0), additional profile data can be made available via Graph API calls by installing and configuring the <a href="https://moodle.org/plugins/local_o365">Microsoft 365 integration plugin (local_o365)</a>.</li>
 <li>If SDS profile sync feature is enabled in the local_o365 plugin, certain profile fields can be synchronised from SDS to Moodle. when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Microsoft Entra ID" scheduled task, nor when user logs in.</li>
+</ul>
+
+The claims available from the ID and access tokens vary depending on IdP type, but most IdP allows some level of customisation of the claims. Documentation on Microsoft IdPs are linked below:
+<ul>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference">Access token claims</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference">ID token claims</a></li>
+<li><a target="_blank" href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference">Optional claim configuration</a>: Note "Email" is an optional claim in Microsoft Entra ID (v1.0) IdP type.</li>
 </ul>';
+
 $string['cfg_cleanupoidctokens_key'] = 'Cleanup OpenID Connect Tokens';
 $string['cfg_cleanupoidctokens_desc'] = 'If your users are experiencing problems logging in using their Microsoft 365 account, trying cleaning up OpenID Connect tokens. This removes stray and incomplete tokens that can cause errors. WARNING: This may interrupt logins in-process, so it\'s best to do this during downtime.';
 $string['settings_section_basic'] = 'Basic settings';
