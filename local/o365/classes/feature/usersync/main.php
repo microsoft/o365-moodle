@@ -758,7 +758,7 @@ class main {
 
                     return false;
                 }
-                $usergroupsresults = $apiclient->get_user_transitive_groups($aaddata['id']);
+                $usergroupsresults = $apiclient->get_user_transitive_groups($entraiduserdata['id']);
                 $usergroups = $usergroupsresults['value'];
 
                 foreach ($usergroups as $usergroup) {
@@ -776,9 +776,9 @@ class main {
         } else if (substr($restriction['remotefield'], 0, 18) == 'extensionAttribute') {
             $extensionattributeid = substr($restriction['remotefield'], 18);
             if (ctype_digit($extensionattributeid) && $extensionattributeid >= 1 && $extensionattributeid <= 15) {
-                if (isset($aaddata['onPremisesExtensionAttributes']) &&
-                    isset($aaddata['onPremisesExtensionAttributes'][$restriction['remotefield']])) {
-                    $fieldval = $aaddata['onPremisesExtensionAttributes'][$restriction['remotefield']];
+                if (isset($entraiduserdata['onPremisesExtensionAttributes']) &&
+                    isset($entraiduserdata['onPremisesExtensionAttributes'][$restriction['remotefield']])) {
+                    $fieldval = $entraiduserdata['onPremisesExtensionAttributes'][$restriction['remotefield']];
                     $restrictionval = $restriction['value'];
 
                     if ($useregex === true) {
