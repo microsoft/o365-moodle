@@ -196,6 +196,7 @@ class notifysecretexpiry extends scheduled_task {
         $notificationreciepients = $this->get_notification_recipients();
 
         foreach ($notificationreciepients as $recipient) {
+            mtrace('...... Sending notification to ' . $recipient->email . '.');
             email_to_user($recipient, $supportuser, $subject, $message);
         }
     }
@@ -223,6 +224,7 @@ class notifysecretexpiry extends scheduled_task {
 
         $notificationreciepients = $this->get_notification_recipients();
         foreach ($notificationreciepients as $recipient) {
+            mtrace('...... Sending notification to ' . $recipient->email . '.');
             email_to_user($recipient, $supportuser, $subject, $message);
         }
     }
@@ -239,6 +241,7 @@ class notifysecretexpiry extends scheduled_task {
 
         $notificationreciepients = $this->get_notification_recipients();
         foreach ($notificationreciepients as $recipient) {
+            mtrace('...... Sending notification to ' . $recipient->email . '.');
             email_to_user($recipient, $supportuser, $subject, $message);
         }
     }
