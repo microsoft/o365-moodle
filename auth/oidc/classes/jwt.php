@@ -140,6 +140,23 @@ class jwt {
      * @return mixed The value of the claim.
      */
     public function claim($claim) {
+        // PATCH - refs #2754378
+        // If the token contains a claim for 'employeeNumber' (EIN), then
+        //   add the 'source' and create a reliable UPN
+        // else
+        //   let the original behavior suffice
+        if (getenv('O365_ENABLE_EIN_PATCH') !== false) {
+            if (!empty($claim) && $claim == 'upn') {
+                $ein = $this->claim('person_ein');
+                if (!empty($ein)) {
+                    $src = $this->claim('person_source');
+                    if (empty($src)) {
+                        $src = 'unknown';
+                    }
+                    return $src . '_' . $ein;
+                }
+            }
+        }
         return (isset($this->claims[$claim])) ? $this->claims[$claim] : null;
     }
 

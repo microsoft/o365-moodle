@@ -573,7 +573,13 @@ class authcode extends base {
             if ($existingmatching = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $oidcuniqid])) {
                 $existinguser = core_user::get_user($existingmatching->moodleid);
                 if ($existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername)) {
-                    $usernamechanged = true;
+                    // PATCH - refs #2685838
+                    // The tokenrec->oidcusername will never match the idtoken->upn,
+                    // so never try to update it (leave $usernamechanged == false).
+                    if (getenv('O365_ENABLE_EIN_PATCH') !== false) {
+                    } else {
+                        $usernamechanged = true;
+                    }
                 }
             }
         }
