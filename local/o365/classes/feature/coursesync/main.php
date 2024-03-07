@@ -27,6 +27,7 @@
 namespace local_o365\feature\coursesync;
 
 use context_course;
+use core\task\manager;
 use local_o365\rest\unified;
 use moodle_exception;
 use stdClass;
@@ -592,6 +593,12 @@ class main {
 
         $this->mtrace('Processing courses without groups...');
 
+        // Process adhoc tasks first to prevent creating duplicate teams for the same course.
+        $courserequestadhoctasks = manager::get_adhoc_tasks('local_o365\task\processcourserequestapproval');
+        foreach ($courserequestadhoctasks as $courserequestadhoctask) {
+            $courserequestadhoctask->execute();
+        }
+
         $sql = 'SELECT crs.*
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
@@ -610,6 +617,7 @@ class main {
         $courses = $DB->get_recordset_sql($sql, $params);
 
         $coursesprocessed = 0;
+
         foreach ($courses as $course) {
             if ($coursesprocessed > $courselimit) {
                 $this->mtrace('Course processing limit of ' . $courselimit . ' reached. Exit.');
