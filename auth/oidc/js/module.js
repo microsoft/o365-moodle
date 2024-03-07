@@ -35,10 +35,17 @@ M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertifica
 
     $clientauthmethod.change(function() {
         if ($(this).val() == authmethodcertificate) {
-            $clientcert.prop('disabled', false);
-            $clientprivatekey.prop('disabled', false);
-            $clientprivatekeyfile.prop('disabled', false);
-            $clientcertfile.prop('disabled', false);
+            if ($clientcertsource.val() == 'file') {
+                $clientcert.prop('disabled', true);
+                $clientprivatekey.prop('disabled', true);
+                $clientprivatekeyfile.prop('disabled', false);
+                $clientcertfile.prop('disabled', false);
+            } else {
+                $clientcert.prop('disabled', false);
+                $clientprivatekey.prop('disabled', false);
+                $clientprivatekeyfile.prop('disabled', true);
+                $clientcertfile.prop('disabled', true);
+            }
             $clientcertpassphrase.prop('disabled', false);
             $clientcertsource.prop('disabled', false);
         } else {
