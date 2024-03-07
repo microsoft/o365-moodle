@@ -655,7 +655,7 @@ function auth_oidc_get_client_auth_method_name() {
  *
  * @return string
  */
-function auth_oidc_get_binding_username_claim() {
+function auth_oidc_get_binding_username_claim() : string {
     $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
 
     if (empty($bindingusernameclaim)) {
@@ -674,29 +674,31 @@ function auth_oidc_get_binding_username_claim() {
  * Return the claims that presents in the existing tokens.
  *
  * @return array
- * @throws dml_exception
  * @throws moodle_exception
  */
-function auth_oidc_get_existing_claims() {
+function auth_oidc_get_existing_claims() : array {
     global $DB;
 
     $tokens = $DB->get_records('auth_oidc_token', null, 'expiry DESC');
     $tokenrecord = array_shift($tokens);
 
-    $excludedclaims = ['appid', 'appidacr', 'app_displayname', 'ipaddr', 'scp', 'tenant_region_scope', 'ver', 'aud', 'iss',
-        'iat', 'nbf', 'exp', 'idtyp', 'plantf', 'xms_tcdt', 'xms_tdbr'];
+    $tokenclaims = [];
 
-    $decodedtoken = jwt::decode($tokenrecord->idtoken);
-    if (is_array($decodedtoken) && count($decodedtoken) > 1) {
-        $tokenclaims = [];
-        foreach ($decodedtoken[1] as $claim => $value) {
-            if (!in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value))) {
-                $tokenclaims[] = $claim;
+    if ($tokenrecord) {
+        $excludedclaims = ['appid', 'appidacr', 'app_displayname', 'ipaddr', 'scp', 'tenant_region_scope', 'ver', 'aud', 'iss',
+            'iat', 'nbf', 'exp', 'idtyp', 'plantf', 'xms_tcdt', 'xms_tdbr'];
+
+        $decodedtoken = jwt::decode($tokenrecord->idtoken);
+        if (is_array($decodedtoken) && count($decodedtoken) > 1) {
+            foreach ($decodedtoken[1] as $claim => $value) {
+                if (!in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value))) {
+                    $tokenclaims[] = $claim;
+                }
             }
         }
-    }
 
-    asort($tokenclaims);
+        asort($tokenclaims);
+    }
 
     return $tokenclaims;
 }

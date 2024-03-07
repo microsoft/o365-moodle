@@ -87,6 +87,7 @@ class preview extends html_table {
         $linenum = 1;
 
         while ($linenum <= $this->previewrows and $fields = $this->cir->next()) {
+            $hasfatalerror = false;
             $linenum++;
             $rowcols = [];
             $rowcols['line'] = $linenum;
@@ -97,6 +98,7 @@ class preview extends html_table {
 
             if (!isset($rowcols['username']) || !isset($rowcols['new_username'])) {
                 $rowcols['status'][] = get_string('update_error_incomplete_line', 'auth_oidc');
+                $hasfatalerror = true;
             }
 
             $user = $DB->get_record('user', ['username' => $rowcols['username']]);
@@ -109,9 +111,10 @@ class preview extends html_table {
             $lcnewusername = core_text::strtolower($rowcols['new_username']);
             if ($lcnewusername != core_user::clean_field($lcnewusername, 'username')) {
                 $rowcols['status'][] = get_string('update_error_invalid_new_username', 'auth_oidc');
+                $hasfatalerror = true;
             }
 
-            $this->noerror = empty($rowcols['status']);
+            $this->noerror = !$hasfatalerror && $this->noerror;
             $rowcols['status'] = join('<br />', $rowcols['status']);
             $data[] = $rowcols;
         }

@@ -39,6 +39,9 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * Class process represents the process binding username claim tool.
  */
 class process {
+    const ROUTE_AUTH_OIDC_RENAME = 1;
+    const ROUTE_AUTH_OTHER_MATCH = 2;
+
     /** @var csv_import_reader */
     protected $cir;
     /** @var array */
@@ -164,18 +167,10 @@ class process {
         }
 
         $user = core_user::get_user_by_username($lcusername);
-
-        if (!$user) {
-            $this->upt->track('status', get_string('update_error_user_not_found', 'auth_oidc'));
-            $this->userserrors++;
-
-            return;
-        }
-        if ($user->auth != 'oidc') {
-            $this->upt->track('status', get_string('update_error_user_not_oidc', 'auth_oidc'));
-            $this->userserrors++;
-
-            return;
+        if ($user && $user->auth == 'oidc') {
+            $route = self::ROUTE_AUTH_OIDC_RENAME;
+        } else {
+            $route = self::ROUTE_AUTH_OTHER_MATCH;
         }
 
         if ($newusername !== core_user::clean_field($newusername, 'username')) {
@@ -186,38 +181,87 @@ class process {
         }
 
         $this->upt->track('new_username', $newusername);
-        $this->upt->track('id', $user->id);
 
         // All check passed, update the user record.
+        $userupdated = false;
+        $authoidctokenupdated = false;
+        $localo365objectupdated = false;
 
-        // Step 1: Update the user object.
-        $user->username = $lcnewusername;
-        try {
-            user_update_user($user, false);
-        } catch (moodle_exception $e) {
-            $this->upt->track('status', get_string('update_error_user_update_failed', 'auth_oidc'));
-            $this->userserrors++;
+        // Step 1: Update the user object, if route is auth_oidc rename.
+        if ($route == self::ROUTE_AUTH_OIDC_RENAME) {
+            $this->upt->track('id', $user->id);
 
-            return;
+            $user->username = $lcnewusername;
+            try {
+                user_update_user($user, false);
+                $userupdated = true;
+            } catch (moodle_exception $e) {
+                $this->upt->track('status', get_string('update_error_user_update_failed', 'auth_oidc'));
+                $this->userserrors++;
+
+                return;
+            }
         }
 
         // Step 2: Update the token record.
-        if ($tokenrecord = $DB->get_record('auth_oidc_token', ['userid' => $user->id])) {
-            $tokenrecord->username = $lcnewusername;
-            $tokenrecord->useridentifier = $newusername;
-            $DB->update_record('auth_oidc_token', $tokenrecord);
+        if ($route == self::ROUTE_AUTH_OIDC_RENAME) {
+            if ($tokenrecord = $DB->get_record('auth_oidc_token', ['userid' => $user->id])) {
+                $tokenrecord->username = $lcnewusername;
+                $tokenrecord->useridentifier = $newusername;
+                $DB->update_record('auth_oidc_token', $tokenrecord);
+                $authoidctokenupdated = true;
+            }
+        } else {
+            $sql = "SELECT *
+                      FROM {auth_oidc_token}
+                     WHERE lower(useridentifier) = ?";
+            if ($tokenrecord = $DB->get_record_sql($sql, [$lcusername])) {
+                $tokenrecord->useridentifier = $newusername;
+                $DB->update_record('auth_oidc_token', $tokenrecord);
+                $authoidctokenupdated = true;
+            }
         }
 
         // Step 3: Update connection record in local_o365_object table.
         if (auth_oidc_is_local_365_installed()) {
-            if ($connectionrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
-                $connectionrecord->o365name = $newusername;
-                $DB->update_record('local_o365_objects', $connectionrecord);
+            if ($route == static::ROUTE_AUTH_OIDC_RENAME) {
+                if ($connectionrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
+                    $connectionrecord->o365name = $newusername;
+                    $DB->update_record('local_o365_objects', $connectionrecord);
+                    $localo365objectupdated = true;
+                }
+            } else {
+                $sql = "SELECT *
+                          FROM {local_o365_objects}
+                         WHERE type = 'user'
+                           AND lower(o365name) = ?";
+                if ($connectionrecord = $DB->get_record_sql($sql, [$lcusername])) {
+                    $connectionrecord->o365name = $newusername;
+                    $DB->update_record('local_o365_objects', $connectionrecord);
+                    $localo365objectupdated = true;
+                }
             }
         }
 
-        $this->usersupdated++;
-        $this->upt->track('status', get_string('update_success', 'auth_oidc'));
+        if ($userupdated) {
+            $this->upt->track('status', get_string('update_success_username', 'auth_oidc'));
+        }
+
+        if ($authoidctokenupdated) {
+            $this->upt->track('status', get_string('update_success_token', 'auth_oidc'));
+        }
+
+        if ($localo365objectupdated) {
+            $this->upt->track('status', get_string('update_success_o365', 'auth_oidc'));
+        }
+
+        if ($userupdated || $authoidctokenupdated || $localo365objectupdated) {
+            // At least one of the records has been updated.
+            $this->usersupdated++;
+        } else {
+            $this->upt->track('status', get_string('update_error_nothing_updated', 'auth_oidc'));
+            $this->userserrors++;
+        }
     }
 
     /**
