@@ -25,6 +25,7 @@
 
 namespace auth_oidc\form;
 
+use moodle_exception;
 use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
@@ -52,6 +53,7 @@ class binding_username_claim extends moodleform {
 
         // Binding username claim.
         $idptype = get_config('auth_oidc', 'idptype');
+        $bindingusernameoptions = [];
         switch ($idptype) {
             case AUTH_OIDC_IDP_TYPE_OTHER:
                 $this->optionset = self::OPTION_SET_NON_MS_IDP;
@@ -94,6 +96,10 @@ class binding_username_claim extends moodleform {
                     ];
                 }
                 break;
+        }
+
+        if (empty($bindingusernameoptions)) {
+            throw new moodle_exception('missing_idp_type', 'auth_oidc');
         }
 
         $mform->addElement('select', 'bindingusernameclaim', auth_oidc_config_name_in_form('binding_username_claim'), $bindingusernameoptions);
