@@ -35,5 +35,5 @@ $plugin->dependencies = [
     'block_microsoft' => 2023100910,
     'local_o365' => 2023100910,
     'repository_office365' => 2023100910,
-    'theme_boost_o365teams' => 2023100910,
+    'theme_boost_o365teams' => 2023100900,
 ];
