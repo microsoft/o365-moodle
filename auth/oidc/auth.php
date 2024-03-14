@@ -74,15 +74,6 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
-     * Returns true if plugin can be manually set.
-     *
-     * @return bool
-     */
-    function can_be_manually_set() {
-        return true;
-    }
-
-    /**
      * Returns a list of potential IdPs that this authentication plugin supports. Used to provide links on the login page.
      *
      * @param string $wantsurl The relative url fragment the user wants to get to.
