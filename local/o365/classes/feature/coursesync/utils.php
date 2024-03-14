@@ -789,7 +789,10 @@ class utils {
                             break;
                         case MICROSOFT365_GROUP_ROLE_MEMBER:
                             // Add user to the Microsoft 365 group as member.
-                            $coursesync->remove_owner_from_group($groupobjectid, $userobjectid);
+                            $groupowneroids = $coursesync->get_group_owners($groupobjectid);
+                            if (in_array($userobjectid, $groupowneroids)) {
+                                $coursesync->remove_owner_from_group($groupobjectid, $userobjectid);
+                            }
                             $coursesync->add_member_to_group($groupobjectid, $userobjectid);
                             break;
                     }
