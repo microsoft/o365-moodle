@@ -679,20 +679,26 @@ function auth_oidc_get_binding_username_claim() : string {
 function auth_oidc_get_existing_claims() : array {
     global $DB;
 
-    $tokens = $DB->get_records('auth_oidc_token', null, 'expiry DESC');
-    $tokenrecord = array_shift($tokens);
+    $sql = 'SELECT *
+              FROM {auth_oidc_token}
+          ORDER BY expiry DESC';
+    $tokenrecord = $DB->get_record_sql($sql, null, IGNORE_MULTIPLE);
 
     $tokenclaims = [];
 
     if ($tokenrecord) {
         $excludedclaims = ['appid', 'appidacr', 'app_displayname', 'ipaddr', 'scp', 'tenant_region_scope', 'ver', 'aud', 'iss',
-            'iat', 'nbf', 'exp', 'idtyp', 'plantf', 'xms_tcdt', 'xms_tdbr'];
+            'iat', 'nbf', 'exp', 'idtyp', 'plantf', 'xms_tcdt', 'xms_tdbr', 'amr', 'nonce', 'tid', 'acct', 'acr', 'signin_state',
+            'wids'];
 
-        $decodedtoken = jwt::decode($tokenrecord->idtoken);
-        if (is_array($decodedtoken) && count($decodedtoken) > 1) {
-            foreach ($decodedtoken[1] as $claim => $value) {
-                if (!in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value))) {
-                    $tokenclaims[] = $claim;
+        foreach (['idtoken', 'token'] as $tokenkey) {
+            $decodedtoken = jwt::decode($tokenrecord->$tokenkey);
+            if (is_array($decodedtoken) && count($decodedtoken) > 1) {
+                foreach ($decodedtoken[1] as $claim => $value) {
+                    if (!in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value)) &&
+                        !in_array($claim, $tokenclaims)) {
+                        $tokenclaims[] = $claim;
+                    }
                 }
             }
         }
