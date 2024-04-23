@@ -167,6 +167,11 @@ class process {
         }
 
         $user = core_user::get_user_by_username($lcusername);
+        if (!$user) {
+            $user = core_user::get_user_by_email($lcusername);
+            $this->upt->track('status', get_string('update_warning_email_match', 'auth_oidc'));
+        }
+
         if ($user && $user->auth == 'oidc') {
             $route = self::ROUTE_AUTH_OIDC_RENAME;
         } else {
