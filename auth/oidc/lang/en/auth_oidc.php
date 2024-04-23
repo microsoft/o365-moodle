@@ -449,6 +449,7 @@ $string['update_error_user_not_found'] = 'No user found matching the username. W
 $string['update_error_user_not_oidc'] = 'The user is not using OpenID Connect authentication method. Will try update manually matched user.';
 $string['update_error_invalid_new_username'] = 'New username is invalid.';
 $string['update_error_user_update_failed'] = 'Failed to update user.';
+$string['update_warning_email_match'] = 'Email matches existing user.';
 $string['update_success_username'] = 'Username updated successfully.';
 $string['update_success_token'] = 'Token updated successfully.';
 $string['update_success_o365'] = 'Microsoft 365 connection record updated successfully.';
