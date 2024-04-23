@@ -459,17 +459,22 @@ $string['error_invalid_upload_file'] = 'Invalid upload file.';
 $string['csvline'] = 'CSV line';
 $string['change_binding_username_claim_tool'] = 'Change binding username claim tool';
 $string['change_binding_username_claim_tool_description'] = '<p class="warning_header">This is an advanced feature!</p>
-<p>This tool allows site administrators to bulk update usernames, binding usernames in stored OpenID Connect ID tokens, and Moodle and Microsoft account connection records.</p>
+<p>This tool allows site administrators to bulk update the following records:</p>
+<ul>
+<li>Moodle account usernames,</li>
+<li>Binding usernames in stored OpenID Connect ID tokens,</li>
+<li>Moodle and Microsoft account connection records.</li>
+</ul>
 <p>This should only be used when changing the <b>Binding username claim</b> settings.</p>
 <p class="warning">Be very cautious when using this feature, and follow the steps on the <a href="{$a}" target="_blank">Binding username claim configuration page</a>. Misuse of this tool will result in Moodle user records being damaged and/or SSO failure.</p>
 <p>The tool accepts a simple CSV file with two columns:</p>
 <ul>
-<li><b><span class="code">username</span></b>: The current username of the Moodle account to be updated, or if the current user is manually matched, this needs to be current binding claim value.</li>
+<li><b><span class="code">username</span></b>: The current username of the Moodle account to be updated, or if the current user is manually matched, this needs to be the current binding claim value.</li>
 <li><b><span class="code">new_username</span></b>: The case-sensitive value of the new token claim to be used as the binding username claim. If the user is automatically matched and uses the OpenID Connect authentication type, the lowercase of this value will be used as Moodle username.</li>
 </ul>
 <p>When the file is uploaded, the tool will perform the following actions:</p>
 <ol>
-<li>Find an existing Moodle user with the given <span class="code">username</span> and using the OpenID Connect authentication method, and if one is found, update the username of the user to be the lowercase of <span class="code">new_username</span>.</li>
+<li>Find an existing Moodle user with the given <span class="code">username</span> as either username or email address, and using the OpenID Connect authentication method, and if one is found, update the username of the user to be the lowercase of <span class="code">new_username</span>.</li>
 <li>Update OpenID Connect token record.
 <ul>
 <li>If a user is found in the step 1 above, then find the token record in the <span class="code">auth_oidc_token</span> table for the user, and update <span class="code">username</span> column to be the lowercase of <span class="code">new_username</span>, and <span class="code">oidcusername</span> column to be the same as <span class="code">new_username</span>.</li>
