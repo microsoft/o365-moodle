@@ -103,7 +103,12 @@ class preview extends html_table {
 
             $user = $DB->get_record('user', ['username' => $rowcols['username']]);
             if (!$user) {
-                $rowcols['status'][] = get_string('update_error_user_not_found', 'auth_oidc');
+                $user = $DB->get_record('user', ['email' => $rowcols['username']]);
+                if ($user) {
+                    $rowcols['status'][] = get_string('update_warning_email_match', 'auth_oidc');
+                } else {
+                    $rowcols['status'][] = get_string('update_error_user_not_found', 'auth_oidc');
+                }
             } else if ($user->auth != 'oidc') {
                 $rowcols['status'][] = get_string('update_error_user_not_oidc', 'auth_oidc');
             }
