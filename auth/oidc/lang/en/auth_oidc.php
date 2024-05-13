@@ -128,6 +128,22 @@ $string['cfg_loginflow_authcode'] = 'Authorization Code Flow <b>(recommended)</b
 $string['cfg_loginflow_authcode_desc'] = 'Using this flow, the user clicks the name of the IdP (See "Provider Display Name" above) on the Moodle login page and is redirected to the provider to log in. Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently. This is the most standardized, secure way for the user log in.';
 $string['cfg_loginflow_rocreds'] = 'Resource Owner Password Credentials Grant <b>(deprecated)</b>';
 $string['cfg_loginflow_rocreds_desc'] = '<b>This login flow is deprecated and will be removed from the plugin soon.</b><br/>Using this flow, the user enters their username and password into the Moodle login form like they would with a manual login. This will authorize the user with the IdP, but will not create a session on the IdP\'s site. For example, if using Microsoft 365 with OpenID Connect, the user will be logged in to Moodle but not the Microsoft 365 web applications. Using the authorization request is recommended if you want users to be logged in to both Moodle and the IdP. Note that not all IdP support this flow. This option should only be used when other authorization grant types are not available.';
+$string['cfg_silentloginmode_key'] = 'Silent Login Mode';
+$string['cfg_silentloginmode_desc'] = 'If enabled, Moodle will try to use the active session of a user authenticated to the configured authorization endpoint to log the user in.<br/>
+To use this feature, the following configurations are required:
+<ul>
+<li><b>Force users to log in</b> (forcelogin) in the <a href="{$a}" target="_blank">Site policies section</a> is enabled.</li>
+<li><b>Force redirect</b> (auth_oidc/forceredirect) setting above is enabled.</li>
+</ul>
+In order to avoid Moodle trying to use personal accounts or accounts from other tenants to login, it is also recommended to use tenant specific endpoints, rather than generic ones using "common" or "organization" etc. paths.<br/>
+<br/>
+For Microsoft IdPs, the user experience is as follows:
+<ul>
+<li>If no active user session is found, Moodle login page will show.</li>
+<li>If only one active user session is found, and the user has access to the Entra ID app (i.e. user is from the same tenant, or is a guest user of the tenant), the user will be logged in to Moodle automatically using SSO.</li>
+<li>If only one active user session is found, but the user doesn\'t have access to the Entra ID app (e.g. the user is from a different tenant, or the app requires user assignment and the user isn\'t assigned), the Moodle login page will show.</li>
+<li>If there are multiple active user sessions who have access to the Entra ID app, a page will show to allow the user to select the account to log in with.</li>
+</ul>';
 $string['oidcresource'] = 'Resource';
 $string['oidcresource_help'] = 'The OpenID Connect resource for which to send the request.<br/>
 <b>Note</b> this is paramater is not supported in <b>Microsoft identity platform (v2.0)</b> IdP type.';
