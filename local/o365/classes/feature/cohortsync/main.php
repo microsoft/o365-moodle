@@ -201,7 +201,7 @@ class main {
      */
     public function fetch_cohorts() : void {
         $systemcontext = context_system::instance();
-        $systemcohorts = cohort_get_cohorts($systemcontext->id);
+        $systemcohorts = cohort_get_cohorts($systemcontext->id, 0, 0);
         $this->cohortlist = $systemcohorts['cohorts'];
     }
 
