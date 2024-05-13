@@ -121,7 +121,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @return bool If this returns true then redirect
      */
     public function should_login_redirect() {
-        global $SESSION;
+        global $CFG, $SESSION;
+
         $oidc = optional_param('oidc', null, PARAM_BOOL);
         // Also support noredirect param - used by other auth plugins.
         $noredirect = optional_param('noredirect', 0, PARAM_BOOL);
@@ -137,13 +138,22 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
 
         // Check whether we've skipped the login page already.
-        // This is here because loginpage_hook is called again during form
-        // submission (all of login.php is processed) and ?oidc=off is not
-        // preserved forcing us to the IdP.
+        // This is here because loginpage_hook is called again during form submission (all of login.php is processed) and
+        // ?oidc=off is not preserved forcing us to the IdP.
         //
-        // This isn't needed when duallogin is on because $oidc will default to 0
-        // and duallogin is not part of the request.
+        // This isn't needed when duallogin is on because $oidc will default to 0 and duallogin is not part of the request.
         if ((isset($SESSION->oidc) && $SESSION->oidc == 0)) {
+            if (!isset($SESSION->silent_login_mode)) {
+                return false;
+            }
+        }
+
+        // If the user is redirectred to the login page immediately after logging out, don't redirect.
+        $silentloginmodesetting = get_config('auth_oidc', 'silentloginmode');
+        $forceredirectsetting = get_config('auth_oidc', 'forceredirect');
+        $forceloginsetting = get_config('core', 'forcelogin');
+        if ($silentloginmodesetting && $forceredirectsetting && $forceloginsetting && isset($_SERVER['HTTP_REFERER']) &&
+            strpos($_SERVER['HTTP_REFERER'], $CFG->wwwroot) !== false) {
             return false;
         }
 
@@ -156,6 +166,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         if (isset($SESSION->oidc)) {
             unset($SESSION->oidc);
         }
+
         return true;
     }
 
