@@ -124,18 +124,16 @@ class main {
         }
 
         // Get Teams.
-        $subtypes = ['teamfromgroup', 'course', 'courseteam'];
-        [$subtypesql, $subtypeparams] = $DB->get_in_or_equal($subtypes);
         $teamsoidsql =
             "SELECT distinct objectid
                FROM {local_o365_objects}
-              WHERE type = ?
-                AND subtype $subtypesql";
-        $matchedgroupoids = $DB->get_fieldset_sql($teamsoidsql, array_merge(['group'], $subtypeparams));
+              WHERE type = 'group'
+                AND subtype IN ('teamfromgroup', 'course', 'courseteam')";
+        $matchedgroupoids = $DB->get_fieldset_sql($teamsoidsql);
 
         // Get SDS courses.
-        $sdsmatchedgroupoids = $DB->get_fieldset_select('local_o365_objects', 'objectid', 'type = ? AND subtype = ?',
-            ['sdssection', 'course']);
+        $sdsmatchedgroupoids = $DB->get_fieldset_select('local_o365_objects', 'objectid',
+            'type = "sdssection" AND subtype = "course"');
 
         $matchedgroupoids = array_unique(array_merge($matchedgroupoids, $sdsmatchedgroupoids));
         $unmatchedteams = [];
