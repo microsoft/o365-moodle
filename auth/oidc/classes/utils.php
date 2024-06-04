@@ -27,6 +27,7 @@ namespace auth_oidc;
 
 use Exception;
 use moodle_exception;
+use auth_oidc\event\action_failed;
 
 defined('MOODLE_INTERNAL') || die();
 
