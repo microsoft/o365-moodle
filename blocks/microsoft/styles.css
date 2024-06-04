@@ -76,10 +76,8 @@
 .block_microsoft .block_microsoft_reset {
   background-image: url([[pix:moodle|t/reset]]);
 }
-.block_microsoft .block_microsoft_profile {
-  border-radius: 50%;
-  display: block;
-  margin: 1rem auto 2rem;
+.block_microsoft .block_microsoft_courserequest {
+  background-image: url([[pix:block_microsoft|courserequest]]);
 }
 .block_microsoft hr {
   margin: 1rem 0 !important; }

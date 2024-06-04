@@ -24,21 +24,27 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use auth_oidc\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 // IdP types.
-CONST AUTH_OIDC_IDP_TYPE_AZURE_AD = 1;
-CONST AUTH_OIDC_IDP_TYPE_MICROSOFT = 2;
+CONST AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
+CONST AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
 CONST AUTH_OIDC_IDP_TYPE_OTHER = 3;
 
-// Azure AD / Microsoft endpoint version.
-CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_UNKNOWN = 0;
-CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_1 = 1;
-CONST AUTH_OIDC_AAD_ENDPOINT_VERSION_2 = 2;
+// Microsoft Entra ID / Microsoft endpoint version.
+CONST AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN = 0;
+CONST AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
+CONST AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
 
 // OIDC application authentication method.
 CONST AUTH_OIDC_AUTH_METHOD_SECRET = 1;
 CONST AUTH_OIDC_AUTH_METHOD_CERTIFICATE = 2;
+
+// OIDC application auth certificate source.
+CONST AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
+CONST AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
 
 /**
  * Initialize custom icon.
@@ -220,7 +226,7 @@ function auth_oidc_delete_token(int $tokenid): void {
             $DB->delete_records('local_o365_token', ['user_id' => $objectrecord->userid]);
 
             // Delete record from local_o365_connections.
-            $DB->delete_records_select('local_o365_connections', 'muserid = :userid OR LOWER(aadupn) = :email',
+            $DB->delete_records_select('local_o365_connections', 'muserid = :userid OR LOWER(entraidupn) = :email',
                 ['userid' => $objectrecord->userid, 'email' => $objectrecord->email]);
         }
     }
@@ -522,18 +528,18 @@ function auth_oidc_get_all_user_fields() {
 }
 
 /**
- * Determine the endpoint version of the given Azure AD / Microsoft authorization or token endpoint.
+ * Determine the endpoint version of the given Microsoft Entra ID / Microsoft authorization or token endpoint.
  *
  * @return int
  */
 function auth_oidc_determine_endpoint_version(string $endpoint) {
-    $endpointversion = AUTH_OIDC_AAD_ENDPOINT_VERSION_UNKNOWN;
+    $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN;
 
     if (strpos($endpoint, 'https://login.microsoftonline.com/') === 0) {
         if (strpos($endpoint, 'oauth2/v2.0/') !== false) {
-            $endpointversion = AUTH_OIDC_AAD_ENDPOINT_VERSION_2;
+            $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2;
         } else if (strpos($endpoint, 'oauth2') !== false) {
-            $endpointversion = AUTH_OIDC_AAD_ENDPOINT_VERSION_1;
+            $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1;
         }
     }
 
@@ -571,8 +577,21 @@ function auth_oidc_is_setup_complete() {
             }
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
-            if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
-                return false;
+            if (!isset($pluginconfig->clientcertsource)) {
+                set_config('clientcertsource', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+                $pluginconfig->clientcertsource = AUTH_OIDC_AUTH_CERT_SOURCE_TEXT;
+            }
+            switch ($pluginconfig->clientcertsource) {
+                case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
+                    if (!utils::get_certpath() || !utils::get_keypath()) {
+                        return false;
+                    }
+                    break;
+                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                    if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
+                        return false;
+                    }
+                    break;
             }
             break;
     }
@@ -593,11 +612,11 @@ function auth_oidc_get_idp_type_name() {
     $idptypename = '';
 
     switch (get_config('auth_oidc', 'idptype')) {
-        case AUTH_OIDC_IDP_TYPE_AZURE_AD:
-            $idptypename = get_string('idp_type_azuread', 'auth_oidc');
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+            $idptypename = get_string('idp_type_microsoft_entra_id', 'auth_oidc');
             break;
-        case AUTH_OIDC_IDP_TYPE_MICROSOFT:
-            $idptypename = get_string('idp_type_microsoft', 'auth_oidc');
+        case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+            $idptypename = get_string('idp_type_microsoft_identity_platform', 'auth_oidc');
             break;
         case AUTH_OIDC_IDP_TYPE_OTHER:
             $idptypename = get_string('idp_type_other', 'auth_oidc');

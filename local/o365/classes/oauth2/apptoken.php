@@ -28,6 +28,7 @@ namespace local_o365\oauth2;
 
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -51,6 +52,10 @@ class apptoken extends \local_o365\oauth2\token {
     public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
         $token = static::get_app_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
+            if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                $token['resource'] = $tokenresource;
+                $token['expires_on'] = null;
+            }
             static::store_new_token(null, $token['access_token'], $token['expires_on'], null, $token['scope'], $token['resource']);
             return static::instance(null, $tokenresource, $clientdata, $httpclient);
         } else {
@@ -74,7 +79,7 @@ class apptoken extends \local_o365\oauth2\token {
         $tokenendpoint = $clientdata->get_apptokenendpoint();
 
         switch (get_config('auth_oidc', 'idptype')) {
-            case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
                 $params = [
                     'client_id' => $clientdata->get_clientid(),
                     'client_secret' => $clientdata->get_clientsecret(),
@@ -82,7 +87,7 @@ class apptoken extends \local_o365\oauth2\token {
                     'resource' => $tokenresource,
                 ];
                 break;
-            case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
                 if (get_config('auth_oidc', 'clientauthmethod') == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
                     $params = [
                         'client_id' => $clientdata->get_clientid(),
@@ -139,6 +144,7 @@ class apptoken extends \local_o365\oauth2\token {
      * Refresh the application only token.
      *
      * @return bool Success/Failure.
+     * @throws moodle_exception
      */
     public function refresh() {
         $result = static::get_app_token($this->tokenresource, $this->clientdata, $this->httpclient);
@@ -170,7 +176,7 @@ class apptoken extends \local_o365\oauth2\token {
             }
             return true;
         } else {
-            throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
+            throw new moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
         }
     }
 

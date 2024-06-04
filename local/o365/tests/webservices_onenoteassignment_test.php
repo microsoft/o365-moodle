@@ -23,11 +23,10 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+
 defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-
-require_once($CFG->dirroot.'/lib/externallib.php');
 
 /**
  * Tests \local_o365\webservices\utils
@@ -56,7 +55,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_create_parameters() {
         $schema = \local_o365\webservices\create_onenoteassignment::assignment_create_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -133,7 +132,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_create_returns() {
         $schema = \local_o365\webservices\create_onenoteassignment::assignment_create_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -142,7 +141,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_read_parameters() {
         $schema = \local_o365\webservices\read_onenoteassignment::assignment_read_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -330,7 +329,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_read_returns() {
         $schema = \local_o365\webservices\read_onenoteassignment::assignment_read_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -339,7 +338,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_update_parameters() {
         $schema = \local_o365\webservices\update_onenoteassignment::assignment_update_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -500,7 +499,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_update_returns() {
         $schema = \local_o365\webservices\update_onenoteassignment::assignment_update_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -509,7 +508,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_delete_parameters() {
         $schema = \local_o365\webservices\delete_onenoteassignment::assignment_delete_parameters();
-        $this->assertTrue($schema instanceof \external_function_parameters);
+        $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
@@ -570,7 +569,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      */
     public function test_assignment_delete_returns() {
         $schema = \local_o365\webservices\delete_onenoteassignment::assignment_delete_returns();
-        $this->assertTrue($schema instanceof \external_single_structure);
+        $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('result', $schema->keys);
     }
 }

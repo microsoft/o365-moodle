@@ -25,6 +25,8 @@
 
 namespace local_o365\oauth2;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -168,11 +170,8 @@ class token {
                         return $token;
                     }
                 }
-                $backtrace = debug_backtrace(0);
-                $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-                $caller = __METHOD__ . ':' . $callingline;
                 // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
-                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', $caller);
+                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', __METHOD__);
                 return null;
             } else {
                 $token = static::get_for_new_resource($userid, $tokenresource, $clientdata, $httpclient);
@@ -247,13 +246,13 @@ class token {
      * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
      */
     public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
-        $aadgraphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
-        if (!empty($aadgraphtoken)) {
+        $graphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
+        if (!empty($graphtoken)) {
             $params = [
                 'client_id' => $clientdata->get_clientid(),
                 'client_secret' => $clientdata->get_clientsecret(),
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $aadgraphtoken->get_refreshtoken(),
+                'refresh_token' => $graphtoken->get_refreshtoken(),
                 'resource' => $tokenresource,
             ];
             $params = http_build_query($params, '', '&');
@@ -396,6 +395,7 @@ class token {
      * Refresh the token.
      *
      * @return bool Success/Failure.
+     * @throws moodle_exception
      */
     public function refresh() {
         $result = '';
@@ -456,7 +456,7 @@ class token {
                 $this->tokenresource = $token->get_tokenresource();
                 return true;
             } else {
-                throw new \moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
+                throw new moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
                 return false;
             }
         }

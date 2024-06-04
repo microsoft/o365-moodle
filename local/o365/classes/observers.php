@@ -41,23 +41,23 @@ use core\event\course_deleted;
 use core\event\course_restored;
 use core\event\course_updated;
 use core\event\enrol_instance_updated;
-use core\event\notification_sent;
 use core\event\role_assigned;
 use core\event\role_deleted;
 use core\event\role_unassigned;
 use core\event\user_created;
 use core\event\user_deleted;
 use core\event\user_enrolment_updated;
+use core\event\cohort_deleted;
 use core\task\manager;
 use core_user;
-use Exception;
 use local_o365\feature\coursesync\main;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
-use local_o365\rest\botframework;
 use local_o365\rest\unified;
 use local_o365\task\groupmembershipsync;
+use local_o365\task\processcourserequestapproval;
+use moodle_exception;
 use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
@@ -66,6 +66,7 @@ global $CFG;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Handles events.
@@ -89,36 +90,19 @@ class observers {
         $action = (!empty($eventdata['other']['statedata']['action'])) ? $eventdata['other']['statedata']['action'] : null;
 
         switch ($action) {
-            case 'setsystemapiuser':
-                $tokendata = [
-                    'idtoken' => $eventdata['other']['tokenparams']['id_token'],
-                    $eventdata['other']['tokenparams']['resource'] => [
-                        'token' => $eventdata['other']['tokenparams']['access_token'],
-                        'scope' => $eventdata['other']['tokenparams']['scope'],
-                        'refreshtoken' => $eventdata['other']['tokenparams']['refresh_token'],
-                        'tokenresource' => $eventdata['other']['tokenparams']['resource'],
-                        'expiry' => $eventdata['other']['tokenparams']['expires_on'],
-                    ]
-                ];
-
-                set_config('systemtokens', serialize($tokendata), 'local_o365');
-                redirect(new moodle_url('/admin/settings.php?section=local_o365'));
-                break;
-
             case 'adminconsent':
-                // Get tenant if using app-only access.
-                if (utils::is_enabled_apponlyaccess() === true) {
-                    if (isset($eventdata['other']['tokenparams']['id_token'])) {
-                        $idtoken = $eventdata['other']['tokenparams']['id_token'];
-                        $idtoken = jwt::instance_from_encoded($idtoken);
-                        if (!empty($idtoken)) {
-                            $tenant = utils::get_tenant_from_idtoken($idtoken);
-                            if (!empty($tenant)) {
-                                set_config('aadtenantid', $tenant, 'local_o365');
-                            }
+                // Get tenant.
+                if (isset($eventdata['other']['tokenparams']['id_token'])) {
+                    $idtoken = $eventdata['other']['tokenparams']['id_token'];
+                    $idtoken = jwt::instance_from_encoded($idtoken);
+                    if (!empty($idtoken)) {
+                        $tenant = utils::get_tenant_from_idtoken($idtoken);
+                        if (!empty($tenant)) {
+                            set_config('entratenantid', $tenant, 'local_o365');
                         }
                     }
                 }
+
                 redirect(new moodle_url('/admin/settings.php?section=local_o365'));
                 break;
 
@@ -126,7 +110,7 @@ class observers {
                 $clientdata = clientdata::instance_from_oidc();
                 $httpclient = new httpclient();
                 switch (get_config('auth_oidc', 'idptype')) {
-                    case AUTH_OIDC_IDP_TYPE_MICROSOFT:
+                    case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
                         $token = $eventdata['other']['tokenparams']['access_token'];
                         $expiry = time() + $eventdata['other']['tokenparams']['expires_in'];
                         $rtoken = '';
@@ -156,7 +140,7 @@ class observers {
                         $domainsfetched = true;
 
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Do nothing.
                 }
 
@@ -208,7 +192,7 @@ class observers {
                         try {
                             $apiclient = utils::get_api();
                             $userdata = $apiclient->get_user($eventdata['other']['oidcuniqid'], $isguestuser);
-                        } catch (Exception $e) {
+                        } catch (moodle_exception $e) {
                             utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                             return true;
                         }
@@ -239,13 +223,17 @@ class observers {
                         $userobjectdata->id = $DB->insert_record('local_o365_objects', $userobjectdata);
 
                         // Enrol user to all courses he was enrolled prior to connecting.
-                        if ($userobjectdata->id && \local_o365\feature\coursesync\utils::is_enabled() === true) {
-                            $courses = enrol_get_users_courses($userid, true);
+                        // Do nothing if sync direction is Teams to Moodle.
+                        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+                        if ($courseusersyncdirection != COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+                            if ($userobjectdata->id && \local_o365\feature\coursesync\utils::is_enabled() === true) {
+                                $courses = enrol_get_users_courses($userid, true);
 
-                            foreach ($courses as $courseid => $course) {
-                                if (\local_o365\feature\coursesync\utils::is_course_sync_enabled($courseid) == true) {
-                                    \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($userid, $courseid,
-                                        $userobjectdata->id);
+                                foreach ($courses as $courseid => $course) {
+                                    if (\local_o365\feature\coursesync\utils::is_course_sync_enabled($courseid) == true) {
+                                        \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($userid, $courseid,
+                                                $userobjectdata->id);
+                                    }
                                 }
                             }
                         }
@@ -255,7 +243,7 @@ class observers {
                 }
 
                 return true;
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 utils::debug($e->getMessage(), __METHOD__, $e);
                 return false;
             }
@@ -268,7 +256,7 @@ class observers {
      *
      * Does the following:
      *  - Check if user is using OpenID Connect auth plugin.
-     *  - If so, gets additional information from Azure AD and updates the user.
+     *  - If so, gets additional information from Microsoft Entra ID and updates the user.
      *
      * @param user_created $event The triggered event.
      * @return bool Success/Failure.
@@ -340,9 +328,9 @@ class observers {
     }
 
     /**
-     * Get additional information about a user from Azure AD.
+     * Get additional information about a user from Microsoft Entra ID.
      *
-     * @param int $userid The ID of the user we want more information about..
+     * @param int $userid The ID of the user we want more information about.
      * @return bool Success/Failure.
      */
     public static function get_additional_user_info(int $userid) : bool {
@@ -356,7 +344,7 @@ class observers {
 
             $o365user = o365user::instance_from_muserid($userid);
             if (empty($o365user)) {
-                // No OIDC token for this user and resource - maybe not an Azure AD user.
+                // No OIDC token for this user and resource - maybe not a Microsoft Entra ID user.
                 return false;
             }
 
@@ -394,18 +382,18 @@ class observers {
             }
 
             // Sync profile photo and timezone.
-            $aadsync = get_config('local_o365', 'aadsync');
-            $aadsync = array_flip(explode(',', $aadsync));
+            $usersyncsettings = get_config('local_o365', 'usersync');
+            $usersyncsettings = array_flip(explode(',', $usersyncsettings));
             $usersync = new feature\usersync\main();
-            if (isset($aadsync['photosynconlogin'])) {
+            if (isset($usersyncsettings['photosynconlogin'])) {
                 $usersync->assign_photo($userid);
             }
-            if (isset($aadsync['tzsynconlogin'])) {
+            if (isset($usersyncsettings['tzsynconlogin'])) {
                 $usersync->sync_timezone($userid);
             }
 
             return true;
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug($e->getMessage(), __METHOD__, $e);
         }
         return false;
@@ -422,6 +410,12 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_user_enrolment_updated(user_enrolment_updated $event) : bool {
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
+
         if (utils::is_connected() !== true || \local_o365\feature\coursesync\utils::is_enabled() !== true ||
             \local_o365\feature\coursesync\utils::is_course_sync_enabled($event->courseid) !== true) {
             return false;
@@ -442,6 +436,12 @@ class observers {
      */
     public static function handle_enrol_instance_updated(enrol_instance_updated $event) : bool {
         global $DB;
+
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
 
         $courseid = $event->courseid;
 
@@ -482,21 +482,52 @@ class observers {
      * Handle course_created event.
      *
      * Does the following:
+     *  - process custom course request from Microsoft Teams approval.
      *  - enable sync on the new courses if course sync is "custom", and the option to enable sync on new courses by default is set.
      *
      * @param course_created $event The triggered event.
      * @return bool Success/Failure.
      */
-    public static function handle_course_created(course_created $event) : bool {
+    public static function handle_course_created(course_created $event): bool {
+        global $DB;
+
         if (utils::is_connected() !== true) {
             return false;
         }
 
+        $coursecreatedfromcustomcourserequest = false;
+
+        // Process course request approval
+        $courseid = $event->objectid;
+        $course = get_course($courseid);
+        $shortnametocheck = $course->shortname;
+
+        // First, try to get a record with an exact match on shortname
+        $customrequest = $DB->get_record('local_o365_course_request',
+            ['courseshortname' => $shortnametocheck, 'requeststatus' => feature\courserequest\main::COURSE_REQUEST_STATUS_PENDING]);
+
+        // If no exact match, try removing the suffix _(number)
+        if (!$customrequest && preg_match('/^(.+)_(\d+)$/', $course->shortname, $matches)) {
+            $shortnametocheck = $matches[1];
+            $customrequest = $DB->get_record('local_o365_course_request', ['courseshortname' => $shortnametocheck,
+                'requeststatus' => feature\courserequest\main::COURSE_REQUEST_STATUS_PENDING]);
+        }
+
+        if ($customrequest && $DB->record_exists('course_request', ['shortname' => $shortnametocheck])) {
+            $coursecreatedfromcustomcourserequest = true;
+            $task = new processcourserequestapproval();
+            $task->set_custom_data(['customrequest' => $customrequest, 'courseid' => $courseid, 'shortname' => $shortnametocheck]);
+            $task->set_next_run_time(time() + 1);
+            manager::queue_adhoc_task($task);
+        }
+
         // Enable team sync for newly created courses if the create teams setting is "custom", and the option to enable sync on
         // new courses by default is on.
-        $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
-        if ((get_config('local_o365', 'coursesync') === 'oncustom') && $syncnewcoursesetting) {
-            \local_o365\feature\coursesync\utils::set_course_sync_enabled($event->objectid, true);
+        if (!$coursecreatedfromcustomcourserequest) {
+            $syncnewcoursesetting = get_config('local_o365', 'sync_new_course');
+            if ((get_config('local_o365', 'coursesync') === 'oncustom') && $syncnewcoursesetting) {
+                \local_o365\feature\coursesync\utils::set_course_sync_enabled($event->objectid, true);
+            }
         }
 
         return true;
@@ -610,6 +641,12 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_assigned(role_assigned $event) : bool {
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
+
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -633,6 +670,11 @@ class observers {
      * @return bool Success/Failure.
      */
     public static function handle_role_unassigned(role_unassigned $event) : bool {
+        // Do nothing if sync direction is Teams to Moodle.
+        $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+        if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+            return false;
+        }
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -719,135 +761,6 @@ class observers {
     }
 
     /**
-     * Send proactive notifications to o365 users when a notification is sent to the Moodle user.
-     *
-     * @param notification_sent $event
-     *
-     * @return bool
-     */
-    public static function handle_notification_sent(notification_sent $event) : bool {
-        global $CFG, $DB, $PAGE;
-
-        $debugmode = get_config('local_o365', 'debugmode');
-        $debuggingon = !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING') && $debugmode;
-
-        // Check if we have the configuration to send proactive notifications.
-        $aadtenant = get_config('local_o365', 'aadtenant');
-        $botappid = get_config('local_o365', 'bot_app_id');
-        $botappsecret = get_config('local_o365', 'bot_app_password');
-        $notificationendpoint = get_config('local_o365', 'bot_webhook_endpoint');
-        if (empty($aadtenant) || empty($botappid) || empty($botappsecret) || empty($notificationendpoint)) {
-            // Incomplete settings, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - incomplete settings', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        $notificationid = $event->objectid;
-        $notification = $DB->get_record('notifications', ['id' => $notificationid]);
-        if (!$notification) {
-            // Notification cannot be found, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - notification cannot be found', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        $user = $DB->get_record('user', ['id' => $notification->useridto]);
-        if (!$user) {
-            // Recipient user invalid, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - recipient user invalid', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        if ($user->auth != 'oidc') {
-            // Recipient user is not Microsoft 365 user, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - recipient user is not Microsoft 365 user', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Get user object record.
-        $userrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id]);
-        if (!$userrecord) {
-            // Recipient user doesn't have an object ID, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - recipient user doesn\'t have an object ID', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Get course object record.
-        if (!array_key_exists('courseid', $event->other)) {
-            // Course doesn't exist, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - course doesn\'t exist', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-        $courseid = $event->other['courseid'];
-        if (!$courseid || $courseid == SITEID) {
-            // Invalid course id, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-        $course = $DB->get_record('course', ['id' => $courseid]);
-        if (!$course) {
-            // Invalid course, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - invalid course id', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Get course object record.
-        $courserecord = $DB->get_record('local_o365_objects',
-            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
-        if (!$courserecord) {
-            // Course record doesn't have an object ID, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - course record doesn\'t have an object ID', DEBUG_DEVELOPER);
-            }
-            return true;
-        } else {
-            $courseobjectid = $courserecord->objectid;
-        }
-
-        // Passed all tests, need to send notification.
-        $botframework = new botframework();
-        if (!$botframework->has_token()) {
-            // Cannot get token, exit.
-            if ($debuggingon) {
-                debugging('SKIPPED: handle_notification_sent - cannot get token from bot framework', DEBUG_DEVELOPER);
-            }
-            return true;
-        }
-
-        // Check if we need to add activity details.
-        $listitems = [];
-        if ((strpos($notification->component, 'mod_') !== false) && !empty($notification->contexturl)) {
-            $PAGE->theme->force_svg_use(null);
-            $listitems[] = [
-                'title' => $notification->contexturlname,
-                'subtitle' => '',
-                'icon' => $CFG->wwwroot . '/local/o365/pix/moodle.png',
-                'action' => $notification->contexturl,
-                'actionType' => 'openUrl'
-            ];
-        }
-        $message = (empty($notification->smallmessage) ? $notification->fullmessage : $notification->smallmessage);
-        // Send notification.
-        $botframework->send_notification($courseobjectid, $userrecord->objectid, $message, $listitems, $notificationendpoint);
-        return true;
-    }
-
-    /**
      * Action when certain configuration are changed.
      *
      * @param config_log_created $event
@@ -888,17 +801,17 @@ class observers {
                 case 'idptype':
                 case 'clientauthmethod':
                     // If client ID, IdP type, or authentication method has changed, unset token and verify setup results.
-                    // Azure admin needs to set up again.
+                    // Azure admin needs to provide consent again.
                     unset_config('apptokens', 'local_o365');
                     unset_config('adminconsent', 'local_o365');
-                    unset_config('azuresetupresult', 'local_o365');
+                    unset_config('verifysetupresult', 'local_o365');
 
                     $cachespurgeneeded = true;
             }
         }
 
-        // If Azure tenant is changed, user manual matching and connection records need to be deleted.
-        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'aadtenant') {
+        // If Entra tenant is changed, user manual matching and connection records need to be deleted.
+        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'entratenant') {
             // Clear local_o365_connections table.
             $DB->delete_records('local_o365_connections');
 
@@ -908,18 +821,26 @@ class observers {
             $cachespurgeneeded = true;
         }
 
-        // If connection method is changed from system API user to application access, system API user token needs to be deleted.
-        if ($eventdata['other']['plugin'] == 'local_o365' && $eventdata['other']['name'] == 'enableapponlyaccess' &&
-            $eventdata['other']['oldvalue'] == '0' && $eventdata['other']['value'] == '1') {
-            unset_config('systemtokens', 'local_o365');
-
-            $cachespurgeneeded = true;
-        }
-
         // Purge caches if needed.
         if ($cachespurgeneeded) {
             purge_all_caches();
         }
+
+        return true;
+    }
+
+    /**
+     * Handles actions to be performed when a cohort is deleted.
+     *
+     * @param cohort_deleted $event
+     *
+     * @return bool
+     */
+    public static function handle_cohort_deleted(cohort_deleted $event) : bool {
+        global $DB;
+
+        $cohortid = $event->objectid;
+        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort', 'moodleid' => $cohortid]);
 
         return true;
     }

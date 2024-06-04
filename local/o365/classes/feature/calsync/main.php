@@ -25,6 +25,8 @@
 
 namespace local_o365\feature\calsync;
 
+use local_o365\httpclient;
+use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use local_o365\utils;
@@ -37,24 +39,24 @@ defined('MOODLE_INTERNAL') || die();
  */
 class main {
     /**
-     * @var \local_o365\oauth2\clientdata|null
+     * @var clientdata|null
      */
     protected $clientdata = null;
     /**
-     * @var \local_o365\httpclient|null
+     * @var httpclient|null
      */
     protected $httpclient = null;
 
     /**
      * Constructor.
      *
-     * @param \local_o365\oauth2\clientdata|null $clientdata
-     * @param \local_o365\httpclient|null $httpclient
+     * @param clientdata|null $clientdata
+     * @param httpclient|null $httpclient
      * @throws moodle_exception
      */
-    public function __construct(\local_o365\oauth2\clientdata $clientdata = null, \local_o365\httpclient $httpclient = null) {
-        $this->clientdata = (!empty($clientdata)) ? $clientdata : \local_o365\oauth2\clientdata::instance_from_oidc();
-        $this->httpclient = (!empty($httpclient)) ? $httpclient : new \local_o365\httpclient();
+    public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
+        $this->clientdata = (!empty($clientdata)) ? $clientdata : clientdata::instance_from_oidc();
+        $this->httpclient = (!empty($httpclient)) ? $httpclient : new httpclient();
     }
 
     /**
@@ -64,16 +66,17 @@ class main {
      * @param bool $systemfallback
      *
      * @return unified A constructed unified API client, or false if error.
+     * @throws moodle_exception
      */
     public function construct_calendar_api($muserid, $systemfallback = true) {
         $tokenresource = unified::get_tokenresource();
 
         $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
         if (empty($token) && $systemfallback === true) {
-            $token = utils::get_app_or_system_token($tokenresource, $this->clientdata, $this->httpclient);
+            $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         }
         if (empty($token)) {
-            throw new \Exception('No token available for user #'.$muserid);
+            throw new moodle_exception('errornotoken', 'local_o365', '', $muserid);
         }
 
         $apiclient = new unified($token, $this->httpclient);
@@ -298,7 +301,7 @@ class main {
                             ];
                             $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
                         }
-                    } catch (\Exception $e) {
+                    } catch (moodle_exception $e) {
                         // No token found, nothing to do.
                     }
                 }
@@ -392,22 +395,7 @@ class main {
         $apiclient = $this->construct_calendar_api($USER->id, false);
         $o365upn = utils::get_o365_upn($USER->id);
         if ($o365upn) {
-            $calendarresults = $apiclient->get_calendars($o365upn);
-            $calendars = $calendarresults['value'];
-            while (!empty($calendarresults['@odata.nextLink'])) {
-                $nextlink = parse_url($calendarresults['@odata.nextLink']);
-                $calendarresults = [];
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skip'])) {
-                        $calendarresults = $apiclient->get_calendars($o365upn, $query['$skip']);
-                        $calendars = array_merge($calendars, $calendarresults['value']);
-                    }
-                }
-            }
-
-            return (!empty($calendars) && is_array($calendars)) ? $calendars : [];
+            return $apiclient->get_calendars($o365upn);
         } else {
             return [];
         }
@@ -424,22 +412,10 @@ class main {
     public function get_events($muserid, $o365calid, $since = null) {
         $apiclient = $this->construct_calendar_api($muserid, false);
         $o365upn = utils::get_o365_upn($muserid);
+
         $events = [];
         if ($o365upn) {
-            $eventresults = $apiclient->get_events($o365calid, $since, $o365upn);
-            $events = $eventresults['value'];
-            while (!empty($eventresults['@odata.nextLink'])) {
-                $nextlink = parse_url($eventresults['@odata.nextLink']);
-                $eventresults = [];
-                if (isset($nextlink['query'])) {
-                    $query = [];
-                    parse_str($nextlink['query'], $query);
-                    if (isset($query['$skip'])) {
-                        $eventresults = $apiclient->get_events($o365calid, $since, $o365upn, $query['$skip']);
-                        $events = array_merge($events, $eventresults['value']);
-                    }
-                }
-            }
+            $events = $apiclient->get_events($o365calid, $since, $o365upn);
         }
 
         return $events;
@@ -540,10 +516,10 @@ class main {
         // Assemble Moodle course data and reconstruct the o365 group email.
         $groupprefix = $DB->get_field('course', 'shortname', ['id' => SITEID]);
         $groupname = $DB->get_field('course', 'shortname', ['id' => $courseid]);
-        $tenant = get_config('local_o365', 'aadtenant');
+        $tenant = get_config('local_o365', 'entratenant');
         $groupemail = '';
 
-        // If the course shortname and the Azure AD tenant are not empty.
+        // If the course shortname and the Microsoft tenant are not empty.
         if (!empty($groupprefix) && !empty($tenant)) {
             $mailnickprefix = \core_text::strtolower($groupprefix);
             $mailnickprefix = preg_replace('/[^a-z0-9]+/iu', '', $mailnickprefix);

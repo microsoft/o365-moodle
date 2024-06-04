@@ -27,15 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
     [
-        'classname' => 'local_o365\task\refreshsystemrefreshtoken',
-        'blocking' => 0,
-        'minute' => '1',
-        'hour' => '1',
-        'day' => '*',
-        'dayofweek' => '3',
-        'month' => '*'
-    ],
-    [
         'classname' => 'local_o365\task\usersync',
         'blocking' => 0,
         'minute' => '0',
@@ -81,19 +72,37 @@ $tasks = [
         'month' => '*'
     ],
     [
-        'classname' => 'local_o365\task\bot',
+        'classname' => 'local_o365\task\notifysecretexpiry',
         'blocking' => 0,
-        'minute' => '3',
+        'minute' => 0,
+        'hour' => '3',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
+    [
+        'classname' => 'local_o365\task\cohortsync',
+        'blocking' => 0,
+        'minute' => '*/5',
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
     ],
     [
-        'classname' => 'local_o365\task\notifysecretexpiry',
+        'classname' => 'local_o365\task\updatecourserequeststatus',
         'blocking' => 0,
-        'minute' => 0,
-        'hour' => '3',
+        'minute' => '*',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ],
+    [
+        'classname' => 'local_o365\task\coursemembershipsync',
+        'blocking' => 0,
+        'minute' => '*/5',
+        'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*',

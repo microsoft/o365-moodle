@@ -81,14 +81,14 @@ class block_microsoft extends block_base {
                 if (!empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
                         local_o365_connectioncapability($USER->id, 'link'))) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
-                    $this->content->text .= $this->get_user_content_matched($connection->aadupn, $uselogin);
+                    $this->content->text .= $this->get_user_content_matched($connection->entraidupn, $uselogin);
                 } else {
                     $this->content->text .= $this->get_user_content_not_connected();
                 }
             }
 
             $this->content->text .= $this->get_course_content();
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             $this->content->text = $e->getMessage();
         }
 
@@ -98,17 +98,17 @@ class block_microsoft extends block_base {
     /**
      * Get block content for an unconnected but matched user.
      *
-     * @param string $o365account The o365 account the user was matched to.
+     * @param string $entraidupn The UPN of the Microsoft Entra ID account the user was matched to.
      * @param bool $uselogin Whether the match includes login change.
      * @return string Block content about user.
      */
-    protected function get_user_content_matched($o365account, $uselogin = false) {
+    protected function get_user_content_matched($entraidupn, $uselogin = false) {
         $html = '';
 
         $langmatched = get_string('o365matched_title', 'block_microsoft');
         $html .= '<h5>' . $langmatched . '</h5>';
 
-        $langmatcheddesc = get_string('o365matched_desc', 'block_microsoft', $o365account);
+        $langmatcheddesc = get_string('o365matched_desc', 'block_microsoft', $entraidupn);
         $html .= '<p>' . $langmatcheddesc . '</p>';
 
         $langlogin = get_string('logintoo365', 'block_microsoft');
@@ -273,7 +273,7 @@ class block_microsoft extends block_base {
      * @return string Block content.
      */
     protected function get_user_content_connected() {
-        global $DB, $CFG, $SESSION, $USER, $OUTPUT;
+        global $DB, $USER, $OUTPUT;
         $o365config = get_config('local_o365');
         $html = '';
 
@@ -370,16 +370,24 @@ class block_microsoft extends block_base {
             }
         }
 
-        // Microsoft Stream.
-        if (!empty($this->globalconfig->settings_showmsstream)) {
-            $streamurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
+        // Microsoft Stream (on SharePoint).
+        if (!empty($this->globalconfig->settings_showmsstreamonsharepoint)) {
+            $streamurl = 'https://www.microsoft365.com/launch/stream';
             $streamattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
             $items[] = html_writer::link($streamurl, get_string('linkmsstream', 'block_microsoft'), $streamattrs);
         }
 
+        // Microsoft Stream (Classic).
+        if (!empty($this->globalconfig->settings_showmsstream)) {
+            $streamclassicurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
+            $streamclassicattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
+            $items[] = html_writer::link($streamclassicurl, get_string('linkmsstreamclassic', 'block_microsoft'),
+                $streamclassicattrs);
+        }
+
         // Microsoft Teams.
         if (!empty($this->globalconfig->settings_showmsteams)) {
-            $teamsurl = 'https://teams.microsoft.com/_';
+            $teamsurl = 'https://teams.microsoft.com';
             $teamsattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msteams'];
             $items[] = html_writer::link($teamsurl, get_string('linkmsteams', 'block_microsoft'), $teamsattrs);
         }
@@ -420,6 +428,15 @@ class block_microsoft extends block_base {
         $downloadlinks = $this->get_content_o365download();
         foreach ($downloadlinks as $link) {
             $items[] = $link;
+        }
+
+        if (has_capability('moodle/course:request', $this->page->context)) {
+            if (!empty($this->globalconfig->settings_courserequest)) {
+                $courserequesturl = new moodle_url('/local/o365/courserequest.php');
+                $courserequestattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_courserequest'];
+                $courserequeststr = get_string('linkcourserequest', 'block_microsoft');
+                $items[] = html_writer::link($courserequesturl, $courserequeststr, $courserequestattrs);
+            }
         }
 
         $html .= html_writer::alist($items);
@@ -562,7 +579,7 @@ class block_microsoft extends block_base {
                 }
             }
             return $output;
-        } catch (\Exception $e) {
+        } catch (moodle_exception $e) {
             if (class_exists('\local_o365\utils')) {
                 \local_o365\utils::debug($e->getMessage(), __METHOD__, $e);
             }

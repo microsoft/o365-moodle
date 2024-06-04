@@ -26,6 +26,7 @@
 namespace local_o365\feature\calsync\task;
 
 use core_date;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -54,7 +55,7 @@ class importfromoutlook extends \core\task\scheduled_task {
         }
 
         // Get calendars set to sync in.
-        $starttime = time();
+        $starttimestring = time();
 
         \local_o365\feature\calsync\observers::set_event_import(true);
 
@@ -74,29 +75,38 @@ class importfromoutlook extends \core\task\scheduled_task {
                 $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime);
                 if (!empty($events) && is_array($events)) {
                     foreach ($events as $event) {
-                        if (!isset($event['Id'])) {
+                        if (!isset($event['id'])) {
                             $errmsg = 'Skipped an event because of malformed data.';
                             \local_o365\utils::debug($errmsg, __METHOD__, $event);
                             mtrace($errmsg);
                             continue;
                         }
-                        $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
+                        $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['id']]);
+                        if (is_array($event['start'])) {
+                            $starttimestring = $event['start']['dateTime'] . ' ' . $event['start']['timeZone'];
+                        } else {
+                            $starttimestring = $event['start'];
+                        }
+                        if (is_array($event['end'])) {
+                            $endtimestring = $event['end']['dateTime'] . ' ' . $event['end']['timeZone'];
+                        } else {
+                            $endtimestring = $event['end'];
+                        }
                         if ($idmapexists === false) {
                             // Create Moodle event.
                             $eventparams = [
-                                'name' => $event['Subject'],
-                                'description' => $event['Body']['Content'],
+                                'name' => $event['subject'],
+                                'description' => $event['body']['content'],
                                 'eventtype' => $calsub->caltype,
                                 'repeatid' => 0,
                                 'modulename' => 0,
                                 'instance' => 0,
-                                'timestart' => strtotime($event['Start']),
+                                'timestart' => strtotime($starttimestring),
                                 'visible' => 1,
                                 'uuid' => '',
                                 'sequence' => 1,
                             ];
-                            $end = strtotime($event['End']);
-                            $eventparams['timeduration'] = $end - $eventparams['timestart'];
+                            $eventparams['timeduration'] = strtotime($endtimestring) - strtotime($starttimestring);
 
                             // If all day event time is stored in Outlook only as UTC time and not in the local user time.
                             if (isset($event['isAllDay']) && $event['isAllDay'] == '1') {
@@ -105,11 +115,11 @@ class importfromoutlook extends \core\task\scheduled_task {
                                 if ($user->timezone == 99) {
                                     $user->timezone = core_date::get_server_timezone();
                                 }
-                                $userstart = strtotime(substr($event['Start'], 0, 10) . ' ' . $user->timezone);
+                                $userstart = strtotime(substr($starttimestring, 0, 10) . ' ' . $user->timezone);
                                 if ($userstart) {
                                     $eventparams['timestart'] = $userstart;
                                 }
-                                $userend = strtotime(substr($event['End'], 0, 10) . ' ' . $user->timezone);
+                                $userend = strtotime(substr($endtimestring, 0, 10) . ' ' . $user->timezone);
                                 if ($userstart && $userend) {
                                     $eventparams['timeduration'] = $userend - $userstart - 1;
                                 }
@@ -125,7 +135,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                             if (!empty($moodleevent) && !empty($moodleevent->id)) {
                                 $idmaprec = [
                                     'eventid' => $moodleevent->id,
-                                    'outlookeventid' => $event['Id'],
+                                    'outlookeventid' => $event['id'],
                                     'origin' => 'o365',
                                     'userid' => $calsub->user_id
                                 ];
@@ -137,7 +147,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                 } else {
                     mtrace('No new events to sync in.');
                 }
-            } catch (\Exception $e) {
+            } catch (moodle_exception $e) {
                 \local_o365\utils::debug('Error syncing events: ' . $e->getMessage(), __METHOD__, $e);
                 mtrace('Error: '.$e->getMessage());
             }
@@ -145,7 +155,7 @@ class importfromoutlook extends \core\task\scheduled_task {
         $calsubs->close();
         \local_o365\feature\calsync\observers::set_event_import(false);
 
-        set_config('calsyncinlastrun', $starttime, 'local_o365');
+        set_config('calsyncinlastrun', $starttimestring, 'local_o365');
         return true;
     }
 }

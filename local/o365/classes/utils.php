@@ -31,10 +31,10 @@ use Exception;
 use local_o365\event\api_call_failed;
 use local_o365\oauth2\apptoken;
 use local_o365\oauth2\clientdata;
-use local_o365\oauth2\systemapiusertoken;
 use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -50,7 +50,16 @@ class utils {
      * @return bool Whether the plugins are configured.
      */
     public static function is_configured() {
-        return auth_oidc_is_setup_complete();
+        $authoidcsetupcomplete = auth_oidc_is_setup_complete();
+
+        if ($authoidcsetupcomplete) {
+            $idptype = get_config('auth_oidc', 'idptype');
+            if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -64,11 +73,11 @@ class utils {
             $clientdata = clientdata::instance_from_oidc();
             $graphresource = unified::get_tokenresource();
             try {
-                $token = utils::get_app_or_system_token($graphresource, $clientdata, $httpclient);
+                $token = utils::get_application_token($graphresource, $clientdata, $httpclient);
                 if ($token) {
                     return true;
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 return false;
             }
         }
@@ -77,40 +86,32 @@ class utils {
     }
 
     /**
-     * Get an app token if available or fall back to system API user token.
+     * Get an application token if available.
      *
      * @param string $tokenresource The desired resource.
      * @param clientdata $clientdata Client credentials.
      * @param httpclientinterface $httpclient An HTTP client.
      * @param bool $forcecreate
      * @param bool $throwexception
-     * @return apptoken|systemapiusertoken|null An app or system token.
-     * @throws Exception
+     * @return bool|token|null A token, or null if none available.
+     * @throws moodle_exception
      */
-    public static function get_app_or_system_token(string $tokenresource, clientdata $clientdata, httpclientinterface $httpclient,
+    public static function get_application_token(string $tokenresource, clientdata $clientdata, httpclientinterface $httpclient,
         bool $forcecreate = false, bool $throwexception = true) {
         $token = null;
         try {
             if (static::is_configured_apponlyaccess() === true) {
                 $token = apptoken::instance(null, $tokenresource, $clientdata, $httpclient, $forcecreate);
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             static::debug($e->getMessage(), __METHOD__ . ' (app)', $e);
-        }
-
-        if (empty($token)) {
-            try {
-                $token = systemapiusertoken::instance(null, $tokenresource, $clientdata, $httpclient);
-            } catch (Exception $e) {
-                static::debug($e->getMessage(), __METHOD__ . ' (system)', $e);
-            }
         }
 
         if (!empty($token)) {
             return $token;
         } else {
             if ($throwexception) {
-                throw new Exception('Could not get app or system token');
+                throw new moodle_exception('errorcannotgettoken', 'local_o365');
             } else {
                 return $token;
             }
@@ -136,29 +137,14 @@ class utils {
     }
 
     /**
-     * Determine whether app-only access is enabled.
-     *
-     * @return bool Enabled/disabled.
-     */
-    public static function is_enabled_apponlyaccess() {
-        $apponlyenabled = get_config('local_o365', 'enableapponlyaccess');
-        return (!empty($apponlyenabled)) ? true : false;
-    }
-
-    /**
      * Determine whether the app only access is configured.
      *
      * @return bool Whether the app only access is configured.
      */
     public static function is_configured_apponlyaccess() {
-        // App only access requires unified api to be enabled.
-        $apponlyenabled = static::is_enabled_apponlyaccess();
-        if (empty($apponlyenabled)) {
-            return false;
-        }
-        $aadtenant = get_config('local_o365', 'aadtenant');
-        $aadtenantid = get_config('local_o365', 'aadtenantid');
-        if (empty($aadtenant) && empty($aadtenantid)) {
+        $entratenant = get_config('local_o365', 'entratenant');
+        $entratenantid = get_config('local_o365', 'entratenantid');
+        if (empty($entratenant) && empty($entratenantid)) {
             return false;
         }
         return true;
@@ -184,7 +170,7 @@ class utils {
         if (empty($userids)) {
             return [];
         }
-        $aadresource = unified::get_tokenresource();
+        $tokenresource = unified::get_tokenresource();
         [$idsql, $idparams] = $DB->get_in_or_equal($userids);
         $sql = 'SELECT u.id as userid
                   FROM {user} u
@@ -192,7 +178,7 @@ class utils {
              LEFT JOIN {auth_oidc_token} authtok ON authtok.tokenresource = ? AND authtok.userid = u.id
                  WHERE u.id ' . $idsql . '
                        AND (localtok.id IS NOT NULL OR authtok.id IS NOT NULL)';
-        $params = [$aadresource];
+        $params = [$tokenresource];
         $params = array_merge($params, $idparams);
         $records = $DB->get_recordset_sql($sql, $params);
         $return = [];
@@ -256,7 +242,7 @@ class utils {
                 'line' => $val->getLine(),
                 'message' => $val->getMessage(),
             ];
-            if ($val instanceof \moodle_exception) {
+            if ($val instanceof moodle_exception) {
                 $valinfo['debuginfo'] = $val->debuginfo;
                 $valinfo['errorcode'] = $val->errorcode;
                 $valinfo['module'] = $val->module;
@@ -277,10 +263,16 @@ class utils {
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('local_o365', 'debugmode');
         if ($debugmode === true) {
-            $fullmessage = (!empty($where)) ? $where : 'Unknown function';
-            $fullmessage .= ': '.$message;
-            $fullmessage .= ' Data: '.static::tostring($debugdata);
-            $event = api_call_failed::create(['other' => $fullmessage]);
+            $backtrace = debug_backtrace();
+            $otherdata = [
+                'other' => [
+                    'message' => $message,
+                    'where' => $where,
+                    'debugdata' => $debugdata,
+                    'backtrace' => $backtrace,
+                ],
+            ];
+            $event = api_call_failed::create($otherdata);
             $event->trigger();
         }
     }
@@ -290,6 +282,7 @@ class utils {
      *
      * @param int|null $userid
      * @return unified A constructed unified API client, or throw an error.
+     * @throws moodle_exception
      */
     public static function get_api(int $userid = null) {
         $tokenresource = unified::get_tokenresource();
@@ -298,10 +291,10 @@ class utils {
         if (!empty($userid)) {
             $token = token::instance($userid, $tokenresource, $clientdata, $httpclient);
         } else {
-            $token = static::get_app_or_system_token($tokenresource, $clientdata, $httpclient);
+            $token = static::get_application_token($tokenresource, $clientdata, $httpclient);
         }
         if (empty($token)) {
-            throw new Exception('No token available for system user. Please run local_o365 health check.');
+            throw new moodle_exception('errornotokenforsysmemuser', 'local_o365');
         }
 
         $apiclient = new unified($token, $httpclient);
@@ -340,7 +333,7 @@ class utils {
         }
 
         // Update restrictions.
-        $hostingtenant = get_config('local_o365', 'aadtenant');
+        $hostingtenant = get_config('local_o365', 'entratenant');
         $newrestrictions = ['@' . str_replace('.', '\.', $hostingtenant) . '$'];
         foreach ($additionaltenants as $configuredtenantdomains) {
             foreach ($configuredtenantdomains as $configuredtenantdomain) {
@@ -470,9 +463,9 @@ class utils {
                 $apiclient = new unified($token, $httpclient);
                 $tenant = $apiclient->get_default_domain_name_in_tenant();
                 $tenant = clean_param($tenant, PARAM_TEXT);
-                return ($tenant != get_config('local_o365', 'aadtenant')) ? $tenant : '';
+                return ($tenant != get_config('local_o365', 'entratenant')) ? $tenant : '';
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             // Do nothing.
         }
         return '';
@@ -496,9 +489,41 @@ class utils {
                 $tenant = clean_param($tenant, PARAM_TEXT);
                 return ($tenant != get_config('local_o365', 'odburl')) ? $tenant : '';
             }
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             // Do nothing.
         }
         return '';
+    }
+
+    /**
+     * Get the cached Microsoft account oid for the Moodle user with the given ID.
+     *
+     * @param int $userid The ID of the user.
+     * @return string The Microsoft account uid for the user.
+     */
+    public static function get_microsoft_account_oid_by_user_id(int $userid) {
+        global $DB;
+
+        $oid = $DB->get_field('local_o365_objects', 'objectid', ['moodleid' => $userid, 'type' => 'user']);
+
+        return $oid;
+    }
+
+    /**
+     * Get the list of connected users with their Moodle user ID and Microsoft 365 user ID.
+     *
+     * @return array
+     */
+    public static function get_connected_users() : array {
+        global $DB;
+
+        $connectedusers = [];
+
+        $userobjectrecords = $DB->get_records('local_o365_objects', ['type' => 'user']);
+        foreach ($userobjectrecords as $userobjectrecord) {
+            $connectedusers[$userobjectrecord->moodleid] = $userobjectrecord->objectid;
+        }
+
+        return $connectedusers;
     }
 }

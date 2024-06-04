@@ -27,10 +27,8 @@ namespace local_onenote\api;
 
 use context;
 use context_module;
-use curl;
 use DOMDocument;
 use DOMXPath;
-use Exception;
 use html_writer;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
@@ -135,13 +133,13 @@ abstract class base {
      * Gets the instance of the correct api class. Use this method to get an instance of the api class.
      *
      * @return base An implementation of the OneNote API.
+     * @throws moodle_exception If no suitable API is found.
      */
     public static function getinstance() {
         global $USER;
 
         $o365class = '\local_onenote\api\o365';
         $debugtracker = '';
-        $debugcaller = 'onenote\api\base\getinstance';
 
         $isconnecteduser = utils::is_o365_connected($USER->id) === true;
         if ($isconnecteduser === true) {
@@ -162,8 +160,8 @@ abstract class base {
                         $debugtracker .= '5';
                         $isconnecteduser = false;
                     }
-                } catch (Exception $e) {
-                    \local_onenote\utils::debug($e->getMessage(), $debugcaller, $debugtracker);
+                } catch (moodle_exception $e) {
+                    \local_onenote\utils::debug($e->getMessage(), __METHOD__, $debugtracker);
                     $debugtracker .= '4';
                     $isconnecteduser = false;
                 }
@@ -176,14 +174,14 @@ abstract class base {
                 $class = $o365class;
             } else {
                 $debugtracker .= '8';
-                \local_onenote\utils::debug('was o365 user but fell back to msaccount.', $debugcaller, $debugtracker);
+                \local_onenote\utils::debug('was o365 user but fell back to msaccount.', __METHOD__, $debugtracker);
             }
         } else {
             $debugtracker .= '6';
         }
 
         if (empty($class)) {
-            \local_onenote\utils::debug('no usable onenote api was found.', $debugcaller, $debugtracker);
+            \local_onenote\utils::debug('no usable onenote api was found.', __METHOD__, $debugtracker);
             throw new moodle_exception('error_noapiavailable', 'local_onenote');
         }
 
@@ -200,20 +198,17 @@ abstract class base {
      * @param string $response The raw response from an API call.
      * @param array $expectedstructure A structure to validate.
      * @return array|null Array if successful, null if not.
+     * @throws moodle_exception If the response is invalid.
      */
     public function process_apicall_response(string $response, array $expectedstructure = []) {
-        $backtrace = debug_backtrace(0);
-        $callingline = (isset($backtrace[0]['line'])) ? $backtrace[0]['line'] : '?';
-        $caller = __METHOD__ . ':' . $callingline;
-
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
-            \local_onenote\utils::debug('Bad response received', $caller, $response);
+            \local_onenote\utils::debug('Bad response received', __METHOD__, $response);
             throw new moodle_exception('erroronenoteapibadcall', 'local_onenote');
         }
         if (isset($result['odata.error'])) {
             $errmsg = 'Error response received.';
-            \local_onenote\utils::debug($errmsg, $caller, $result['odata.error']);
+            \local_onenote\utils::debug($errmsg, __METHOD__, $result['odata.error']);
             if (isset($result['odata.error']['message']) && isset($result['odata.error']['message']['value'])) {
                 $apierrormessage = $result['odata.error']['message']['value'];
                 throw new moodle_exception('erroronenoteapibadcall_message', 'local_onenote', '', htmlentities($apierrormessage));
@@ -223,7 +218,7 @@ abstract class base {
         }
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
-            \local_onenote\utils::debug($errmsg, $caller, $result['error']);
+            \local_onenote\utils::debug($errmsg, __METHOD__, $result['error']);
             if (isset($result['error']['message'])) {
                 $apierrormessage = 'Unknown error, check logs for more information.';
                 if (is_string($result['error']['message'])) {
@@ -240,7 +235,7 @@ abstract class base {
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "' . $key . '"';
-                \local_onenote\utils::debug($errmsg, $caller, $result);
+                \local_onenote\utils::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroronenoteapibadcall_message', 'local_onenote', '', $errmsg);
             }
 
@@ -250,7 +245,7 @@ abstract class base {
                 $errmsg =
                     'Invalid structure received. Invalid "' . $key . '". Received "' . $strreceivedval . '", expected "' . $strval .
                     '"';
-                \local_onenote\utils::debug($errmsg, $caller, $result);
+                \local_onenote\utils::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroronenoteapibadcall_message', 'local_onenote', '', $errmsg);
             }
         }
@@ -272,7 +267,7 @@ abstract class base {
         $decodedresponse = json_decode($response);
 
         if (empty($response) || !empty($decodedresponse->error)) {
-            \local_onenote\utils::debug('Download error', 'onenote\api\download_page', $response);
+            \local_onenote\utils::debug('Download error', __METHOD__, $response);
             return null;
         }
 
@@ -296,7 +291,7 @@ abstract class base {
             $filesfolder = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page_files']);
             if (!mkdir($filesfolder, 0777, true)) {
                 echo('Failed to create folder: ' . $filesfolder);
-                \local_onenote\utils::debug('Failed to create folde', 'onenote\api\download_page', $filesfolder);
+                \local_onenote\utils::debug('Failed to create folder', __METHOD__, $filesfolder);
                 return null;
             }
 
@@ -321,9 +316,9 @@ abstract class base {
                     if ($imgnode->attributes->getNamedItem("data-fullres-src")) {
                         $imgnode->removeAttribute("data-fullres-src");
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     // Skip image if there is a problem.
-                    \local_onenote\utils::debug('Problem saving image', 'onenote\api\download_page', $e);
+                    \local_onenote\utils::debug('Problem saving image', __METHOD__, $e);
                 }
                 $i++;
             }
@@ -380,13 +375,13 @@ abstract class base {
         $response = $this->apicall('get', $endpoint);
         try {
             $response = $this->process_apicall_response($response, ['value' => null]);
-        } catch (Exception $e) {
-            \local_onenote\utils::debug($e->getMessage(), 'onenote\api\base::get_items_list', $e);
+        } catch (moodle_exception $e) {
+            \local_onenote\utils::debug($e->getMessage(), __METHOD__, $e);
             return [];
         }
 
         if (empty($response['value']) || !is_array($response['value'])) {
-            \local_onenote\utils::debug('Bad value parameter', 'onenote\api\base::get_items_list', $response);
+            \local_onenote\utils::debug('Bad value parameter', __METHOD__, $response);
             return [];
         }
 
@@ -464,8 +459,8 @@ abstract class base {
                 $notebookdata = json_encode(['displayName' => $notebookname]);
                 $creatednotebook = $this->apicall('post', '/notebooks', $notebookdata);
                 $creatednotebook = $this->process_apicall_response($creatednotebook, ['id' => null]);
-            } catch (Exception $e) {
-                \local_onenote\utils::debug('Could not create Moodle notebook', 'sync_notebook_data', $e);
+            } catch (moodle_exception $e) {
+                \local_onenote\utils::debug('Could not create Moodle notebook', __METHOD__, $e);
                 return false;
             }
             $sections = [];
@@ -631,7 +626,7 @@ abstract class base {
                 }
             } else {
                 $errstr = get_string('errorfeedbackinstudentcontext', 'local_onenote');
-                \local_onenote\utils::debug($errstr, 'prepare_feedback_postdata', $submissionid);
+                \local_onenote\utils::debug($errstr, __METHOD__, $submissionid);
                 throw new moodle_exception('errorfeedbackinstudentcontext', 'local_onenote');
             }
         } else {
@@ -668,7 +663,7 @@ abstract class base {
         if (!$submissionid || !($files = $this->get_stored_page_data($context->id, 'submission', $submissionid))) {
             if ($isteacher) {
                 $errstr = get_string('errorsubmissioninteachercontext', 'local_onenote');
-                \local_onenote\utils::debug($errstr, 'prepare_submission_postdata', $submissionid);
+                \local_onenote\utils::debug($errstr, __METHOD__, $submissionid);
                 throw new moodle_exception('errorsubmissioninteachercontext', 'local_onenote');
             } else {
                 // This is a student and they are just starting to work on this assignment.
@@ -763,9 +758,9 @@ abstract class base {
                         // We have a record and the page exists in OneNote.
                         return $page['links']['oneNoteWebUrl']['href'];
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $debugdata = ['pageid' => $pagerecord->$requestedpageidfield, 'e' => $e];
-                    \local_onenote\utils::debug('Error getting page', 'onenote\api\get_page', $debugdata);
+                    \local_onenote\utils::debug('Error getting page', __METHOD__, $debugdata);
                 }
             }
 
@@ -850,7 +845,7 @@ abstract class base {
                 if (!empty($onenotesection)) {
                     return $section;
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 // Process apicall response will log any errors.
                 return null;
             }
@@ -992,7 +987,7 @@ abstract class base {
 
         $pagefile = join(DIRECTORY_SEPARATOR, [rtrim($folder, DIRECTORY_SEPARATOR), 'page.html']);
         if (!$dom->loadHTML(mb_convert_encoding(file_get_contents($pagefile), 'HTML-ENTITIES', 'UTF-8'))) {
-            \local_onenote\utils::debug('Could not parse page HTML', 'create_postdata_from_folder', $pagefile);
+            \local_onenote\utils::debug('Could not parse page HTML', __METHOD__, $pagefile);
             return null;
         }
         $xpath = new DOMXPath($dom);
@@ -1076,8 +1071,8 @@ abstract class base {
 
                 return $response;
             }
-        } catch (Exception $e) {
-            \local_onenote\utils::debug($e->getMessage(), 'create_page_from_postdata', $e);
+        } catch (moodle_exception $e) {
+            \local_onenote\utils::debug($e->getMessage(), __METHOD__, $e);
         }
 
         return null;
@@ -1294,9 +1289,9 @@ abstract class base {
     public function get_page_metadata($pageid) {
         try {
             $page = $this->apicall('get', '/pages/' . $pageid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             $debugdata = ['pageid' => $pageid, 'e' => $e];
-            \local_onenote\utils::debug('Error getting page', 'onenote\api\get_page', $debugdata);
+            \local_onenote\utils::debug('Error getting page', __METHOD__, $debugdata);
         }
         return $page;
     }

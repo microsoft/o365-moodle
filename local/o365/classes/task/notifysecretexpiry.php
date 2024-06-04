@@ -27,8 +27,8 @@ namespace local_o365\task;
 
 use core\task\scheduled_task;
 use core_user;
-use Exception;
 use local_o365\utils;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -40,7 +40,7 @@ class notifysecretexpiry extends scheduled_task {
      *
      * @return string
      */
-    public function get_name() {
+    public function get_name() : string {
         return get_string('task_notifysecretexpiry', 'local_o365');
     }
 
@@ -49,14 +49,14 @@ class notifysecretexpiry extends scheduled_task {
      *
      * @return bool
      */
-    public function execute() {
+    public function execute() : bool {
         if (utils::is_connected() !== true) {
             return false;
         }
 
         try {
             $graphclient = utils::get_api();
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             mtrace('Failed to get Graph API client');
             return false;
@@ -72,7 +72,7 @@ class notifysecretexpiry extends scheduled_task {
         $appsecret = get_config('auth_oidc', 'clientsecret');
         try {
             $appcredentials = $graphclient->get_app_credentials($appid);
-        } catch (Exception $e) {
+        } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
             mtrace ('Failed to get secrets');
             $this->notify_invalid_secret();
@@ -135,17 +135,70 @@ class notifysecretexpiry extends scheduled_task {
     }
 
     /**
+     * Get notification recipient emails.
+     *
+     * @return array
+     */
+    private function get_notification_recipient_emails_from_configuration() : array {
+        $recipientemails = [];
+
+        $recipientssetting = get_config('auth_oidc', 'secretexpiryrecipients');
+        if (!empty($recipientssetting)) {
+            $emailinsetting = explode(',', $recipientssetting);
+            foreach ($emailinsetting as $email) {
+                $email = trim(filter_var($email, FILTER_SANITIZE_EMAIL));
+                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $recipientemails[] = $email;
+                }
+            }
+        }
+
+        return $recipientemails;
+    }
+
+    /**
+     * Get notification recipient user.
+     *
+     * @return array
+     */
+    private function get_notification_recipients() : array {
+        $notificationrecipients = [];
+
+        $recipientemails = $this->get_notification_recipient_emails_from_configuration();
+        if ($recipientemails) {
+            $dummyuser = core_user::get_support_user();
+            $dummyuser->firstname = 'Notification';
+            $dummyuser->lastname = 'Recipient';
+
+            foreach ($recipientemails as $recipientemail) {
+                $recipient = clone $dummyuser;
+                $recipient->email = $recipientemail;
+                $notificationrecipients[] = $recipient;
+            }
+        } else {
+            $adminuser = get_admin();
+            $notificationrecipients[] = $adminuser;
+        }
+
+        return $notificationrecipients;
+    }
+
+    /**
      * Notify site admin about secret already expired.
      *
      * @return void
      */
     private function notify_secret_expired() {
-        $adminuser = get_admin();
         $supportuser = core_user::get_support_user();
         $subject = get_string('notification_subject_secret_expired', 'local_o365');
         $message = get_string('notification_content_secret_expired', 'local_o365');
 
-        email_to_user($adminuser, $supportuser, $subject, $message);
+        $notificationreciepients = $this->get_notification_recipients();
+
+        foreach ($notificationreciepients as $recipient) {
+            mtrace('...... Sending notification to ' . $recipient->email . '.');
+            email_to_user($recipient, $supportuser, $subject, $message);
+        }
     }
 
     /**
@@ -155,7 +208,6 @@ class notifysecretexpiry extends scheduled_task {
      * @return void
      */
     private function notify_secret_almost_expired(int $endtime) {
-        $adminuser = get_admin();
         $supportuser = core_user::get_support_user();
 
         // Calculate in how many days the secret will expire, and form duration string.
@@ -170,7 +222,11 @@ class notifysecretexpiry extends scheduled_task {
         $subject = get_string('notification_subject_secret_almost_expired', 'local_o365');
         $message = get_string('notification_content_secret_almost_expired', 'local_o365', $daysstring);
 
-        email_to_user($adminuser, $supportuser, $subject, $message);
+        $notificationreciepients = $this->get_notification_recipients();
+        foreach ($notificationreciepients as $recipient) {
+            mtrace('...... Sending notification to ' . $recipient->email . '.');
+            email_to_user($recipient, $supportuser, $subject, $message);
+        }
     }
 
     /**
@@ -179,11 +235,14 @@ class notifysecretexpiry extends scheduled_task {
      * @return void
      */
     private function notify_invalid_secret() {
-        $adminuser = get_admin();
         $supportuser = core_user::get_support_user();
         $subject = get_string('notification_subject_invalid_secret', 'local_o365');
         $message = get_string('notification_content_invalid_secret', 'local_o365');
 
-        email_to_user($adminuser, $supportuser, $subject, $message);
+        $notificationreciepients = $this->get_notification_recipients();
+        foreach ($notificationreciepients as $recipient) {
+            mtrace('...... Sending notification to ' . $recipient->email . '.');
+            email_to_user($recipient, $supportuser, $subject, $message);
+        }
     }
 }

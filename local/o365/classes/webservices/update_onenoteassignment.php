@@ -29,11 +29,13 @@ defined('MOODLE_INTERNAL') || die();
 
 use local_o365\webservices\exception as exception;
 use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
-require_once($CFG->libdir.'/externallib.php');
 
 /**
  * Update assignment API class.
@@ -45,14 +47,14 @@ class update_onenoteassignment extends external_api {
      * @return external_function_parameters The parameters object for this webservice method.
      */
     public static function assignment_update_parameters() {
-        return new \external_function_parameters([
-            'data' => new \external_single_structure([
-                'coursemodule' => new \external_value(PARAM_INT, 'course module id'),
-                'course' => new \external_value(PARAM_INT, 'course id'),
-                'name' => new \external_value(PARAM_TEXT, 'name', VALUE_DEFAULT, null),
-                'intro' => new \external_value(PARAM_TEXT, 'intro', VALUE_DEFAULT, null),
-                'section' => new \external_value(PARAM_INT, 'section', VALUE_DEFAULT, null),
-                'visible' => new \external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, null),
+        return new external_function_parameters([
+            'data' => new external_single_structure([
+                'coursemodule' => new external_value(PARAM_INT, 'course module id'),
+                'course' => new external_value(PARAM_INT, 'course id'),
+                'name' => new external_value(PARAM_TEXT, 'name', VALUE_DEFAULT, null),
+                'intro' => new external_value(PARAM_TEXT, 'intro', VALUE_DEFAULT, null),
+                'section' => new external_value(PARAM_INT, 'section', VALUE_DEFAULT, null),
+                'visible' => new external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, null),
             ])
         ]);
     }
@@ -62,6 +64,7 @@ class update_onenoteassignment extends external_api {
      *
      * @param array $data The incoming data parameter.
      * @return array An array of parameters, if successful.
+     * @throws exception\sectionnotfound
      */
     public static function assignment_update($data) {
         global $DB;

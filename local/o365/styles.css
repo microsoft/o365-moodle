@@ -10,15 +10,15 @@
     vertical-align: middle;
 }
 
-#local_o365_admin-azuresetup button.refreshperms {
+#local_o365_admin-verifysetup button.refreshperms {
     margin: 0 0 0.75rem;
 }
 
-.local_o365_adminsetting_azuresetup_results section {
+.local_o365_adminsetting_verifysetup_results section {
     margin-bottom: 1rem;
 }
 
-.local_o365_adminsetting_azuresetup_results section h5 {
+.local_o365_adminsetting_verifysetup_results section h5 {
     margin: 0 0 0.25rem;
 }
 
@@ -263,10 +263,6 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
     text-align: center;
 }
 
-.local_o365_settings_teams_banner_part_2 {
-    margin: 0px 40px 10px 40px;
-}
-
 .local_o365_settings_teams_app_img {
     width: 100%;
     margin-bottom: 30px;
@@ -295,12 +291,4 @@ button.local_o365_manual_login_button:focus, button.local_o365_manual_login_butt
 .support_upn_change_case_detail {
     font-weight: normal;
     font-size: 0.8rem;
-}
-
-#admin-bot_app_id,
-#admin-bot_app_password,
-#admin-bot_feature_enabled,
-#admin-bot_webhook_endpoint,
-#admin-bot_domains_whitelist {
-    margin-bottom: 20px;
 }

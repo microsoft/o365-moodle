@@ -25,14 +25,21 @@
 
 namespace local_o365\webservices;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 use core_external\external_api;
+use core_external\external_format_value;
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
+use core_external\external_warnings;
 
 global $CFG;
 
 require_once($CFG->dirroot.'/course/modlib.php');
-require_once($CFG->libdir.'/externallib.php');
 require_once($CFG->dirroot.'/user/externallib.php');
 require_once($CFG->dirroot.'/mod/assign/locallib.php');
 
@@ -47,27 +54,27 @@ class read_assignments extends external_api {
      * @return external_function_parameters
      */
     public static function assignments_read_parameters() {
-        return new \external_function_parameters([
-            'courseids' => new \external_multiple_structure(
-                new \external_value(PARAM_INT, 'course id, empty for retrieving all the courses where the user is enroled in'),
+        return new external_function_parameters([
+            'courseids' => new external_multiple_structure(
+                new external_value(PARAM_INT, 'course id, empty for retrieving all the courses where the user is enroled in'),
                 '0 or more course ids',
                 VALUE_DEFAULT,
                 []
             ),
-            'assignmentids' => new \external_multiple_structure(
-                new \external_value(PARAM_INT,
+            'assignmentids' => new external_multiple_structure(
+                new external_value(PARAM_INT,
                     'assignment id, empty for retrieving all assignments for courses the user is enroled in'),
                 '0 or more assignment ids',
                 VALUE_DEFAULT,
                 []
             ),
-            'capabilities'  => new \external_multiple_structure(
-                new \external_value(PARAM_CAPABILITY, 'capability'),
+            'capabilities'  => new external_multiple_structure(
+                new external_value(PARAM_CAPABILITY, 'capability'),
                 'list of capabilities used to filter courses',
                 VALUE_DEFAULT,
                 []
             ),
-            'includenotenrolledcourses' => new \external_value(
+            'includenotenrolledcourses' => new external_value(
                 PARAM_BOOL,
                 'whether to return courses that the user can see even if is not enroled in. This requires the parameter ' .
                 'courseids to not be empty.',
@@ -147,7 +154,7 @@ class read_assignments extends external_api {
                 if (!isset($courses[$cid])) {
                     $courses[$cid] = get_course($cid);
                 }
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 unset($courses[$cid]);
                 $warnings[] = array(
                     'item' => 'course',
@@ -203,7 +210,7 @@ class read_assignments extends external_api {
                     try {
                         self::validate_context($context);
                         require_capability('mod/assign:view', $context);
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $warnings[] = array(
                             'item' => 'module',
                             'itemid' => $module->id,
@@ -260,7 +267,7 @@ class read_assignments extends external_api {
 
                     if ($assign->show_intro()) {
 
-                        list($assignment['intro'], $assignment['introformat']) = external_format_text($module->intro,
+                        [$assignment['intro'], $assignment['introformat']] = external_format_text($module->intro,
                             $module->introformat, $context->id, 'mod_assign', 'intro', null);
 
                         $fs = get_file_storage();
@@ -307,43 +314,43 @@ class read_assignments extends external_api {
      * @since Moodle 2.4
      */
     private static function get_assignments_assignment_structure() {
-        return new \external_single_structure(
+        return new external_single_structure(
             array(
-                'id' => new \external_value(PARAM_INT, 'assignment id'),
-                'cmid' => new \external_value(PARAM_INT, 'course module id'),
-                'course' => new \external_value(PARAM_INT, 'course id'),
-                'name' => new \external_value(PARAM_TEXT, 'assignment name'),
-                'nosubmissions' => new \external_value(PARAM_INT, 'no submissions'),
-                'submissiondrafts' => new \external_value(PARAM_INT, 'submissions drafts'),
-                'sendnotifications' => new \external_value(PARAM_INT, 'send notifications'),
-                'sendlatenotifications' => new \external_value(PARAM_INT, 'send notifications'),
-                'sendstudentnotifications' => new \external_value(PARAM_INT, 'send student notifications (default)'),
-                'duedate' => new \external_value(PARAM_INT, 'assignment due date'),
-                'allowsubmissionsfromdate' => new \external_value(PARAM_INT, 'allow submissions from date'),
-                'grade' => new \external_value(PARAM_INT, 'grade type'),
-                'timemodified' => new \external_value(PARAM_INT, 'last time assignment was modified'),
-                'completionsubmit' => new \external_value(PARAM_INT, 'if enabled, set activity as complete following submission'),
-                'cutoffdate' => new \external_value(PARAM_INT, 'date after which submission is not accepted without an extension'),
-                'teamsubmission' => new \external_value(PARAM_INT, 'if enabled, students submit as a team'),
-                'requireallteammemberssubmit' => new \external_value(PARAM_INT, 'if enabled, all team members must submit'),
-                'teamsubmissiongroupingid' => new \external_value(PARAM_INT, 'the grouping id for the team submission groups'),
-                'blindmarking' => new \external_value(PARAM_INT, 'if enabled, hide identities until reveal identities actioned'),
-                'revealidentities' => new \external_value(PARAM_INT, 'show identities for a blind marking assignment'),
-                'attemptreopenmethod' => new \external_value(PARAM_TEXT, 'method used to control opening new attempts'),
-                'maxattempts' => new \external_value(PARAM_INT, 'maximum number of attempts allowed'),
-                'markingworkflow' => new \external_value(PARAM_INT, 'enable marking workflow'),
-                'markingallocation' => new \external_value(PARAM_INT, 'enable marking allocation'),
-                'requiresubmissionstatement' => new \external_value(PARAM_INT, 'student must accept submission statement'),
-                'configs' => new \external_multiple_structure(self::get_assignments_config_structure(), 'configuration settings'),
-                'intro' => new \external_value(PARAM_RAW,
+                'id' => new external_value(PARAM_INT, 'assignment id'),
+                'cmid' => new external_value(PARAM_INT, 'course module id'),
+                'course' => new external_value(PARAM_INT, 'course id'),
+                'name' => new external_value(PARAM_TEXT, 'assignment name'),
+                'nosubmissions' => new external_value(PARAM_INT, 'no submissions'),
+                'submissiondrafts' => new external_value(PARAM_INT, 'submissions drafts'),
+                'sendnotifications' => new external_value(PARAM_INT, 'send notifications'),
+                'sendlatenotifications' => new external_value(PARAM_INT, 'send notifications'),
+                'sendstudentnotifications' => new external_value(PARAM_INT, 'send student notifications (default)'),
+                'duedate' => new external_value(PARAM_INT, 'assignment due date'),
+                'allowsubmissionsfromdate' => new external_value(PARAM_INT, 'allow submissions from date'),
+                'grade' => new external_value(PARAM_INT, 'grade type'),
+                'timemodified' => new external_value(PARAM_INT, 'last time assignment was modified'),
+                'completionsubmit' => new external_value(PARAM_INT, 'if enabled, set activity as complete following submission'),
+                'cutoffdate' => new external_value(PARAM_INT, 'date after which submission is not accepted without an extension'),
+                'teamsubmission' => new external_value(PARAM_INT, 'if enabled, students submit as a team'),
+                'requireallteammemberssubmit' => new external_value(PARAM_INT, 'if enabled, all team members must submit'),
+                'teamsubmissiongroupingid' => new external_value(PARAM_INT, 'the grouping id for the team submission groups'),
+                'blindmarking' => new external_value(PARAM_INT, 'if enabled, hide identities until reveal identities actioned'),
+                'revealidentities' => new external_value(PARAM_INT, 'show identities for a blind marking assignment'),
+                'attemptreopenmethod' => new external_value(PARAM_TEXT, 'method used to control opening new attempts'),
+                'maxattempts' => new external_value(PARAM_INT, 'maximum number of attempts allowed'),
+                'markingworkflow' => new external_value(PARAM_INT, 'enable marking workflow'),
+                'markingallocation' => new external_value(PARAM_INT, 'enable marking allocation'),
+                'requiresubmissionstatement' => new external_value(PARAM_INT, 'student must accept submission statement'),
+                'configs' => new external_multiple_structure(self::get_assignments_config_structure(), 'configuration settings'),
+                'intro' => new external_value(PARAM_RAW,
                     'assignment intro, not allways returned because it deppends on the activity configuration', VALUE_OPTIONAL),
-                'introformat' => new \external_format_value('intro', VALUE_OPTIONAL),
-                'introattachments' => new \external_multiple_structure(
-                    new \external_single_structure(
+                'introformat' => new external_format_value('intro', VALUE_OPTIONAL),
+                'introattachments' => new external_multiple_structure(
+                    new external_single_structure(
                         array (
-                            'filename' => new \external_value(PARAM_FILE, 'file name'),
-                            'mimetype' => new \external_value(PARAM_RAW, 'mime type'),
-                            'fileurl'  => new \external_value(PARAM_URL, 'file download url')
+                            'filename' => new external_value(PARAM_FILE, 'file name'),
+                            'mimetype' => new external_value(PARAM_RAW, 'mime type'),
+                            'fileurl'  => new external_value(PARAM_URL, 'file download url')
                         )
                     ), 'intro attachments files', VALUE_OPTIONAL
                 )
@@ -357,14 +364,14 @@ class read_assignments extends external_api {
      * @since Moodle 2.4
      */
     private static function get_assignments_config_structure() {
-        return new \external_single_structure(
+        return new external_single_structure(
             array(
-                'id' => new \external_value(PARAM_INT, 'assign_plugin_config id'),
-                'assignment' => new \external_value(PARAM_INT, 'assignment id'),
-                'plugin' => new \external_value(PARAM_TEXT, 'plugin'),
-                'subtype' => new \external_value(PARAM_TEXT, 'subtype'),
-                'name' => new \external_value(PARAM_TEXT, 'name'),
-                'value' => new \external_value(PARAM_TEXT, 'value')
+                'id' => new external_value(PARAM_INT, 'assign_plugin_config id'),
+                'assignment' => new external_value(PARAM_INT, 'assignment id'),
+                'plugin' => new external_value(PARAM_TEXT, 'plugin'),
+                'subtype' => new external_value(PARAM_TEXT, 'subtype'),
+                'name' => new external_value(PARAM_TEXT, 'name'),
+                'value' => new external_value(PARAM_TEXT, 'value')
             ), 'assignment configuration object'
         );
     }
@@ -376,13 +383,13 @@ class read_assignments extends external_api {
      * @since Moodle 2.4
      */
     private static function get_assignments_course_structure() {
-        return new \external_single_structure(
+        return new external_single_structure(
             array(
-                'id' => new \external_value(PARAM_INT, 'course id'),
-                'fullname' => new \external_value(PARAM_TEXT, 'course full name'),
-                'shortname' => new \external_value(PARAM_TEXT, 'course short name'),
-                'timemodified' => new \external_value(PARAM_INT, 'last time modified'),
-                'assignments' => new \external_multiple_structure(self::get_assignments_assignment_structure(), 'assignment info')
+                'id' => new external_value(PARAM_INT, 'course id'),
+                'fullname' => new external_value(PARAM_TEXT, 'course full name'),
+                'shortname' => new external_value(PARAM_TEXT, 'course short name'),
+                'timemodified' => new external_value(PARAM_INT, 'last time modified'),
+                'assignments' => new external_multiple_structure(self::get_assignments_assignment_structure(), 'assignment info')
               ), 'course information object'
         );
     }
@@ -394,10 +401,10 @@ class read_assignments extends external_api {
      * @since Moodle 2.4
      */
     public static function assignments_read_returns() {
-        return new \external_single_structure(
+        return new external_single_structure(
             array(
-                'courses' => new \external_multiple_structure(self::get_assignments_course_structure(), 'list of courses'),
-                'warnings'  => new \external_warnings('item can be \'course\' (errorcode 1 or 2) or \'module\' (errorcode 1)',
+                'courses' => new external_multiple_structure(self::get_assignments_course_structure(), 'list of courses'),
+                'warnings'  => new external_warnings('item can be \'course\' (errorcode 1 or 2) or \'module\' (errorcode 1)',
                     'When item is a course then itemid is a course id. When the item is a module then itemid is a module id',
                     'errorcode can be 1 (no access rights) or 2 (not enrolled or no permissions)')
             )

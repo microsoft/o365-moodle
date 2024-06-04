@@ -35,7 +35,6 @@ use core_course_category;
 use core_php_time_limit;
 use core_plugin_manager;
 use core_user;
-use Exception;
 use finfo;
 use html_table;
 use html_writer;
@@ -123,25 +122,12 @@ class acp extends base {
         $stateparams = ['redirect' => '/admin/settings.php?section=local_o365', 'justauth' => true, 'forceflow' => 'authcode',
             'action' => 'adminconsent',];
         $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
         } else {
             $extraparams = ['prompt' => 'admin_consent'];
             $auth->initiateauthrequest(true, $stateparams, $extraparams);
         }
-    }
-
-    /**
-     * Set the system API user.
-     */
-    public function mode_setsystemuser() {
-        set_config('enableapponlyaccess', '0', 'local_o365');
-        $auth = new authcode;
-        $auth->set_httpclient(new httpclient());
-        $stateparams = ['redirect' => '/admin/settings.php?section=local_o365', 'justauth' => true, 'forceflow' => 'authcode',
-            'action' => 'setsystemapiuser',];
-        $extraparams = ['prompt' => 'admin_consent'];
-        $auth->initiateauthrequest(true, $stateparams, $extraparams);
     }
 
     /**
@@ -151,10 +137,10 @@ class acp extends base {
      */
     public function checktenantsetup() : bool {
         $config = get_config('local_o365');
-        if (empty($config->aadtenant)) {
+        if (empty($config->entratenant)) {
             return false;
         }
-        if (utils::is_configured_apponlyaccess() === true || !empty($config->systemtokens)) {
+        if (utils::is_configured_apponlyaccess() === true) {
             return true;
         }
         return false;
@@ -186,7 +172,7 @@ class acp extends base {
         echo html_writer::div($multitenantdesc, 'alert alert-info');
 
         echo html_writer::empty_tag('br');
-        $hosttenantstr = get_string('acp_tenants_hosttenant', 'local_o365', $config->aadtenant);
+        $hosttenantstr = get_string('acp_tenants_hosttenant', 'local_o365', $config->entratenant);
         $hosttenanthtml = html_writer::tag('h4', $hosttenantstr);
         echo html_writer::div($hosttenanthtml);
         echo html_writer::empty_tag('br');
@@ -320,7 +306,7 @@ class acp extends base {
         $stateparams = ['redirect' => '/local/o365/acp.php?mode=tenantsadd', 'justauth' => true, 'forceflow' => 'authcode',
             'action' => 'addtenant', 'ignorerestrictions' => true,];
         $idptype = get_config('auth_oidc', 'idptype');
-        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+        if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
         } else {
             $extraparams = ['prompt' => 'admin_consent'];
@@ -340,12 +326,8 @@ class acp extends base {
 
         $this->standard_header();
 
-        $enableapponlyaccess = get_config('local_o365', 'enableapponlyaccess');
-        if (empty($enableapponlyaccess)) {
-            $healthchecks = ['systemapiuser', 'ratelimit'];
-        } else {
-            $healthchecks = ['ratelimit'];
-        }
+        $healthchecks = ['ratelimit'];
+
         foreach ($healthchecks as $healthcheck) {
             $healthcheckclass = '\local_o365\healthcheck\\' . $healthcheck;
             $healthcheck = new $healthcheckclass();
@@ -458,7 +440,7 @@ class acp extends base {
                         } else {
                             $errors[] = get_string('acp_usermatch_upload_err_fileopen', 'local_o365');
                         }
-                    } catch (Exception $e) {
+                    } catch (moodle_exception $e) {
                         $errors[] = $e->getMessage();
                     }
                 } else {
@@ -1168,8 +1150,20 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
             $coursesync = new main($graphclient);
 
-            // Sync users.
-            $coursesync->resync_group_owners_and_members($courseid, $teamcacherecord->objectid);
+            // Sync users based on course user sync direction.
+            $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+
+            switch ($courseusersyncdirection) {
+                case COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS:
+                    $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($courseid, $teamcacherecord->objectid);
+                    break;
+                case COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE:
+                    $coursesync->process_course_team_user_sync_from_microsoft_to_moodle($courseid, $teamcacherecord->objectid);
+                    break;
+                case COURSE_USER_SYNC_DIRECTION_BOTH:
+                    $coursesync->process_initial_course_team_user_sync($courseid, $teamcacherecord->objectid);
+                    break;
+            }
 
             // Provision app, add tab.
             $coursesync->install_moodle_app_in_team($teamcacherecord->objectid, $courseid);
@@ -1285,8 +1279,15 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
             $coursesync = new main($graphclient);
 
-            // Sync users.
-            $coursesync->resync_group_owners_and_members($courseid, $teamcacherecord->objectid);
+            // Sync users based on course user sync direction.
+            $courseusersyncdirection = get_config('local_o365', 'courseusersyncdirection');
+
+            if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS ||
+                $courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_BOTH) {
+                $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($courseid, $teamcacherecord->objectid);
+            } else if ($courseusersyncdirection == COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE) {
+                $coursesync->process_course_team_user_sync_from_microsoft_to_moodle($courseid, $teamcacherecord->objectid);
+            }
 
             // Provision app, add tab.
             $coursesync->install_moodle_app_in_team($teamcacherecord->objectid, $courseid);
@@ -1313,7 +1314,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $this->set_title(get_string('acp_maintenance_recreatedeletedgroups', 'local_o365'));
 
-        $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses();
+        $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         $coursesync = new main($graphclient, true);
@@ -1433,11 +1434,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $courseitem['link'] = html_writer::link(new moodle_url('/course/view.php', ['id' => $course->id]), $course->fullname);
             try {
                 ob_start();
-                $coursesync->resync_group_owners_and_members($course->id, $course->groupobjectid);
+                $coursesync->process_course_team_user_sync_from_moodle_to_microsoft($course->id, $course->groupobjectid);
                 $courseitem['output'] = ob_get_contents();
                 ob_clean();
                 $courseitem['output'] = '<pre>' . $courseitem['output'] . '</pre>';
-            } catch (Exception $e) {
+            } catch (moodle_exception $e) {
                 $courseitem['output'] = 'Could not sync course ' . $course->id . '. Reason: ' . $e->getMessage();
             }
             $outputsbycourse[] = $courseitem;
@@ -1512,14 +1513,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'settings_showcoursegroup',
             ],
             'local_o365' => [
-                'enableapponlyaccess',
                 'apptokens',
-                'systemtokens',
-                'systemapiuser',
-                'aadsync',
-                'aadtenant',
-                'aadtenantid',
-                'azuresetupresult',
+                'usersync',
+                'entratenant',
+                'entratenantid',
+                'verifysetupresult',
                 'chineseapi',
                 'coursesync',
                 'coursesynccustom',
@@ -1531,8 +1529,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'usersynccreationrestriction',
                 'task_usersync_lastdelete',
                 'task_usersync_lastdeltatoken',
-                'task_usersync_lastskiptokendelta',
-                'task_usersync_lastskiptokenfull',
                 'unifiedapiactive',
                 'delete_group_on_course_deletion',
                 'delete_group_on_course_sync_disabled',
@@ -1560,13 +1556,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'sdsschools',
                 'sdssyncenrolmenttosds',
                 'sdsteamsenabled',
-                'bot_app_id',
-                'bot_app_password',
-                'bot_sharedsecret',
                 'teams_moodle_app_external_id',
                 'teams_moodle_app_short_name',
-                'bot_feature_enabled',
-                'bot_webhook_endpoint',
                 'manifest_downloaded',
                 'moodle_app_id',
                 'teamscacheupdated',
@@ -1698,7 +1689,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $this->set_title(get_string('acp_maintenance_cleandeltatoken', 'local_o365'));
 
         set_config('task_usersync_lastdeltatoken', '', 'local_o365');
-        set_config('task_usersync_lastskiptokendelta', '', 'local_o365');
 
         $url = new moodle_url($this->url, ['mode' => 'cleandeltatoken']);
         $PAGE->navbar->add(get_string('acp_maintenance_cleandeltatoken', 'local_o365'), $url);
@@ -1745,6 +1735,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * Resync action from the userconnections tool.
      *
      * @return bool
+     * @throws moodle_exception
      */
     public function mode_userconnections_resync() : bool {
         global $DB;
@@ -1769,7 +1760,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             throw new moodle_exception('acp_userconnections_resync_nodata', 'local_o365');
         }
 
-        // Get aad data.
+        // Get Entra ID data.
         $usersync = new \local_o365\feature\usersync\main();
         $userdata = $usersync->get_user($objectrecord->objectid, $isguestuser);
         echo '<pre>';
@@ -1781,6 +1772,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
     /**
      * Manual match action from the userconnections tool.
+     *
+     * @throws moodle_exception
      */
     public function mode_userconnections_manualmatch() {
         global $DB, $PAGE;
@@ -1810,7 +1803,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $o365username = trim($fromform->o365username);
 
             // Check existing matches for Microsoft user.
-            $existingmatchforo365user = $DB->get_record('local_o365_connections', ['aadupn' => $o365username]);
+            $existingmatchforo365user = $DB->get_record('local_o365_connections', ['entraidupn' => $o365username]);
             if (!empty($existingmatchforo365user)) {
                 throw new moodle_exception('acp_userconnections_manualmatch_error_o365usermatched', 'local_o365');
             }
@@ -1829,7 +1822,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
 
             $uselogin = (!empty($fromform->uselogin)) ? 1 : 0;
-            $matchrec = (object) ['muserid' => $userid, 'aadupn' => $o365username, 'uselogin' => $uselogin,];
+            $matchrec = (object) ['muserid' => $userid, 'entraidupn' => $o365username, 'uselogin' => $uselogin,];
             $DB->insert_record('local_o365_connections', $matchrec);
             redirect(new moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']));
             die();
