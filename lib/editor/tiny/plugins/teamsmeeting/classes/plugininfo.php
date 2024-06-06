@@ -55,6 +55,24 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
     }
 
     /**
+     * Is the plugin enabled? This is the case when the capabilities are met.
+     *
+     * @param context $context The context that the editor is used within
+     * @param array $options The options passed in when requesting the editor
+     * @param array $fpoptions The filepicker options passed in when requesting the editor
+     * @param editor|null $editor The editor instance in which the plugin is initialised
+     * @return boolean
+     */
+    public static function is_enabled(
+        context $context,
+        array $options,
+        array $fpoptions,
+        ?editor $editor = null
+    ): bool {
+        return has_capability('tiny/teamsmeeting:add', $context);
+    }
+
+    /**
      * Return plugin configuration for the given context.
      *
      * @param context $context
