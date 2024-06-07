@@ -1930,7 +1930,11 @@ class unified extends o365api {
      */
     public function add_tab_to_channel(string $groupobjectid, string $channelid, string $appid, array $tabconfiguration) : string {
         $endpoint = '/teams/' . $groupobjectid . '/channels/' . $channelid . '/tabs';
-        $requestparams = ['displayName' => get_string('tab_moodle', 'local_o365'),
+        $tabname = get_config('local_o365', 'teams_moodle_tab_name');
+        if (!$tabname) {
+            $tabname = 'Moodle';
+        }
+        $requestparams = ['displayName' => $tabname,
             'teamsApp@odata.bind' => $this->get_apiuri() . '/beta/appCatalogs/teamsApps/' . $appid,
             'configuration' => $tabconfiguration,];
 
