@@ -149,9 +149,6 @@ class block_microsoft extends block_base {
             $courseheaderdisplayed = true;
         }
 
-        [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
-        $html .= $courseheader;
-
         // Link to course sync options.
         if (has_capability('local/o365:teamowner', $this->page->context)) {
             $coursesyncsetting = get_config('local_o365', 'coursesync');
