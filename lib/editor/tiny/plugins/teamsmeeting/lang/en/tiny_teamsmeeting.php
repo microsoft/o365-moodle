@@ -31,6 +31,9 @@ $string['pluginname'] = 'Teams Meeting';
 $string['settings_meetings_app_link'] = 'Meetings App URL';
 $string['settings_meetings_app_link_desc'] = 'This is URL of meeting app location';
 
+// Capability.
+$string['teamsmeeting:add'] = 'Add Teams Meeting';
+
 // iFrame.
 $string['iframe_meeting_options'] = 'Meeting Options';
 $string['iframe_meeting_created'] = 'Meeting "{$a}" was created successfully!';
