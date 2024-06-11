@@ -628,9 +628,8 @@ class observers {
         }
 
         // Delete group mapping records.
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]);
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid]);
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $courseid]);
+        $DB->delete_records_select('local_o365_objects',
+            "type = 'group' AND subtype in ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
 
         return true;
     }
