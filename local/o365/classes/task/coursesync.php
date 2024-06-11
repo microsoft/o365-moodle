@@ -68,6 +68,9 @@ class coursesync extends \core\task\scheduled_task {
 
         $coursesync = new main($graphclient, true);
         $coursesync->sync_courses();
-        $coursesync->update_teams_cache();
+        if ($coursesync->update_teams_cache()) {
+            $coursesync->cleanup_teams_connections();
+        }
+        $coursesync->cleanup_course_connection_records();
     }
 }

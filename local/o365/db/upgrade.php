@@ -1159,5 +1159,18 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023100911, 'local', 'o365');
     }
 
+    if ($oldversion < 2023100916) {
+        // Changing nullability of field courseid on table local_o365_course_request to null.
+        $table = new xmldb_table('local_o365_course_request');
+        $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, null, null, '0', 'requeststatus');
+
+        // Launch change of nullability for field courseid.
+        $dbman->change_field_notnull($table, $field);
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2023100916, 'local', 'o365');
+    }
+
+
     return true;
 }
