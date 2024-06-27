@@ -303,7 +303,7 @@ class local_o365_usersync_testcase extends \advanced_testcase {
         $apiclient = new \local_o365\rest\unified($this->get_mock_token(), $httpclient);
         $usersync = new \local_o365\feature\usersync\main($clientdata, $httpclient);
         $users = $apiclient->get_users();
-        $usersync->sync_users($users['value']);
+        $usersync->sync_users($users);
 
         $existinguser = ['auth' => 'oidc', 'username' => 'testuser1@example.onmicrosoft.com'];
         $this->assertTrue($DB->record_exists('user', $existinguser));
