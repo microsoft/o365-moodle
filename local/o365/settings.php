@@ -583,6 +583,12 @@ if ($hassiteconfig) {
         $downloadmanifesthtml .= html_writer::end_tag('p');
         $downloadmanifesthtml .= html_writer::end_div();
 
+        // Moodle tab name settings.
+        $settings->add(new admin_setting_configtext('local_o365/teams_moodle_tab_name',
+            get_string('settings_teams_moodle_tab_name', 'local_o365'),
+            get_string('settings_teams_moodle_tab_name_desc', 'local_o365'),
+            'Moodle'));
+
         $settings->add(new admin_setting_heading('download_manifest_header', '', $downloadmanifesthtml));
     }
 
