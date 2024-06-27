@@ -171,10 +171,15 @@ class unified extends o365api {
         $deltatokenvalue = null;
 
         $continue = true;
+        $skiptoken = null;
 
         while ($continue) {
             if (!empty($skiptoken)) {
                 $odataqueries[$skipparam] = $skiptoken;
+                // Cannot send a delta token and a skip token at the same time.
+                if (isset($odataqueries['$deltatoken'])) {
+                    unset($odataqueries['$deltatoken']);
+                }
             }
 
             $odataquerystring = '';
