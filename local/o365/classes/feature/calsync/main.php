@@ -72,6 +72,16 @@ class main {
         $tokenresource = unified::get_tokenresource();
 
         $token = token::instance($muserid, $tokenresource, $this->clientdata, $this->httpclient);
+        if ($token && $token->is_expired()) {
+            try {
+                if (!$token->refresh()) {
+                    $token = null;
+                }
+            } catch (moodle_exception $e) {
+                // Token fails to refresh, so we'll use application token.
+                $token = null;
+            }
+        }
         if (empty($token) && $systemfallback === true) {
             $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         }
@@ -392,7 +402,7 @@ class main {
      */
     public function get_calendars() {
         global $USER;
-        $apiclient = $this->construct_calendar_api($USER->id, false);
+        $apiclient = $this->construct_calendar_api($USER->id);
         $o365upn = utils::get_o365_upn($USER->id);
         if ($o365upn) {
             return $apiclient->get_calendars($o365upn);
@@ -410,7 +420,7 @@ class main {
      * @return array Array of events.
      */
     public function get_events($muserid, $o365calid, $since = null) {
-        $apiclient = $this->construct_calendar_api($muserid, false);
+        $apiclient = $this->construct_calendar_api($muserid);
         $o365upn = utils::get_o365_upn($muserid);
 
         $events = [];
@@ -561,7 +571,7 @@ class main {
      */
     public function create_outlook_calendar($name) {
         global $USER;
-        $apiclient = $this->construct_calendar_api($USER->id, false);
+        $apiclient = $this->construct_calendar_api($USER->id);
         $o365upn = utils::get_o365_upn($USER->id);
         if ($o365upn) {
             return $apiclient->create_calendar($name, $o365upn);
