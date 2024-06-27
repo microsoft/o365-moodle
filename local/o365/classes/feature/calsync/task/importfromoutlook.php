@@ -55,7 +55,7 @@ class importfromoutlook extends \core\task\scheduled_task {
         }
 
         // Get calendars set to sync in.
-        $starttimestring = time();
+        $starttime = time();
 
         \local_o365\feature\calsync\observers::set_event_import(true);
 
@@ -155,7 +155,7 @@ class importfromoutlook extends \core\task\scheduled_task {
         $calsubs->close();
         \local_o365\feature\calsync\observers::set_event_import(false);
 
-        set_config('calsyncinlastrun', $starttimestring, 'local_o365');
+        set_config('calsyncinlastrun', $starttime, 'local_o365');
         return true;
     }
 }

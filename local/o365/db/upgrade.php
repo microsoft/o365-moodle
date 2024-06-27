@@ -1172,5 +1172,21 @@ function xmldb_local_o365_upgrade($oldversion) {
     }
 
 
+    if ($oldversion < 2023100917) {
+        // Fix data type issue in calsyncinlastrun config.
+        $calsyncinlastrun = get_config('local_o365', 'calsyncinlastrun');
+        if ($calsyncinlastrun && !is_numeric($calsyncinlastrun)) {
+            $calsyncinlastrun = strtotime($calsyncinlastrun);
+            if ($calsyncinlastrun) {
+                set_config('calsyncinlastrun', $calsyncinlastrun, 'local_o365');
+            } else {
+                set_config('calsyncinlastrun', 0, 'local_o365');
+            }
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2023100917, 'local', 'o365');
+    }
+
     return true;
 }
