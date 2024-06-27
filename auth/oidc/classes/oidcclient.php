@@ -167,9 +167,13 @@ class oidcclient {
      * @param bool $promptlogin Whether to prompt for login or use existing session.
      * @param array $stateparams Parameters to store as state.
      * @param array $extraparams Additional parameters to send with the OIDC request.
+     * @param bool $selectaccount Whether to prompt the user to select an account.
      * @return array Array of request parameters.
      */
-    protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
+    protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array(),
+        bool $selectaccount = false) {
+        global $SESSION;
+
         $nonce = 'N'.uniqid();
 
         $params = [
@@ -188,6 +192,14 @@ class oidcclient {
 
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
+        } else if ($selectaccount === true) {
+            $params['prompt'] = 'select_account';
+        } else {
+            $silentloginmode = get_config('auth_oidc', 'silentloginmode');
+            if ($silentloginmode) {
+                $params['prompt'] = 'none';
+                $SESSION->silent_login_mode = true;
+            }
         }
 
         $domainhint = get_config('auth_oidc', 'domainhint');
@@ -247,8 +259,10 @@ class oidcclient {
      * @param bool $promptlogin Whether to prompt for login or use existing session.
      * @param array $stateparams Parameters to store as state.
      * @param array $extraparams Additional parameters to send with the OIDC request.
+     * @param bool $selectaccount Whether to prompt the user to select an account.
      */
-    public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
+    public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array(),
+        bool $selectaccount = false) {
         if (empty($this->clientid)) {
             throw new moodle_exception('erroroidcclientnocreds', 'auth_oidc');
         }
@@ -257,7 +271,7 @@ class oidcclient {
             throw new moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
         }
 
-        $params = $this->getauthrequestparams($promptlogin, $stateparams, $extraparams);
+        $params = $this->getauthrequestparams($promptlogin, $stateparams, $extraparams, $selectaccount);
         $redirecturl = new moodle_url($this->endpoints['auth'], $params);
         redirect($redirecturl);
     }
