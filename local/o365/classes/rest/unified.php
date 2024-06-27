@@ -493,11 +493,16 @@ class unified extends o365api {
             return null;
         }
         $config = get_config('local_o365');
+        $o365urls = [];
         $url = preg_replace("/-my.sharepoint.com/", ".sharepoint.com", $config->odburl);
         // First time visiting the onedrive or notebook urls will result in a "please wait while we provision onedrive" message.
-        $o365urls = [
-            'onedrive' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=documents',
-            'notebook' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=notebook',
+        if ($url) {
+            $o365urls = [
+                'onedrive' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=documents',
+                'notebook' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=notebook',
+            ];
+        }
+        $o365urls += [
             'conversations' => 'https://outlook.office.com/owa/?path=/group/' . $group['mail'] . '/mail',
             'calendar' => 'https://outlook.office365.com/owa/?path=/group/' . $group['mail'] . '/calendar',
         ];
