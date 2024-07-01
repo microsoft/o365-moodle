@@ -912,7 +912,7 @@ class main {
                 'type' => 'user',
                 'subtype' => '',
                 'objectid' => $userobjectid,
-                'o365name' => $entraiduserdata['userPrincipalName'],
+                'o365name' => $entraiduserdata['useridentifier'],
                 'moodleid' => $newuser->id,
                 'tenant' => '',
                 'timecreated' => $now,
