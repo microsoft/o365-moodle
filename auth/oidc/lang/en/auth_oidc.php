@@ -139,10 +139,10 @@ In order to avoid Moodle trying to use personal accounts or accounts from other 
 <br/>
 For Microsoft IdPs, the user experience is as follows:
 <ul>
-<li>If there is no active user session is found, Moodle login page will show.</li>
-<li>If only one active user session is found, and the user has access to the Entra ID app (i.e. the user can use the Entra ID app), the user will be logged in to Moodle using SSO.</li>
+<li>If no active user session is found, Moodle login page will show.</li>
+<li>If only one active user session is found, and the user has access to the Entra ID app (i.e. user is from the same tenant, or is a guest user of the tenant), the user will be logged in to Moodle automatically using SSO.</li>
 <li>If only one active user session is found, but the user doesn\'t have access to the Entra ID app (e.g. the user is from a different tenant, or the app requires user assignment and the user isn\'t assigned), the Moodle login page will show.</li>
-<li>If there are multiple active user sessions, a page will show to allow the user to select the account to log in with.</li>
+<li>If there are multiple active user sessions who have access to the Entra ID app, a page will show to allow the user to select the account to log in with.</li>
 </ul>';
 $string['oidcresource'] = 'Resource';
 $string['oidcresource_help'] = 'The OpenID Connect resource for which to send the request.<br/>
