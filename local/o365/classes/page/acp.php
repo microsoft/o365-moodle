@@ -1132,7 +1132,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
 
             $DB->delete_records_select('local_o365_objects',
-                'type => "group" AND subtype IN ("courseteam", "teamfromgroup") AND moodleid = ?', [$courseid]);
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
 
             $teamrecord = new stdClass();
             $teamrecord->type = 'group';
@@ -1262,7 +1262,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
 
             $DB->delete_records_select('local_o365_objects',
-                'type => "group" AND subtype IN ("courseteam", "teamfromgroup") AND moodleid = ?', [$courseid]);
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
 
             $teamrecord = new stdClass();
             $teamrecord->type = 'group';
@@ -1343,7 +1343,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             if (!$course = $DB->get_record('course', ['id' => $groupobject->moodleid])) {
                 // Moodle course doesn't exist. Delete the invalid record.
                 $DB->delete_records_select('local_o365_objects',
-                    'type => "group" AND subtype IN ("course", "courseteam", "teamfromgroup") AND moodleid = ?',
+                    "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?",
                     [$groupobject->moodleid]);
                 continue;
             }
@@ -1360,7 +1360,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $status = '';
             if (!in_array($groupobject->objectid, $groupids)) {
                 $DB->delete_records_select('local_o365_objects',
-                    'type => "group" AND subtype IN ("course", "courseteam", "teamfromgroup") AND moodleid = ?',
+                    "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?",
                     [$groupobject->moodleid]);
                 if (!in_array($course->id, $coursesenabled)) {
                     $status = get_string('acp_maintenance_recreatedeletedgroups_status_sync_disabled', 'local_o365');

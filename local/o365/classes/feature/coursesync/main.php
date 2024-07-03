@@ -605,10 +605,10 @@ class main {
             }
         }
 
-        $sql = 'SELECT crs.*
+        $sql = "SELECT crs.*
                   FROM {course} crs
-             LEFT JOIN {local_o365_objects} obj ON obj.type = "group" AND obj.subtype = "course" AND obj.moodleid = crs.id
-                 WHERE obj.id IS NULL AND crs.id != ? AND crs.visible != 0';
+             LEFT JOIN {local_o365_objects} obj ON obj.type = 'group' AND obj.subtype = 'course' AND obj.moodleid = crs.id
+                 WHERE obj.id IS NULL AND crs.id != ? AND crs.visible != 0";
         // The "crs.visible != 0" is used to filter out courses in the process of copy or restore, which may contain incorrect or
         // incomplete contents.
         $params = [SITEID];
@@ -696,22 +696,22 @@ class main {
 
         $this->mtrace('Processing courses without teams...');
 
-        $sql = 'SELECT crs.*, obj_group.objectid AS groupobjectid
+        $sql = "SELECT crs.*, obj_group.objectid AS groupobjectid
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj_group
-                        ON obj_group.type = "group" AND obj_group.subtype = "course" AND obj_group.moodleid = crs.id
+                        ON obj_group.type = 'group' AND obj_group.subtype = 'course' AND obj_group.moodleid = crs.id
              LEFT JOIN {local_o365_objects} obj_team1
-                        ON obj_team1.type = "group" AND obj_team1.subtype = "courseteam" AND obj_team1.moodleid = crs.id
+                        ON obj_team1.type = 'group' AND obj_team1.subtype = 'courseteam' AND obj_team1.moodleid = crs.id
              LEFT JOIN {local_o365_objects} obj_team2
-                        ON obj_team2.type = "group" AND obj_team2.subtype = "teamfromgroup" AND obj_team2.moodleid = crs.id
+                        ON obj_team2.type = 'group' AND obj_team2.subtype = 'teamfromgroup' AND obj_team2.moodleid = crs.id
              LEFT JOIN {local_o365_objects} obj_sds
-                        ON obj_sds.type = "sdssection" AND obj_sds.subtype = "course" AND obj_sds.moodleid = crs.id
+                        ON obj_sds.type = 'sdssection' AND obj_sds.subtype = 'course' AND obj_sds.moodleid = crs.id
                  WHERE obj_group.id IS NOT NULL
                    AND obj_team1.id IS NULL
                    AND obj_team2.id IS NULL
                    AND obj_sds.id IS NULL
-                   AND crs.id != ?';
-        $params = [SITEID];
+                   AND crs.id != " . SITEID;
+        $params = [];
         if (!empty($this->coursesinsql)) {
             $sql .= ' AND crs.id ' . $this->coursesinsql;
             $params = array_merge($params, $this->coursesparams);
