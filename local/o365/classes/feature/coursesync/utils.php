@@ -199,7 +199,7 @@ class utils {
 
             // Delete course and team connection records.
             $DB->delete_records_select('local_o365_objects',
-                'type = "group" AND subtype IN ("courseteam", "teamfromgroup") AND moodleid = ?', [$courseid]);
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
 
             if ($result === true) {
                 $metadata = (!empty($objectrec->metadata)) ? @json_decode($objectrec->metadata, true) : [];
