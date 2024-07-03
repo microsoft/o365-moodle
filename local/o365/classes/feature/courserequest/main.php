@@ -36,7 +36,6 @@ use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
 use stdClass;
-
 class main {
     const COURSE_REQUEST_STATUS_PENDING = 0;
     const COURSE_REQUEST_STATUS_APPROVED = 1;
@@ -133,7 +132,7 @@ class main {
 
         // Get SDS courses.
         $sdsmatchedgroupoids = $DB->get_fieldset_select('local_o365_objects', 'objectid',
-            'type = "sdssection" AND subtype = "course"');
+            "type = 'sdssection' AND subtype = 'course'");
 
         $matchedgroupoids = array_unique(array_merge($matchedgroupoids, $sdsmatchedgroupoids));
         $unmatchedteams = [];
