@@ -123,8 +123,6 @@ function local_o365_rmdir($path) {
 function local_o365_create_manifest_file() : array {
     global $CFG;
 
-    $error = '';
-
     // Task 1: prepare manifest folder.
     $pathtomanifestfolder = $CFG->dataroot . '/temp/ms_teams_manifest';
     if (file_exists($pathtomanifestfolder)) {
@@ -210,7 +208,7 @@ function local_o365_create_manifest_file() : array {
     }
     $ziparchive->close();
 
-    return [$errorcode, $zipfilename];
+    return $zipfilename ? [null, $zipfilename] : ['errorcannotcreatezipfile', null];
 }
 
 /**
