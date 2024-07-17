@@ -35,6 +35,9 @@ require_once($CFG->dirroot.'/local/o365/lib.php');
  * Microsoft Block.
  */
 class block_microsoft extends block_base {
+    /** @var stdClass plugin configuration */
+    private $globalconfig;
+
     /**
      * Initialize plugin.
      */
