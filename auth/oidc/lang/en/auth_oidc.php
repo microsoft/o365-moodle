@@ -195,7 +195,7 @@ $string['settings_section_secret_expiry_notification'] = 'Secret expiry notifica
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
 $string['application_updated'] = 'OpenID Connect application setting have been updated.';
 $string['application_updated_microsoft'] = 'OpenID Connect application setting was updated.<br/>
-<span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}" target="_blank">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
+<span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the Microsoft 365 integration configuration page if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 $string['application_not_changed'] = 'OpenID Connect application setting was not changed.';
 
 $string['event_debug'] = 'Debug message';
