@@ -141,8 +141,8 @@ class calendar extends \HTML_QuickForm_advcheckbox {
         $checkboxonclick = 'if($(this).is(\':checked\')){$(this).parent().siblings().show();}else{$(this).parent().siblings()'.
             '.hide();}';
         $html = '<div>';
-        $html .= '<input type="checkbox" name="'.$checkboxname.'" onclick="'.$checkboxonclick.'" id="'.$checkboxid.'" '.
-            $checkboxchecked.'/>';
+        $html .= '<input type="checkbox" name="' . $checkboxname . '" onclick="' . $checkboxonclick . '" id="' . $checkboxid .
+                '" class="mr-2" ' . $checkboxchecked . '/>';
         $html .= \html_writer::label($this->_text, $checkboxid);
         $html .= '</div>';
 
@@ -152,8 +152,8 @@ class calendar extends \HTML_QuickForm_advcheckbox {
         $availableo365calendars = (isset($this->customdata['o365calendars'])) ? $this->customdata['o365calendars'] : [];
         $availcalid = $this->getAttribute('id').'_syncwith';
         $availcalname = $this->getName().'[syncwith]';
-        $html .= '<div style="'.$stylestr.'">';
-        $html .= \html_writer::label(get_string('ucp_syncwith_title', 'local_o365'), $availcalid);
+        $html .= '<div style="'.$stylestr.'" class="mb-2">';
+        $html .= \html_writer::label(get_string('ucp_syncwith_title', 'local_o365'), $availcalid, false, ['class' => 'mr-2']);
         $calselectopts = [];
         foreach ($availableo365calendars as $i => $info) {
             $calselectopts[$info['id']] = $info['name'];
@@ -176,7 +176,7 @@ class calendar extends \HTML_QuickForm_advcheckbox {
         $syncbehavid = $this->getAttribute('id').'_syncbehav';
         $syncbehavname = $this->getName().'[syncbehav]';
         $html .= '<div style="'.$stylestr.'">';
-        $html .= \html_writer::label(get_string('ucp_syncdir_title', 'local_o365'), $syncbehavid);
+        $html .= \html_writer::label(get_string('ucp_syncdir_title', 'local_o365'), $syncbehavid, false, ['class' => 'mr-2']);
         $html .= \html_writer::select($syncbehavior, $syncbehavname, $this->syncbehav, false, ['id' => $syncbehavid]);
         $html .= '</div>';
 
