@@ -143,9 +143,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         //
         // This isn't needed when duallogin is on because $oidc will default to 0 and duallogin is not part of the request.
         if ((isset($SESSION->oidc) && $SESSION->oidc == 0)) {
-            if (!isset($SESSION->silent_login_mode)) {
-                return false;
-            }
+            return false;
         }
 
         // If the user is redirectred to the login page immediately after logging out, don't redirect.
