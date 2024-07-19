@@ -49,7 +49,7 @@ $string['settings_setup_step1_credentials_end'] = 'If you are unable to set up t
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/2: Admin consent &amp; additional information';
-$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
+$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some Azure permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
 $string['settings_setup_step3'] = 'Verify setup';
 $string['settings_setup_step3_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
 

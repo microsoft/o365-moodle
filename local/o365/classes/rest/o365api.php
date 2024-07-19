@@ -264,6 +264,7 @@ abstract class o365api {
      *
      * @param string $response The raw response from an API call.
      * @param array $expectedstructure A structure to validate.
+     * @param bool $allowempty Whether to allow empty responses.
      * @return array|null Array if successful, null if not.
      * @throws moodle_exception If the response is invalid.
      */

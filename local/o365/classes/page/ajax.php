@@ -167,7 +167,6 @@ class ajax extends base {
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
         $token = utils::get_application_token($tokenresource, $clientdata, $httpclient, true);
-
         $apiclient = new unified($token, $httpclient);
         switch ($setting) {
             case 'entratenant':

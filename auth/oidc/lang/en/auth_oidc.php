@@ -197,9 +197,8 @@ $string['settings_section_other_params'] = 'Other parameters';
 $string['settings_section_secret_expiry_notification'] = 'Secret expiry notification';
 $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint settings updated.';
 $string['application_updated'] = 'OpenID Connect application setting have been updated.';
-$string['application_updated_microsoft'] = 'OpenID Connect application settings have been updated.<br/>
-<span class="warning" style="color: red;">Since the settings have been updated, any previous application token used by Moodle to integrate with Microsoft 365 has expired and been deleted.</span><br/>
-<span class="warning" style="color: red;">Please verify settings on this page and click the <b>Verify setup</b> button again generate a new token.</span>';
+$string['application_updated_microsoft'] = 'OpenID Connect application setting was updated.<br/>
+<span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}" target="_blank">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 $string['application_not_changed'] = 'OpenID Connect application setting was not changed.';
 
 $string['event_debug'] = 'Debug message';
@@ -265,7 +264,7 @@ $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoi
 <li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize</li>
 </ul>';
 $string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
-$string['error_empty_oidcresource'] = 'Resource cannot be empty when using Azure AD (v1.0) or other types of IdP.';
+$string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';
 $string['error_no_response_available'] = 'No responses available.';
 

@@ -615,7 +615,7 @@ class unified extends o365api {
      * Get a list of group owners.
      *
      * @param string $groupobjectid The object ID of the group.
-     * @return array
+     * @return array|null Array of returned owners.
      * @throws moodle_exception
      */
     public function get_group_owners(string $groupobjectid) : ?array {

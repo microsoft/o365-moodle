@@ -197,7 +197,7 @@ class main {
                 // Check if json error message was returned.
                 if (!preg_match('/^{/', $image)) {
                     // Update profile picture.
-                    $tempfile = tempnam($CFG->tempdir.'/', 'profileimage').'.jpg';
+                    $tempfile = tempnam($CFG->tempdir . '/', 'profileimage') . '.jpg';
                     if (!$fp = fopen($tempfile, 'w+b')) {
                         @unlink($tempfile);
                         return false;
@@ -207,14 +207,14 @@ class main {
                     require_once("$CFG->libdir/gdlib.php");
                     $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                     if ($newpicture != $muser->picture) {
-                        $DB->set_field('user', 'picture', $newpicture, array('id' => $muser->id));
+                        $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
                         $result = true;
                     }
                     @unlink($tempfile);
                 }
 
                 // Update appassign record.
-                $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+                $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
                 if (empty($record)) {
                     $record = new stdClass();
                     $record->muserid = $muserid;
@@ -1032,7 +1032,7 @@ class main {
         foreach ($entraidusers as $i => $user) {
             if (!isset($user[$bindingusernameclaim])) {
                 // User doesn't have the binding username claim, should be deleted users.
-                unset(entraidusers[$i]);
+                unset($entraidusers[$i]);
                 continue;
             }
 
@@ -1352,7 +1352,7 @@ class main {
                     }
 
                     // Process guest users.
-                    if (stripos($entraiduser['upnlower'], '_ext_') !== false) {
+                    if (stripos($entraiduser['userPrincipalName'], '_ext_') !== false) {
                         $this->mtrace('The user is a guest user.');
                         if (!isset($usersyncsettings['guestsync'])) {
                             $this->mtrace('The option to sync guest users is turned off.');
@@ -1463,7 +1463,7 @@ class main {
                         $e->getMessage());
                 }
             } else {
-                $this->mtrace('Could not create user "'.$entraiduserdata['useridentifier'].'" Reason: '.$e->getMessage());
+                $this->mtrace('Could not create user "' . $entraiduserdata['useridentifier'] . '" Reason: ' . $e->getMessage());
             }
         }
 
@@ -1474,7 +1474,7 @@ class main {
                     $this->assign_user($newmuser->id, $userobjectid);
                 }
             } catch (moodle_exception $e) {
-                $this->mtrace('Could not assign user "'.$entraiduserdata['useridentifier'].'" Reason: '.$e->getMessage());
+                $this->mtrace('Could not assign user "' . $entraiduserdata['useridentifier'] . '" Reason: ' . $e->getMessage());
             }
         }
 
@@ -1609,7 +1609,7 @@ class main {
 
         // Match user if needed.
         if ($existinguser->auth !== 'oidc') {
-            $this->mtrace('Found a user in Microsoft Intra ID that seems to match a user in Moodle');
+            $this->mtrace('Found a user in Microsoft Entra ID that seems to match a user in Moodle');
             $this->mtrace(sprintf('moodle username: %s, Entra ID user identifier: %s', $existinguser->username, $entraiduserdata['useridentifierlower']));
             return $this->sync_users_matchuser($syncoptions, $entraiduserdata, $existinguser, $exactmatch);
         } else {
