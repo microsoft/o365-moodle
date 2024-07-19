@@ -41,7 +41,7 @@ class processcourserequestapproval extends adhoc_task {
      * Execute the task.
      *
      * @return void
-     * @throws Exception
+     * @throws moodle_exception
      */
     public function execute() : bool {
         global $DB;
