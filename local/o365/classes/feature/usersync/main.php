@@ -200,7 +200,6 @@ class main {
                     $tempfile = tempnam($CFG->tempdir . '/', 'profileimage') . '.jpg';
                     if (!$fp = fopen($tempfile, 'w+b')) {
                         @unlink($tempfile);
-
                         return false;
                     }
                     fwrite($fp, $image);
@@ -1464,7 +1463,7 @@ class main {
                         $e->getMessage());
                 }
             } else {
-                $this->mtrace('Could not create user "'. $entraiduserdata['useridentifier'].'" Reason: '.$e->getMessage());
+                $this->mtrace('Could not create user "' . $entraiduserdata['useridentifier'] . '" Reason: ' . $e->getMessage());
             }
         }
 
@@ -1474,8 +1473,8 @@ class main {
                 if (!empty($newmuser) && !empty($userobjectid)) {
                     $this->assign_user($newmuser->id, $userobjectid);
                 }
-            } catch (Exception $e) {
-                $this->mtrace('Could not assign user "'. $entraiduserdata['useridentifier'].'" Reason: '.$e->getMessage());
+            } catch (moodle_exception $e) {
+                $this->mtrace('Could not assign user "' . $entraiduserdata['useridentifier'] . '" Reason: ' . $e->getMessage());
             }
         }
 
@@ -1570,7 +1569,7 @@ class main {
                     if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                         $this->assign_photo($existinguser->muserid);
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $this->mtrace('Could not assign profile photo to user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
                         $e->getMessage());
                 }

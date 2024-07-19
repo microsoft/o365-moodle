@@ -732,7 +732,6 @@ class authcode extends base {
             */
 
             // Generate a Moodle username.
-            // Use 'upn' if available for username (Azure-specific), or fall back to lower-case oidcuniqid.
             $username = $this->get_oidc_username_from_token_claim($idtoken);
 
             $originalupn = null;
