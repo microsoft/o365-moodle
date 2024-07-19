@@ -192,12 +192,12 @@ class main {
                     $fs->delete_area_files($context->id, 'user', 'icon');
                     $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
                 }
-               $result = false;
+                $result = false;
             } else {
                 // Check if json error message was returned.
                 if (!preg_match('/^{/', $image)) {
                     // Update profile picture.
-                    $tempfile = tempnam($CFG->tempdir.'/', 'profileimage').'.jpg';
+                    $tempfile = tempnam($CFG->tempdir . '/', 'profileimage') . '.jpg';
                     if (!$fp = fopen($tempfile, 'w+b')) {
                         @unlink($tempfile);
                         return false;
@@ -207,14 +207,14 @@ class main {
                     require_once("$CFG->libdir/gdlib.php");
                     $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                     if ($newpicture != $muser->picture) {
-                        $DB->set_field('user', 'picture', $newpicture, array('id' => $muser->id));
+                        $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
                         $result = true;
                     }
                     @unlink($tempfile);
                 }
 
                 // Update appassign record.
-                $record = $DB->get_record('local_o365_appassign', array('muserid' => $muserid));
+                $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
                 if (empty($record)) {
                     $record = new stdClass();
                     $record->muserid = $muserid;
@@ -1439,7 +1439,7 @@ class main {
         }
 
         // Process guest users.
-        if (stripos($entraiduserdata['upnlower'], '_ext_') !== false) {
+        if (stripos($entraiduserdata['userPrincipalName'], '_ext_') !== false) {
             $this->mtrace('The user is a guest user.');
             if (!$syncguestusers) {
                 $this->mtrace('The option to sync guest users is turned off.');
@@ -1463,7 +1463,7 @@ class main {
                         $e->getMessage());
                 }
             } else {
-                $this->mtrace('Could not create user "'. $entraiduserdata['useridentifier'].'" Reason: '.$e->getMessage());
+                $this->mtrace('Could not create user "' .  $entraiduserdata['useridentifier'] . '" Reason: ' . $e->getMessage());
             }
         }
 
