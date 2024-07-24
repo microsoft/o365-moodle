@@ -157,10 +157,14 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         // Update old endpoints.
         $config = get_config('auth_oidc');
         if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
+            add_to_config_log('authendpoint', $config->authendpoint, 'https://login.microsoftonline.com/common/oauth2/authorize',
+                'auth_oidc');
             set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_oidc');
         }
 
         if ($config->tokenendpoint === 'https://login.windows.net/common/oauth2/token') {
+            add_to_config_log('tokenendpoint', $config->tokenendpoint, 'https://login.microsoftonline.com/common/oauth2/token',
+                'auth_oidc');
             set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
         }
 
@@ -195,6 +199,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if ($oidcresource !== false && strpos($oidcresource, 'windows') !== false) {
+            $existingoidcresource = get_config('auth_oidc', 'oidcresource');
+            if ($existingoidcresource != 'https://graph.windows.net') {
+                add_to_config_log('oidcresource', $existingoidcresource, 'https://graph.microsoft.com', 'auth_oidc');
+            }
             set_config('oidcresource', 'https://graph.microsoft.com', 'auth_oidc');
         }
 
@@ -204,6 +212,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     if ($oldversion < 2020071503) {
         $localo365singlesignoffsetting = get_config('local_o365', 'single_sign_off');
         if ($localo365singlesignoffsetting !== false) {
+            $existingsignlesignoffsetting = get_config('auth_oidc', 'single_sign_off');
+            if ($existingsignlesignoffsetting !== true) {
+                add_to_config_log('single_sign_off', $existingsignlesignoffsetting, true, 'auth_oidc');
+            }
             set_config('single_sign_off', true, 'auth_oidc');
             unset_config('single_sign_off', 'local_o365');
         }
@@ -253,12 +265,20 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
             if ($authorizationendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
                 $authorizationendpoint = str_replace('common', $entratenant, $authorizationendpoint);
+                $existingauthorizationendpoint = get_config('auth_oidc', 'authendpoint');
+                if ($existingauthorizationendpoint != $authorizationendpoint) {
+                    add_to_config_log('authendpoint', $existingauthorizationendpoint, $authorizationendpoint, 'auth_oidc');
+                }
                 set_config('authendpoint', $authorizationendpoint, 'auth_oidc');
             }
 
             $tokenendpoint = get_config('auth_oidc', 'tokenendpoint');
             if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
                 $tokenendpoint = str_replace('common', $entratenant, $tokenendpoint);
+                $existingtokenendpoint = get_config('auth_oidc', 'tokenendpoint');
+                if ($existingtokenendpoint != $tokenendpoint) {
+                    add_to_config_log('tokenendpoint', $existingtokenendpoint, $tokenendpoint, 'auth_oidc');
+                }
                 set_config('tokenendpoint', $tokenendpoint, 'auth_oidc');
             }
         }
@@ -283,14 +303,28 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                         continue;
                     }
 
-                    list($remotefield, $localfield, $behaviour) = $fieldmap;
+                    [$remotefield, $localfield, $behaviour] = $fieldmap;
 
                     if ($remotefield == 'facsimileTelephoneNumber') {
                         $remotefield = 'faxNumber';
                     }
 
+                    $existingmapsetting = get_config('auth_oidc', 'field_map_' . $localfield);
+                    if ($existingmapsetting !== $remotefield) {
+                        add_to_config_log('field_map_' . $localfield, $existingmapsetting, $remotefield, 'auth_oidc');
+                    }
                     set_config('field_map_' . $localfield, $remotefield, 'auth_oidc');
+
+                    $existinglocksetting = get_config('auth_oidc', 'field_lock_' . $localfield);
+                    if ($existinglocksetting !== 'unlocked') {
+                        add_to_config_log('field_lock_' . $localfield, $existinglocksetting, 'unlocked', 'auth_oidc');
+                    }
                     set_config('field_lock_' . $localfield, 'unlocked', 'auth_oidc');
+
+                    $existingupdatelocalsetting = get_config('auth_oidc', 'field_updatelocal_' . $localfield);
+                    if ($existingupdatelocalsetting !== $behaviour) {
+                        add_to_config_log('field_updatelocal_' . $localfield, $existingupdatelocalsetting, $behaviour, 'auth_oidc');
+                    }
                     set_config('field_updatelocal_' . $localfield, $behaviour, 'auth_oidc');
 
                     if (($key = array_search($localfield, $userfields)) !== false) {
@@ -299,8 +333,22 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 }
 
                 foreach ($userfields as $userfield) {
+                    $existingmapsetting = get_config('auth_oidc', 'field_map_' . $userfield);
+                    if ($existingmapsetting !== '') {
+                        add_to_config_log('field_map_' . $userfield, $existingmapsetting, '', 'auth_oidc');
+                    }
                     set_config('field_map_' . $userfield, '', 'auth_oidc');
+
+                    $existinglocksetting = get_config('auth_oidc', 'field_lock_' . $userfield);
+                    if ($existinglocksetting !== 'unlocked') {
+                        add_to_config_log('field_lock_' . $userfield, $existinglocksetting, 'unlocked', 'auth_oidc');
+                    }
                     set_config('field_lock_' . $userfield, 'unlocked', 'auth_oidc');
+
+                    $existingupdatelocalsetting = get_config('auth_oidc', 'field_updatelocal_' . $userfield);
+                    if ($existingupdatelocalsetting !== 'always') {
+                        add_to_config_log('field_updatelocal_' . $userfield, $existingupdatelocalsetting, 'always', 'auth_oidc');
+                    }
                     set_config('field_updatelocal_' . $userfield, 'always', 'auth_oidc');
                 }
             }
@@ -332,17 +380,33 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
         if (empty($idptypeconfig)) {
             if (!$authorizationendpoint) {
+                $existingidptype = get_config('auth_oidc', 'idptype');
+                if ($existingidptype != AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                    add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+                }
                 set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
             } else {
                 $endpointversion = auth_oidc_determine_endpoint_version($authorizationendpoint);
                 switch ($endpointversion) {
                     case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1:
+                        $existingidptype = get_config('auth_oidc', 'idptype');
+                        if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+                        }
                         set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
                         break;
                     case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2:
+                        $existingidptype = get_config('auth_oidc', 'idptype');
+                        if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+                        }
                         set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
                         break;
                     default:
+                        $existingidptype = get_config('auth_oidc', 'idptype');
+                        if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_OTHER) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_OTHER, 'auth_oidc');
+                        }
                         set_config('idptype', AUTH_OIDC_IDP_TYPE_OTHER, 'auth_oidc');
                 }
             }
@@ -355,8 +419,17 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             $clientcertificateconfig = get_config('auth_oidc', 'clientcert');
             $clientprivatekeyconfig = get_config('auth_oidc', 'clientprivatekey');
             if (empty($clientsecretconfig) && !empty($clientcertificateconfig) && !empty($clientprivatekeyconfig)) {
+                $existingclientauthmethod = get_config('auth_oidc', 'clientauthmethod');
+                if ($existingclientauthmethod != AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
+                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
+                        'auth_oidc');
+                }
                 set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_CERTIFICATE, 'auth_oidc');
             } else {
+                $existingclientauthmethod = get_config('auth_oidc', 'clientauthmethod');
+                if ($existingclientauthmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
+                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+                }
                 set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
             }
         }
@@ -366,6 +439,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         if (empty($tenantnameorguidconfig)) {
             $entratenant = get_config('local_o365', 'aadtenant');
             if ($entratenant) {
+                $existingtenantnameorguid = get_config('auth_oidc', 'tenantnameorguid');
+                if ($existingtenantnameorguid != $entratenant) {
+                    add_to_config_log('tenantnameorguid', $existingtenantnameorguid, $entratenant, 'auth_oidc');
+                }
                 set_config('tenantnameorguid', $entratenant, 'auth_oidc');
             }
         }
@@ -385,6 +462,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     if ($oldversion < 2022112817) {
         // Set initial value for "clientcertsource" config.
         if (empty(get_config('auth_oidc', 'clientcertsource'))) {
+            $existingclientcertsource = get_config('auth_oidc', 'clientcertsource');
+            if ($existingclientcertsource != AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
+                add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+            }
             set_config('clientcertsource', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
         }
 

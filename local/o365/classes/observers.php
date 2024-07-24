@@ -98,6 +98,10 @@ class observers {
                     if (!empty($idtoken)) {
                         $tenant = utils::get_tenant_from_idtoken($idtoken);
                         if (!empty($tenant)) {
+                            $existingentratenantid = get_config('local_o365', 'entratenantid');
+                            if ($existingentratenantid != $tenant) {
+                                add_to_config_log('entratenantid', $existingentratenantid, $tenant, 'local_o365');
+                            }
                             set_config('entratenantid', $tenant, 'local_o365');
                         }
                     }

@@ -205,9 +205,17 @@ class ajax extends base {
         $data = new stdClass;
 
         $entratenant = required_param('entratenant', PARAM_TEXT);
+        $existingentratenantsetting = get_config('local_o365', 'entratenant');
+        if ($existingentratenantsetting != $entratenant) {
+            add_to_config_log('entratenant', $existingentratenantsetting, $entratenant, 'local_o365');
+        }
         set_config('entratenant', $entratenant, 'local_o365');
 
         $odburl = required_param('odburl', PARAM_TEXT);
+        $existingodburlsetting = get_config('local_o365', 'odburl');
+        if ($existingodburlsetting != $odburl) {
+            add_to_config_log('odburl', $existingodburlsetting, $odburl, 'local_o365');
+        }
         set_config('odburl', $odburl, 'local_o365');
 
         // App data.
@@ -277,7 +285,16 @@ class ajax extends base {
 
         $data->appdata = $appdata;
         $data->unifiedapi = $unifiedapi;
+        $existingunifiedapiactivesetting = get_config('local_o365', 'unifiedapiactive');
+        if ($existingunifiedapiactivesetting != (int)$unifiedapi->active) {
+            add_to_config_log('unifiedapiactive', $existingunifiedapiactivesetting, (int)$unifiedapi->active, 'local_o365');
+        }
         set_config('unifiedapiactive', (int)$unifiedapi->active, 'local_o365');
+
+        $existingverifysetupresultsetting = get_config('local_o365', 'verifysetupresult');
+        if ($existingverifysetupresultsetting != serialize($data)) {
+            add_to_config_log('verifysetupresult', $existingverifysetupresultsetting, serialize($data), 'local_o365');
+        }
         set_config('verifysetupresult', serialize($data), 'local_o365');
 
         $success = true;
@@ -309,6 +326,10 @@ class ajax extends base {
             $data->info[] = get_string('settings_notice_cookiesecurealreadyenabled', 'local_o365');
         } else {
             // Secure cookies only is not enabled.
+            $existingcookiesecuresetting = get_config('moodle', 'cookiesecure');
+            if ($existingcookiesecuresetting != 1) {
+                add_to_config_log('cookiesecure', $existingcookiesecuresetting, 1, 'moodle');
+            }
             set_config('cookiesecure', 1);
             $data->success[] = get_string('settings_notice_cookiesecureenabled', 'local_o365');
         }
