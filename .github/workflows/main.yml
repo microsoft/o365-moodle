@@ -33,106 +33,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        folder: [auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote]
+        moodle-branch: ['MOODLE_403_STABLE']
+        php: [8.0, 8.1, 8.2]
+        database: [pgsql, mariadb]
+
         include:
           - folder: auth/oidc
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: pgsql
-            internal-deps: ""
-          - folder: auth/oidc
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: pgsql
-            internal-deps: ""
-          - folder: auth/oidc
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: mariadb
-            internal-deps: ""
-          - folder: auth/oidc
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: mariadb
-            internal-deps: ""
           - folder: blocks/microsoft
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: pgsql
-          - folder: blocks/microsoft
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: pgsql
-            internal-deps: ""
-          - folder: blocks/microsoft
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: mariadb
-            internal-deps: ""
-          - folder: blocks/microsoft
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: mariadb
-            internal-deps: ""
           - folder: local/o365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: pgsql
             internal-deps: "auth/oidc"
-          - folder: local/o365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: pgsql
-            internal-deps: "auth/oidc"
-          - folder: local/o365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: mariadb
-            internal-deps: "auth/oidc"
-          - folder: local/o365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: mariadb
-            internal-deps: "auth/oidc"
+          - folder: local/office365
+          - folder: local/onenote
           - folder: repository/office365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: pgsql
-            internal-deps: "local/o365"
-          - folder: repository/office365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: pgsql
-            internal-deps: "local/o365"
-          - folder: repository/office365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: mariadb
-            internal-deps: "local/o365"
-          - folder: repository/office365
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: mariadb
-            internal-deps: "local/o365"
           - folder: theme/boost_o365teams
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: pgsql
-            internal-deps: "local/o365"
-          - folder: theme/boost_o365teams
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: pgsql
-            internal-deps: "local/o365"
-          - folder: theme/boost_o365teams
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.0
-            database: mariadb
-            internal-deps: "local/o365"
-          - folder: theme/boost_o365teams
-            moodle-branch: 'MOODLE_403_STABLE'
-            php: 8.1
-            database: mariadb
-            internal-deps: "local/o365"
+          - folder: mod/assign/feedback/onenote
+            internal-deps: "local/onenote"
+          - folder: mod/assign/submission/onenote
+            internal-deps: "local/onenote"
 
     steps:
     - name: Check out sub repository code
@@ -166,9 +84,13 @@ jobs:
     - name: Install moodle-plugin-ci
       run: |
         mkdir -p ./extra-plugins
-        for dep in ${{ matrix.internal-deps }}; do 
-          mkdir -p ./extra-plugins/${dep/\//_}
-          mv -v ./plugin/$dep/* ./extra-plugins/${dep/\//_}/
+        for dep in ${{ matrix.internal-deps }}; do
+          if [ -d "./plugin/$dep" ]; then
+            mkdir -p ./extra-plugins/${dep/\//_}
+            mv -v ./plugin/$dep/* ./extra-plugins/${dep/\//_}/
+          else
+            echo "Directory ./plugin/$dep does not exist"
+          fi
         done
         moodle-plugin-ci install --plugin ./plugin/${{ matrix.folder }} --db-host=127.0.0.1 --extra-plugins ./extra-plugins
       env:
