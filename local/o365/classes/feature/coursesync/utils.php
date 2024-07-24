@@ -70,6 +70,7 @@ class utils {
             }
         } else if ($coursesyncsetting === 'oncustom') {
             $coursesenabled = get_config('local_o365', 'coursesynccustom');
+            $originalcoursesenabled = $coursesenabled;
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled)) {
                 $changed = false;
@@ -81,6 +82,9 @@ class utils {
                     }
                 }
                 if ($changed) {
+                    if ($originalcoursesenabled != json_encode($coursesenabled)) {
+                        add_to_config_log('coursesynccustom', $originalcoursesenabled, json_encode($coursesenabled), 'local_o365');
+                    }
                     set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
                 }
                 return array_keys($coursesenabled);
@@ -223,6 +227,7 @@ class utils {
      */
     public static function set_course_sync_enabled(int $courseid, bool $enabled = true) {
         $customcoursesyncsetting = get_config('local_o365', 'coursesynccustom');
+        $originalcustomcoursesyncsetting = $customcoursesyncsetting;
         $customcoursesyncsetting = @json_decode($customcoursesyncsetting, true);
         if (empty($customcoursesyncsetting) || !is_array($customcoursesyncsetting)) {
             $customcoursesyncsetting = [];
@@ -239,6 +244,10 @@ class utils {
             }
         }
 
+        if ($originalcustomcoursesyncsetting != json_encode($customcoursesyncsetting)) {
+            add_to_config_log('coursesynccustom', $originalcustomcoursesyncsetting, json_encode($customcoursesyncsetting),
+                'local_o365');
+        }
         set_config('coursesynccustom', json_encode($customcoursesyncsetting), 'local_o365');
     }
 

@@ -878,7 +878,10 @@ class main {
         }
 
         // Set last updated timestamp.
-        set_config('teamscacheupdated', time(), 'local_o365');
+        $existingteamscahceupdatedsetting = get_config('local_o365', 'teamscacheupdated');
+        $timeupdated = time();
+        add_to_config_log('teamscacheupdated', $existingteamscahceupdatedsetting, $timeupdated, 'local_o365');
+        set_config('teamscacheupdated', $timeupdated, 'local_o365');
 
         return true;
     }

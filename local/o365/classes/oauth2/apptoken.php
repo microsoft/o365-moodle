@@ -228,6 +228,10 @@ class apptoken extends \local_o365\oauth2\token {
         }
         $tokens[$newtoken['tokenresource']] = $newtoken;
         $tokens = serialize($tokens);
+        $existingapptokenssetting = get_config('local_o365', 'apptokens');
+        if ($existingapptokenssetting != $tokens) {
+            add_to_config_log('apptokens', $existingapptokenssetting, $tokens, 'local_o365');
+        }
         set_config('apptokens', $tokens, 'local_o365');
         return true;
     }
@@ -248,6 +252,10 @@ class apptoken extends \local_o365\oauth2\token {
             unset($tokens[$existingtoken['tokenresource']]);
         }
         $tokens = serialize($tokens);
+        $existingapptokenssetting = get_config('local_o365', 'apptokens');
+        if ($existingapptokenssetting != $tokens) {
+            add_to_config_log('apptokens', $existingapptokenssetting, $tokens, 'local_o365');
+        }
         set_config('apptokens', $tokens, 'local_o365');
         return true;
     }
@@ -282,6 +290,10 @@ class apptoken extends \local_o365\oauth2\token {
         ];
         $tokens[$tokenresource] = $newtoken;
         $tokens = serialize($tokens);
+        $existingapptokenssetting = get_config('local_o365', 'apptokens');
+        if ($existingapptokenssetting != $tokens) {
+            add_to_config_log('apptokens', $existingapptokenssetting, $tokens, 'local_o365');
+        }
         set_config('apptokens', $tokens, 'local_o365');
         return $newtoken;
     }
