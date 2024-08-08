@@ -68,8 +68,8 @@ class binding_username_claim extends moodleform {
                     'custom' => get_string('binding_username_custom', 'auth_oidc'), // Custom value.
                 ];
                 break;
-            case AUTH_OIDC_IDP_TYPE_MICROSOFT:
-            case AUTH_OIDC_IDP_TYPE_AZURE_AD:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
                 if (auth_oidc_is_local_365_installed() && auth_oidc_is_user_sync_enabled()) {
                     $this->optionset = self::OPTION_SET_MS_WITH_USER_SYNC;
                     $descriptionidentifier = 'binding_username_claim_help_ms_with_user_sync';
