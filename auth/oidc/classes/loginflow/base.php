@@ -746,7 +746,7 @@ class base {
                 $oidcusername = $idtoken->claim($bindingusernameclaim);
                 break;
             case 'auto':
-                if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT) {
+                if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                     $oidcusername = $idtoken->claim('preferred_username');
                     if (empty($oidcusername)) {
                         $oidcusername = $idtoken->claim('email');
