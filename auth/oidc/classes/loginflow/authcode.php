@@ -644,6 +644,7 @@ class authcode extends base {
                         //  2. can change token record.
                         if ($user->auth == 'oidc') {
                             $user->username = $oidcusername;
+                            utils::debug('Updating user', 'authcode::cleanoidcparam', $user);
                             user_update_user($user, false);
 
                             $fullmessage = 'Attempt to change username of user ' . $user->id . ' from ' .
@@ -833,6 +834,33 @@ class authcode extends base {
                         if ($DB->count_records('user', array('email' => $userinfo['email'], 'deleted' => 0)) > 0) {
                             throw new moodle_exception('errorauthloginfaileddupemail', 'auth_oidc', null, null, '1');
                         }
+                    }
+
+                    if (getenv('O365_LOG_ACCT_CREATE_DATA') !== false) {
+                        $tk = $idtoken;
+                        $eventdata = [
+                            'objectid' => $user->id, 'userid' => $user->id,
+                            'other' => [
+                                'user' => $username,
+                                'claims' => [
+                                    'aud' => $tk->claim('aud'), 'iss' => $tk->claim('iss'),
+                                    'iat' => $tk->claim('iat'), 'nbf' => $tk->claim('nbf'),
+                                    'exp' => $tk->claim('exp'), 'aio' => $tk->claim('aio'),
+                                    'amr' => $tk->claim('amr'), 'email' => $tk->claim('email'),
+                                    'family_name' => $tk->claim('family_name'), 
+                                    'given_name' => $tk->claim('given_name'),
+                                    'idp' => $tk->claim('idp'), 'ipaddr' => $tk->claim('ipaddr'),
+                                    'name' => $tk->claim('name'), 'nonce' => $tk->claim('nonce'),
+                                    'oid' => $tk->claim('oid'), 'rh' => $tk->claim('rh'),
+                                    'sub' => $tk->claim('sub'), 'tid' => $tk->claim('tid'),
+                                    'unique_name' => $tk->claim('unique_name'),
+                                    'util' => $tk->claim('util'), 'ver' => $tk->claim('ver'),
+                                    'person_ein' => $tk->claim('person_ein'),
+                                    'person_source' => $tk->claim('person_source')
+                                ]
+                            ]
+                        ];
+                        \auth_oidc\event\user_account::create($eventdata)->trigger();
                     }
                     $user = create_user_record($username, null, 'oidc');
                 } else {

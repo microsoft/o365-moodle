@@ -157,6 +157,7 @@ $string['application_updated_azure'] = 'OpenID Connect application setting was u
 <span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}" target="_blank">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 
 $string['event_debug'] = 'Debug message';
+$string['eventaccountcreated'] = 'Creating account';
 
 $string['task_cleanup_oidc_state_and_token'] = 'Clean up OIDC state and invalid token';
 
