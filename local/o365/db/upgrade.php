@@ -1171,7 +1171,6 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023100916, 'local', 'o365');
     }
 
-
     if ($oldversion < 2023100917) {
         // Fix data type issue in calsyncinlastrun config.
         $calsyncinlastrun = get_config('local_o365', 'calsyncinlastrun');
@@ -1186,6 +1185,39 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2023100917, 'local', 'o365');
+    }
+
+    if ($oldversion < 2024042202) {
+        // Changing precision of field objectid on table local_o365_groups_cache to (36).
+        $table = new xmldb_table('local_o365_groups_cache');
+        $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
+
+        // Launch change of precision for field objectid.
+        $dbman->change_field_precision($table, $field);
+
+        // Changing precision of field name on table local_o365_groups_cache to (256).
+        $table = new xmldb_table('local_o365_groups_cache');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '256', null, null, null, null, 'objectid');
+
+        // Launch change of precision for field name.
+        $dbman->change_field_precision($table, $field);
+
+        // Changing precision of field objectid on table local_o365_teams_cache to (36).
+        $table = new xmldb_table('local_o365_teams_cache');
+        $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
+
+        // Launch change of precision for field name.
+        $dbman->change_field_precision($table, $field);
+
+        // Changing precision of field name on table local_o365_teams_cache to (264).
+        $table = new xmldb_table('local_o365_teams_cache');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '264', null, null, null, null, 'objectid');
+
+        // Launch change of precision for field objectid.
+        $dbman->change_field_precision($table, $field);
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2024042202, 'local', 'o365');
     }
 
     return true;
