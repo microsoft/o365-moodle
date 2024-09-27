@@ -45,7 +45,7 @@ $string['settings_setup_step1_desc'] = 'Register a new Azure App for your Micros
 <p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here</a> to read instructions on running the script.</p>
 <p>When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Secret returned by the script into the <a href="{$a}">OpenID Connect authentication plugin configuration page</a>.';
-$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the Azure app via PowerShell, <a href="https://aka.ms/MoodleTeamsManualSetup" target="_blank">click here</a> for manual setup instructions.';
+$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the Azure app via PowerShell, <a href="{$a}" target="_blank">click here</a> for manual setup instructions.';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/2: Admin consent &amp; additional information';
