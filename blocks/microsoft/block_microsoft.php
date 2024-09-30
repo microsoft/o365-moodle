@@ -143,12 +143,6 @@ class block_microsoft extends block_base {
         $html = '';
         $items = [];
 
-        $courseheaderdisplayed = false;
-
-        if (has_capability('local/o365:teamowner', $this->page->context)) {
-            $courseheaderdisplayed = true;
-        }
-
         // Link to course sync options.
         if (has_capability('local/o365:teamowner', $this->page->context)) {
             $coursesyncsetting = get_config('local_o365', 'coursesync');
@@ -167,10 +161,8 @@ class block_microsoft extends block_base {
                 true : false;
 
             if ($canmanage === true || $canview === true) {
-                if (!$courseheaderdisplayed) {
-                    [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
-                    $html .= $courseheader;
-                }
+                [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
+                $html .= $courseheader;
 
                 if ($o365record) {
                     // Links to course features.
