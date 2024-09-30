@@ -121,17 +121,43 @@ class utils {
         $debugmode = (bool)get_config('auth_oidc', 'debugmode');
         if ($debugmode === true) {
             $backtrace = debug_backtrace();
-            $otherdata = [
+            $otherdata = static::make_json_safe([
                 'other' => [
                     'message' => $message,
                     'where' => $where,
                     'debugdata' => $debugdata,
                     'backtrace' => $backtrace,
                 ],
-            ];
+            ]);
             $event = action_failed::create($otherdata);
             $event->trigger();
         }
+    }
+
+    /**
+     * Make a JSON structure safe for logging.
+     *
+     * @param mixed $data The data to make safe.
+     * @return mixed The safe data.
+     */
+    private static function make_json_safe($data) {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = static::make_json_safe($value);
+            }
+        } elseif (is_object($data)) {
+            $data = (array)$data;
+            foreach ($data as $key => $value) {
+                $data[$key] = static::make_json_safe($value);
+            }
+        } elseif (is_bool($data)) {
+            $data = (int)$data;
+        } elseif (is_null($data)) {
+            $data = null;
+        } elseif (!is_scalar($data)) {
+            $data = (string)$data;
+        }
+        return $data;
     }
 
     /**
