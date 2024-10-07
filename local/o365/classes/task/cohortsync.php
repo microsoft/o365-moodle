@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use core\task\scheduled_task;
 use local_o365\feature\cohortsync\main;
+use local_o365\utils;
 
 /**
  * A scheduled task to process Microsoft group and Moodle cohort mapping.
@@ -51,7 +52,7 @@ class cohortsync extends scheduled_task {
     public function execute() : bool {
         $graphclient = main::get_unified_api(__METHOD__);
         if (empty($graphclient)) {
-            mtrace("... Failed to get Graph API client. Exiting.");
+            utils::mtrace("Failed to get Graph API client. Exiting.", 1);
 
             return true;
         }
@@ -69,28 +70,31 @@ class cohortsync extends scheduled_task {
      * @return void
      */
     private function execute_sync(main $cohortsync) : void {
-        if (!$cohortsync->update_groups_cache()) {
-            mtrace("... Failed to update groups cache. Exiting.");
+        if ($cohortsync->update_groups_cache()) {
+            utils::clean_up_not_found_groups();
+        } else {
+            utils::mtrace("Failed to update groups cache. Exiting.", 1);
 
             return;
         }
 
-        mtrace("... Start processing cohort mappings.");
+        utils::mtrace("Start processing cohort mappings.", 1);
         $grouplist = $cohortsync->get_grouplist();
-        mtrace("...... Found " . count($grouplist) . " groups.");
+        utils::mtrace("Found " . count($grouplist) . " groups.", 2);
         $grouplistbyoid = [];
         foreach ($grouplist as $group) {
-            $grouplistbyoid[$group['id']] = $group;
+            $grouplistbyoid[$group->objectid] = $group;
         }
 
         $mappings = $cohortsync->get_mappings();
 
         if (empty($mappings)) {
-            mtrace("...... No mappings found. Nothing to process. Exiting.");
+            utils::mtrace("No mappings found. Nothing to process. Exiting.", 1);
+            utils::mtrace("", 1);
 
             return;
         }
-        mtrace("...... Found " . count($mappings) . " mappings.");
+        utils::mtrace("Found " . count($mappings) . " mappings.", 2);
 
         $cohorts = $cohortsync->get_cohortlist();
 
@@ -98,20 +102,20 @@ class cohortsync extends scheduled_task {
             // Verify that the group still exists.
             if (!in_array($mapping->objectid, array_keys($grouplistbyoid))) {
                 $cohortsync->delete_mapping_by_group_oid_and_cohort_id($mapping->objectid, $mapping->moodleid);
-                mtrace("......... Deleted mapping for non-existing group ID {$mapping->objectid}.");
+                utils::mtrace("Deleted mapping for non-existing group ID {$mapping->objectid}.", 3);
                 unset($mappings[$key]);
             }
 
             // Verify that the cohort still exists.
             if (!in_array($mapping->moodleid, array_keys($cohorts))) {
                 $cohortsync->delete_mapping_by_group_oid_and_cohort_id($mapping->objectid, $mapping->moodleid);
-                mtrace("......... Deleted mapping for non-existing cohort ID {$mapping->moodleid}.");
+                utils::mtrace("Deleted mapping for non-existing cohort ID {$mapping->moodleid}.", 3);
                 unset($mappings[$key]);
             }
         }
 
         foreach ($mappings as $mapping) {
-            mtrace("......... Processing mapping for group ID {$mapping->objectid} and cohort ID {$mapping->moodleid}.");
+            utils::mtrace("Processing mapping for group ID {$mapping->objectid} and cohort ID {$mapping->moodleid}.", 3);
             $cohortsync->sync_members_by_group_oid_and_cohort_id($mapping->objectid, $mapping->moodleid);
         }
     }
