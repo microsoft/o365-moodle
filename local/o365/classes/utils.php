@@ -35,6 +35,7 @@ use local_o365\oauth2\token;
 use local_o365\obj\o365user;
 use local_o365\rest\unified;
 use moodle_exception;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -44,6 +45,8 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * General purpose utility class.
  */
 class utils {
+    const RESOURCE_NOT_EXIST_ERROR = 'does not exist or one of its queried reference-property objects are not present';
+
     /**
      * Determine whether essential configuration has been completed.
      *
@@ -525,5 +528,134 @@ class utils {
         }
 
         return $connectedusers;
+    }
+
+    /**
+     * Update Groups cache.
+     *
+     * @param unified $graphclient
+     * @param int $baselevel
+     * @return bool
+     */
+    public static function update_groups_cache(unified $graphclient, int $baselevel = 0) : bool {
+        global $DB;
+
+        static::mtrace("Update groups cache.", $baselevel);
+
+        try {
+            $grouplist = $graphclient->get_groups();
+        } catch (moodle_exception $e) {
+            static::mtrace("Failed to fetch groups. Error: " . $e->getMessage(), $baselevel + 1);
+
+            return false;
+        }
+
+        $existingcacherecords = $DB->get_records('local_o365_groups_cache');
+        $existinggroupsbyoid = [];
+        $existingnotfoundgroupsbyoid = [];
+        foreach ($existingcacherecords as $existingcacherecord) {
+            if ($existingcacherecord->not_found_since) {
+                $existingnotfoundgroupsbyoid[$existingcacherecord->objectid] = $existingcacherecord;
+            } else {
+                $existinggroupsbyoid[$existingcacherecord->objectid] = $existingcacherecord;
+            }
+        }
+
+        foreach ($grouplist as $group) {
+            if (array_key_exists($group['id'], $existingnotfoundgroupsbyoid)) {
+                $cacherecord = $existingnotfoundgroupsbyoid[$group['id']];
+                $cacherecord->name = $group['displayName'];
+                $cacherecord->description = $group['description'];
+                $cacherecord->not_found_since = 0;
+                $DB->update_record('local_o365_groups_cache', $cacherecord);
+                unset($existingnotfoundgroupsbyoid[$group['id']]);
+                static::mtrace("Unset not found flag for group {$group['id']}.", $baselevel + 1);
+            } else if (array_key_exists($group['id'], $existinggroupsbyoid)) {
+                $cacherecord = $existinggroupsbyoid[$group['id']];
+                if ($cacherecord->name != $group['displayName'] || $cacherecord->description != $group['description']) {
+                    $cacherecord->name = $group['displayName'];
+                    $cacherecord->description = $group['description'];
+                    $DB->update_record('local_o365_groups_cache', $cacherecord);
+                    static::mtrace("Updated group ID {$group['id']} in cache.", $baselevel + 1);
+                } else {
+                    static::mtrace("Group ID {$group['id']} in cache is up to date.", $baselevel + 1);
+                }
+                unset($existinggroupsbyoid[$group['id']]);
+            } else {
+                $cacherecord = new stdClass();
+                $cacherecord->objectid = $group['id'];
+                $cacherecord->name = $group['displayName'];
+                $cacherecord->description = $group['description'];
+                $DB->insert_record('local_o365_groups_cache', $cacherecord);
+                static::mtrace("Added group ID {$group['id']} to cache.", $baselevel + 1);
+            }
+        }
+
+        foreach ($existinggroupsbyoid as $oldcacherecord) {
+            $oldcacherecord->not_found_since = time();
+            $DB->update_record('local_o365_groups_cache', $oldcacherecord);
+            static::mtrace("Marked group {$oldcacherecord->objectid} as not found in the cache.", $baselevel + 1);
+        }
+
+        static::mtrace("Finished updating groups cache.", $baselevel);
+        static::mtrace("", $baselevel);
+
+        return true;
+    }
+
+    /**
+     * Clean up non-existing groups from the database.
+     *
+     * @param int $baselevel
+     * @return void
+     */
+    public static function clean_up_not_found_groups(int $baselevel = 1) : void {
+        global $DB;
+
+        static::mtrace('Clean up non-existing groups from database', $baselevel);
+
+        $cutofftime = strtotime('-5 minutes');
+        $sql = "SELECT *
+                  FROM {local_o365_groups_cache}
+                 WHERE not_found_since != 0
+                   AND not_found_since < :cutofftime";
+        $records = $DB->get_records_sql($sql, ['cutofftime' => $cutofftime]);
+
+        foreach ($records as $record) {
+            $DB->delete_records('local_o365_groups_cache', ['objectid' => $record->objectid]);
+            $DB->delete_records('local_o365_objects', ['objectid' => $record->objectid]);
+            $DB->delete_records('local_o365_teams_cache', ['objectid' => $record->objectid]);
+            static::mtrace('Deleted non-existing group ' . $record->objectid . ' from groups cache.', $baselevel + 1);
+        }
+
+        static::mtrace('Finished cleaning up non-existing groups from database.', $baselevel);
+        static::mtrace('', $baselevel);
+    }
+
+    /**
+     * Print a message to the debugging console.
+     *
+     * @param string $message
+     * @param int $level
+     * @param string $eol
+     * @return void
+     */
+    public static function mtrace(string $message, int $level = 0, string $eol = "\n")  {
+        if ($level) {
+            $message = str_repeat('...', $level) . ' ' . $message;
+        }
+        mtrace($message, $eol);
+    }
+
+    /**
+     * Extract GUID from error message.
+     *
+     * @param string $errormessage
+     * @return string|null
+     */
+    public static function extract_guid_from_error_message(string $errormessage) : ?string {
+        $pattern = '/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/';
+        preg_match($pattern, $errormessage, $matches);
+        return $matches[0] ?? null;
     }
 }
