@@ -50,15 +50,6 @@ class action_failed extends \core\event\base {
     }
 
     /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return array(SITEID, 'auth_oidc', 'error', 'index.php');
-    }
-
-    /**
      * Init method.
      *
      * @return void
