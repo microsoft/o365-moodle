@@ -196,9 +196,9 @@ class oidcclient {
             $params['prompt'] = 'select_account';
         } else {
             $silentloginmode = get_config('auth_oidc', 'silentloginmode');
-            if ($silentloginmode) {
+            $source = optional_param('source', '', PARAM_RAW);
+            if ($silentloginmode && $source != 'loginpage') {
                 $params['prompt'] = 'none';
-                $SESSION->silent_login_mode = true;
             }
         }
 
