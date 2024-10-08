@@ -86,8 +86,8 @@ if ($hassiteconfig) {
         $configdesc = new lang_string('settings_setup_step1clientcreds', 'local_o365', $oidcconfigpageurl->out());
         $settings->add(new admin_setting_heading('local_o365_setup_step1clientcreds', '', $configdesc));
 
-        $configdesc = new lang_string('settings_setup_step1_credentials_end', 'local_o365',
-            (object)['oidcsettings' => $oidcconfigpageurl->out()]);
+        $manualconfigurl = 'https://docs.moodle.org/' . get_config('core', 'branch') . '/en/Microsoft_365';
+        $configdesc = new lang_string('settings_setup_step1_credentials_end', 'local_o365', $manualconfigurl);
         $settings->add(new admin_setting_heading('local_o365_setup_step1_credentialsend', '', $configdesc));
 
         if (auth_oidc_is_setup_complete()) {
