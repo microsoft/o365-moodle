@@ -43,11 +43,6 @@ use stdClass;
  */
 class main {
     /**
-     * API error message for group not existing.
-     */
-    const GROUP_DOES_NOT_EXIST_ERROR = "does not exist or one of its queried reference-property objects are not present";
-
-    /**
      * @var unified Graph client instance.
      */
     private $graphclient;
@@ -185,7 +180,10 @@ class main {
     public function fetch_groups_from_cache() : void {
         global $DB;
 
-        $records = $DB->get_records('local_o365_groups_cache');
+        $sql = 'SELECT *
+                  FROM {local_o365_groups_cache}
+                 WHERE not_found_since = 0';
+        $records = $DB->get_records_sql($sql);
 
         $this->grouplist = [];
         foreach ($records as $record) {
@@ -213,56 +211,16 @@ class main {
     public function update_groups_cache() : bool {
         global $DB;
 
-        mtrace("... Start updating groups cache.");
+        if (utils::update_groups_cache($this->graphclient, 1)) {
+            $sql = 'SELECT *
+                      FROM {local_o365_groups_cache}
+                     WHERE not_found_since = 0';
+            $this->grouplist = $DB->get_records_sql($sql);
 
-        try {
-            $this->fetch_groups_from_microsoft();
-        } catch (moodle_exception $e) {
-            mtrace("...... Failed to fetch groups. Error: " . $e->getMessage());
-
+            return true;
+        } else {
             return false;
         }
-
-        $existingcacherecords = $DB->get_records('local_o365_groups_cache');
-        $existingcachebyoid = [];
-        foreach ($existingcacherecords as $existingcacherecord) {
-            $existingcachebyoid[$existingcacherecord->objectid] = $existingcacherecord;
-        }
-
-        foreach ($this->grouplist as $group) {
-            if (array_key_exists($group['id'], $existingcachebyoid)) {
-                $cacherecord = $existingcachebyoid[$group['id']];
-                $cacherecord->name = $group['displayName'];
-                $cacherecord->description = $group['description'];
-                $DB->update_record('local_o365_groups_cache', $cacherecord);
-                unset($existingcachebyoid[$group['id']]);
-            } else {
-                $cacherecord = new stdClass();
-                $cacherecord->objectid = $group['id'];
-                $cacherecord->name = $group['displayName'];
-                $cacherecord->description = $group['description'];
-                $DB->insert_record('local_o365_groups_cache', $cacherecord);
-                mtrace("...... Added group ID {$group['id']} to cache.");
-            }
-        }
-
-        foreach ($existingcachebyoid as $oldcacherecord) {
-            $DB->delete_records('local_o365_groups_cache', ['id' => $oldcacherecord->id]);
-            mtrace("...... Deleted group ID {$oldcacherecord->objectid} from cache.");
-        }
-
-        mtrace("... Finished updating groups cache.");
-
-        return true;
-    }
-
-    /**
-     * Fetch all Microsoft groups.
-     *
-     * @return void
-     */
-    public function fetch_groups_from_microsoft() : void {
-        $this->grouplist = $this->graphclient->get_groups();
     }
 
     /**
@@ -299,7 +257,7 @@ class main {
             $memberrecords = $this->graphclient->get_group_members($groupoid);
             $ownerrecords = $this->graphclient->get_group_owners($groupoid);
         } catch (moodle_exception $e) {
-            if (strpos($e->getMessage(), self::GROUP_DOES_NOT_EXIST_ERROR) !== false) {
+            if (strpos($e->getMessage(), utils::RESOURCE_NOT_EXIST_ERROR) !== false) {
                 $DB->delete_records('local_o365_objects', ['objectid' => $groupoid]);
                 mtrace("...... Deleted mapping for non-existing group ID $groupoid.");
             } else {

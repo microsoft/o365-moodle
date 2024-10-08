@@ -50,6 +50,12 @@ class coursesync extends \core\task\scheduled_task {
      * @return bool|void
      */
     public function execute() {
+        global $SESSION;
+
+        $SESSION->o365_groups_not_exist = [];
+        $SESSION->o365_newly_created_groups = [];
+        $SESSION->o365_users_not_exist = [];
+
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -72,5 +78,10 @@ class coursesync extends \core\task\scheduled_task {
             $coursesync->cleanup_teams_connections();
         }
         $coursesync->cleanup_course_connection_records();
+
+        if (utils::update_groups_cache($graphclient, 1)) {
+            $coursesync->save_not_found_groups();
+            utils::clean_up_not_found_groups();
+        }
     }
 }
