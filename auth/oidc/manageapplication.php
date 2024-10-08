@@ -106,8 +106,8 @@ if ($form->is_cancelled()) {
     foreach ($configstosave as $config) {
         $existingsetting = get_config('auth_oidc', $config);
         if ($fromform->$config != $existingsetting) {
-            set_config($config, $fromform->$config, 'auth_oidc');
             add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
+            set_config($config, $fromform->$config, 'auth_oidc');
             $settingschanged = true;
             if ($config != 'secretexpiryrecipients') {
                 $updateapplicationtokenrequired = true;

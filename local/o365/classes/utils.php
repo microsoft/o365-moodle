@@ -320,14 +320,24 @@ class utils {
         if (!array_key_exists($tenantid, $additionaltenants)) {
             $additionaltenants[$tenantid] = $tenantdomainnames;
         }
-        set_config('multitenants', json_encode($additionaltenants), 'local_o365');
+        $additionaltenantsencoded = json_encode($additionaltenants);
+        $existingmultitenantssetting = get_config('local_o365', 'multitenants');
+        if ($existingmultitenantssetting != $additionaltenantsencoded) {
+            add_to_config_log('multitenants', $existingmultitenantssetting, $additionaltenantsencoded, 'local_o365');
+        }
+        set_config('multitenants', $additionaltenantsencoded, 'local_o365');
 
         // Cleanup legacy multi tenants configurations.
         $configuredlegacytenants = get_config('local_o365', 'legacymultitenants');
+        $originalconfiguredlegacytenants = $configuredlegacytenants;
         if (!empty($configuredlegacytenants)) {
             $configuredlegacytenants = json_decode($configuredlegacytenants, true);
             if (is_array($configuredlegacytenants)) {
                 $configuredlegacytenants = array_diff($configuredlegacytenants, $tenantdomainnames);
+            }
+            if ($originalconfiguredlegacytenants != json_encode($configuredlegacytenants)) {
+                add_to_config_log('legacymultitenants', $originalconfiguredlegacytenants, json_encode($configuredlegacytenants),
+                    'local_o365');
             }
             set_config('legacymultitenants', json_encode($configuredlegacytenants), 'local_o365');
         }
@@ -345,6 +355,10 @@ class utils {
         $userrestrictions = array_merge($userrestrictions, $newrestrictions);
         $userrestrictions = array_unique($userrestrictions);
         $userrestrictions = implode("\n", $userrestrictions);
+        $existinguserrestrictionssetting = get_config('auth_oidc', 'userrestrictions');
+        if ($existinguserrestrictionssetting != $userrestrictions) {
+            add_to_config_log('userrestrictions', $existinguserrestrictionssetting, $userrestrictions, 'auth_oidc');
+        }
         set_config('userrestrictions', $userrestrictions, 'auth_oidc');
     }
 
@@ -387,9 +401,19 @@ class utils {
                         $additionaltenantdomains[$currenttenantid] = $currenttenantdomainnames;
                     }
                 }
+                $existinglegacymultitenantssetting = get_config('local_o365', 'legacymultitenants');
+                if ($existinglegacymultitenantssetting != json_encode($legacyadditionaltenantdomains)) {
+                    add_to_config_log('legacymultitenants', $existinglegacymultitenantssetting,
+                        json_encode($legacyadditionaltenantdomains), 'local_o365');
+                }
                 set_config('legacymultitenants', json_encode($legacyadditionaltenantdomains), 'local_o365');
             }
 
+            $existingmultitenantssetting = get_config('local_o365', 'multitenants');
+            if ($existingmultitenantssetting != json_encode($additionaltenantdomains)) {
+                add_to_config_log('multitenants', $existingmultitenantssetting, json_encode($additionaltenantdomains),
+                    'local_o365');
+            }
             set_config('multitenants', json_encode($additionaltenantdomains), 'local_o365');
         }
     }
@@ -414,17 +438,25 @@ class utils {
         if (array_key_exists($tenantid, $configuredtenants)) {
             $revokeddomains = $configuredtenants[$tenantid];
             unset($configuredtenants[$tenantid]);
+            $existingmultitenantssetting = get_config('local_o365', 'multitenants');
+            if ($existingmultitenantssetting != json_encode($configuredtenants)) {
+                add_to_config_log('multitenants', $existingmultitenantssetting, json_encode($configuredtenants), 'local_o365');
+            }
             set_config('multitenants', json_encode($configuredtenants), 'local_o365');
         }
 
         // Update restrictions.
         $userrestrictions = get_config('auth_oidc', 'userrestrictions');
+        $originaluserrestrictions = $userrestrictions;
         $userrestrictions = (!empty($userrestrictions)) ? explode("\n", $userrestrictions) : [];
         foreach ($revokeddomains as $revokeddomain) {
             $regex = '@' . str_replace('.', '\.', $revokeddomain) . '$';
             $userrestrictions = array_diff($userrestrictions, [$regex]);
         }
         $userrestrictions = implode("\n", $userrestrictions);
+        if ($originaluserrestrictions != $userrestrictions) {
+            add_to_config_log('userrestrictions', $originaluserrestrictions, $userrestrictions, 'auth_oidc');
+        }
         set_config('userrestrictions', $userrestrictions, 'auth_oidc');
     }
 
@@ -444,6 +476,11 @@ class utils {
             $configuredlegacytenants = [];
         }
         $configuredlegacytenants = array_diff($configuredlegacytenants, [$tenant]);
+        $existinglegacymultitenantssetting = get_config('local_o365', 'legacymultitenants');
+        if ($existinglegacymultitenantssetting != json_encode($configuredlegacytenants)) {
+            add_to_config_log('legacymultitenants', $existinglegacymultitenantssetting, json_encode($configuredlegacytenants),
+                'local_o365');
+        }
         set_config('legacymultitenants', json_encode($configuredlegacytenants), 'local_o365');
     }
 
