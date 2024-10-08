@@ -192,6 +192,10 @@ class observers {
                         try {
                             $apiclient = utils::get_api();
                             $userdata = $apiclient->get_user($eventdata['other']['oidcuniqid'], $isguestuser);
+                            if (is_null($userdata)) {
+                                utils::debug('Failed to get user data using Graph API.', __METHOD__);
+                                return true;
+                            }
                         } catch (moodle_exception $e) {
                             utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
                             return true;
@@ -371,7 +375,7 @@ class observers {
                     'type' => 'user',
                     'subtype' => '',
                     'objectid' => $o365user->objectid,
-                    'o365name' => str_replace('#ext#', '#EXT#', $o365user->upn),
+                    'o365name' => str_replace('#ext#', '#EXT#', $o365user->useridentifier),
                     'moodleid' => $userid,
                     'tenant' => $tenant,
                     'metadata' => $metadata,
