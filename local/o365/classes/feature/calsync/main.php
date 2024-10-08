@@ -140,8 +140,7 @@ class main {
      * @param string $calid The o365 ID of the calendar to create the event in.
      * @return bool|int The new ID of the calidmap record.
      */
-    public function create_event_raw($muserid, $eventid, $subject, $body, $timestart, $timeend, $attendees, array $other = array(),
-        $calid) {
+    public function create_event_raw($muserid, $eventid, $subject, $body, $timestart, $timeend, $attendees, array $other, $calid) {
         global $DB;
         $apiclient = $this->construct_calendar_api($muserid, true);
         $o365upn = utils::get_o365_upn($muserid);

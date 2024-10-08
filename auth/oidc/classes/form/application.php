@@ -25,10 +25,7 @@
 
 namespace auth_oidc\form;
 
-use auth_oidc\utils;
-use html_writer;
 use moodleform;
-use tool_brickfield\local\areas\mod_choice\option;
 
 defined('MOODLE_INTERNAL') || die();
 

@@ -186,9 +186,9 @@ if ($hassiteconfig) {
             $label, $desc, ['h' => 2, 'm' => 30]));
 
         // Toggle to control whether to support upn change.
-        $label = new lang_string('settings_support_upn_change', 'local_o365');
-        $desc = new lang_string('settings_support_upn_change_desc', 'local_o365');
-        $settings->add(new admin_setting_configcheckbox('local_o365/support_upn_change', $label, $desc, '0'));
+        $label = new lang_string('settings_support_user_identifier_change', 'local_o365');
+        $desc = new lang_string('settings_support_user_identifier_change_desc', 'local_o365');
+        $settings->add(new admin_setting_configcheckbox('local_o365/support_user_identifier_change', $label, $desc, '0'));
 
         // Course sync section.
         $label = new lang_string('settings_secthead_coursesync', 'local_o365');

@@ -615,7 +615,7 @@ class unified extends o365api {
      * Get a list of group owners.
      *
      * @param string $groupobjectid The object ID of the group.
-     * @return array
+     * @return array|null Array of returned owners.
      * @throws moodle_exception
      */
     public function get_group_owners(string $groupobjectid) : ?array {
@@ -1990,7 +1990,7 @@ class unified extends o365api {
      * @param string $upn
      * @return array|null|false
      */
-    public function get_user_timezone_by_upn(string $upn) {
+    public function get_timezone(string $upn) {
         $endpoint = '/users/' . $upn . '/mailboxSettings/timeZone';
         try {
             $response = $this->betaapicall('get', $endpoint);

@@ -49,7 +49,7 @@ $string['settings_setup_step1_credentials_end'] = 'If you are unable to set up t
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/2: Admin consent &amp; additional information';
-$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
+$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some Azure permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
 $string['settings_setup_step3'] = 'Verify setup';
 $string['settings_setup_step3_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
 
@@ -142,19 +142,19 @@ $string['settings_addsync_tzsynconlogin'] = 'Sync Outlook timezone to Moodle on 
 $string['settings_usersync_guestsync'] = 'Sync guest users';
 $string['settings_suspend_delete_running_time'] = 'User suspension/deletion running time';
 $string['settings_suspend_delete_running_time_desc'] = 'If the option is enabled, suspension/delete feature of user sync function will run once a day, at the time configured in the Moodle instance default time zone.';
-$string['settings_support_upn_change'] = 'Support Microsoft account UPN change';
-$string['settings_support_upn_change_desc'] = 'If enabled, Moodle will try to react when the UPN of a Microsoft account that is connected to a Moodle account is changed.</br>
+$string['settings_support_user_identifier_change'] = 'Support Microsoft account binding username claim value change';
+$string['settings_support_user_identifier_change_desc'] = 'If enabled, Moodle will try to react when the binding username claim value, which is normally UPN, of a Microsoft account that is connected to a Moodle account is changed.</br>
 <table class="flexible table table-striped table-hover generaltable generalbox table-sm">
     <tr>
         <th>Case ID</th>
         <th>The user with the old username has logged in already? (token created)<br/>
-        <span class="support_upn_change_case_detail">Whether a token is saved in the auth_oidc_token table</span>
+        <span class="support_user_identifier_change_case_detail">Whether a token is saved in the auth_oidc_token table</span>
         </th>
         <th>First action after UPN rename<br/>
-        <span class="support_upn_change_case_detail">Either Login or User sync task run</span>
+        <span class="support_user_identifier_change_case_detail">Either Login or User sync task run</span>
         </th>
         <th>Has potential duplicate username<br/>
-        <span class="support_upn_change_case_detail">Whether renaming would cause a username conflicts in Moodle</span>
+        <span class="support_user_identifier_change_case_detail">Whether renaming would cause a username conflicts in Moodle</span>
         </th>
         <th>Expected behaviours</th>
     </tr>

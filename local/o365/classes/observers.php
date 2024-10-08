@@ -375,7 +375,7 @@ class observers {
                     'type' => 'user',
                     'subtype' => '',
                     'objectid' => $o365user->objectid,
-                    'o365name' => str_replace('#ext#', '#EXT#', $o365user->upn),
+                    'o365name' => str_replace('#ext#', '#EXT#', $o365user->useridentifier),
                     'moodleid' => $userid,
                     'tenant' => $tenant,
                     'metadata' => $metadata,

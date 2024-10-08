@@ -42,6 +42,21 @@ if ($hassiteconfig) {
     $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_application', get_string('settings_page_application', 'auth_oidc'),
         new moodle_url('/auth/oidc/manageapplication.php')));
 
+
+    $idptype = get_config('auth_oidc', 'idptype');
+    if ($idptype) {
+        // Binding username claim page.
+        $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_binding_username_claim',
+            get_string('settings_page_binding_username_claim', 'auth_oidc'),
+            new moodle_url('/auth/oidc/binding_username_claim.php')));
+
+        // Change binding username claim tool page.
+        $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_change_binding_username_claim_tool',
+            get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'),
+            new moodle_url('/auth/oidc/change_binding_username_claim_tool.php')));
+    }
+
+
     // Other settings page and its settings.
     $settings = new admin_settingpage($section, get_string('settings_page_other_settings', 'auth_oidc'));
 

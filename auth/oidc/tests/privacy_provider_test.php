@@ -269,6 +269,7 @@ class auth_oidc_privacy_testcase extends \core_privacy\tests\provider_testcase {
         $record->username = "user@example.com";
         $record->userid = $userid;
         $record->oidcusername = "user@example.com";
+        $record->useridentifier = "user@example.com";
         $record->scope = "All";
         $record->tokenresource = "https://graph.microsoft.com";
         $record->authcode = "authcode123";
