@@ -54,15 +54,6 @@ class api_call_failed extends \core\event\base {
     }
 
     /**
-     * Return legacy data for add_to_log().
-     *
-     * @return array
-     */
-    protected function get_legacy_logdata() {
-        return array(SITEID, 'local_o365', 'error', 'index.php');
-    }
-
-    /**
      * Init method.
      *
      * @return void
