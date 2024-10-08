@@ -236,10 +236,41 @@ class usersync extends scheduled_task {
      * @param array $users
      */
     protected function sync_users($usersync, $users) {
+        global $CFG;
+
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
         $chunk = array_chunk($users, 10000);
+
+        $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+        switch ($bindingusernameclaim) {
+            case 'upn':
+                $this->mtrace('Binding username claim: userPrincipalName.');
+                $bindingusernameclaim = 'userPrincipalName';
+                break;
+            case 'oid':
+                $this->mtrace('Binding username claim: id.');
+                $bindingusernameclaim = 'id';
+                break;
+            case 'samaccountname':
+                $this->mtrace('Binding username claim: onPremisesSamAccountName.');
+                $bindingusernameclaim = 'onPremisesSamAccountName';
+                break;
+            case 'email':
+                $this->mtrace('Binding username claim: mail.');
+                $bindingusernameclaim = 'mail';
+                break;
+            case 'unique_name':
+            case 'sub':
+            case 'preferred_username':
+            default:
+                $this->mtrace('Unsupported binding username claim: ' . $bindingusernameclaim . '. Falls back to userPrincepalName.');
+                $bindingusernameclaim = 'userPrincipalName';
+        }
+
         foreach ($chunk as $u) {
             $this->mtrace(count($u) . ' users in chunk. Syncing...');
-            $usersync->sync_users($u);
+            $usersync->sync_users($u, $bindingusernameclaim);
         }
     }
 }

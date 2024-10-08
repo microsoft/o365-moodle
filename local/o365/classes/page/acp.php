@@ -1810,7 +1810,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
 
             // Check existing tokens for Microsoft 365 user (indicates o365 user is already connected to someone).
-            $existingtokenforo365user = $DB->get_record('auth_oidc_token', ['oidcusername' => $o365username]);
+            $existingtokenforo365user = $DB->get_record('auth_oidc_token', ['useridentifier' => $o365username]);
             if (!empty($existingtokenforo365user)) {
                 throw new moodle_exception('acp_userconnections_manualmatch_error_o365userconnected', 'local_o365');
             }

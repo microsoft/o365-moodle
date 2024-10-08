@@ -283,7 +283,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                         continue;
                     }
 
-                    list($remotefield, $localfield, $behaviour) = $fieldmap;
+                    [$remotefield, $localfield, $behaviour] = $fieldmap;
 
                     if ($remotefield == 'facsimileTelephoneNumber') {
                         $remotefield = 'faxNumber';
@@ -389,6 +389,33 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         }
 
         upgrade_plugin_savepoint(true, 2023100902, 'auth', 'oidc');
+    }
+
+    if ($oldversion < 2023100921) {
+        // Set default values for new settings "bindingusernameclaim" and "customclaimname".
+        if (!get_config('auth_oidc', 'bindingusernameclaim')) {
+            set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+        }
+
+        if (!get_config('auth_oidc', 'customclaimname')) {
+            set_config('customclaimname', '', 'auth_oidc');
+        }
+
+        // Define field useridentifier to be added to auth_oidc_token.
+        $table = new xmldb_table('auth_oidc_token');
+        $field = new xmldb_field('useridentifier', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'oidcusername');
+
+        // Conditionally launch add field useridentifier.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+
+            // Save current value of oidcusername to useridentifier.
+            $sql = 'UPDATE {auth_oidc_token} SET useridentifier = oidcusername';
+            $DB->execute($sql);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2023100921, 'auth', 'oidc');
     }
 
     return true;
