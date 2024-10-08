@@ -95,6 +95,10 @@ class utils {
                     }
                 } catch (moodle_exception $e) {
                     // School invalid, reset settings.
+                    $existingsdsprofilesyncsetting = get_config('local_o365', 'sdsprofilesync');
+                    if ($existingsdsprofilesyncsetting) {
+                        add_to_config_log('sdsprofilesync', $existingsdsprofilesyncsetting, '', 'local_o365');
+                    }
                     set_config('sdsprofilesync', '', 'local_o365');
                 }
             }

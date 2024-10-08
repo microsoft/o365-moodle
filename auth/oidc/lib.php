@@ -378,6 +378,10 @@ function auth_oidc_get_field_mappings() {
  * @return array
  */
 function auth_oidc_apply_default_email_mapping() {
+    $existingsetting = get_config('auth_oidc', 'field_map_email');
+    if ($existingsetting != 'mail') {
+        add_to_config_log('field_map_email', $existingsetting, 'mail', 'auth_oidc');
+    }
     set_config('field_map_email', 'mail', 'auth_oidc');
 
     $authoidcconfig = get_config('auth_oidc');
@@ -582,6 +586,10 @@ function auth_oidc_is_setup_complete() {
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
             if (!isset($pluginconfig->clientcertsource)) {
+                $existingclientcertsource = get_config('auth_oidc', 'clientcertsource');
+                if ($existingclientcertsource != AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
+                    add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+                }
                 set_config('clientcertsource', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
                 $pluginconfig->clientcertsource = AUTH_OIDC_AUTH_CERT_SOURCE_TEXT;
             }
