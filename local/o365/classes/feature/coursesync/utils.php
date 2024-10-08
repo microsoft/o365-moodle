@@ -74,8 +74,7 @@ class utils {
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled)) {
                 $changed = false;
-                $courseids = array_keys($coursesenabled);
-                foreach ($courseids as $courseid => $value) {
+                foreach ($coursesenabled as $courseid => $value) {
                     if (!$DB->record_exists('course', ['id' => $courseid])) {
                         unset($coursesenabled[$courseid]);
                         $changed = true;
