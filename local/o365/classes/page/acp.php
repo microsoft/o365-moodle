@@ -800,10 +800,19 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         // Save enabled by default on new course settings.
         $enabledfornewcoursesetting = required_param('newcourse', PARAM_BOOL);
+        $existingsyncnewcoursesetting = get_config('local_o365', 'sync_new_course');
+        if ($existingsyncnewcoursesetting != $enabledfornewcoursesetting) {
+            add_to_config_log('sync_new_course', $existingsyncnewcoursesetting, $enabledfornewcoursesetting, 'local_o365');
+        }
         set_config('sync_new_course', $enabledfornewcoursesetting, 'local_o365');
 
         // Save allow configuring course sync per course.
         $controlpercoursesetting = required_param('percourse', PARAM_BOOL);
+        $existingcoursesyncpercoursesetting = get_config('local_o365', 'course_sync_per_course');
+        if ($existingcoursesyncpercoursesetting != $controlpercoursesetting) {
+            add_to_config_log('course_sync_per_course', $existingcoursesyncpercoursesetting, $controlpercoursesetting,
+                'local_o365');
+        }
         set_config('course_sync_per_course', $controlpercoursesetting, 'local_o365');
 
         // Save course settings.
@@ -1689,6 +1698,10 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $this->set_title(get_string('acp_maintenance_cleandeltatoken', 'local_o365'));
 
+        $existingtaskuserysnclastdeltatokensetting = get_config('local_o365', 'task_usersync_lastdeltatoken');
+        if ($existingtaskuserysnclastdeltatokensetting) {
+            add_to_config_log('task_usersync_lastdeltatoken', $existingtaskuserysnclastdeltatokensetting, '', 'local_o365');
+        }
         set_config('task_usersync_lastdeltatoken', '', 'local_o365');
 
         $url = new moodle_url($this->url, ['mode' => 'cleandeltatoken']);
