@@ -73,7 +73,7 @@ class authcode extends base {
 
         return [
             [
-                'url' => new moodle_url('/auth/oidc/'),
+                'url' => new moodle_url('/auth/oidc/', ['source' => 'loginpage']),
                 'icon' => $icon,
                 'name' => strip_tags(format_text($this->config->opname)),
             ]
