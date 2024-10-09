@@ -1062,8 +1062,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         try {
             $graphclient = main::get_unified_api(__METHOD__);
             if ($graphclient) {
-                $cohortsync = new main($graphclient);
-                $cohortsync->update_groups_cache();
+                utils::update_groups_cache($graphclient);
             }
         } catch (moodle_exception $e) {
             // Do nothing.
@@ -1321,6 +1320,20 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2023100923, 'local', 'o365');
+    }
+
+    if ($oldversion < 2023100924) {
+        // Define field not_found_since to be added to local_o365_groups_cache.
+        $table = new xmldb_table('local_o365_groups_cache');
+        $field = new xmldb_field('not_found_since', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'description');
+
+        // Conditionally launch add field not_found_since.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2023100924, 'local', 'o365');
     }
 
     return true;
