@@ -501,7 +501,7 @@ $string['acp_teamconnections_sync_disabled'] = 'Course sync needs to be enabled 
 $string['acp_teamconnections_table_connect'] = 'Connect';
 $string['acp_teamconnections_table_connect_to_different_team'] = 'Connect to a different Team';
 $string['acp_teamconnections_table_cannot_create_team_from_group'] = 'Cannot create Team from group - no owner';
-$string['acp_teamconnections_table_missing_team'] = 'The course is connected to a non-existing team. Try update Teams cache.';
+$string['acp_teamconnections_table_missing_team'] = 'The course is connected to a non-existing team. This will be cleaned up on the next course sync scheduled task run.';
 $string['acp_teamconnections_table_update'] = 'Update';
 $string['acp_teamconnections_team_already_connected'] = 'The course is already connected to a Team.';
 $string['acp_teamconnections_team_created'] = 'Team was created successfully for the course.';
@@ -691,6 +691,8 @@ $string['settings_teams_moodle_app_short_name_desc'] = 'This can be set as defau
 $string['settings_download_teams_tab_app_manifest'] = 'Download manifest file';
 $string['settings_download_teams_tab_app_manifest_reminder'] = 'Please save all your changes before downloading the manifest.';
 $string['settings_publish_manifest_instruction'] = '<a href="https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload" target="_blank">Click here</a> to learn how to publish your downloaded Moodle app manifest file to all users in Teams.';
+$string['settings_teams_moodle_tab_name'] = 'Moodle tab name in Teams';
+$string['settings_teams_moodle_tab_name_desc'] = 'This is the name of the Moodle tab in Teams.';
 
 // Settings in the "Teams Moodle app" tab.
 $string['settings_moodle_app_id'] = 'Moodle app ID';
@@ -977,7 +979,6 @@ $string['courserequest_duplicate'] = 'A pending or approved course request from 
 // Teams page.
 $string['teams_no_course'] = 'You don\'t have any course to add.';
 $string['tab_name'] = 'Tab name';
-$string['tab_moodle'] = 'Moodle';
 $string['sso_login'] = 'Login to Microsoft 365';
 $string['other_login'] = 'Login manually';
 $string['course_selector_label'] = "Select existing course";

@@ -171,10 +171,15 @@ class unified extends o365api {
         $deltatokenvalue = null;
 
         $continue = true;
+        $skiptoken = null;
 
         while ($continue) {
             if (!empty($skiptoken)) {
                 $odataqueries[$skipparam] = $skiptoken;
+                // Cannot send a delta token and a skip token at the same time.
+                if (isset($odataqueries['$deltatoken'])) {
+                    unset($odataqueries['$deltatoken']);
+                }
             }
 
             $odataquerystring = '';
@@ -488,11 +493,16 @@ class unified extends o365api {
             return null;
         }
         $config = get_config('local_o365');
+        $o365urls = [];
         $url = preg_replace("/-my.sharepoint.com/", ".sharepoint.com", $config->odburl);
         // First time visiting the onedrive or notebook urls will result in a "please wait while we provision onedrive" message.
-        $o365urls = [
-            'onedrive' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=documents',
-            'notebook' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=notebook',
+        if ($url) {
+            $o365urls = [
+                'onedrive' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=documents',
+                'notebook' => 'https://' . $url . '/_layouts/groupstatus.aspx?id=' . $objectid . '&target=notebook',
+            ];
+        }
+        $o365urls += [
             'conversations' => 'https://outlook.office.com/owa/?path=/group/' . $group['mail'] . '/mail',
             'calendar' => 'https://outlook.office365.com/owa/?path=/group/' . $group['mail'] . '/calendar',
         ];
@@ -1930,7 +1940,11 @@ class unified extends o365api {
      */
     public function add_tab_to_channel(string $groupobjectid, string $channelid, string $appid, array $tabconfiguration) : string {
         $endpoint = '/teams/' . $groupobjectid . '/channels/' . $channelid . '/tabs';
-        $requestparams = ['displayName' => get_string('tab_moodle', 'local_o365'),
+        $tabname = get_config('local_o365', 'teams_moodle_tab_name');
+        if (!$tabname) {
+            $tabname = 'Moodle';
+        }
+        $requestparams = ['displayName' => $tabname,
             'teamsApp@odata.bind' => $this->get_apiuri() . '/beta/appCatalogs/teamsApps/' . $appid,
             'configuration' => $tabconfiguration,];
 

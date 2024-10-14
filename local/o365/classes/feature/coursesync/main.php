@@ -596,16 +596,22 @@ class main {
         // Process adhoc tasks first to prevent creating duplicate teams for the same course.
         $courserequestadhoctasks = manager::get_adhoc_tasks('local_o365\task\processcourserequestapproval');
         foreach ($courserequestadhoctasks as $courserequestadhoctask) {
-            $courserequestadhoctask->execute();
+            manager::adhoc_task_starting($courserequestadhoctask);
+            $cronlockfactory = \core\lock\lock_config::get_lock_factory('local_o365');
+            if ($lock = $cronlockfactory->get_lock('\\' . get_class($courserequestadhoctask), 10)) {
+                $courserequestadhoctask->set_lock($lock);
+                $courserequestadhoctask->execute();
+                manager::adhoc_task_complete($courserequestadhoctask);
+            }
         }
 
-        $sql = 'SELECT crs.*
+        $sql = "SELECT crs.*
                   FROM {course} crs
-             LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.subtype = ? AND obj.moodleid = crs.id
-                 WHERE obj.id IS NULL AND crs.id != ? AND crs.visible != 0';
+             LEFT JOIN {local_o365_objects} obj ON obj.type = 'group' AND obj.subtype = 'course' AND obj.moodleid = crs.id
+                 WHERE obj.id IS NULL AND crs.id != ? AND crs.visible != 0";
         // The "crs.visible != 0" is used to filter out courses in the process of copy or restore, which may contain incorrect or
         // incomplete contents.
-        $params = ['group', 'course', SITEID];
+        $params = [SITEID];
         if (!empty($this->coursesinsql)) {
             $sql .= ' AND crs.id ' . $this->coursesinsql;
             $params = array_merge($params, $this->coursesparams);
@@ -690,22 +696,22 @@ class main {
 
         $this->mtrace('Processing courses without teams...');
 
-        $sql = 'SELECT crs.*, obj_group.objectid AS groupobjectid
+        $sql = "SELECT crs.*, obj_group.objectid AS groupobjectid
                   FROM {course} crs
              LEFT JOIN {local_o365_objects} obj_group
-                        ON obj_group.type = ? AND obj_group.subtype = ? AND obj_group.moodleid = crs.id
+                        ON obj_group.type = 'group' AND obj_group.subtype = 'course' AND obj_group.moodleid = crs.id
              LEFT JOIN {local_o365_objects} obj_team1
-                        ON obj_team1.type = ? AND obj_team1.subtype = ? AND obj_team1.moodleid = crs.id
+                        ON obj_team1.type = 'group' AND obj_team1.subtype = 'courseteam' AND obj_team1.moodleid = crs.id
              LEFT JOIN {local_o365_objects} obj_team2
-                        ON obj_team2.type = ? AND obj_team2.subtype = ? AND obj_team2.moodleid = crs.id
+                        ON obj_team2.type = 'group' AND obj_team2.subtype = 'teamfromgroup' AND obj_team2.moodleid = crs.id
              LEFT JOIN {local_o365_objects} obj_sds
-                        ON obj_sds.type = ? AND obj_sds.subtype = ? AND obj_sds.moodleid = crs.id
+                        ON obj_sds.type = 'sdssection' AND obj_sds.subtype = 'course' AND obj_sds.moodleid = crs.id
                  WHERE obj_group.id IS NOT NULL
                    AND obj_team1.id IS NULL
                    AND obj_team2.id IS NULL
                    AND obj_sds.id IS NULL
-                   AND crs.id != ?';
-        $params = ['group', 'course', 'group', 'courseteam', 'group', 'teamfromgroup', 'sdssection', 'course', SITEID];
+                   AND crs.id != " . SITEID;
+        $params = [];
         if (!empty($this->coursesinsql)) {
             $sql .= ' AND crs.id ' . $this->coursesinsql;
             $params = array_merge($params, $this->coursesparams);
@@ -878,6 +884,62 @@ class main {
     }
 
     /**
+     * Cleanup Teams connections records.
+     * This function will delete all Teams connection records with object IDs not found in the Teams cache.
+     * This function should only be called after Teams cache is updated - no cache update will be performed here.
+     *
+     * @return void
+     */
+    public function cleanup_teams_connections() {
+        global $DB;
+
+        $teamobjectids = $DB->get_fieldset_select('local_o365_teams_cache', 'objectid', '');
+
+        $this->mtrace('Cleaning up teams connection records...');
+        if ($teamobjectids) {
+            // If there are records in teams cache, delete teams connection records with object IDs not in the cache.
+            [$teamobjectidsql, $params] = $DB->get_in_or_equal($teamobjectids, SQL_PARAMS_QM, 'param', false);
+            $DB->delete_records_select('local_o365_objects',
+                "type = 'group' AND subtype IN ('classteam', 'teamfromgroup') AND objectid {$teamobjectidsql}", $params);
+        } else {
+            // If there are no records in teams cache, delete all teams connection records.
+            $DB->delete_records_select('local_o365_objects', "type = 'group' AND subtype IN ('classteam', 'teamfromgroup')");
+        }
+    }
+
+    /**
+     * Cleanup course connection records.
+     * This function will delete all course connection records with duplicate subtype values.
+     *
+     * @return void
+     */
+    public function cleanup_course_connection_records() {
+        global $DB;
+
+        $this->mtrace('Cleaning up duplicate course connection records...');
+
+        $sql = "
+            SELECT *
+              FROM {local_o365_objects}
+             WHERE type = 'group'
+               AND subtype IN ('course', 'courseteam', 'teamfromgroup')
+          ORDER BY id ASC";
+        $courseconnectionrecords = $DB->get_records_sql($sql);
+
+        $courseconnectioncache = [];
+        foreach ($courseconnectionrecords as $courseconnectionrecord) {
+            if (!isset($courseconnectioncache[$courseconnectionrecord->moodleid])) {
+                $courseconnectioncache[$courseconnectionrecord->moodleid] = [];
+            }
+            if (!in_array($courseconnectionrecord->subtype, $courseconnectioncache[$courseconnectionrecord->moodleid])) {
+                $courseconnectioncache[$courseconnectionrecord->moodleid][] = $courseconnectionrecord->subtype;
+            } else {
+                $DB->delete_records('local_o365_objects', ['id' => $courseconnectionrecord->id]);
+            }
+        }
+    }
+
+    /**
      * Update team name for the course with the given ID.
      *
      * @param int $courseid
@@ -891,20 +953,32 @@ class main {
             return false;
         }
 
-        if (!$objectrecord = $DB->get_record('local_o365_objects',
-            ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid])) {
-            if (!$objectrecord = $DB->get_record('local_o365_objects',
-                ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $courseid])) {
-                return false;
-            }
+        $sql = "
+            SELECT *
+              FROM {local_o365_objects}
+             WHERE type = 'group'
+               AND subtype IN ('course', 'courseteam', 'teamfromgroup')
+               AND moodleid = ?";
+
+        $objectrecords = $DB->get_records_sql($sql, [$courseid]);
+
+        if (empty($objectrecords)) {
+            return false;
         }
 
         $teamname = utils::get_team_display_name($course);
-        $this->graphclient->update_team_name($objectrecord->objectid, $teamname);
 
-        $objectrecord->o365name = $teamname;
-        $objectrecord->timemodified = time();
-        $DB->update_record('local_o365_objects', $objectrecord);
+        $remotegroupnameupdated = false;
+        foreach ($objectrecords as $objectrecord) {
+            if (!$remotegroupnameupdated) {
+                $this->graphclient->update_team_name($objectrecord->objectid, $teamname);
+                $remotegroupnameupdated = true;
+            }
+
+            $objectrecord->o365name = $teamname;
+            $objectrecord->timemodified = time();
+            $DB->update_record('local_o365_objects', $objectrecord);
+        }
 
         return true;
     }
@@ -979,9 +1053,8 @@ class main {
         }
 
         // Disconnect the Team from the course.
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'course', 'moodleid' => $course->id]);
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $course->id]);
-        $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $course->id]);
+        $DB->delete_records_select('local_o365_objects',
+            "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?", [$course->id]);
 
         // Create a new group / team and connect it to the course.
         if ($createafterreset) {

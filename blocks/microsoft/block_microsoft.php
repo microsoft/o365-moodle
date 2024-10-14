@@ -35,6 +35,9 @@ require_once($CFG->dirroot.'/local/o365/lib.php');
  * Microsoft Block.
  */
 class block_microsoft extends block_base {
+    /** @var stdClass plugin configuration */
+    private $globalconfig;
+
     /**
      * Initialize plugin.
      */
@@ -148,9 +151,6 @@ class block_microsoft extends block_base {
         if (has_capability('local/o365:teamowner', $this->page->context)) {
             $courseheaderdisplayed = true;
         }
-
-        [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
-        $html .= $courseheader;
 
         // Link to course sync options.
         if (has_capability('local/o365:teamowner', $this->page->context)) {

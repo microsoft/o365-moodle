@@ -1131,8 +1131,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 $DB->insert_record('local_o365_objects', $grouprecord);
             }
 
-            $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid]);
-            $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $courseid]);
+            $DB->delete_records_select('local_o365_objects',
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
+
             $teamrecord = new stdClass();
             $teamrecord->type = 'group';
             $teamrecord->subtype = 'courseteam';
@@ -1260,8 +1261,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 $DB->insert_record('local_o365_objects', $grouprecord);
             }
 
-            $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $courseid]);
-            $DB->delete_records('local_o365_objects', ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $courseid]);
+            $DB->delete_records_select('local_o365_objects',
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
+
             $teamrecord = new stdClass();
             $teamrecord->type = 'group';
             $teamrecord->subtype = 'courseteam';
@@ -1340,12 +1342,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $groupconnectiontype = 'course';
             if (!$course = $DB->get_record('course', ['id' => $groupobject->moodleid])) {
                 // Moodle course doesn't exist. Delete the invalid record.
-                $DB->delete_records('local_o365_objects',
-                    ['type' => 'group', 'subtype' => 'course', 'moodleid' => $groupobject->moodleid]);
-                $DB->delete_records('local_o365_objects',
-                    ['type' => 'group', 'subtype' => 'courseteam', 'moodleid' => $groupobject->moodleid]);
-                $DB->delete_records('local_o365_objects',
-                    ['type' => 'group', 'subtype' => 'teamfromgroup', 'moodleid' => $groupobject->moodleid]);
+                $DB->delete_records_select('local_o365_objects',
+                    "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?",
+                    [$groupobject->moodleid]);
                 continue;
             }
             $group = null;
@@ -1360,7 +1359,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
             $status = '';
             if (!in_array($groupobject->objectid, $groupids)) {
-                $DB->delete_records('local_o365_objects', ['id' => $groupobject->id]);
+                $DB->delete_records_select('local_o365_objects',
+                    "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND moodleid = ?",
+                    [$groupobject->moodleid]);
                 if (!in_array($course->id, $coursesenabled)) {
                     $status = get_string('acp_maintenance_recreatedeletedgroups_status_sync_disabled', 'local_o365');
                 } else {

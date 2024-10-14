@@ -102,6 +102,7 @@ class update_onenoteassignment extends external_api {
                 'requireallteammemberssubmit',
                 'blindmarking',
                 'markingworkflow',
+                'markinganonymous',
                 'markingallocation',
             ];
             $assigninfo = [

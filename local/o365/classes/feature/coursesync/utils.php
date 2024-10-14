@@ -197,6 +197,10 @@ class utils {
             $graphclient = unified::instance_for_user();
             $result = $graphclient->delete_group($objectrec->objectid);
 
+            // Delete course and team connection records.
+            $DB->delete_records_select('local_o365_objects',
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
+
             if ($result === true) {
                 $metadata = (!empty($objectrec->metadata)) ? @json_decode($objectrec->metadata, true) : [];
                 if (empty($metadata) || !is_array($metadata)) {

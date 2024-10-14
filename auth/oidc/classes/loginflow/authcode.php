@@ -73,7 +73,7 @@ class authcode extends base {
 
         return [
             [
-                'url' => new moodle_url('/auth/oidc/'),
+                'url' => new moodle_url('/auth/oidc/', ['source' => 'loginpage']),
                 'icon' => $icon,
                 'name' => strip_tags(format_text($this->config->opname)),
             ]
@@ -108,6 +108,27 @@ class authcode extends base {
     public function handleredirect() {
         global $CFG, $SESSION;
 
+        $error = optional_param('error', '', PARAM_TEXT);
+        $errordescription = optional_param('error_description', '', PARAM_TEXT);
+        $silentloginmode = get_config('auth_oidc', 'silentloginmode');
+        $selectaccount = false;
+        if ($silentloginmode) {
+            if ($error == 'login_required') {
+                // If silent login mode is enabled and the error is 'login_required', redirect to the login page.
+                $loginpageurl = new moodle_url('/login/index.php', ['noredirect' => 1]);
+                redirect($loginpageurl);
+                die();
+            } else if ($error == 'interaction_required') {
+                if (strpos($errordescription, 'multiple user identities') !== false) {
+                    $selectaccount = true;
+                } else {
+                    $loginpageurl = new moodle_url('/login/index.php', ['noredirect' => 1]);
+                    redirect($loginpageurl);
+                    die();
+                }
+            }
+        }
+
         if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $adminconsent = optional_param('admin_consent', '', PARAM_TEXT);
             if ($adminconsent) {
@@ -127,7 +148,7 @@ class authcode extends base {
         $promptlogin = (bool)optional_param('promptlogin', 0, PARAM_BOOL);
         $promptaconsent = (bool)optional_param('promptaconsent', 0, PARAM_BOOL);
         $justauth = (bool)optional_param('justauth', 0, PARAM_BOOL);
-        if (!empty($state)) {
+        if (!empty($state) && $selectaccount === false) {
             $requestparams = [
                 'state' => $state,
                 'code' => $code,
@@ -155,7 +176,7 @@ class authcode extends base {
             if ($justauth === true) {
                 $stateparams['justauth'] = true;
             }
-            $this->initiateauthrequest($promptlogin, $stateparams, $extraparams);
+            $this->initiateauthrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
         }
     }
 
@@ -186,10 +207,12 @@ class authcode extends base {
      * @param bool $promptlogin Whether to prompt for login or use existing session.
      * @param array $stateparams Parameters to store as state.
      * @param array $extraparams Additional parameters to send with the OIDC request.
+     * @param bool $selectaccount Whether to prompt the user to select an account.
      */
-    public function initiateauthrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array()) {
+    public function initiateauthrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array(),
+        bool $selectaccount = false) {
         $client = $this->get_oidcclient();
-        $client->authrequest($promptlogin, $stateparams, $extraparams);
+        $client->authrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
     }
 
     /**

@@ -328,8 +328,8 @@ class ajax extends base {
 
         // Enabling admin settings.
         $formdata = new stdClass();
-        $formdata->allowframembedding = 1;
-        $formdata->enablewebservices = 1;
+        $formdata->s__allowframembedding = 1;
+        $formdata->s__enablewebservices = 1;
         $count = admin_write_settings($formdata);
         if ($count == 0) {
             $data->info[] = get_string('settings_notice_webservicesframealreadyenabled', 'local_o365');
