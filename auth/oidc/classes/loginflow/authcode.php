@@ -371,7 +371,8 @@ class authcode extends base {
                 $upn = $idtoken->claim('upn');
                 if (empty($upn)) {
                     $upn = $idtoken->claim('unique_name');
-                } else if (empty($upn)) {
+                }
+                if (empty($upn)) {
                     $upn = $idtoken->claim('sub');
                 }
             }
