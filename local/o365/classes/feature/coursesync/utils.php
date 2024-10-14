@@ -69,7 +69,12 @@ class utils {
                 return true;
             }
         } else if ($coursesyncsetting === 'oncustom') {
-            $coursesenabled = get_config('local_o365', 'coursesynccustom');
+            // Get the list of enabled courses from database rather than get_config() to avoid cache issues.
+            $coursesenabled = $DB->get_field('config_plugins', 'value', ['plugin' => 'local_o365', 'name' => 'coursesynccustom']);
+            if (!$coursesenabled) {
+                $coursesenabled = '';
+            }
+            $originalcoursesenabled = $coursesenabled;
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled)) {
                 $changed = false;
@@ -81,7 +86,10 @@ class utils {
                     }
                 }
                 if ($changed) {
-                    set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
+                    if ($originalcoursesenabled !== json_encode($coursesenabled)) {
+                        add_to_config_log('coursesynccustom', $originalcoursesenabled, json_encode($coursesenabled), 'local_o365');
+                        set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
+                    }
                 }
                 return array_keys($coursesenabled);
             }
@@ -222,7 +230,15 @@ class utils {
      * @param bool $enabled Whether to enable or disable.
      */
     public static function set_course_sync_enabled(int $courseid, bool $enabled = true) {
-        $customcoursesyncsetting = get_config('local_o365', 'coursesynccustom');
+        global $DB;
+
+        // Get the list of enabled courses from database rather than get_config() to avoid cache issues.
+        $customcoursesyncsetting = $DB->get_field('config_plugins', 'value',
+            ['plugin' => 'local_o365', 'name' => 'coursesynccustom']);
+        if ($customcoursesyncsetting === false) {
+            $customcoursesyncsetting = '';
+        }
+        $originalcustomcoursesyncsetting = $customcoursesyncsetting;
         $customcoursesyncsetting = @json_decode($customcoursesyncsetting, true);
         if (empty($customcoursesyncsetting) || !is_array($customcoursesyncsetting)) {
             $customcoursesyncsetting = [];
@@ -239,7 +255,11 @@ class utils {
             }
         }
 
-        set_config('coursesynccustom', json_encode($customcoursesyncsetting), 'local_o365');
+        if ($originalcustomcoursesyncsetting != json_encode($customcoursesyncsetting)) {
+            add_to_config_log('coursesynccustom', $originalcustomcoursesyncsetting, json_encode($customcoursesyncsetting),
+                'local_o365');
+            set_config('coursesynccustom', json_encode($customcoursesyncsetting), 'local_o365');
+        }
     }
 
     /**
