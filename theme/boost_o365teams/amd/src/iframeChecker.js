@@ -1,7 +1,7 @@
-define(['jquery'], function ($) {
+define(['jquery'], function($) {
     return {
         init: function() {
-            if (in_teams()) {
+            if (inTeams()) {
                 // In Teams, hide page elements.
                 $('body.drawer-open-left').css('margin-left', '0');
                 $('div#page').css('margin-top', '0');
@@ -44,7 +44,12 @@ define(['jquery'], function ($) {
         }
     };
 
-    function in_teams() {
+    /**
+     * Check if the page is being displayed in Microsoft Teams.
+     *
+     * @return {boolean} True if the page is being displayed in Microsoft Teams, false otherwise.
+     */
+    function inTeams() {
         return ((window.location != window.parent.location) || (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)));
-    };
+    }
 });

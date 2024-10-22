@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 use theme_boost_o365teams\css_processor;
 
 /**
@@ -38,7 +36,7 @@ use theme_boost_o365teams\css_processor;
  * @param array $options
  * @return bool
  */
-function theme_boost_o365teams_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+function theme_boost_o365teams_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
 
     static $theme;
     if (empty($theme)) {
