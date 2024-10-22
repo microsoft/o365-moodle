@@ -27,8 +27,6 @@ namespace assignsubmission_onenote\event;
 
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The assignsubmission_onenote submission_updated event class.
  *

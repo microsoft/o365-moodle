@@ -27,8 +27,6 @@ namespace assignsubmission_onenote\event;
 
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The assignsubmission_onenote assessable uploaded event class.
  *
