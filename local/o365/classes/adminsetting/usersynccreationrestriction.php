@@ -72,8 +72,8 @@ class usersynccreationrestriction extends \admin_setting {
         ];
         $order = 0;
         while ($order++ < 15) {
-            $this->remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_oidc',
-                $order);
+            $this->remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute',
+                'auth_oidc', $order);
         }
 
         return parent::__construct($name, $visiblename, $description, $defaultsetting);

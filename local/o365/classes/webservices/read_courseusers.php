@@ -109,7 +109,7 @@ class read_courseusers extends external_api {
         $limitnumber = clean_param($limitnumber, PARAM_INT);
 
         if ($courseid == SITEID) {
-            // TODO exception.
+            return [];
         }
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
         $context = \context_course::instance($courseid);

@@ -43,7 +43,7 @@ class cohortsync extends moodleform {
     /**
      * Define the form elements.
      */
-    public function definition() : void {
+    public function definition(): void {
         $mform = $this->_form;
 
         $cohortsyncmain = $this->_customdata['cohortsyncmain'];

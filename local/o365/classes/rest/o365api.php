@@ -27,8 +27,6 @@ namespace local_o365\rest;
 
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Abstract base class for all o365 REST api classes.
  */
@@ -345,7 +343,7 @@ abstract class o365api {
         if ($tokenvalid !== true) {
             throw new moodle_exception('erroro365apiinvalidtoken', 'local_o365');
         }
-        $header = ['Authorization: Bearer ' . $this->token->get_token(),];
+        $header = ['Authorization: Bearer ' . $this->token->get_token()];
         $this->httpclient->resetheader();
         $this->httpclient->setheader($header);
         return $this->httpclient->get($url, '', $options);

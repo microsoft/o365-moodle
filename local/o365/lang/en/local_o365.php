@@ -26,6 +26,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder -- The strings are organised by features.
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment -- The strings are organised by features.
+
 $string['pluginname'] = 'Microsoft 365 Integration';
 
 // Settings - tabs.
@@ -167,7 +170,7 @@ $string['settings_support_user_identifier_change_desc'] = 'If enabled, Moodle wi
             <ol>
                 <li>Rename the Moodle user.</li>
                 <li>auth_oidc_token updated with both new values for both "username" and "oidcusername" fields.</li>
-                <li>local_o365_objects user connection record "o365name" field updated to new value.</li>        
+                <li>local_o365_objects user connection record "o365name" field updated to new value.</li>
             </ol>
         </td>
     </tr>
@@ -180,7 +183,7 @@ $string['settings_support_user_identifier_change_desc'] = 'If enabled, Moodle wi
             <ol>
                 <li>Rename the Moodle user.</li>
                 <li>local_o365_objects user connection record is updated.</li>
-                <li>auth_oidc_token updated.</li>        
+                <li>auth_oidc_token updated.</li>
             </ol>
         </td>
     </tr>
@@ -193,7 +196,7 @@ $string['settings_support_user_identifier_change_desc'] = 'If enabled, Moodle wi
             <ol>
                 <li>Rename the Moodle user.</li>
                 <li>local_o365_objects user connection record is updated.</li>
-                <li>auth_oidc_token updated.</li>        
+                <li>auth_oidc_token updated.</li>
             </ol>
         </td>
     </tr>
@@ -205,7 +208,7 @@ $string['settings_support_user_identifier_change_desc'] = 'If enabled, Moodle wi
         <td>
             <ol>
                 <li>Rename the Moodle user.</li>
-                <li>local_o365_objects user connection record is updated.</li>      
+                <li>local_o365_objects user connection record is updated.</li>
             </ol>
         </td>
     </tr>
@@ -1000,8 +1003,11 @@ $string['notification_days_days'] = '{$a} days';
 $string['notification_subject_invalid_secret'] = 'Action required: invalid Azure app secret found';
 $string['notification_content_invalid_secret'] = 'Dear site administrator,
 
-The Azure app secret used in your Moodle and Microsoft 365 integration seems to be invalid. This can either be caused by the secret expired, or it has been deleted.  
+The Azure app secret used in your Moodle and Microsoft 365 integration seems to be invalid. This can either be caused by the secret expired, or it has been deleted.
 Please review the secret to ensure the integration works as expected.';
 
 // Misc.
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

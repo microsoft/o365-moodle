@@ -23,9 +23,16 @@
  * @copyright (C) 2019 Remote Learner.net Inc http://www.remote-learner.net
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_o365;
 
-use \local_o365\privacy\provider;
+use context_system;
+use context_user;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\writer;
+use core_privacy\tests\provider_testcase;
+use local_o365\privacy\provider;
+use stdClass;
 
 /**
  * Privacy test for the local_o365
@@ -35,19 +42,21 @@ use \local_o365\privacy\provider;
  * @group office365
  * @group office365_privacy
  */
-class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase {
+final class privacy_provider_test extends provider_testcase {
     /**
      * Tests set up.
      */
-    protected function setUp() : void {
+    protected function setUp(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
     }
 
     /**
      * Check that a user context is returned if there is any user data for this user.
+     *
+     * @covers \local_o365\privacy\provider::get_contexts_for_userid
      */
-    public function test_get_contexts_for_userid() {
+    public function test_get_contexts_for_userid(): void {
         $user = $this->getDataGenerator()->create_user();
         $this->assertEmpty(provider::get_contexts_for_userid($user->id));
 
@@ -59,14 +68,16 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $this->assertCount(1, $contextlist);
 
         // Check that a context is returned and is the expected context.
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = context_user::instance($user->id);
         $this->assertEquals($usercontext->id, $contextlist->get_contextids()[0]);
     }
 
     /**
      * Test that only users with a user context are fetched.
+     *
+     * @covers \local_o365\privacy\provider::get_users_in_context
      */
-    public function test_get_users_in_context() {
+    public function test_get_users_in_context(): void {
         $this->resetAfterTest();
 
         $component = 'local_o365';
@@ -75,7 +86,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $usercontext = context_user::instance($user->id);
 
         // The list of users should not return anything yet (related data still haven't been created).
-        $userlist = new \core_privacy\local\request\userlist($usercontext, $component);
+        $userlist = new userlist($usercontext, $component);
         provider::get_users_in_context($userlist);
         $this->assertCount(0, $userlist);
 
@@ -90,49 +101,53 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $this->assertEquals($expected, $actual);
 
         // The list of users for system context should not return any users.
-        $userlist = new \core_privacy\local\request\userlist(context_system::instance(), $component);
+        $userlist = new userlist(context_system::instance(), $component);
         provider::get_users_in_context($userlist);
         $this->assertCount(0, $userlist);
     }
 
     /**
      * Test that user data is exported correctly.
+     *
+     * @covers \local_o365\privacy\provider::export_user_data
      */
-    public function test_export_user_data() {
+    public function test_export_user_data(): void {
         // Create a user record.
         $user = $this->getDataGenerator()->create_user();
 
         // Create user records.
         $userrecords = self::create_userdata($user->id);
 
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = context_user::instance($user->id);
 
-        $writer = \core_privacy\local\request\writer::with_context($usercontext);
+        $writer = writer::with_context($usercontext);
         $this->assertFalse($writer->has_any_data());
-        $approvedlist = new core_privacy\local\request\approved_contextlist($user, 'local_o365', [$usercontext->id]);
+        $approvedlist = new approved_contextlist($user, 'local_o365', [$usercontext->id]);
         provider::export_user_data($approvedlist);
 
         foreach ($userrecords as $table => $record) {
             $data = $writer->get_data([
                 get_string('privacy:metadata:local_o365', 'local_o365'),
-                get_string('privacy:metadata:'.$table, 'local_o365')
+                get_string('privacy:metadata:' . $table, 'local_o365'),
             ]);
             foreach ($record as $k => $v) {
-                $this->assertEquals((string)$v, $data->$k);
+                $this->assertEquals((string) $v, $data->$k);
             }
         }
     }
 
     /**
      * Test deleting all user data for a specific context.
+     *
+     * @covers \local_o365\privacy\provider::delete_data_for_all_users_in_context
      */
-    public function test_delete_data_for_all_users_in_context() {
+    public function test_delete_data_for_all_users_in_context(): void {
         global $DB;
 
         // Create user data.
         $user1 = $this->getDataGenerator()->create_user();
         $user1records = self::create_userdata($user1->id);
-        $user1context = \context_user::instance($user1->id);
+        $user1context = context_user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         $user2records = self::create_userdata($user2->id);
@@ -162,14 +177,16 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
 
     /**
      * This should work identical to the above test.
+     *
+     * @covers \local_o365\privacy\provider::delete_data_for_all_users_in_context
      */
-    public function test_delete_data_for_user() {
+    public function test_delete_data_for_user(): void {
         global $DB;
 
         // Create a user record.
         $user1 = $this->getDataGenerator()->create_user();
         $user1records = self::create_userdata($user1->id);
-        $user1context = \context_user::instance($user1->id);
+        $user1context = context_user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         $user2records = self::create_userdata($user2->id);
@@ -180,7 +197,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         }
 
         // Delete everything for the first user.
-        $approvedlist = new \core_privacy\local\request\approved_contextlist($user1, 'local_o365', [$user1context->id]);
+        $approvedlist = new approved_contextlist($user1, 'local_o365', [$user1context->id]);
         provider::delete_data_for_user($approvedlist);
 
         $this->assertCount(0, $DB->get_records('local_o365_calidmap', ['userid' => $user1->id]));
@@ -200,8 +217,10 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
 
     /**
      * Test that data for users in approved userlist is deleted.
+     *
+     * @covers \local_o365\privacy\provider::delete_data_for_users
      */
-    public function test_delete_data_for_users() {
+    public function test_delete_data_for_users(): void {
         $this->resetAfterTest();
 
         $component = 'local_o365';
@@ -216,7 +235,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $usercontext2 = context_user::instance($user2->id);
 
         // The list of users for usercontext1 should return user1.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
+        $userlist1 = new userlist($usercontext1, $component);
         provider::get_users_in_context($userlist1);
         $this->assertCount(1, $userlist1);
         $expected = [$user1->id];
@@ -224,7 +243,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $this->assertEquals($expected, $actual);
 
         // The list of users for usercontext2 should return user2.
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
+        $userlist2 = new userlist($usercontext2, $component);
         provider::get_users_in_context($userlist2);
         $this->assertCount(1, $userlist2);
         $expected = [$user2->id];
@@ -238,11 +257,11 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         provider::delete_data_for_users($approvedlist);
 
         // Re-fetch users in usercontext1 - The user list should now be empty.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
+        $userlist1 = new userlist($usercontext1, $component);
         provider::get_users_in_context($userlist1);
         $this->assertCount(0, $userlist1);
         // Re-fetch users in usercontext2 - The user list should not be empty (user2).
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
+        $userlist2 = new userlist($usercontext2, $component);
         provider::get_users_in_context($userlist2);
         $this->assertCount(1, $userlist2);
 
@@ -253,7 +272,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         // Delete user1 data using delete_data_for_user.
         provider::delete_data_for_users($approvedlist);
         // Re-fetch users in usercontext2 - The user list should not be empty (user2).
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
+        $userlist2 = new userlist($usercontext2, $component);
         provider::get_users_in_context($userlist2);
         $this->assertCount(1, $userlist2);
     }
@@ -275,6 +294,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
             'local_o365_matchqueue' => self::create_matchqueue($userid),
             'local_o365_calsettings' => self::create_calsettings($userid),
         ];
+
         return $records;
     }
 
@@ -292,6 +312,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->origin = 'moodle';
         $record->userid = $userid;
         $record->id = $DB->insert_record('local_o365_calidmap', $record);
+
         return $record;
     }
 
@@ -312,6 +333,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->syncbehav = "out";
         $record->timecreated = 123456;
         $record->id = $DB->insert_record('local_o365_calsub', $record);
+
         return $record;
     }
 
@@ -325,9 +347,10 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         global $DB;
         $record = new stdClass();
         $record->muserid = $userid;
-        $record->entraidupn = "user".$userid."@example.com";
+        $record->entraidupn = "user" . $userid . "@example.com";
         $record->uselogin = 1;
         $record->id = $DB->insert_record('local_o365_connections', $record);
+
         return $record;
     }
 
@@ -347,6 +370,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->expiry = 123456;
         $record->refreshtoken = 'refreshtoken1234567';
         $record->id = $DB->insert_record('local_o365_token', $record);
+
         return $record;
     }
 
@@ -369,6 +393,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->timecreated = 123456;
         $record->timemodified = 123457;
         $record->id = $DB->insert_record('local_o365_objects', $record);
+
         return $record;
     }
 
@@ -386,6 +411,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->photoid = 'photoid123';
         $record->photoupdated = 123457;
         $record->id = $DB->insert_record('local_o365_appassign', $record);
+
         return $record;
     }
 
@@ -405,6 +431,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->completed = 1;
         $record->errormessage = 'some error message';
         $record->id = $DB->insert_record('local_o365_matchqueue', $record);
+
         return $record;
     }
 
@@ -421,6 +448,7 @@ class local_o365_privacy_testcase extends \core_privacy\tests\provider_testcase 
         $record->o365calid = 'calid1234';
         $record->timecreated = 1234567;
         $record->id = $DB->insert_record('local_o365_calsettings', $record);
+
         return $record;
     }
 

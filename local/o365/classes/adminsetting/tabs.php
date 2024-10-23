@@ -30,8 +30,6 @@ use html_writer;
 use moodle_url;
 use tabobject;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * A tab in the plugin configuration page.
  */
@@ -136,7 +134,7 @@ class tabs extends admin_setting {
      * @param moodle_url|null $url An explicit URL to use instead of settings page section.
      * @uses $CFG
      */
-    public function addtab($id, $name, moodle_url $url = null) {
+    public function addtab($id, $name, ?moodle_url $url = null) {
         if (empty($url)) {
             $urlparams = [
                 'section' => $this->section,

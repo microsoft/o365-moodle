@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'Microsoft 365の統合';
 $string['acp_title'] = 'Microsoft 365管理コントロールパネル';
 $string['acp_healthcheck'] = '状態チェック';
@@ -141,3 +144,6 @@ $string['ucp_syncdir_in'] = 'OutlookからMoodleへ';
 $string['ucp_syncdir_both'] = 'OutlookとMoodleを両方更新する';
 $string['ucp_title'] = 'Microsoft 365 / Moodleコントロールパネル';
 $string['ucp_options'] = 'オプション';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

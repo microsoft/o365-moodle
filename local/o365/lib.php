@@ -30,50 +30,76 @@ require_once($CFG->libdir . '/filestorage/zip_archive.php');
 /**
  * TEAMS_MOODLE_APP_EXTERNAL_ID - app ID used to create Teams Moodle app.
  */
+/** @var string default teams Moodle app external ID. */
 const TEAMS_MOODLE_APP_EXTERNAL_ID = '2e43119b-fcfe-44f8-b3e5-996ffcb7fb95';
 
 // Teams/group course reset site settings.
+/** @var int course reset site action Do nothing. */
 const COURSE_SYNC_RESET_SITE_SETTING_DO_NOTHING = '1';
+/** @var int course reset site action allow configuration per course. */
 const COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE = '2';
+/** @var int course reset site action disconnect and create new. */
 const COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW = '3';
+/** @var int course reset site action disconnect only. */
 const COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_ONLY = '4';
 
 // Course reset course settings.
+/** @var int course reset action do nothing. */
 const COURSE_SYNC_RESET_COURSE_SETTING_DO_NOTHING = '1';
+/** @var int course reset course action disconnect and create new. */
 const COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_AND_CREATE_NEW = '2';
+/** @var int course reset course action disconnect only. */
 const COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_ONLY = '3';
 
 // Course sync options.
+/** @var int course sync disabled. */
 const MICROSOFT365_COURSE_SYNC_DISABLED = 0;
+/** @var int course sync enabled. */
 const MICROSOFT365_COURSE_SYNC_ENABLED = 1;
 
 // Configuration tabs.
-const LOCAL_O365_TAB_SETUP = 0; // Setup settings.
-const LOCAL_O365_TAB_SYNC = 1; // Sync settings.
-const LOCAL_O365_TAB_ADVANCED = 2; // Admin tools + advanced settings.
-const LOCAL_O365_TAB_SDS = 3; // School data sync.
-const LOCAL_O365_TAB_TEAMS = 5; // Teams integration settings.
-const LOCAL_O365_TAB_MOODLE_APP = 6; // Teams Moodle app.
+/** @var int configuration tab "Setup settings". */
+const LOCAL_O365_TAB_SETUP = 0;
+/** @var int configuration tab "Sync settings". */
+const LOCAL_O365_TAB_SYNC = 1;
+/** @var int configuration tab "Admin tools + advanced settings.". */
+const LOCAL_O365_TAB_ADVANCED = 2;
+/** @var int configuration tab "School data sync". */
+const LOCAL_O365_TAB_SDS = 3;
+/** @var int configuration tab "Teams integration settings". */
+const LOCAL_O365_TAB_TEAMS = 5;
+/** @var int configuration tab "Teams Moodle app". */
+const LOCAL_O365_TAB_MOODLE_APP = 6;
 
 // Group roles.
+/** @var int group role owner */
 const MICROSOFT365_GROUP_ROLE_OWNER = 'owner';
+/** @var int group role member */
 const MICROSOFT365_GROUP_ROLE_MEMBER = 'member';
 
 // Team lock status.
+/** @var int team locking status unknown */
 const TEAM_LOCKED_STATUS_UNKNOWN = 0;
+/** @var int team locking status locked */
 const TEAM_LOCKED = 1;
+/** @var int team locking status unlocked */
 const TEAM_UNLOCKED = 2;
 
-// Education license.
+/** @var array education license */
 const EDUCATION_LICENSE_IDS = ['c33802dd-1b50-4b9a-8bb9-f13d2cdeadac', '500b6a2a-7a50-4f40-b5f9-160e5b8c2f48'];
 
 // SDS sync school disabled actions.
+/** @var int SDS school disabled action keep connected */
 const SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED = 1;
+/** @var int SDS school disabled action disconnect */
 const SDS_SCHOOL_DISABLED_ACTION_DISCONNECT = 2;
 
 // Course user sync directions.
+/** @var int course user sync direction from Moodle to teams */
 const COURSE_USER_SYNC_DIRECTION_MOODLE_TO_TEAMS = 1;
+/** @var int course user sync direction from teams to Moodle */
 const COURSE_USER_SYNC_DIRECTION_TEAMS_TO_MOODLE = 2;
+/** @var int course user sync direction both */
 const COURSE_USER_SYNC_DIRECTION_BOTH = 3;
 
 /**
@@ -120,7 +146,7 @@ function local_o365_rmdir($path) {
  *
  * @return string[]
  */
-function local_o365_create_manifest_file() : array {
+function local_o365_create_manifest_file(): array {
     global $CFG;
 
     // Task 1: prepare manifest folder.
@@ -283,11 +309,12 @@ function local_o365_set_default_user_sync_suspension_feature_schedule() {
  */
 function local_o365_get_duplicate_emails() {
     global $DB;
-    
+
     $sql = 'SELECT LOWER(email) FROM {user}
         WHERE deleted = 0 and suspended = 0
         GROUP BY LOWER(email) HAVING COUNT(*) > 1';
 
     $records = $DB->get_records_sql($sql);
+
     return array_keys($records);
 }

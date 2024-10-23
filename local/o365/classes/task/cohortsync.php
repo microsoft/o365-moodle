@@ -25,8 +25,6 @@
 
 namespace local_o365\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\scheduled_task;
 use local_o365\feature\cohortsync\main;
 use local_o365\utils;
@@ -40,7 +38,7 @@ class cohortsync extends scheduled_task {
      *
      * @return string
      */
-    public function get_name() : string {
+    public function get_name(): string {
         return get_string('cohortsync_taskname', 'local_o365');
     }
 
@@ -49,7 +47,7 @@ class cohortsync extends scheduled_task {
      *
      * @return bool
      */
-    public function execute() : bool {
+    public function execute(): bool {
         $graphclient = main::get_unified_api(__METHOD__);
         if (empty($graphclient)) {
             utils::mtrace("Failed to get Graph API client. Exiting.", 1);
@@ -69,7 +67,7 @@ class cohortsync extends scheduled_task {
      * @param main $cohortsync
      * @return void
      */
-    private function execute_sync(main $cohortsync) : void {
+    private function execute_sync(main $cohortsync): void {
         if ($cohortsync->update_groups_cache()) {
             utils::clean_up_not_found_groups();
         } else {

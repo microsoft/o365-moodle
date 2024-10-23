@@ -33,8 +33,6 @@ use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Scheduled task to run SDS sync.
  */
@@ -44,7 +42,7 @@ class sync extends scheduled_task {
      *
      * @return string
      */
-    public function get_name() : string {
+    public function get_name(): string {
         return get_string('task_sds_sync', 'local_o365');
     }
 
@@ -54,7 +52,7 @@ class sync extends scheduled_task {
      * @param unified $apiclient The unified API client.
      * @return bool
      */
-    public static function runsync(unified $apiclient) : bool {
+    public static function runsync(unified $apiclient): bool {
         global $DB, $CFG;
 
         require_once($CFG->dirroot . '/user/lib.php');
@@ -438,7 +436,7 @@ class sync extends scheduled_task {
      * @return object The course object.
      */
     public static function get_or_create_class_course(string $classobjectid, string $shortname, string $fullname,
-        int $categoryid = 0) : object {
+        int $categoryid = 0): object {
         global $DB, $CFG;
 
         require_once($CFG->dirroot . '/course/lib.php');
@@ -458,12 +456,12 @@ class sync extends scheduled_task {
         }
 
         // Create new course category and object record.
-        $data = ['category' => $categoryid, 'shortname' => $shortname, 'fullname' => $fullname, 'idnumber' => $classobjectid,];
+        $data = ['category' => $categoryid, 'shortname' => $shortname, 'fullname' => $fullname, 'idnumber' => $classobjectid];
         $course = create_course((object) $data);
 
         $now = time();
         $objectrec = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid, 'moodleid' => $course->id,
-            'o365name' => $shortname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now,];
+            'o365name' => $shortname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now];
         $DB->insert_record('local_o365_objects', $objectrec);
 
         return $course;
@@ -476,7 +474,7 @@ class sync extends scheduled_task {
      * @param string $schoolname The name of the school.
      * @return core_course_category A course category object for the retrieved or created course category.
      */
-    public static function get_or_create_school_coursecategory(string $schoolobjectid, string $schoolname) : core_course_category {
+    public static function get_or_create_school_coursecategory(string $schoolobjectid, string $schoolname): core_course_category {
         global $DB;
 
         // Look for existing category.
@@ -494,7 +492,7 @@ class sync extends scheduled_task {
         }
 
         // Create new course category and object record.
-        $data = ['visible' => 1, 'name' => $schoolname, 'idnumber' => $schoolobjectid,];
+        $data = ['visible' => 1, 'name' => $schoolname, 'idnumber' => $schoolobjectid];
         if (strlen($data['name']) > 255) {
             static::mtrace('School name was over 255 chars when creating course category, truncating to 255.');
             $data['name'] = substr($data['name'], 0, 255);
@@ -504,7 +502,7 @@ class sync extends scheduled_task {
 
         $now = time();
         $objectrec = ['type' => 'sdsschool', 'subtype' => 'coursecat', 'objectid' => $schoolobjectid, 'moodleid' => $coursecat->id,
-            'o365name' => $schoolname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now,];
+            'o365name' => $schoolname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now];
         $DB->insert_record('local_o365_objects', $objectrec);
 
         return $coursecat;
@@ -515,7 +513,7 @@ class sync extends scheduled_task {
      *
      * @return bool
      */
-    public function execute() : bool {
+    public function execute(): bool {
         if (utils::is_connected() !== true) {
             static::mtrace('local_o365 reported unconfigured during SDS sync task, so exiting.');
             return false;
@@ -573,6 +571,7 @@ class sync extends scheduled_task {
                 $sectionsinenabledschools = array_merge($sectionsinenabledschools, $schoolclasses);
             } catch (moodle_exception $e) {
                 // Do nothing.
+                static::mtrace('Error getting school classes. Details: ' . $e->getMessage(), 2);
             }
         }
         foreach ($sectionsinenabledschools as $sectionsinenabledschool) {

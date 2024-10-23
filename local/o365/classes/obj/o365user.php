@@ -25,10 +25,6 @@
 
 namespace local_o365\obj;
 
-use local_o365\utils;
-
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Class representing Microsoft 365 user information.
  */

@@ -73,7 +73,7 @@ class read_teachercourses extends external_api {
         $params = self::validate_parameters(
             self::teachercourses_read_parameters(),
             [
-                'courseids' => $courseids
+                'courseids' => $courseids,
             ]
         );
 
@@ -114,7 +114,7 @@ class read_teachercourses extends external_api {
                 'format' => $course->format,
                 'showgrades' => $course->showgrades,
                 'lang' => $course->lang,
-                'enablecompletion' => $course->enablecompletion
+                'enablecompletion' => $course->enablecompletion,
             ];
         }
 

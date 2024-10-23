@@ -25,8 +25,6 @@
 
 namespace local_o365\webservices\exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Exception thrown when a course section that does not exist is used to update an assignment.
  */

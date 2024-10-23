@@ -25,8 +25,6 @@
 
 namespace local_o365\webservices\exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Exception thrown when a module is called that is not a OneNote assignment.
  */

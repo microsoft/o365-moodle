@@ -52,7 +52,7 @@ class teamstabconfiguration extends moodleform {
         if ($courseoptions) {
             // User can access at least one course, show tab name field and course selector.
             $mform->addElement('text', 'local_o365_teams_tab_name', get_string('tab_name', 'local_o365'),
-                    array('onchange' => 'onTabNameChange()'));
+                ['onchange' => 'onTabNameChange()']);
             $mform->setType('local_o365_teams_tab_name', PARAM_TEXT);
             $tabname = get_config('local_o365', 'teams_moodle_tab_name');
             if (!$tabname) {
@@ -62,7 +62,7 @@ class teamstabconfiguration extends moodleform {
 
             $courseselector = $mform->createElement('select', 'local_o365_teams_course',
                 get_string('course_selector_label', 'local_o365'),
-                $courseoptions, array('onchange' => 'onCourseChange()'));
+                $courseoptions, ['onchange' => 'onCourseChange()']);
             $courseselector->setSize(100);
             $courseselector->setMultiple(true);
 
@@ -84,7 +84,7 @@ class teamstabconfiguration extends moodleform {
     private function get_course_options() {
         global $DB, $USER;
 
-        $courseoptions = array();
+        $courseoptions = [];
 
         if (is_siteadmin($USER->id)) {
             $courses = $DB->get_records('course', ['visible' => 1]);

@@ -25,8 +25,6 @@
 
 namespace local_o365\webservices\exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Exception thrown when a grade could not be saved in local_o365_update_grade.
  */

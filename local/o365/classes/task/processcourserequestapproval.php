@@ -25,8 +25,6 @@
 
 namespace local_o365\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\adhoc_task;
 use local_o365\feature\courserequest\main;
 use local_o365\feature\coursesync\utils;
@@ -40,10 +38,9 @@ class processcourserequestapproval extends adhoc_task {
     /**
      * Execute the task.
      *
-     * @return void
-     * @throws moodle_exception
+     * @return bool
      */
-    public function execute() : bool {
+    public function execute(): bool {
         global $DB;
 
         $coursedata = $this->get_custom_data();

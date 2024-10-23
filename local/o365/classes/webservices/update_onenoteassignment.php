@@ -55,7 +55,7 @@ class update_onenoteassignment extends external_api {
                 'intro' => new external_value(PARAM_TEXT, 'intro', VALUE_DEFAULT, null),
                 'section' => new external_value(PARAM_INT, 'section', VALUE_DEFAULT, null),
                 'visible' => new external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, null),
-            ])
+            ]),
         ]);
     }
 

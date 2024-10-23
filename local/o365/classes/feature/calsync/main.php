@@ -32,8 +32,6 @@ use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Calendar sync feature.
  */
@@ -54,7 +52,7 @@ class main {
      * @param httpclient|null $httpclient
      * @throws moodle_exception
      */
-    public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
+    public function __construct(?clientdata $clientdata = null, ?httpclient $httpclient = null) {
         $this->clientdata = (!empty($clientdata)) ? $clientdata : clientdata::instance_from_oidc();
         $this->httpclient = (!empty($httpclient)) ? $httpclient : new httpclient();
     }
@@ -293,7 +291,7 @@ class main {
                             'emailAddress' => [
                                 'name' => $groupobject->o365name,
                                 'address' => $outlookgroupemail,
-                            ]
+                            ],
                         ],
                         'responseRequested' => false,
                         'isOrganizer' => true,
@@ -313,6 +311,7 @@ class main {
                         }
                     } catch (moodle_exception $e) {
                         // No token found, nothing to do.
+                        debugging('Error creating group event. Details: ' . $e->getMessage());
                     }
                 }
             }
@@ -478,7 +477,7 @@ class main {
                 try {
                     $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
                 } catch (moodle_exception $e) {
-                    // Do nothing.
+                    mtrace('Error updating event: '.$e->getMessage());
                 }
             }
         }
@@ -537,30 +536,6 @@ class main {
         }
 
         return $groupemail;
-    }
-
-    /**
-     * Get group first and last name.
-     * @param string $groupname The o365 group name.
-     * @return array The first index is the first name and the second index is the last name.
-     */
-    protected function group_first_last_name($groupname) {
-        $firstname = '';
-        $lastname = '';
-        if (empty($groupname)) {
-            return array($firstname, $lastname);
-        }
-
-        $pos = strpos($groupname, ': ');
-
-        if (false === $pos) {
-            return array($firstname, $lastname);
-        }
-
-        $firstname = substr($groupname, 0, $pos + 1);
-        $lastname = substr($groupname, $pos + 1);
-        $lastname = trim($lastname);
-        return array($firstname, $lastname);
     }
 
     /**

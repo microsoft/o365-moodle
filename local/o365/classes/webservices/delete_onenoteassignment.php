@@ -50,7 +50,7 @@ class delete_onenoteassignment extends external_api {
             'data' => new external_single_structure([
                 'coursemodule' => new external_value(PARAM_INT, 'course module id'),
                 'course' => new external_value(PARAM_INT, 'course id'),
-            ])
+            ]),
         ]);
     }
 

@@ -54,7 +54,7 @@ class create_onenoteassignment extends external_api {
                 'section' => new external_value(PARAM_INT, 'section', VALUE_DEFAULT, 0),
                 'visible' => new external_value(PARAM_BOOL, 'visible', VALUE_DEFAULT, false),
                 'duedate' => new external_value(PARAM_INT, 'duedate', VALUE_DEFAULT, 0),
-            ])
+            ]),
         ]);
     }
 
@@ -81,7 +81,6 @@ class create_onenoteassignment extends external_api {
             'duedate' => 0,
             'cutoffdate' => 0,
             'allowsubmissionsfromdate' => 0,
-            'grade' => 0,
             'gradingduedate' => 0,
             'completionsubmit' => 0,
             'teamsubmission' => 0,

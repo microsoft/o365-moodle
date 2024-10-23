@@ -27,8 +27,6 @@ namespace local_o365\oauth2;
 
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Represents an oauth2 token.
  */
@@ -207,7 +205,7 @@ class token {
 
         $header = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Content-Length: '.strlen($params)
+            'Content-Length: ' . strlen($params),
         ];
         $httpclient->resetheader();
         $httpclient->setheader($header);
@@ -260,7 +258,7 @@ class token {
 
             $header = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Content-Length: '.strlen($params)
+                'Content-Length: ' . strlen($params),
             ];
             $httpclient->resetheader();
             $httpclient->setheader($header);
@@ -282,7 +280,7 @@ class token {
                 }
                 $debuginfo = [
                     'tokenresult' => $tokenresult,
-                    'resource' => $tokenresource
+                    'resource' => $tokenresource,
                 ];
                 \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
             }
@@ -412,7 +410,7 @@ class token {
 
             $header = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Content-Length: '.strlen($params)
+                'Content-Length: ' . strlen($params),
             ];
             $this->httpclient->resetheader();
             $this->httpclient->setheader($header);
@@ -436,7 +434,7 @@ class token {
                     'token' => $this->token,
                     'expiry' => $this->expiry,
                     'refreshtoken' => $this->refreshtoken,
-                    'tokenresource' => $this->tokenresource
+                    'tokenresource' => $this->tokenresource,
                 ];
                 $this->update_stored_token($existingtoken, $newtoken);
             }

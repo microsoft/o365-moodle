@@ -83,18 +83,18 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
      */
     public function output_html($data, $query = '') {
         global $OUTPUT;
-        if (!$this->load_choices() or empty($this->choices)) {
+        if (!$this->load_choices() || empty($this->choices)) {
             return '';
         }
         $default = $this->get_defaultsetting();
         if (is_null($default)) {
-            $default = array();
+            $default = [];
         }
         if (is_null($data)) {
-            $data = array();
+            $data = [];
         }
-        $options = array();
-        $defaults = array();
+        $options = [];
+        $defaults = [];
         foreach ($this->choices as $key => $description) {
             if (!empty($data[$key])) {
                 $checked = 'checked="checked"';
