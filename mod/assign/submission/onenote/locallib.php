@@ -29,8 +29,6 @@ use assignsubmission_onenote\event\submission_created;
 use assignsubmission_onenote\event\submission_updated;
 use local_onenote\api\base;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Library class for OneNote submission plugin extending submission plugin base class
  *

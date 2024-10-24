@@ -103,5 +103,5 @@ $services = [
         'restrictedusers' => 0,
         'enabled' => 0,
         'shortname' => 'o365_webservices',
-    ]
+    ],
 ];

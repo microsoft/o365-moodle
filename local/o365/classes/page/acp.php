@@ -120,7 +120,7 @@ class acp extends base {
         $auth = new authcode;
         $auth->set_httpclient(new httpclient());
         $stateparams = ['redirect' => '/admin/settings.php?section=local_o365', 'justauth' => true, 'forceflow' => 'authcode',
-            'action' => 'adminconsent',];
+            'action' => 'adminconsent'];
         $idptype = get_config('auth_oidc', 'idptype');
         if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
@@ -135,7 +135,7 @@ class acp extends base {
      *
      * @return bool
      */
-    public function checktenantsetup() : bool {
+    public function checktenantsetup(): bool {
         $config = get_config('local_o365');
         if (empty($config->entratenant)) {
             return false;
@@ -304,7 +304,7 @@ class acp extends base {
         $auth = new authcode;
         $auth->set_httpclient(new httpclient());
         $stateparams = ['redirect' => '/local/o365/acp.php?mode=tenantsadd', 'justauth' => true, 'forceflow' => 'authcode',
-            'action' => 'addtenant', 'ignorerestrictions' => true,];
+            'action' => 'addtenant', 'ignorerestrictions' => true];
         $idptype = get_config('auth_oidc', 'idptype');
         if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
@@ -598,7 +598,7 @@ class acp extends base {
         $search = optional_param('search', '', PARAM_TEXT);
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
 
-        $headers = ['fullname' => get_string('fullnamecourse'), 'shortname' => get_string('shortnamecourse'),];
+        $headers = ['fullname' => get_string('fullnamecourse'), 'shortname' => get_string('shortnamecourse')];
         if (empty($sort) || !isset($headers[$sort])) {
             $sort = 'fullname';
         }
@@ -627,7 +627,7 @@ class acp extends base {
             if ($sortdir == 'desc') {
                 $sortdir = -1;
             }
-            $options = ['recursive' => true, 'sort' => [$sort => $sortdir], 'offset' => $limitfrom, 'limit' => $perpage,];
+            $options = ['recursive' => true, 'sort' => [$sort => $sortdir], 'offset' => $limitfrom, 'limit' => $perpage];
             $topcat = core_course_category::get(0);
             $courses = $topcat->get_courses($options);
             $totalcount = $topcat->get_courses_count($options);
@@ -707,7 +707,7 @@ var local_o365_coursesync_save = function() {
 var local_o365_coursesync_all_set_feature = function(state) {
     if (confirm("' . get_string('acp_coursesynccustom_confirm_all_action', 'local_o365') . '")) {
         var enabled = (state == 1) ? true : false;
-        
+
         // Send data to server
         $.ajax({
             url: \'' . $allchangeendpoint->out(false) . '\',
@@ -879,7 +879,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $search = optional_param('search', '', PARAM_TEXT);
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
 
-        $headers = ['fullname' => get_string('fullnamecourse'), 'shortname' => get_string('shortnamecourse'),];
+        $headers = ['fullname' => get_string('fullnamecourse'), 'shortname' => get_string('shortnamecourse')];
         if (empty($sort) || !isset($headers[$sort])) {
             $sort = 'fullname';
         }
@@ -908,7 +908,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             if ($sortdir == 'desc') {
                 $sortdir = -1;
             }
-            $options = ['recursive' => true, 'sort' => [$sort => $sortdir], 'offset' => $limitfrom, 'limit' => $perpage,];
+            $options = ['recursive' => true, 'sort' => [$sort => $sortdir], 'offset' => $limitfrom, 'limit' => $perpage];
             $topcat = core_course_category::get(0);
             $courses = $topcat->get_courses($options);
             $totalcount = $topcat->get_courses_count($options);
@@ -1013,7 +1013,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
             $courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
 
-            $rowdata = [html_writer::link($courseurl, $course->fullname), $course->shortname, $existingconnection, $actionsfield,];
+            $rowdata = [html_writer::link($courseurl, $course->fullname), $course->shortname, $existingconnection, $actionsfield];
 
             $table->data[] = $rowdata;
         }
@@ -1728,7 +1728,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $searchurl = new moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
         $filterfields = ['o365username' => 0, 'realname' => 0, 'username' => 0, 'idnumber' => 1, 'firstname' => 1, 'lastname' => 1,
-            'email' => 1,];
+            'email' => 1];
         $ufiltering = new filtering($filterfields, $searchurl);
         [$extrasql, $params] = $ufiltering->get_sql_filter();
         [$o365usernamesql, $o365usernameparams] = $ufiltering->get_filter_o365username();
@@ -1751,7 +1751,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * @return bool
      * @throws moodle_exception
      */
-    public function mode_userconnections_resync() : bool {
+    public function mode_userconnections_resync(): bool {
         global $DB;
         $userid = required_param('userid', PARAM_INT);
         confirm_sesskey();
@@ -1829,14 +1829,14 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
 
             // Check if a o365 user object record already exists.
-            $params = ['moodleid' => $userid, 'type' => 'user',];
+            $params = ['moodleid' => $userid, 'type' => 'user'];
             $existingobject = $DB->get_record('local_o365_objects', $params);
             if (!empty($existingobject) && $existingobject->o365name === $o365username) {
                 throw new moodle_exception('acp_userconnections_manualmatch_error_muserconnected2', 'local_o365');
             }
 
             $uselogin = (!empty($fromform->uselogin)) ? 1 : 0;
-            $matchrec = (object) ['muserid' => $userid, 'entraidupn' => $o365username, 'uselogin' => $uselogin,];
+            $matchrec = (object) ['muserid' => $userid, 'entraidupn' => $o365username, 'uselogin' => $uselogin];
             $DB->insert_record('local_o365_connections', $matchrec);
             redirect(new moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']));
             die();
@@ -1871,7 +1871,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $this->standard_header();
             $message = get_string('acp_userconnections_table_unmatch_confirmmsg', 'local_o365', $user->username);
             $message .= '<br /><br />';
-            $urlparams = ['mode' => 'userconnections_unmatch', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey(),];
+            $urlparams = ['mode' => 'userconnections_unmatch', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey()];
             $url = new moodle_url('/local/o365/acp.php', $urlparams);
             $label = get_string('acp_userconnections_table_unmatch', 'local_o365');
             $message .= html_writer::link($url, $label);
@@ -1907,7 +1907,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $this->standard_header();
             $message = get_string('acp_userconnections_table_disconnect_confirmmsg', 'local_o365', $user->username);
             $message .= '<br /><br />';
-            $urlparams = ['mode' => 'userconnections_disconnect', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey(),];
+            $urlparams = ['mode' => 'userconnections_disconnect', 'userid' => $userid, 'confirmed' => 1, 'sesskey' => sesskey()];
             $url = new moodle_url('/local/o365/acp.php', $urlparams);
             $label = get_string('acp_userconnections_table_disconnect', 'local_o365');
             $message .= html_writer::link($url, $label);

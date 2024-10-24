@@ -31,8 +31,6 @@ use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * General purpose utility class.
  */

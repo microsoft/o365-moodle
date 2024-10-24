@@ -51,7 +51,7 @@ class repository_office365 extends repository {
      * @param array $options repository options
      * @param int $readonly indicate this repo is readonly or not
      */
-    public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array(), $readonly = 0) {
+    public function __construct($repositoryid, $context = SYSCONTEXTID, $options = [], $readonly = 0) {
         parent::__construct($repositoryid, $context, $options, $readonly);
         $this->httpclient = new httpclient();
         if (utils::is_connected()) {
@@ -1025,7 +1025,7 @@ class repository_office365 extends repository {
      * @param bool $forcedownload If true (default false), forces download of file rather than view in browser/plugin
      * @param array|null $options additional options affecting the file serving
      */
-    public function send_file($storedfile, $lifetime = null , $filter = 0, $forcedownload = false, array $options = null) {
+    public function send_file($storedfile, $lifetime = null , $filter = 0, $forcedownload = false, ?array $options = null) {
         global $USER;
 
         $reference = $this->unpack_reference($storedfile->get_reference());

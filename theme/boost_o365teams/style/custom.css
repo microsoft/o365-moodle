@@ -32,15 +32,19 @@
     font-weight: 600;
     font-style: normal;
 }
+
 body {
-    font-family: "Segoe UI","Helvetica Neue","Apple Color Emoji","Segoe UI Emoji",Helvetica,Arial,sans-serif;
+    font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif;
 }
+
 div.felement select option {
-    font-family: "Segoe UI","Helvetica Neue","Apple Color Emoji","Segoe UI Emoji",Helvetica,Arial,sans-serif;
+    font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif;
 }
+
 form .felement input {
-    font-family: "Segoe UI","Helvetica Neue","Apple Color Emoji","Segoe UI Emoji",Helvetica,Arial,sans-serif;
+    font-family: "Segoe UI", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji", Helvetica, Arial, sans-serif;
 }
+
 /* topics format START */
 .format-topics.path-course-view .completionprogress {
     float: left;
@@ -69,7 +73,8 @@ form .felement input {
 .format-topics .availabilityinfo.ishidden {
     display: none;
 }
-/*topics format END */
+/* topics format END */
+
 /* weeks format START */
 .format-weeks.path-course-view .completionprogress {
     float: left;
@@ -90,7 +95,7 @@ form .felement input {
     font-size: 1em;
 }
 .format-weeks .course-content .current::before {
-    border: 0px;
+    border: 0;
 }
 .format-weeks .section_availability .ishidden {
     padding-left: 32px;
@@ -99,12 +104,13 @@ form .felement input {
     display: none;
 }
 /* weeks format END */
+
 /* collapsable topics format START */
 .format-collapsibletopics.path-course-view .completionprogress {
     float: left;
 }
 .course-content ul.collapsibletopics li.section ul.section {
-    padding-left: 0px;
+    padding-left: 0;
 }
 .format-collapsibletopics .section .activity {
     background-color: #fff;
@@ -140,26 +146,17 @@ form .felement input {
 .format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle.collapsed ~ .section-summary-activities {
     padding-left: 20px;
 }
-/*.format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle ~ .section-summary-activities,*/
-/*.format-collapsibletopics .course-content ul.collapsibletopics .sectiontoggle.collapsed ~ .section-summary-activities{*/
-    /*display: none;*/
-/*}*/
 .format-collapsibletopics .availabilityinfo.ishidden {
     display: none;
 }
-/*.format-collapsibletopics .expandall {*/
-    /*display: none;*/
-/*}*/
-/*.format-collapsibletopics #completionprogressid {*/
-    /*display: none;*/
-/*}*/
 /* collapsable topics format END */
+
 /* collapsable weeks format START */
 .format-collapsibleweeks.path-course-view .completionprogress {
     float: left;
 }
 .course-content ul.collapsibleweeks li.section ul.section {
-    padding-left: 0px;
+    padding-left: 0;
 }
 .format-collapsibleweeks .section .activity {
     background-color: #fff;
@@ -199,20 +196,11 @@ form .felement input {
 .format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle.collapsed ~ .section-summary-activities {
     padding-left: 20px;
 }
-/*.format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle ~ .section-summary-activities,*/
-/*.format-collapsibleweeks .course-content ul.collapsibleweeks .sectiontoggle.collapsed ~ .section-summary-activities{*/
-/*display: none;*/
-/*}*/
-/*.format-collapsibleweeks .expandall {*/
-/*display: none;*/
-/*}*/
-/*.format-collapsibleweeks #completionprogressid {*/
-/*display: none;*/
-/*}*/
 .format-collapsibleweeks .availabilityinfo.ishidden {
     display: none;
 }
 /* collapsable weeks format END */
+
 /* multi-page topics format START */
 /* main page */
 .format-topics .course-content .section-summary {
@@ -221,9 +209,6 @@ form .felement input {
 .format-topics .course-content .topics .section-summary .section-title {
     margin: 0;
 }
-/*.format-topics .course-content ul.topics .section-summary-activities {*/
-    /*display: none;*/
-/*}*/
 /* section page */
 .format-topics .single-section h3.sectionname {
     text-align: unset;
@@ -244,10 +229,6 @@ form .felement input {
 .format-weeks .course-content .weeks .section-summary .section-title {
     margin: 0;
 }
-/*.format-weeks .course-content ul.weeks .section-summary-activities {*/
-/*display: none;*/
-/*}*/
-/* section page */
 .format-weeks .single-section h3.sectionname {
     text-align: unset;
     font-size: 1em;
@@ -262,13 +243,6 @@ form .felement input {
 #page-course-view-weeks .navigationtitle .mdl-right {
     display: none;
 }
-/*.format-weeks .course-content .single-section .section-navigation .mdl-right,*/
-/*.format-weeks .course-content .single-section .section-navigation .mdl-left {*/
-/*display:none;*/
-/*}*/
-/*.format-weeks #sectionmenu {*/
-/*display: none;*/
-/*}*/
 .format-weeks .availabilityinfo.ishidden {
     display: none;
 }
@@ -310,25 +284,24 @@ body .back_course_main {
     text-decoration: none;
 }
 
-@media (max-width:800px) {
+@media (max-width: 800px) {
     body #course_page_title {
         font-size: 21px;
     }
 }
 
-@media (max-width:640px) {
+@media (max-width: 640px) {
     body #course_page_title {
         font-size: 17px;
     }
 }
 
-@media (max-width:550px) {
+@media (max-width: 550px) {
     body #course_page_title {
         font-size: 16px;
     }
 }
 /* header END */
-
 
 /* Section page START */
 .section-summary-activities {
@@ -336,7 +309,6 @@ body .back_course_main {
     padding-left: 10px;
 }
 /* Section page END */
-
 
 /*!* all course formats START *!*/
 .card-body {
@@ -400,7 +372,7 @@ body.theme_contrast {
     padding-right: 15px;
 }
 .form-group div[data-fieldtype="filemanager"] {
-    padding-right: 0px;
+    padding-right: 0;
 }
 
 .course-content ul li.section.main {
@@ -411,8 +383,8 @@ body.theme_contrast {
 }
 
 .row {
-    margin-right: 0px;
-    margin-left: 0px;
+    margin-right: 0;
+    margin-left: 0;
 }
 
 a,
@@ -423,7 +395,7 @@ a,
     color: #6264a7;
 }
 .theme_contrast a {
-    color: #ffff00;
+    color: #ff0;
 }
 /* course body END */
 
@@ -471,7 +443,7 @@ a,
     color: gold;
     height: 60px;
     position: fixed;
-    bottom: 0px;
+    bottom: 0;
     background-color: #f3f2f1;
     padding-top: 10px;
     padding-bottom: 10px;
@@ -510,19 +482,19 @@ a.feedbacklink {
     color: #c8c6c4;
 }
 .theme_contrast a.feedbacklink {
-    color: #ffff00;
+    color: #ff0;
 }
 .fa-lightbulb-o {
-    font-family: "FontAwesome" !important;
-    font-size: 15px !important;
-    border-radius: 5px !important;
+    font-family: "FontAwesome";
+    font-size: 15px;
+    border-radius: 5px;
 }
 .fa-lightbulb-o:before {
     padding: 5px;
 }
 /* footer END */
-/* popup icon START */
 
+/* popup icon START */
 .modtype_assign .popupicon,
 .modtype_quiz .popupicon {
     display: none;
@@ -540,11 +512,11 @@ button {
     letter-spacing: normal;
     word-spacing: normal;
     text-transform: none;
-    text-indent: 0px;
+    text-indent: 0;
     text-shadow: none;
     display: inline-block;
     text-align: start;
-    margin: 0em;
+    margin: 0;
     font: 400 13.3333px Arial;
 }
 
@@ -563,8 +535,8 @@ button {
     min-width: 6rem;
     padding: 0.25rem;
     white-space: nowrap;
-    -webkit-box-shadow: unset !important;
-    box-shadow: unset !important;
+    -webkit-box-shadow: unset;
+    box-shadow: unset;
 }
 /* secondary button :active*/
 .btn-secondary:not(:disabled):not(.disabled):active {
@@ -575,7 +547,7 @@ button {
 /* secondary button :hover*/
 .btn-secondary:hover,
 .btn-secondary:focus:enabled {
-    background: rgb(200,200,200);
+    background: rgb(200, 200, 200);
     border-color: transparent;
     color: #000;
 }
@@ -619,8 +591,8 @@ div.disabled .btn-secondary {
     min-width: 6rem;
     padding: 0.25rem;
     white-space: nowrap;
-    -webkit-box-shadow: unset !important;
-    box-shadow: unset !important;
+    -webkit-box-shadow: unset;
+    box-shadow: unset;
     color: #fff;
 }
 /* primary button :active*/
@@ -631,17 +603,15 @@ div.disabled .btn-secondary {
     color: #201f1f;
 }
 /* primary button :hover*/
-.btn-primary:hover, .btn-primary:focus:enabled,
-.btn-default:hover, .btn-default:focus:enabled {
+.btn-primary:hover,
+.btn-primary:focus:enabled,
+.btn-default:hover,
+.btn-default:focus:enabled {
     background: #464775;
     border-color: transparent;
     color: #fff;
 }
 /* primary button :focus*/
-.btn-primary:focus, .btn-primary:focus:enabled,
-.btn-default:focus, .btn-default:focus:enabled {
-}
-
 body {
     display: none;
 }
@@ -689,7 +659,7 @@ ul {
     content: none;
 }
 #page-wrapper {
-    margin-bottom: 50px !important;
+    margin-bottom: 50px;
 }
 
 /*!* modules START *!*/
@@ -701,9 +671,6 @@ ul {
 #prev-activity-link {
     margin-left: 33px;
 }
-/*.editsubmissionform .col-md-3 {*/
-/*display: none;*/
-/*}*/
 .editsubmissionform .form-group {
     margin-left: -15px;
 }
@@ -752,7 +719,6 @@ table#permissions tbody tr:hover {
 }
 /* Assignment Module END */
 
-
 /* Quiz Module START */
 #page-mod-quiz-attempt .card div[role="main"],
 #page-mod-quiz-view .card div[role="main"] {
@@ -762,20 +728,9 @@ table#permissions tbody tr:hover {
     display: inline-block;
     margin-left: 3px;
 }
-/* Quiz Module END */
-/*!* modules END *!*/
-
-
-.m-t-2, .m-b-1 {
-    padding-top: 25px;
-}
-
-.section .activity .availabilityinfo, .section .activity .contentafterlink {
-    padding-right: 30px;
-}
 
 .submitbtns_with_return {
-    text-align: center !important;
+    text-align: center;
 }
 
 .mod_quiz-prev-nav {
@@ -784,4 +739,16 @@ table#permissions tbody tr:hover {
 
 .mod_quiz-return-nav {
     margin: 0 auto;
+}
+/* Quiz Module END */
+/*!* modules END *!*/
+
+.m-t-2,
+.m-b-1 {
+    padding-top: 25px;
+}
+
+.section .activity .availabilityinfo,
+.section .activity .contentafterlink {
+    padding-right: 30px;
 }

@@ -23,6 +23,7 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:ignore moodle.Files.RequireLogin.Missing
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
 
