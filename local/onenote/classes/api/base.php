@@ -39,8 +39,6 @@ use moodle_exception;
 use moodle_url;
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * A helper class to access Microsoft OneNote using the REST api.
  */
@@ -352,7 +350,7 @@ abstract class base {
      * @param string $path The path containing notebook id / section id / page id.
      * @return array Array of items formatted for fileapi.
      */
-    public function get_items_list($path = '') : array {
+    public function get_items_list($path = ''): array {
         global $OUTPUT;
 
         if (empty($path)) {
@@ -398,11 +396,17 @@ abstract class base {
                         $itemlastmodified = $item['lastModifiedDateTime'];
                     }
 
-                    $items[] = ['title' => $itemname, 'path' => $path . '/' . urlencode($item['id']),
-                        'date' => strtotime($itemlastmodified),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false), 'source' => $item['id'],
-                        'url' => $item['links']['oneNoteWebUrl']['href'], 'author' => $item['createdBy'], 'id' => $item['id'],
-                        'children' => [],];
+                    $items[] = [
+                            'title' => $itemname,
+                            'path' => $path . '/' . urlencode($item['id']),
+                            'date' => strtotime($itemlastmodified),
+                            'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false),
+                            'source' => $item['id'],
+                            'url' => $item['links']['oneNoteWebUrl']['href'],
+                            'author' => $item['createdBy'],
+                            'id' => $item['id'],
+                            'children' => [],
+                    ];
                     break;
 
                 case 'section':
@@ -415,10 +419,17 @@ abstract class base {
                         $itemlastmodified = $item['lastModifiedDateTime'];
                     }
 
-                    $items[] = ['title' => $itemname, 'path' => $path . '/' . urlencode($item['id']),
-                        'date' => strtotime($itemlastmodified),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false), 'source' => $item['id'],
-                        'url' => $item['self'], 'author' => $item['createdBy'], 'id' => $item['id'], 'children' => [],];
+                    $items[] = [
+                            'title' => $itemname,
+                            'path' => $path . '/' . urlencode($item['id']),
+                            'date' => strtotime($itemlastmodified),
+                            'thumbnail' => $OUTPUT->image_url(file_extension_icon($itemname))->out(false),
+                            'source' => $item['id'],
+                            'url' => $item['self'],
+                            'author' => $item['createdBy'],
+                            'id' => $item['id'],
+                            'children' => [],
+                    ];
                     break;
 
                 case 'page':
@@ -427,11 +438,16 @@ abstract class base {
                         $itemcreatedtime = $item['createdDateTime'];
                     }
 
-                    $items[] = ['title' => $item['title'] . ".zip", 'path' => $path . '/' . urlencode($item['id']),
-                        'date' => strtotime($itemcreatedtime),
-                        'thumbnail' => $OUTPUT->image_url(file_extension_icon($item['title']))->out(false),
-                        'source' => $item['id'], 'url' => $item['links']['oneNoteWebUrl']['href'],
-                        'author' => $item['createdByAppId'], 'id' => $item['id'],];
+                    $items[] = [
+                            'title' => $item['title'] . ".zip",
+                            'path' => $path . '/' . urlencode($item['id']),
+                            'date' => strtotime($itemcreatedtime),
+                            'thumbnail' => $OUTPUT->image_url(file_extension_icon($item['title']))->out(false),
+                            'source' => $item['id'],
+                            'url' => $item['links']['oneNoteWebUrl']['href'],
+                            'author' => $item['createdByAppId'],
+                            'id' => $item['id'],
+                    ];
                     break;
             }
         }
@@ -563,7 +579,7 @@ abstract class base {
 
         $url = new moodle_url('/local/onenote/onenote_actions.php', $actionparams);
 
-        $attrs = ['onclick' => 'window.open(this.href,\'_blank\'); return false;', 'class' => 'local_onenote_linkbutton',];
+        $attrs = ['onclick' => 'window.open(this.href,\'_blank\'); return false;', 'class' => 'local_onenote_linkbutton'];
         return html_writer::link($url->out(false), $buttontext, $attrs);
     }
 
