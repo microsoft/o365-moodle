@@ -28,10 +28,8 @@ namespace local_o365\webservices;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
-use \local_o365\webservices\exception as exception;
+use local_o365\webservices\exception as exception;
 use moodle_exception;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Webservices utilities.
@@ -88,6 +86,7 @@ class utils {
                 ])
             ),
         ];
+
         return new external_single_structure($params);
     }
 
@@ -112,6 +111,7 @@ class utils {
         if (empty($assign)) {
             throw new exception\assignnotfound();
         }
+
         return [$course, $module, $assign];
     }
 
@@ -124,6 +124,7 @@ class utils {
      */
     public static function get_assignment_return_info($coursemoduleid, $courseid) {
         [$course, $module, $assign] = static::get_assignment_info($coursemoduleid, $courseid);
+
         return [
             'course' => $course->id,
             'coursemodule' => $module->id,

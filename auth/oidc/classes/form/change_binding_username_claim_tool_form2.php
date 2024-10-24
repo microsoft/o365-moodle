@@ -27,8 +27,6 @@ namespace auth_oidc\form;
 
 use moodleform;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Class change_binding_username_claim_tool_form2 represents the form on the change binding username claim tool page.
  */
@@ -38,7 +36,7 @@ class change_binding_username_claim_tool_form2 extends moodleform {
      *
      * @return void
      */
-    function definition() {
+    public function definition() {
         $mform =& $this->_form;
         $data = $this->_customdata['data'];
 

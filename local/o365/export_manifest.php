@@ -27,6 +27,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
+require_admin();
+
 // Mark manifest file as downloaded.
 $existingmanifestdownloadedsetting = get_config('local_o365', 'manifest_downloaded');
 if (!$existingmanifestdownloadedsetting) {

@@ -52,7 +52,7 @@ class base {
      */
     public function __construct() {
         $default = [
-            'opname' => get_string('pluginname', 'auth_oidc')
+                'opname' => get_string('pluginname', 'auth_oidc'),
         ];
         $storedconfig = (array)get_config('auth_oidc');
 
@@ -89,9 +89,9 @@ class base {
     /**
      * Provides a hook into the login page.
      *
-     * @param object &$frm Form object.
-     * @param object &$user User object.
-     * @return bool
+     * @param object $frm The form object containing login page data.
+     * @param object $user The user object related to the login attempt.
+     * @return bool True if the hook was processed successfully.
      */
     public function loginpage_hook(&$frm, &$user) {
         return true;
@@ -350,15 +350,15 @@ class base {
     /**
      * Handle OIDC disconnection from Moodle account.
      *
-     * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user, otherwise revert login methods.
-     * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account to a
-     *                                "linked" account.
-     * @param \moodle_url|null $redirect Where to redirect if successful.
-     * @param \moodle_url|null $selfurl The page this is accessed from. Used for some redirects.
-     * @param  $userid
+     * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user; otherwise, revert login methods.
+     * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account
+     *                                to a "linked" account.
+     * @param \moodle_url|null $redirect URL to redirect to if successful.
+     * @param \moodle_url|null $selfurl The page this is accessed from, used for some redirects.
+     * @param int|null $userid ID of the user to disconnect; uses the current user if not provided.
      */
-    public function disconnect($justremovetokens = false, $donotremovetokens = false, \moodle_url $redirect = null,
-                               \moodle_url $selfurl = null, $userid = null) {
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\moodle_url $redirect = null,
+            ?\moodle_url $selfurl = null, $userid = null) {
         global $USER, $DB, $CFG;
         if ($redirect === null) {
             $redirect = new \moodle_url('/auth/oidc/ucp.php');
@@ -724,7 +724,7 @@ class base {
      * @param string $bindingusernameclaim The configured binding username claim.
      * @return string|null The OIDC username if found, null otherwise.
      */
-    protected function  get_oidc_username_from_token_claim(jwt $idtoken, string $bindingusernameclaim = '') : ?string {
+    protected function get_oidc_username_from_token_claim(jwt $idtoken, string $bindingusernameclaim = ''): ?string {
         if (empty($idtoken)) {
             return '';
         }

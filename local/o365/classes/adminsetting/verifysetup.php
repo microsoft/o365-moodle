@@ -87,14 +87,10 @@ class verifysetup extends \admin_setting {
         if (\local_o365\adminsetting\detectoidc::setup_step_complete() === true) {
             $existingsetting = $this->config_read($this->name);
             if (!empty($existingsetting)) {
-                $messageattrs = [
-                    'class' => 'permmessage'
-                ];
+                $messageattrs = ['class' => 'permmessage'];
                 $message = \html_writer::tag('span', get_string('settings_detectperms_valid', 'local_o365'), $messageattrs);
             } else {
-                $messageattrs = [
-                    'class' => 'permmessage'
-                ];
+                $messageattrs = ['class' => 'permmessage'];
                 $message = \html_writer::tag('span', get_string('settings_detectperms_invalid', 'local_o365'), $messageattrs);
             }
         } else {

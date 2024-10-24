@@ -79,14 +79,14 @@ class preview extends html_table {
      *
      * @return array
      */
-    protected function read_data() : array {
+    protected function read_data(): array {
         global $DB;
 
         $data = [];
         $this->cir->init();
         $linenum = 1;
 
-        while ($linenum <= $this->previewrows and $fields = $this->cir->next()) {
+        while ($linenum <= $this->previewrows && $fields = $this->cir->next()) {
             $hasfatalerror = false;
             $linenum++;
             $rowcols = [];
@@ -137,7 +137,7 @@ class preview extends html_table {
      *
      * @return bool
      */
-    public function get_no_error() : bool {
+    public function get_no_error(): bool {
         return $this->noerror;
     }
 }

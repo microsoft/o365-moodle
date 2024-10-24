@@ -25,8 +25,6 @@
 
 namespace local_o365\feature\courserequest;
 
-defined('MOODLE_INTERNAL') || die();
-
 use context_course;
 use core_user;
 use course_request;
@@ -36,9 +34,22 @@ use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
 use stdClass;
+
+/**
+ * Main class for the course request from Microsoft Teams feature.
+ */
 class main {
+    /**
+     * @var int The course request status: pending.
+     */
     const COURSE_REQUEST_STATUS_PENDING = 0;
+    /**
+     * @var int The course request status: approved.
+     */
     const COURSE_REQUEST_STATUS_APPROVED = 1;
+    /**
+     * @var int The course request status: rejected.
+     */
     const COURSE_REQUEST_STATUS_REJECTED = 2;
 
     /**
@@ -70,7 +81,7 @@ class main {
      * @param string $eol
      * @return void
      */
-    protected function mtrace(string $msg, int $level = 0, string $eol = "\n") : void {
+    protected function mtrace(string $msg, int $level = 0, string $eol = "\n"): void {
         if ($this->debug === true) {
             if ($level) {
                 $msg = str_repeat('...', $level) . ' ' . $msg;
@@ -86,7 +97,7 @@ class main {
      * @param array $teamdata
      * @return bool
      */
-    public function save_custom_course_request_data(course_request $request, array $teamdata) : bool {
+    public function save_custom_course_request_data(course_request $request, array $teamdata): bool {
         global $DB;
 
         if (empty($request) || empty($teamdata)) {
@@ -197,7 +208,7 @@ class main {
      * @param int $courseid
      * @return bool
      */
-    public function enrol_team_owners_and_members_in_course_by_team_oid_and_course_id(string $teamoid, int $courseid) : bool {
+    public function enrol_team_owners_and_members_in_course_by_team_oid_and_course_id(string $teamoid, int $courseid): bool {
         global $DB;
 
         if (empty($teamoid) || empty($courseid)) {
@@ -246,7 +257,7 @@ class main {
                 }
                 if ($moodleuser->suspended || $moodleuser->deleted) {
                     mtrace('......... Moodle user matching Microsoft account ' . $teamowner['id'] . ' is suspended or deleted.');
-                    contrinue;
+                    continue;
                 }
                 if (user_has_role_assignment($userconnectionrecord->moodleid, $ownerroleid, $context->id) &&
                     in_array($userconnectionrecord->moodleid, $enrolleduserids)) {
@@ -276,7 +287,7 @@ class main {
                 }
                 if ($moodleuser->suspended || $moodleuser->deleted) {
                     mtrace('......... Moodle user matching Microsoft account ' . $teammember['id'] . ' is suspended or deleted.');
-                    contrinue;
+                    continue;
                 }
                 if (user_has_role_assignment($userconnectionrecord->moodleid, $memberroleid, $context->id) &&
                     in_array($userconnectionrecord->moodleid, $enrolleduserids)) {
@@ -300,7 +311,7 @@ class main {
      *
      * @return array
      */
-    private function get_team_owners_and_members_by_team_oid(string $teamoid) : array {
+    private function get_team_owners_and_members_by_team_oid(string $teamoid): array {
         $teamowners = [];
         $teammembers = [];
 

@@ -68,7 +68,7 @@ class main {
      *
      * @throws moodle_exception
      */
-    public function __construct(clientdata $clientdata = null, httpclient $httpclient = null) {
+    public function __construct(?clientdata $clientdata = null, ?httpclient $httpclient = null) {
         if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
             $this->clientdata = (!empty($clientdata))
                 ? $clientdata
@@ -190,7 +190,7 @@ class main {
                     // User has no photo. Deleting previous profile photo.
                     $fs = \get_file_storage();
                     $fs->delete_area_files($context->id, 'user', 'icon');
-                    $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
+                    $DB->set_field('user', 'picture', 0, ['id' => $muser->id]);
                 }
                 $result = false;
             } else {
@@ -234,7 +234,7 @@ class main {
                     // User has no photo. Deleting previous profile photo.
                     $fs = \get_file_storage();
                     $fs->delete_area_files($context->id, 'user', 'icon');
-                    $DB->set_field('user', 'picture', 0, array('id' => $muser->id));
+                    $DB->set_field('user', 'picture', 0, ['id' => $muser->id]);
                 }
             }
         }
@@ -563,7 +563,8 @@ class main {
                         if (isset($countrymap[$incoming])) {
                             $countrycode = $incoming;
                         } else {
-                            $countrycode = array_search($entraiduserdata[$remotefield], get_string_manager()->get_list_of_countries());
+                            $countrycode = array_search($entraiduserdata[$remotefield],
+                                get_string_manager()->get_list_of_countries());
                         }
                         $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
                         break;
@@ -803,7 +804,7 @@ class main {
 
                 return false;
             } else {
-                utils:debug('Invalid extension attribute ID', __METHOD__);
+                utils::debug('Invalid extension attribute ID', __METHOD__);
                 return false;
             }
         } else {
@@ -1012,7 +1013,7 @@ class main {
      * @param string $bindingusernameclaim
      * @return bool Success/Failure
      */
-    public function sync_users(array $entraidusers = array(), string $bindingusernameclaim = 'userPrincipalName') {
+    public function sync_users(array $entraidusers = [], string $bindingusernameclaim = 'userPrincipalName') {
         global $DB, $CFG;
 
         $usersyncsettings = $this->get_sync_options();
@@ -1158,7 +1159,8 @@ class main {
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
              LEFT JOIN {local_o365_appassign} assign ON assign.muserid = u.id
              LEFT JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                 WHERE tok.oidcusername '.$useridentifiersql.' AND u.username '.$usernamesql.' AND u.mnethostid = ? AND u.deleted = ? ';
+                 WHERE tok.oidcusername ' . $useridentifiersql . ' AND u.username ' . $usernamesql . ' AND u.mnethostid = ?
+                    AND u.deleted = ? ';
             $params = array_merge(['user'], $useridentifierparams, $usernameparams, [$CFG->mnet_localhost_id, '0']);
             $linkedexistingusers = $DB->get_records_sql($sql, $params);
 
@@ -1258,7 +1260,8 @@ class main {
                                 $existinguserrecord->suspended = $renamedmoodleuser->suspended;
                                 $existinguserrecord->auth = $renamedmoodleuser->auth;
 
-                                $connected = $this->sync_existing_user($usersyncsettings, $entraiduser, $existinguserrecord, $exactmatch);
+                                $connected = $this->sync_existing_user($usersyncsettings, $entraiduser, $existinguserrecord,
+                                    $exactmatch);
                                 $existinguser = $renamedmoodleuser;
                             }
                         } else {
@@ -1281,7 +1284,8 @@ class main {
                 if (isset($entraiduser['id']) && $entraiduser['id'] &&
                     $existingusermatching = $DB->get_record('local_o365_objects',
                         ['type' => 'user', 'objectid' => $entraiduser['id']])) {
-                    $possibleo365names = [$entraiduser['useridentifierlower'], $entraiduser['convertedidentifier'], $entraiduser['useridentifier']];
+                    $possibleo365names = [$entraiduser['useridentifierlower'], $entraiduser['convertedidentifier'],
+                        $entraiduser['useridentifier']];
                     if (isset($entraiduser['upnsplit0'])) {
                         $possibleo365names[] = $entraiduser['upnsplit0'];
                     }
@@ -1321,7 +1325,8 @@ class main {
                                         $DB->update_record('local_o365_objects', $existingusermatching);
 
                                         // Update token record.
-                                        if ($existingtoken = $DB->get_record('auth_oidc_token', ['userid' => $renamedmoodleuser->id])) {
+                                        if ($existingtoken = $DB->get_record('auth_oidc_token',
+                                            ['userid' => $renamedmoodleuser->id])) {
                                             $existingtoken->useridentifier = $entraiduser['useridentifier'];
                                             $existingtoken->username = $username;
                                             $DB->update_record('auth_oidc_token', $existingtoken);
@@ -1607,7 +1612,8 @@ class main {
         // Match user if needed.
         if ($existinguser->auth !== 'oidc') {
             $this->mtrace('Found a user in Microsoft Entra ID that seems to match a user in Moodle');
-            $this->mtrace(sprintf('moodle username: %s, Entra ID user identifier: %s', $existinguser->username, $entraiduserdata['useridentifierlower']));
+            $this->mtrace(sprintf('moodle username: %s, Entra ID user identifier: %s', $existinguser->username,
+                $entraiduserdata['useridentifierlower']));
             return $this->sync_users_matchuser($syncoptions, $entraiduserdata, $existinguser, $exactmatch);
         } else {
             $this->mtrace('The user is already using OIDC for authentication.');

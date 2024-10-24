@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder -- The strings are organised by features.
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment -- The strings are organised by features.
+
 $string['pluginname'] = 'Microsoft block';
 $string['contactadmin'] = 'Contact administrator for more information.';
 $string['error_nomoodlenotebook'] = 'Could not find your Moodle notebook.';
@@ -140,7 +143,10 @@ $string['error_reset_setting_not_managed_per_course'] = 'Reset action configurat
 $string['error_connected_team_missing'] = 'The course is configured to be synced, but the Team cannot be found.';
 $string['error_course_sync_disabled'] = 'The course is not configured to be synced.';
 
-// Course request
+// Course request.
 $string['linkcourserequest'] = 'Request course from Teams';
 $string['settings_courserequest'] = 'Request course from Teams';
 $string['settings_courserequest_desc'] = 'Request a new course from Microsoft Teams. After approval, the course will be created and connected to a Team. Microsoft Team members will be enrolled in the course.';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

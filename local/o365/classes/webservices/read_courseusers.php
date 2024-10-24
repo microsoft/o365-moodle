@@ -25,6 +25,8 @@
 
 namespace local_o365\webservices;
 
+use context_course;
+use context_helper;
 use moodle_exception;
 use stdClass;
 
@@ -38,7 +40,7 @@ use core_external\external_value;
 
 global $CFG;
 
-require_once($CFG->dirroot.'/course/modlib.php');
+require_once($CFG->dirroot . '/course/modlib.php');
 
 /**
  * Get a list of students in a course by course id.
@@ -77,7 +79,7 @@ class read_courseusers extends external_api {
      */
     public static function courseusers_read($courseid, $limitfrom = 0, $limitnumber = 0, $userids = []) {
         global $CFG, $DB;
-        require_once($CFG->dirroot.'/user/lib.php');
+        require_once($CFG->dirroot . '/user/lib.php');
 
         $params = self::validate_parameters(
             self::courseusers_read_parameters(),
@@ -109,10 +111,10 @@ class read_courseusers extends external_api {
         $limitnumber = clean_param($limitnumber, PARAM_INT);
 
         if ($courseid == SITEID) {
-            // TODO exception.
+            return [];
         }
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-        $context = \context_course::instance($courseid);
+        $context = context_course::instance($courseid);
         self::validate_context($context);
 
         try {
@@ -121,7 +123,7 @@ class read_courseusers extends external_api {
             $exceptionparam = new stdClass();
             $exceptionparam->message = $e->getMessage();
             $exceptionparam->courseid = $params['courseid'];
-            throw new moodle_exception('errorcoursecontextnotvalid' , 'webservice', '', $exceptionparam);
+            throw new moodle_exception('errorcoursecontextnotvalid', 'webservice', '', $exceptionparam);
         }
 
         require_capability('moodle/course:viewparticipants', $context);
@@ -129,7 +131,7 @@ class read_courseusers extends external_api {
         [$enrolledsql, $enrolledparams] = get_enrolled_sql($context, $withcapability);
 
         // For user context preloading.
-        $ctxselect = ', ' . \context_helper::get_preload_record_columns_sql('ctx');
+        $ctxselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
         $ctxjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = u.id AND ctx.contextlevel = :contextlevel)";
         $enrolledparams['contextlevel'] = CONTEXT_USER;
 
@@ -166,7 +168,7 @@ class read_courseusers extends external_api {
             }
 
             // Get user info.
-            \context_helper::preload_from_record($user);
+            context_helper::preload_from_record($user);
             if ($userdetails = user_get_user_details($user, $course, $userfields)) {
                 $users[] = $userdetails;
             }
@@ -179,7 +181,7 @@ class read_courseusers extends external_api {
     /**
      * Returns description of method result value
      *
-     * @return external_description
+     * @return external_multiple_structure
      */
     public static function courseusers_read_returns() {
         return new external_multiple_structure(

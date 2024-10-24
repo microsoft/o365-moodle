@@ -50,7 +50,7 @@
         "hasregionmainsettingsmenu": false
     }
 }}
-{{> theme_boost/head }}
+{{> theme_boost_o365teams/head }}
 
 <body {{{ bodyattributes }}}>
 
@@ -65,9 +65,9 @@
         <div id="page-content" class="row">
             <div id="region-main-box" class="col-12">
                 {{#hasregionmainsettingsmenu}}
-                <div id="region-main-settings-menu" class="d-print-none {{#hasblocks}}has-blocks{{/hasblocks}}">
-                    <div> {{{ output.region_main_settings_menu }}} </div>
-                </div>
+                    <div id="region-main-settings-menu" class="d-print-none {{#hasblocks}}has-blocks{{/hasblocks}}">
+                        <div> {{{ output.region_main_settings_menu }}} </div>
+                    </div>
                 {{/hasregionmainsettingsmenu}}
                 <section id="region-main" {{#hasblocks}}class="has-blocks mb-3"{{/hasblocks}}>
                     <div class="card">
@@ -76,21 +76,21 @@
                                 <div class="region_main_settings_menu_proxy"></div>
                             {{/hasregionmainsettingsmenu}}
                             {{#is_course_overview}}
-                               {{{ output.course_content_header }}}
-                               <span class="back">
-                               <div id="course_page_title">
-                                  <div class="back_course_main"><a href="{{{course_page}}}">< Course Overview</a></div>
-                                  <div class="page_title"><a href="{{{ course_page }}}">{{{ output.page_title }}}</a></div>
-                               </div>
-                               </span>
+                                {{{ output.course_content_header }}}
+                                <div class="back">
+                                    <div id="course_page_title">
+                                        <div class="back_course_main"><a href="{{{course_page}}}">< Course Overview</a></div>
+                                        <div class="page_title"><a href="{{{ course_page }}}">{{{ output.page_title }}}</a></div>
+                                    </div>
+                                </div>
                             {{/is_course_overview}}
                             {{^is_course_overview}}
-                               {{{ output.course_content_header }}}
-                               <span class="no_back">
-                               <div id="course_page_title">
-                                  <div class="page_title"><a href="{{{ course_page }}}">{{{ output.page_title }}}</a></div>
-                               </div>
-                               </span>
+                                {{{ output.course_content_header }}}
+                                <div class="no_back">
+                                    <div id="course_page_title">
+                                        <div class="page_title"><a href="{{{ course_page }}}">{{{ output.page_title }}}</a></div>
+                                    </div>
+                                </div>
                             {{/is_course_overview}}
                             {{{ output.main_content }}}
                             {{{ output.activity_navigation }}}
@@ -99,9 +99,9 @@
                     </div>
                 </section>
                 {{#hasblocks}}
-                <section data-region="blocks-column" class="d-print-none">
-                    {{{ sidepreblocks }}}
-                </section>
+                    <section data-region="blocks-column" class="d-print-none">
+                        {{{ sidepreblocks }}}
+                    </section>
                 {{/hasblocks}}
             </div>
         </div>
@@ -124,14 +124,14 @@
 </body>
 </html>
 {{#js}}
-require(['theme_boost/loader']);
-require(['theme_boost/drawer'], function(mod) {
+    require(['theme_boost/loader']);
+    require(['theme_boost/drawer'], function(mod) {
     mod.init();
-});
-require(['theme_boost_o365teams/iframeChecker'], function(iframeChecker) {
+    });
+    require(['theme_boost_o365teams/iframeChecker'], function(iframeChecker) {
     iframeChecker.init();
-});
-require(['theme_boost_o365teams/teamsThemeChecker'], function(teamsThemeChecker) {
+    });
+    require(['theme_boost_o365teams/teamsThemeChecker'], function(teamsThemeChecker) {
     teamsThemeChecker.init();
-});
+    });
 {{/js}}

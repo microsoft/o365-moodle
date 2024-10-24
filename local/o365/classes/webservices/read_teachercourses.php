@@ -25,6 +25,7 @@
 
 namespace local_o365\webservices;
 
+use context_course;
 use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
@@ -37,7 +38,7 @@ use core_external\external_value;
 
 global $CFG;
 
-require_once($CFG->dirroot.'/course/modlib.php');
+require_once($CFG->dirroot . '/course/modlib.php');
 
 /**
  * Get a list of courses where the current user is a teacher.
@@ -73,7 +74,7 @@ class read_teachercourses extends external_api {
         $params = self::validate_parameters(
             self::teachercourses_read_parameters(),
             [
-                'courseids' => $courseids
+                'courseids' => $courseids,
             ]
         );
 
@@ -86,12 +87,11 @@ class read_teachercourses extends external_api {
         $result = [];
 
         foreach ($courses as $course) {
-
             if (!empty($courseids) && !isset($courseids[$course->id])) {
                 continue;
             }
 
-            $context = \context_course::instance($course->id, IGNORE_MISSING);
+            $context = context_course::instance($course->id, IGNORE_MISSING);
 
             // Validate the user can execute functions in this course.
             try {
@@ -114,7 +114,7 @@ class read_teachercourses extends external_api {
                 'format' => $course->format,
                 'showgrades' => $course->showgrades,
                 'lang' => $course->lang,
-                'enablecompletion' => $course->enablecompletion
+                'enablecompletion' => $course->enablecompletion,
             ];
         }
 
@@ -124,7 +124,7 @@ class read_teachercourses extends external_api {
     /**
      * Returns description of method result value
      *
-     * @return external_description
+     * @return external_multiple_structure
      */
     public static function teachercourses_read_returns() {
         return new external_multiple_structure(

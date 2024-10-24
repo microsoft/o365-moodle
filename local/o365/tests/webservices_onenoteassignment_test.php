@@ -23,10 +23,16 @@
  * @copyright (C) 2014 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+namespace local_o365;
+
+use advanced_testcase;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
-
-defined('MOODLE_INTERNAL') || die();
+use lang_string;
+use local_o365\webservices\create_onenoteassignment;
+use local_o365\webservices\delete_onenoteassignment;
+use local_o365\webservices\read_onenoteassignment;
+use local_o365\webservices\update_onenoteassignment;
 
 /**
  * Tests \local_o365\webservices\utils
@@ -34,27 +40,33 @@ defined('MOODLE_INTERNAL') || die();
  * @group local_o365
  * @group office365
  */
-class local_o365_webservices_onenoteassignment_testcase extends \advanced_testcase {
+final class webservices_onenoteassignment_test extends advanced_testcase {
 
     // Data structure elements of the array based on old Data Provider.
+    /** @var int */
     const DBSTATE = 0;
+    /** @var int */
     const PARAMS = 1;
+    /** @var int  */
     const EXPECTEDRETURN = 2;
+    /** @var int */
     const EXPECTEDEXCEPTION = 3;
 
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
-    protected function setUp() : void {
+    protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
     }
 
     /**
      * Test assignment_create_parameters method.
+     *
+     * @covers \local_o365\webservices\create_onenoteassignment::assignment_create_parameters
      */
-    public function test_assignment_create_parameters() {
-        $schema = \local_o365\webservices\create_onenoteassignment::assignment_create_parameters();
+    public function test_assignment_create_parameters(): void {
+        $schema = create_onenoteassignment::assignment_create_parameters();
         $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
@@ -64,7 +76,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      *
      * @return array Array of test parameters.
      */
-    public function dataprovider_create_assignment() {
+    public static function dataprovider_create_assignment(): array {
         return [
             [
                 [
@@ -94,18 +106,19 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      * @dataProvider dataprovider_create_assignment
      * @param array $params Webservice parameters.
      * @param array $expectedreturn Expected return.
+     * @covers \local_o365\webservices\create_onenoteassignment::assignment_create
      */
-    public function test_assignment_create($params, $expectedreturn) {
+    public function test_assignment_create($params, $expectedreturn): void {
         global $DB;
         $course = $this->getDataGenerator()->create_course();
 
         if ($params['course'] === '[[courseid]]') {
-            $params['course'] = (int)$course->id;
+            $params['course'] = (int) $course->id;
         }
 
         $this->setAdminUser();
 
-        $actualreturn = \local_o365\webservices\create_onenoteassignment::assignment_create($params);
+        $actualreturn = create_onenoteassignment::assignment_create($params);
         $this->assertNotEmpty($actualreturn);
         $this->assertArrayHasKey('data', $actualreturn);
 
@@ -129,18 +142,22 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test assignment_create_returns method.
+     *
+     * @covers \local_o365\webservices\create_onenoteassignment::assignment_create_returns
      */
-    public function test_assignment_create_returns() {
-        $schema = \local_o365\webservices\create_onenoteassignment::assignment_create_returns();
+    public function test_assignment_create_returns(): void {
+        $schema = create_onenoteassignment::assignment_create_returns();
         $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
     /**
      * Test assignment_read_parameters method.
+     *
+     * @covers \local_o365\webservices\read_onenoteassignment::assignment_read_parameters
      */
-    public function test_assignment_read_parameters() {
-        $schema = \local_o365\webservices\read_onenoteassignment::assignment_read_parameters();
+    public function test_assignment_read_parameters(): void {
+        $schema = read_onenoteassignment::assignment_read_parameters();
         $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
@@ -148,16 +165,16 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
     /**
      * Returns a list of general data existence tests to run against any function that looks up assignment data.
      *
-     * @return [type] [description]
+     * @return array[] [type] [description]
      */
-    public function get_general_assignment_data_tests() {
+    public static function get_general_assignment_data_tests() {
         global $DB;
 
-        $course = $this->getDataGenerator()->create_course();
-        $assign = $this->getDataGenerator()->create_module('assign', array('course' => $course->id,
-                                                           'section' => 1,
-                                                           'name' => 'OneNote Assignment',
-                                                           'intro' => 'This is a test assignment'));
+        $course = static::getDataGenerator()->create_course();
+        $assign = static::getDataGenerator()->create_module('assign', ['course' => $course->id,
+            'section' => 1,
+            'name' => 'OneNote Assignment',
+            'intro' => 'This is a test assignment']);
 
         // Enable OneNote submission for this assignment.
         $pluginconfigparams = [
@@ -254,10 +271,10 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      *
      * @return array Array of test parameters.
      */
-    public function dataprovider_assignment_read() {
+    public static function dataprovider_assignment_read(): array {
         global $DB;
 
-        $generaltests = $this->get_general_assignment_data_tests();
+        $generaltests = static::get_general_assignment_data_tests();
         $return = [];
 
         foreach ($generaltests as $testkey => $parameters) {
@@ -269,12 +286,12 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                         'data' => [
                             [
                                 'course' => $parameters['params']['course'],
-                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => 'OneNote Assignment',
                                 'intro' => 'This is a test assignment',
                                 'section' => $DB->get_field('course_sections', 'id',
-                                                        array('course' => $parameters['params']['course'],
-                                                              'section' => 1)),
+                                    ['course' => $parameters['params']['course'],
+                                        'section' => 1]),
                                 'visible' => '1',
                             ],
                         ],
@@ -296,10 +313,11 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test \local_o365\webservices\read_onenoteassignment::assignment_read().
+     *
+     * @dataProvider dataprovider_assignment_read
+     * @covers \local_o365\webservices\read_onenoteassignment::assignment_read
      */
-    public function test_assignment_read() {
-        global $DB;
-
+    public function test_assignment_read(): void {
         $dataarr = $this->dataprovider_assignment_read();
         foreach ($dataarr as $data) {
             if (!empty($data[self::DBSTATE])) {
@@ -318,7 +336,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
             $this->setAdminUser();
 
-            $actualreturn = \local_o365\webservices\read_onenoteassignment::assignment_read($data[self::PARAMS]);
+            $actualreturn = read_onenoteassignment::assignment_read($data[self::PARAMS]);
 
             $this->assertEquals($data[self::EXPECTEDRETURN], $actualreturn);
         }
@@ -326,18 +344,22 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test assignment_read_returns method.
+     *
+     * @covers \local_o365\webservices\read_onenoteassignment::assignment_read_returns
      */
-    public function test_assignment_read_returns() {
-        $schema = \local_o365\webservices\read_onenoteassignment::assignment_read_returns();
+    public function test_assignment_read_returns(): void {
+        $schema = read_onenoteassignment::assignment_read_returns();
         $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
     /**
      * Test assignment_update_parameters method.
+     *
+     * @covers \local_o365\webservices\update_onenoteassignment::assignment_update_parameters
      */
-    public function test_assignment_update_parameters() {
-        $schema = \local_o365\webservices\update_onenoteassignment::assignment_update_parameters();
+    public function test_assignment_update_parameters(): void {
+        $schema = update_onenoteassignment::assignment_update_parameters();
         $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
@@ -347,26 +369,24 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      *
      * @return array Array of test parameters.
      */
-    public function dataprovider_assignment_update() {
+    public static function dataprovider_assignment_update(): array {
         global $DB;
-        $generaltests = $this->get_general_assignment_data_tests();
+        $generaltests = static::get_general_assignment_data_tests();
         $return = [];
 
         foreach ($generaltests as $testkey => $parameters) {
             if ($testkey === 'All data correct, assignment is a OneNote assignment') {
-                $data = array(
-                            'name' => 'New OneNote Assignment',
-                            'intro' => 'This is a test assignment',
-                            'newintro' => 'This is a new test assignment',
-                            'section' => $DB->get_field('course_sections', 'id',
-                                                        array('course' => $parameters['params']['course'],
-                                                              'section' => 1)),
-                            'newsection' => $DB->get_field('course_sections', 'id',
-                                                        array('course' => $parameters['params']['course'],
-                                                              'section' => 0)),
-                            'visible' => 1,
-                            'newvisible' => 0,
-                            );
+                $data = [
+                    'name' => 'New OneNote Assignment',
+                    'intro' => 'This is a test assignment',
+                    'newintro' => 'This is a new test assignment',
+                    'section' => $DB->get_field('course_sections', 'id',
+                        ['course' => $parameters['params']['course'], 'section' => 1]),
+                    'newsection' => $DB->get_field('course_sections', 'id',
+                        ['course' => $parameters['params']['course'], 'section' => 0]),
+                    'visible' => 1,
+                    'newvisible' => 0,
+                ];
 
                 $return['Update name'] = [
                     $parameters['dbstate'],
@@ -375,7 +395,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                         'data' => [
                             [
                                 'course' => $parameters['params']['course'],
-                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => $data['name'],
                                 'intro' => $data['intro'],
                                 'section' => $data['section'],
@@ -393,7 +413,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                         'data' => [
                             [
                                 'course' => $parameters['params']['course'],
-                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => $data['name'],
                                 'intro' => $data['newintro'],
                                 'section' => $data['section'],
@@ -411,7 +431,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                         'data' => [
                             [
                                 'course' => $parameters['params']['course'],
-                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => $data['name'],
                                 'intro' => $data['newintro'],
                                 'section' => $data['section'],
@@ -429,7 +449,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                         'data' => [
                             [
                                 'course' => $parameters['params']['course'],
-                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => $data['name'],
                                 'intro' => $data['newintro'],
                                 'section' => $data['newsection'],
@@ -447,7 +467,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
                         'data' => [
                             [
                                 'course' => $parameters['params']['course'],
-                                'coursemodule' => (string)$parameters['params']['coursemodule'],
+                                'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => $data['name'],
                                 'intro' => $data['newintro'],
                                 'section' => $data['newsection'],
@@ -465,8 +485,11 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test \local_o365\webservices\update_onenoteassignment::assignment_update().
+     *
+     * @dataProvider dataprovider_assignment_update
+     * @covers \local_o365\webservices\update_onenoteassignment::assignment_update
      */
-    public function test_assignment_update() {
+    public function test_assignment_update(): void {
         $dataarr = $this->dataprovider_assignment_update();
         foreach ($dataarr as $data) {
             if (!empty($data[self::DBSTATE])) {
@@ -485,7 +508,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
             $this->setAdminUser();
 
-            $actualreturn = \local_o365\webservices\update_onenoteassignment::assignment_update($data[self::PARAMS]);
+            $actualreturn = update_onenoteassignment::assignment_update($data[self::PARAMS]);
 
             $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['name'], $actualreturn['data'][0]['name']);
             $this->assertEquals($data[self::EXPECTEDRETURN]['data'][0]['intro'], $actualreturn['data'][0]['intro']);
@@ -496,18 +519,22 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test assignment_update_returns method.
+     *
+     * @covers \local_o365\webservices\update_onenoteassignment::assignment_update_returns
      */
-    public function test_assignment_update_returns() {
-        $schema = \local_o365\webservices\update_onenoteassignment::assignment_update_returns();
+    public function test_assignment_update_returns(): void {
+        $schema = update_onenoteassignment::assignment_update_returns();
         $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('data', $schema->keys);
     }
 
     /**
      * Test assignment_delete_parameters method.
+     *
+     * @covers \local_o365\webservices\delete_onenoteassignment::assignment_delete_parameters
      */
-    public function test_assignment_delete_parameters() {
-        $schema = \local_o365\webservices\delete_onenoteassignment::assignment_delete_parameters();
+    public function test_assignment_delete_parameters(): void {
+        $schema = delete_onenoteassignment::assignment_delete_parameters();
         $this->assertTrue($schema instanceof external_function_parameters);
         $this->assertArrayHasKey('data', $schema->keys);
     }
@@ -517,8 +544,8 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
      *
      * @return array Array of test parameters.
      */
-    public function dataprovider_assignment_delete() {
-        $generaltests = $this->get_general_assignment_data_tests();
+    public static function dataprovider_assignment_delete(): array {
+        $generaltests = static::get_general_assignment_data_tests();
         $return = [];
 
         foreach ($generaltests as $testkey => $parameters) {
@@ -538,8 +565,10 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test \local_o365\webservices\delete_onenoteassignment::assignment_delete().
+     *
+     * @covers \local_o365\webservices\delete_onenoteassignment::assignment_delete
      */
-    public function test_assignment_delete() {
+    public function test_assignment_delete(): void {
         $dataarr = $this->dataprovider_assignment_delete();
         foreach ($dataarr as $data) {
             if (!empty($data[self::DBSTATE])) {
@@ -558,7 +587,7 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
             $this->setAdminUser();
 
-            $actualreturn = \local_o365\webservices\delete_onenoteassignment::assignment_delete($data[self::PARAMS]);
+            $actualreturn = delete_onenoteassignment::assignment_delete($data[self::PARAMS]);
 
             $this->assertEquals($data[self::EXPECTEDRETURN], $actualreturn);
         }
@@ -566,9 +595,11 @@ class local_o365_webservices_onenoteassignment_testcase extends \advanced_testca
 
     /**
      * Test assignment_delete_returns method.
+     *
+     * @covers \local_o365\webservices\delete_onenoteassignment::assignment_delete_returns
      */
-    public function test_assignment_delete_returns() {
-        $schema = \local_o365\webservices\delete_onenoteassignment::assignment_delete_returns();
+    public function test_assignment_delete_returns(): void {
+        $schema = delete_onenoteassignment::assignment_delete_returns();
         $this->assertTrue($schema instanceof external_single_structure);
         $this->assertArrayHasKey('result', $schema->keys);
     }
