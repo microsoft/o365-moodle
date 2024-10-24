@@ -25,8 +25,6 @@
 
 namespace local_office365\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy subsystem implementation of local_office365.
  */
