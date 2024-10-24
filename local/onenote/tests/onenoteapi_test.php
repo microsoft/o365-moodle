@@ -51,7 +51,7 @@ require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
  * @group local_onenote
  * @group office365
  */
-final class onenoteapi_test extends advanced_testcase {
+final class onenoteapi_test extends \advanced_testcase {
     /** @var \onenoteapi */
     private $onenoteapi;
     /** @var \user */
