@@ -31,8 +31,6 @@ use html_writer;
 use moodle_url;
 use moodleform;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Class change_binding_username_claim_tool_form1 represents the form on the change binding username claim tool page.
  */

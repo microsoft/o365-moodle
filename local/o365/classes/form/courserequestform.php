@@ -44,7 +44,7 @@ class courserequestform extends course_request_form {
      *
      * @return void
      */
-    function definition() {
+    public function definition() {
         global $CFG, $DB, $USER;
 
         $mform =& $this->_form;
@@ -108,7 +108,7 @@ class courserequestform extends course_request_form {
                     $select = $mform->addElement('select', 'team', get_string('courserequest_teams', 'local_o365'), []);
                     $mform->addHelpButton('team', 'courserequest_teams', 'local_o365');
 
-                    // Populate the select element based on the availability of unmatched teams
+                    // Populate the select element based on the availability of unmatched teams.
                     if (!empty($unmatchedteams)) {
                         foreach ($unmatchedteams as $unmatchedteam) {
                             $select->addOption($unmatchedteam['displayName'], $unmatchedteam['id']);
@@ -118,7 +118,7 @@ class courserequestform extends course_request_form {
                         $mform->disabledIf('team', '', 'eq', '');
                     }
 
-                    // Add client-side validation
+                    // Add client-side validation.
                     $mform->addRule('team', get_string('courserequest_emptyteams', 'local_o365'), 'required', null, 'client');
                 }
             }
@@ -144,11 +144,11 @@ class courserequestform extends course_request_form {
     /**
      * Custom validation function.
      *
-     * @param $data
-     * @param $files
+     * @param array $data
+     * @param array $files
      * @return array
      */
-    public function validation($data, $files) : array {
+    public function validation($data, $files): array {
         global $DB;
 
         $errors = parent::validation($data, $files);

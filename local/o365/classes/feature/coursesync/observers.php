@@ -46,7 +46,7 @@ class observers {
      * @param course_reset_started $event
      * @return bool
      */
-    public static function handle_course_reset_started(course_reset_started $event) : bool {
+    public static function handle_course_reset_started(course_reset_started $event): bool {
         global $CFG, $DB;
 
         if (!\local_o365\utils::is_connected()) {
@@ -88,6 +88,7 @@ class observers {
                     }
                 } catch (moodle_exception $e) {
                     // Do nothing.
+                    $connectedtoteam = false;
                 }
             }
         } else {
