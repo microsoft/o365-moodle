@@ -16,6 +16,7 @@
 
 /**
  * Block Microsoft block
+ *
  * @package block_microsoft
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -24,12 +25,13 @@
  */
 
 use local_o365\feature\coursesync\utils;
+use local_onenote\api\base;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/blocks/microsoft/lib.php');
-require_once($CFG->dirroot.'/auth/oidc/lib.php');
-require_once($CFG->dirroot.'/local/o365/lib.php');
+require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
+require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Microsoft Block.
@@ -55,7 +57,7 @@ class block_microsoft extends block_base {
     /**
      * Get the content of the block.
      *
-     * @return stdClass|stdObject|null
+     * @return stdClass|null
      */
     public function get_content() {
         global $USER, $DB;
@@ -157,8 +159,7 @@ class block_microsoft extends block_base {
 
         if ($iscoursecontext && $coursesyncenabled && $iscoursesyncenabled) {
             $canmanage = (has_capability('local/o365:managegroups', $this->page->context) === true) ? true : false;
-            $canview = (is_enrolled($this->page->context) && has_capability('local/o365:viewgroups', $this->page->context)) ?
-                true : false;
+            $canview = is_enrolled($this->page->context) && has_capability('local/o365:viewgroups', $this->page->context);
 
             if ($canmanage === true || $canview === true) {
                 [$courseheader, $o365record] = $this->get_course_header_and_o365object($courseid);
@@ -266,9 +267,9 @@ class block_microsoft extends block_base {
         $o365config = get_config('local_o365');
         $html = '';
 
-        $user = $DB->get_record('user', array('id' => $USER->id));
+        $user = $DB->get_record('user', ['id' => $USER->id]);
         $langconnected = get_string('o365connected', 'block_microsoft', $user);
-        $html .= '<h5>'.$langconnected.'</h5>';
+        $html .= '<h5>' . $langconnected . '</h5>';
 
         $odburl = get_config('local_o365', 'odburl');
         $o365object = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $USER->id]);
@@ -281,13 +282,13 @@ class block_microsoft extends block_base {
 
         if (!empty($odburl) && !empty($this->globalconfig->settings_showmydelve)) {
             if (!empty($o365object)) {
-                $delveurl = 'https://'.$odburl.'/_layouts/15/me.aspx?u='.$o365object->objectid.'&v=work';
+                $delveurl = 'https://' . $odburl . '/_layouts/15/me.aspx?u=' . $o365object->objectid . '&v=work';
             }
         }
 
         if (!empty($user->picture)) {
             $html .= '<div class="profilepicture">';
-            $picturehtml = $OUTPUT->user_picture($user, array('size' => 100, 'class' => 'block_microsoft_profile'));
+            $picturehtml = $OUTPUT->user_picture($user, ['size' => 100, 'class' => 'block_microsoft_profile']);
             $profileurl = new moodle_url('/user/profile.php', ['id' => $USER->id]);
             if (!empty($delveurl)) {
                 // If "My Delve" is enabled, clicking the user picture should take you to their Delve page.
@@ -310,7 +311,7 @@ class block_microsoft extends block_base {
                 if (!empty($coursespsite)) {
                     $spsite = \local_o365\rest\sharepoint::get_tokenresource();
                     if (!empty($spsite)) {
-                        $spurl = $spsite.'/'.$coursespsite->siteurl;
+                        $spurl = $spsite . '/' . $coursespsite->siteurl;
                         $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];
                         $items[] = html_writer::link($spurl, $sharepointstr, $spattrs);
                         $items[] = '<hr/>';
@@ -355,7 +356,7 @@ class block_microsoft extends block_base {
             ];
             $stronedrive = get_string('linkonedrive', 'block_microsoft');
             if (!empty($odburl)) {
-                $items[] = html_writer::link('https://'.$odburl, $stronedrive, $odbattrs);
+                $items[] = html_writer::link('https://' . $odburl, $stronedrive, $odbattrs);
             }
         }
 
@@ -383,7 +384,7 @@ class block_microsoft extends block_base {
 
         // My Sways.
         if (!empty($this->globalconfig->settings_showsways) && !empty($userupn)) {
-            $swayurl = 'https://www.sway.com/my?auth_pvr=OrgId&auth_upn='.$userupn;
+            $swayurl = 'https://www.sway.com/my?auth_pvr=OrgId&auth_upn=' . $userupn;
             $swayattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_sway'];
             $items[] = html_writer::link($swayurl, get_string('linksways', 'block_microsoft'), $swayattrs);
         }
@@ -403,9 +404,9 @@ class block_microsoft extends block_base {
         }
 
         if (auth_oidc_connectioncapability($USER->id, 'connect') === true
-          || auth_oidc_connectioncapability($USER->id, 'disconnect') === true
-          || local_o365_connectioncapability($USER->id, 'link')
-          || local_o365_connectioncapability($USER->id, 'unlink')) {
+            || auth_oidc_connectioncapability($USER->id, 'disconnect') === true
+            || local_o365_connectioncapability($USER->id, 'link')
+            || local_o365_connectioncapability($USER->id, 'unlink')) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
                 $connectstr = get_string('linkconnection', 'block_microsoft');
@@ -462,6 +463,7 @@ class block_microsoft extends block_base {
         }
 
         $html .= html_writer::alist($items);
+
         return $html;
     }
 
@@ -477,18 +479,20 @@ class block_microsoft extends block_base {
 
         $url = get_config('block_microsoft', 'settings_geto365link');
         $str = get_string('install_office', 'block_microsoft');
+
         return [
-            html_writer::link($url, $str, ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']),
+            html_writer::link($url, $str,
+                ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']),
         ];
     }
 
     /**
      * Get the user's Moodle OneNote Notebook.
      *
-     * @param \local_onenote\api\base $onenoteapi A constructed OneNote API to use.
+     * @param base $onenoteapi A constructed OneNote API to use.
      * @return array Array of information about the user's OneNote notebook used for Moodle.
      */
-    protected function get_onenote_notebook(\local_onenote\api\base $onenoteapi) {
+    protected function get_onenote_notebook(base $onenoteapi) {
         $moodlenotebook = null;
         for ($i = 0; $i < 2; $i++) {
             $notebooks = $onenoteapi->get_items_list('');
@@ -507,6 +511,7 @@ class block_microsoft extends block_base {
                 break;
             }
         }
+
         return $moodlenotebook;
     }
 
@@ -529,21 +534,20 @@ class block_microsoft extends block_base {
                 'onclick' => 'window.open(this.href,\'_blank\'); return false;',
                 'class' => 'servicelink block_microsoft_onenote',
             ];
+
             return html_writer::link($url->out(false), $stropennotebook, $linkattrs);
         }
 
         $action = optional_param('action', '', PARAM_TEXT);
         try {
-            $onenoteapi = \local_onenote\api\base::getinstance();
+            $onenoteapi = base::getinstance();
             $output = '';
             if ($onenoteapi->is_logged_in()) {
                 // Add the "save to onenote" button if we are on an assignment page.
-                $onassignpage = ($this->page->cm
-                  && $this->page->cm->modname == 'assign'
-                  && $action == 'editsubmission') ? true : false;
+                $onassignpage = $this->page->cm && $this->page->cm->modname == 'assign' && $action == 'editsubmission';
                 if ($onassignpage === true && $onenoteapi->is_student($this->page->cm->id, $USER->id)) {
                     $workstr = get_string('workonthis', 'block_microsoft');
-                    $output .= $onenoteapi->render_action_button($workstr, $this->page->cm->id).'<br /><br />';
+                    $output .= $onenoteapi->render_action_button($workstr, $this->page->cm->id) . '<br /><br />';
                 }
                 // Find moodle notebook, create if not found.
                 $moodlenotebook = null;
@@ -567,13 +571,16 @@ class block_microsoft extends block_base {
                     $output .= get_string('error_nomoodlenotebook', 'block_microsoft');
                 }
             }
+
             return $output;
         } catch (moodle_exception $e) {
             if (class_exists('\local_o365\utils')) {
                 \local_o365\utils::debug($e->getMessage(), __METHOD__, $e);
             }
-            return '<span class="block_microsoft_onenote servicelink">'.get_string('linkonenote_unavailable', 'block_microsoft')
-                    .'<br /><small>'.get_string('contactadmin', 'block_microsoft').'</small></span>';
+
+            return '<span class="block_microsoft_onenote servicelink">' .
+                get_string('linkonenote_unavailable', 'block_microsoft') . '<br /><small>' .
+                get_string('contactadmin', 'block_microsoft') . '</small></span>';
         }
     }
 }

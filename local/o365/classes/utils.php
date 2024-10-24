@@ -45,6 +45,9 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * General purpose utility class.
  */
 class utils {
+    /**
+     * @var string RESOURCE_NOT_EXIST_ERROR
+     */
     const RESOURCE_NOT_EXIST_ERROR = 'does not exist or one of its queried reference-property objects are not present';
 
     /**
@@ -76,7 +79,7 @@ class utils {
             $clientdata = clientdata::instance_from_oidc();
             $graphresource = unified::get_tokenresource();
             try {
-                $token = utils::get_application_token($graphresource, $clientdata, $httpclient);
+                $token = static::get_application_token($graphresource, $clientdata, $httpclient);
                 if ($token) {
                     return true;
                 }
@@ -158,7 +161,7 @@ class utils {
      *
      * @return bool Whether app-only access is active.
      */
-    public static function is_active_apponlyaccess() : bool {
+    public static function is_active_apponlyaccess(): bool {
         return static::is_configured_apponlyaccess() === true && unified::is_configured() === true;
     }
 
@@ -250,9 +253,9 @@ class utils {
                 $valinfo['errorcode'] = $val->errorcode;
                 $valinfo['module'] = $val->module;
             }
-            return print_r($valinfo, true);
+            return json_encode($valinfo, JSON_PRETTY_PRINT);
         } else {
-            return print_r($val, true);
+            return json_encode($val, JSON_PRETTY_PRINT);
         }
     }
 
@@ -287,7 +290,7 @@ class utils {
      * @return unified A constructed unified API client, or throw an error.
      * @throws moodle_exception
      */
-    public static function get_api(int $userid = null) {
+    public static function get_api(?int $userid = null) {
         $tokenresource = unified::get_tokenresource();
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
@@ -466,10 +469,10 @@ class utils {
     /**
      * Delete an additional tenant from the legacy additional tenant settings.
      *
-     * @param $tenant
+     * @param string $tenant
      * @return bool|void
      */
-    public static function deletelegacyadditionaltenant($tenant) {
+    public static function deletelegacyadditionaltenant(string $tenant) {
         $o365config = get_config('local_o365');
         if (empty($o365config->legacymultitenants)) {
             return true;
@@ -493,7 +496,7 @@ class utils {
      * @param int $userid The ID of the user.
      * @return string The tenant for the user. Empty string unless different from the host tenant.
      */
-    public static function get_tenant_for_user(int $userid) : string {
+    public static function get_tenant_for_user(int $userid): string {
         try {
             $clientdata = clientdata::instance_from_oidc();
             $httpclient = new httpclient();
@@ -506,7 +509,7 @@ class utils {
                 return ($tenant != get_config('local_o365', 'entratenant')) ? $tenant : '';
             }
         } catch (moodle_exception $e) {
-            // Do nothing.
+            return '';
         }
         return '';
     }
@@ -530,7 +533,7 @@ class utils {
                 return ($tenant != get_config('local_o365', 'odburl')) ? $tenant : '';
             }
         } catch (moodle_exception $e) {
-            // Do nothing.
+            return '';
         }
         return '';
     }
@@ -554,7 +557,7 @@ class utils {
      *
      * @return array
      */
-    public static function get_connected_users() : array {
+    public static function get_connected_users(): array {
         global $DB;
 
         $connectedusers = [];
@@ -574,7 +577,7 @@ class utils {
      * @param int $baselevel
      * @return bool
      */
-    public static function update_groups_cache(unified $graphclient, int $baselevel = 0) : bool {
+    public static function update_groups_cache(unified $graphclient, int $baselevel = 0): bool {
         global $DB;
 
         static::mtrace("Update groups cache.", $baselevel);
@@ -646,7 +649,7 @@ class utils {
      * @param int $baselevel
      * @return void
      */
-    public static function clean_up_not_found_groups(int $baselevel = 1) : void {
+    public static function clean_up_not_found_groups(int $baselevel = 1): void {
         global $DB;
 
         static::mtrace('Clean up non-existing groups from database', $baselevel);
@@ -677,7 +680,7 @@ class utils {
      * @param string $eol
      * @return void
      */
-    public static function mtrace(string $message, int $level = 0, string $eol = "\n")  {
+    public static function mtrace(string $message, int $level = 0, string $eol = "\n"): void {
         if ($level) {
             $message = str_repeat('...', $level) . ' ' . $message;
         }
@@ -690,7 +693,7 @@ class utils {
      * @param string $errormessage
      * @return string|null
      */
-    public static function extract_guid_from_error_message(string $errormessage) : ?string {
+    public static function extract_guid_from_error_message(string $errormessage): ?string {
         $pattern = '/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/';
         preg_match($pattern, $errormessage, $matches);
         return $matches[0] ?? null;

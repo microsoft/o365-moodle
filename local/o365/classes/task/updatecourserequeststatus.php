@@ -25,8 +25,6 @@
 
 namespace local_o365\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core\task\scheduled_task;
 use local_o365\feature\courserequest\main;
 

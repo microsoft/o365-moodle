@@ -153,9 +153,10 @@ class oidcclient {
     }
 
     /**
-     * Validate the return the endpoint.
-     * @param $endpoint
-     * @return mixed|null
+     * Validate and return the specified endpoint.
+     *
+     * @param string $endpoint The endpoint key to retrieve.
+     * @return mixed|null The endpoint URL if available, otherwise null.
      */
     public function get_endpoint($endpoint) {
         return (isset($this->endpoints[$endpoint])) ? $this->endpoints[$endpoint] : null;
@@ -170,7 +171,7 @@ class oidcclient {
      * @param bool $selectaccount Whether to prompt the user to select an account.
      * @return array Array of request parameters.
      */
-    protected function getauthrequestparams($promptlogin = false, array $stateparams = array(), array $extraparams = array(),
+    protected function getauthrequestparams($promptlogin = false, array $stateparams = [], array $extraparams = [],
         bool $selectaccount = false) {
         global $SESSION;
 
@@ -183,7 +184,7 @@ class oidcclient {
             'nonce' => $nonce,
             'response_mode' => 'form_post',
             'state' => $this->getnewstate($nonce, $stateparams),
-            'redirect_uri' => $this->redirecturi
+            'redirect_uri' => $this->redirecturi,
         ];
 
         if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
@@ -241,7 +242,7 @@ class oidcclient {
      * @param array $stateparams
      * @return string The new state value.
      */
-    protected function getnewstate($nonce, array $stateparams = array()) {
+    protected function getnewstate($nonce, array $stateparams = []) {
         global $DB;
         $staterec = new \stdClass;
         $staterec->sesskey = sesskey();
@@ -261,7 +262,7 @@ class oidcclient {
      * @param array $extraparams Additional parameters to send with the OIDC request.
      * @param bool $selectaccount Whether to prompt the user to select an account.
      */
-    public function authrequest($promptlogin = false, array $stateparams = array(), array $extraparams = array(),
+    public function authrequest($promptlogin = false, array $stateparams = [], array $extraparams = [],
         bool $selectaccount = false) {
         if (empty($this->clientid)) {
             throw new moodle_exception('erroroidcclientnocreds', 'auth_oidc');
@@ -392,7 +393,7 @@ class oidcclient {
      * @return string
      * @throws moodle_exception
      */
-    public static function generate_client_assertion() : string {
+    public static function generate_client_assertion(): string {
         $authoidcconfig = get_config('auth_oidc');
         $certsource = $authoidcconfig->clientcertsource;
 
@@ -410,7 +411,7 @@ class oidcclient {
         } else {
             throw new moodle_exception('errorinvalidcertificatesource', 'auth_oidc');
         }
-        
+
         $sh1hash = openssl_x509_fingerprint($cert);
         $x5t = base64_encode(hex2bin($sh1hash));
 

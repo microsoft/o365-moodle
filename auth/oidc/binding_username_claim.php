@@ -50,11 +50,11 @@ $predefinedbindingclaims = ['auto', 'preferred_username', 'email', 'upn', 'uniqu
 
 $oidcconfig = get_config('auth_oidc');
 if (!isset($oidcconfig->bindingusernameclaim)) {
-    // bindingusernameclaim is not set, set default value.
+    // Bindingusernameclaim is not set, set default value.
     $formdata['bindingusernameclaim'] = 'auto';
     $formdata['customclaimname'] = '';
     set_config('bindingusernameclaim', 'auto', 'auth_oidc');
-} else if(!$oidcconfig->bindingusernameclaim) {
+} else if (!$oidcconfig->bindingusernameclaim) {
     $formdata['bindingusernameclaim'] = 'auto';
     $formdata['customclaimname'] = '';
 } else if (in_array($oidcconfig->bindingusernameclaim, $predefinedbindingclaims)) {

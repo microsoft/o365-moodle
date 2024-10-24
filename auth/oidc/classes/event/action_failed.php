@@ -25,8 +25,6 @@
 
 namespace auth_oidc\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Event fired whenever we need to record a debug message.
  */

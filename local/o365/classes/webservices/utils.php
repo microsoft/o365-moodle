@@ -25,10 +25,12 @@
 
 namespace local_o365\webservices;
 
-use \local_o365\webservices\exception as exception;
+use context_module;
+use external_multiple_structure;
+use external_single_structure;
+use external_value;
+use local_o365\webservices\exception as exception;
 use moodle_exception;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Webservices utilities.
@@ -49,7 +51,7 @@ class utils {
 
         [$course, $module, $assign] = static::get_assignment_info($coursemoduleid, $courseid);
 
-        require_capability('moodle/course:manageactivities', \context_module::instance($module->id));
+        require_capability('moodle/course:manageactivities', context_module::instance($module->id));
 
         $pluginconfigparams = [
             'assignment' => $assign->id,
@@ -69,23 +71,24 @@ class utils {
     /**
      * Get the external structure schema when returning information about an assignment.
      *
-     * @return \external_single_structure The return data schema.
+     * @return external_single_structure The return data schema.
      */
     public static function get_assignment_return_info_schema() {
         $params = [
-            'data' => new \external_multiple_structure(
-                new \external_single_structure([
-                    'course' => new \external_value(PARAM_INT, 'course id'),
-                    'coursemodule' => new \external_value(PARAM_INT, 'coursemodule id'),
-                    'name' => new \external_value(PARAM_TEXT, 'name'),
-                    'intro' => new \external_value(PARAM_TEXT, 'intro'),
-                    'section' => new \external_value(PARAM_INT, 'section'),
-                    'visible' => new \external_value(PARAM_INT, 'visible'),
-                    'instance' => new \external_value(PARAM_INT, 'instance id'),
+            'data' => new external_multiple_structure(
+                new external_single_structure([
+                    'course' => new external_value(PARAM_INT, 'course id'),
+                    'coursemodule' => new external_value(PARAM_INT, 'coursemodule id'),
+                    'name' => new external_value(PARAM_TEXT, 'name'),
+                    'intro' => new external_value(PARAM_TEXT, 'intro'),
+                    'section' => new external_value(PARAM_INT, 'section'),
+                    'visible' => new external_value(PARAM_INT, 'visible'),
+                    'instance' => new external_value(PARAM_INT, 'instance id'),
                 ])
             ),
         ];
-        return new \external_single_structure($params);
+
+        return new external_single_structure($params);
     }
 
     /**
@@ -109,6 +112,7 @@ class utils {
         if (empty($assign)) {
             throw new exception\assignnotfound();
         }
+
         return [$course, $module, $assign];
     }
 
@@ -121,6 +125,7 @@ class utils {
      */
     public static function get_assignment_return_info($coursemoduleid, $courseid) {
         [$course, $module, $assign] = static::get_assignment_info($coursemoduleid, $courseid);
+
         return [
             'course' => $course->id,
             'coursemodule' => $module->id,

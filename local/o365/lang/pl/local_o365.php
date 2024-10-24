@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'Integracja pakietu Microsoft 365';
 $string['acp_title'] = 'Panel sterowania administratora pakietu Microsoft 365';
 $string['acp_healthcheck'] = 'Sprawdzanie kondycji';
@@ -141,3 +144,6 @@ $string['ucp_syncdir_in'] = 'Z programu Outlook do platformy Moodle';
 $string['ucp_syncdir_both'] = 'Zaktualizuj dane w programie Outlook i na platformie Moodle';
 $string['ucp_title'] = 'Panel sterowania pakietu Microsoft 365 / platformy Moodle';
 $string['ucp_options'] = 'Opcje';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

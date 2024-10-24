@@ -39,7 +39,18 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * Class process represents the process binding username claim tool.
  */
 class process {
+    /**
+     * Route for renaming in auth_oidc.
+     *
+     * @var int
+     */
     const ROUTE_AUTH_OIDC_RENAME = 1;
+
+    /**
+     * Route for matching other authentication methods.
+     *
+     * @var int
+     */
     const ROUTE_AUTH_OTHER_MATCH = 2;
 
     /** @var csv_import_reader */
@@ -70,7 +81,7 @@ class process {
      * @return array
      * @throws moodle_exception
      */
-    public function get_file_columns() : array {
+    public function get_file_columns(): array {
         if ($this->filecolumns === null) {
             $columns = $this->cir->get_columns();
             if (count($columns) != 2) {
@@ -86,7 +97,7 @@ class process {
                 $field = $columns[$key];
                 $field = trim($field);
                 $lcfield = core_text::strtolower($field);
-                if (in_array($field, $stdfields) or in_array($lcfield, $stdfields)) {
+                if (in_array($field, $stdfields) || in_array($lcfield, $stdfields)) {
                     $newfield = $lcfield;
                 }
                 if (in_array($newfield, $this->filecolumns)) {
@@ -274,7 +285,7 @@ class process {
      *
      * @return array
      */
-    public function get_stats() : array {
+    public function get_stats(): array {
         $lines = [];
 
         $lines[] = get_string('update_stats_users_updated', 'auth_oidc', $this->usersupdated);

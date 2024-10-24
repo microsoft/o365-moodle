@@ -27,8 +27,6 @@ namespace auth_oidc\tests;
 
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * A mock HTTP client allowing set responses.
  */
@@ -69,7 +67,7 @@ class mockhttpclient extends \auth_oidc\httpclient {
      * @param array $options Additional curl options.
      * @return string The set response.
      */
-    protected function request($url, $options = array()) {
+    protected function request($url, $options = []) {
         if (isset($this->mockresponse[$this->curresponse])) {
             $response = $this->mockresponse[$this->curresponse];
             $this->curresponse++;

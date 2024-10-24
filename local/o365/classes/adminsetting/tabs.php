@@ -25,7 +25,10 @@
 
 namespace local_o365\adminsetting;
 
-defined('MOODLE_INTERNAL') || die();
+use admin_setting;
+use html_writer;
+use moodle_url;
+use tabobject;
 
 /**
  * A tab in the plugin configuration page.
@@ -126,13 +129,11 @@ class tabs extends \admin_setting {
      * @param \moodle_url|null $url An explicit URL to use instead of settings page section.
      * @uses $CFG
      */
-    public function addtab($id, $name, \moodle_url $url = null) {
-        global $CFG;
-
+    public function addtab($id, $name, ?moodle_url $url = null) {
         if (empty($url)) {
             $urlparams = [
                 'section' => $this->section,
-                $this->get_full_name() => $id
+                $this->get_full_name() => $id,
             ];
             $url = new \moodle_url('/admin/settings.php', $urlparams);
         }
@@ -159,7 +160,7 @@ class tabs extends \admin_setting {
         $properties = [
             'type'  => 'hidden',
             'name'  => $this->get_full_name(),
-            'value' => $this->get_setting()
+            'value' => $this->get_setting(),
         ];
 
         $output .= \html_writer::empty_tag('input', $properties);

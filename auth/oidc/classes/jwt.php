@@ -27,8 +27,6 @@ namespace auth_oidc;
 
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Class for working with JWTs.
  */
