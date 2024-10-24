@@ -23,7 +23,7 @@
  * @copyright (C) 2019 Remote Learner.net Inc http://www.remote-learner.net
  */
 
-namespace local_onenote\tests;
+namespace local_onenote;
 
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
@@ -40,7 +40,7 @@ use local_onenote\privacy\provider;
  * @group office365
  * @group office365_privacy
  */
-final class privacy_provider_testcase extends provider_testcase {
+final class privacy_provider_test extends provider_testcase {
     /**
      * Tests set up.
      */

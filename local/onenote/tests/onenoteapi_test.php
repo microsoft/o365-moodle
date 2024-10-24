@@ -39,7 +39,7 @@
  *  3) Run the unit tests using the standard process for running PHP Unit tests for Moodle.
  */
 
-namespace local_onenote\tests;
+namespace local_onenote;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
@@ -148,7 +148,6 @@ final class onenoteapi_test extends advanced_testcase {
      * @covers \local_onenote\api\base::create_temp_folder
      */
     public function test_createtempfolder(): void {
-        return true; // Need to update test to not require config data.
         $this->set_test_config();
         $this->set_user(0);
 

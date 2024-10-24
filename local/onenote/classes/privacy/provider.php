@@ -35,7 +35,8 @@ use core_privacy\local\request\writer;
 /**
  * Interface for the local_onenote user list provider.
  */
-interface local_onenote_userlist extends \core_privacy\local\request\core_userlist_provider {}
+interface local_onenote_userlist extends \core_privacy\local\request\core_userlist_provider {
+}
 
 /**
  * Provider details for onenote
