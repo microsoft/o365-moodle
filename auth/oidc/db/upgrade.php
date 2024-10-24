@@ -398,7 +398,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                     case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2:
                         $existingidptype = get_config('auth_oidc', 'idptype');
                         if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                            add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+                            add_to_config_log(
+                                    'idptype',
+                                    $existingidptype,
+                                    AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+                                    'auth_oidc'
+                            );
                         }
                         set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
                         break;

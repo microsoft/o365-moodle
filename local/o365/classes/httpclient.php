@@ -26,24 +26,26 @@
 
 namespace local_o365;
 
+use curl;
 use moodle_exception;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/filelib.php');
+require_once($CFG->dirroot . '/lib/filelib.php');
 
 /**
  * An httpclientinterface implementation, using curl class as backend and adding patch and merge methods.
  */
-class httpclient extends \curl implements \local_o365\httpclientinterface {
+class httpclient extends curl implements httpclientinterface {
     /**
-     * Generate a client tag.
+     * Generate client tag headers.
      *
-     * @return string A client tag.
+     * @return string[]
      */
-    protected function get_clienttag_headers() {
+    protected function get_clienttag_headers(): array {
         global $CFG;
 
         $iid = sha1($CFG->wwwroot);
@@ -55,9 +57,10 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
 
         $params = "lang=PHP; os={$ostype}; os_version={$osver}; arch={$arch}; version={$ver}; MoodleInstallId={$iid}";
         $clienttag = "Moodle/{$mdlver} ({$params})";
+
         return [
-            'User-Agent: '.$clienttag,
-            'X-ClientService-ClientTag: '.$clienttag,
+            'User-Agent: ' . $clienttag,
+            'X-ClientService-ClientTag: ' . $clienttag,
         ];
     }
 
@@ -66,10 +69,12 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      *
      * @return string The current plugin version.
      */
-    protected function get_plugin_version() {
+    protected function get_plugin_version(): string {
         global $CFG;
-        $plugin = new \stdClass;
-        require_once($CFG->dirroot.'/local/o365/version.php');
+
+        $plugin = new stdClass;
+        require_once($CFG->dirroot . '/local/o365/version.php');
+
         return $plugin->release;
     }
 
@@ -78,8 +83,9 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      *
      * @return string The current Moodle version.
      */
-    protected function get_moodle_version() {
+    protected function get_moodle_version(): string {
         global $CFG;
+
         return $CFG->release;
     }
 
@@ -91,11 +97,11 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      * @param array $options
      * @return bool
      */
-    public function patch($url, $params = '', $options = array()) {
+    public function patch($url, $params = '', $options = []): bool {
         $options['CURLOPT_CUSTOMREQUEST'] = 'PATCH';
 
         if (is_array($params)) {
-            $this->_tmp_file_post_params = array();
+            $this->_tmp_file_post_params = [];
             foreach ($params as $key => $value) {
                 if ($value instanceof stored_file) {
                     $value->add_to_curl_request($this, $key);
@@ -109,6 +115,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
             // Var $params is the raw post data.
             $options['CURLOPT_POSTFIELDS'] = $params;
         }
+
         return $this->request($url, $options);
     }
 
@@ -120,11 +127,11 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      * @param array $options
      * @return bool
      */
-    public function merge($url, $params = '', $options = array()) {
+    public function merge($url, $params = '', $options = []): bool {
         $options['CURLOPT_CUSTOMREQUEST'] = 'MERGE';
 
         if (is_array($params)) {
-            $this->_tmp_file_post_params = array();
+            $this->_tmp_file_post_params = [];
             foreach ($params as $key => $value) {
                 if ($value instanceof stored_file) {
                     $value->add_to_curl_request($this, $key);
@@ -138,6 +145,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
             // Var $params is the raw post data.
             $options['CURLOPT_POSTFIELDS'] = $params;
         }
+
         return $this->request($url, $options);
     }
 
@@ -149,7 +157,7 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      * @param array $options
      * @return bool
      */
-    public function put($url, $params = array(), $options = array()) {
+    public function put($url, $params = [], $options = []): bool {
         if (!isset($params['file'])) {
             throw new moodle_exception('errorhttpclientnofileinput', 'local_o365');
         }
@@ -168,12 +176,10 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
         $options['CURLOPT_PUT'] = 1;
         $options['CURLOPT_INFILESIZE'] = $size;
         $options['CURLOPT_INFILE'] = $fp;
-        if (!isset($this->options['CURLOPT_USERPWD'])) {
-            $this->setopt(array('CURLOPT_USERPWD' => 'anonymous: noreply@moodle.org'));
-        }
 
         $ret = $this->request($url, $options);
         fclose($fp);
+
         return $ret;
     }
 
@@ -184,8 +190,9 @@ class httpclient extends \curl implements \local_o365\httpclientinterface {
      * @param array $options
      * @return bool
      */
-    public function download_file($url, $options = array()) {
-        $url = str_replace(array('+', ' '), '%20', $url);
+    public function download_file($url, $options = []): bool {
+        $url = str_replace(['+', ' '], '%20', $url);
+
         return $this->request($url, $options);
     }
 }

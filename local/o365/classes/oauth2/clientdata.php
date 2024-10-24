@@ -47,7 +47,7 @@ class clientdata {
     /** @var string The token endpoint URI. */
     protected $tokenendpoint;
 
-    /** @var boolean The app-only token endpoint URI. */
+    /** @var bool The app-only token endpoint URI. */
     protected $apptokenendpoint = false;
 
     /**

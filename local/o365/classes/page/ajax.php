@@ -36,8 +36,6 @@ use moodle_exception;
 use stdClass;
 use webservice;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Ajax page.
  */
@@ -361,7 +359,7 @@ class ajax extends base {
         // Enable REST protocol.
         $webservice = 'rest';
         $availablewebservices = core_component::get_plugin_list('webservice');
-        $activewebservices = empty($CFG->webserviceprotocols) ? array() : explode(',', $CFG->webserviceprotocols);
+        $activewebservices = empty($CFG->webserviceprotocols) ? [] : explode(',', $CFG->webserviceprotocols);
         foreach ($activewebservices as $key => $active) {
             if (empty($availablewebservices[$active])) {
                 unset($activewebservices[$key]);
@@ -386,9 +384,7 @@ class ajax extends base {
         if (!$o365service->enabled) {
             $o365service->enabled = 1;
             $webservicemanager->update_external_service($o365service);
-            $params = array(
-                'objectid' => $o365service->id
-            );
+            $params = ['objectid' => $o365service->id];
             $event = \core\event\webservice_service_updated::create($params);
             $event->trigger();
             $data->success[] = get_string('settings_notice_o365serviceenabled', 'local_o365');

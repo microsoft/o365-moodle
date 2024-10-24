@@ -31,8 +31,6 @@ use local_o365\feature\usersync\main;
 use local_o365\utils;
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Scheduled task to sync users with Microsoft Entra ID.
  */
@@ -178,7 +176,7 @@ class usersync extends scheduled_task {
                 if (!$suspensiontaskhour) {
                     $suspensiontaskhour = 0;
                 }
-                if(!$suspensiontaskminute) {
+                if (!$suspensiontaskminute) {
                     $suspensiontaskminute = 0;
                 }
                 $currenthour = date('H');
@@ -186,13 +184,15 @@ class usersync extends scheduled_task {
                 if ($currenthour > $suspensiontaskhour) {
                     $existingtaskusersynclastdeletesetting = get_config('local_o365', 'task_usersync_lastdelete');
                     if ($existingtaskusersynclastdeletesetting != date('Ymd')) {
-                        add_to_config_log('task_usersync_lastdelete', $existingtaskusersynclastdeletesetting, date('Ymd'), 'local_o365');
+                        add_to_config_log('task_usersync_lastdelete', $existingtaskusersynclastdeletesetting, date('Ymd'),
+                            'local_o365');
                     }
                     set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
                 } else if (($currenthour == $suspensiontaskhour) && ($currentminute >= $suspensiontaskminute)) {
                     $existingtaskusersynclastdeletesetting = get_config('local_o365', 'task_usersync_lastdelete');
                     if ($existingtaskusersynclastdeletesetting != date('Ymd')) {
-                        add_to_config_log('task_usersync_lastdelete', $existingtaskusersynclastdeletesetting, date('Ymd'), 'local_o365');
+                        add_to_config_log('task_usersync_lastdelete', $existingtaskusersynclastdeletesetting, date('Ymd'),
+                            'local_o365');
                     }
                     set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
                 } else {
@@ -276,7 +276,8 @@ class usersync extends scheduled_task {
             case 'sub':
             case 'preferred_username':
             default:
-                $this->mtrace('Unsupported binding username claim: ' . $bindingusernameclaim . '. Falls back to userPrincepalName.');
+                $this->mtrace('Unsupported binding username claim: ' . $bindingusernameclaim .
+                    '. Falls back to userPrincepalName.');
                 $bindingusernameclaim = 'userPrincipalName';
         }
 

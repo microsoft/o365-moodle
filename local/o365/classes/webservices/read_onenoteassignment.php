@@ -27,6 +27,7 @@ namespace local_o365\webservices;
 
 defined('MOODLE_INTERNAL') || die();
 
+use context_course;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
@@ -34,7 +35,7 @@ use core_external\external_value;
 
 global $CFG;
 
-require_once($CFG->dirroot.'/course/modlib.php');
+require_once($CFG->dirroot . '/course/modlib.php');
 
 /**
  * Read assignment API class.
@@ -50,7 +51,7 @@ class read_onenoteassignment extends external_api {
             'data' => new external_single_structure([
                 'coursemodule' => new external_value(PARAM_INT, 'course module id'),
                 'course' => new external_value(PARAM_INT, 'course id'),
-            ])
+            ]),
         ]);
     }
 
@@ -63,13 +64,14 @@ class read_onenoteassignment extends external_api {
     public static function assignment_read($data) {
         $params = self::validate_parameters(self::assignment_read_parameters(), ['data' => $data]);
         $params = $params['data'];
-        list($course, $module, $assign) = \local_o365\webservices\utils::verify_assignment($params['coursemodule'],
+        [$course, $module, $assign] = utils::verify_assignment($params['coursemodule'],
             $params['course']);
 
-        $context = \context_course::instance($params['course']);
+        $context = context_course::instance($params['course']);
         self::validate_context($context);
 
-        $modinfo = \local_o365\webservices\utils::get_assignment_return_info($module->id, $course->id);
+        $modinfo = utils::get_assignment_return_info($module->id, $course->id);
+
         return ['data' => [$modinfo]];
     }
 
@@ -79,6 +81,6 @@ class read_onenoteassignment extends external_api {
      * @return external_single_structure Object describing return parameters for this webservice method.
      */
     public static function assignment_read_returns() {
-        return \local_o365\webservices\utils::get_assignment_return_info_schema();
+        return utils::get_assignment_return_info_schema();
     }
 }

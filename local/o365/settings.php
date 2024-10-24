@@ -297,7 +297,7 @@ if ($hassiteconfig) {
             get_string('settings_team_name_sync_desc', 'local_o365'),
             0));
 
-        // Cohort Sync section
+        // Cohort Sync section.
         $label = new lang_string('settings_secthead_cohortsync', 'local_o365');
         $desc = new lang_string('settings_secthead_cohortsync_desc', 'local_o365');
         $settings->add(new admin_setting_heading('local_o365_section_cohortsync', $label, $desc));

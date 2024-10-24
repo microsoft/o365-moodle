@@ -27,31 +27,68 @@
 use auth_oidc\jwt;
 use auth_oidc\utils;
 
-defined('MOODLE_INTERNAL') || die();
-
 // IdP types.
-CONST AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
-CONST AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
-CONST AUTH_OIDC_IDP_TYPE_OTHER = 3;
-
-// Microsoft Entra ID / Microsoft endpoint version.
-CONST AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN = 0;
-CONST AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
-CONST AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
-
-// OIDC application authentication method.
-CONST AUTH_OIDC_AUTH_METHOD_SECRET = 1;
-CONST AUTH_OIDC_AUTH_METHOD_CERTIFICATE = 2;
-
-// OIDC application auth certificate source.
-CONST AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
-CONST AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
+/**
+ * Microsoft Entra ID identity provider type.
+ */
+const AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
 
 /**
- * Initialize custom icon.
+ * Microsoft Identity Platform identity provider type.
+ */
+const AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
+
+/**
+ * Other identity provider type.
+ */
+const AUTH_OIDC_IDP_TYPE_OTHER = 3;
+
+// Microsoft Entra ID / Microsoft endpoint version.
+/**
+ * Unknown Microsoft endpoint version.
+ */
+const AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN = 0;
+
+/**
+ * Microsoft endpoint version 1.
+ */
+const AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
+
+/**
+ * Microsoft endpoint version 2.
+ */
+const AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
+
+// OIDC application authentication method.
+/**
+ * OIDC application authentication method using secret.
+ */
+const AUTH_OIDC_AUTH_METHOD_SECRET = 1;
+
+/**
+ * OIDC application authentication method using certificate.
+ */
+const AUTH_OIDC_AUTH_METHOD_CERTIFICATE = 2;
+
+// OIDC application auth certificate source.
+/**
+ * OIDC application authentication certificate source from text.
+ */
+const AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
+
+/**
+ * OIDC application authentication certificate source from file.
+ */
+const AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
+
+/**
+ * Initialize custom icon for OIDC authentication.
  *
- * @param $filefullname
- * @return false|void
+ * This function sets up a custom icon for the OIDC plugin by creating necessary directories
+ * and copying the file into the specified location in Moodle's data directory.
+ *
+ * @param string $filefullname Full name of the custom icon file.
+ * @return bool False if the file is missing or is a directory; void otherwise.
  */
 function auth_oidc_initialize_customicon($filefullname) {
     global $CFG;
@@ -61,7 +98,7 @@ function auth_oidc_initialize_customicon($filefullname) {
     $fullpath = "/{$systemcontext->id}/auth_oidc/customicon/0{$file}";
 
     $fs = get_file_storage();
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
         return false;
     }
     $pixpluginsdir = 'pix_plugins/auth/oidc/0';
@@ -416,7 +453,7 @@ function auth_oidc_apply_default_email_mapping() {
  * @param array $customfields list of custom profile fields
  */
 function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $helptext, $mapremotefields, $updateremotefields,
-    $customfields = array()) {
+    $customfields = []) {
     global $DB;
 
     // Introductory explanation and help text.
@@ -538,7 +575,8 @@ function auth_oidc_get_all_user_fields() {
 /**
  * Determine the endpoint version of the given Microsoft Entra ID / Microsoft authorization or token endpoint.
  *
- * @return int
+ * @param string $endpoint The URL of the endpoint to be checked.
+ * @return int The version of the Microsoft endpoint (1 or 2) or unknown.
  */
 function auth_oidc_determine_endpoint_version(string $endpoint) {
     $endpointversion = AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN;
@@ -663,7 +701,7 @@ function auth_oidc_get_client_auth_method_name() {
  *
  * @return string
  */
-function auth_oidc_get_binding_username_claim() : string {
+function auth_oidc_get_binding_username_claim(): string {
     $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
 
     if (empty($bindingusernameclaim)) {
@@ -684,7 +722,7 @@ function auth_oidc_get_binding_username_claim() : string {
  * @return array
  * @throws moodle_exception
  */
-function auth_oidc_get_existing_claims() : array {
+function auth_oidc_get_existing_claims(): array {
     global $DB;
 
     $sql = 'SELECT *

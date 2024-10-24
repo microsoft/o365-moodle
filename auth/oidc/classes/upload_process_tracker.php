@@ -27,8 +27,9 @@ namespace auth_oidc;
 
 use html_writer;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Class to track the progress of processing username claims uploads.
+ */
 class upload_process_tracker {
     /** @var array */
     protected $_row;
@@ -74,8 +75,8 @@ class upload_process_tracker {
      * @return void
      */
     public function flush() {
-        if (empty($this->_row) or empty($this->_row['line']['normal'])) {
-            // Nothing to print - each line has to have at least number
+        if (empty($this->_row) || empty($this->_row['line']['normal'])) {
+            // Nothing to print - each line has to have at least number.
             $this->_row = [];
             foreach ($this->columns as $col) {
                 $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];

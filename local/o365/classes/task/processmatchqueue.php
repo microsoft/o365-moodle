@@ -51,7 +51,7 @@ class processmatchqueue extends scheduled_task {
      *
      * @return string
      */
-    public function get_name() : string {
+    public function get_name(): string {
         return get_string('task_processmatchqueue', 'local_o365');
     }
 
@@ -79,7 +79,7 @@ class processmatchqueue extends scheduled_task {
     /**
      * Do the job.
      */
-    public function execute() : bool {
+    public function execute(): bool {
         global $DB;
 
         if (utils::is_connected() !== true) {
