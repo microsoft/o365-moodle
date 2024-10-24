@@ -33,8 +33,6 @@ use local_o365\rest\unified;
 use moodle_exception;
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die();
-
 define('API_CALL_RETRY_LIMIT', 5);
 
 /**
@@ -112,14 +110,14 @@ class main {
      *
      * @return bool
      */
-    public function has_education_license() : bool {
+    public function has_education_license(): bool {
         return $this->haseducationlicense;
     }
 
     /**
      * Create teams and populate membership for all courses that don't have an associated team recorded.
      */
-    public function sync_courses() : bool {
+    public function sync_courses(): bool {
         global $DB;
 
         $this->mtrace('Start syncing courses.');
@@ -254,7 +252,7 @@ class main {
      * @param int $baselevel
      * @return bool
      */
-    public function set_lti_properties_in_education_group(string $groupobjectid, stdClass $course, int $baselevel = 3) : bool {
+    public function set_lti_properties_in_education_group(string $groupobjectid, stdClass $course, int $baselevel = 3): bool {
         $this->mtrace('Set LMS attributes in group ' . $groupobjectid . ' for course #' . $course->id, $baselevel);
 
         $lmsattributes = [
@@ -346,7 +344,7 @@ class main {
      * @return bool whether at least one owner was added.
      */
     private function add_group_owners_and_members_to_group(string $groupobjectid, array $owners, array $members,
-        int $baselevel = 3) : bool {
+        int $baselevel = 3): bool {
         global $SESSION;
         if (empty($owners) && empty($members)) {
             $this->mtrace('Skip adding owners / members to the group. Reason: No users to add.', $baselevel);
@@ -441,7 +439,7 @@ class main {
                     sleep(10);
                 }
                 try {
-                    $this->mtrace('Chunk ' . $key + 1 . ', adding ' . count($users) . ' users as ' . $role, $baselevel + 1);
+                    $this->mtrace('Chunk ' . ($key + 1) . ', adding ' . count($users) . ' users as ' . $role, $baselevel + 1);
 
                     if (isset($SESSION->o365_groups_not_exist)) {
                         if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
@@ -498,7 +496,7 @@ class main {
      * @param string $exceptionmessage
      * @return bool
      */
-    private static function is_resource_not_exist_exception(string $exceptionmessage) : bool {
+    private static function is_resource_not_exist_exception(string $exceptionmessage): bool {
         return (strpos($exceptionmessage, \local_o365\utils::RESOURCE_NOT_EXIST_ERROR) !== false);
     }
 
@@ -754,7 +752,7 @@ class main {
      * @return string
      */
     private function add_moodle_tab_to_channel(string $groupobjectid, string $channelid, string $appid,
-        int $moodlecourseid) : string {
+        int $moodlecourseid): string {
         global $CFG;
 
         $tabconfiguration = [
@@ -837,7 +835,7 @@ class main {
      * @param int $baselevel
      * @return bool True if group creation succeeds, or False if it fails.
      */
-    public function create_group_for_course(stdClass $course, int $baselevel = 2) : bool {
+    public function create_group_for_course(stdClass $course, int $baselevel = 2): bool {
         global $SESSION;
 
         $this->mtrace('Process course #' . $course->id, $baselevel);
@@ -999,7 +997,7 @@ class main {
      * @param array $objectrecmetadata The metadata of the object database record.
      * @return bool
      */
-    private function restore_group(int $objectrecid, string $objectid, array $objectrecmetadata) : bool {
+    private function restore_group(int $objectrecid, string $objectid, array $objectrecmetadata): bool {
         global $DB;
 
         $deletedgroups = $this->graphclient->list_deleted_groups();
@@ -1028,7 +1026,7 @@ class main {
      *
      * @return bool
      */
-    public function update_teams_cache() : bool {
+    public function update_teams_cache(): bool {
         global $DB;
 
         $this->mtrace('Update teams cache...');
@@ -1184,7 +1182,7 @@ class main {
      *
      * @return bool
      */
-    public function update_team_name(int $courseid) : bool {
+    public function update_team_name(int $courseid): bool {
         global $DB;
 
         if (!$course = $DB->get_record('course', ['id' => $courseid])) {
@@ -1238,7 +1236,7 @@ class main {
      * @return bool
      */
     public function process_course_reset(stdClass $course, stdClass $o365object, bool $teamexists = false,
-        bool $createafterreset = true) : bool {
+        bool $createafterreset = true): bool {
         global $DB;
 
         // Rename existing group.
@@ -1477,7 +1475,7 @@ class main {
      * @return array
      * @throws moodle_exception
      */
-    public function get_group_members(string $groupobjectid) : array {
+    public function get_group_members(string $groupobjectid): array {
         $groupmembers = [];
 
         $memberrecords = $this->graphclient->get_group_members($groupobjectid);
@@ -1495,7 +1493,7 @@ class main {
      * @return array
      * @throws moodle_exception
      */
-    public function get_group_owners(string $groupobjectid) : array {
+    public function get_group_owners(string $groupobjectid): array {
         $groupowners = [];
 
         $ownerresults = $this->graphclient->get_group_owners($groupobjectid);
@@ -1511,7 +1509,7 @@ class main {
      *
      * @return array An array of group IDs.
      */
-    public function get_all_group_ids() : array {
+    public function get_all_group_ids(): array {
         $groupids = [];
 
         $groups = $this->graphclient->get_groups();
@@ -1636,6 +1634,7 @@ class main {
                         $this->graphclient->get_aad_user_conversation_member_id($groupobjectid, $userobjectid);
                 } catch (moodle_exception $e) {
                     // Do nothing.
+                    $removed = false;
                 }
                 if ($aaduserconversationmemberid) {
                     try {
@@ -1644,6 +1643,7 @@ class main {
                         $removed = true;
                     } catch (moodle_exception $e) {
                         // Do nothing.
+                        $removed = false;
                     }
                 }
             }
@@ -1669,6 +1669,7 @@ class main {
                     $this->graphclient->get_aad_user_conversation_member_id($groupobjectid, $userobjectid);
             } catch (moodle_exception $e) {
                 // Do nothing.
+                $removed = false;
             }
             if ($aaduserconversationmemberid) {
                 try {
@@ -1677,6 +1678,7 @@ class main {
                     $removed = true;
                 } catch (moodle_exception $e) {
                     // Do nothing.
+                    $removed = false;
                 }
             }
         }
@@ -1695,7 +1697,7 @@ class main {
      * @return bool
      */
     public function process_course_team_user_sync_from_microsoft_to_moodle(int $courseid, string $groupobjectid = '',
-        array $connectedusers = null) : bool {
+        ?array $connectedusers = null): bool {
         global $DB;
 
         $coursecontext = context_course::instance($courseid, IGNORE_MISSING);
@@ -1785,8 +1787,8 @@ class main {
             array_keys($moodletomicrosoftusermappings));
 
         // Sync teachers.
-        //  - $connectedcurrentcourseteachers contains the current teachers in the course.
-        //  - $connectedintendedcourseteachers contains the teachers that should be in the course.
+        // - $connectedcurrentcourseteachers contains the current teachers in the course.
+        // - $connectedintendedcourseteachers contains the teachers that should be in the course.
         $teacherstoenrol = array_diff($connectedintendedcourseteachers, $connectedcurrentcourseteachers);
         if ($teacherstoenrol) {
             $this->mtrace('Add teacher role to ' . count($teacherstoenrol) . ' users...', 2);
@@ -1809,8 +1811,8 @@ class main {
         }
 
         // Sync students.
-        //  - $connectedcurrentcoursestudents contains the current students in the course.
-        //  - $connectedintendedcoursestudents contains the students that should be in the course.
+        // - $connectedcurrentcoursestudents contains the current students in the course.
+        // - $connectedintendedcoursestudents contains the students that should be in the course.
         $studentstoenrol = array_diff($connectedintendedcoursestudents, $connectedcurrentcoursestudents);
         if ($studentstoenrol) {
             $this->mtrace('Add student role to ' . count($studentstoenrol) . ' users...', 2);
@@ -1842,7 +1844,7 @@ class main {
      * @param int $roleid The ID of the role.
      * @param context_course $context The context of the course.
      */
-    private function assign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, context_course $context) : void {
+    private function assign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, context_course $context): void {
         enrol_try_internal_enrol($context->instanceid, $userid, $roleid);
         $this->mtrace('Assigned role #' . $roleid . ' to user #' . $userid . '.', 3);
     }
@@ -1857,7 +1859,7 @@ class main {
      * @param bool $hasotherrole Whether the user has other role.
      */
     private function unassign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, context_course $context,
-        bool $hasotherrole) : void {
+        bool $hasotherrole): void {
         role_unassign($roleid, $userid, $context->id);
         $this->mtrace('Removed role #' . $roleid . ' from user #' . $userid . '.', 3);
 
@@ -1875,7 +1877,7 @@ class main {
      * @param int $courseid The ID of the course.
      * @return bool
      */
-    private function unenrol_user_by_user_id_and_course_id(int $userid, int $courseid) : bool {
+    private function unenrol_user_by_user_id_and_course_id(int $userid, int $courseid): bool {
         global $DB;
 
         $sql = "SELECT *
@@ -1919,7 +1921,7 @@ class main {
      * @param int $courseid The ID of the course.
      * @param string $groupobjectid The object ID of the Microsoft 365 group.
      */
-    public function process_initial_course_team_user_sync(int $courseid, string $groupobjectid) : void {
+    public function process_initial_course_team_user_sync(int $courseid, string $groupobjectid): void {
         $coursecontext = context_course::instance($courseid);
 
         $this->mtrace('Perform initial Moodle course and Microsoft Teams user sync between course #' . $courseid .
@@ -1980,8 +1982,8 @@ class main {
         }
 
         // Sync teachers from Microsoft Teams to Moodle course.
-        //  - $connectedcurrentcourseteachers contains the current teachers in the course.
-        //  - $connectedintendedcourseteachers contains the teachers that should be in the course.
+        // - $connectedcurrentcourseteachers contains the current teachers in the course.
+        // - $connectedintendedcourseteachers contains the teachers that should be in the course.
         $teacherstoenrol = array_diff($connectedintendedcourseteachers, $connectedcurrentcourseteachers);
         if ($teacherstoenrol) {
             $this->mtrace('Add teacher role to ' . count($teacherstoenrol) . ' users...', 2);
@@ -1993,8 +1995,8 @@ class main {
         }
 
         // Sync students from Microsoft Teams to Moodle course.
-        //  - $connectedcurrentcoursestudents contains the current students in the course.
-        //  - $connectedintendedcoursestudents contains the students that should be in the course.
+        // - $connectedcurrentcoursestudents contains the current students in the course.
+        // - $connectedintendedcoursestudents contains the students that should be in the course.
         $studentstoenrol = array_diff($connectedintendedcoursestudents, $connectedcurrentcoursestudents);
         if ($studentstoenrol) {
             $this->mtrace('Add student role to ' . count($studentstoenrol) . ' users...', 2);
@@ -2025,7 +2027,7 @@ class main {
      *
      * @return void
      */
-    public function save_not_found_groups() : void {
+    public function save_not_found_groups(): void {
         global $DB, $SESSION;
 
         $this->mtrace('Save non-existing groups to groups cache...');

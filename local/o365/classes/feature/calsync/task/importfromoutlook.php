@@ -28,8 +28,6 @@ namespace local_o365\feature\calsync\task;
 use core_date;
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Scheduled task to check for new o365 events and sync them into Moodle.
  */
@@ -111,7 +109,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                             // If all day event time is stored in Outlook only as UTC time and not in the local user time.
                             if (isset($event['isAllDay']) && $event['isAllDay'] == '1') {
                                 // Need to make the time the same as the user preference so no time conversion.
-                                $user = $DB->get_record('user', array('id' => $calsub->user_id));
+                                $user = $DB->get_record('user', ['id' => $calsub->user_id]);
                                 if ($user->timezone == 99) {
                                     $user->timezone = core_date::get_server_timezone();
                                 }
@@ -137,7 +135,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                                     'eventid' => $moodleevent->id,
                                     'outlookeventid' => $event['id'],
                                     'origin' => 'o365',
-                                    'userid' => $calsub->user_id
+                                    'userid' => $calsub->user_id,
                                 ];
                                 $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
                                 mtrace('Successfully imported event #'.$moodleevent->id);

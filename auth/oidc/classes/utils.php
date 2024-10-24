@@ -29,8 +29,6 @@ use Exception;
 use moodle_exception;
 use auth_oidc\event\action_failed;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * General purpose utility class.
  */
@@ -43,7 +41,7 @@ class utils {
      * @return array The parsed JSON.
      * @throws moodle_exception
      */
-    public static function process_json_response($response, array $expectedstructure = array()) {
+    public static function process_json_response($response, array $expectedstructure = []) {
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             self::debug('Bad response received', __METHOD__, $response);
@@ -104,9 +102,9 @@ class utils {
                 $valinfo['errorcode'] = $val->errorcode;
                 $valinfo['module'] = $val->module;
             }
-            return print_r($valinfo, true);
+            return json_encode($valinfo, JSON_PRETTY_PRINT);
         } else {
-            return print_r($val, true);
+            return json_encode($val, JSON_PRETTY_PRINT);
         }
     }
 
@@ -145,16 +143,16 @@ class utils {
             foreach ($data as $key => $value) {
                 $data[$key] = static::make_json_safe($value);
             }
-        } elseif (is_object($data)) {
+        } else if (is_object($data)) {
             $data = (array)$data;
             foreach ($data as $key => $value) {
                 $data[$key] = static::make_json_safe($value);
             }
-        } elseif (is_bool($data)) {
+        } else if (is_bool($data)) {
             $data = (int)$data;
-        } elseif (is_null($data)) {
+        } else if (is_null($data)) {
             $data = null;
-        } elseif (!is_scalar($data)) {
+        } else if (!is_scalar($data)) {
             $data = (string)$data;
         }
         return $data;

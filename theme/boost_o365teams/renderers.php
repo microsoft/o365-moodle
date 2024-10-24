@@ -48,7 +48,7 @@ class theme_boost_o365teams_mod_assign_renderer extends mod_assign\output\render
             $this->page->navbar->add($header->subpage, $header->subpageurl);
         }
 
-        $heading = format_string($header->assign->name, false, array('context' => $header->context));
+        $heading = format_string($header->assign->name, false, ['context' => $header->context]);
         $this->page->set_title($heading);
         $this->page->set_heading($this->page->course->fullname);
 
@@ -65,12 +65,13 @@ class theme_boost_o365teams_mod_assign_renderer extends mod_assign\output\render
         $activityheader = $this->page->activityheader;
         $activityheader->set_attrs([
             'title' => $activityheader->is_title_allowed() ? $heading : '',
-            'description' => $description
+            'description' => $description,
         ]);
 
         return $this->output->header();
     }
 }
+
 /**
  * course
  *
@@ -89,7 +90,7 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
      * @param array $displayoptions
      * @return string
      */
-    public function course_section_cm($course, &$completioninfo, cm_info $mod, $sectionreturn, $displayoptions = array()) {
+    public function course_section_cm($course, &$completioninfo, cm_info $mod, $sectionreturn, $displayoptions = []) {
         $output = '';
         // We return empty string (because course module will not be displayed at all) if
         // 1) The activity is not visible to users; and
@@ -114,7 +115,7 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
             $output .= course_get_cm_move($mod, $sectionreturn);
         }
 
-        $output .= html_writer::start_tag('div', array('class' => 'mod-indent-outer'));
+        $output .= html_writer::start_tag('div', ['class' => 'mod-indent-outer']);
 
         // This div is used to indent the content.
         $output .= html_writer::div('', $indentclasses);
@@ -149,7 +150,7 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
 
         if (!empty($cmname)) {
             // Start the div for the activity title, excluding the edit icons.
-            $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
+            $output .= html_writer::start_tag('div', ['class' => 'activityinstance']);
             $output .= $cmname;
 
             // Module can put text after the link (e.g. forum unread).
@@ -176,8 +177,10 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
         $output .= html_writer::end_tag('div');
 
         $output .= html_writer::end_tag('div');
+
         return $output;
     }
+
     /**
      * Get Section Name
      *
@@ -185,7 +188,7 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
      * @param array $displayoptions
      * @return string
      */
-    public function course_section_cm_name_title(cm_info $mod, $displayoptions = array()) {
+    public function course_section_cm_name_title(cm_info $mod, $displayoptions = []) {
         $output = '';
         $url = $mod->url;
         if (!$mod->is_visible_on_course_page() || !$url) {
@@ -200,7 +203,7 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
         // includes the word forum (or Forum, etc) then it is unhelpful
         // to include that in the accessible description that is added.
         if (false !== strpos(core_text::strtolower($instancename),
-                        core_text::strtolower($altname))) {
+                core_text::strtolower($altname))) {
             $altname = '';
         }
         // File type after name, for alphabetic lists (screen reader).
@@ -208,27 +211,29 @@ class theme_boost_o365teams_core_course_renderer extends core_course_renderer {
             $altname = get_accesshide(' ' . $altname);
         }
 
-        list($linkclasses, $textclasses) = $this->course_section_cm_classes($mod);
+        [$linkclasses, $textclasses] = $this->course_section_cm_classes($mod);
 
         // Get on-click attribute value if specified and decode the onclick - it
         // has already been encoded for display (puke).
         $onclick = htmlspecialchars_decode($mod->onclick, ENT_QUOTES);
 
         // Display link itself.
-        $activitylink = html_writer::empty_tag('img', array('src' => $mod->get_icon_url(),
-                        'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation')) .
-                html_writer::tag('span', $instancename . $altname, array('class' => 'instancename')) .
-                html_writer::tag('span', '', array('class' => 'fa fa-external-link popupicon'));
+        $activitylink = html_writer::empty_tag('img', ['src' => $mod->get_icon_url(),
+                'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation']) .
+            html_writer::tag('span', $instancename . $altname, ['class' => 'instancename']) .
+            html_writer::tag('span', '', ['class' => 'fa fa-external-link popupicon']);
         if ($mod->uservisible) {
-            $output .= html_writer::link($url, $activitylink, array('class' => $linkclasses, 'onclick' => $onclick));
+            $output .= html_writer::link($url, $activitylink, ['class' => $linkclasses, 'onclick' => $onclick]);
         } else {
             // We may be displaying this just in order to show information
             // about visibility, without the actual link ($mod->is_visible_on_course_page()).
-            $output .= html_writer::tag('div', $activitylink, array('class' => $textclasses));
+            $output .= html_writer::tag('div', $activitylink, ['class' => $textclasses]);
         }
+
         return $output;
     }
 }
+
 /**
  * mod_quiz
  *
@@ -251,41 +256,41 @@ class theme_boost_o365teams_mod_quiz_renderer extends mod_quiz_renderer {
 
         // Start the form.
         $output .= html_writer::start_tag('form',
-                array('action' => new moodle_url($attemptobj->processattempt_url(),
-                        array('cmid' => $attemptobj->get_cmid())), 'method' => 'post',
-                        'enctype' => 'multipart/form-data', 'accept-charset' => 'utf-8',
-                        'id' => 'responseform'));
+            ['action' => new moodle_url($attemptobj->processattempt_url(),
+                ['cmid' => $attemptobj->get_cmid()]), 'method' => 'post',
+                'enctype' => 'multipart/form-data', 'accept-charset' => 'utf-8',
+                'id' => 'responseform']);
         $output .= html_writer::start_tag('div');
 
         // Print all the questions.
         foreach ($slots as $slot) {
             $output .= $attemptobj->render_question($slot, false, $this,
-                    $attemptobj->attempt_url($slot, $page), $this);
+                $attemptobj->attempt_url($slot, $page), $this);
         }
 
         $navmethod = $attemptobj->get_quiz()->navmethod;
         $output .= $this->attempt_navigation_buttons_with_link($page, $attemptobj->is_last_page($page), $navmethod,
-                $attemptobj->view_url());
+            $attemptobj->view_url());
 
         // Some hidden fields to trach what is going on.
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'attempt',
-                'value' => $attemptobj->get_attemptid()));
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'thispage',
-                'value' => $page, 'id' => 'followingpage'));
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'nextpage',
-                'value' => $nextpage));
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'timeup',
-                'value' => '0', 'id' => 'timeup'));
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey',
-                'value' => sesskey()));
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'scrollpos',
-                'value' => '', 'id' => 'scrollpos'));
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'attempt',
+            'value' => $attemptobj->get_attemptid()]);
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'thispage',
+            'value' => $page, 'id' => 'followingpage']);
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'nextpage',
+            'value' => $nextpage]);
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'timeup',
+            'value' => '0', 'id' => 'timeup']);
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey',
+            'value' => sesskey()]);
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'scrollpos',
+            'value' => '', 'id' => 'scrollpos']);
 
         // Add a hidden field with questionids. Do this at the end of the form, so
         // if you navigate before the form has finished loading, it does not wipe all
         // the student's answers.
-        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'slots',
-                'value' => implode(',', $attemptobj->get_active_slots($page))));
+        $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'slots',
+            'value' => implode(',', $attemptobj->get_active_slots($page))]);
 
         // Finish the form.
         $output .= html_writer::end_tag('div');
@@ -311,27 +316,28 @@ class theme_boost_o365teams_mod_quiz_renderer extends mod_quiz_renderer {
     protected function attempt_navigation_buttons_with_link($page, $lastpage, $navmethod = 'free', $viewurl = null) {
         $output = '';
 
-        $output .= html_writer::start_tag('div', array('class' => 'submitbtns submitbtns_with_return'));
+        $output .= html_writer::start_tag('div', ['class' => 'submitbtns submitbtns_with_return']);
         if ($page > 0 && $navmethod == 'free') {
-            $output .= html_writer::empty_tag('input', array('type' => 'submit', 'name' => 'previous',
-                    'value' => get_string('navigateprevious', 'quiz'), 'class' => 'mod_quiz-prev-nav btn btn-secondary'));
+            $output .= html_writer::empty_tag('input', ['type' => 'submit', 'name' => 'previous',
+                'value' => get_string('navigateprevious', 'quiz'), 'class' => 'mod_quiz-prev-nav btn btn-secondary']);
         }
         if ($lastpage) {
             $nextlabel = get_string('endtest', 'quiz');
         } else {
             $nextlabel = get_string('navigatenext', 'quiz');
         }
-        $output .= html_writer::empty_tag('input', array('type' => 'submit', 'name' => 'next',
-                'value' => $nextlabel, 'class' => 'mod_quiz-next-nav btn btn-primary'));
+        $output .= html_writer::empty_tag('input', ['type' => 'submit', 'name' => 'next',
+            'value' => $nextlabel, 'class' => 'mod_quiz-next-nav btn btn-primary']);
         if ($viewurl) {
             // Return button.
             $output .= html_writer::link($viewurl, get_string('navigatereturn', 'theme_boost_o365teams'),
-                    array('class' => 'btn btn-secondary mod_quiz-return-nav'));
+                ['class' => 'btn btn-secondary mod_quiz-return-nav']);
         }
         $output .= html_writer::end_tag('div');
 
         return $output;
     }
+
     /**
      * No Question message
      *
@@ -343,7 +349,7 @@ class theme_boost_o365teams_mod_quiz_renderer extends mod_quiz_renderer {
         $output = '';
         $output .= $this->notification(get_string('noquestions', 'quiz'));
         if ($canedit) {
-            $output .= $this->single_button($editurl, get_string('editquiz', 'quiz'), 'get', array("primary" => true));
+            $output .= $this->single_button($editurl, get_string('editquiz', 'quiz'), 'get', ["primary" => true]);
         }
 
         return $output;

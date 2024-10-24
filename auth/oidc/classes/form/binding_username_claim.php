@@ -36,8 +36,19 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * Class bindingusernameclaim represents the form on the binding username claim configuration page.
  */
 class binding_username_claim extends moodleform {
+    /**
+     * Option for setting a non-Microsoft IdP.
+     */
     const OPTION_SET_NON_MS_IDP = 1;
+
+    /**
+     * Option for setting a Microsoft IdP without user sync.
+     */
     const OPTION_SET_MS_NO_USER_SYNC = 2;
+
+    /**
+     * Option for setting a Microsoft IdP with user sync enabled.
+     */
     const OPTION_SET_MS_WITH_USER_SYNC = 3;
 
     /** @var int */
@@ -102,7 +113,12 @@ class binding_username_claim extends moodleform {
             throw new moodle_exception('missing_idp_type', 'auth_oidc');
         }
 
-        $mform->addElement('select', 'bindingusernameclaim', auth_oidc_config_name_in_form('binding_username_claim'), $bindingusernameoptions);
+        $mform->addElement(
+                'select',
+                'bindingusernameclaim',
+                auth_oidc_config_name_in_form('binding_username_claim'),
+                $bindingusernameoptions
+        );
         $mform->setDefault('bindingusernameclaim', 'auto');
         $mform->addElement('static', 'bindingusernameclaim_description', '', get_string($descriptionidentifier, 'auth_oidc'));
 
