@@ -24,6 +24,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
+
 $string['pluginname'] = 'Intégration de Microsoft 365';
 $string['acp_title'] = 'Panneau de configuration d\'administration Microsoft 365';
 $string['acp_healthcheck'] = 'Contrôle de l\'état';
@@ -46,7 +49,7 @@ $string['erroro365apiinvalidmethod'] = 'Méthode httpmethod non valide transmise
 $string['erroro365apinoparentinfo'] = 'Informations du dossier parent introuvables';
 $string['erroro365apinotimplemented'] = 'Ces données doivent être remplacées.';
 $string['erroro365apinotoken'] = 'Jeton inexistant pour l\'utilisateur et la ressource donnés. Impossible d\'en obtenir un. Le jeton actualisé de l\'utilisateur a-t-il expiré ?';
-$string['erroro365apisiteexistsnolocal'] = 'Le site existe déjà, mais registre local introuvable.';;
+$string['erroro365apisiteexistsnolocal'] = 'Le site existe déjà, mais registre local introuvable.';
 $string['eventapifail'] = 'Échec de l\'API';
 $string['eventcalendarsubscribed'] = 'Utilisateur abonné à un calendrier';
 $string['eventcalendarunsubscribed'] = 'Utilisateur désabonné d\'un calendrier';
@@ -141,3 +144,6 @@ $string['ucp_syncdir_in'] = 'De Outlook à Moodle';
 $string['ucp_syncdir_both'] = 'Mettre à jour Outlook et Moodle';
 $string['ucp_title'] = 'Panneau de configuration Microsoft 365/Moodle';
 $string['ucp_options'] = 'Options';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

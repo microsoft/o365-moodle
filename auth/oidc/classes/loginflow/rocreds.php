@@ -62,8 +62,8 @@ class rocreds extends base {
     /**
      * Provides a hook into the login page.
      *
-     * @param object &$frm Form object.
-     * @param object &$user User object.
+     * @param stdClass $frm Form object.
+     * @param stdClass $user User object.
      * @return bool
      */
     public function loginpage_hook(&$frm, &$user) {
@@ -122,8 +122,8 @@ class rocreds extends base {
             $failurereason = AUTH_LOGIN_UNAUTHORISED;
 
             // Trigger login failed event.
-            $event = \core\event\user_login_failed::create(array('other' => array('username' => $username,
-                    'reason' => $failurereason)));
+            $event = \core\event\user_login_failed::create(['other' => ['username' => $username,
+                    'reason' => $failurereason]]);
             $event->trigger();
 
             debugging('[client '.getremoteaddr()."]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  ".

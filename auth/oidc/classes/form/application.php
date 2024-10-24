@@ -86,7 +86,7 @@ class application extends moodleform {
         // Certificate source.
         $mform->addElement('select', 'clientcertsource', auth_oidc_config_name_in_form('clientcertsource'), [
             AUTH_OIDC_AUTH_CERT_SOURCE_TEXT => get_string('cert_source_text', 'auth_oidc'),
-            AUTH_OIDC_AUTH_CERT_SOURCE_FILE => get_string('cert_source_path', 'auth_oidc')
+            AUTH_OIDC_AUTH_CERT_SOURCE_FILE => get_string('cert_source_path', 'auth_oidc'),
         ]);
         $mform->setDefault('clientcertsource', 0);
         $mform->disabledIf('clientcertsource', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
@@ -146,7 +146,7 @@ class application extends moodleform {
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_oidc'));
         $mform->addRule('tokenendpoint', null, 'required', null, 'client');
 
-        // "Other parameters" header.
+        // Other parameters header.
         $mform->addElement('header', 'otherparams', get_string('settings_section_other_params', 'auth_oidc'));
         $mform->setExpanded('otherparams');
 
@@ -184,11 +184,11 @@ class application extends moodleform {
     /**
      * Additional validate rules.
      *
-     * @param $data
-     * @param $files
-     * @return array
+     * @param array $data Submitted data for validation.
+     * @param array $files Uploaded files for validation.
+     * @return array An array of validation errors, if any.
      */
-    function validation($data, $files) {
+    public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
         if (!isset($data['clientauthmethod'])) {

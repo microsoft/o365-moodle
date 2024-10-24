@@ -33,7 +33,7 @@ $tasks = [
         'hour' => '1',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\task\coursesync',
@@ -42,7 +42,7 @@ $tasks = [
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\feature\calsync\task\importfromoutlook',
@@ -51,7 +51,7 @@ $tasks = [
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\task\processmatchqueue',
@@ -60,7 +60,7 @@ $tasks = [
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\feature\sds\task\sync',
@@ -69,7 +69,7 @@ $tasks = [
         'hour' => '3',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\task\notifysecretexpiry',
@@ -87,7 +87,7 @@ $tasks = [
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\task\updatecourserequeststatus',
@@ -96,7 +96,7 @@ $tasks = [
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
-        'month' => '*'
+        'month' => '*',
     ],
     [
         'classname' => 'local_o365\task\coursemembershipsync',

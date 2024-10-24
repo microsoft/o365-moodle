@@ -34,13 +34,16 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
+/**
+ * Notify secret expiry task.
+ */
 class notifysecretexpiry extends scheduled_task {
     /**
      * Return a descriptive name of the task.
      *
      * @return string
      */
-    public function get_name() : string {
+    public function get_name(): string {
         return get_string('task_notifysecretexpiry', 'local_o365');
     }
 
@@ -49,7 +52,7 @@ class notifysecretexpiry extends scheduled_task {
      *
      * @return bool
      */
-    public function execute() : bool {
+    public function execute(): bool {
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -139,7 +142,7 @@ class notifysecretexpiry extends scheduled_task {
      *
      * @return array
      */
-    private function get_notification_recipient_emails_from_configuration() : array {
+    private function get_notification_recipient_emails_from_configuration(): array {
         $recipientemails = [];
 
         $recipientssetting = get_config('auth_oidc', 'secretexpiryrecipients');
@@ -161,7 +164,7 @@ class notifysecretexpiry extends scheduled_task {
      *
      * @return array
      */
-    private function get_notification_recipients() : array {
+    private function get_notification_recipients(): array {
         $notificationrecipients = [];
 
         $recipientemails = $this->get_notification_recipient_emails_from_configuration();
