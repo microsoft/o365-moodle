@@ -485,9 +485,9 @@ a.feedbacklink {
     color: #ff0;
 }
 .fa-lightbulb-o {
-    font-family: "FontAwesome" !important;
-    font-size: 15px !important;
-    border-radius: 5px !important;
+    font-family: "FontAwesome";
+    font-size: 15px;
+    border-radius: 5px;
 }
 .fa-lightbulb-o:before {
     padding: 5px;
@@ -535,8 +535,8 @@ button {
     min-width: 6rem;
     padding: 0.25rem;
     white-space: nowrap;
-    -webkit-box-shadow: unset !important;
-    box-shadow: unset !important;
+    -webkit-box-shadow: unset;
+    box-shadow: unset;
 }
 /* secondary button :active*/
 .btn-secondary:not(:disabled):not(.disabled):active {
@@ -591,8 +591,8 @@ div.disabled .btn-secondary {
     min-width: 6rem;
     padding: 0.25rem;
     white-space: nowrap;
-    -webkit-box-shadow: unset !important;
-    box-shadow: unset !important;
+    -webkit-box-shadow: unset;
+    box-shadow: unset;
     color: #fff;
 }
 /* primary button :active*/
@@ -659,7 +659,7 @@ ul {
     content: none;
 }
 #page-wrapper {
-    margin-bottom: 50px !important;
+    margin-bottom: 50px;
 }
 
 /*!* modules START *!*/
@@ -730,7 +730,7 @@ table#permissions tbody tr:hover {
 }
 
 .submitbtns_with_return {
-    text-align: center !important;
+    text-align: center;
 }
 
 .mod_quiz-prev-nav {
