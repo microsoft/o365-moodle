@@ -15,18 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * Plugin installation script.
  *
  * @package auth_oidc
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2024042206;
-$plugin->requires = 2024042200;
-$plugin->release = '4.4.1';
-$plugin->component = 'auth_oidc';
-$plugin->maturity = MATURITY_STABLE;
+/**
+ * Installation script.
+ */
+function xmldb_auth_oidc_install() {
+    // Set the default value for the bindingusernameclaim setting.
+    $bindingusernameclaimconfig = get_config('auth_oidc', 'bindingusernameclaim');
+    if (empty($bindingusernameclaimconfig)) {
+        set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+    }
+}
