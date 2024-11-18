@@ -731,6 +731,10 @@ class base {
 
         if (empty($bindingusernameclaim)) {
             $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
+            if (empty($bindingusernameclaim)) {
+                $bindingusernameclaim = 'auto';
+                set_config('bindingusernameclaim', $bindingusernameclaim, 'auth_oidc');
+            }
         }
 
         switch ($bindingusernameclaim) {

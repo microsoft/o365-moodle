@@ -102,7 +102,12 @@ class binding_username_claim extends moodleform {
             throw new moodle_exception('missing_idp_type', 'auth_oidc');
         }
 
-        $mform->addElement('select', 'bindingusernameclaim', auth_oidc_config_name_in_form('binding_username_claim'), $bindingusernameoptions);
+        $mform->addElement(
+                'select',
+                'bindingusernameclaim',
+                auth_oidc_config_name_in_form('bindingusernameclaim'),
+                $bindingusernameoptions
+        );
         $mform->setDefault('bindingusernameclaim', 'auto');
         $mform->addElement('static', 'bindingusernameclaim_description', '', get_string($descriptionidentifier, 'auth_oidc'));
 
