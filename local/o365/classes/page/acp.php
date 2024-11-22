@@ -1414,7 +1414,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $courseid = optional_param('courseid', 0, PARAM_INT);
         core_php_time_limit::raise();
         raise_memory_limit(MEMORY_EXTRA);
-        disable_output_buffering();
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         $coursesync = new main($graphclient, true);
