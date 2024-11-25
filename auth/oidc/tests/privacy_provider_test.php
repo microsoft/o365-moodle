@@ -41,7 +41,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
      * Tests set up.
      */
     public function setUp(): void {
-        global $CFG;
+        parent::setUp();
         $this->resetAfterTest();
         $this->setAdminUser();
     }

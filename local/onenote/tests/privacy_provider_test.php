@@ -48,7 +48,7 @@ final class privacy_provider_test extends provider_testcase {
      * Tests set up.
      */
     public function setUp(): void {
-        global $CFG;
+        parent::setUp();
         $this->resetAfterTest();
         $this->setAdminUser();
     }
