@@ -24,11 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2024042200;
-$plugin->requires = 2024042200;
-$plugin->release = '4.4.0';
+$plugin->version = 2024100700;
+$plugin->requires = 2024100700;
+$plugin->release = '4.5.0';
 $plugin->component = 'theme_boost_o365teams';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'local_o365' => 2024042200,
+    'local_o365' => 2024100700,
 ];
