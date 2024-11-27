@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin tasks.
+ * A scheduled task to clean up oidc sid records.
  *
  * @package auth_oidc
  * @author Lai Wei <lai.wei@enovation.ie>
@@ -23,25 +23,27 @@
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace auth_oidc\task;
 
-$tasks = [
-    [
-        'classname' => 'auth_oidc\task\cleanup_oidc_state_and_token',
-        'blocking' => 0,
-        'minute' => '*',
-        'hour' => '*',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*',
-    ],
-    [
-        'classname' => 'auth_oidc\task\cleanup_oidc_sid',
-        'blocking' => 0,
-        'minute' => '51',
-        'hour' => '*',
-        'day' => '*',
-        'dayofweek' => '*',
-        'month' => '*',
-    ],
-];
+use core\task\scheduled_task;
+
+/**
+ * A scheduled task that cleans up OIDC SID records.
+ */
+class cleanup_oidc_sid extends scheduled_task {
+    /**
+     * Get a descriptive name for the task.
+     */
+    public function get_name() {
+        return get_string('task_cleanup_oidc_sid', 'auth_oidc');
+    }
+
+    /**
+     * Clean up OIDC SID records.
+     */
+    public function execute() {
+        global $DB;
+
+        $DB->delete_records_select('auth_oidc_sid', 'timecreated < ?', [strtotime('-1 day')]);
+    }
+}

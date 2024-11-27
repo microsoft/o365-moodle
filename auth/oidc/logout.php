@@ -32,14 +32,15 @@ $PAGE->set_context(context_system::instance());
 $sid = optional_param('sid', '', PARAM_TEXT);
 
 if ($sid) {
-    if ($authoidctokenrecord = $DB->get_record('auth_oidc_token', ['sid' => $sid])) {
-        if ($authoidctokenrecord->userid == $USER->id) {
+    if ($authoidcsidrecord = $DB->get_record('auth_oidc_sid', ['sid' => $sid])) {
+        if ($authoidcsidrecord->userid == $USER->id) {
             $authsequence = get_enabled_auth_plugins(); // Auths, in sequence.
             foreach ($authsequence as $authname) {
                 $authplugin = get_auth_plugin($authname);
                 $authplugin->logoutpage_hook();
             }
 
+            $DB->delete_records('auth_oidc_sid', ['sid' => $sid]);
             require_logout();
         }
     }
