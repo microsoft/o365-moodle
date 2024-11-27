@@ -207,6 +207,7 @@ $string['application_not_changed'] = 'OpenID Connect application setting was not
 $string['event_debug'] = 'Debug message';
 
 $string['task_cleanup_oidc_state_and_token'] = 'Clean up OIDC state and invalid token';
+$string['task_cleanup_oidc_sid'] = 'Clean up OIDC SID records';
 
 $string['errorauthdisconnectemptypassword'] = 'Password cannot be empty';
 $string['errorauthdisconnectemptyusername'] = 'Username cannot be empty';
