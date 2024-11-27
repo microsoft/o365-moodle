@@ -801,7 +801,7 @@ class repository_office365 extends repository {
      * @return int
      */
     public function supported_returntypes() {
-        return FILE_INTERNAL | FILE_EXTERNAL | FILE_REFERENCE;
+        return FILE_INTERNAL;
     }
 
     /**
