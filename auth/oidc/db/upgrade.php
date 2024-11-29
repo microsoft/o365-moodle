@@ -504,5 +504,16 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022112836, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2022112841) {
+        // Set the default value for the bindingusernameclaim setting.
+        $bindingusernameclaimconfig = get_config('auth_oidc', 'bindingusernameclaim');
+        if (empty($bindingusernameclaimconfig)) {
+            set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2022112841, 'auth', 'oidc');
+    }
+
     return true;
 }
