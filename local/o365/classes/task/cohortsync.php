@@ -25,6 +25,7 @@
 
 namespace local_o365\task;
 
+use core\exception\moodle_exception;
 use core\task\scheduled_task;
 use local_o365\feature\cohortsync\main;
 use local_o365\utils;
@@ -48,8 +49,14 @@ class cohortsync extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
-        $graphclient = main::get_unified_api(__METHOD__);
-        if (empty($graphclient)) {
+        try {
+            $graphclient = main::get_unified_api(__METHOD__);
+            if (empty($graphclient)) {
+                utils::mtrace("Failed to get Graph API client. Exiting.", 1);
+
+                return true;
+            }
+        } catch (moodle_exception $e) {
             utils::mtrace("Failed to get Graph API client. Exiting.", 1);
 
             return true;
