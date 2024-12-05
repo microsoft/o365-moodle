@@ -54,6 +54,10 @@ $string['eventapifail'] = 'API-Fehler';
 $string['eventcalendarsubscribed'] = 'Benutzer hat einen Kalender abonniert';
 $string['eventcalendarunsubscribed'] = 'Benutzer hat Abonnement eines Kalenders gekündigt';
 $string['healthcheck_fixlink'] = 'Klicken Sie hier zum Beheben.';
+
+$string['help_user_reenable'] = 'Hilfe für die Kontenreaktivierung';
+$string['help_user_reenable_help'] = 'Mit Entra ID verknüpfte gesperrte Moodle-Konten werden reaktiviert, wenn sie auf Entra ID als aktiv markiert sind.';
+
 $string['settings_usersync'] = 'Benutzer mit Microsoft Entra ID synchronisieren';
 $string['settings_usersync_details'] = 'Wenn diese Option aktiviert ist, werden Moodle- und Microsoft Entra ID-Benutzer gemäß der obigen Optionen synchronisiert.<br /><br /><b>Hinweis: </b>Der Synchronisierungsauftrag wird im Moodle-Cron ausgeführt. Er synchronisiert 1.000 Benutzer gleichzeitig. Dieser Vorgang wird standardmäßig einmal täglich um 01:00 Uhr in der Zeitzone Ihres Servers ausgeführt. Um große Benutzermengen schneller zu synchronisieren, können Sie die Häufigkeit der Aufgabe <b>Benutzer mit Microsoft Entra ID synchronisieren</b> mithilfe der Seite für die <a href="{$a}">Verwaltung geplanter Aufgaben erhöhen.</a><br /><br />Ausführlichere Anweisungen finden Sie in der <a href="https://docs.moodle.org/30/en/Office365#User_sync">Dokumentation zur Benutzersynchronisierung</a><br /><br />';
 $string['settings_usersync_create'] = 'Konten für Benutzer in Microsoft Entra ID in Moodle erstellen';
