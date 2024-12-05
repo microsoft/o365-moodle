@@ -104,6 +104,7 @@ $string['settings_healthcheck_details'] = 'Wenn etwas nicht ordnungsgemäß funk
 $string['settings_healthcheck_linktext'] = 'Health Check ausführen';
 $string['settings_odburl'] = 'URL für OneDrive for Business';
 $string['settings_odburl_details'] = 'Die für den Zugriff auf OneDrive for Business verwendete URL. Diese kann in der Regel mithilfe Ihres Microsoft Entra ID-Mandanten ermittelt werden. Wenn Ihr Microsoft Entra ID-Mandant z. B. "contoso.onmicrosoft.com" lautet, ist dies wahrscheinlich "contoso-my.sharepoint.com". Geben Sie nur den Domänennamen ein und lassen Sie das "http://" oder "https://" weg.';
+$string['settings_usersync_update'] = 'Aktualisiere mit Entra ID verknüpfte Moodle-Konten mit Entra ID-Daten';
 $string['settings_serviceresourceabstract_valid'] = '{$a} kann verwendet werden.';
 $string['settings_serviceresourceabstract_invalid'] = 'Dieser Wert kann anscheinend nicht verwendet werden.';
 $string['settings_serviceresourceabstract_nocreds'] = 'Legen Sie zunächst die Anwendungsanmeldeinformationen fest.';
