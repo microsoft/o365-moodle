@@ -44,7 +44,7 @@ require_once($CFG->dirroot . '/mod/assign/tests/privacy/provider_test.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \assignfeedback_onenote\privacy\provider
  */
-final class provider_test extends \mod_assign\privacy\provider_test {
+final class provider_test extends \mod_assign\tests\provider_testcase {
 
     /**
      * Convenience function for creating feedback data.
