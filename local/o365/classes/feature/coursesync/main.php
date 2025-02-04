@@ -1130,11 +1130,31 @@ class main {
         if ($teamobjectids) {
             // If there are records in teams cache, delete teams connection records with object IDs not in the cache.
             [$teamobjectidsql, $params] = $DB->get_in_or_equal($teamobjectids, SQL_PARAMS_QM, 'param', false);
-            $DB->delete_records_select('local_o365_objects',
-                "type = 'group' AND subtype IN ('classteam', 'teamfromgroup') AND objectid {$teamobjectidsql}", $params);
+
+            if (count($params) < 65535) {
+                $DB->delete_records_select('local_o365_objects',
+                    "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND objectid {$teamobjectidsql}", $params);
+            } else {
+                // PostgreSQL can't handle more than 65535 parameters in a query. Special care is needed.
+                $groupobjectids = $DB->get_records_select_menu('local_o365_objects',
+                    "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup')", [], '', 'objectid, id');
+                $objectrecordidstodelete = [];
+                foreach ($groupobjectids as $objectid => $objectrecordid) {
+                    if (!in_array($objectid, $teamobjectids)) {
+                        $objectrecordidstodelete[] = $objectrecordid;
+                    }
+                }
+                if ($objectrecordidstodelete) {
+                    $objectrecordidstodeletechunk = array_chunk($objectrecordidstodelete, 10000);
+                    foreach ($objectrecordidstodeletechunk as $objectrecordidstodelete) {
+                        [$teamsobjectidsql, $params] = $DB->get_in_or_equal($objectrecordidstodelete);
+                        $DB->delete_records_select('local_o365_objects', "id {$teamsobjectidsql}", $params);
+                    }
+                }
+            }
         } else {
             // If there are no records in teams cache, delete all teams connection records.
-            $DB->delete_records_select('local_o365_objects', "type = 'group' AND subtype IN ('classteam', 'teamfromgroup')");
+            $DB->delete_records_select('local_o365_objects', "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup')");
         }
         $this->mtrace('Finished cleaning up teams connection records.');
         $this->mtrace('');
