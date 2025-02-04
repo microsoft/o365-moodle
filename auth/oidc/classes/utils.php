@@ -118,18 +118,53 @@ class utils {
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('auth_oidc', 'debugmode');
         if ($debugmode === true) {
-            $backtrace = debug_backtrace();
-            $otherdata = [
+            $debugbacktrace = debug_backtrace();
+            $debugbacktracechecksum = md5(json_encode($debugbacktrace));
+
+            $otherdata = static::make_json_safe([
                 'other' => [
                     'message' => $message,
                     'where' => $where,
                     'debugdata' => $debugdata,
-                    'backtrace' => $backtrace,
+                    'backtrace_checksum' => $debugbacktracechecksum,
                 ],
-            ];
+            ]);
             $event = action_failed::create($otherdata);
             $event->trigger();
+
+            $debugbacktracedata = [
+                'checksum' => $debugbacktracechecksum,
+                'backtrace' => $debugbacktrace,
+            ];
+
+            debugging(json_encode($debugbacktracedata), DEBUG_DEVELOPER);
         }
+    }
+
+    /**
+     * Make a JSON structure safe for logging.
+     *
+     * @param mixed $data The data to make safe.
+     * @return mixed The safe data.
+     */
+    private static function make_json_safe($data) {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = static::make_json_safe($value);
+            }
+        } else if (is_object($data)) {
+            $data = (array)$data;
+            foreach ($data as $key => $value) {
+                $data[$key] = static::make_json_safe($value);
+            }
+        } else if (is_bool($data)) {
+            $data = (int)$data;
+        } else if (is_null($data)) {
+            $data = null;
+        } else if (!is_scalar($data)) {
+            $data = (string)$data;
+        }
+        return $data;
     }
 
     /**
