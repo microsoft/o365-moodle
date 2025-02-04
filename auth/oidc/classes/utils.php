@@ -118,17 +118,26 @@ class utils {
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('auth_oidc', 'debugmode');
         if ($debugmode === true) {
-            $backtrace = debug_backtrace();
+            $debugbacktrace = debug_backtrace();
+            $debugbacktracechecksum = md5(json_encode($debugbacktrace));
+
             $otherdata = static::make_json_safe([
                 'other' => [
                     'message' => $message,
                     'where' => $where,
                     'debugdata' => $debugdata,
-                    'backtrace' => $backtrace,
+                    'backtrace_checksum' => $debugbacktracechecksum,
                 ],
             ]);
             $event = action_failed::create($otherdata);
             $event->trigger();
+
+            $debugbacktracedata = [
+                'checksum' => $debugbacktracechecksum,
+                'backtrace' => $debugbacktrace,
+            ];
+
+            debugging(json_encode($debugbacktracedata), DEBUG_DEVELOPER);
         }
     }
 
