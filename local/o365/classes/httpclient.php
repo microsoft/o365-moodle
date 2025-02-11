@@ -95,9 +95,9 @@ class httpclient extends curl implements httpclientinterface {
      * @param string $url
      * @param array|string $params
      * @param array $options
-     * @return bool
+     * @return bool|string
      */
-    public function patch($url, $params = '', $options = []): bool {
+    public function patch($url, $params = '', $options = []): bool|string {
         $options['CURLOPT_CUSTOMREQUEST'] = 'PATCH';
 
         if (is_array($params)) {
@@ -125,9 +125,9 @@ class httpclient extends curl implements httpclientinterface {
      * @param string $url
      * @param array|string $params
      * @param array $options
-     * @return bool
+     * @return bool|string
      */
-    public function merge($url, $params = '', $options = []): bool {
+    public function merge($url, $params = '', $options = []): bool|string {
         $options['CURLOPT_CUSTOMREQUEST'] = 'MERGE';
 
         if (is_array($params)) {
@@ -155,9 +155,9 @@ class httpclient extends curl implements httpclientinterface {
      * @param string $url
      * @param array $params
      * @param array $options
-     * @return bool
+     * @return bool|string
      */
-    public function put($url, $params = [], $options = []): bool {
+    public function put($url, $params = [], $options = []): bool|string {
         if (!isset($params['file'])) {
             throw new moodle_exception('errorhttpclientnofileinput', 'local_o365');
         }
@@ -188,9 +188,9 @@ class httpclient extends curl implements httpclientinterface {
      *
      * @param string $url
      * @param array $options
-     * @return bool
+     * @return bool|string
      */
-    public function download_file($url, $options = []): bool {
+    public function download_file($url, $options = []): bool|string {
         $url = str_replace(['+', ' '], '%20', $url);
 
         return $this->request($url, $options);
