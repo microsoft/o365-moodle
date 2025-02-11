@@ -572,7 +572,7 @@ class authcode extends base {
             }
         }
 
-        $supportupnchangeconfig = get_config('local_o365', 'support_upn_change');
+        $supportuseridentifierchangeconfig = get_config('local_o365', 'support_user_identifier_change');
 
         if (!empty($tokenrec)) {
             // Already connected user.
@@ -612,7 +612,7 @@ class authcode extends base {
 
                 // Handle username change - update token, update connection.
                 if ($usernamechanged) {
-                    if ($supportupnchangeconfig != 1) {
+                    if ($supportuseridentifierchangeconfig != 1) {
                         // Username change is not supported, throw exception.
                         throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
                     }
@@ -668,7 +668,7 @@ class authcode extends base {
             // 2. create token record,
             // 3. update connection record in local_o365_objects table.
 
-            if ($supportupnchangeconfig != 1) {
+            if ($supportuseridentifierchangeconfig != 1) {
                 throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
             }
 
