@@ -1432,10 +1432,12 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $sql .= ' AND crs.id = ?';
             $params[] = $courseid;
         }
-        if (is_array($coursesenabled)) {
+        if (is_array($coursesenabled) && !empty($coursesenabled)) {
             [$coursesinsql, $coursesparams] = $DB->get_in_or_equal($coursesenabled);
             $sql .= ' AND crs.id ' . $coursesinsql;
             $params = array_merge($params, $coursesparams);
+        } else {
+            $sql .= ' AND 1 = 0';
         }
         $courses = $DB->get_recordset_sql($sql, $params);
         $outputsbycourse = [];
