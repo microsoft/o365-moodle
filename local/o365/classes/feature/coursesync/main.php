@@ -220,6 +220,9 @@ class main {
             if (strlen($description) > 1024) {
                 $description = shorten_text($description, 1024, true, ' ...');
             }
+            while (mb_strlen($description, '8bit') > 1024) {
+                $description = mb_substr($description, 0, -5) . ' ...';
+            }
         }
         $externalid = $course->id;
         $externalname = $course->fullname;
@@ -312,6 +315,9 @@ class main {
             $description = strip_tags($course->summary);
             if (strlen($description) > 1024) {
                 $description = shorten_text($description, 1024, true, ' ...');
+            }
+            while (mb_strlen($description, '8bit') > 1024) {
+                $description = mb_substr($description, 0, -5) . ' ...';
             }
         }
 
