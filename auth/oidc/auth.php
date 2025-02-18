@@ -320,7 +320,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if ($redirect) {
                 $logouturl = get_config('auth_oidc', 'logouturi');
                 if (!$logouturl) {
-                    $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
+                    $logouturl = 'https://login.microsoftonline.com/organizations/oauth2/logout?post_logout_redirect_uri=' .
                         urlencode($CFG->wwwroot);
                 } else {
                     if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&

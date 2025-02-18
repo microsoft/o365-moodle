@@ -135,14 +135,14 @@ class application extends moodleform {
         // Authorization endpoint.
         $mform->addElement('text', 'authendpoint', auth_oidc_config_name_in_form('authendpoint'), ['size' => 60]);
         $mform->setType('authendpoint', PARAM_URL);
-        $mform->setDefault('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize');
+        $mform->setDefault('authendpoint', 'https://login.microsoftonline.com/organizations/oauth2/authorize');
         $mform->addElement('static', 'authendpoint_help', '', get_string('authendpoint_help', 'auth_oidc'));
         $mform->addRule('authendpoint', null, 'required', null, 'client');
 
         // Token endpoint.
         $mform->addElement('text', 'tokenendpoint', auth_oidc_config_name_in_form('tokenendpoint'), ['size' => 60]);
         $mform->setType('tokenendpoint', PARAM_URL);
-        $mform->setDefault('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token');
+        $mform->setDefault('tokenendpoint', 'https://login.microsoftonline.com/organizations/oauth2/token');
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_oidc'));
         $mform->addRule('tokenendpoint', null, 'required', null, 'client');
 
