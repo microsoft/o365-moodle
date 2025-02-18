@@ -28,6 +28,7 @@ namespace auth_oidc;
 use Exception;
 use moodle_exception;
 use auth_oidc\event\action_failed;
+use moodle_url;
 
 /**
  * General purpose utility class.
@@ -52,6 +53,18 @@ class utils {
             $errmsg = 'Error response received.';
             self::debug($errmsg, __METHOD__, $result);
             if (isset($result['error_description'])) {
+                $isadminconsent = optional_param('admin_consent', false, PARAM_BOOL);
+                if ($isadminconsent) {
+                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
+                        auth_oidc_is_local_365_installed() &&
+                        $result['error'] === 'invalid_grant' &&
+                        isset($result['error_codes']) && count($result['error_codes']) == 1 &&
+                        $result['error_codes'][0] == 53003) {
+                        $localo365configurationpageurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
+                        throw new moodle_exception('settings_adminconsent_error_53003', 'local_o365',
+                            $localo365configurationpageurl, '', $result['error_description']);
+                    }
+                }
                 throw new moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
             } else {
                 throw new moodle_exception('erroroidccall', 'auth_oidc');
@@ -164,7 +177,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_redirecturl() {
-        $redirecturl = new \moodle_url('/auth/oidc/');
+        $redirecturl = new moodle_url('/auth/oidc/');
         return $redirecturl->out(false);
     }
 
@@ -174,7 +187,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_frontchannellogouturl() {
-        $logouturl = new \moodle_url('/auth/oidc/logout.php');
+        $logouturl = new moodle_url('/auth/oidc/logout.php');
         return $logouturl->out(false);
     }
 
