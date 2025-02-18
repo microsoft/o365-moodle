@@ -59,9 +59,17 @@ $string['settings_setup_step3_desc'] = 'Setup is complete. Click the "Update" bu
 // Settings in "Step 2/2" section of the "Setup" tab.
 $string['settings_adminconsent'] = 'Admin Consent';
 $string['settings_adminconsent_btn'] = 'Provide Admin Consent';
-$string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with an Azure administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Azure.';
+$string['settings_adminconsent_error_53003'] = 'A known issue has happened when providing admin consent, which only applies to Microsoft identity platform (v2.0) IdP type. As a result, the integration cannot detect Microsoft Entra tenant and OneDrive for Business URL settings below automatically. Please set these values manually.';
+$string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with a Microsoft Entra ID administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Entra ID.';
 $string['settings_entratenant'] = 'Microsoft Entra tenant';
-$string['settings_entratenant_details'] = 'Used to Identify your organization within Microsoft. For example: "contoso.onmicrosoft.com".';
+$string['settings_entratenant_details'] = 'Used to Identify your organization within Microsoft. For example: "contoso.onmicrosoft.com".<br/>
+To find this value manually:
+<ul>
+<li>Go to <a href="http://portal.azure.com" target="_blank">Azure Portal</a>.</li>
+<li>Sign in with your admin account.</li>
+<li>In the search bar, type "Microsoft Entra ID", and go to the "Microsoft Entra ID" page.</li>
+<li>Use the value in <b>Primary domain</b> field in the "Basic information" section.</li>
+</ul>';
 $string['settings_odburl'] = 'OneDrive for Business URL';
 $string['settings_odburl_details'] = 'The URL used to access OneDrive for Business. This can usually be determined by your Microsoft Entra tenant. For example, if your Microsoft Entra tenant is "contoso.onmicrosoft.com", this is most likely "contoso-my.sharepoint.com". Enter only the domain name, do not include http:// or https://';
 $string['settings_odburl_error'] = 'We could not determine your OneDrive for Business URL.';
