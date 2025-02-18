@@ -25,6 +25,8 @@
 
 namespace local_o365\oauth2;
 
+use local_o365\httpclientinterface;
+use local_o365\utils;
 use moodle_exception;
 
 /**
@@ -46,10 +48,10 @@ class token {
     /** @var string The token's resource. */
     protected $tokenresource;
 
-    /** @var \local_o365\oauth2\clientdata Client data used for refreshing the token if needed. */
+    /** @var clientdata Client data used for refreshing the token if needed. */
     protected $clientdata;
 
-    /** @var \local_o365\httpclientinterface An HTTP client used for refreshing the token if needed. */
+    /** @var httpclientinterface An HTTP client used for refreshing the token if needed. */
     protected $httpclient;
 
     /** @var int The ID of the user the token belongs to. */
@@ -64,11 +66,11 @@ class token {
      * @param string $scope The token's scope.
      * @param string $tokenresource The token's resource.
      * @param int $userid
-     * @param \local_o365\oauth2\clientdata $clientdata Client data used for refreshing the token if needed.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
+     * @param clientdata $clientdata Client data used for refreshing the token if needed.
+     * @param httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
      */
     public function __construct($token, $expiry, $refreshtoken, $scope, $tokenresource, $userid,
-                                \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+                                clientdata $clientdata, httpclientinterface $httpclient) {
         $this->token = $token;
         $this->expiry = $expiry;
         $this->refreshtoken = $refreshtoken;
@@ -147,14 +149,13 @@ class token {
      *
      * @param int $userid
      * @param string $tokenresource The new resource.
-     * @param \local_o365\oauth2\clientdata $clientdata Client information.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @param clientdata $clientdata Client information.
+     * @param httpclientinterface $httpclient An HTTP client.
      * @param bool $forcecreate
      *
-     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     * @return token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function instance($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient,
-                                    $forcecreate = false) {
+    public static function instance($userid, $tokenresource, clientdata $clientdata, $httpclient, $forcecreate = false) {
         $token = static::get_stored_token($userid, $tokenresource);
         if (!empty($token)) {
             $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['tokenresource'],
@@ -169,7 +170,7 @@ class token {
                     }
                 }
                 // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
-                \local_o365\utils::debug('Cannot retrieve a token for the base resource.', __METHOD__);
+                utils::debug('Cannot retrieve a token for the base resource.', __METHOD__);
                 return null;
             } else {
                 $token = static::get_for_new_resource($userid, $tokenresource, $clientdata, $httpclient);
@@ -184,15 +185,15 @@ class token {
     /**
      * Given a token for one resource, attempt to get a token for a different resource.
      *
-     * @param \local_o365\oauth2\token $token The starting token.
+     * @param token $token The starting token.
      * @param string $newtokenresource The new resource.
-     * @param \local_o365\oauth2\clientdata $clientdata Client information.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @param clientdata $clientdata Client information.
+     * @param httpclientinterface $httpclient An HTTP client.
      *
-     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     * @return token A constructed token for the new resource, or false if failure.
      */
-    public static function jump_tokenresource(\local_o365\oauth2\token $token, $newtokenresource,
-        \local_o365\oauth2\clientdata $clientdata, \local_o365\httpclientinterface $httpclient) {
+    public static function jump_tokenresource(token $token, $newtokenresource, clientdata $clientdata,
+        httpclientinterface $httpclient) {
         $params = [
             'client_id' => $clientdata->get_clientid(),
             'client_secret' => $clientdata->get_clientsecret(),
@@ -214,7 +215,7 @@ class token {
 
         if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
             $userid = $token->get_userid();
-            $newtoken = new \local_o365\oauth2\token($tokenresult['access_token'], $tokenresult['expires_on'],
+            $newtoken = new token($tokenresult['access_token'], $tokenresult['expires_on'],
                 $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource'], $userid, $clientdata, $httpclient);
             return $newtoken;
         } else {
@@ -229,7 +230,7 @@ class token {
                 'tokenresult' => $tokenresult,
                 'resource' => $newtokenresource,
             ];
-            \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
+            utils::debug($errmsg, __METHOD__, $debuginfo);
         }
     }
 
@@ -238,12 +239,12 @@ class token {
      *
      * @param int $userid
      * @param string $tokenresource The new resource.
-     * @param \local_o365\oauth2\clientdata $clientdata Client information.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @param clientdata $clientdata Client information.
+     * @param httpclientinterface $httpclient An HTTP client.
      *
-     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     * @return token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function get_for_new_resource($userid, $tokenresource, clientdata $clientdata, $httpclient) {
         $graphtoken = static::instance($userid, 'https://graph.microsoft.com', $clientdata, $httpclient);
         if (!empty($graphtoken)) {
             $params = [
@@ -266,7 +267,13 @@ class token {
             $tokenresult = @json_decode($tokenresult, true);
 
             if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
-                static::store_new_token($userid, $tokenresult['access_token'], $tokenresult['expires_on'],
+                $expiry = $tokenresult['expires_on'] ?? time() + $tokenresult['expires_in'];
+                if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                    $tokenresult['resource'] = $tokenresource;
+                    $tokenresult['scope'] = null;
+                    $tokenresult['refresh_token'] = null;
+                }
+                static::store_new_token($userid, $tokenresult['access_token'], $expiry,
                         $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
                 $token = static::instance($userid, $tokenresource, $clientdata, $httpclient);
                 return $token;
@@ -282,7 +289,7 @@ class token {
                     'tokenresult' => $tokenresult,
                     'resource' => $tokenresource,
                 ];
-                \local_o365\utils::debug($errmsg, __METHOD__, $debuginfo);
+                utils::debug($errmsg, __METHOD__, $debuginfo);
             }
         }
         return false;
@@ -422,7 +429,7 @@ class token {
             $originaltokenresource = $this->tokenresource;
 
             $this->token = $result['access_token'];
-            $this->expiry = $result['expires_on'];
+            $this->expiry = $result['expires_on'] ?? time() + $result['expires_in'];
             $this->refreshtoken = $result['refresh_token'];
             $this->scope = $result['scope'];
             $this->tokenresource = $result['resource'];
