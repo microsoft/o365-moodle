@@ -54,8 +54,8 @@ $string['heading_debugging_desc'] = '';
 $string['idptype'] = 'Identity Provider (IdP) Type';
 $string['idptype_help'] = 'Three types of IdP are currently supported:
 <ul>
-<li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/authorize.</li>
-<li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID with oath2 v2.0 endpoints, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize.</li>
+<li><b>Microsoft Entra ID (v1.0)</b>: Microsoft Entra ID with oauth2 v1.0 endpoints, e.g. https://login.microsoftonline.com/organizations/oauth2/authorize.</li>
+<li><b>Microsoft identity platform (v2.0)</b>: Microsoft Entra ID with oath2 v2.0 endpoints, e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize.</li>
 <li><b>Other</b>: any non Microsoft IdP.</li>
 </ul>
 The differences between <b>Microsoft Entra ID (v1.0)</b> and <b>Microsoft identity platform (v2.0)</b> options can be found at <a href="https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison">https://docs.microsoft.com/en-us/azure/active-directory/azuread-dev/azure-ad-endpoint-comparison</a>.<br/>
@@ -258,13 +258,13 @@ $string['error_empty_client_cert_file'] = 'Client certificate public key file ca
 $string['error_empty_tenantname_or_guid'] = 'Tenant name or GUID cannot be empty when using "certificate" authentication method';
 $string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match configured IdP type.<br/>
 <ul>
-<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/authorize</li>
-<li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize</li>
+<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/authorize</li>
+<li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize</li>
 </ul>';
 $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoint does not match configured IdP type.<br/>
 <ul>
-<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/token</li>
-<li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/common/oauth2/v2.0/authorize</li>
+<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/token</li>
+<li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/token</li>
 </ul>';
 $string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
 $string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
