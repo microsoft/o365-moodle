@@ -28,6 +28,7 @@ namespace local_o365\oauth2;
 
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
+use local_o365\httpclientinterface;
 use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
@@ -37,26 +38,27 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
 /**
  * Represents an oauth2 token.
  */
-class apptoken extends \local_o365\oauth2\token {
+class apptoken extends token {
 
     /**
      * Get a token instance for a new resource.
      *
      * @param int $userid
      * @param string $tokenresource The new resource.
-     * @param \local_o365\oauth2\clientdata $clientdata Client information.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @param clientdata $clientdata Client information.
+     * @param httpclientinterface $httpclient An HTTP client.
      *
-     * @return \local_o365\oauth2\token|bool A constructed token for the new resource, or false if failure.
+     * @return token|bool A constructed token for the new resource, or false if failure.
      */
-    public static function get_for_new_resource($userid, $tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function get_for_new_resource($userid, $tokenresource, clientdata $clientdata, $httpclient) {
         $token = static::get_app_token($tokenresource, $clientdata, $httpclient);
         if (!empty($token)) {
-            if (get_config('auth_oidc', 'idptype') === AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+            $expiry = $token['expires_on'] ?? time() + $token['expires_in'];
+            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                 $token['resource'] = $tokenresource;
-                $token['expires_on'] = null;
+                $token['scope'] = null;
             }
-            static::store_new_token(null, $token['access_token'], $token['expires_on'], null, $token['scope'], $token['resource']);
+            static::store_new_token(null, $token['access_token'], $expiry, null, $token['scope'], $token['resource']);
             return static::instance(null, $tokenresource, $clientdata, $httpclient);
         } else {
             return false;
@@ -70,12 +72,12 @@ class apptoken extends \local_o365\oauth2\token {
      * getting a new token.
      *
      * @param string $tokenresource The desired token resource.
-     * @param \local_o365\oauth2\clientdata $clientdata Client credentials object.
-     * @param \local_o365\httpclientinterface $httpclient An HTTP client.
+     * @param clientdata $clientdata Client credentials object.
+     * @param httpclientinterface $httpclient An HTTP client.
      *
      * @return array|bool If successful, an array of token parameters. False if unsuccessful.
      */
-    public static function get_app_token($tokenresource, \local_o365\oauth2\clientdata $clientdata, $httpclient) {
+    public static function get_app_token($tokenresource, clientdata $clientdata, $httpclient) {
         $tokenendpoint = $clientdata->get_apptokenendpoint();
 
         switch (get_config('auth_oidc', 'idptype')) {
@@ -152,11 +154,7 @@ class apptoken extends \local_o365\oauth2\token {
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $originaltokenresource = $this->tokenresource;
             $this->token = $result['access_token'];
-            $expiry = '';
-            if (isset($result['expires_on'])) {
-                 $expiry = $result['expires_on'];
-            }
-            $this->expiry = $expiry;
+            $this->expiry = $result['expires_on'] ?? time() + $result['expires_in'];
             $this->refreshtoken = $result['access_token'];
             $this->scope = $result['scope'];
             if (isset($result['resource'])) {
