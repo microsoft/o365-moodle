@@ -15,18 +15,35 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * A scheduled task to clean up oidc sid records.
  *
  * @package auth_oidc
- * @author James McQuillan <james.mcquillan@remote-learner.net>
+ * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace auth_oidc\task;
 
-$plugin->version = 2024042208;
-$plugin->requires = 2024042200;
-$plugin->release = '4.4.1';
-$plugin->component = 'auth_oidc';
-$plugin->maturity = MATURITY_STABLE;
+use core\task\scheduled_task;
+
+/**
+ * A scheduled task that cleans up OIDC SID records.
+ */
+class cleanup_oidc_sid extends scheduled_task {
+    /**
+     * Get a descriptive name for the task.
+     */
+    public function get_name() {
+        return get_string('task_cleanup_oidc_sid', 'auth_oidc');
+    }
+
+    /**
+     * Clean up OIDC SID records.
+     */
+    public function execute() {
+        global $DB;
+
+        $DB->delete_records_select('auth_oidc_sid', 'timecreated < ?', [strtotime('-1 day')]);
+    }
+}
