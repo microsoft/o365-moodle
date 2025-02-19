@@ -125,7 +125,7 @@ if ($hassiteconfig) {
     // IdP logout endpoint.
     $settings->add(new admin_setting_configtext('auth_oidc/logouturi',
         get_string('cfg_logoutendpoint_key', 'auth_oidc'), get_string('cfg_logoutendpoint_desc', 'auth_oidc'),
-        'https://login.microsoftonline.com/common/oauth2/logout', PARAM_URL));
+        'https://login.microsoftonline.com/organizations/oauth2/logout', PARAM_URL));
 
     // Front channel logout URL.
     $settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/logoutendpoint',
