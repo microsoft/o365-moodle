@@ -541,6 +541,15 @@ class main {
         }
 
         $usersync = new self();
+
+        $countrymapping = get_string_manager()->get_list_of_countries();
+        foreach ($countrymapping as $code => $country) {
+            $country = strtolower($country);
+            $country = preg_replace('/\s*\([^)]*\)/', '', $country);
+            $country = preg_replace('/\s*(the\s+)?republic\s+of/', '', $country);
+            $countrymapping[$code] = $country;
+        }
+
         foreach ($fieldmappings as $localfield => $fieldmapping) {
             $remotefield = $fieldmapping['field_map'];
             $behavior = $fieldmapping['update_local'];
@@ -559,12 +568,17 @@ class main {
                     case 'country':
                         // Update country with two-letter country code.
                         $incoming = strtoupper($entraiduserdata[$remotefield]);
-                        $countrymap = get_string_manager()->get_list_of_countries();
-                        if (isset($countrymap[$incoming])) {
+                        if (isset($countrymapping[$incoming])) {
                             $countrycode = $incoming;
                         } else {
-                            $countrycode = array_search($entraiduserdata[$remotefield],
-                                get_string_manager()->get_list_of_countries());
+                            $incoming = strtolower($incoming);
+                            foreach ($countrymapping as $code => $country) {
+                                if (stripos($country, $incoming) !== false ||
+                                    stripos($incoming, $country) !== false) {
+                                    $countrycode = $code;
+                                    break;
+                                }
+                            }
                         }
                         $user->$localfield = (!empty($countrycode)) ? $countrycode : '';
                         break;
@@ -845,20 +859,6 @@ class main {
             return false;
         }
 
-        // Locate country code.
-        if (isset($entraiduserdata['country'])) {
-            $countries = get_string_manager()->get_list_of_countries(true, 'en');
-            foreach ($countries as $code => $name) {
-                if ($entraiduserdata['country'] == $name) {
-                    $entraiduserdata['country'] = $code;
-                }
-            }
-            if (strlen($entraiduserdata['country']) > 2) {
-                // Limit string to 2 chars to prevent sql error.
-                $entraiduserdata['country'] = substr($entraiduserdata['country'], 0, 2);
-            }
-        }
-
         $username = $entraiduserdata['useridentifier'];
         if (isset($entraiduserdata['convertedidentifier']) && $entraiduserdata['convertedidentifier']) {
             $username = $entraiduserdata['convertedidentifier'];
@@ -934,20 +934,6 @@ class main {
      * @return bool An boolean indicating that was created Moodle user.
      */
     public function update_user_from_entra_id_data($entraiduserdata, $fullexistinguser) {
-        // Locate country code.
-        if (isset($entraiduserdata['country'])) {
-            $countries = get_string_manager()->get_list_of_countries(true, 'en');
-            foreach ($countries as $code => $name) {
-                if ($entraiduserdata['country'] == $name) {
-                    $entraiduserdata['country'] = $code;
-                }
-            }
-            if (strlen($entraiduserdata['country']) > 2) {
-                // Limit string to 2 chars to prevent sql error.
-                $entraiduserdata['country'] = substr($entraiduserdata['country'], 0, 2);
-            }
-        }
-
         $existinguser = static::apply_configured_fieldmap($entraiduserdata, $fullexistinguser, 'login');
 
         if (!empty($existinguser->email)) {
