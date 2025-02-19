@@ -41,25 +41,25 @@ $string['settings_header_moodle_app'] = 'Teams Moodle app';
 
 // Setting sections in the "Setup" tab.
 $string['settings_setup_step1'] = 'Step 1/2: Register Moodle with Microsoft Entra ID';
-$string['settings_setup_step1_desc'] = 'Register a new Azure App for your Microsoft Entra tenant using Windows PowerShell:
+$string['settings_setup_step1_desc'] = 'Register a new Microsoft Entra ID App for Moodle integration using PowerShell:
 
-<a href="{$a}/local/o365/scripts/Moodle-AzureAD-Powershell.zip" class="btn btn-primary" target="_blank">Download Windows PowerShell Script</a>
+<a href="{$a}/local/o365/scripts/Moodle-EntraID-PowerShell.zip" class="btn btn-primary" target="_blank">Download PowerShell Script</a>
 
-<p style="margin-top:10px"><a href="https://aka.ms/MoodleTeamsPowerShellReadMe" target="_blank">Click here</a> to read instructions on running the script.</p>
+<p style="margin-top:10px"><a href="{$a}/local/o365/scripts/README.md" target="_blank">Click here</a> to read instructions on running the script.</p>
 <p>When prompted, use the following link as the Moodle URL:</p><h5><b>{$a}</b></h5>';
 $string['settings_setup_step1clientcreds'] = '<br />Once the script is successfully executed, copy the Application ID and Secret returned by the script into the <a href="{$a}">OpenID Connect authentication plugin configuration page</a>.';
-$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up the Azure app via PowerShell, <a href="{$a}" target="_blank">click here</a> for manual setup instructions.';
+$string['settings_setup_step1_credentials_end'] = 'If you are unable to set up Microsoft Entra ID app via PowerShell, <a href="{$a}" target="_blank">click here</a> for manual setup instructions.';
 $string['settings_setup_step1_continue'] = '<b>Once you have entered your Application ID and Key, click "Save changes" at the bottom of the page to continue.</b><br /><br /><br /><br /><br />';
 $string['settings_setup_step1_existing_settings'] = '<h5>Existing settings</h5>';
 $string['settings_setup_step2'] = 'Step 2/2: Admin consent &amp; additional information';
-$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some Azure permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
+$string['settings_setup_step2_desc'] = 'This last step allows you to give administrator consent to use some Microsoft Entra ID permissions, and gathers some additional information about your Microsoft 365 environment.<br /><br />';
 $string['settings_setup_step3'] = 'Verify setup';
 $string['settings_setup_step3_desc'] = 'Setup is complete. Click the "Update" button below to verify your setup.';
 
 // Settings in "Step 2/2" section of the "Setup" tab.
 $string['settings_adminconsent'] = 'Admin Consent';
 $string['settings_adminconsent_btn'] = 'Provide Admin Consent';
-$string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with an Azure administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Azure.';
+$string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with a Microsoft Entra ID administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Entra ID.';
 $string['settings_entratenant'] = 'Microsoft Entra tenant';
 $string['settings_entratenant_details'] = 'Used to Identify your organization within Microsoft. For example: "contoso.onmicrosoft.com".';
 $string['settings_odburl'] = 'OneDrive for Business URL';
@@ -76,8 +76,8 @@ $string['settings_serviceresourceabstract_empty'] = 'Please enter a value or cli
 
 // Settings in "Verify setup" section of the "Setup" tab.
 $string['settings_verifysetup'] = 'Verify setup';
-$string['settings_verifysetup_appdataheader'] = 'Azure App Registration';
-$string['settings_verifysetup_appdatadesc'] = 'Verifies the correct parameters are set up in Azure app.';
+$string['settings_verifysetup_appdataheader'] = 'Microsoft Entra ID App Registration';
+$string['settings_verifysetup_appdatadesc'] = 'Verifies the correct parameters are set up in Entra ID app.';
 $string['settings_verifysetup_appdatareplyurlcorrect'] = 'Reply URL Correct';
 $string['settings_verifysetup_appdatareplyurlincorrect'] = 'Reply URL Incorrect';
 $string['settings_verifysetup_appdatareplyurlgeneralerror'] = 'Could not check reply url.';
@@ -85,7 +85,7 @@ $string['settings_verifysetup_appdatasignonurlcorrect'] = 'Sign-on URL Correct.'
 $string['settings_verifysetup_appdatasignonurlincorrect'] = 'Sign-on URL Incorrect';
 $string['settings_verifysetup_appdatasignonurlgeneralerror'] = 'Could not check sign-on url.';
 $string['settings_verifysetup_apppermscorrect'] = 'Application Permissions are correct.';
-$string['settings_verifysetup_details'] = 'This tool checks with Azure to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Azure app can take a moment to appear here. If you have made a change in the Azure app and do not see it reflected here, wait a moment and try again.';
+$string['settings_verifysetup_details'] = 'This tool checks with Microsoft Entra ID to make sure everything is set up correctly. <br /><b>Note:</b> Changes in Microsoft Entra ID app can take a moment to appear here. If you have made a change in the Microsoft Entra ID app and do not see it reflected here, wait a moment and try again.';
 $string['settings_verifysetup_correctval'] = 'Correct Value:';
 $string['settings_verifysetup_detectedval'] = 'Detected Value:';
 $string['settings_verifysetup_update'] = 'Update';
@@ -94,9 +94,9 @@ $string['settings_verifysetup_missingappperms'] = 'Missing Application Permissio
 $string['settings_verifysetup_missingperms'] = 'Missing Delegated Permissions:';
 $string['settings_verifysetup_permscorrect'] = 'Delegated Permissions are correct.';
 $string['settings_verifysetup_errorcheck'] = 'An error occurred trying to check setup.';
-$string['settings_verifysetup_noinfo'] = 'We don\'t have any information about your Azure app setup yet. Please click the Update button to check.';
+$string['settings_verifysetup_noinfo'] = 'We don\'t have any information about your Microsoft Entra ID app setup yet. Please click the Update button to check.';
 $string['settings_verifysetup_strunifiedpermerror'] = 'There was an error checking Microsoft Graph API permissions.';
-$string['settings_verifysetup_strtenanterror'] = 'Please use the dectect button to set your Microsoft Entra tenant before updating Azure app setup.';
+$string['settings_verifysetup_strtenanterror'] = 'Please use the dectect button to set your Microsoft Entra tenant before updating Microsoft Entra ID app setup.';
 $string['settings_verifysetup_unifiedheader'] = 'Microsoft Graph API';
 $string['settings_verifysetup_unifieddesc'] = 'The Microsoft Graph API allows communication between Moodle and Microsoft 365.';
 $string['settings_verifysetup_unifiederror'] = 'There was an error checking for Microsoft Graph API support.';
@@ -111,16 +111,16 @@ $string['settings_detectoidc_credsvalid_link'] = 'Change';
 $string['settings_detectoidc_credsinvalid'] = 'Credentials have not been set or are incomplete.';
 $string['settings_detectoidc_credsinvalid_link'] = 'Set Credentials';
 $string['settings_detectperms'] = 'Application Permissions';
-$string['settings_detectperms_details'] = 'To use the plugin features, correct permissions must be set up in the Azure app.';
+$string['settings_detectperms_details'] = 'To use the plugin features, correct permissions must be set up in the Microsoft Entra ID app.';
 $string['settings_detectperms_nocreds'] = 'Application credentials need to be set first. See above setting.';
 $string['settings_detectperms_missing'] = 'Missing:';
-$string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please fix manually in Azure.';
+$string['settings_detectperms_errorfix'] = 'An error occurred trying to fix permissions. Please fix manually in Microsoft Entra ID.';
 $string['settings_detectperms_fixperms'] = 'Fix permissions';
 $string['settings_detectperms_nounified'] = 'Microsoft Graph API not present, some new features may not work.';
 $string['settings_detectperms_unifiednomissing'] = 'All unified permissions present.';
 $string['settings_detectperms_update'] = 'Update';
 $string['settings_detectperms_valid'] = 'Permissions have been set up.';
-$string['settings_detectperms_invalid'] = 'Check permissions in Azure';
+$string['settings_detectperms_invalid'] = 'Check permissions in Microsoft Entra ID';
 
 // Settings in "User sync" section of the "Sync settings" tab.
 $string['settings_options_usersync'] = 'User Sync';
@@ -413,16 +413,16 @@ $string['acp_tenants_intro'] = '<b>How Multitenancy Works:</b><br />Multitenancy
         <li>Log in to Moodle as a site administrator user that is not using the OpenID Connect authentication plugin.</li>
         <li>Ensure the <b>Authorization Endpoint</b> and <b>Token Endpoint</b> settings of the OpenID Connect authentication plugin are using the default non-tenant specific settings.</li>
         <li>Disable the OpenID Connect authentication plugin in Moodle. (Use <a href="{$a}/admin/settings.php?section=manageauths">the authentication plugins administration page</a>.)</li>
-        <li>Navigate to Azure portal and find the application you configured for Moodle.</li>
-        <li>Enable multitenancy in the Azure app and save changes.</li>
+        <li>Navigate to Microsoft Entra ID and find the application you configured for Moodle.</li>
+        <li>Enable multitenancy in the Microsoft Entra ID app and save changes.</li>
         <li>Give at least one of the following Graph Delegated permissions to the app: <b>Directory.Read.All</b>, <b>Domain.Read.All</b>, or <b>Domain.ReadWrite.All</b>. Admin consent for your organisation is not required.</li>
         <li>If you are already signed in using your Microsoft account from the additional tenant, log out completely and log back in.</li>
         <li>For each tenant you want to enable, click "Add New Tenant" and log in with an administrator account from the tenant you want to enable.</li>
         <li>Once you have added all the tenants you want, re-enable the OpenID Connect authentication plugin in Moodle.</li>
         <li>You\'re done! To add additional tenants in the future, just click the "Add New Tenant" button and log in with an administrator account from that tenant.</li>
     </ol>
-    <b>Important Note:</b> Enabling multitenancy in Azure app allows all Microsoft Entra tenants to access your application when enabled. Adding the tenants here allows us to restrict Moodle access to tenants you configure. <b>If you remove all the tenants from this list before disabling multitenancy in Azure app, or enable OpenID Connect authentication in Moodle with an empty list, your Moodle site will be open to all Microsoft Entra tenants.</b>';
-$string['acp_tenants_none'] = 'You have not configured any tenants. If you have enabled multitenancy in Azure app, your Moodle site may be open to all Microsoft 365 users.';
+    <b>Important Note:</b> Enabling multitenancy in Microsoft Entra ID app allows all Microsoft Entra tenants to access your application when enabled. Adding the tenants here allows us to restrict Moodle access to tenants you configure. <b>If you remove all the tenants from this list before disabling multitenancy in Microsoft Entra ID app, or enable OpenID Connect authentication in Moodle with an empty list, your Moodle site will be open to all Microsoft Entra tenants.</b>';
+$string['acp_tenants_none'] = 'You have not configured any tenants. If you have enabled multitenancy in Microsoft Entra ID app, your Moodle site may be open to all Microsoft 365 users.';
 $string['acp_tenants_revokeaccess'] = 'Revoke Access';
 $string['acp_tenants_tenant'] = 'Tenant';
 $string['acp_tenants_actions'] = 'Actions';
@@ -609,7 +609,7 @@ $string['settings_sds_intro_desc'] = 'The Microsoft School Data Sync ("SDS") sim
 <br/>
 The SDS sync feature is capable of synchronising roster data from SDS to Moodle, including courses, teachers and students.<br/>
 <br/>
-In order to use the SDS sync feature, please ensure the Azure app used for the integration has <b>EduRoster.Read.All</b> and <b>Member.Read.Hidden</b> Microsoft Graph application permissions, which are not automatically added by the default set up. Admin consent needs to be granted for them too.<br/>
+In order to use the SDS sync feature, please ensure the Microsoft Entra ID app used for the integration has <b>EduRoster.Read.All</b> and <b>Member.Read.Hidden</b> Microsoft Graph application permissions, which are not automatically added by the default set up. Admin consent needs to be granted for them too.<br/>
 <br/>
 By default, the SDS sync process happens daily in the Moodle cron, at 3am server time. To change this schedule, please visit the <a href="{$a}">scheduled tasks management page.</a><br/><br/>';
 $string['settings_sds_coursecreation'] = 'Course Sync';
@@ -638,7 +638,7 @@ $string['settings_sds_profilesync_header'] = 'User Profile Sync';
 $string['settings_sds_profilesync_header_desc'] = 'Each SDS school may store user profile for teachers and members of the school. The field is school-specific, i.e. different schools may have different values in the same field for the same user.<br/>
 If a school is selected in this section, the SDS user profile fields can be configured in user field mapping.
 <ul>
-<li>Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Azure AD" scheduled task, nor when user logs in.</li>
+<li>Note synchronisation of SDS fields will only happen when running the "Sync with SDS" scheduled task, and will not happen when running the "Sync users with Microsoft Entra ID" scheduled task, nor when user logs in.</li>
 <li>Note there is a known issue in Microsoft Graph API used by this feature that certain student and teacher school profile fields are not returned, therefore are unavilable to sync even when configured.</li>
 </ul>
 ';
@@ -646,7 +646,7 @@ $string['settings_sds_profilesync_disabled'] = 'Disabled';
 $string['settings_sds_profilesync'] = 'Sync profile data from school';
 $string['settings_sds_profilesync_desc'] = 'Select the SDS school from which Moodle synchronises SDS specific profile data.';
 $string['settings_sds_noschools'] = '<div class="alert alert-info">You do not have any schools available in SDS.</div>';
-$string['settings_sds_get_schools_error'] = '<div class="alert alert-info error">Failed to get SDS schools. Check the Azure app has required permission.</div>';
+$string['settings_sds_get_schools_error'] = '<div class="alert alert-info error">Failed to get SDS schools. Check the Microsoft Entra ID app has required permission.</div>';
 $string['settings_sds_school_disabled_action'] = 'School sync disabled action';
 $string['settings_sds_school_disabled_action_desc'] = 'Action to the already connected Moodle courses when sync is disabled on an SDS school.';
 $string['settings_sds_school_disabled_action_keep_connected'] = 'Keep the Moodle course connected to the Team';
@@ -885,7 +885,7 @@ $string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members 
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_processmatchqueue'] = 'Process Match Queue';
-$string['task_notifysecretexpiry'] = 'Notify site admin about Azure app secret expiry';
+$string['task_notifysecretexpiry'] = 'Notify site admin about Microsoft Entra ID app secret expiry';
 $string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to a Microsoft 365 user.';
 $string['task_processmatchqueue_err_museralreadyo365'] = 'Moodle user is already connected to Microsoft 365.';
 $string['task_processmatchqueue_err_nomuser'] = 'No Moodle user found with this username.';
@@ -929,7 +929,7 @@ $string['help_user_match_help'] = 'This will look at each user in the linked Mic
 $string['help_user_matchswitchauth'] = 'Switch Matched Accounts Help';
 $string['help_user_matchswitchauth_help'] = 'This requires the "Match preexisting Moodle users" setting above to be enabled. When a user is matched, enabling this setting will switch their authentication method to OpenID Connect. They will then be able to log in to Moodle with their Microsoft 365 credentials. Note: Please ensure that the OpenID Connect authentication plugin is enabled if you want to use this setting.';
 $string['help_user_appassign'] = 'Assign Users To Application Help';
-$string['help_user_appassign_help'] = 'This will cause all the Microsoft Entra ID accounts with matching Moodle accounts to be assigned to the Azure app created for this Moodle installation, if not already assigned.';
+$string['help_user_appassign_help'] = 'This will cause all the Microsoft Entra ID accounts with matching Moodle accounts to be assigned to the Microsoft Entra ID app created for this Moodle installation, if not already assigned.';
 $string['help_user_photosync'] = 'Sync Microsoft 365 Profile Photos (Cron) Help';
 $string['help_user_photosync_help'] = 'This will cause all users\' Moodle profile photos to get synced with their Microsoft 365 profile photos.';
 $string['help_user_photosynconlogin'] = 'Sync Microsoft 365 Profile Photos (Login) Help';
@@ -937,7 +937,7 @@ $string['help_user_photosynconlogin_help'] = 'This will cause a user\'s Moodle p
 $string['help_user_nodelta'] = 'Perform a full sync help';
 $string['help_user_nodelta_help'] = 'By default, user sync will only sync changes from Microsoft Entra ID from the last time the sync is run. Checking this option will force a full user sync each time.';
 $string['help_user_emailsync'] = 'Sync Microsoft Entra ID usernames to moodle emails Help';
-$string['help_user_emailsync_help'] = 'Enabling this option will match Microsoft Entra ID usernames to moodle emails, instead of the default behaviour which is azure usernames to moodle usernames.';
+$string['help_user_emailsync_help'] = 'Enabling this option will match Microsoft Entra ID usernames to moodle emails, instead of the default behaviour which is Microsoft Entra ID usernames to moodle usernames.';
 $string['help_user_tzsync'] = 'Sync Outlook timezone (Cron) Help';
 $string['help_user_tzsync_help'] = 'This will cause all users\' Moodle timezone to get synced with their Outlook timezone preference.';
 $string['help_user_tzsynconlogin'] = 'Sync Outlook timezone (Login) Help';
@@ -986,24 +986,24 @@ $string['sso_login'] = 'Login to Microsoft 365';
 $string['other_login'] = 'Login manually';
 $string['course_selector_label'] = "Select existing course";
 
-// Notifications to site admin about Azure app secret.
-$string['notification_subject_secret_expired'] = 'Action required: Azure app secret expired';
+// Notifications to site admin about Microsoft Entra ID app secret.
+$string['notification_subject_secret_expired'] = 'Action required: Microsoft Entra ID app secret expired';
 $string['notification_content_secret_expired'] = 'Dear site administrator,
 
-The Azure app secret used in your Moodle and Microsoft 365 integration has expired.
-Please create a new secret in Azure portal and update it in the integration configuration in order to restore the integration.';
-$string['notification_subject_secret_almost_expired'] = 'Action required: Azure app secret expiring soon';
+The Microsoft Entra ID app secret used in your Moodle and Microsoft 365 integration has expired.
+Please create a new secret in Microsoft Entra ID and update it in the integration configuration in order to restore the integration.';
+$string['notification_subject_secret_almost_expired'] = 'Action required: Microsoft Entra ID app secret expiring soon';
 $string['notification_content_secret_almost_expired'] = 'Dear site administrator,
 
-The Azure app secret used in your Moodle and Microsoft 365 integration will expire in {$a}.
-Please create a new secret in Azure portal and update it in the integration configuration in order to avoid integration disruption.';
+The Microsoft Entra ID app secret used in your Moodle and Microsoft 365 integration will expire in {$a}.
+Please create a new secret in Microsoft Entra ID and update it in the integration configuration in order to avoid integration disruption.';
 $string['notification_days_less_than_one_day'] = 'less than 1 day';
 $string['notification_days_one_day'] = '1 day';
 $string['notification_days_days'] = '{$a} days';
-$string['notification_subject_invalid_secret'] = 'Action required: invalid Azure app secret found';
+$string['notification_subject_invalid_secret'] = 'Action required: invalid Microsoft Entra ID app secret found';
 $string['notification_content_invalid_secret'] = 'Dear site administrator,
 
-The Azure app secret used in your Moodle and Microsoft 365 integration seems to be invalid. This can either be caused by the secret expired, or it has been deleted.
+The Microsoft Entra ID app secret used in your Moodle and Microsoft 365 integration seems to be invalid. This can either be caused by the secret expired, or it has been deleted.
 Please review the secret to ensure the integration works as expected.';
 
 // Misc.
