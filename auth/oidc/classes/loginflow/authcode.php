@@ -36,6 +36,7 @@ use core_user;
 use moodle_exception;
 use moodle_url;
 use pix_icon;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -395,7 +396,11 @@ class authcode extends base {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
             if ($USER->id && $DB->record_exists('auth_oidc_token', ['userid' => $USER->id])) {
-                $DB->set_field('auth_oidc_token', 'sid', $sid, ['userid' => $USER->id]);
+                $authoidsidrecord = new stdClass();
+                $authoidsidrecord->userid = $USER->id;
+                $authoidsidrecord->sid = $sid;
+                $authoidsidrecord->timecreated = time();
+                $DB->insert_record('auth_oidc_sid', $authoidsidrecord);
             }
             redirect(core_login_get_return_url());
         }
@@ -792,7 +797,7 @@ class authcode extends base {
                 $tokenrec = $DB->get_record('auth_oidc_token', ['id' => $tokenrec->id]);
                 // This should be already done in auth_plugin_oidc::user_authenticated_hook, but just in case...
                 if (!empty($tokenrec) && empty($tokenrec->userid)) {
-                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec = new stdClass;
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
