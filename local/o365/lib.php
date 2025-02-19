@@ -272,8 +272,9 @@ function local_o365_get_auth_token() {
 
     if (function_exists('apache_request_headers')) {
         $headers = apache_request_headers();
-        if (isset($headers['Authorization'])) {
-            $authtoken = substr($headers['Authorization'], 7);
+        $headers = array_change_key_case($headers, CASE_LOWER);
+        if (isset($headers['authorization'])) {
+            $authtoken = substr($headers['authorization'], 7);
         }
     }
 
