@@ -226,7 +226,8 @@ if ($hassiteconfig) {
     $configkey = new lang_string('cfg_customicon_key', 'auth_oidc');
     $configdesc = new lang_string('cfg_customicon_desc', 'auth_oidc');
     $customiconsetting = new admin_setting_configstoredfile('auth_oidc/customicon',
-        get_string('cfg_customicon_key', 'auth_oidc'), get_string('cfg_customicon_desc', 'auth_oidc'), 'customicon');
+        get_string('cfg_customicon_key', 'auth_oidc'), get_string('cfg_customicon_desc', 'auth_oidc'), 'customicon', 0,
+        ['accepted_types' => ['.png', '.jpg', '.ico'], 'maxbytes' => get_max_upload_file_size()]);
     $customiconsetting->set_updatedcallback('auth_oidc_initialize_customicon');
     $settings->add($customiconsetting);
 
