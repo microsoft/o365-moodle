@@ -534,15 +534,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         }
 
         // Migrate existing sid values from auth_oidc_tokens to auth_oidc_sid.
-        $tokenrecords = $DB->get_records('auth_oidc_token');
-        foreach ($tokenrecords as $tokenrecord) {
-            if (isset($tokenrecord->sid) && $tokenrecord->sid) {
-                $sidrecord = new stdClass();
-                $sidrecord->userid = $tokenrecord->userid;
-                $sidrecord->sid = $tokenrecord->sid;
-                $sidrecord->timecreated = time();
-                $DB->insert_record('auth_oidc_sid', $sidrecord);
-            }
+        if ($dbman->field_exists('auth_oidc_token', 'sid')) {
+            $sql = "INSERT INTO {auth_oidc_sid} (userid, sid, timecreated)
+                    SELECT userid, sid, ? AS timecreated
+                    FROM {auth_oidc_token}
+                    WHERE sid IS NOT NULL AND sid != ''";
+            $DB->execute($sql, [time()]);
         }
 
         // Define field sid to be dropped from auth_oidc_token.
