@@ -76,6 +76,11 @@ class provider implements
                 'refreshtoken',
                 'idtoken',
             ],
+            'auth_oidc_sid' => [
+                'userid',
+                'sid',
+                'timecreated',
+            ],
         ];
 
         foreach ($tables as $table => $fields) {
@@ -116,6 +121,13 @@ class provider implements
         $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
         $contextlist->add_from_sql($sql, $params);
 
+        $sql = "SELECT ctx.id
+                  FROM {auth_oidc_sid} si
+                  JOIN {context} ctx ON ctx.instanceid = si.userid AND ctx.contextlevel = :contextlevel
+                 WHERE si.userid = :userid";
+        $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
+        $contextlist->add_from_sql($sql, $params);
+
         return $contextlist;
     }
 
@@ -151,6 +163,15 @@ class provider implements
                        AND ctx.contextlevel = :contextuser
                  WHERE ctx.id = :contextid";
         $userlist->add_from_sql('userid', $sql, $params);
+
+        $sql = "SELECT ctx.instanceid as userid
+                  FROM {auth_oidc_sid} si
+                  JOIN {context} ctx
+                       ON ctx.instanceid = si.userid
+                       AND ctx.contextlevel = :contextuser
+                 WHERE ctx.id = :contextid";
+        $userlist->add_from_sql('userid', $sql, $params);
+
     }
 
     /**
@@ -184,6 +205,7 @@ class provider implements
         $tables = [
             'auth_oidc_prevlogin' => ['userid' => $user->id],
             'auth_oidc_token' => ['userid' => $user->id],
+            'auth_oidc_sid' => ['userid' => $user->id],
         ];
         return $tables;
     }
@@ -224,6 +246,7 @@ class provider implements
         global $DB;
         $DB->delete_records('auth_oidc_prevlogin', ['userid' => $userid]);
         $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+        $DB->delete_records('auth_oidc_sid', ['userid' => $userid]);
     }
 
     /**
