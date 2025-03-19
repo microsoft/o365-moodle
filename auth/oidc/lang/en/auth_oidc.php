@@ -301,6 +301,10 @@ $string['privacy:metadata:auth_oidc_token:token'] = 'The token';
 $string['privacy:metadata:auth_oidc_token:expiry'] = 'The token expiry';
 $string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'The refresh token';
 $string['privacy:metadata:auth_oidc_token:idtoken'] = 'The ID token';
+$string['privacy:metadata:auth_oidc_sid'] = 'Stores sid from IdP';
+$string['privacy:metadata:auth_oidc_sid:userid'] = 'The user ID of the Moodle user';
+$string['privacy:metadata:auth_oidc_sid:sid'] = 'The sid from IdP';
+$string['privacy:metadata:auth_oidc_sid:timecreated'] = 'The time created';
 
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
 // "Microsoft 365", "OpenID Connect", etc.
