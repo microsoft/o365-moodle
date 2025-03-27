@@ -57,6 +57,13 @@ class main {
         global $DB;
 
         try {
+            // Check if the sharing feature is enabled globally.
+            // We still want to allow deleting links even if the feature is disabled, to clean up
+            if (!$this->is_sharing_enabled()) {
+                // When sharing feature is disabled, we should still allow deleting existing links
+                // for cleanup purposes, so we don't return false here
+            }
+
             // Delete all sharing links for this module from the database.
             $DB->delete_records('local_o365_sharing', ['moduleid' => $moduleid]);
             return true;
@@ -76,6 +83,12 @@ class main {
         global $DB;
         
         try {
+            // Check if the sharing feature is enabled globally.
+            if (!$this->is_sharing_enabled()) {
+                // Sharing feature is disabled, don't create sharing links.
+                return false;
+            }
+            
             // First, check if the module is visible.
             $module = $DB->get_record('course_modules', ['id' => $moduleid]);
             if (!$module || !$module->visible) {
@@ -216,5 +229,14 @@ class main {
      */
     protected function is_course_sync_enabled(int $courseid): bool {
         return \local_o365\feature\coursesync\utils::is_course_sync_enabled($courseid);
+    }
+
+    /**
+     * Check if the sharing feature is enabled globally.
+     *
+     * @return bool Whether the sharing feature is enabled.
+     */
+    protected function is_sharing_enabled(): bool {
+        return (bool)get_config('local_o365', 'sharingfeature_enabled');
     }
 }
