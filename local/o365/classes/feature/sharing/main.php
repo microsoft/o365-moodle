@@ -151,7 +151,9 @@ class main {
                 
                 try {
                     // Create sharing link for the file using Microsoft Graph API.
-                    $sharinglink = $apiclient->get_sharing_link($file->fileid, $groupobject->objectid);
+                    // Note: Files in course modules are typically stored in the group/team SharePoint site,
+                    // so we use get_group_file_sharing_link instead of get_sharing_link
+                    $sharinglink = $apiclient->get_group_file_sharing_link($groupobject->objectid, $file->fileid);
                     
                     // Save the sharing link to the database.
                     $sharinglinkrecord = new stdClass();
