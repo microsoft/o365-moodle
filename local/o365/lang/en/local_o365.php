@@ -610,6 +610,9 @@ $string['settings_customtheme'] = 'Custom theme (Advanced)';
 $string['settings_customtheme_desc'] = 'Recommended theme is "boost_o365teams". However, you can select different theme if you have a custom theme which is adapted to be used in the Teams tab.<br/>
 Please note that a custom theme set at either course or category level would take precedence over settings here, i.e. a course would use course or category theme in Moodle app in Teams by default. This can be fixed by updating $CFG->themeorder in config.php to be "array(\'session\', \'course\', \'category\', \'user\', \'cohort\', \'site\');".';
 
+$string['settings_sharingfeature_enabled'] = 'Enable Microsoft 365 file sharing';
+$string['settings_sharingfeature_enabled_desc'] = 'Enable or disable the automatic creation of sharing links for Microsoft 365 files in course modules. When enabled, sharing links will be automatically created when course modules containing Microsoft 365 files become visible, and deleted when they become hidden.';
+
 // Settings in the "SDS sync" tab.
 $string['settings_sds_intro'] = '';
 $string['settings_sds_intro_previewwarning'] = '<div class="alert"><b>This is a preview feature</b><br />Preview features may not work as intended or may break without warning. Please proceed with caution.</div>';

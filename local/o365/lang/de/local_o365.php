@@ -152,5 +152,8 @@ $string['ucp_syncdir_both'] = 'Sowohl Outlook als auch Moodle aktualisieren';
 $string['ucp_title'] = 'Microsoft 365/Moodle-Systemsteuerung';
 $string['ucp_options'] = 'Optionen';
 
+$string['settings_sharingfeature_enabled'] = 'Microsoft 365-Dateifreigabe aktivieren';
+$string['settings_sharingfeature_enabled_desc'] = 'Aktivieren oder deaktivieren Sie die automatische Erstellung von Freigabelinks für Microsoft 365-Dateien in Kursmodulen. Wenn aktiviert, werden Freigabelinks automatisch erstellt, wenn Kursmodule mit Microsoft 365-Dateien sichtbar werden, und gelöscht, wenn sie ausgeblendet werden.';
+
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
