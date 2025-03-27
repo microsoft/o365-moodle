@@ -261,7 +261,7 @@ function xmldb_local_o365_upgrade($oldversion) {
     if ($oldversion < 2015012715) {
         // Lengthen field.
         $table = new xmldb_table('local_o365_token');
-        $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, 'user_id');
+        $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, null, 'user_id');
         $dbman->change_field_type($table, $field);
         upgrade_plugin_savepoint(true, 2015012715, 'local', 'o365');
     }
@@ -1243,7 +1243,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         }
 
         // O365 savepoint reached.
-        upgrade_plugin_savepoint(true, 2023100917, 'local', 'o365');
+        upgrade_plugin_savepoint(true, 3100917, 'local', 'o365');
     }
 
     if ($oldversion < 2024042201) {
@@ -1302,6 +1302,35 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2024042203, 'local', 'o365');
+    }
+
+    if ($oldversion < 2025032700) {
+        // Define table local_o365_sharing to be created.
+        $table = new xmldb_table('local_o365_sharing');
+
+        // Adding fields to table local_o365_sharing.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('moduleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('fileid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('filename', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('sharelink', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table local_o365_sharing.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('moduleid', XMLDB_KEY_FOREIGN, ['moduleid'], 'course_modules', ['id']);
+
+        // Adding indexes to table local_o365_sharing.
+        $table->add_index('moduleid-fileid', XMLDB_INDEX_UNIQUE, ['moduleid', 'fileid']);
+
+        // Conditionally launch create table for local_o365_sharing.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2025032700, 'local', 'o365');
     }
 
     return true;
