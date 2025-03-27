@@ -18,7 +18,7 @@
  * Observer functions for sharing link management.
  *
  * @package local_o365
- * @author Your Name <your.email@example.com>
+ * @author Ivo Bättig ivo@joker-it.ch>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -129,7 +129,7 @@ class observers {
             if ($eventdata->visible) {
                 // Module is now visible, create sharing links.
                 // We need to check if the section is visible as well.
-                $section = get_section_info($eventdata->course, $eventdata->section);
+                $section = self::get_section_info($eventdata->course, $eventdata->section);
                 if ($section && $section->visible) {
                     $sharingmanager->create_sharing_links_for_module($eventdata->id);
                 }
