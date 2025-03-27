@@ -589,6 +589,11 @@ if ($hassiteconfig) {
             get_string('settings_teams_moodle_tab_name_desc', 'local_o365'),
             'Moodle'));
 
+        $settings->add(new admin_setting_configcheckbox('local_o365/sharingfeature_enabled',
+            get_string('settings_sharingfeature_enabled', 'local_o365'),
+            get_string('settings_sharingfeature_enabled_desc', 'local_o365'),
+            '0'));
+
         $settings->add(new admin_setting_heading('download_manifest_header', '', $downloadmanifesthtml));
     }
 
