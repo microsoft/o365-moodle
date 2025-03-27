@@ -213,30 +213,6 @@ class main {
      * @return bool Whether course sync is enabled.
      */
     protected function is_course_sync_enabled(int $courseid): bool {
-        global $DB;
-        
-        // Get course sync setting.
-        $coursesync = get_config('local_o365', 'coursesync');
-        
-        if ($coursesync === 'off') {
-            return false;
-        }
-        
-        if ($coursesync === 'onall') {
-            return true;
-        }
-        
-        // Check custom sync settings for this course.
-        if ($coursesync === 'oncustom') {
-            $syncobject = $DB->get_record('local_o365_objects', [
-                'type' => 'group', 
-                'subtype' => 'courseteam', 
-                'moodleid' => $courseid
-            ]);
-            
-            return !empty($syncobject);
-        }
-        
-        return false;
+        return \local_o365\feature\coursesync\utils::is_course_sync_enabled($courseid);
     }
 }
