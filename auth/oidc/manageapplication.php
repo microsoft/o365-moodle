@@ -60,7 +60,7 @@ foreach (
         'idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
         'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
         'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope', 'secretexpiryrecipients',
-        'bindingusernameclaim', 'customclaimname',
+        'bindingusernameclaim', 'customclaimname', 'customclaims',
     ] as $field
 ) {
     if (isset($oidcconfig->$field)) {
@@ -80,7 +80,7 @@ if ($form->is_cancelled()) {
 
     // Prepare config settings to save.
     $configstosave = ['idptype', 'clientid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
-        'oidcresource', 'oidcscope'];
+        'oidcresource', 'oidcscope','customclaims'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {
