@@ -347,6 +347,9 @@ function auth_oidc_get_remote_fields() {
             'surname' => get_string('settings_fieldmap_field_surname', 'auth_oidc'),
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
         ];
+        foreach (explode(" ",get_config('auth_oidc', 'customclaims')) as $value){
+                $remotefields[$value] = $value;
+        }
     }
 
     return $remotefields;
