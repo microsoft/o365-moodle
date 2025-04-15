@@ -617,8 +617,6 @@ class utils {
                     $cacherecord->description = $group['description'];
                     $DB->update_record('local_o365_groups_cache', $cacherecord);
                     static::mtrace("Updated group ID {$group['id']} in cache.", $baselevel + 1);
-                } else {
-                    static::mtrace("Group ID {$group['id']} in cache is up to date.", $baselevel + 1);
                 }
                 unset($existinggroupsbyoid[$group['id']]);
             } else {
