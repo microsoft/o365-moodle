@@ -580,12 +580,12 @@ class utils {
     public static function update_groups_cache(unified $graphclient, int $baselevel = 0): bool {
         global $DB;
 
-        static::mtrace("Update groups cache.", $baselevel);
+        debugging("Update groups cache.", DEBUG_DEVELOPER);
 
         try {
             $grouplist = $graphclient->get_groups();
         } catch (moodle_exception $e) {
-            static::mtrace("Failed to fetch groups. Error: " . $e->getMessage(), $baselevel + 1);
+            debugging("Failed to fetch groups. Error: " . $e->getMessage(), DEBUG_DEVELOPER);
 
             return false;
         }
@@ -609,16 +609,16 @@ class utils {
                 $cacherecord->not_found_since = 0;
                 $DB->update_record('local_o365_groups_cache', $cacherecord);
                 unset($existingnotfoundgroupsbyoid[$group['id']]);
-                static::mtrace("Unset not found flag for group {$group['id']}.", $baselevel + 1);
+                debugging("Unset not found flag for group {$group['id']}.", DEBUG_DEVELOPER);
             } else if (array_key_exists($group['id'], $existinggroupsbyoid)) {
                 $cacherecord = $existinggroupsbyoid[$group['id']];
                 if ($cacherecord->name != $group['displayName'] || $cacherecord->description != $group['description']) {
                     $cacherecord->name = $group['displayName'];
                     $cacherecord->description = $group['description'];
                     $DB->update_record('local_o365_groups_cache', $cacherecord);
-                    static::mtrace("Updated group ID {$group['id']} in cache.", $baselevel + 1);
+                    debugging("Updated group ID {$group['id']} in cache.", DEBUG_DEVELOPER);
                 } else {
-                    static::mtrace("Group ID {$group['id']} in cache is up to date.", $baselevel + 1);
+                    debugging("Group ID {$group['id']} in cache is up to date.", DEBUG_DEVELOPER);
                 }
                 unset($existinggroupsbyoid[$group['id']]);
             } else {
@@ -627,18 +627,18 @@ class utils {
                 $cacherecord->name = $group['displayName'];
                 $cacherecord->description = $group['description'];
                 $DB->insert_record('local_o365_groups_cache', $cacherecord);
-                static::mtrace("Added group ID {$group['id']} to cache.", $baselevel + 1);
+                debugging("Added group ID {$group['id']} to cache.", DEBUG_DEVELOPER);
             }
         }
 
         foreach ($existinggroupsbyoid as $oldcacherecord) {
             $oldcacherecord->not_found_since = time();
             $DB->update_record('local_o365_groups_cache', $oldcacherecord);
-            static::mtrace("Marked group {$oldcacherecord->objectid} as not found in the cache.", $baselevel + 1);
+            debugging("Marked group {$oldcacherecord->objectid} as not found in the cache.", DEBUG_DEVELOPER);
         }
 
-        static::mtrace("Finished updating groups cache.", $baselevel);
-        static::mtrace("", $baselevel);
+        debugging("Finished updating groups cache.", DEBUG_DEVELOPER);
+        debugging("", DEBUG_DEVELOPER);
 
         return true;
     }
@@ -652,7 +652,7 @@ class utils {
     public static function clean_up_not_found_groups(int $baselevel = 1): void {
         global $DB;
 
-        static::mtrace('Clean up non-existing groups from database', $baselevel);
+        debugging('Clean up non-existing groups from database', DEBUG_DEVELOPER);
 
         $cutofftime = strtotime('-5 minutes');
         $sql = "SELECT *
@@ -665,11 +665,11 @@ class utils {
             $DB->delete_records('local_o365_groups_cache', ['objectid' => $record->objectid]);
             $DB->delete_records('local_o365_objects', ['objectid' => $record->objectid]);
             $DB->delete_records('local_o365_teams_cache', ['objectid' => $record->objectid]);
-            static::mtrace('Deleted non-existing group ' . $record->objectid . ' from groups cache.', $baselevel + 1);
+            debugging('Deleted non-existing group ' . $record->objectid . ' from groups cache.', DEBUG_DEVELOPER);
         }
 
-        static::mtrace('Finished cleaning up non-existing groups from database.', $baselevel);
-        static::mtrace('', $baselevel);
+        debugging('Finished cleaning up non-existing groups from database.', DEBUG_DEVELOPER);
+        debugging('', DEBUG_DEVELOPER);
     }
 
     /**
