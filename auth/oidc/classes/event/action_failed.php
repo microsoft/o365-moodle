@@ -44,7 +44,7 @@ class action_failed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return $this->data['other'];
+        return json_encode($this->data['other']);
     }
 
     /**
