@@ -133,12 +133,17 @@ $string['settings_detectperms_invalid'] = 'Check permissions in Microsoft Entra 
 // Settings in "User sync" section of the "Sync settings" tab.
 $string['settings_options_usersync'] = 'User Sync';
 $string['settings_options_usersync_desc'] = 'The following settings control user synchronization between Microsoft 365 and Moodle.';
+$string['settings_usersync_general'] = 'General user synchronization';
+$string['settings_usersync_suspension'] = 'Moodle account suspension';
+$string['settings_usersync_matching'] = 'User matching';
+$string['settings_usersync_photos'] = 'Sync Microsoft 365 profile photos to Moodle';
+$string['settings_usersync_timezone'] = 'Sync Outlook timezone to Moodle';
 $string['settings_usersync'] = 'Sync users from Microsoft Entra ID';
 $string['settings_usersync_details'] = 'When enabled, Moodle synchronises users from Microsoft Entra ID according to the above options.<br /><br /><b>Note: </b>The sync job runs in the Moodle cron, and syncs 1000 users at a time. By default, this runs once per day at 1:00 AM in the time zone local to your server. To sync large sets of users more quickly, you can increase the frequency of the <b>Sync users from Microsoft Entra ID</b> task using the <a href="{$a}">Scheduled tasks management page.</a><br /><br />';
 $string['settings_usersync_create'] = 'Create accounts in Moodle for users in Microsoft Entra ID';
 $string['settings_usersync_update'] = 'Update accounts in Moodle for users in Microsoft Entra ID';
 $string['settings_usersync_suspend'] = 'Suspend previously synced accounts in Moodle when they are deleted from Microsoft Entra ID';
-$string['settings_usersync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Microsoft Entra ID (requires "suspend" option above)';
+$string['settings_usersync_delete'] = 'Delete previously synced accounts in Moodle when they are deleted from Microsoft Entra ID';
 $string['settings_usersync_reenable'] = 'Re-enable suspended accounts for users in Microsoft Entra ID';
 $string['settings_usersync_disabledsync'] = 'Sync disabled status';
 $string['settings_usersync_match'] = 'Match preexisting Moodle users with same-named accounts in Microsoft Entra ID';
