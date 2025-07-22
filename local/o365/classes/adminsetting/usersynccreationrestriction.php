@@ -37,6 +37,11 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
 class usersynccreationrestriction extends \admin_setting {
 
     /**
+     * @var array Contains the names of the remote fields.
+     */
+    private array $remotefields;
+
+    /**
      * Constructor
      * @param string $name unique ascii name, either 'mysetting' for settings that in config,
      *                     or 'myplugin/mysetting' for ones in config_plugins.
