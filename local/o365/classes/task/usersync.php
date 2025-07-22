@@ -277,7 +277,7 @@ class usersync extends scheduled_task {
             case 'preferred_username':
             default:
                 $this->mtrace('Unsupported binding username claim: ' . $bindingusernameclaim .
-                    '. Falls back to userPrincepalName.');
+                    '. Falls back to userPrincipalName.');
                 $bindingusernameclaim = 'userPrincipalName';
         }
 
