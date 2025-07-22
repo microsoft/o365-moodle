@@ -56,7 +56,7 @@ class application extends moodleform {
         $mform->addElement('static', 'idptype_help', '', get_string('idptype_help', 'auth_oidc'));
 
         // Client ID.
-        $mform->addElement('text', 'clientid', auth_oidc_config_name_in_form('clientid'), ['size' => 40]);
+        $mform->addElement('passwordunmask', 'clientid', auth_oidc_config_name_in_form('clientid'), ['size' => 40]);
         $mform->setType('clientid', PARAM_TEXT);
         $mform->addElement('static', 'clientid_help', '', get_string('clientid_help', 'auth_oidc'));
         $mform->addRule('clientid', null, 'required', null, 'client');
