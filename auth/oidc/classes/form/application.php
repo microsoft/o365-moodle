@@ -78,7 +78,7 @@ class application extends moodleform {
         $mform->addElement('static', 'clientauthmethod_help', '', get_string('clientauthmethod_help', 'auth_oidc'));
 
         // Secret.
-        $mform->addElement('text', 'clientsecret', auth_oidc_config_name_in_form('clientsecret'), ['size' => 60]);
+        $mform->addElement('passwordunmask', 'clientsecret', auth_oidc_config_name_in_form('clientsecret'), ['size' => 60]);
         $mform->setType('clientsecret', PARAM_TEXT);
         $mform->disabledIf('clientsecret', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
         $mform->addElement('static', 'clientsecret_help', '', get_string('clientsecret_help', 'auth_oidc'));
