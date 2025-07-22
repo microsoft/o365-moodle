@@ -123,7 +123,7 @@ class application extends moodleform {
         $mform->addElement('static', 'clientcertfile_help', '', get_string('clientcertfile_help', 'auth_oidc'));
 
         // Certificate file passphrase.
-        $mform->addElement('text', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), ['size' => 60]);
+        $mform->addElement('passwordunmask', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), ['size' => 60]);
         $mform->setType('clientcertpassphrase', PARAM_TEXT);
         $mform->disabledIf('clientcertpassphrase', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
         $mform->addElement('static', 'clientcertpassphrase_help', '', get_string('clientcertpassphrase_help', 'auth_oidc'));
