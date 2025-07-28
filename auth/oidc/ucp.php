@@ -88,7 +88,7 @@ if (!empty($action)) {
         echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
         if (is_enabled_auth('manual') === true) {
             if (auth_oidc_connectioncapability($USER->id, 'disconnect')) {
-                $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                $connectlinkuri = new \core\url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
                 $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
                 $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
                 echo \html_writer::tag('h5', $linkhtml);
@@ -98,7 +98,7 @@ if (!empty($action)) {
     } else {
         echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
         if (auth_oidc_connectioncapability($USER->id, 'connect')) {
-            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
+            $connectlinkuri = new \core\url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
             $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
             echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_oidc', $opname));

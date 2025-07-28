@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 require_login();
 
-$url = new moodle_url('/auth/oidc/binding_username_claim.php');
+$url = new \core\url('/auth/oidc/binding_username_claim.php');
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
@@ -97,7 +97,7 @@ $existingclaims = auth_oidc_get_existing_claims();
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('binding_username_claim_heading', 'auth_oidc'));
-$bindingusernametoolurl = new moodle_url('/auth/oidc/change_binding_username_claim_tool.php');
+$bindingusernametoolurl = new \core\url('/auth/oidc/change_binding_username_claim_tool.php');
 echo html_writer::tag('p', get_string('binding_username_claim_description', 'auth_oidc', $bindingusernametoolurl->out()));
 if ($existingclaims) {
     echo html_writer::tag('p', get_string('binding_username_claim_description_existing_claims', 'auth_oidc',

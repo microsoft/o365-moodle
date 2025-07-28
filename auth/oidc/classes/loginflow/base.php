@@ -353,18 +353,18 @@ class base {
      * @param bool $justremovetokens If true, just remove the stored OIDC tokens for the user; otherwise, revert login methods.
      * @param bool $donotremovetokens If true, do not remove tokens when disconnecting. This migrates from a login account
      *                                to a "linked" account.
-     * @param \moodle_url|null $redirect URL to redirect to if successful.
-     * @param \moodle_url|null $selfurl The page this is accessed from, used for some redirects.
+     * @param \core\url|null $redirect URL to redirect to if successful.
+     * @param \core\url|null $selfurl The page this is accessed from, used for some redirects.
      * @param int|null $userid ID of the user to disconnect; uses the current user if not provided.
      */
-    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\moodle_url $redirect = null,
-            ?\moodle_url $selfurl = null, $userid = null) {
+    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\core\url $redirect = null,
+            ?\core\url $selfurl = null, $userid = null) {
         global $USER, $DB, $CFG;
         if ($redirect === null) {
-            $redirect = new \moodle_url('/auth/oidc/ucp.php');
+            $redirect = new \core\url('/auth/oidc/ucp.php');
         }
         if ($selfurl === null) {
-            $selfurl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+            $selfurl = new \core\url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
         }
 
         // Get the record of the user involved. Current user if no ID received.
