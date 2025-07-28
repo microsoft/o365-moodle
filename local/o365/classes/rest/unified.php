@@ -87,15 +87,11 @@ class unified extends o365api {
     /**
      * Get the base URI that API calls should be sent to.
      *
-     * @return string|bool The URI to send API calls to, or false if a precondition failed.
+     * @return string The URI to send API calls to.
+     * @throws dml_exception
      */
-    public function get_apiuri() {
-        $oidcresource = get_config('auth_oidc', 'oidcresource');
-        if (!empty($oidcresource)) {
-            return $oidcresource;
-        } else {
-            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
-        }
+    public function get_apiuri(): string {
+        return self::get_tokenresource();
     }
 
     /**
