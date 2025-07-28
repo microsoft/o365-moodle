@@ -50,6 +50,16 @@ class unified extends o365api {
     public $apiarea = 'graph';
 
     /**
+     * The Microsoft OAuth2 token resource
+     */
+    public const RESOURCE_URL = 'https://graph.microsoft.com';
+
+    /**
+     * The Chinese API OAuth2 token resource
+     */
+    public const RESOURCE_URL_CHINESE = 'https://microsoftgraph.chinacloudapi.cn';
+
+    /**
      * Determine if the API client is configured.
      *
      * @return bool Whether the API client is configured.
@@ -69,9 +79,9 @@ class unified extends o365api {
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if (!empty($oidcresource)) {
             return $oidcresource;
-        } else {
-            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
         }
+
+        return (static::use_chinese_api() === true) ? self::RESOURCE_URL_CHINESE : self::RESOURCE_URL;
     }
 
     /**
