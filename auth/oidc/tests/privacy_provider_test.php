@@ -27,6 +27,7 @@ namespace auth_oidc;
 
 use auth_oidc\privacy\provider;
 use core\context\system;
+use core\context\user;
 
 /**
  * Privacy test for auth_oidc
@@ -65,7 +66,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $this->assertCount(1, $contextlist);
 
         // Check that a context is returned and is the expected context.
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
         $this->assertEquals($usercontext->id, $contextlist->get_contextids()[0]);
     }
 
@@ -80,7 +81,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $component = 'auth_oidc';
         // Create a user.
         $user = $this->getDataGenerator()->create_user();
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
 
         // The list of users should not return anything yet (related data still haven't been created).
         $userlist = new \core_privacy\local\request\userlist($usercontext, $component);
@@ -115,7 +116,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $tokenrecord = self::create_token($user->id);
         $prevloginrecord = self::create_prevlogin($user->id);
 
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
 
         $writer = \core_privacy\local\request\writer::with_context($usercontext);
         $this->assertFalse($writer->has_any_data());
@@ -150,7 +151,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $user1 = $this->getDataGenerator()->create_user();
         self::create_token($user1->id);
         self::create_prevlogin($user1->id);
-        $user1context = \context_user::instance($user1->id);
+        $user1context = user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         self::create_token($user2->id);
@@ -183,7 +184,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $user1 = $this->getDataGenerator()->create_user();
         self::create_token($user1->id);
         self::create_prevlogin($user1->id);
-        $user1context = \context_user::instance($user1->id);
+        $user1context = user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         self::create_token($user2->id);
@@ -216,13 +217,13 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $component = 'auth_oidc';
         // Create user1.
         $user1 = $this->getDataGenerator()->create_user();
-        $usercontext1 = \context_user::instance($user1->id);
+        $usercontext1 = user::instance($user1->id);
         self::create_token($user1->id);
         self::create_prevlogin($user1->id);
 
         // Create user2.
         $user2 = $this->getDataGenerator()->create_user();
-        $usercontext2 = \context_user::instance($user2->id);
+        $usercontext2 = user::instance($user2->id);
         self::create_token($user2->id);
         self::create_prevlogin($user2->id);
 

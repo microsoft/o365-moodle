@@ -24,6 +24,7 @@
  */
 
 use core\context\system;
+use core\context\user;
 
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
@@ -61,7 +62,7 @@ if (!empty($action)) {
     }
 } else {
     $PAGE->set_url('/auth/oidc/ucp.php');
-    $usercontext = \context_user::instance($USER->id);
+    $usercontext = user::instance($USER->id);
     $PAGE->set_context(system::instance());
     $PAGE->set_pagelayout('standard');
     $USER->editing = false;
