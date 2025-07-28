@@ -29,6 +29,7 @@ namespace local_o365\rest;
 use core_date;
 use core_text;
 use DateTime;
+use dml_exception;
 use local_o365\oauth2\clientdata;
 use local_o365\obj\o365user;
 use local_o365\utils;
@@ -62,6 +63,7 @@ class unified extends o365api {
      * Get the API client's oauth2 resource.
      *
      * @return string The resource for oauth2 tokens.
+     * @throws dml_exception
      */
     public static function get_tokenresource(): string {
         $oidcresource = get_config('auth_oidc', 'oidcresource');
