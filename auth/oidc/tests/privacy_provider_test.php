@@ -26,6 +26,7 @@
 namespace auth_oidc;
 
 use auth_oidc\privacy\provider;
+use core\context\system;
 
 /**
  * Privacy test for auth_oidc
@@ -98,7 +99,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $this->assertEquals($expected, $actual);
 
         // The list of users for system context should not return any users.
-        $userlist = new \core_privacy\local\request\userlist(\context_system::instance(), $component);
+        $userlist = new \core_privacy\local\request\userlist(system::instance(), $component);
         provider::get_users_in_context($userlist);
         $this->assertCount(0, $userlist);
     }
@@ -257,7 +258,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $this->assertCount(1, $userlist2);
 
         // User data should be only removed in the user context.
-        $systemcontext = \context_system::instance();
+        $systemcontext = system::instance();
         // Add userlist2 to the approved user list in the system context.
         $approvedlist = new \core_privacy\local\request\approved_userlist($systemcontext, $component, $userlist2->get_userids());
         // Delete user1 data using delete_data_for_user.

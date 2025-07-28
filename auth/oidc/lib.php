@@ -26,6 +26,7 @@
 
 use auth_oidc\jwt;
 use auth_oidc\utils;
+use core\context\system;
 
 // IdP types.
 /**
@@ -94,7 +95,7 @@ function auth_oidc_initialize_customicon($filefullname) {
     global $CFG;
 
     $file = get_config('auth_oidc', 'customicon');
-    $systemcontext = \context_system::instance();
+    $systemcontext = system::instance();
     $fullpath = "/{$systemcontext->id}/auth_oidc/customicon/0{$file}";
 
     $fs = get_file_storage();

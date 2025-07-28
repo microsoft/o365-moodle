@@ -27,6 +27,7 @@ use auth_oidc\form\change_binding_username_claim_tool_form1;
 use auth_oidc\form\change_binding_username_claim_tool_form2;
 use auth_oidc\preview;
 use auth_oidc\process;
+use core\context\system;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -36,7 +37,7 @@ require_login();
 
 $url = new moodle_url('/auth/oidc/change_binding_username_claim_tool.php');
 $PAGE->set_url($url);
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
 $PAGE->set_pagelayout('admin');
 $PAGE->set_heading(get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'));
 $PAGE->set_title(get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'));

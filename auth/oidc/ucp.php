@@ -23,6 +23,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\system;
+
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
 require_once(__DIR__.'/lib.php');
@@ -60,7 +62,7 @@ if (!empty($action)) {
 } else {
     $PAGE->set_url('/auth/oidc/ucp.php');
     $usercontext = \context_user::instance($USER->id);
-    $PAGE->set_context(\context_system::instance());
+    $PAGE->set_context(system::instance());
     $PAGE->set_pagelayout('standard');
     $USER->editing = false;
     $authconfig = get_config('auth_oidc');
