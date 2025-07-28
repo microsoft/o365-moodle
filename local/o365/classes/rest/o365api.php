@@ -247,12 +247,21 @@ abstract class o365api {
                 $ratelimitlevel++;
                 $existingratelimitsetting = get_config('local_o365', 'ratelimit');
                 if ($existingratelimitsetting != $ratelimitlevel . ':' . $ratelimittime) {
-                    add_to_config_log('ratelimit', $existingratelimitsetting, $ratelimitlevel . ':' . $ratelimittime, 'local_o365');
+                    add_to_config_log(
+                        'ratelimit',
+                        $existingratelimitsetting,
+                        $ratelimitlevel . ':' . $ratelimittime,
+                        'local_o365',
+                    );
                 }
                 set_config('ratelimit', $ratelimitlevel . ':' . time(), 'local_o365');
 
-                return $this->apicall($origparam['httpmethod'], $origparam['apimethod'], $origparam['params'],
-                    $origparam['options']);
+                return $this->apicall(
+                    $origparam['httpmethod'],
+                    $origparam['apimethod'],
+                    $origparam['params'],
+                    $origparam['options'],
+                );
             } else if ($this->httpclient->info['http_code'] == 202) {
                 // If response is 202 Accepted, return response.
                 return $this->httpclient->response;

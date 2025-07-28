@@ -170,8 +170,18 @@ class unified extends o365api {
      * @return array The result of the API call.
      * @throws moodle_exception
      */
-    public function paginatedapicall($httpmethod, $apimethod, $odataqueries = [], $expectedstructure = ['value' => null],
-        $betaapi = false, $params = '', $options = [], $skipparam = '$skiptoken', $deltalink = '', $deltatokenparam = '') {
+    public function paginatedapicall(
+        $httpmethod,
+        $apimethod,
+        $odataqueries = [],
+        $expectedstructure = ['value' => null],
+        $betaapi = false,
+        $params = '',
+        $options = [],
+        $skipparam = '$skiptoken',
+        $deltalink = '',
+        $deltatokenparam = ''
+    ) {
         $content = [];
 
         $originalapimethod = $apimethod;
