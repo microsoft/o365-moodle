@@ -224,12 +224,11 @@ class unified extends o365api {
                     $content = array_merge($content, $result['value']);
                 }
 
+                $skiptoken = null;
                 if (isset($result['odata.nextLink'])) {
                     $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], $skipparam);
                 } else if (isset($result['@odata.nextLink'])) {
                     $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], $skipparam);
-                } else {
-                    $skiptoken = null;
                 }
 
                 if ($deltalink && $deltatokenparam && isset($result[$deltalink])) {
@@ -242,9 +241,9 @@ class unified extends o365api {
 
         if ($deltatokenvalue) {
             return [$content, $deltatokenvalue];
-        } else {
-            return $content;
         }
+
+        return $content;
     }
 
     /**
