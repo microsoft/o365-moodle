@@ -78,6 +78,7 @@ class coursesync extends scheduled_task {
         }
         $coursesync->cleanup_course_connection_records();
 
+        // Update the groups cache and save any not found groups.
         if (utils::update_groups_cache($graphclient, 1)) {
             $coursesync->save_not_found_groups();
             utils::clean_up_not_found_groups();
