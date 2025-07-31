@@ -75,6 +75,7 @@ class cohortsync extends scheduled_task {
      * @return void
      */
     private function execute_sync(main $cohortsync): void {
+        // First, update the group cache, and delete any groups that no longer exist.
         if ($cohortsync->update_groups_cache()) {
             utils::clean_up_not_found_groups();
         } else {

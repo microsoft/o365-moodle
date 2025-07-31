@@ -165,7 +165,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_o365_groups_cache" COMMENT="Stores Groups cache">
+    <TABLE NAME="local_o365_groups_cache" COMMENT="Stores Groups cache. This is primarily used for cohort sync, but is used to clean up groups in local_o365_objects and teams caches too">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="objectid" TYPE="char" LENGTH="36" NOTNULL="true" SEQUENCE="false"/>
