@@ -37,6 +37,7 @@ use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
 use stdClass;
+use function get_file_storage;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -46,6 +47,7 @@ require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->libdir . '/gdlib.php');
 
 /**
  * User sync feature.
@@ -87,10 +89,17 @@ class main {
      */
     public static function is_enabled() {
         $usersyncsettings = get_config('local_o365', 'usersync');
-        if (empty($usersyncsettings) || $usersyncsettings === 'photosynconlogin' || $usersyncsettings === 'tzsynconlogin') {
+        if (!empty($usersyncsettings)) {
+            $usersyncsettings = explode(',', $usersyncsettings);
+            $realsyncoptions = ['create', 'update', 'suspend', 'reenable', 'disabledsync', 'matchswitchauth', 'appassign',
+                'photosync', 'tzsync'];
+            if (!empty(array_intersect($usersyncsettings, $realsyncoptions))) {
+                // At least one sync option is enabled.
+                return true;
+            }
+        } else {
             return false;
         }
-        return true;
     }
 
     /**
@@ -167,11 +176,15 @@ class main {
      * Assign photo to Moodle user account.
      *
      * @param int $muserid
+     * @param bool $printtrace
      * @return boolean True on photo updated.
      */
-    public function assign_photo(int $muserid) {
+    public function assign_photo(int $muserid, bool $printtrace = false) {
         global $DB, $CFG;
 
+        if ($printtrace) {
+            $this->mtrace('Syncing profile photo.');
+        }
         $result = false;
         $apiclient = $this->construct_user_api();
         $oidcusername = $DB->get_field('local_o365_objects', 'o365name', ['moodleid' => $muserid, 'type' => 'user']);
@@ -185,15 +198,23 @@ class main {
         try {
             $image = $apiclient->get_photo($oidcusername);
             if (!$image) {
-                // Profile photo has been deleted.
+                // No profile photo found.
+                if ($printtrace) {
+                    $this->mtrace('No profile photo received.');
+                }
+
                 if (!empty($muser->picture)) {
                     // User has no photo. Deleting previous profile photo.
-                    $fs = \get_file_storage();
+                    $fs = get_file_storage();
                     $fs->delete_area_files($context->id, 'user', 'icon');
                     $DB->set_field('user', 'picture', 0, ['id' => $muser->id]);
                 }
                 $result = false;
             } else {
+                if ($printtrace) {
+                    $this->mtrace('Profile photo received.');
+                }
+
                 // Check if json error message was returned.
                 if (!preg_match('/^{/', $image)) {
                     // Update profile picture.
@@ -204,7 +225,7 @@ class main {
                     }
                     fwrite($fp, $image);
                     fclose($fp);
-                    require_once("$CFG->libdir/gdlib.php");
+
                     $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
                     if ($newpicture != $muser->picture) {
                         $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
@@ -229,10 +250,14 @@ class main {
             }
         } catch (moodle_exception $e) {
             if ($e->getMessage() === get_string('erroro365nophoto', 'local_o365')) {
+                if ($printtrace) {
+                    $this->mtrace('No profile photo received.');
+                }
+
                 // User has no photo - if the user has an existing photo in Moodle profile, delete it.
                 if (!empty($muser->picture)) {
                     // User has no photo. Deleting previous profile photo.
-                    $fs = \get_file_storage();
+                    $fs = get_file_storage();
                     $fs->delete_area_files($context->id, 'user', 'icon');
                     $DB->set_field('user', 'picture', 0, ['id' => $muser->id]);
                 }
@@ -246,9 +271,14 @@ class main {
      * Sync timezone of user from Outlook to Moodle.
      *
      * @param int $muserid
+     * @param bool $printtrace
      */
-    public function sync_timezone(int $muserid) {
+    public function sync_timezone(int $muserid, bool $printtrace = false) {
         global $DB;
+
+        if ($printtrace) {
+            $this->mtrace('Syncing timezone');
+        }
 
         $tokenresource = unified::get_tokenresource();
         $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
@@ -964,9 +994,9 @@ class main {
      *
      * @param string $msg The message.
      */
-    public static function mtrace($msg) {
+    public static function mtrace(string $msg) {
         if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-            mtrace('......... '.$msg);
+            mtrace('......... ' . $msg);
         }
     }
 
@@ -1471,7 +1501,7 @@ class main {
             if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     if (!empty($newmuser)) {
-                        $this->assign_photo($newmuser->id);
+                        $this->assign_photo($newmuser->id, true);
                     }
                 } catch (moodle_exception $e) {
                     $this->mtrace('Could not assign photo to user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
@@ -1485,7 +1515,7 @@ class main {
             if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     if (!empty($newmuser)) {
-                        $this->sync_timezone($newmuser->id);
+                        $this->sync_timezone($newmuser->id, true);
                     }
                 } catch (moodle_exception $e) {
                     $this->mtrace('Could not sync timezone for user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
@@ -1555,7 +1585,7 @@ class main {
             if (empty($existinguser->photoupdated) || ($existinguser->photoupdated + $photoexpiresec) < time()) {
                 try {
                     if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-                        $this->assign_photo($existinguser->muserid);
+                        $this->assign_photo($existinguser->muserid, true);
                     }
                 } catch (moodle_exception $e) {
                     $this->mtrace('Could not assign profile photo to user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
@@ -1568,7 +1598,7 @@ class main {
         if (isset($syncoptions['tzsync'])) {
             try {
                 if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-                    $this->sync_timezone($existinguser->muserid);
+                    $this->sync_timezone($existinguser->muserid, true);
                 }
             } catch (moodle_exception $e) {
                 $this->mtrace('Could not sync timezone for user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
@@ -1596,15 +1626,19 @@ class main {
         }
 
         // Match user if needed.
-        if ($existinguser->auth !== 'oidc') {
-            $this->mtrace('Found a user in Microsoft Entra ID that seems to match a user in Moodle');
-            $this->mtrace(sprintf('moodle username: %s, Entra ID user identifier: %s', $existinguser->username,
-                $entraiduserdata['useridentifierlower']));
-            return $this->sync_users_matchuser($syncoptions, $entraiduserdata, $existinguser, $exactmatch);
-        } else {
-            $this->mtrace('The user is already using OIDC for authentication.');
-            return true;
+        if (isset($syncoptions['match']) || isset($syncoptions['matchswitchauth'])) {
+            if ($existinguser->auth !== 'oidc') {
+                $this->mtrace('Found a user in Microsoft Entra ID that seems to match a user in Moodle');
+                $this->mtrace(sprintf('moodle username: %s, Entra ID user identifier: %s', $existinguser->username,
+                    $entraiduserdata['useridentifierlower']));
+                return $this->sync_users_matchuser($syncoptions, $entraiduserdata, $existinguser, $exactmatch);
+            } else {
+                $this->mtrace('The user is already using OIDC for authentication.');
+                return true;
+            }
         }
+
+        return true;
     }
 
     /**
