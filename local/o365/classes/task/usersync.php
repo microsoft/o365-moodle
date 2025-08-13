@@ -272,12 +272,20 @@ class usersync extends scheduled_task {
                 $this->mtrace('Binding username claim: mail.');
                 $bindingusernameclaim = 'mail';
                 break;
+            case 'auto':
+                $this->mtrace('Binding username claim: auto-detected. Use userPrincipalName.');
+                $bindingusernameclaim = 'userPrincipalName';
+                break;
             case 'unique_name':
             case 'sub':
             case 'preferred_username':
+                $this->mtrace('Binding user claim "' . $bindingusernameclaim . '" is unavailable in Graph user resource. ' .
+                    'Fall back to userPrincipalName.');
+                $bindingusernameclaim = 'userPrincipalName';
+                break;
             default:
                 $this->mtrace('Unsupported binding username claim: ' . $bindingusernameclaim .
-                    '. Falls back to userPrincepalName.');
+                    '. Fall back to userPrincipalName.');
                 $bindingusernameclaim = 'userPrincipalName';
         }
 
