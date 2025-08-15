@@ -20,7 +20,7 @@ variables:
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/composer"
   NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.cache/npm"
   CI_BUILD_DIR: '/tmp/plugin'
-  MOODLE_BRANCH: 'MOODLE_405_STABLE'
+  MOODLE_BRANCH: 'MOODLE_500_STABLE'
   MOODLE_BEHAT_WWWROOT: 'http://localhost:8000'
   MOODLE_BEHAT_WDHOST: 'http://behat:4444/wd/hub'
   MOODLE_START_BEHAT_SERVERS: 'no'
@@ -67,12 +67,6 @@ stages:
         exit 1;
       fi
 
-php81:
-  tags:
-    - docker
-  image: moodlehq/moodle-php-apache:8.1
-  <<: *setupandruncheck
-
 php82:
   tags:
     - docker
@@ -83,4 +77,10 @@ php83:
   tags:
     - docker
   image: moodlehq/moodle-php-apache:8.3
+  <<: *setupandruncheck
+
+php84:
+  tags:
+    - docker
+  image: moodlehq/moodle-php-apache:8.4
   <<: *setupandruncheck
