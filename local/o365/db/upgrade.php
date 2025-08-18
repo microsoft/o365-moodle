@@ -1304,5 +1304,28 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024042203, 'local', 'o365');
     }
 
+    if ($oldversion < 2024100711) {
+        // Delete config log entries created by mistake.
+        $confignames = ['apptokens', 'teamscacheupdated', 'calsyncinlastrun', 'task_usersync_lastdeltatoken',
+            'task_usersync_lastdelete', 'cal_site_lastsync', 'cal_course_lastsync', 'cal_user_lastsync'];
+
+        foreach ($confignames as $configname) {
+            $configlogentryids = $DB->get_fieldset_select('config_log', 'id', "plugin = 'local_o365' AND name = :name",
+                ['name' => $configname]);
+            if ($configlogentryids) {
+                [$logentryidsql, $params] = $DB->get_in_or_equal($configlogentryids, SQL_PARAMS_NAMED);
+                // Delete logstore_standard_log records.
+                $DB->delete_records_select('logstore_standard_log', 'eventname = :eventname AND objectid ' . $logentryidsql,
+                    array_merge($params, ['eventname' => '\core\event\config_log_created']));
+
+                // Delete config_log records.
+                $DB->delete_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
+            }
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100711, 'local', 'o365');
+    }
+
     return true;
 }
