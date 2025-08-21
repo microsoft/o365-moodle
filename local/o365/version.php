@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2022112850;
+$plugin->version = 2022112850.01;
 $plugin->requires = 2022112800;
 $plugin->release = '4.1.11';
 $plugin->component = 'local_o365';
