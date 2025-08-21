@@ -82,6 +82,24 @@ $functions = [
         'description' => 'Update a grade.',
         'type' => 'write',
     ],
+    'local_o365_search_groups' => [
+            'classname' => '\local_o365\webservices\cohortsync_search_groups',
+            'methodname' => 'search_groups',
+            'classpath' => 'local/o365/classes/webservices/cohortsync_search_groups.php',
+            'description' => 'Search Microsoft 365 groups for cohort sync',
+            'type' => 'read',
+            'capabilities' => 'moodle/site:config',
+            'ajax' => true,
+    ],
+    'local_o365_search_cohorts' => [
+            'classname' => '\local_o365\webservices\cohortsync_search_cohorts',
+            'methodname' => 'search_cohorts',
+            'classpath' => 'local/o365/classes/webservices/cohortsync_search_cohorts.php',
+            'description' => 'Search Moodle cohorts for cohort sync',
+            'type' => 'read',
+            'capabilities' => 'moodle/site:config',
+            'ajax' => true,
+    ],
 ];
 
 // Pre-built service.
@@ -96,6 +114,8 @@ $services = [
             'local_o365_get_course_users',
             'local_o365_get_assignments',
             'local_o365_update_grade',
+            'local_o365_search_groups',
+            'local_o365_search_cohorts',
             'mod_assign_get_assignments',
             'mod_assign_get_grades',
             'mod_assign_save_grade',
