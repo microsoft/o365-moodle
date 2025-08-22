@@ -87,19 +87,37 @@ class ucp extends base {
         $usersetting = $DB->get_record('local_o365_calsettings', ['user_id' => $USER->id]);
         if (!empty($usersetting)) {
             $customdata['o365calendarcheck'] = true;
-            $updatecalendar = true;
-            foreach ($o365calendars as $o365calendar) {
-                if ($o365calendar['name'] === $SITE->fullname) {
-                    $updatecalendar = false;
+            if (!empty($usersetting->o365calid) && !$calsync->calendar_exists($USER->id, $usersetting->o365calid)) {
+                $calsync->calendar_unsubscribe($USER->id, 'site', SITEID, $usersetting->o365calid);
+                $newcalendar = $calsync->create_outlook_calendar($SITE->fullname);
+                if (!empty($newcalendar['Id'])) {
+                    $usersetting->o365calid = $newcalendar['Id'];
+                    $DB->update_record('local_o365_calsettings', $usersetting);
+                    $DB->set_field('local_o365_calsub', 'o365calid', $newcalendar['Id'],
+                            ['user_id' => $USER->id, 'caltype' => 'site']);
+                    $o365calendars = $calsync->get_calendars();
                 }
-            }
-            if ($updatecalendar) {
-                // Update the existing calendar.
-                $calsync->update_outlook_calendar($usersetting->o365calid, ['name' => $SITE->fullname]);
-                $o365calendars = $calsync->get_calendars();
+            } else {
+                $updatecalendar = true;
+                foreach ($o365calendars as $o365calendar) {
+                    if ($o365calendar['name'] === $SITE->fullname) {
+                        $updatecalendar = false;
+                    }
+                }
+                if ($updatecalendar) {
+                    // Update the existing calendar.
+                    $calsync->update_outlook_calendar($usersetting->o365calid, ['name' => $SITE->fullname]);
+                    $o365calendars = $calsync->get_calendars();
+                }
             }
         }
 
+        $subscriptions = $DB->get_records('local_o365_calsub', ['user_id' => $USER->id]);
+        foreach ($subscriptions as $sub) {
+            if (!empty($sub->o365calid) && !$calsync->calendar_exists($USER->id, $sub->o365calid)) {
+                $calsync->calendar_unsubscribe($USER->id, $sub->caltype, $sub->caltypeid, $sub->o365calid);
+            }
+        }
         foreach ($o365calendars as $o365calendar) {
             $customdata['o365calendars'][] = [
                 'id' => $o365calendar['id'],
