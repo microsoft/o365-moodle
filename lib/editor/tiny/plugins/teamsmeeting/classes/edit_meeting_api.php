@@ -63,7 +63,21 @@ class edit_meeting_api extends external_api {
      * @return array
      */
     public static function edit_meeting($url) {
+        global $DB;
         $record = self::get_meeting($url);
+
+        if ($record === null) {
+            $context = \context_system::instance();
+        } else {
+            if (!empty($record->contextid)) {
+                $context = \context::instance_by_id($record->contextid);
+            } else {
+                $context = \context_system::instance();
+            }
+        }
+
+        require_capability('tiny/teamsmeeting:add', $context);
+
         $url = self::get_meeting_url($record);
 
         if ($record == null) {

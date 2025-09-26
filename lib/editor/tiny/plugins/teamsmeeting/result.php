@@ -27,10 +27,20 @@ require_once(__DIR__ . '/../../../../../config.php');
 
 require_login();
 
+$courseid = optional_param('courseid', 0, PARAM_INT);
+if ($courseid) {
+    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+    $context = \context_course::instance($course->id);
+} else {
+    $context = \context_system::instance();
+}
+
+require_capability('tiny/teamsmeeting:add', $context);
+
 $meetinglink = optional_param('link', null, PARAM_URL);
 $title = optional_param('title', null, PARAM_TEXT);
-$preview = optional_param('preview', null, PARAM_RAW);
-$optionslink = optional_param('options', null, PARAM_RAW);
+$preview = optional_param('preview', null, PARAM_TEXT);
+$optionslink = optional_param('options', null, PARAM_URL);
 
 $meetingoptions = null;
 
@@ -51,16 +61,19 @@ if (!empty($preview)) {
     $meetingdata->link = $meetinglink;
     $meetingdata->options = $meetingoptions;
     $meetingdata->timecreated = time();
+    $meetingdata->userid = $USER->id;
+    $meetingdata->contextid = $context->id;
     $DB->insert_record('tiny_teamsmeeting', $meetingdata);
 } else if (!empty($optionslink)) {
-    $meetingoptions = $optionslink;
+    if (filter_var($optionslink, FILTER_VALIDATE_URL)) {
+        $meetingoptions = $optionslink;
+    }
 }
 
-$context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_url(new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', ['link' => $meetinglink, 'title' => $title,
-    'preview' => $preview, 'options' => $optionslink]));
+    'preview' => $preview, 'options' => $optionslink, 'courseid' => $courseid]));
 echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;padding: 2rem;font-family: sans-serif;">
     <svg class="meetingsuccess" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width:100px; align-self: center;
         display: flex; margin-bottom: 1.5rem;">
@@ -77,14 +90,14 @@ echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;paddin
     '</span>';
 if (!empty($meetinglink)) {
     echo '<span class="meetinglink" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
-        $meetinglink . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
+        htmlspecialchars($meetinglink, ENT_QUOTES, 'UTF-8') . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
         border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px;
         color: #fff; background-color: #6264a7; margin-top: 1rem; padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('iframe_go_to_meeting', 'tiny_teamsmeeting') . '</a></span>';
 }
 if (!empty($meetingoptions)) {
     echo '<span class="meetingoptions" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
-        $meetingoptions . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
+        htmlspecialchars($meetingoptions, ENT_QUOTES, 'UTF-8') . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
         border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px;
         color: #fff; background-color: #6264a7; margin-top: 1rem; padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('iframe_meeting_options', 'tiny_teamsmeeting') . '</a></span>';
@@ -94,7 +107,7 @@ echo '</div>';
 echo "<script type='text/javascript'>
 window.parent.postMessage({
     action: 'meetingUrl',
-    url: '" . $meetinglink . "'
+    url: '" . addslashes($meetinglink) . "'
 }, '*');
 </script>";
 
