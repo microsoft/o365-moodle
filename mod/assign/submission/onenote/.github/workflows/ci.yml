@@ -1,4 +1,4 @@
-name: Moodle Plugin CI for auth_oidc
+name: Moodle Plugin CI for assigsubmission_onenote
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

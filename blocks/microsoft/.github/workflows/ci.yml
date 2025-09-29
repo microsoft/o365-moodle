@@ -1,4 +1,4 @@
-name: Moodle Plugin CI for auth_oidc
+name: Moodle Plugin CI for block_microsoft
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

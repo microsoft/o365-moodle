@@ -1,4 +1,4 @@
-name: Moodle Plugin CI for auth_oidc
+name: Moodle Plugin CI for local_o365
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
