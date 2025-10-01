@@ -1310,17 +1310,13 @@ function xmldb_local_o365_upgrade($oldversion) {
             'task_usersync_lastdelete', 'cal_site_lastsync', 'cal_course_lastsync', 'cal_user_lastsync'];
 
         foreach ($confignames as $configname) {
-            $configlogentryids = $DB->get_fieldset_select('config_log', 'id', "plugin = 'local_o365' AND name = :name",
-                ['name' => $configname]);
-            if ($configlogentryids) {
-                [$logentryidsql, $params] = $DB->get_in_or_equal($configlogentryids, SQL_PARAMS_NAMED);
-                // Delete logstore_standard_log records.
-                $DB->delete_records_select('logstore_standard_log', 'eventname = :eventname AND objectid ' . $logentryidsql,
-                    array_merge($params, ['eventname' => '\core\event\config_log_created']));
+            // Delete logstore_standard_log records.
+            $DB->delete_records_select('logstore_standard_log',
+                'eventname = :eventname AND objectid IN (SELECT id FROM {config_log} WHERE plugin = :plugin AND name = :name)',
+                ['eventname' => '\core\event\config_log_created', 'plugin' => 'local_o365', 'name' => $configname]);
 
-                // Delete config_log records.
-                $DB->delete_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
-            }
+            // Delete config_log records.
+            $DB->delete_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
         }
 
         // O365 savepoint reached.
