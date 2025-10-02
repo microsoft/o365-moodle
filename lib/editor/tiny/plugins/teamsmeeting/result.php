@@ -39,7 +39,7 @@ require_capability('tiny/teamsmeeting:add', $context);
 
 $meetinglink = optional_param('link', null, PARAM_URL);
 $title = optional_param('title', null, PARAM_TEXT);
-$preview = optional_param('preview', null, PARAM_TEXT);
+$preview = optional_param('preview', null, PARAM_CLEANHTML);
 $optionslink = optional_param('options', null, PARAM_URL);
 
 $meetingoptions = null;
