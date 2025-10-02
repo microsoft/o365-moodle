@@ -50,7 +50,7 @@ if (!empty($preview)) {
     $links = $htmlDom->getElementsByTagName('a');
     foreach ($links as $link) {
         $href = $link->getAttribute('href');
-        if ($href && strpos($href, 'meetingOptions') !== false) {
+        if ($href && strpos($href, 'meetingOptions') !== false && filter_var($href, FILTER_VALIDATE_URL)) {
             $meetingoptions = $href;
             break;
         }
