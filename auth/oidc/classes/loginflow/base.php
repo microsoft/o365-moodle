@@ -29,6 +29,7 @@ namespace auth_oidc\loginflow;
 use auth_oidc\jwt;
 use auth_oidc\oidcclient;
 use auth_oidc\utils;
+use core\context\system;
 use core_user;
 use moodle_exception;
 use stdClass;
@@ -388,7 +389,7 @@ class base {
             global $OUTPUT, $PAGE;
             require_once($CFG->dirroot.'/user/lib.php');
             $PAGE->set_url($selfurl->out());
-            $PAGE->set_context(\context_system::instance());
+            $PAGE->set_context(system::instance());
             $PAGE->set_pagelayout('standard');
             $USER->editing = false;
 

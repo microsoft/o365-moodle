@@ -24,10 +24,12 @@
  */
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing
+use core\context\system;
+
 require_once(__DIR__ . '/../../config.php');
 
 $PAGE->set_url('/auth/oidc/logout.php');
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
 
 $sid = optional_param('sid', '', PARAM_TEXT);
 
