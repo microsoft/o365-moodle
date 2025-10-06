@@ -27,7 +27,13 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/course/renderer.php');
 require_once($CFG->dirroot . '/mod/assign/classes/output/renderer.php');
 require_once($CFG->dirroot . '/mod/assign/classes/output/assign_header.php');
-require_once($CFG->dirroot . '/mod/quiz/renderer.php');
+
+if (file_exists($CFG->dirroot . '/mod/quiz/renderer.php')) {
+    require_once($CFG->dirroot . '/mod/quiz/renderer.php');
+} else {
+    // Since 5.1
+    require_once($CFG->dirroot . '/mod/quiz/classes/output/renderer.php');
+}
 
 /**
  * mod_assign
