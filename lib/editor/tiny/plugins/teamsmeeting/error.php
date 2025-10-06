@@ -28,7 +28,7 @@ require_once(__DIR__ . '/../../../../../config.php');
 require_login();
 
 // Error message text.
-$errormessage = get_string('iframe_error', 'tiny_teamsmeeting');
+$errormessage = get_string('iframe_not_found', 'tiny_teamsmeeting');
 
 // SVG error icon.
 $svgattributes = [

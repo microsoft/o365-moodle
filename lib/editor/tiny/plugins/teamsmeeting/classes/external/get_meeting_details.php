@@ -59,7 +59,6 @@ class get_meeting_details extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['url' => $url]);
 
         $record = self::get_meeting($params['url']);
-        var_dump($record);die;
         if (!$record) {
             return [
                 'status' => false,
