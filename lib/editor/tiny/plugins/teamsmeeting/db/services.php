@@ -20,25 +20,25 @@
  * @package     tiny_teamsmeeting
  * @copyright   2023 Enovation Solutions
  * @author      Oliwer Banach <oliwer.banach@enovation.ie>
+ * @author      Lai Wei <lai.wei@enovation.ie>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'tiny_teamsmeeting_edit_meeting' => [
-        'classname' => '\tiny_teamsmeeting\edit_meeting_api',
-        'methodname' => 'edit_meeting',
-        'classpath' => 'lib/editor/tiny/plugins/teamsmeeting/classes/edit_meeting_api.php',
-        'description' => 'Edit existing meeting',
-        'type' => 'write',
+    'tiny_teamsmeeting_get_meeting_details' => [
+        'classname' => '\tiny_teamsmeeting\external\get_meeting_details',
+        'description' => 'Get existing meeting details',
+        'type' => 'read',
         'ajax' => true,
+        'services' => ['tiny_teamsmeeting_service'],
     ],
 ];
 
 $services = [
     'tiny_teamsmeeting_service' => [
-        'functions' => ['tiny_teamsmeeting_edit_meeting'],
+        'functions' => ['tiny_teamsmeeting_get_meeting_details'],
         'restrictedusers' => 0,
         'enabled' => 1,
     ],

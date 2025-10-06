@@ -85,11 +85,20 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
         ?editor $editor = null) : array {
         global $CFG, $SESSION, $USER;
 
+        // Add courseid parameter if we're in a course context or below.
+        $coursecontext = $context->get_course_context(false);
+        if ($coursecontext) {
+            $courseid = $coursecontext->instanceid;
+        } else {
+            $courseid = SITEID;
+        }
+
         return [
             'appurl' => get_config('tiny_teamsmeeting', 'meetingapplink'),
             'clientdomain' => encode_url($CFG->wwwroot),
             'localevalue' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
             'msession' => sesskey(),
+            'courseid' => $courseid,
         ];
     }
 }
