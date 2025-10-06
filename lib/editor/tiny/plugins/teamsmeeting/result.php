@@ -28,8 +28,8 @@ require_once(__DIR__ . '/../../../../../config.php');
 require_login();
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
-$edit = optional_param('edit', 0, PARAM_INT);
-if ($edit) {
+$viewexisting = optional_param('viewexisting', 0, PARAM_INT);
+if ($viewexisting) {
     require_sesskey();
     $context = context_system::instance();
 } else {

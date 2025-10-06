@@ -70,7 +70,7 @@ class get_meeting_details extends external_api {
             'title' => $record->title,
             'link' => $record->link,
             'options' => $record->options,
-            'edit' => 1,
+            'viewexisting' => 1,
             'sesskey' => sesskey(),
         ]);
         return [
