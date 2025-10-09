@@ -1230,6 +1230,10 @@ class main {
                                 if ($existingtoken = $DB->get_record('auth_oidc_token', ['userid' => $renamedmoodleuser->id])) {
                                     $existingtoken->useridentifier = $entraiduser['useridentifier'];
                                     $existingtoken->username = $username;
+                                    $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                                    if (in_array($bindingusernameclaim, ['upn', 'auto'])) {
+                                        $existingtoken->oidcusername = $entraiduser['useridentifier'];
+                                    }
                                     $DB->update_record('auth_oidc_token', $existingtoken);
                                 }
 
