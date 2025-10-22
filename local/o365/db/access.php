@@ -36,7 +36,7 @@ $capabilities = [
         ],
     ],
     'local/o365:viewgroups' => [
-        'riskbitmask' => RISK_SPAM | RISK_XSS,
+        'riskbitmask' => RISK_SPAM,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [
