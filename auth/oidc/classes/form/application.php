@@ -56,7 +56,7 @@ class application extends moodleform {
         $mform->addElement('static', 'idptype_help', '', get_string('idptype_help', 'auth_oidc'));
 
         // Client ID.
-        $mform->addElement('text', 'clientid', auth_oidc_config_name_in_form('clientid'), ['size' => 40]);
+        $mform->addElement('passwordunmask', 'clientid', auth_oidc_config_name_in_form('clientid'), ['size' => 40]);
         $mform->setType('clientid', PARAM_TEXT);
         $mform->addElement('static', 'clientid_help', '', get_string('clientid_help', 'auth_oidc'));
         $mform->addRule('clientid', null, 'required', null, 'client');
@@ -78,7 +78,7 @@ class application extends moodleform {
         $mform->addElement('static', 'clientauthmethod_help', '', get_string('clientauthmethod_help', 'auth_oidc'));
 
         // Secret.
-        $mform->addElement('text', 'clientsecret', auth_oidc_config_name_in_form('clientsecret'), ['size' => 60]);
+        $mform->addElement('passwordunmask', 'clientsecret', auth_oidc_config_name_in_form('clientsecret'), ['size' => 60]);
         $mform->setType('clientsecret', PARAM_TEXT);
         $mform->disabledIf('clientsecret', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
         $mform->addElement('static', 'clientsecret_help', '', get_string('clientsecret_help', 'auth_oidc'));
@@ -123,7 +123,7 @@ class application extends moodleform {
         $mform->addElement('static', 'clientcertfile_help', '', get_string('clientcertfile_help', 'auth_oidc'));
 
         // Certificate file passphrase.
-        $mform->addElement('text', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), ['size' => 60]);
+        $mform->addElement('passwordunmask', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), ['size' => 60]);
         $mform->setType('clientcertpassphrase', PARAM_TEXT);
         $mform->disabledIf('clientcertpassphrase', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
         $mform->addElement('static', 'clientcertpassphrase_help', '', get_string('clientcertpassphrase_help', 'auth_oidc'));
