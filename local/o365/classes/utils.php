@@ -562,10 +562,12 @@ class utils {
 
         $connectedusers = [];
 
-        $userobjectrecords = $DB->get_records('local_o365_objects', ['type' => 'user']);
-        foreach ($userobjectrecords as $userobjectrecord) {
+        // Use recordset instead of get_records to reduce memory usage.
+        $userobjectrecordset = $DB->get_recordset('local_o365_objects', ['type' => 'user']);
+        foreach ($userobjectrecordset as $userobjectrecord) {
             $connectedusers[$userobjectrecord->moodleid] = $userobjectrecord->objectid;
         }
+        $userobjectrecordset->close();
 
         return $connectedusers;
     }
@@ -662,17 +664,23 @@ class utils {
         static::mtrace('Clean up non-existing groups from database', $baselevel);
 
         $cutofftime = strtotime('-5 minutes');
-        $sql = "SELECT *
+        $sql = "SELECT objectid
                   FROM {local_o365_groups_cache}
                  WHERE not_found_since != 0
                    AND not_found_since < :cutofftime";
         $records = $DB->get_records_sql($sql, ['cutofftime' => $cutofftime]);
 
-        foreach ($records as $record) {
-            $DB->delete_records('local_o365_groups_cache', ['objectid' => $record->objectid]);
-            $DB->delete_records('local_o365_objects', ['objectid' => $record->objectid]);
-            $DB->delete_records('local_o365_teams_cache', ['objectid' => $record->objectid]);
-            static::mtrace('Deleted non-existing group ' . $record->objectid . ' from groups cache.', $baselevel + 1);
+        if (!empty($records)) {
+            $objectids = array_keys($records);
+
+            // Use bulk delete with IN clause for better performance.
+            [$insql, $inparams] = $DB->get_in_or_equal($objectids, SQL_PARAMS_NAMED);
+            $DB->delete_records_select('local_o365_groups_cache', "objectid $insql", $inparams);
+            $DB->delete_records_select('local_o365_objects', "objectid $insql", $inparams);
+            $DB->delete_records_select('local_o365_teams_cache', "objectid $insql", $inparams);
+
+            $count = count($objectids);
+            static::mtrace("Deleted $count non-existing groups from database.", $baselevel + 1);
         }
 
         static::mtrace('Finished cleaning up non-existing groups from database.', $baselevel);
