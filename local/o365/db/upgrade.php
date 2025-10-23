@@ -1304,5 +1304,44 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022112839, 'local', 'o365');
     }
 
+    if ($oldversion < 2022112852) {
+        // Add index to local_o365_teams_cache.objectid for better query performance.
+        $table = new xmldb_table('local_o365_teams_cache');
+        $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
+
+        // Conditionally launch add index objectid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Add indexes to local_o365_groups_cache for better query performance.
+        $table = new xmldb_table('local_o365_groups_cache');
+        $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
+
+        // Conditionally launch add index objectid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $index = new xmldb_index('not_found_since', XMLDB_INDEX_NOTUNIQUE, ['not_found_since']);
+
+        // Conditionally launch add index not_found_since.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Add index to local_o365_course_request.requeststatus for better query performance.
+        $table = new xmldb_table('local_o365_course_request');
+        $index = new xmldb_index('requeststatus', XMLDB_INDEX_NOTUNIQUE, ['requeststatus']);
+
+        // Conditionally launch add index requeststatus.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2022112852, 'local', 'o365');
+    }
+
     return true;
 }
