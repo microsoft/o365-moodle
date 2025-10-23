@@ -590,16 +590,18 @@ class utils {
             return false;
         }
 
-        $existingcacherecords = $DB->get_records('local_o365_groups_cache');
+        // Use recordset instead of get_records to reduce memory usage.
+        $existingcacherecordset = $DB->get_recordset('local_o365_groups_cache');
         $existinggroupsbyoid = [];
         $existingnotfoundgroupsbyoid = [];
-        foreach ($existingcacherecords as $existingcacherecord) {
+        foreach ($existingcacherecordset as $existingcacherecord) {
             if ($existingcacherecord->not_found_since) {
                 $existingnotfoundgroupsbyoid[$existingcacherecord->objectid] = $existingcacherecord;
             } else {
                 $existinggroupsbyoid[$existingcacherecord->objectid] = $existingcacherecord;
             }
         }
+        $existingcacherecordset->close();
 
         foreach ($grouplist as $group) {
             if (array_key_exists($group['id'], $existingnotfoundgroupsbyoid)) {
@@ -617,9 +619,8 @@ class utils {
                     $cacherecord->description = $group['description'];
                     $DB->update_record('local_o365_groups_cache', $cacherecord);
                     static::mtrace("Updated group ID {$group['id']} in cache.", $baselevel + 1);
-                } else {
-                    static::mtrace("Group ID {$group['id']} in cache is up to date.", $baselevel + 1);
                 }
+                // Removed the "up to date" message to reduce unnecessary output.
                 unset($existinggroupsbyoid[$group['id']]);
             } else {
                 $cacherecord = new stdClass();
