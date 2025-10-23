@@ -477,12 +477,14 @@ class observers {
             }
         }
 
-        $userenrolments = $DB->get_records('user_enrolments', ['enrolid' => $event->objectid]);
+        // Use recordset instead of get_records to reduce memory usage.
+        $userenrolmentsrecordset = $DB->get_recordset('user_enrolments', ['enrolid' => $event->objectid]);
 
-        foreach ($userenrolments as $userenrolment) {
+        foreach ($userenrolmentsrecordset as $userenrolment) {
             \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($userenrolment->userid, $courseid, 0,
                 $coursegroupobjectrecordid, true);
         }
+        $userenrolmentsrecordset->close();
 
         return true;
     }
