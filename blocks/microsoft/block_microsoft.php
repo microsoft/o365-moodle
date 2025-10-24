@@ -420,13 +420,36 @@ class block_microsoft extends block_base {
             $items[] = $link;
         }
 
-        if (has_capability('moodle/course:request', $this->page->context)) {
-            if (!empty($this->globalconfig->settings_courserequest)) {
-                $courserequesturl = new moodle_url('/local/o365/courserequest.php');
-                $courserequestattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_courserequest'];
-                $courserequeststr = get_string('linkcourserequest', 'block_microsoft');
-                $items[] = html_writer::link($courserequesturl, $courserequeststr, $courserequestattrs);
+        // Course request link.
+        $hasaccesstocourserequest = false;
+        $currentcontext = $this->page->context;
+
+        $contexttocheck = null;
+
+        if ($currentcontext->contextlevel == CONTEXT_SYSTEM) {
+            $contexttocheck = context_system::instance();
+        } else {
+            $parentcontexts = $currentcontext->get_parent_contexts(true);
+            foreach ($parentcontexts as $parentcontext) {
+                if ($parentcontext->contextlevel == CONTEXT_COURSECAT) {
+                    $contexttocheck = $parentcontext;
+                    break;
+                }
             }
+            if (!$contexttocheck) {
+                $contexttocheck = context_system::instance();
+            }
+        }
+
+        if (has_capability('moodle/course:request', $contexttocheck)) {
+            $hasaccesstocourserequest = true;
+        }
+
+        if ($hasaccesstocourserequest && !empty($this->globalconfig->settings_courserequest)) {
+            $courserequesturl = new moodle_url('/local/o365/courserequest.php');
+            $courserequestattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_courserequest'];
+            $courserequeststr = get_string('linkcourserequest', 'block_microsoft');
+            $items[] = html_writer::link($courserequesturl, $courserequeststr, $courserequestattrs);
         }
 
         $html .= html_writer::alist($items);
