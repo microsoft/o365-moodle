@@ -31,7 +31,6 @@
  * @package assignsubmission_onenote
  */
 class restore_assignsubmission_onenote_subplugin extends restore_subplugin {
-
     /**
      * Returns the paths to be handled by the subplugin at workshop level
      *
@@ -69,5 +68,4 @@ class restore_assignsubmission_onenote_subplugin extends restore_subplugin {
 
         $this->add_related_files('assignsubmission_onenote', 'submission_onenote', 'submission', null, $oldsubmissionid);
     }
-
 }

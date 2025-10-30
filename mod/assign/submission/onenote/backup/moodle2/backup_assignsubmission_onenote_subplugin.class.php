@@ -30,7 +30,6 @@
  * @package assignsubmission_onenote
  */
 class backup_assignsubmission_onenote_subplugin extends backup_subplugin {
-
     /**
      * Returns the subplugin information to attach to submission element.
      *
@@ -53,5 +52,4 @@ class backup_assignsubmission_onenote_subplugin extends backup_subplugin {
         $subpluginelement->annotate_files('assignsubmission_onenote', 'submission_onenote', 'submission');
         return $subplugin;
     }
-
 }
