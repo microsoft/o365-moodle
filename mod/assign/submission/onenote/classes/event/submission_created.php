@@ -38,7 +38,6 @@ use moodle_exception;
  * @since      Moodle 2.7
  */
 class submission_created extends \mod_assign\event\submission_created {
-
     /**
      * Init method.
      */

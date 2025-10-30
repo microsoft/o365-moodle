@@ -34,7 +34,6 @@ use stdClass;
  * @since      Moodle 2.6
  */
 class assessable_uploaded extends \core\event\assessable_uploaded {
-
     /**
      * Legacy event files.
      *
@@ -89,5 +88,4 @@ class assessable_uploaded extends \core\event\assessable_uploaded {
         parent::init();
         $this->data['objecttable'] = 'assign_submission';
     }
-
 }

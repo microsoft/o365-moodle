@@ -24,16 +24,26 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$settings->add(new admin_setting_configcheckbox('assignsubmission_onenote/default',
-    new lang_string('default', 'assignsubmission_onenote'), new lang_string('default_help', 'assignsubmission_onenote'), 0));
+$settings->add(
+    new admin_setting_configcheckbox(
+        'assignsubmission_onenote/default',
+        new lang_string('default', 'assignsubmission_onenote'),
+        new lang_string('default_help', 'assignsubmission_onenote'),
+        0
+    )
+);
 
 if (isset($CFG->maxbytes)) {
-
     $name = new lang_string('maximumsubmissionsize', 'assignsubmission_onenote');
     $description = new lang_string('configmaxbytes', 'assignsubmission_onenote');
 
     $maxbytes = get_config('assignsubmission_onenote', 'maxbytes');
-    $element = new admin_setting_configselect('assignsubmission_onenote/maxbytes', $name, $description, 1048576,
-        get_max_upload_sizes($CFG->maxbytes, 0, 0, $maxbytes));
+    $element = new admin_setting_configselect(
+        'assignsubmission_onenote/maxbytes',
+        $name,
+        $description,
+        1048576,
+        get_max_upload_sizes($CFG->maxbytes, 0, 0, $maxbytes)
+    );
     $settings->add($element);
 }
