@@ -119,8 +119,11 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         [$plugin2, $submission2] = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
         $fs = new file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+        $files = $fs->get_area_files(
+            $assign->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+        );
         // 4 including directories.
         $this->assertEquals(4, count($files));
 
@@ -132,8 +135,11 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         $this->assertTrue($plugin2->is_empty($submission2));
 
         $fs = new file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+        $files = $fs->get_area_files(
+            $assign->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+        );
         $this->assertEquals(0, count($files));
     }
 
@@ -162,8 +168,11 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         [$plugin2, $submission2] = $this->create_onenote_submission($assign, $user2, $studenttext2);
 
         $fs = new file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+        $files = $fs->get_area_files(
+            $assign->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+        );
         // 4 including directories.
         $this->assertEquals(4, count($files));
 
@@ -176,8 +185,11 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         $this->assertFalse($plugin2->is_empty($submission2));
 
         $fs = new file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+        $files = $fs->get_area_files(
+            $assign->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+        );
         // 2 files that were not deleted.
         $this->assertEquals(2, count($files));
     }
@@ -224,10 +236,22 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         $fs = new file_storage();
         // 6 including directories for assign 1.
         // 4 including directories for assign 2.
-        $this->assertCount(6, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
-        $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+        $this->assertCount(
+            6,
+            $fs->get_area_files(
+                $assign1->get_context()->id,
+                'assignsubmission_onenote',
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+            )
+        );
+        $this->assertCount(
+            4,
+            $fs->get_area_files(
+                $assign2->get_context()->id,
+                'assignsubmission_onenote',
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+            )
+        );
 
         $data = $DB->get_records('assignsubmission_onenote', ['assignment' => $assign1->get_instance()->id]);
         $this->assertCount(3, $data);
@@ -248,10 +272,22 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         $fs = new file_storage();
         // 6 including directories for assign 1.
         // 4 including directories for assign 2.
-        $this->assertCount(2, $fs->get_area_files($assign1->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
-        $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA));
+        $this->assertCount(
+            2,
+            $fs->get_area_files(
+                $assign1->get_context()->id,
+                'assignsubmission_onenote',
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+            )
+        );
+        $this->assertCount(
+            4,
+            $fs->get_area_files(
+                $assign2->get_context()->id,
+                'assignsubmission_onenote',
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+            )
+        );
     }
 
     /**
@@ -300,8 +336,14 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
      */
     private function count_files($assign, $submissionid) {
         $fs = get_file_storage();
-        $files = $fs->get_area_files($assign->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid, 'id', false);
+        $files = $fs->get_area_files(
+            $assign->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            $submissionid,
+            'id',
+            false
+        );
         return count($files);
     }
 }
