@@ -40,6 +40,7 @@ use mod_assign\privacy\assignsubmission_provider;
 use mod_assign\privacy\assignsubmission_user_provider;
 use mod_assign\privacy\useridlist;
 
+// phpcs:disable Universal.OOStructures.AlphabeticExtendsImplements.ImplementsWrongOrder
 /**
  * Privacy class for requesting user data.
  *
@@ -48,9 +49,10 @@ use mod_assign\privacy\useridlist;
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 class provider implements
-        metadataprovider,
-        assignsubmission_provider,
-        assignsubmission_user_provider {
+    metadataprovider,
+    assignsubmission_provider,
+    assignsubmission_user_provider {
+    // phpcs:enable Universal.OOStructures.AlphabeticExtendsImplements.ImplementsWrongOrder
     /**
      * Return metadata about this plugin.
      *
@@ -123,9 +125,13 @@ class provider implements
         foreach ($records as $record) {
             writer::with_context($context)
                 ->export_data($currentpath, $record);
-            writer::with_context($exportdata->get_context())->export_area_files($currentpath,
-                'assignsubmission_onenote', base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
 
+            writer::with_context($exportdata->get_context())->export_area_files(
+                $currentpath,
+                'assignsubmission_onenote',
+                base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+                $submissionid
+            );
         }
     }
 
@@ -141,8 +147,11 @@ class provider implements
         global $DB;
 
         $fs = get_file_storage();
-        $fs->delete_area_files($requestdata->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
+        $fs->delete_area_files(
+            $requestdata->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA
+        );
 
         $filters = ['assignment' => $requestdata->get_assign()->get_instance()->id];
         $DB->delete_records('assignsubmission_onenote', $filters);
@@ -166,8 +175,12 @@ class provider implements
 
         // Delete files.
         $fs = get_file_storage();
-        $fs->delete_area_files($deletedata->get_context()->id, 'assignsubmission_onenote',
-            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA, $submissionid);
+        $fs->delete_area_files(
+            $deletedata->get_context()->id,
+            'assignsubmission_onenote',
+            base::ASSIGNSUBMISSION_ONENOTE_FILEAREA,
+            $submissionid
+        );
 
         // Delete the records in the table.
         $filters = ['assignment' => $assignmentid, 'submission' => $submissionid];
