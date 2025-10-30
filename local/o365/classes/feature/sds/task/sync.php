@@ -456,6 +456,7 @@ class sync extends scheduled_task {
         }
 
         // Create new course category and object record.
+        $fullname = substr($fullname, 0, 254); // Course full name max length is 254, while class display name can be 256.
         $data = ['category' => $categoryid, 'shortname' => $shortname, 'fullname' => $fullname, 'idnumber' => $classobjectid];
         $course = create_course((object) $data);
 
