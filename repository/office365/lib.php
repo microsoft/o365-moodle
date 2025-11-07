@@ -451,7 +451,9 @@ class repository_office365 extends repository {
                         $breadcrumb[] = ['name' => get_string('upload', 'repository_office365'), 'path' => $curpath.'upload/'];
                     } else {
                         $unified = $this->get_unified_apiclient();
-
+                        if ($unified === false) {
+                            return [[], $breadcrumb];
+                        }
                         if (!empty($curparent)) {
                             $metadata = $unified->get_group_file_metadata($group->objectid, $curparent);
                             if (!empty($metadata['parentReference']) && !empty($metadata['parentReference']['path'])) {
