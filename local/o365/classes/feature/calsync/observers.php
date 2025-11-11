@@ -145,7 +145,10 @@ class observers {
             return false;
         }
         $calsync = new \local_o365\feature\calsync\main();
-        return $calsync->delete_outlook_event($event->objectid);
+
+        $snapshot = $event->get_record_snapshot('event', $event->objectid);
+
+        return $calsync->delete_outlook_event($event->objectid, $snapshot);
     }
 
     /**
