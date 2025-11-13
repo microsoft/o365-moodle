@@ -27,6 +27,7 @@ namespace local_o365\task;
 
 use core\exception\moodle_exception;
 use core\task\scheduled_task;
+use Exception;
 use local_o365\feature\cohortsync\main;
 use local_o365\utils;
 
@@ -49,6 +50,10 @@ class cohortsync extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
+        // Raise memory and time limits to handle large numbers of groups/cohorts.
+        raise_memory_limit(MEMORY_HUGE);
+        @set_time_limit(0);
+
         try {
             $graphclient = main::get_unified_api(__METHOD__);
             if (empty($graphclient)) {
@@ -75,11 +80,17 @@ class cohortsync extends scheduled_task {
      * @return void
      */
     private function execute_sync(main $cohortsync): void {
-        if ($cohortsync->update_groups_cache()) {
-            utils::clean_up_not_found_groups();
-        } else {
-            utils::mtrace("Failed to update groups cache. Exiting.", 1);
-
+        // First, update the group cache, and delete any groups that no longer exist.
+        try {
+            if ($cohortsync->update_groups_cache()) {
+                utils::clean_up_not_found_groups();
+            } else {
+                utils::mtrace("Failed to update groups cache. Exiting.", 1);
+                return;
+            }
+        } catch (Exception $e) {
+            utils::mtrace("Error updating groups cache: " . $e->getMessage(), 1);
+            utils::debug('Exception in update_groups_cache: ' . $e->getMessage(), __METHOD__, $e);
             return;
         }
 
@@ -121,7 +132,13 @@ class cohortsync extends scheduled_task {
 
         foreach ($mappings as $mapping) {
             utils::mtrace("Processing mapping for group ID {$mapping->objectid} and cohort ID {$mapping->moodleid}.", 3);
-            $cohortsync->sync_members_by_group_oid_and_cohort_id($mapping->objectid, $mapping->moodleid);
+            try {
+                $cohortsync->sync_members_by_group_oid_and_cohort_id($mapping->objectid, $mapping->moodleid);
+            } catch (Exception $e) {
+                utils::mtrace("Error syncing members for mapping: " . $e->getMessage(), 4);
+                utils::debug('Exception in sync_members_by_group_oid_and_cohort_id: ' . $e->getMessage(), __METHOD__, $e);
+                // Continue with other mappings even if one fails.
+            }
         }
     }
 }
