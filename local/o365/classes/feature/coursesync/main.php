@@ -1068,7 +1068,17 @@ class main {
         }
 
         // Fetch teams from Graph API.
-        $teams = $this->graphclient->get_teams();
+        try {
+            $teams = $this->graphclient->get_teams();
+            if ($teams === null || !is_array($teams)) {
+                $this->mtrace('Failed to fetch teams from Graph API', 1);
+                return false;
+            }
+        } catch (moodle_exception $e) {
+            $this->mtrace('Error fetching teams: ' . $e->getMessage(), 1);
+            utils::debug('Exception in get_teams: ' . $e->getMessage(), __METHOD__, $e);
+            return false;
+        }
 
         // Build existing teams records cache.
         $this->mtrace('Building existing teams cache records', 1);
