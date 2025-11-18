@@ -33,6 +33,10 @@ use html_table;
 use html_writer;
 use moodle_url;
 use moodleform;
+use MoodleQuickForm;
+
+MoodleQuickForm::registerElementType('group_autocomplete', "$CFG->dirroot/local/o365/classes/form/group_autocomplete.php", 'local_o365\form\group_autocomplete');
+MoodleQuickForm::registerElementType('cohort_autocomplete', "$CFG->dirroot/local/o365/classes/form/cohort_autocomplete.php", 'local_o365\form\cohort_autocomplete');
 
 /**
  * Class cohortsync.
@@ -53,7 +57,6 @@ class cohortsync extends moodleform {
         $mform->addElement('html', $description);
 
         // Get group and cohort options.
-        $cohortsyncmain->fetch_groups_from_cache();
         $existingmappings = $cohortsyncmain->get_mappings();
         $mappedcohortids = [];
         $mappedgroupoids = [];
@@ -63,42 +66,12 @@ class cohortsync extends moodleform {
             $mappedcohortids[] = $mapping->moodleid;
         }
 
-        $systemcohorts = $cohortsyncmain->get_cohortlist();
-
-        $groupoptions = [];
-
-        foreach ($cohortsyncmain->get_grouplist() as $group) {
-            if (!in_array($group['id'], $mappedgroupoids)) {
-                $groupoptions[$group['id']] = $group['displayName'];
-            }
-        }
-
-        $cohortoptions = [];
-        $buttonattributes = [];
-        foreach ($systemcohorts as $cohort) {
-            if (!in_array($cohort->id, $mappedcohortids)) {
-                $cohortoptions[$cohort->id] = $cohort->name;
-            }
-        }
-
-        natcasesort($groupoptions);
-        natcasesort($cohortoptions);
-
         // Display group selector.
-        if (empty($groupoptions)) {
-            $buttonattributes['disabled'] = 'disabled';
-            $groupoptions[''] = get_string('cohortsync_emptygroups', 'local_o365');
-        }
-        $mform->addElement('select', 'groupoid', get_string('cohortsync_select_group', 'local_o365'), $groupoptions,
-            ['class' => 'group-select']);
+        $buttonattributes = [];
+        $mform->addElement('group_autocomplete', 'groupoid', get_string('cohortsync_select_group', 'local_o365'), ['cohortsyncmain' => $cohortsyncmain]);
 
         // Display cohort selector.
-        if (empty($cohortoptions)) {
-            $buttonattributes['disabled'] = 'disabled';
-            $cohortoptions[''] = get_string('cohortsync_emptycohorts', 'local_o365');
-        }
-        $mform->addElement('select', 'cohortid', get_string('cohortsync_select_cohort', 'local_o365'), $cohortoptions,
-            ['class' => 'cohort-select']);
+        $mform->addElement('cohort_autocomplete', 'cohortid', get_string('cohortsync_select_cohort', 'local_o365'), ['cohortsyncmain' => $cohortsyncmain]);
 
         // Display submit button.
         $mform->addElement('submit', 'action', get_string('cohortsync_addmapping', 'local_o365'), $buttonattributes);
