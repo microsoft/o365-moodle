@@ -1128,9 +1128,7 @@ class main {
         $this->mtrace('');
 
         // Set last updated timestamp.
-        $existingteamscahceupdatedsetting = get_config('local_o365', 'teamscacheupdated');
         $timeupdated = time();
-        add_to_config_log('teamscacheupdated', $existingteamscahceupdatedsetting, $timeupdated, 'local_o365');
         set_config('teamscacheupdated', $timeupdated, 'local_o365');
 
         return true;

@@ -153,10 +153,6 @@ class importfromoutlook extends \core\task\scheduled_task {
         $calsubs->close();
         \local_o365\feature\calsync\observers::set_event_import(false);
 
-        $existingcalsyncinlastrunsetting = get_config('local_o365', 'calsyncinlastrun');
-        if ($existingcalsyncinlastrunsetting != $starttime) {
-            add_to_config_log('calsyncinlastrun', $existingcalsyncinlastrunsetting, $starttime, 'local_o365');
-        }
         set_config('calsyncinlastrun', $starttime, 'local_o365');
         return true;
     }
