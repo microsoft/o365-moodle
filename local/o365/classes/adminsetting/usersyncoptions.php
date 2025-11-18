@@ -93,22 +93,97 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
         if (is_null($data)) {
             $data = [];
         }
-        $options = [];
-        $defaults = [];
-        foreach ($this->choices as $key => $description) {
-            if (!empty($data[$key])) {
-                $checked = 'checked="checked"';
-            } else {
-                $checked = '';
+
+        $groups = [
+                'general' => [
+                        'title' => new \lang_string('settings_usersync_general', 'local_o365'),
+                        'options' => ['create', 'update', 'appassign', 'nodelta', 'guestsync'],
+                ],
+                'suspension' => [
+                        'title' => new \lang_string('settings_usersync_suspension', 'local_o365'),
+                        'options' => ['suspend', 'delete', 'reenable', 'disabledsync'],
+                ],
+                'matching' => [
+                        'title' => new \lang_string('settings_usersync_matching', 'local_o365'),
+                        'options' => ['match', 'matchswitchauth', 'emailsync'],
+                ],
+                'photos' => [
+                        'title' => new \lang_string('settings_usersync_photos', 'local_o365'),
+                        'options' => ['photosync', 'photosynconlogin'],
+                ],
+                'timezone' => [
+                        'title' => new \lang_string('settings_usersync_timezone', 'local_o365'),
+                        'options' => ['tzsync', 'tzsynconlogin'],
+                ],
+        ];
+
+        $dependents = ['delete', 'matchswitchauth'];
+
+        $return = '<div class="form-multicheckbox">';
+        $return .= '<input type="hidden" name="' . $this->get_full_name() . '[xxxxx]" value="1" />';
+
+        foreach ($groups as $group) {
+            $return .= '<h3>' . $group['title'] . '</h3>';
+            $options = [];
+            $defaults = [];
+            foreach ($group['options'] as $key) {
+                if (!isset($this->choices[$key])) {
+                    continue;
+                }
+                $description = $this->choices[$key];
+                if (!empty($data[$key])) {
+                    $checked = 'checked="checked"';
+                } else {
+                    $checked = '';
+                }
+                if (!empty($default[$key])) {
+                    $defaults[] = $description;
+                }
+                $helphtml = $OUTPUT->help_icon('help_user_' . $key, 'local_o365');
+                $optionhtml = '<input type="checkbox" id="' . $this->get_id() . '_' . $key . '" name="' . $this->get_full_name()
+                        . '[' . $key . ']" value="1" ' . $checked . ' />' . ' <label for="' . $this->get_id() . '_' . $key . '">'
+                        . highlightfast($query, $description) . '</label>' . $helphtml;
+                $style = (in_array($key, $dependents)) ? ' style="margin-left:20px;"' : '';
+                $options[] = '<li' . $style . '>' . $optionhtml . '</li>';
             }
-            if (!empty($default[$key])) {
-                $defaults[] = $description;
+            if ($options) {
+                $return .= '<ul>';
+                $return .= implode('', $options);
+                $return .= '</ul>';
             }
-            $helphtml = $OUTPUT->help_icon('help_user_' . $key, 'local_o365');
-            $options[] = '<input type="checkbox" id="' . $this->get_id() . '_' . $key . '" name="' . $this->get_full_name()
-                . '[' . $key . ']" value="1" ' . $checked . ' />' . ' <label for="' . $this->get_id() . '_' . $key . '">'
-                . highlightfast($query, $description) . '</label>' . $helphtml;
         }
+
+        $return .= '</div>';
+
+        // Add JavaScript for dependencies.
+        $return .= '<script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function() {
+                var suspendChk = document.getElementById("' . $this->get_id() . '_suspend");
+                var deleteChk = document.getElementById("' . $this->get_id() . '_delete");
+                var matchChk = document.getElementById("' . $this->get_id() . '_match");
+                var matchswitchauthChk = document.getElementById("' . $this->get_id() . '_matchswitchauth");
+
+                function updateDependencies() {
+                    if (deleteChk) {
+                        deleteChk.disabled = !suspendChk.checked;
+                        if (!suspendChk.checked && deleteChk.checked) {
+                            deleteChk.checked = false;
+                        }
+                    }
+                    if (matchswitchauthChk) {
+                        matchswitchauthChk.disabled = !matchChk.checked;
+                        if (!matchChk.checked && matchswitchauthChk.checked) {
+                            matchswitchauthChk.checked = false;
+                        }
+                    }
+                }
+
+                if (suspendChk) suspendChk.addEventListener("change", updateDependencies);
+                if (matchChk) matchChk.addEventListener("change", updateDependencies);
+                updateDependencies();
+            });
+        </script>';
+
         if (is_null($default)) {
             $defaultinfo = null;
         } else if (!empty($defaults)) {
@@ -116,17 +191,6 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
         } else {
             $defaultinfo = get_string('none');
         }
-        // Something must be submitted even if nothing selected.
-        $return = '<div class="form-multicheckbox">';
-        $return .= '<input type="hidden" name="' . $this->get_full_name() . '[xxxxx]" value="1" />';
-        if ($options) {
-            $return .= '<ul>';
-            foreach ($options as $option) {
-                $return .= '<li>' . $option . '</li>';
-            }
-            $return .= '</ul>';
-        }
-        $return .= '</div>';
 
         return format_admin_setting($this, $this->visiblename, $return, $this->description, false, '', $defaultinfo, $query);
     }
@@ -139,9 +203,14 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
      * @return mixed|string
      */
     public function write_setting($data) {
-        // Option 'delete' can only be set if option 'suspend' is check.
+        // Option 'delete' can only be set if option 'suspend' is checked.
         if (!isset($data['suspend']) && isset($data['delete'])) {
             unset($data['delete']);
+        }
+
+        // Option 'matchswitchauth' can only be set if option 'match' is checked.
+        if (!isset($data['match']) && isset($data['matchswitchauth'])) {
+            unset($data['matchswitchauth']);
         }
 
         return parent::write_setting($data);
