@@ -67,10 +67,6 @@ class usersync extends scheduled_task {
         if (empty($value)) {
             $value = '';
         }
-        $existingtaskusersynclastsetting = get_config('local_o365', 'task_usersync_last' . $name);
-        if ($existingtaskusersynclastsetting != $value) {
-            add_to_config_log('task_usersync_last' . $name, $existingtaskusersynclastsetting, $value, 'local_o365');
-        }
         set_config('task_usersync_last' . $name, $value, 'local_o365');
     }
 
@@ -182,18 +178,8 @@ class usersync extends scheduled_task {
                 $currenthour = date('H');
                 $currentminute = date('i');
                 if ($currenthour > $suspensiontaskhour) {
-                    $existingtaskusersynclastdeletesetting = get_config('local_o365', 'task_usersync_lastdelete');
-                    if ($existingtaskusersynclastdeletesetting != date('Ymd')) {
-                        add_to_config_log('task_usersync_lastdelete', $existingtaskusersynclastdeletesetting, date('Ymd'),
-                            'local_o365');
-                    }
                     set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
                 } else if (($currenthour == $suspensiontaskhour) && ($currentminute >= $suspensiontaskminute)) {
-                    $existingtaskusersynclastdeletesetting = get_config('local_o365', 'task_usersync_lastdelete');
-                    if ($existingtaskusersynclastdeletesetting != date('Ymd')) {
-                        add_to_config_log('task_usersync_lastdelete', $existingtaskusersynclastdeletesetting, date('Ymd'),
-                            'local_o365');
-                    }
                     set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
                 } else {
                     $rundelete = false;

@@ -1304,5 +1304,34 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024042203, 'local', 'o365');
     }
 
+    if ($oldversion < 2024042216) {
+        // Delete config log entries created by mistake.
+        $confignames = ['apptokens', 'teamscacheupdated', 'calsyncinlastrun', 'task_usersync_lastdeltatoken',
+            'task_usersync_lastdelete', 'cal_site_lastsync', 'cal_course_lastsync', 'cal_user_lastsync'];
+
+        foreach ($confignames as $configname) {
+            // Delete logstore_standard_log records.
+            // First, get the config_log IDs to avoid slow subquery in DELETE.
+            $configlogids = $DB->get_fieldset_select('config_log', 'id', 'plugin = :plugin AND name = :name',
+                ['plugin' => 'local_o365', 'name' => $configname]);
+
+            if (!empty($configlogids)) {
+                // Process in chunks to avoid PostgreSQL parameter limits.
+                $chunks = array_chunk($configlogids, 10000);
+                foreach ($chunks as $chunk) {
+                    list($insql, $inparams) = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED);
+                    $params = array_merge(['eventname' => '\core\event\config_log_created'], $inparams);
+                    $DB->delete_records_select('logstore_standard_log', "eventname = :eventname AND objectid $insql", $params);
+                }
+            }
+
+            // Delete config_log records.
+            $DB->delete_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2024042216, 'local', 'o365');
+    }
+
     return true;
 }
