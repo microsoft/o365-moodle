@@ -75,9 +75,33 @@ class syncoldevents extends \core\task\adhoc_task {
      * Sync all site events with Outlook.
      *
      * @param int $timecreated The time the task was created.
+     * @param int $opuserid The user id who triggered the task.
      */
-    protected function sync_siteevents($timecreated) {
-        global $DB;
+    protected function sync_siteevents($timecreated, $opuserid) {
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/calendar/lib.php');
+
+        // Remove local imports from O365 for this user if unsubscribed or outward-only.
+        $subscription = $DB->get_record('local_o365_calsub', [
+            'user_id' => $opuserid,
+            'caltype' => 'site'
+        ]);
+        if (empty($subscription) || $subscription->syncbehav === 'out') {
+            $sqlcleanup = 'SELECT ev.id
+                             FROM {event} ev
+                             JOIN {local_o365_calidmap} m ON m.eventid = ev.id
+                            WHERE ev.courseid = ? AND m.userid = ? AND m.origin = ?';
+            $cleanuprecords = $DB->get_records_sql($sqlcleanup, [0, $opuserid, 'o365']);
+            foreach ($cleanuprecords as $cleanup) {
+                mtrace('Removing imported site event #'.$cleanup->id.'.');
+                $DB->delete_records('local_o365_calidmap', [
+                    'eventid' => $cleanup->id,
+                    'origin'  => 'o365',
+                ]);
+                \calendar_event::load($cleanup->id)->delete();
+            }
+        }
+
         $timestart = time();
         // Check the last time site events were synced. Using a direct query here so we don't run into static cache issues.
         $lastsitesync = $DB->get_record('config_plugins', ['plugin' => 'local_o365', 'name' => 'cal_site_lastsync']);
@@ -193,9 +217,34 @@ class syncoldevents extends \core\task\adhoc_task {
      *
      * @param int $courseid The ID of the course to sync.
      * @param int $timecreated The time the task was created.
+     * @param int $opuserid The user id who triggered the task.
      */
-    protected function sync_courseevents($courseid, $timecreated) {
-        global $DB;
+    protected function sync_courseevents($courseid, $timecreated, $opuserid) {
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/calendar/lib.php');
+
+        // Remove local imports from O365 for this user if unsubscribed or outward-only.
+        $subscription = $DB->get_record('local_o365_calsub', [
+            'user_id' => $opuserid,
+            'caltype' => 'course',
+            'caltypeid' => $courseid
+        ]);
+        if (empty($subscription) || $subscription->syncbehav === 'out') {
+            $sqlcleanup = 'SELECT ev.id
+                             FROM {event} ev
+                             JOIN {local_o365_calidmap} m ON m.eventid = ev.id
+                            WHERE ev.courseid = ? AND m.userid = ? AND m.origin = ?';
+            $cleanuprecords = $DB->get_records_sql($sqlcleanup, [$courseid, $opuserid, 'o365']);
+            foreach ($cleanuprecords as $cleanup) {
+                mtrace('Removing imported course event #'.$cleanup->id.'.');
+                $DB->delete_records('local_o365_calidmap', [
+                    'eventid' => $cleanup->id,
+                    'origin'  => 'o365',
+                ]);
+                \calendar_event::load($cleanup->id)->delete();
+            }
+        }
+
         $timestart = time();
         // Check the last time course events for this course were synced.
         // Using a direct query here so we don't run into static cache issues.
@@ -347,7 +396,30 @@ class syncoldevents extends \core\task\adhoc_task {
      * @param int $timecreated The time the task was created.
      */
     protected function sync_userevents($userid, $timecreated) {
-        global $DB;
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/calendar/lib.php');
+
+        // Remove local imports from O365 for this user if unsubscribed or outward-only.
+        $subscription = $DB->get_record('local_o365_calsub', ['user_id' => $userid, 'caltype' => 'user']);
+        if (empty($subscription) || $subscription->syncbehav === 'out') {
+            $sqlcleanup = 'SELECT ev.id
+                             FROM {event} ev
+                        LEFT JOIN {local_o365_calidmap} idmap ON ev.id = idmap.eventid AND idmap.userid = ev.userid
+                            WHERE ev.courseid = 0
+                              AND ev.groupid = 0
+                              AND ev.userid = ?
+                              AND idmap.origin = ?';
+            $cleanuprecords = $DB->get_records_sql($sqlcleanup, [$userid, 'o365']);
+            foreach ($cleanuprecords as $cleanup) {
+                mtrace('Cleanup(user): removing imported user event #'.$cleanup->id.'.');
+                $DB->delete_records('local_o365_calidmap', [
+                    'eventid' => $cleanup->id,
+                    'origin'  => 'o365',
+                ]);
+                \calendar_event::load($cleanup->id)->delete();
+            }
+        }
+
         $timestart = time();
         // Check the last time user events for this user were synced.
         // Using a direct query here so we don't run into static cache issues.
@@ -370,8 +442,6 @@ class syncoldevents extends \core\task\adhoc_task {
             utils::debug('Could not get user token for calendar sync.', __METHOD__);
             return false;
         }
-
-        $subscription = $DB->get_record('local_o365_calsub', ['user_id' => $userid, 'caltype' => 'user']);
 
         $sql = 'SELECT ev.id AS eventid,
                        ev.name AS eventname,
@@ -457,9 +527,9 @@ class syncoldevents extends \core\task\adhoc_task {
 
         // Sync site events.
         if ($opdata->caltype === 'site') {
-            $this->sync_siteevents($timecreated);
+            $this->sync_siteevents($timecreated, $opdata->userid);
         } else if ($opdata->caltype === 'course') {
-            $this->sync_courseevents($opdata->caltypeid, $timecreated);
+            $this->sync_courseevents($opdata->caltypeid, $timecreated, $opdata->userid);
         } else if ($opdata->caltype === 'user') {
             $this->sync_userevents($opdata->userid, $timecreated);
         }
