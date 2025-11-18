@@ -62,7 +62,7 @@ if (!isset($oidcconfig->bindingusernameclaim)) {
     $formdata['customclaimname'] = '';
 } else {
     $formdata['bindingusernameclaim'] = 'custom';
-    $formdata['customclaimname'] = $oidcconfig->bindingusernameclaim;
+    $formdata['customclaimname'] = $oidcconfig->customclaimname ?? '';
 }
 
 $form->set_data($formdata);
