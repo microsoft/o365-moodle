@@ -42,6 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        folder: [auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote]
         moodle-branch: ['MOODLE_404_STABLE']
         php: [8.1, 8.2, 8.3]
         database: [pgsql, mariadb]
