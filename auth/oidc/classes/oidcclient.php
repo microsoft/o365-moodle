@@ -54,6 +54,9 @@ class oidcclient {
     /** @var string The resource of the token. */
     protected $tokenresource;
 
+    /** @var string The scope of the token. */
+    protected $scope;
+
     /**
      * Constructor.
      *
