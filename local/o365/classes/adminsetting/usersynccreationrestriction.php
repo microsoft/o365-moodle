@@ -25,6 +25,8 @@
 
 namespace local_o365\adminsetting;
 
+use admin_setting;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -34,7 +36,12 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
 /**
  * Admin setting to control field mappings for users.
  */
-class usersynccreationrestriction extends \admin_setting {
+class usersynccreationrestriction extends admin_setting {
+    /**
+     * @var array $remotefields
+     * Array of remote fields that can be used for user creation restrictions.
+     */
+    private array $remotefields;
 
     /**
      * Constructor
@@ -45,8 +52,6 @@ class usersynccreationrestriction extends \admin_setting {
      * @param mixed $defaultsetting string or array depending on implementation
      */
     public function __construct($name, $visiblename, $description, $defaultsetting) {
-        global $DB;
-
         $this->remotefields = [
             'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_oidc'),
             'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_oidc'),
