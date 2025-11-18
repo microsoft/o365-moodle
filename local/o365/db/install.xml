@@ -164,6 +164,9 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="objectid" UNIQUE="false" FIELDS="objectid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_groups_cache" COMMENT="Stores Groups cache. This is primarily used for cohort sync, but is used to clean up groups in local_o365_objects and teams caches too">
       <FIELDS>
@@ -176,6 +179,10 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="objectid" UNIQUE="false" FIELDS="objectid"/>
+        <INDEX NAME="not_found_since" UNIQUE="false" FIELDS="not_found_since"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="local_o365_course_request" COMMENT="Table to store course requests for o365">
       <FIELDS>
@@ -190,6 +197,9 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="requeststatus" UNIQUE="false" FIELDS="requeststatus"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

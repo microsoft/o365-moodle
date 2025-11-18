@@ -143,7 +143,13 @@ class main {
     public function get_mappings(): array {
         global $DB;
 
-        $mappings = $DB->get_records('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort']);
+        // Use recordset instead of get_records to reduce memory usage.
+        $mappingrecordset = $DB->get_recordset('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort']);
+        $mappings = [];
+        foreach ($mappingrecordset as $mapping) {
+            $mappings[$mapping->id] = $mapping;
+        }
+        $mappingrecordset->close();
 
         return $mappings;
     }
@@ -297,7 +303,13 @@ class main {
         global $DB;
 
         $microsoftuseroids = array_column($microsoftuserobjects, 'id');
-        $currentmembers = $DB->get_records('cohort_members', ['cohortid' => $cohortid], '', 'userid');
+        // Use recordset instead of get_records to reduce memory usage.
+        $currentmembersrecordset = $DB->get_recordset('cohort_members', ['cohortid' => $cohortid], '', 'userid');
+        $currentmembers = [];
+        foreach ($currentmembersrecordset as $member) {
+            $currentmembers[$member->userid] = $member;
+        }
+        $currentmembersrecordset->close();
         $connectedusers = $this->get_all_potential_user_details($microsoftuseroids, array_keys($currentmembers));
 
         $microsoftuseroidsflipped = array_flip($microsoftuseroids);
