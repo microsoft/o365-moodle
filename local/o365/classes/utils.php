@@ -572,6 +572,12 @@ class utils {
 
     /**
      * Update Groups cache.
+     * This function is called at two places:
+     *  - At the end of the course sync task. After the call,
+     *    - all cached groups that are not found are marked as not found.
+     *    - local_o365_objects group records, cohort cache and group cache records are cleaned up.
+     *  - At the start of the cohort sync task. After the call,
+     *    - local_o365_objects group records, cohort cache and group cache records are cleaned up.
      *
      * @param unified $graphclient
      * @param int $baselevel
