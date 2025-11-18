@@ -627,6 +627,24 @@ class unified extends o365api {
     }
 
     /**
+     * Check if a group has an owner.
+     *
+     * @param string $groupobjectid The object ID of the group.
+     * @return bool True if the group has an owner, false otherwise.
+     */
+    public function group_has_owner(string $groupobjectid): bool {
+        $endpoint = '/groups/' . $groupobjectid . '/owners/microsoft.graph.user?$top=1&$select=id';
+
+        try {
+            $response = $this->process_apicall_response($this->apicall('get', $endpoint), ['value' => null]);
+            return count($response['value']) > 0;
+        } catch (moodle_exception $e) {
+            // If the call fails, it may be because the group does not exist or the user does not have permission to view it.
+            return false;
+        }
+    }
+
+    /**
      * Return the list of files in a group.
      *
      * @param string $groupid
@@ -2230,41 +2248,18 @@ class unified extends o365api {
     }
 
     /**
-     * Create a class team from the education group with the given object ID.
+     * Create a team from the group with the given object ID and template name.
      *
      * @param string $groupobjectid
+     * @param string $template
      * @return array|bool|null
      * @throws moodle_exception
      */
-    public function create_class_team_from_education_group(string $groupobjectid) {
+    public function create_team_from_group(string $groupobjectid, string $template = 'standard') {
         $endpoint = '/teams';
 
         $teamparams = [
-            'template@odata.bind' => "https://graph.microsoft.com/v1.0/teamsTemplates('educationClass')",
-            'group@odata.bind' => "https://graph.microsoft.com/v1.0/groups('" . $groupobjectid . "')",
-        ];
-
-        $response = $this->betaapicall('post', $endpoint, json_encode($teamparams));
-
-        if ($this->check_expected_http_code(['202'])) {
-            return true;
-        } else {
-            return $this->process_apicall_response($response);
-        }
-    }
-
-    /**
-     * Create a standard team from the group with the given object ID.
-     *
-     * @param string $groupobjectid
-     * @return array|bool|null
-     * @throws moodle_exception
-     */
-    public function create_standard_team_from_group(string $groupobjectid) {
-        $endpoint = '/teams';
-
-        $teamparams = [
-            'template@odata.bind' => "https://graph.microsoft.com/v1.0/teamsTemplates('standard')",
+            'template@odata.bind' => "https://graph.microsoft.com/v1.0/teamsTemplates('" . $template . "')",
             'group@odata.bind' => "https://graph.microsoft.com/v1.0/groups('" . $groupobjectid . "')",
         ];
         $response = $this->apicall('post', $endpoint, json_encode($teamparams));
