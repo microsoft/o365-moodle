@@ -31,6 +31,7 @@ use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
+use stdClass;
 
 /**
  * Calendar sync feature.
@@ -140,6 +141,16 @@ class main {
      */
     public function create_event_raw($muserid, $eventid, $subject, $body, $timestart, $timeend, $attendees, array $other, $calid) {
         global $DB;
+
+        $event = $DB->get_record('event', ['id' => $eventid]);
+        if ($event) {
+            $context = $this->get_calendar_context($event, $muserid);
+            if (!empty($calid) && !$this->calendar_exists($muserid, $calid)) {
+                $this->calendar_unsubscribe($muserid, $context['caltype'], $context['caltypeid'], $calid);
+                return false;
+            }
+        }
+
         $apiclient = $this->construct_calendar_api($muserid, true);
         $o365upn = utils::get_o365_upn($muserid);
         if ($o365upn) {
@@ -166,6 +177,20 @@ class main {
      * @throws moodle_exception
      */
     public function update_event_raw($muserid, $outlookeventid, $updated) {
+        global $DB;
+
+        $idmaprec = $DB->get_record('local_o365_calidmap', ['outlookeventid' => $outlookeventid, 'userid' => $muserid]);
+        if ($idmaprec) {
+            $event = $DB->get_record('event', ['id' => $idmaprec->eventid]);
+            if ($event) {
+                $context = $this->get_calendar_context($event, $muserid);
+                if (!empty($context['calid']) && !$this->calendar_exists($muserid, $context['calid'])) {
+                    $this->calendar_unsubscribe($muserid, $context['caltype'], $context['caltypeid'], $context['calid']);
+                    return;
+                }
+            }
+        }
+
         $apiclient = $this->construct_calendar_api($muserid, true);
         $o365upn = utils::get_o365_upn($muserid);
         if ($o365upn) {
@@ -184,6 +209,43 @@ class main {
      */
     public function delete_event_raw($muserid, $outlookeventid, $idmaprecid = null) {
         global $DB;
+
+        if (empty($idmaprecid)) {
+            $idmaprec = $DB->get_record('local_o365_calidmap', ['outlookeventid' => $outlookeventid, 'userid' => $muserid]);
+            if ($idmaprec) {
+                $idmaprecid = $idmaprec->id;
+                $eventid = $idmaprec->eventid;
+            } else {
+                return false;
+            }
+        } else {
+            $idmaprec = $DB->get_record('local_o365_calidmap', ['id' => $idmaprecid]);
+            if ($idmaprec) {
+                $eventid = $idmaprec->eventid;
+            } else {
+                return false;
+            }
+        }
+
+        $event = $DB->get_record('event', ['id' => $eventid]);
+        $handled = false;
+        if ($event) {
+            $context = $this->get_calendar_context($event, $muserid);
+            if (!empty($context['calid']) && !$this->calendar_exists($muserid, $context['calid'])) {
+                $this->calendar_unsubscribe($muserid, $context['caltype'], $context['caltypeid'], $context['calid']);
+                $handled = true;
+            }
+        }
+
+        if ($handled) {
+            if (!empty($idmaprecid)) {
+                $DB->delete_records('local_o365_calidmap', ['id' => $idmaprecid]);
+            } else {
+                $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $outlookeventid]);
+            }
+            return true;
+        }
+
         $apiclient = $this->construct_calendar_api($muserid, true);
         $o365upn = utils::get_o365_upn($muserid);
         if ($o365upn) {
@@ -194,6 +256,8 @@ class main {
         } else {
             $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $outlookeventid]);
         }
+
+        return true;
     }
 
     /**
@@ -292,6 +356,11 @@ class main {
                 // Send event to o365 and store ID.
                 $apiclient = $this->construct_calendar_api($event->userid);
                 $calid = (!empty($calsub->o365calid) && empty($calsub->isprimary)) ? $calsub->o365calid : null;
+                $context = $this->get_calendar_context($event, $event->userid);
+                if (!empty($calid) && !$this->calendar_exists($event->userid, $calid)) {
+                    $this->calendar_unsubscribe($event->userid, $context['caltype'], $context['caltypeid'], $calid);
+                    return false;
+                }
                 $o365upn = utils::get_o365_upn($event->userid);
                 if ($o365upn) {
                     $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid, $o365upn);
@@ -352,16 +421,21 @@ class main {
             if (isset($eventcreatorsub->subisprimary) && $eventcreatorsub->subisprimary == 1) {
                 $calid = null;
             }
-            $o365upn = utils::get_o365_upn($event->userid);
-            if ($o365upn) {
-                $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid, $o365upn);
-                $idmaprec = [
-                    'eventid' => $event->id,
-                    'outlookeventid' => $response['Id'],
-                    'userid' => $event->userid,
-                    'origin' => 'moodle',
-                ];
-                $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+            $context = $this->get_calendar_context($event, $event->userid);
+            if (!empty($calid) && !$this->calendar_exists($event->userid, $calid)) {
+                $this->calendar_unsubscribe($event->userid, $context['caltype'], $context['caltypeid'], $calid);
+            } else {
+                $o365upn = utils::get_o365_upn($event->userid);
+                if ($o365upn) {
+                    $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid, $o365upn);
+                    $idmaprec = [
+                            'eventid' => $event->id,
+                            'outlookeventid' => $response['Id'],
+                            'userid' => $event->userid,
+                            'origin' => 'moodle',
+                    ];
+                    $DB->insert_record('local_o365_calidmap', (object) $idmaprec);
+                }
             }
         }
 
@@ -369,6 +443,11 @@ class main {
         foreach ($nonprimarycalsubs as $attendee) {
             $apiclient = $this->construct_calendar_api($attendee->id);
             $calid = (!empty($attendee->subo365calid)) ? $attendee->subo365calid : null;
+            $context = $this->get_calendar_context($event, $attendee->userid);
+            if (!empty($calid) && !$this->calendar_exists($attendee->userid, $calid)) {
+                $this->calendar_unsubscribe($attendee->userid, $context['caltype'], $context['caltypeid'], $calid);
+                continue;
+            }
             $o365upn = utils::get_o365_upn($attendee->userid);
             if ($o365upn) {
                 $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid, $o365upn);
@@ -473,9 +552,14 @@ class main {
         }
 
         foreach ($idmaprecs as $idmaprec) {
+            $context = $this->get_calendar_context($event, $idmaprec->userid);
+            if (!empty($context['calid']) && !$this->calendar_exists($idmaprec->userid, $context['calid'])) {
+                $this->calendar_unsubscribe($idmaprec->userid, $context['caltype'], $context['caltypeid'], $context['calid']);
+                continue;
+            }
             try {
                 $apiclient = $this->construct_calendar_api($idmaprec->userid);
-
+                
                 if ($isgroupevent) {
                     try {
                         $apiclient->update_event($idmaprec->outlookeventid, $updated, $groupobject->objectid, 'group');
@@ -488,7 +572,7 @@ class main {
                         continue;
                     }
                 }
-
+                
                 $o365upn = utils::get_o365_upn($idmaprec->userid);
                 if ($o365upn) {
                     $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
@@ -502,9 +586,10 @@ class main {
     }
 
     /**
-     * Delete all synced outlook event for a given Moodle event.
+     * Delete all synced Outlook events for a given Moodle event.
      *
      * @param int $moodleeventid The ID of a Moodle event.
+     * @param \stdClass $eventsnapshot Snapshot of the Moodle event.
      * @return bool Success/Failure.
      */
     public function delete_outlook_event($moodleeventid, ?\stdClass $eventsnapshot) {
@@ -530,6 +615,15 @@ class main {
         }
 
         foreach ($idmaprecs as $idmaprec) {
+            if (!empty($event)) {
+                $context = $this->get_calendar_context($event, (int)$idmaprec->userid);
+
+                if (!empty($context['calid']) && !$this->calendar_exists($idmaprec->userid, $context['calid'])) {
+                    $this->calendar_unsubscribe($idmaprec->userid, $context['caltype'], $context['caltypeid'], $context['calid']);
+                    continue;
+                }
+            }
+
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
 
             if ($isgroupevent) {
@@ -614,4 +708,116 @@ class main {
         $spanhtml = \html_writer::span($linkhtml.\html_writer::empty_tag('br').$fulllinkhtml);
         return \html_writer::empty_tag('br').\html_writer::tag('p', $spanhtml);
     }
+
+    /**
+     * Check if a specific Outlook calendar exists for the user.
+     *
+     * @param int $userid The Moodle user ID.
+     * @param string $outlookcalendarid The Outlook calendar ID to check.
+     * @return bool True if the calendar exists, false otherwise.
+     */
+    public function calendar_exists(int $userid, string $outlookcalendarid): bool {
+        try {
+            $apiclient = $this->construct_calendar_api($userid, true);
+            $o365upn = utils::get_o365_upn($userid);
+            if (empty($o365upn) || empty($outlookcalendarid)) {
+                return false;
+            }
+            $calendars = $apiclient->get_calendars($o365upn) ?? [];
+            foreach ($calendars as $calendar) {
+                if (isset($calendar['id']) && $calendar['id'] === $outlookcalendarid) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (moodle_exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Unsubscribe calendar for a user and queue adhoc task to clean mappings/events.
+     *
+     * - Removes subscription(s) from local_o365_calsub for the given parameters.
+     * - Queues syncoldevents adhoc task to perform cleanup.
+     *
+     * @param int $userid Moodle user ID.
+     * @param string $calendartype 'site' | 'course' | 'user'.
+     * @param int|null $calendartypeid SITEID / courseid / userid depending on type (nullable for 'site' or 'user').
+     * @param string|null $calendarid Outlook calendar ID (o365calid). Null means do not filter by o365calid.
+     * @return void
+     * @throws \moodle_exception
+     */
+    public function calendar_unsubscribe(int $userid, string $calendartype, ?int $calendartypeid, ?string $calendarid = null): void {
+        global $DB;
+
+        if (empty($calendartype)) {
+            throw new \moodle_exception('caltype_required', 'local_o365');
+        }
+        if ($calendartype === 'course' && empty($calendartypeid)) {
+            throw new \moodle_exception('caltypeid_required_for_course', 'local_o365');
+        }
+
+        // Remove subscription(s).
+        $subparams = [
+            'user_id' => $userid,
+            'caltype' => $calendartype,
+        ];
+        if ($calendartypeid !== null) {
+            $subparams['caltypeid'] = $calendartypeid;
+        }
+        if (!empty($calendarid)) {
+            $subparams['o365calid'] = $calendarid;
+        }
+        $DB->delete_records('local_o365_calsub', $subparams);
+
+        // Queue adhoc task to sync old events (cleanup mappings/events).
+        $task = new \local_o365\feature\calsync\task\syncoldevents();
+        $task->set_custom_data([
+            'caltype' => $calendartype,
+            'caltypeid' => (int)($calendartypeid ?? 0),
+            'userid' => $userid,
+            'timecreated' => time(),
+        ]);
+        \core\task\manager::queue_adhoc_task($task);
+    }
+
+    /**
+     * Get calendar context (type, type ID, and calendar ID) for a Moodle event and user.
+     *
+     * @param \stdClass $event The Moodle event object.
+     * @param int $userid The Moodle user ID.
+     * @return array {caltype: string, caltypeid: int|null, calid: string|null}
+     */
+    protected function get_calendar_context(\stdClass $event, int $userid): array {
+        global $DB;
+
+        $calendartype = null;
+        $calendartypeid = null;
+
+        if (isset($event->courseid) && $event->courseid == SITEID) {
+            $calendartype = 'site';
+            $calendartypeid = SITEID;
+        } else if (isset($event->courseid) && $event->courseid != SITEID && $event->courseid > 0) {
+            $calendartype = 'course';
+            $calendartypeid = $event->courseid;
+        } else {
+            $calendartype = 'user';
+            $calendartypeid = $userid;
+        }
+
+        $subparams = [
+                'user_id' => $userid,
+                'caltype' => $calendartype,
+        ];
+        if ($calendartypeid !== null) {
+            $subparams['caltypeid'] = $calendartypeid;
+        }
+
+        $calsub = $DB->get_record('local_o365_calsub', $subparams);
+        $calendarid = ($calsub && (int)$calsub->isprimary === 0) ? $calsub->o365calid : null;
+
+        return ['caltype' => $calendartype, 'caltypeid' => $calendartypeid, 'calid' => $calendarid];
+    }
+
 }

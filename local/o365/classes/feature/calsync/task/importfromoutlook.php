@@ -68,6 +68,12 @@ class importfromoutlook extends \core\task\scheduled_task {
         $calsync = new \local_o365\feature\calsync\main($clientdata, $httpclient);
         foreach ($calsubs as $calsub) {
             try {
+                if (!empty($calsub->o365calid) && !$calsync->calendar_exists($calsub->user_id, $calsub->o365calid)) {
+                    $calsync->calendar_unsubscribe($calsub->user_id, $calsub->caltype, $calsub->caltypeid, $calsub->o365calid);
+                    mtrace('Calendar ' . $calsub->o365calid . ' not found for user ' . $calsub->user_id . '. Subscription removed and cleanup queued.');
+                    continue;
+                }
+
                 mtrace('Syncing events for user #'.$calsub->user_id);
 
                 $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime);
