@@ -282,38 +282,6 @@ class main {
                 // Retrieve the Outlook group objectid.
                 $groupobject = $DB->get_record('local_o365_objects',
                     ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']);
-                $outlookgroupemail = $this->construct_outlook_group_email($event->courseid);
-                // Add the Outlook group user as an attendee and organizer to the event.
-                if (!empty($groupobject) && !empty($groupobject->o365name) && !empty($outlookgroupemail)) {
-                    // Add o365 group as organizer for the event.
-                    $outlookeventorganizer = [
-                        'organizer' => [
-                            'emailAddress' => [
-                                'name' => $groupobject->o365name,
-                                'address' => $outlookgroupemail,
-                            ],
-                        ],
-                        'responseRequested' => false,
-                        'isOrganizer' => true,
-                    ];
-                    try {
-                        $apiclient = $this->construct_calendar_api($event->userid);
-                        $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, [],
-                            $outlookeventorganizer, $groupobject->objectid);
-                        if (!empty($response)) {
-                            $idmaprec = [
-                                'eventid' => $event->id,
-                                'outlookeventid' => $response['Id'],
-                                'userid' => $event->userid,
-                                'origin' => 'moodle',
-                            ];
-                            $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                        }
-                    } catch (moodle_exception $e) {
-                        // No token found, nothing to do.
-                        debugging('Error creating group event. Details: ' . $e->getMessage());
-                    }
-                }
             }
         } else {
             // Personal user event. Only sync if user is subscribed to their events.
@@ -354,8 +322,31 @@ class main {
             }
         }
 
+        $createdgroupevent = false;
+        if (isset($groupobject) && !empty($groupobject->objectid) && empty($event->groupid)) {
+            try {
+                if (!empty($attendees)) {
+                    $apiclient = $this->construct_calendar_api($event->userid);
+                    $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, $attendees,
+                        ['responseRequested' => false], $groupobject->objectid);
+                    if (!empty($response)) {
+                        $idmaprec = [
+                            'eventid' => $event->id,
+                            'outlookeventid' => $response['Id'],
+                            'userid' => $event->userid,
+                            'origin' => 'moodle',
+                        ];
+                        $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
+                        $createdgroupevent = true;
+                    }
+                }
+            } catch (moodle_exception $e) {
+                debugging('Error creating group event. Details: ' . $e->getMessage());
+            }
+        }
+
         // Sync primary-calendar users as attendees on a single event.
-        if (!empty($attendees)) {
+        if (!$createdgroupevent && !empty($attendees)) {
             $apiclient = $this->construct_calendar_api($event->userid);
             $calid = (!empty($eventcreatorsub) && !empty($eventcreatorsub->subo365calid)) ? $eventcreatorsub->subo365calid : null;
             if (isset($eventcreatorsub->subisprimary) && $eventcreatorsub->subisprimary == 1) {
@@ -470,17 +461,43 @@ class main {
 
         $updated['body'] .= $this->get_event_link_html($event);
 
+        $groupobject = null;
+        $isgroupevent = false;
+
+        if ($event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
+            $groupobject = $DB->get_record(
+                    'local_o365_objects',
+                    ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
+            );
+            $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
+        }
+
         foreach ($idmaprecs as $idmaprec) {
-            $apiclient = $this->construct_calendar_api($idmaprec->userid);
-            $o365upn = utils::get_o365_upn($idmaprec->userid);
-            if ($o365upn) {
-                try {
-                    $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
-                } catch (moodle_exception $e) {
-                    mtrace('Error updating event: '.$e->getMessage());
+            try {
+                $apiclient = $this->construct_calendar_api($idmaprec->userid);
+
+                if ($isgroupevent) {
+                    try {
+                        $apiclient->update_event($idmaprec->outlookeventid, $updated, $groupobject->objectid, 'group');
+                        continue;
+                    } catch (\moodle_exception $e) {
+                        $o365upn = utils::get_o365_upn($idmaprec->userid);
+                        if ($o365upn) {
+                            $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
+                        }
+                        continue;
+                    }
                 }
+
+                $o365upn = utils::get_o365_upn($idmaprec->userid);
+                if ($o365upn) {
+                    $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
+                }
+            } catch (\moodle_exception $e) {
+                mtrace('Error updating event: ' . $e->getMessage());
             }
         }
+
         return true;
     }
 
@@ -490,7 +507,7 @@ class main {
      * @param int $moodleeventid The ID of a Moodle event.
      * @return bool Success/Failure.
      */
-    public function delete_outlook_event($moodleeventid) {
+    public function delete_outlook_event($moodleeventid, ?\stdClass $eventsnapshot) {
         global $DB;
 
         // Get o365 event ids (and determine if we can sync this event).
@@ -499,8 +516,35 @@ class main {
             return true;
         }
 
+        $event = $eventsnapshot;
+
+        $groupobject = null;
+        $isgroupevent = false;
+
+        if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
+            $groupobject = $DB->get_record(
+                    'local_o365_objects',
+                    ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
+            );
+            $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
+        }
+
         foreach ($idmaprecs as $idmaprec) {
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
+
+            if ($isgroupevent) {
+                try {
+                    $apiclient->delete_event($idmaprec->outlookeventid, $groupobject->objectid, 'group');
+                    continue;
+                } catch (\moodle_exception $e) {
+                    $o365upn = utils::get_o365_upn($idmaprec->userid);
+                    if ($o365upn) {
+                        $apiclient->delete_event($idmaprec->outlookeventid, $o365upn);
+                    }
+                    continue;
+                }
+            }
+
             $o365upn = utils::get_o365_upn($idmaprec->userid);
             if ($o365upn) {
                 $apiclient->delete_event($idmaprec->outlookeventid, $o365upn);
@@ -511,31 +555,6 @@ class main {
         $DB->delete_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
 
         return true;
-    }
-
-    /**
-     * Construct the o365 group email.
-     *
-     * @param int $courseid
-     *
-     * @return string The o365 group email, or an empty string if an error occurred.
-     */
-    protected function construct_outlook_group_email($courseid) {
-        global $DB;
-        // Assemble Moodle course data and reconstruct the o365 group email.
-        $groupprefix = $DB->get_field('course', 'shortname', ['id' => SITEID]);
-        $groupname = $DB->get_field('course', 'shortname', ['id' => $courseid]);
-        $tenant = get_config('local_o365', 'entratenant');
-        $groupemail = '';
-
-        // If the course shortname and the Microsoft tenant are not empty.
-        if (!empty($groupprefix) && !empty($tenant)) {
-            $mailnickprefix = \core_text::strtolower($groupprefix);
-            $mailnickprefix = preg_replace('/[^a-z0-9]+/iu', '', $mailnickprefix);
-            $groupemail = $mailnickprefix.'_'.$groupname."@{$tenant}";
-        }
-
-        return $groupemail;
     }
 
     /**
