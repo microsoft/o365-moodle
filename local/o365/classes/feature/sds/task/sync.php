@@ -86,8 +86,9 @@ class sync extends scheduled_task {
                     static::mtrace('Only basic SDS profile data required', 2);
                 }
 
-                $oidcusers = $DB->get_records('user', ['auth' => 'oidc', 'deleted' => 0]);
-                foreach ($oidcusers as $userid => $oidcuser) {
+                // Use recordset instead of get_records to reduce memory usage.
+                $oidcusersrecordset = $DB->get_recordset('user', ['auth' => 'oidc', 'deleted' => 0]);
+                foreach ($oidcusersrecordset as $userid => $oidcuser) {
                     $completeuser = get_complete_user_data('id', $userid);
                     if ($completeuser) {
                         static::mtrace('Processing user ' . $oidcuser->username, 3);
@@ -178,6 +179,7 @@ class sync extends scheduled_task {
                         }
                     }
                 }
+                $oidcusersrecordset->close();
             } else {
                 static::mtrace('SDS field mapping disabled', 2);
             }
@@ -540,8 +542,20 @@ class sync extends scheduled_task {
         static::mtrace('Running course sync cleanup', 1);
 
         // Get existing synced records.
-        $syncedsdsschools = $DB->get_records('local_o365_objects', ['type' => 'sdsschool']);
-        $syncedsdssections = $DB->get_records('local_o365_objects', ['type' => 'sdssection']);
+        // Use recordset instead of get_records to reduce memory usage.
+        $syncedsdsschoolsrecordset = $DB->get_recordset('local_o365_objects', ['type' => 'sdsschool']);
+        $syncedsdsschools = [];
+        foreach ($syncedsdsschoolsrecordset as $school) {
+            $syncedsdsschools[$school->id] = $school;
+        }
+        $syncedsdsschoolsrecordset->close();
+
+        $syncedsdssectionsrecordset = $DB->get_recordset('local_o365_objects', ['type' => 'sdssection']);
+        $syncedsdssections = [];
+        foreach ($syncedsdssectionsrecordset as $section) {
+            $syncedsdssections[$section->id] = $section;
+        }
+        $syncedsdssectionsrecordset->close();
 
         // Clean up schools.
         $enabledschools = get_config('local_o365', 'sdsschools');
