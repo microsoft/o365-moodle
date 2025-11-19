@@ -643,6 +643,10 @@ class authcode extends base {
                         }
 
                         $tokenrec->useridentifier = $oidcusername;
+                        $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                        if (in_array($bindingusernameclaim, ['upn', 'auto'])) {
+                            $tokenrec->oidcusername = $oidcusername;
+                        }
                         $DB->update_record('auth_oidc_token', $tokenrec);
                     }
 
