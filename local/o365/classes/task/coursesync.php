@@ -26,6 +26,7 @@
 namespace local_o365\task;
 
 use core\task\scheduled_task;
+use Exception;
 use local_o365\feature\coursesync\main;
 use local_o365\utils;
 use moodle_exception;
@@ -55,6 +56,10 @@ class coursesync extends scheduled_task {
         $SESSION->o365_newly_created_groups = [];
         $SESSION->o365_users_not_exist = [];
 
+        // Raise memory and time limits to handle large numbers of teams/groups.
+        raise_memory_limit(MEMORY_HUGE);
+        @set_time_limit(0);
+
         if (utils::is_connected() !== true) {
             return false;
         }
@@ -73,15 +78,29 @@ class coursesync extends scheduled_task {
 
         $coursesync = new main($graphclient, true);
         $coursesync->sync_courses();
-        if ($coursesync->update_teams_cache()) {
-            $coursesync->cleanup_teams_connections();
+
+        // Wrap update_teams_cache in try-catch to handle API failures gracefully.
+        try {
+            if ($coursesync->update_teams_cache()) {
+                $coursesync->cleanup_teams_connections();
+            }
+        } catch (Exception $e) {
+            mtrace('Error updating teams cache: ' . $e->getMessage());
+            utils::debug('Exception in update_teams_cache: ' . $e->getMessage(), __METHOD__, $e);
+            // Continue with other operations even if teams cache update fails.
         }
+
         $coursesync->cleanup_course_connection_records();
 
         // Update the groups cache and save any not found groups.
-        if (utils::update_groups_cache($graphclient, 1)) {
-            $coursesync->save_not_found_groups();
-            utils::clean_up_not_found_groups();
+        try {
+            if (utils::update_groups_cache($graphclient, 1)) {
+                $coursesync->save_not_found_groups();
+                utils::clean_up_not_found_groups();
+            }
+        } catch (Exception $e) {
+            mtrace('Error updating groups cache: ' . $e->getMessage());
+            utils::debug('Exception in update_groups_cache: ' . $e->getMessage(), __METHOD__, $e);
         }
     }
 }
