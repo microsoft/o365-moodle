@@ -612,9 +612,6 @@ div.disabled .btn-secondary {
     color: #fff;
 }
 /* primary button :focus*/
-body {
-    display: none;
-}
 body#page-login-index {
     display: block;
 }
