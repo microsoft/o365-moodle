@@ -221,14 +221,19 @@ class main {
     public function update_groups_cache(): bool {
         global $DB;
 
-        if (utils::update_groups_cache($this->graphclient, 1)) {
-            $sql = 'SELECT *
-                      FROM {local_o365_groups_cache}
-                     WHERE not_found_since = 0';
-            $this->grouplist = $DB->get_records_sql($sql);
+        try {
+            if (utils::update_groups_cache($this->graphclient, 1)) {
+                $sql = 'SELECT *
+                          FROM {local_o365_groups_cache}
+                         WHERE not_found_since = 0';
+                $this->grouplist = $DB->get_records_sql($sql);
 
-            return true;
-        } else {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (moodle_exception $e) {
+            utils::debug('Exception in update_groups_cache: ' . $e->getMessage(), __METHOD__, $e);
             return false;
         }
     }
