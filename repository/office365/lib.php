@@ -803,7 +803,22 @@ class repository_office365 extends repository {
      * @return int
      */
     public function supported_returntypes() {
-        return FILE_INTERNAL;
+        $returntypes = FILE_INTERNAL;
+
+        // Check if direct link option is enabled.
+        $disabledirectlink = get_config('office365', 'disabledirectlink');
+        if (empty($disabledirectlink)) {
+            $returntypes |= FILE_REFERENCE;
+        }
+
+        // Check if anonymous share option is enabled.
+        // Use FILE_CONTROLLED_LINK which displays as "Create an access controlled link to the file".
+        $diableanonymousshare = get_config('office365', 'diableanonymousshare');
+        if (empty($diableanonymousshare)) {
+            $returntypes |= FILE_CONTROLLED_LINK;
+        }
+
+        return $returntypes;
     }
 
     /**
@@ -820,6 +835,14 @@ class repository_office365 extends repository {
         global $USER;
 
         $reference = $this->unpack_reference($reference);
+
+        // Check if this is a direct link (FILE_REFERENCE) - should not download.
+        if (isset($reference['linktype']) && $reference['linktype'] === 'directlink') {
+            // This shouldn't happen - FILE_REFERENCE should not call get_file().
+            // But if it does, throw an exception to prevent unwanted downloads.
+            utils::debug('get_file() called for FILE_REFERENCE - this should not happen', __METHOD__, $reference);
+            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+        }
 
         if ($reference['source'] === 'onedrive') {
             if ($this->unifiedconfigured === true) {
@@ -889,6 +912,107 @@ class repository_office365 extends repository {
     }
 
     /**
+     * Called after a file is selected with FILE_CONTROLLED_LINK.
+     * This creates a copy of the file and shares it with the organization.
+     *
+     * @param string $reference The reference from get_file_reference()
+     * @param context $context The target context for this new file
+     * @param string $component The target component for this new file
+     * @param string $filearea The target filearea for this new file
+     * @param string $itemid The target itemid for this new file
+     * @return string Modified reference pointing to the copied and shared file
+     */
+    public function reference_file_selected($reference, $context, $component, $filearea, $itemid) {
+        global $USER;
+
+        $ref = $this->unpack_reference($reference);
+
+        // Check if this is a direct link (FILE_REFERENCE) - no copy needed.
+        if (isset($ref['linktype']) && $ref['linktype'] === 'directlink') {
+            // For direct links, just return the reference unchanged.
+            // The file should be accessed with its existing permissions.
+            return $reference;
+        }
+
+        // Check if already processed.
+        if (isset($ref['shared']) && $ref['shared'] === true) {
+            return $reference;
+        }
+
+        $fileid = $ref['id'];
+        $filesource = $ref['source'];
+
+        try {
+            if ($filesource === 'onedrive') {
+                if ($this->unifiedconfigured === true) {
+                    $sourceclient = $this->get_unified_apiclient();
+                    $o365userid = utils::get_o365_userid($USER->id);
+
+                    // Get original file metadata.
+                    $metadata = $sourceclient->get_file_metadata($fileid, $o365userid);
+                    $filename = isset($metadata['name']) ? $metadata['name'] : 'file';
+
+                    // Create a copy with " - Shared" suffix.
+                    $newname = pathinfo($filename, PATHINFO_FILENAME) . ' - Shared';
+                    if (pathinfo($filename, PATHINFO_EXTENSION)) {
+                        $newname .= '.' . pathinfo($filename, PATHINFO_EXTENSION);
+                    }
+
+                    // Copy the file using download-and-upload approach.
+                    // This returns the new file ID directly (synchronous operation).
+                    $copiedfileid = $sourceclient->copy_file($fileid, $o365userid, $newname);
+
+                    // Create organization sharing link for the copy.
+                    $shareurl = $sourceclient->get_sharing_link($copiedfileid, $o365userid);
+
+                    // Update reference to point to the copy.
+                    $ref['id'] = $copiedfileid;
+                    $ref['url'] = $shareurl;
+                    $ref['shared'] = true;
+                    $ref['linktype'] = 'controlledshare';
+                }
+            } else if ($filesource === 'onedrivegroup') {
+                if ($this->unifiedconfigured !== true) {
+                    throw new moodle_exception('errorwhiledownload', 'repository_office365');
+                }
+
+                $sourceclient = $this->get_unified_apiclient();
+                $o365userid = utils::get_o365_userid($USER->id);
+
+                // Get original file metadata.
+                $metadata = $sourceclient->get_group_file_metadata($ref['groupid'], $fileid);
+                $filename = isset($metadata['name']) ? $metadata['name'] : 'file';
+
+                // Create a copy with " - Shared" suffix.
+                $newname = pathinfo($filename, PATHINFO_FILENAME) . ' - Shared';
+                if (pathinfo($filename, PATHINFO_EXTENSION)) {
+                    $newname .= '.' . pathinfo($filename, PATHINFO_EXTENSION);
+                }
+
+                // Copy the group file to user's OneDrive using download-and-upload approach.
+                // This returns the new file ID directly (synchronous operation).
+                $copiedfileid = $sourceclient->copy_group_file_to_user($ref['groupid'], $fileid, $o365userid, $newname);
+
+                // Create organization sharing link for the copy.
+                $shareurl = $sourceclient->get_sharing_link($copiedfileid, $o365userid);
+
+                // Update reference to point to the copy.
+                $ref['id'] = $copiedfileid;
+                $ref['url'] = $shareurl;
+                $ref['source'] = 'onedrive'; // Copy is in user's OneDrive now.
+                $ref['shared'] = true;
+                $ref['linktype'] = 'controlledshare';
+                unset($ref['groupid']); // No longer a group file.
+            }
+        } catch (moodle_exception $e) {
+            utils::debug('Error in reference_file_selected', __METHOD__, $e->getMessage());
+            throw $e;
+        }
+
+        return $this->pack_reference($ref);
+    }
+
+    /**
      * Prepare file reference information
      *
      * @param string $source source of the file, returned by repository as 'source' and received back from user (not cleaned)
@@ -902,10 +1026,22 @@ class repository_office365 extends repository {
             $fileid = $sourceunpacked['id'];
             $filesource = $sourceunpacked['source'];
 
+            // Detect link type based on optional parameter passed by file picker.
+            // When user selects FILE_REFERENCE, Moodle passes 'usefilereference' parameter.
+            $usefilereference = optional_param('usefilereference', false, PARAM_BOOL);
+
+            // Determine link type based on user selection in file picker.
+            $linktype = 'default'; // FILE_INTERNAL - download and copy.
+            if ($usefilereference) {
+                $linktype = 'directlink'; // FILE_REFERENCE - direct link without changing permissions.
+            }
+            // Note: FILE_CONTROLLED_LINK is handled by reference_file_selected() callback, not here.
+
             $reference = [
                 'source' => $filesource,
                 'id' => $fileid,
                 'url' => '',
+                'linktype' => $linktype,
             ];
 
             if (isset($sourceunpacked['url'])) {
@@ -914,31 +1050,66 @@ class repository_office365 extends repository {
             if (isset($sourceunpacked['downloadurl'])) {
                 $reference['downloadurl'] = $sourceunpacked['downloadurl'];
             }
+            if (isset($sourceunpacked['groupid'])) {
+                $reference['groupid'] = $sourceunpacked['groupid'];
+            }
 
             try {
-                if ($filesource === 'onedrive') {
-                    if ($this->unifiedconfigured === true) {
+                if ($linktype === 'directlink') {
+                    // Handle direct link (FILE_REFERENCE) - get the file's webUrl WITHOUT changing permissions.
+                    // This preserves the existing sharing settings in OneDrive.
+                    if ($filesource === 'onedrive') {
+                        if ($this->unifiedconfigured === true) {
+                            $sourceclient = $this->get_unified_apiclient();
+                            $o365userid = utils::get_o365_userid($USER->id);
+                            $metadata = $sourceclient->get_file_metadata($fileid, $o365userid);
+                            if (isset($metadata['webUrl'])) {
+                                $reference['url'] = $metadata['webUrl'];
+                            }
+                        }
+                    } else if ($filesource === 'onedrivegroup') {
+                        if ($this->unifiedconfigured !== true) {
+                            utils::debug('Tried to access a onedrive group file while the graph api is disabled.', __METHOD__);
+                            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+                        }
                         $sourceclient = $this->get_unified_apiclient();
-                        $o365userid = utils::get_o365_userid($USER->id);
-                        $reference['url'] = $sourceclient->get_sharing_link($fileid, $o365userid);
+                        $metadata = $sourceclient->get_group_file_metadata($sourceunpacked['groupid'], $fileid);
+                        if (isset($metadata['webUrl'])) {
+                            $reference['url'] = $metadata['webUrl'];
+                        }
                     }
-                } else if ($filesource === 'onedrivegroup') {
-                    if ($this->unifiedconfigured !== true) {
-                        utils::debug('Tried to access a onedrive group file while the graph api is disabled.', __METHOD__);
-                        throw new moodle_exception('errorwhiledownload', 'repository_office365');
-                    }
-                    $sourceclient = $this->get_unified_apiclient();
-                    $reference['groupid'] = $sourceunpacked['groupid'];
-                    $reference['url'] = $sourceclient->get_group_file_sharing_link($sourceunpacked['groupid'], $fileid);
-                } else if ($filesource === 'trendingaround') {
-                    if ($this->unifiedconfigured !== true) {
-                        utils::debug('Tried to access a trending around me file while the graph api is disabled.', __METHOD__);
-                        throw new moodle_exception('errorwhiledownload', 'repository_office365');
-                    }
-                    $sourceclient = $this->get_unified_apiclient();
-                    $filedata = $sourceclient->get_file_data($fileid);
-                    if (isset($filedata['@microsoft.graph.downloadUrl'])) {
-                        $reference['url'] = $filedata['@microsoft.graph.downloadUrl'];
+                } else {
+                    // Default behavior (FILE_INTERNAL) - download the file.
+                    // Get the webUrl WITHOUT changing permissions.
+                    if ($filesource === 'onedrive') {
+                        if ($this->unifiedconfigured === true) {
+                            $sourceclient = $this->get_unified_apiclient();
+                            $o365userid = utils::get_o365_userid($USER->id);
+                            $metadata = $sourceclient->get_file_metadata($fileid, $o365userid);
+                            if (isset($metadata['webUrl'])) {
+                                $reference['url'] = $metadata['webUrl'];
+                            }
+                        }
+                    } else if ($filesource === 'onedrivegroup') {
+                        if ($this->unifiedconfigured !== true) {
+                            utils::debug('Tried to access a onedrive group file while the graph api is disabled.', __METHOD__);
+                            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+                        }
+                        $sourceclient = $this->get_unified_apiclient();
+                        $metadata = $sourceclient->get_group_file_metadata($sourceunpacked['groupid'], $fileid);
+                        if (isset($metadata['webUrl'])) {
+                            $reference['url'] = $metadata['webUrl'];
+                        }
+                    } else if ($filesource === 'trendingaround') {
+                        if ($this->unifiedconfigured !== true) {
+                            utils::debug('Tried to access a trending around me file while the graph api is disabled.', __METHOD__);
+                            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+                        }
+                        $sourceclient = $this->get_unified_apiclient();
+                        $filedata = $sourceclient->get_file_data($fileid);
+                        if (isset($filedata['@microsoft.graph.downloadUrl'])) {
+                            $reference['url'] = $filedata['@microsoft.graph.downloadUrl'];
+                        }
                     }
                 }
 
@@ -947,10 +1118,15 @@ class repository_office365 extends repository {
                 $debugdata = [
                     'source' => $filesource,
                     'id' => $fileid,
+                    'linktype' => $linktype,
                     'message' => $e->getMessage(),
                     'e' => $e,
                 ];
                 utils::debug($errmsg, __METHOD__, $debugdata);
+
+                // Re-throw the exception so the user is notified instead of silently failing.
+                // This prevents accidentally sharing the original file if copy/share operations fail.
+                throw $e;
             }
 
             return $this->pack_reference($reference);
@@ -966,6 +1142,70 @@ class repository_office365 extends repository {
             utils::debug($errmsg, __METHOD__, $debugdata);
         }
         return $source;
+    }
+
+    /**
+     * Return reference file details as a human readable string for display.
+     *
+     * @param string $reference The file reference
+     * @param int $filestatus The file status (0 = OK, 666 = source missing)
+     * @return string A human readable reference string
+     */
+    public function get_reference_details($reference, $filestatus = 0) {
+        global $USER;
+
+        if ($filestatus == 666) {
+            // File source has been deleted or is no longer accessible.
+            return get_string('lostsource', 'repository', '');
+        }
+
+        $ref = $this->unpack_reference($reference);
+
+        // Build a human-readable reference string.
+        $details = '';
+
+        try {
+            if (isset($ref['source']) && isset($ref['id'])) {
+                $linktype = isset($ref['linktype']) ? $ref['linktype'] : 'default';
+
+                // Add link type description.
+                if ($linktype === 'controlledshare') {
+                    $details = get_string('controlledsharelinkdesc', 'repository_office365');
+                } else if ($linktype === 'directlink') {
+                    $details = get_string('directlinkdesc', 'repository_office365');
+                } else {
+                    $details = get_string('copiedfile', 'repository_office365');
+                }
+
+                // Try to get the file name and add it to the reference.
+                if ($ref['source'] === 'onedrive') {
+                    if ($this->unifiedconfigured === true) {
+                        $sourceclient = $this->get_unified_apiclient();
+                        $o365userid = utils::get_o365_userid($USER->id);
+                        $metadata = $sourceclient->get_file_metadata($ref['id'], $o365userid);
+
+                        if (isset($metadata['name'])) {
+                            $details .= ': ' . $metadata['name'];
+                        }
+                    }
+                } else if ($ref['source'] === 'onedrivegroup' && isset($ref['groupid'])) {
+                    if ($this->unifiedconfigured === true) {
+                        $sourceclient = $this->get_unified_apiclient();
+                        $metadata = $sourceclient->get_group_file_metadata($ref['groupid'], $ref['id']);
+
+                        if (isset($metadata['name'])) {
+                            $details .= ': ' . $metadata['name'];
+                        }
+                    }
+                }
+            }
+        } catch (moodle_exception $e) {
+            // If we can't get details, return a generic message.
+            utils::debug('Could not get file reference details', __METHOD__, $e->getMessage());
+            return get_string('unknownsource', 'repository');
+        }
+
+        return $details;
     }
 
     /**
@@ -1145,14 +1385,45 @@ class repository_office365 extends repository {
         $mform->setType('onedrivegroup', PARAM_INT);
         $mform->addElement('checkbox', 'trendinggroup', get_string('trendinggroup', 'repository_office365'));
         $mform->setType('trendinggroup', PARAM_INT);
+
+        // File linking options.
+        $mform->addElement('header', 'filelinking', get_string('filelinkingheader', 'repository_office365'));
+
+        $mform->addElement(
+            'checkbox',
+            'disabledirectlink',
+            get_string('disabledirectlink', 'repository_office365', get_string('makefilereference', 'repository'))
+        );
+        $mform->setType('disabledirectlink', PARAM_INT);
+        $mform->addHelpButton('disabledirectlink', 'disabledirectlink', 'repository_office365');
+        $mform->addElement(
+            'static',
+            'disabledirectlinkwarning',
+            '',
+            get_string('disabledirectlinkwarning', 'repository_office365', get_string('makefilereference', 'repository'))
+        );
+
+        $mform->addElement(
+            'checkbox',
+            'disableanonymousshare',
+            get_string('disableanonymousshare', 'repository_office365', get_string('makefilecontrolledlink', 'repository'))
+        );
+        $mform->setType('disableanonymousshare', PARAM_INT);
+        $mform->addHelpButton('disableanonymousshare', 'disableanonymousshare', 'repository_office365');
+        $mform->addElement(
+            'static',
+            'disableanonymoussharewarning',
+            '',
+            get_string('disableanonymoussharewarning', 'repository_office365', get_string('makefilecontrolledlink', 'repository'))
+        );
     }
 
      /**
-      * Option names of dropbox office365
+      * Option names of office365.
       *
       * @return array
       */
     public static function get_type_option_names() {
-        return ['coursegroup', 'onedrivegroup', 'trendinggroup', 'pluginname'];
+        return ['coursegroup', 'onedrivegroup', 'trendinggroup', 'disabledirectlink', 'disableanonymousshare', 'pluginname'];
     }
 }
