@@ -1254,11 +1254,11 @@ class unified extends o365api {
         ];
         foreach ($attendees as $attendee) {
             $eventdata['attendees'][] = [
-                'EmailAddress' => [
-                    'Address' => $attendee->email,
-                    'Name' => $attendee->firstname.' '.$attendee->lastname,
+                'emailAddress' => [
+                    'address' => $attendee->email,
+                    'name' => $attendee->firstname.' '.$attendee->lastname,
                 ],
-                'type' => 'Resource',
+                'type' => 'resource',
             ];
         }
         $eventdata = array_merge($eventdata, $other);
@@ -1303,11 +1303,12 @@ class unified extends o365api {
      *
      * @param string $outlookeventid The event ID in o365 outlook.
      * @param array $updated Array of updated information. Keys are 'subject', 'body', 'starttime', 'endtime', and 'attendees'.
-     * @param string $upn user's userPrincipalName
+     * @param string $owner user's userPrincipalName or group object id
+     * @param string $scope 'user' or 'group'
      * @return array|null Returned response, or null if error.
      * @throws moodle_exception
      */
-    public function update_event(string $outlookeventid, array $updated, string $upn): ?array {
+    public function update_event(string $outlookeventid, array $updated, string $owner, string $scope = 'user'): ?array {
         if (empty($outlookeventid) || empty($updated)) {
             return [];
         }
@@ -1336,8 +1337,12 @@ class unified extends o365api {
                         'type' => 'resource'];
             }
         }
-        $updateddata = json_encode($updateddata);
-        $response = $this->apicall('patch', '/users/' . $upn . '/events/' . $outlookeventid, $updateddata);
+
+        $path = $scope === 'group'
+                ? '/groups/' . $owner . '/events/' . $outlookeventid
+                : '/users/' . $owner . '/events/' . $outlookeventid;
+
+        $response = $this->apicall('patch', $path, json_encode($updateddata));
         $expectedparams = ['id' => null];
         return $this->process_apicall_response($response, $expectedparams);
     }
@@ -1346,12 +1351,17 @@ class unified extends o365api {
      * Delete an event.
      *
      * @param string $outlookeventid The event ID in o365 outlook.
-     * @param string $upn user's userPrincipalName
+     * @param string $owner user's userPrincipalName or group object id
+     * @param string $scope 'user' or 'group'
      * @return bool Success/Failure.
      */
-    public function delete_event(string $outlookeventid, string $upn): bool {
+    public function delete_event(string $outlookeventid, string $owner, string $scope = 'user'): bool {
         if (!empty($outlookeventid)) {
-            $this->apicall('delete', '/users/' . $upn . '/events/' . $outlookeventid);
+            $path = $scope === 'group'
+                ? '/groups/' . $owner . '/events/' . $outlookeventid
+                : '/users/' . $owner . '/events/' . $outlookeventid;
+
+            $this->apicall('delete', $path);
         }
         return true;
     }
