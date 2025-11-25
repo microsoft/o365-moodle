@@ -29,6 +29,7 @@ use assign;
 use context_course;
 use context_module;
 use external_api;
+use external_format_value;
 use external_function_parameters;
 use external_multiple_structure;
 use external_single_structure;
