@@ -1829,7 +1829,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 throw new moodle_exception('acp_userconnections_manualmatch_error_o365userconnected', 'local_o365');
             }
 
-            // Check if a o365 user object record already exists.
+            // Check if an o365 user object record already exists.
             $params = ['moodleid' => $userid, 'type' => 'user'];
             $existingobject = $DB->get_record('local_o365_objects', $params);
             if (!empty($existingobject) && $existingobject->o365name === $o365username) {
