@@ -34,7 +34,7 @@ require_once($CFG->libdir . '/csvlib.class.php');
 
 require_login();
 
-$url = new moodle_url('/auth/oidc/change_binding_username_claim_tool.php');
+$url = new \core\url('/auth/oidc/change_binding_username_claim_tool.php');
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
@@ -70,7 +70,7 @@ if (empty($iid)) {
         echo $OUTPUT->header();
 
         echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
-        $bindingusernameclaimurl = new moodle_url('/auth/oidc/binding_username_claim.php');
+        $bindingusernameclaimurl = new \core\url('/auth/oidc/binding_username_claim.php');
         echo html_writer::tag('p', get_string('change_binding_username_claim_tool_description', 'auth_oidc',
             $bindingusernameclaimurl->out()));
 

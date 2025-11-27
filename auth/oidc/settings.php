@@ -40,7 +40,7 @@ if ($hassiteconfig) {
 
     // Application configuration page.
     $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_application', get_string('settings_page_application', 'auth_oidc'),
-        new moodle_url('/auth/oidc/manageapplication.php')));
+        new \core\url('/auth/oidc/manageapplication.php')));
 
 
     $idptype = get_config('auth_oidc', 'idptype');
@@ -48,12 +48,12 @@ if ($hassiteconfig) {
         // Binding username claim page.
         $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_binding_username_claim',
             get_string('settings_page_binding_username_claim', 'auth_oidc'),
-            new moodle_url('/auth/oidc/binding_username_claim.php')));
+            new \core\url('/auth/oidc/binding_username_claim.php')));
 
         // Change binding username claim tool page.
         $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_change_binding_username_claim_tool',
             get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'),
-            new moodle_url('/auth/oidc/change_binding_username_claim_tool.php')));
+            new \core\url('/auth/oidc/change_binding_username_claim_tool.php')));
     }
 
 
@@ -69,7 +69,7 @@ if ($hassiteconfig) {
         get_string('cfg_redirecturi_key', 'auth_oidc'), get_string('cfg_redirecturi_desc', 'auth_oidc'), utils::get_redirecturl()));
 
     // Link to authentication options.
-    $authenticationconfigurationurl = new moodle_url('/auth/oidc/manageapplication.php');
+    $authenticationconfigurationurl = new \core\url('/auth/oidc/manageapplication.php');
     $settings->add(new admin_setting_description('auth_oidc/authenticationlink',
         get_string('settings_page_application', 'auth_oidc'),
         get_string('cfg_authenticationlink_desc', 'auth_oidc', $authenticationconfigurationurl->out())));
@@ -83,7 +83,7 @@ if ($hassiteconfig) {
         get_string('cfg_forceredirect_key', 'auth_oidc'), get_string('cfg_forceredirect_desc', 'auth_oidc'), 0));
 
     // Silent login mode.
-    $forceloginconfigurl = new moodle_url('/admin/settings.php', ['section' => 'sitepolicies']);
+    $forceloginconfigurl = new \core\url('/admin/settings.php', ['section' => 'sitepolicies']);
     $settings->add(new admin_setting_configcheckbox('auth_oidc/silentloginmode',
         get_string('cfg_silentloginmode_key', 'auth_oidc'),
         get_string('cfg_silentloginmode_desc', 'auth_oidc', $forceloginconfigurl->out(false)), 0));
@@ -243,7 +243,7 @@ if ($hassiteconfig) {
 
     // Cleanup OIDC tokens page.
     $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_cleanup_oidc_tokens',
-        get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'), new moodle_url('/auth/oidc/cleanupoidctokens.php')));
+        get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'), new \core\url('/auth/oidc/cleanupoidctokens.php')));
 
     // Other settings page and its settings.
     $fieldmappingspage = new admin_settingpage('auth_oidc_field_mapping', get_string('settings_page_field_mapping', 'auth_oidc'));

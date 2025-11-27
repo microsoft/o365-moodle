@@ -198,7 +198,7 @@ function auth_oidc_get_tokens_with_empty_ids() {
         $item->oidcuniqueid = $record->oidcuniqid;
         $item->matchingstatus = get_string('unmatched', 'auth_oidc');
         $item->details = get_string('na', 'auth_oidc');
-        $deletetokenurl = new moodle_url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new \core\url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token', 'auth_oidc'));
 
         $emptyuseridtokens[$record->id] = $item;
@@ -234,7 +234,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
         $item->matchingstatus = get_string('mismatched', 'auth_oidc');
         $item->details = get_string('mismatched_details', 'auth_oidc',
             ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]);
-        $deletetokenurl = new moodle_url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new \core\url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token_and_reference', 'auth_oidc'));
 
         $mismatchedtokens[$record->id] = $item;
@@ -523,7 +523,7 @@ function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $hel
         // Generate the list of fields / mappings.
         if ($fieldnametoolong) {
             // Display a message that the field can not be mapped because it's too long.
-            $url = new moodle_url('/user/profile/index.php');
+            $url = new \core\url('/user/profile/index.php');
             $a = (object)['fieldname' => s($fieldname), 'shortname' => s($field), 'charlimit' => 67, 'link' => $url->out()];
             $settings->add(new admin_setting_heading($auth.'/field_not_mapped_'.sha1($field), '',
                 get_string('cannotmapfield', 'auth', $a)));

@@ -30,7 +30,7 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
 require_login();
 
 $context = context_system::instance();
-$pageurl = new moodle_url('/auth/oidc/cleanupoidctokens.php');
+$pageurl = new \core\url('/auth/oidc/cleanupoidctokens.php');
 
 admin_externalpage_setup('auth_oidc_cleanup_oidc_tokens');
 
