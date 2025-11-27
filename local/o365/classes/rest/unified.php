@@ -29,6 +29,7 @@ namespace local_o365\rest;
 use core_date;
 use core_text;
 use DateTime;
+use dml_exception;
 use local_o365\oauth2\clientdata;
 use local_o365\obj\o365user;
 use local_o365\utils;
@@ -49,6 +50,16 @@ class unified extends o365api {
     public $apiarea = 'graph';
 
     /**
+     * The Microsoft OAuth2 token resource
+     */
+    public const RESOURCE_URL = 'https://graph.microsoft.com';
+
+    /**
+     * The Chinese API OAuth2 token resource
+     */
+    public const RESOURCE_URL_CHINESE = 'https://microsoftgraph.chinacloudapi.cn';
+
+    /**
      * Determine if the API client is configured.
      *
      * @return bool Whether the API client is configured.
@@ -62,28 +73,25 @@ class unified extends o365api {
      * Get the API client's oauth2 resource.
      *
      * @return string The resource for oauth2 tokens.
+     * @throws dml_exception
      */
     public static function get_tokenresource(): string {
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if (!empty($oidcresource)) {
             return $oidcresource;
-        } else {
-            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
         }
+
+        return (static::use_chinese_api() === true) ? self::RESOURCE_URL_CHINESE : self::RESOURCE_URL;
     }
 
     /**
      * Get the base URI that API calls should be sent to.
      *
-     * @return string|bool The URI to send API calls to, or false if a precondition failed.
+     * @return string The URI to send API calls to.
+     * @throws dml_exception
      */
-    public function get_apiuri() {
-        $oidcresource = get_config('auth_oidc', 'oidcresource');
-        if (!empty($oidcresource)) {
-            return $oidcresource;
-        } else {
-            return (static::use_chinese_api() === true) ? 'https://microsoftgraph.chinacloudapi.cn' : 'https://graph.microsoft.com';
-        }
+    public function get_apiuri(): string {
+        return self::get_tokenresource();
     }
 
     /**
@@ -162,8 +170,18 @@ class unified extends o365api {
      * @return array The result of the API call.
      * @throws moodle_exception
      */
-    public function paginatedapicall($httpmethod, $apimethod, $odataqueries = [], $expectedstructure = ['value' => null],
-        $betaapi = false, $params = '', $options = [], $skipparam = '$skiptoken', $deltalink = '', $deltatokenparam = '') {
+    public function paginatedapicall(
+        $httpmethod,
+        $apimethod,
+        $odataqueries = [],
+        $expectedstructure = ['value' => null],
+        $betaapi = false,
+        $params = '',
+        $options = [],
+        $skipparam = '$skiptoken',
+        $deltalink = '',
+        $deltatokenparam = ''
+    ) {
         $content = [];
 
         $originalapimethod = $apimethod;
@@ -206,12 +224,11 @@ class unified extends o365api {
                     $content = array_merge($content, $result['value']);
                 }
 
+                $skiptoken = null;
                 if (isset($result['odata.nextLink'])) {
                     $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], $skipparam);
                 } else if (isset($result['@odata.nextLink'])) {
                     $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], $skipparam);
-                } else {
-                    $skiptoken = null;
                 }
 
                 if ($deltalink && $deltatokenparam && isset($result[$deltalink])) {
@@ -224,9 +241,9 @@ class unified extends o365api {
 
         if ($deltatokenvalue) {
             return [$content, $deltatokenvalue];
-        } else {
-            return $content;
         }
+
+        return $content;
     }
 
     /**
