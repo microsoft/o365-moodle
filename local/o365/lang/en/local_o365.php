@@ -899,6 +899,7 @@ $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_processmatchqueue'] = 'Process Match Queue';
 $string['task_notifysecretexpiry'] = 'Notify site admin about Microsoft Entra ID app secret expiry';
+$string['task_checkinvalidconfiglog'] = 'Check and clean up invalid config log records';
 $string['task_processmatchqueue_err_museralreadymatched'] = 'Moodle user is already matched to a Microsoft 365 user.';
 $string['task_processmatchqueue_err_museralreadyo365'] = 'Moodle user is already connected to Microsoft 365.';
 $string['task_processmatchqueue_err_nomuser'] = 'No Moodle user found with this username.';

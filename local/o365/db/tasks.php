@@ -107,4 +107,13 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*',
     ],
+    [
+        'classname' => 'local_o365\task\checkinvalidconfiglog',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => '2',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
 ];
