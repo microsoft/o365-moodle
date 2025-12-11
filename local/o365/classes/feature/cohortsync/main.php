@@ -270,7 +270,7 @@ class main {
         }
 
         try {
-            $memberrecords = $this->graphclient->get_group_members($groupoid);
+            $memberrecords = $this->graphclient->get_transitive_group_members($groupoid);
             $ownerrecords = $this->graphclient->get_group_owners($groupoid);
         } catch (moodle_exception $e) {
             if (strpos($e->getMessage(), utils::RESOURCE_NOT_EXIST_ERROR) !== false) {
