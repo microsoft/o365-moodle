@@ -207,6 +207,13 @@ class base {
                             }
                         }
 
+                        if (!isset($userdata['employeeId'])) {
+                            $employeeId = $token->claim('employeeId');
+                            if (!empty($employeeId)) {
+                                $userdata['employeeId'] = $employeeId;
+                            } 
+                        }
+
                         if (!isset($userdata['bindingusernameclaim'])) {
                             $bindingusernameclaim = auth_oidc_get_binding_username_claim();
                             if (!empty($bindingusernameclaim)) {
