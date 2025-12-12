@@ -162,6 +162,11 @@ class application extends moodleform {
         $mform->setDefault('oidcscope', 'openid profile email');
         $mform->addElement('static', 'oidcscope_help', '', get_string('oidcscope_help', 'auth_oidc'));
 
+        // Custom Claim.
+        $mform->addElement('text', 'customclaims', auth_oidc_config_name_in_form('customclaim'), ['size' => 120]);
+        $mform->setType('customclaims', PARAM_TEXT);
+        $mform->setDefault('customclaims', '');
+        $mform->addElement('static', 'customclaims_help', '', get_string('customclaim_help', 'auth_oidc'));
         // Secret expiry notifications recipients.
         if (auth_oidc_is_local_365_installed()) {
             $mform->addElement('header', 'secretexpirynotification',

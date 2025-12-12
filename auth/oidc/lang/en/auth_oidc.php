@@ -154,6 +154,8 @@ $string['oidcresource_help'] = 'The OpenID Connect resource for which to send th
 <b>Note</b> this is paramater is not supported in <b>Microsoft identity platform (v2.0)</b> IdP type.';
 $string['oidcscope'] = 'Scope';
 $string['oidcscope_help'] = 'The OIDC Scope to use.';
+$string['customclaims'] = 'Add custom claims';
+$string['customclaims_help'] = 'Custom claims list to get from the token (claims need to be separate by space)';
 $string['secretexpiryrecipients'] = 'Secret Expiry Notification Recipients';
 $string['secretexpiryrecipients_help'] = 'A comma-separated list of email addresses to send secret expiry notifications to.<br/>
 If no email address is entered, the main site administrator will be notified.';
