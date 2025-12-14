@@ -67,8 +67,10 @@ class delete_onenoteassignment extends external_api {
         $params = self::validate_parameters(self::assignment_delete_parameters(), ['data' => $data]);
         $params = $params['data'];
 
-        [$course, $module, $assign] = utils::verify_assignment($params['coursemodule'],
-            $params['course']);
+        [$course, $module, $assign] = utils::verify_assignment(
+            $params['coursemodule'],
+            $params['course']
+        );
 
         $context = context_course::instance($params['course']);
         self::validate_context($context);

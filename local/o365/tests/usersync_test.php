@@ -59,8 +59,12 @@ final class usersync_test extends advanced_testcase {
             'tokenendpoint' => 'http://example.com/token',
         ];
 
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-            $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
+        $clientdata = new \local_o365\oauth2\clientdata(
+            $oidcconfig->clientid,
+            $oidcconfig->clientsecret,
+            $oidcconfig->authendpoint,
+            $oidcconfig->tokenendpoint
+        );
 
         return $clientdata;
     }
@@ -83,8 +87,16 @@ final class usersync_test extends advanced_testcase {
         ];
 
         $clientdata = $this->get_mock_clientdata();
-        $token = new token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-            $tokenrec->scope, $tokenrec->tokenresource, $tokenrec->user_id, $clientdata, $httpclient);
+        $token = new token(
+            $tokenrec->token,
+            $tokenrec->expiry,
+            $tokenrec->refreshtoken,
+            $tokenrec->scope,
+            $tokenrec->tokenresource,
+            $tokenrec->user_id,
+            $clientdata,
+            $httpclient
+        );
 
         return $token;
     }

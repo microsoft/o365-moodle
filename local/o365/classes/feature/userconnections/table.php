@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->libdir.'/tablelib.php');
+require_once($CFG->libdir . '/tablelib.php');
 
 /**
  * Search results table.
@@ -47,7 +47,7 @@ class table extends \table_sql {
     public function __construct($uniqueid) {
         global $USER, $DB;
         parent::__construct($uniqueid);
-        $this->sql = new \stdClass;
+        $this->sql = new \stdClass();
         $this->set_columns();
         $this->having = (object)['sql' => '', 'params' => []];
     }
@@ -105,7 +105,7 @@ class table extends \table_sql {
      * @param int $pagesize The amount of results per page.
      * @param bool $useinitialsbar Whether to use the initials bar.
      */
-    public function query_db($pagesize, $useinitialsbar=true) {
+    public function query_db($pagesize, $useinitialsbar = true) {
         global $DB;
 
         $customsql = $this->where->sql;
@@ -137,7 +137,7 @@ class table extends \table_sql {
         $params = ['user', 'guest'];
 
         if (!empty($customsql)) {
-            $sql .= ' AND '.$customsql;
+            $sql .= ' AND ' . $customsql;
             $params = array_merge($params, $customparams);
         }
 
@@ -147,7 +147,7 @@ class table extends \table_sql {
             $params = array_merge($params, $customhavingparams);
         }
 
-        $totalresults = $DB->count_records_sql('SELECT count(1) from ('.$sql.') a', $params);
+        $totalresults = $DB->count_records_sql('SELECT count(1) from (' . $sql . ') a', $params);
         if ($useinitialsbar) {
             $this->initialbars($totalresults > $pagesize);
         }
@@ -157,8 +157,8 @@ class table extends \table_sql {
         // Sorting.
         $sort = $this->get_sql_sort();
         if (!empty($sort)) {
-            $sort = 'ORDER BY '.$sort;
-            $sql .= ' '.$sort;
+            $sort = 'ORDER BY ' . $sort;
+            $sql .= ' ' . $sort;
         }
 
         $start = $this->get_page_start();
@@ -185,6 +185,7 @@ class table extends \table_sql {
                 return (!empty($values->matcheduselogin)) ? get_string('yes') : get_string('no');
             }
         }
+
         return '';
     }
 
@@ -300,7 +301,7 @@ class table extends \table_sql {
                 }
             }
         }
+
         return implode('<br />', $links);
     }
-
 }

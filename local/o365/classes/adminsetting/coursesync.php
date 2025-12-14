@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/lib/adminlib.php');
 
 /**
  * Admin setting to configure course sync.
@@ -76,7 +76,7 @@ class coursesync extends \admin_setting {
         foreach ($options as $key => $desc) {
             $radioattrs = [
                 'type' => 'radio',
-                'id' => $this->get_id().'_'.$key,
+                'id' => $this->get_id() . '_' . $key,
                 'name' => $this->get_full_name(),
                 'value' => $key,
                 'onchange' => 'teams_togglecustom()',
@@ -85,11 +85,13 @@ class coursesync extends \admin_setting {
             if ($curval === $key) {
                 $radioattrs['checked'] = 'checked';
             }
+
             $settinghtml .= \html_writer::empty_tag('input', $radioattrs);
-            $settinghtml .= \html_writer::label($desc, $this->get_id().'_'.$key, false);
+            $settinghtml .= \html_writer::label($desc, $this->get_id() . '_' . $key, false);
             $settinghtml .= \html_writer::empty_tag('br');
             $settinghtml .= \html_writer::empty_tag('br');
         }
+
         $js = <<<JS
 function teams_togglecustom() {
     if ($("#id_s_local_o365_coursesync_oncustom").is(":checked")) {

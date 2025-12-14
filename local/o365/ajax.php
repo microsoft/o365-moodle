@@ -24,7 +24,7 @@
  */
 
 define('AJAX_SCRIPT', true);
-require_once(__DIR__.'/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_login();
 $mode = required_param('mode', PARAM_TEXT);
 require_capability('moodle/site:config', \context_system::instance());

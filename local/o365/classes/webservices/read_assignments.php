@@ -51,7 +51,6 @@ require_once($CFG->dirroot . '/mod/assign/locallib.php');
  * Get a list of assignments in one or more courses.
  */
 class read_assignments extends external_api {
-
     /**
      * Returns description of method parameters
      *
@@ -66,8 +65,10 @@ class read_assignments extends external_api {
                 []
             ),
             'assignmentids' => new external_multiple_structure(
-                new external_value(PARAM_INT,
-                    'assignment id, empty for retrieving all assignments for courses the user is enroled in'),
+                new external_value(
+                    PARAM_INT,
+                    'assignment id, empty for retrieving all assignments for courses the user is enroled in'
+                ),
                 '0 or more assignment ids',
                 VALUE_DEFAULT,
                 []
@@ -101,8 +102,12 @@ class read_assignments extends external_api {
      * @return array An array of courses and warnings.
      * @since  Moodle 2.4
      */
-    public static function assignments_read($courseids = [], $assignmentids = [], $capabilities = [],
-        $includenotenrolledcourses = false) {
+    public static function assignments_read(
+        $courseids = [],
+        $assignmentids = [],
+        $capabilities = [],
+        $includenotenrolledcourses = false
+    ) {
         global $USER, $DB;
 
         $params = self::validate_parameters(
@@ -145,11 +150,11 @@ class read_assignments extends external_api {
                     $courses[$courseid] = $mycourses[$courseid];
                 }
             }
+
             $courseids = array_keys($courses);
         }
 
         foreach ($courseids as $cid) {
-
             try {
                 $context = context_course::instance($cid);
                 self::validate_context($context);
@@ -168,10 +173,12 @@ class read_assignments extends external_api {
                 ];
                 continue;
             }
+
             if (count($params['capabilities']) > 0 && !has_all_capabilities($params['capabilities'], $context)) {
                 unset($courses[$cid]);
             }
         }
+
         $extrafields = 'm.id as assignmentid, ' .
             'm.course, ' .
             'm.nosubmissions, ' .
@@ -204,7 +211,6 @@ class read_assignments extends external_api {
             // Get a list of assignments for the course.
             if ($modules = get_coursemodules_in_course('assign', $courses[$id]->id, $extrafields)) {
                 foreach ($modules as $module) {
-
                     // Check assignment ID filter.
                     if (!empty($assignmentids) && !isset($assignmentids[$module->assignmentid])) {
                         continue;
@@ -223,6 +229,7 @@ class read_assignments extends external_api {
                         ];
                         continue;
                     }
+
                     $configrecords = $DB->get_recordset('assign_plugin_config', ['assignment' => $module->assignmentid]);
                     $configarray = [];
                     foreach ($configrecords as $configrecord) {
@@ -235,6 +242,7 @@ class read_assignments extends external_api {
                             'value' => $configrecord->value,
                         ];
                     }
+
                     $configrecords->close();
 
                     $assignment = [
@@ -270,14 +278,26 @@ class read_assignments extends external_api {
                     $assign = new assign($context, null, null);
 
                     if ($assign->show_intro()) {
-
-                        [$assignment['intro'], $assignment['introformat']] = external_format_text($module->intro,
-                            $module->introformat, $context->id, 'mod_assign', 'intro', null);
+                        [$assignment['intro'], $assignment['introformat']] = external_format_text(
+                            $module->intro,
+                            $module->introformat,
+                            $context->id,
+                            'mod_assign',
+                            'intro',
+                            null
+                        );
 
                         $fs = get_file_storage();
-                        if ($files = $fs->get_area_files($context->id, 'mod_assign', ASSIGN_INTROATTACHMENT_FILEAREA,
-                            0, 'timemodified', false)) {
-
+                        if (
+                            $files = $fs->get_area_files(
+                                $context->id,
+                                'mod_assign',
+                                ASSIGN_INTROATTACHMENT_FILEAREA,
+                                0,
+                                'timemodified',
+                                false
+                            )
+                        ) {
                             $assignment['introattachments'] = [];
                             foreach ($files as $file) {
                                 $filename = $file->get_filename();
@@ -286,7 +306,13 @@ class read_assignments extends external_api {
                                     'filename' => $filename,
                                     'mimetype' => $file->get_mimetype(),
                                     'fileurl' => moodle_url::make_webservice_pluginfile_url(
-                                        $context->id, 'mod_assign', ASSIGN_INTROATTACHMENT_FILEAREA, 0, '/', $filename)->out(false),
+                                        $context->id,
+                                        'mod_assign',
+                                        ASSIGN_INTROATTACHMENT_FILEAREA,
+                                        0,
+                                        '/',
+                                        $filename
+                                    )->out(false),
                                 ];
                             }
                         }
@@ -295,6 +321,7 @@ class read_assignments extends external_api {
                     $assignmentarray[] = $assignment;
                 }
             }
+
             $coursearray[] = [
                 'id' => $courses[$id]->id,
                 'fullname' => $courses[$id]->fullname,
@@ -347,8 +374,11 @@ class read_assignments extends external_api {
                 'markingallocation' => new external_value(PARAM_INT, 'enable marking allocation'),
                 'requiresubmissionstatement' => new external_value(PARAM_INT, 'student must accept submission statement'),
                 'configs' => new external_multiple_structure(self::get_assignments_config_structure(), 'configuration settings'),
-                'intro' => new external_value(PARAM_RAW,
-                    'assignment intro, not allways returned because it deppends on the activity configuration', VALUE_OPTIONAL),
+                'intro' => new external_value(
+                    PARAM_RAW,
+                    'assignment intro, not allways returned because it deppends on the activity configuration',
+                    VALUE_OPTIONAL
+                ),
                 'introformat' => new external_format_value('intro', VALUE_OPTIONAL),
                 'introattachments' => new external_multiple_structure(
                     new external_single_structure(
@@ -357,9 +387,13 @@ class read_assignments extends external_api {
                             'mimetype' => new external_value(PARAM_RAW, 'mime type'),
                             'fileurl' => new external_value(PARAM_URL, 'file download url'),
                         ]
-                    ), 'intro attachments files', VALUE_OPTIONAL
+                    ),
+                    'intro attachments files',
+                    VALUE_OPTIONAL
                 ),
-            ], 'assignment information object');
+            ],
+            'assignment information object'
+        );
     }
 
     /**
@@ -377,7 +411,8 @@ class read_assignments extends external_api {
                 'subtype' => new external_value(PARAM_TEXT, 'subtype'),
                 'name' => new external_value(PARAM_TEXT, 'name'),
                 'value' => new external_value(PARAM_TEXT, 'value'),
-            ], 'assignment configuration object'
+            ],
+            'assignment configuration object'
         );
     }
 
@@ -395,7 +430,8 @@ class read_assignments extends external_api {
                 'shortname' => new external_value(PARAM_TEXT, 'course short name'),
                 'timemodified' => new external_value(PARAM_INT, 'last time modified'),
                 'assignments' => new external_multiple_structure(self::get_assignments_assignment_structure(), 'assignment info'),
-            ], 'course information object'
+            ],
+            'course information object'
         );
     }
 
@@ -409,9 +445,11 @@ class read_assignments extends external_api {
         return new external_single_structure(
             [
                 'courses' => new external_multiple_structure(self::get_assignments_course_structure(), 'list of courses'),
-                'warnings' => new external_warnings('item can be \'course\' (errorcode 1 or 2) or \'module\' (errorcode 1)',
+                'warnings' => new external_warnings(
+                    'item can be \'course\' (errorcode 1 or 2) or \'module\' (errorcode 1)',
                     'When item is a course then itemid is a course id. When the item is a module then itemid is a module id',
-                    'errorcode can be 1 (no access rights) or 2 (not enrolled or no permissions)'),
+                    'errorcode can be 1 (no access rights) or 2 (not enrolled or no permissions)'
+                ),
             ]
         );
     }

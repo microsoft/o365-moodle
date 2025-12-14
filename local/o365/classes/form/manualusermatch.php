@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot . '/lib/formslib.php');
 
 /**
  * Single, manual user match form.
@@ -57,7 +57,7 @@ class manualusermatch extends \moodleform {
 
         $mform->addElement('header', 'userdetails', get_string('userdetails'));
 
-        $musernametext = fullname($userrec).' ('.$userrec->username.')';
+        $musernametext = fullname($userrec) . ' (' . $userrec->username . ')';
         $label = get_string('acp_userconnections_manualmatch_musername', 'local_o365');
         $mform->addElement('static', 'musername', $label, $musernametext);
         $mform->addElement('text', 'o365username', get_string('acp_userconnections_manualmatch_o365username', 'local_o365'));

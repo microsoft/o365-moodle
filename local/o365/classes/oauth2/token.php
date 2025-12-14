@@ -69,8 +69,16 @@ class token {
      * @param clientdata $clientdata Client data used for refreshing the token if needed.
      * @param httpclientinterface $httpclient An HTTP client used for refreshing the token if needed.
      */
-    public function __construct($token, $expiry, $refreshtoken, $scope, $tokenresource, $userid,
-                                clientdata $clientdata, httpclientinterface $httpclient) {
+    public function __construct(
+        $token,
+        $expiry,
+        $refreshtoken,
+        $scope,
+        $tokenresource,
+        $userid,
+        clientdata $clientdata,
+        httpclientinterface $httpclient
+    ) {
         $this->token = $token;
         $this->expiry = $expiry;
         $this->refreshtoken = $refreshtoken;
@@ -158,8 +166,16 @@ class token {
     public static function instance($userid, $tokenresource, clientdata $clientdata, $httpclient, $forcecreate = false) {
         $token = static::get_stored_token($userid, $tokenresource);
         if (!empty($token)) {
-            $token = new static($token['token'], $token['expiry'], $token['refreshtoken'], $token['scope'], $token['tokenresource'],
-                $token['user_id'], $clientdata, $httpclient);
+            $token = new static(
+                $token['token'],
+                $token['expiry'],
+                $token['refreshtoken'],
+                $token['scope'],
+                $token['tokenresource'],
+                $token['user_id'],
+                $clientdata,
+                $httpclient
+            );
             return $token;
         } else {
             if ($tokenresource === 'https://graph.microsoft.com') {
@@ -169,6 +185,7 @@ class token {
                         return $token;
                     }
                 }
+
                 // This is the base resource we need to get tokens for other resources. If we don't have this, we can't continue.
                 utils::debug('Cannot retrieve a token for the base resource.', __METHOD__);
                 return null;
@@ -179,6 +196,7 @@ class token {
                 }
             }
         }
+
         return null;
     }
 
@@ -192,8 +210,12 @@ class token {
      *
      * @return token A constructed token for the new resource, or false if failure.
      */
-    public static function jump_tokenresource(token $token, $newtokenresource, clientdata $clientdata,
-        httpclientinterface $httpclient) {
+    public static function jump_tokenresource(
+        token $token,
+        $newtokenresource,
+        clientdata $clientdata,
+        httpclientinterface $httpclient
+    ) {
         $params = [
             'client_id' => $clientdata->get_clientid(),
             'client_secret' => $clientdata->get_clientsecret(),
@@ -215,17 +237,27 @@ class token {
 
         if (!empty($tokenresult) && isset($tokenresult['token_type']) && $tokenresult['token_type'] === 'Bearer') {
             $userid = $token->get_userid();
-            $newtoken = new token($tokenresult['access_token'], $tokenresult['expires_on'],
-                $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource'], $userid, $clientdata, $httpclient);
+            $newtoken = new token(
+                $tokenresult['access_token'],
+                $tokenresult['expires_on'],
+                $tokenresult['refresh_token'],
+                $tokenresult['scope'],
+                $tokenresult['resource'],
+                $userid,
+                $clientdata,
+                $httpclient
+            );
             return $newtoken;
         } else {
             $errmsg = 'Problem encountered getting a new token.';
             if (isset($tokenresult['access_token'])) {
                 $tokenresult['access_token'] = '---';
             }
+
             if (isset($tokenresult['refresh_token'])) {
                 $tokenresult['refresh_token'] = '---';
             }
+
             $debuginfo = [
                 'tokenresult' => $tokenresult,
                 'resource' => $newtokenresource,
@@ -273,8 +305,15 @@ class token {
                     $tokenresult['scope'] = null;
                     $tokenresult['refresh_token'] = null;
                 }
-                static::store_new_token($userid, $tokenresult['access_token'], $expiry,
-                        $tokenresult['refresh_token'], $tokenresult['scope'], $tokenresult['resource']);
+
+                static::store_new_token(
+                    $userid,
+                    $tokenresult['access_token'],
+                    $expiry,
+                    $tokenresult['refresh_token'],
+                    $tokenresult['scope'],
+                    $tokenresult['resource']
+                );
                 $token = static::instance($userid, $tokenresource, $clientdata, $httpclient);
                 return $token;
             } else {
@@ -282,9 +321,11 @@ class token {
                 if (isset($tokenresult['access_token'])) {
                     $tokenresult['access_token'] = '---';
                 }
+
                 if (isset($tokenresult['refresh_token'])) {
                     $tokenresult['refresh_token'] = '---';
                 }
+
                 $debuginfo = [
                     'tokenresult' => $tokenresult,
                     'resource' => $tokenresource,
@@ -292,6 +333,7 @@ class token {
                 utils::debug($errmsg, __METHOD__, $debuginfo);
             }
         }
+
         return false;
     }
 
@@ -328,6 +370,7 @@ class token {
                 return (array)$record;
             }
         }
+
         return null;
     }
 
@@ -345,9 +388,11 @@ class token {
             if (empty($newtoken['refreshtoken'])) {
                 $newtoken['refreshtoken'] = '';
             }
+
             $DB->update_record('local_o365_token', (object)$newtoken);
             return true;
         }
+
         return false;
     }
 
@@ -363,6 +408,7 @@ class token {
             $DB->delete_records('local_o365_token', ['id' => $existingtoken['id']]);
             return true;
         }
+
         return false;
     }
 
@@ -380,7 +426,7 @@ class token {
      */
     public static function store_new_token($userid, $token, $expiry, $refreshtoken, $scope, $tokenresource) {
         global $DB;
-        $newtoken = new \stdClass;
+        $newtoken = new \stdClass();
         $newtoken->user_id = $userid;
         $newtoken->tokenresource = $tokenresource;
         $newtoken->scope = $scope;
@@ -425,6 +471,7 @@ class token {
             $result = $this->httpclient->post($tokenendpoint, $params);
             $result = json_decode($result, true);
         }
+
         if (!empty($result) && is_array($result) && isset($result['access_token'])) {
             $originaltokenresource = $this->tokenresource;
 
@@ -445,6 +492,7 @@ class token {
                 ];
                 $this->update_stored_token($existingtoken, $newtoken);
             }
+
             return true;
         } else {
             // Couldn't refresh token with the stored information. Wipe the stored information and go from the original login token.
@@ -452,6 +500,7 @@ class token {
             if (!empty($existingtoken)) {
                 $this->delete_stored_token($existingtoken);
             }
+
             $token = static::get_for_new_resource($this->userid, $this->tokenresource, $this->clientdata, $this->httpclient);
             if (!empty($token)) {
                 $this->token = $token->get_token();

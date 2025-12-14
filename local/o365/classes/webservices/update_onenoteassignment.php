@@ -28,7 +28,7 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 use context_course;
-use local_o365\webservices\exception as exception;
+use local_o365\webservices\exception;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
@@ -73,8 +73,10 @@ class update_onenoteassignment extends external_api {
         $params = self::validate_parameters(self::assignment_update_parameters(), ['data' => $data]);
         $params = $params['data'];
 
-        [$course, $module, $assign] = utils::verify_assignment($params['coursemodule'],
-            $params['course']);
+        [$course, $module, $assign] = utils::verify_assignment(
+            $params['coursemodule'],
+            $params['course']
+        );
 
         $context = context_course::instance($params['course']);
         self::validate_context($context);
@@ -84,9 +86,11 @@ class update_onenoteassignment extends external_api {
         if (isset($params['name']) && $params['name'] !== null) {
             $updatedassigninfo['name'] = $params['name'];
         }
+
         if (isset($params['intro']) && $params['intro'] !== null) {
             $updatedassigninfo['introeditor'] = ['text' => (string) $params['intro'], 'format' => FORMAT_HTML, 'itemid' => null];
         }
+
         if (!empty($updatedassigninfo)) {
             $assignkeys = [
                 'name',
@@ -138,6 +142,7 @@ class update_onenoteassignment extends external_api {
             if (empty($section)) {
                 throw new exception\sectionnotfound();
             }
+
             moveto_module($module, $section);
         }
 

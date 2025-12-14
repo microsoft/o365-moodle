@@ -452,6 +452,4 @@ final class privacy_provider_test extends provider_testcase {
 
         return $record;
     }
-
 }
-

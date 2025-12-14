@@ -40,7 +40,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/auth/oidc/auth.php');
+require_once($CFG->dirroot . '/auth/oidc/auth.php');
 
 /**
  * Scheduled task to process a batch from the match queue.
@@ -86,7 +86,7 @@ class processmatchqueue extends scheduled_task {
             return false;
         }
 
-        $auth = new auth_plugin_oidc;
+        $auth = new auth_plugin_oidc();
 
         $sql = 'SELECT mq.*,
                        u.id as muserid,
@@ -106,11 +106,11 @@ class processmatchqueue extends scheduled_task {
         $matchqueue = $DB->get_recordset_sql($sql, $params, 0, 100);
         $apiclient = $this->get_api();
         foreach ($matchqueue as $matchrec) {
-            mtrace('Processing '.$matchrec->musername.'/'.$matchrec->o365username);
+            mtrace('Processing ' . $matchrec->musername . '/' . $matchrec->o365username);
             try {
                 // Check for matching Moodle user.
                 if (empty($matchrec->muserid)) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_nomuser', 'local_o365');
                     $updatedrec->completed = 1;
@@ -121,7 +121,7 @@ class processmatchqueue extends scheduled_task {
 
                 // Check whether Moodle user is already o365 connected.
                 if (utils::is_o365_connected($matchrec->muserid)) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_museralreadyo365', 'local_o365');
                     $updatedrec->completed = 1;
@@ -132,7 +132,7 @@ class processmatchqueue extends scheduled_task {
 
                 // Check existing matches for Moodle user.
                 if (!empty($matchrec->muserexistingconnectionid)) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_museralreadymatched', 'local_o365');
                     $updatedrec->completed = 1;
@@ -143,7 +143,7 @@ class processmatchqueue extends scheduled_task {
 
                 // Check existing matches for Microsoft 365 user.
                 if (!empty($matchrec->officeuserexistingconnectionid)) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadymatched', 'local_o365');
                     $updatedrec->completed = 1;
@@ -154,7 +154,7 @@ class processmatchqueue extends scheduled_task {
 
                 // Check existing tokens for Microsoft 365 user (indicates o365 user is already connected to someone).
                 if (!empty($matchrec->officeuserexistingoidctoken)) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadyconnected', 'local_o365');
                     $updatedrec->completed = 1;
@@ -165,7 +165,7 @@ class processmatchqueue extends scheduled_task {
 
                 // Check if an o365 user object record already exists.
                 if (!empty($matchrec->officeuserobjectrecid)) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_o365useralreadyconnected', 'local_o365');
                     $updatedrec->completed = 1;
@@ -184,7 +184,7 @@ class processmatchqueue extends scheduled_task {
                 }
 
                 if ($userfound !== true) {
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->id;
                     $updatedrec->errormessage = get_string('task_processmatchqueue_err_noo365user', 'local_o365');
                     $updatedrec->completed = 1;
@@ -195,7 +195,7 @@ class processmatchqueue extends scheduled_task {
 
                 if (empty($matchrec->openidconnect)) {
                     // Match validated.
-                    $connectionrec = new stdClass;
+                    $connectionrec = new stdClass();
                     $connectionrec->muserid = $matchrec->muserid;
                     $connectionrec->entraidupn = core_text::strtolower($o365user['userPrincipalName']);
                     $connectionrec->uselogin = 0;
@@ -225,22 +225,21 @@ class processmatchqueue extends scheduled_task {
 
                     // Updated the user's authentication method field.
                     mtrace('Updating user authentication record.');
-                    $updatedrec = new stdClass;
+                    $updatedrec = new stdClass();
                     $updatedrec->id = $matchrec->muserid;
                     $updatedrec->auth = $auth->authtype;
                     $DB->update_record('user', $updatedrec);
                 }
 
-                $updatedrec = new stdClass;
+                $updatedrec = new stdClass();
                 $updatedrec->id = $matchrec->id;
                 $updatedrec->completed = 1;
                 $DB->update_record('local_o365_matchqueue', $updatedrec);
                 mtrace('Match record created for userid #' . $matchrec->muserid . ' and o365 user ' .
                     core_text::strtolower($o365user['userPrincipalName']));
-
             } catch (moodle_exception $e) {
-                $exceptionstring = $e->getMessage().': '.$e->debuginfo;
-                $updatedrec = new stdClass;
+                $exceptionstring = $e->getMessage() . ': ' . $e->debuginfo;
+                $updatedrec = new stdClass();
                 $updatedrec->id = $matchrec->id;
                 $updatedrec->errormessage = $exceptionstring;
                 $updatedrec->completed = 1;

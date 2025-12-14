@@ -67,6 +67,7 @@ class usersync extends scheduled_task {
         if (empty($value)) {
             $value = '';
         }
+
         set_config('task_usersync_last' . $name, $value, 'local_o365');
     }
 
@@ -94,6 +95,7 @@ class usersync extends scheduled_task {
 
             return true;
         }
+
         $this->mtrace('Starting sync');
         raise_memory_limit(MEMORY_HUGE);
 
@@ -115,6 +117,7 @@ class usersync extends scheduled_task {
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), __METHOD__, $e);
             }
+
             $this->mtrace('Got response from Microsoft Entra ID');
         } else {
             $deltatoken = $this->get_token('deltatoken');
@@ -144,6 +147,7 @@ class usersync extends scheduled_task {
             } else {
                 $this->mtrace('Clearing deltatoken (none received)');
             }
+
             $this->store_token('deltatoken', $deltatoken);
         }
 
@@ -162,19 +166,23 @@ class usersync extends scheduled_task {
             if (strlen($lastrundate) == 10) {
                 $lastrundate = false;
             }
+
             if ($lastrundate && $lastrundate >= date('Ymd')) {
                 $alreadyruntoday = true;
                 $rundelete = false;
             }
+
             if (!$alreadyruntoday) {
                 $suspensiontaskhour = get_config('local_o365', 'usersync_suspension_h');
                 $suspensiontaskminute = get_config('local_o365', 'usersync_suspension_m');
                 if (!$suspensiontaskhour) {
                     $suspensiontaskhour = 0;
                 }
+
                 if (!$suspensiontaskminute) {
                     $suspensiontaskminute = 0;
                 }
+
                 $currenthour = date('H');
                 $currentminute = date('i');
                 if ($currenthour > $suspensiontaskhour) {
@@ -192,6 +200,7 @@ class usersync extends scheduled_task {
                     $this->mtrace('Suspend/delete users feature skipped because it was run less than 1 day ago.');
                 }
             }
+
             if ($rundelete) {
                 $this->mtrace('Start suspend/delete users feature...');
                 if (main::sync_option_enabled('nodelta') !== true) {
@@ -214,6 +223,7 @@ class usersync extends scheduled_task {
                         $this->mtrace('Suspending deleted users...');
                         $usersync->suspend_users($users, main::sync_option_enabled('delete'));
                     }
+
                     if (main::sync_option_enabled('reenable')) {
                         $this->mtrace('Re-enabling suspended users...');
                         $usersync->reenable_suspsend_users($users, main::sync_option_enabled('disabledsync'));

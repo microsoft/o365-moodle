@@ -34,6 +34,7 @@ $existingmanifestdownloadedsetting = get_config('local_o365', 'manifest_download
 if (!$existingmanifestdownloadedsetting) {
     add_to_config_log('manifest_downloaded', $existingmanifestdownloadedsetting, true, 'local_o365');
 }
+
 set_config('manifest_downloaded', true, 'local_o365');
 purge_all_caches();
 

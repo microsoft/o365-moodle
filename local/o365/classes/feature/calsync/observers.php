@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/filelib.php');
+require_once($CFG->dirroot . '/lib/filelib.php');
 
 /**
  * Observer functions used by the calendar sync feature.
@@ -81,6 +81,7 @@ class observers {
             $event = \local_o365\event\calendar_unsubscribed::create($eventdata);
             $event->trigger();
         }
+
         $subscriptions->close();
         $DB->delete_records('local_o365_calsub', $calsubparams);
         return true;
@@ -112,6 +113,7 @@ class observers {
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
+
         if (static::$importingevents === true) {
             return true;
         }
@@ -130,6 +132,7 @@ class observers {
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
+
         $calsync = new \local_o365\feature\calsync\main();
         return $calsync->update_outlook_event($event->objectid);
     }
@@ -144,6 +147,7 @@ class observers {
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
+
         $calsync = new \local_o365\feature\calsync\main();
 
         $snapshot = $event->get_record_snapshot('event', $event->objectid);
@@ -161,6 +165,7 @@ class observers {
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
+
         $eventdata = $event->get_data();
         $calsubscribe = new \local_o365\feature\calsync\task\syncoldevents();
         $calsubscribe->set_custom_data([
@@ -183,6 +188,7 @@ class observers {
         if (\local_o365\utils::is_connected() !== true) {
             return false;
         }
+
         $eventdata = $event->get_data();
         $calunsubscribe = new \local_o365\feature\calsync\task\syncoldevents();
         $calunsubscribe->set_custom_data([

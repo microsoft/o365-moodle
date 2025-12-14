@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 use assign;
 use context_module;
 use grading_manager;
-use local_o365\webservices\exception as exception;
+use local_o365\webservices\exception;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
@@ -77,13 +77,14 @@ class update_grade extends external_api {
                 foreach ($details as $key => $value) {
                     $value->required = VALUE_OPTIONAL;
                     unset($value->content->keys['id']);
-                    $items[$key] = new external_multiple_structure (new external_single_structure(
+                    $items[$key] = new external_multiple_structure(new external_single_structure(
                         [
                             'criterionid' => new external_value(PARAM_INT, 'criterion id'),
                             'fillings' => $value,
                         ]
                     ));
                 }
+
                 $advancedgradingdata[$method] = new external_single_structure($items, 'items', VALUE_OPTIONAL);
             }
         }
@@ -99,8 +100,12 @@ class update_grade extends external_api {
                 'applytoall' => new external_value(PARAM_BOOL, 'If true, this grade will be applied to all members ' .
                     'of the group (for group assignments).'),
                 'plugindata' => new external_single_structure($pluginfeedbackparams, 'plugin data', VALUE_DEFAULT, []),
-                'advancedgradingdata' => new external_single_structure($advancedgradingdata, 'advanced grading data',
-                    VALUE_DEFAULT, []),
+                'advancedgradingdata' => new external_single_structure(
+                    $advancedgradingdata,
+                    'advanced grading data',
+                    VALUE_DEFAULT,
+                    []
+                ),
             ]
         );
     }
@@ -121,8 +126,17 @@ class update_grade extends external_api {
      * @throws exception\couldnotsavegrade
      * @since Moodle 2.6
      */
-    public static function grade_update($assignmentid, $userid, $grade, $attemptnumber, $addattempt, $workflowstate, $applytoall,
-        $plugindata = [], $advancedgradingdata = []) {
+    public static function grade_update(
+        $assignmentid,
+        $userid,
+        $grade,
+        $attemptnumber,
+        $addattempt,
+        $workflowstate,
+        $applytoall,
+        $plugindata = [],
+        $advancedgradingdata = []
+    ) {
         global $DB;
 
         $params = self::validate_parameters(self::grade_update_parameters(), ['assignmentid' => $assignmentid,
@@ -154,8 +168,10 @@ class update_grade extends external_api {
                         $details[$value['criterionid']] = $filling;
                     }
                 }
+
                 $advancedgrading[$key] = $details;
             }
+
             $gradedata->advancedgrading = $advancedgrading;
         }
 
