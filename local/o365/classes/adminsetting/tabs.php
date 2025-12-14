@@ -85,7 +85,6 @@ class tabs extends admin_setting {
                 $this->selected = $newtab;
             }
         }
-
     }
 
     /**
@@ -109,13 +108,10 @@ class tabs extends admin_setting {
         $result = '';
 
         if (isset($data['action'])) {
-
             if ($data['action'] == 1) {
                 $result = $this->reset();
-
             } else if ($data['action'] == 2) {
                 $result = $this->import($data['picker']);
-
             } else if ($data['action'] == 3) {
                 $result = $this->export();
             }
@@ -142,6 +138,7 @@ class tabs extends admin_setting {
             ];
             $url = new moodle_url('/admin/settings.php', $urlparams);
         }
+
         $tab = new tabobject($id, $url, $name);
 
         $this->tabs[0][] = $tab;

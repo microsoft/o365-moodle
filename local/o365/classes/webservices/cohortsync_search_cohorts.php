@@ -31,8 +31,12 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/externallib.php');
 
+/**
+ * Class cohortsync_search_cohorts.
+ *
+ * @package local_o365\webservices
+ */
 class cohortsync_search_cohorts extends \external_api {
-
     /**
      * Parameters for search_cohorts.
      *
@@ -62,10 +66,11 @@ class cohortsync_search_cohorts extends \external_api {
         if (empty($apiclient)) {
             throw new \moodle_exception('cohortsync_unifiedapierror', 'local_o365');
         }
+
         $cohortsyncmain = new \local_o365\feature\cohortsync\main($apiclient);
         $allcohorts = $cohortsyncmain->get_cohortlist();
 
-        // Get mapped to exclude
+        // Get mapped to exclude.
         $mappedcohortids = [];
         $mappings = $DB->get_records('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort'], '', 'moodleid');
         foreach ($mappings as $mapping) {
@@ -82,7 +87,7 @@ class cohortsync_search_cohorts extends \external_api {
             }
         }
 
-        usort($result, function($a, $b) {
+        usort($result, function ($a, $b) {
             return strcasecmp($a['name'], $b['name']);
         });
         $result = array_slice($result, 0, 30);
@@ -97,7 +102,7 @@ class cohortsync_search_cohorts extends \external_api {
      */
     public static function search_cohorts_returns() {
         return new \external_multiple_structure(
-                new \external_single_structure([
+            new \external_single_structure([
                         'id' => new \external_value(PARAM_INT, 'Cohort ID'),
                         'name' => new \external_value(PARAM_TEXT, 'Cohort name'),
                 ])

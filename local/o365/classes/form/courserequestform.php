@@ -55,6 +55,7 @@ class courserequestform extends course_request_form {
             foreach ($pending as $cp) {
                 $list[] = format_string($cp->fullname);
             }
+
             $list = implode(', ', $list);
             $mform->addElement('static', 'pendingcourses', get_string('courses'), $list);
         }
@@ -126,8 +127,12 @@ class courserequestform extends course_request_form {
 
         // If no team options are available, display a static element with a message.
         if ($graphapiunavailable) {
-            $mform->addElement('static', 'team', get_string('courserequest_teams', 'local_o365'),
-                get_string('courserequest_graphapi_disabled', 'local_o365'));
+            $mform->addElement(
+                'static',
+                'team',
+                get_string('courserequest_teams', 'local_o365'),
+                get_string('courserequest_graphapi_disabled', 'local_o365')
+            );
         }
 
         $mform->addRule('team', get_string('courserequest_emptyteams', 'local_o365'), 'required', null, 'client');

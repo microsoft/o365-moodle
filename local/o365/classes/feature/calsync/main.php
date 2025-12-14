@@ -81,9 +81,11 @@ class main {
                 $token = null;
             }
         }
+
         if (empty($token) && $systemfallback === true) {
             $token = utils::get_application_token($tokenresource, $this->clientdata, $this->httpclient);
         }
+
         if (empty($token)) {
             throw new moodle_exception('errornotoken', 'local_o365', '', $muserid);
         }
@@ -243,6 +245,7 @@ class main {
             } else {
                 $DB->delete_records('local_o365_calidmap', ['outlookeventid' => $outlookeventid]);
             }
+
             return true;
         }
 
@@ -251,6 +254,7 @@ class main {
         if ($o365upn) {
             $apiclient->delete_event($outlookeventid, $o365upn);
         }
+
         if (!empty($idmaprecid)) {
             $DB->delete_records('local_o365_calidmap', ['id' => $idmaprecid]);
         } else {
@@ -344,8 +348,10 @@ class main {
                 $attendees = $DB->get_records_sql($sql, $params);
 
                 // Retrieve the Outlook group objectid.
-                $groupobject = $DB->get_record('local_o365_objects',
-                    ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']);
+                $groupobject = $DB->get_record(
+                    'local_o365_objects',
+                    ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
+                );
             }
         } else {
             // Personal user event. Only sync if user is subscribed to their events.
@@ -361,6 +367,7 @@ class main {
                     $this->calendar_unsubscribe($event->userid, $context['caltype'], $context['caltypeid'], $calid);
                     return false;
                 }
+
                 $o365upn = utils::get_o365_upn($event->userid);
                 if ($o365upn) {
                     $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid, $o365upn);
@@ -375,6 +382,7 @@ class main {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -385,6 +393,7 @@ class main {
             if ($userid == $event->userid) {
                 $eventcreatorsub = $attendee;
             }
+
             if (isset($attendee->subisprimary) && $attendee->subisprimary == '0') {
                 $nonprimarycalsubs[] = $attendee;
                 unset($attendees[$userid]);
@@ -396,8 +405,15 @@ class main {
             try {
                 if (!empty($attendees)) {
                     $apiclient = $this->construct_calendar_api($event->userid);
-                    $response = $apiclient->create_group_event($subject, $body, $timestart, $timeend, $attendees,
-                        ['responseRequested' => false], $groupobject->objectid);
+                    $response = $apiclient->create_group_event(
+                        $subject,
+                        $body,
+                        $timestart,
+                        $timeend,
+                        $attendees,
+                        ['responseRequested' => false],
+                        $groupobject->objectid
+                    );
                     if (!empty($response)) {
                         $idmaprec = [
                             'eventid' => $event->id,
@@ -421,6 +437,7 @@ class main {
             if (isset($eventcreatorsub->subisprimary) && $eventcreatorsub->subisprimary == 1) {
                 $calid = null;
             }
+
             $context = $this->get_calendar_context($event, $event->userid);
             if (!empty($calid) && !$this->calendar_exists($event->userid, $calid)) {
                 $this->calendar_unsubscribe($event->userid, $context['caltype'], $context['caltypeid'], $calid);
@@ -448,6 +465,7 @@ class main {
                 $this->calendar_unsubscribe($attendee->userid, $context['caltype'], $context['caltypeid'], $calid);
                 continue;
             }
+
             $o365upn = utils::get_o365_upn($attendee->userid);
             if ($o365upn) {
                 $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid, $o365upn);
@@ -545,8 +563,8 @@ class main {
 
         if ($event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
             $groupobject = $DB->get_record(
-                    'local_o365_objects',
-                    ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
+                'local_o365_objects',
+                ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
             );
             $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
         }
@@ -557,6 +575,7 @@ class main {
                 $this->calendar_unsubscribe($idmaprec->userid, $context['caltype'], $context['caltypeid'], $context['calid']);
                 continue;
             }
+
             try {
                 $apiclient = $this->construct_calendar_api($idmaprec->userid);
 
@@ -569,6 +588,7 @@ class main {
                         if ($o365upn) {
                             $apiclient->update_event($idmaprec->outlookeventid, $updated, $o365upn);
                         }
+
                         continue;
                     }
                 }
@@ -589,7 +609,7 @@ class main {
      * Delete all synced Outlook events for a given Moodle event.
      *
      * @param int $moodleeventid The ID of a Moodle event.
-     * @param \stdClass $eventsnapshot Snapshot of the Moodle event.
+     * @param stdClass|null $eventsnapshot Snapshot of the Moodle event.
      * @return bool Success/Failure.
      */
     public function delete_outlook_event($moodleeventid, ?\stdClass $eventsnapshot) {
@@ -608,8 +628,8 @@ class main {
 
         if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
             $groupobject = $DB->get_record(
-                    'local_o365_objects',
-                    ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
+                'local_o365_objects',
+                ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
             );
             $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
         }
@@ -635,6 +655,7 @@ class main {
                     if ($o365upn) {
                         $apiclient->delete_event($idmaprec->outlookeventid, $o365upn);
                     }
+
                     continue;
                 }
             }
@@ -695,18 +716,18 @@ class main {
     public function get_event_link_html($event) {
         // Update event description.
         if (isset($event->courseid) && $event->courseid == SITEID) {
-            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time='.$event->timestart.'#event_'.$event->id);
+            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time=' . $event->timestart . '#event_' . $event->id);
         } else if (isset($event->courseid) && $event->courseid != SITEID && $event->courseid > 0) {
-            $moodleeventurl = new \moodle_url('/calendar/view.php?course='.$event->courseid.'&view=day&time='.$event->timestart.
-                '#event_'.$event->id);
+            $moodleeventurl = new \moodle_url('/calendar/view.php?course=' . $event->courseid . '&view=day&time=' .
+                $event->timestart . '#event_' . $event->id);
         } else {
-            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time='.$event->timestart.'#event_'.$event->id);
+            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time=' . $event->timestart . '#event_' . $event->id);
         }
 
         $linkhtml = \html_writer::link($moodleeventurl, get_string('calendar_event', 'local_o365'));
         $fulllinkhtml = \html_writer::link($moodleeventurl, $moodleeventurl);
-        $spanhtml = \html_writer::span($linkhtml.\html_writer::empty_tag('br').$fulllinkhtml);
-        return \html_writer::empty_tag('br').\html_writer::tag('p', $spanhtml);
+        $spanhtml = \html_writer::span($linkhtml . \html_writer::empty_tag('br') . $fulllinkhtml);
+        return \html_writer::empty_tag('br') . \html_writer::tag('p', $spanhtml);
     }
 
     /**
@@ -723,12 +744,14 @@ class main {
             if (empty($o365upn) || empty($outlookcalendarid)) {
                 return false;
             }
+
             $calendars = $apiclient->get_calendars($o365upn) ?? [];
             foreach ($calendars as $calendar) {
                 if (isset($calendar['id']) && $calendar['id'] === $outlookcalendarid) {
                     return true;
                 }
             }
+
             return false;
         } catch (moodle_exception $e) {
             return false;
@@ -748,12 +771,18 @@ class main {
      * @return void
      * @throws \moodle_exception
      */
-    public function calendar_unsubscribe(int $userid, string $calendartype, ?int $calendartypeid, ?string $calendarid = null): void {
+    public function calendar_unsubscribe(
+        int $userid,
+        string $calendartype,
+        ?int $calendartypeid,
+        ?string $calendarid = null
+    ): void {
         global $DB;
 
         if (empty($calendartype)) {
             throw new \moodle_exception('caltype_required', 'local_o365');
         }
+
         if ($calendartype === 'course' && empty($calendartypeid)) {
             throw new \moodle_exception('caltypeid_required_for_course', 'local_o365');
         }
@@ -766,9 +795,11 @@ class main {
         if ($calendartypeid !== null) {
             $subparams['caltypeid'] = $calendartypeid;
         }
+
         if (!empty($calendarid)) {
             $subparams['o365calid'] = $calendarid;
         }
+
         $DB->delete_records('local_o365_calsub', $subparams);
 
         // Queue adhoc task to sync old events (cleanup mappings/events).
@@ -819,5 +850,4 @@ class main {
 
         return ['caltype' => $calendartype, 'caltypeid' => $calendartypeid, 'calid' => $calendarid];
     }
-
 }

@@ -28,7 +28,7 @@ namespace local_o365\webservices;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
-use local_o365\webservices\exception as exception;
+use local_o365\webservices\exception;
 use moodle_exception;
 
 /**

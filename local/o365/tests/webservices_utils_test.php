@@ -37,7 +37,6 @@ use local_o365\webservices\utils;
  * @group office365
  */
 final class webservices_utils_test extends advanced_testcase {
-
     /**
      * Perform setup before every test. This tells Moodle's phpunit to reset the database after every test.
      */
@@ -73,8 +72,10 @@ final class webservices_utils_test extends advanced_testcase {
                 if ($modulerecord['assignrec']['course'] === '[[courseid]]') {
                     $modulerecord['assignrec']['course'] = $course->id;
                 }
+
                 $modulerecord['instance'] = $DB->insert_record('assign', $modulerecord['assignrec']);
             }
+
             unset($modulerecord['assignrec']);
 
             $modulerecord['id'] = $DB->insert_record('course_modules', $modulerecord);
@@ -275,8 +276,14 @@ final class webservices_utils_test extends advanced_testcase {
      *
      * @covers \local_o365\webservices\utils::get_assignment_info
      */
-    public function test_get_assignment_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
-        $expectedreturn): void {
+    public function test_get_assignment_info(
+        $createcourse,
+        $modulerecords,
+        $expectedexception,
+        $coursemoduleid,
+        $courseid,
+        $expectedreturn
+    ): void {
         global $DB;
 
         [$course, $modulerecord] = $this->create_assignment_info_testdata($createcourse, $modulerecords);
@@ -298,9 +305,11 @@ final class webservices_utils_test extends advanced_testcase {
         if ($expectedreturn[0] === '[[course]]') {
             $expectedreturn[0] = $DB->get_record('course', ['id' => $course->id]);
         }
+
         if ($expectedreturn[1] === '[[coursemodule]]') {
             $expectedreturn[1] = $DB->get_record('course_modules', ['id' => $modulerecord['id']]);
         }
+
         if ($expectedreturn[2] === '[[assignment]]') {
             $expectedreturn[2] = $DB->get_record('assign', ['id' => $modulerecord['instance']]);
         }
@@ -372,8 +381,16 @@ final class webservices_utils_test extends advanced_testcase {
      *
      * @covers \local_o365\webservices\utils::verify_assignment
      */
-    public function test_verify_assignment($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
-        $expectedreturn, $grantcapability, $addonenotesubmission): void {
+    public function test_verify_assignment(
+        $createcourse,
+        $modulerecords,
+        $expectedexception,
+        $coursemoduleid,
+        $courseid,
+        $expectedreturn,
+        $grantcapability,
+        $addonenotesubmission
+    ): void {
         global $DB;
 
         [$course, $modulerecord] = $this->create_assignment_info_testdata($createcourse, $modulerecords);
@@ -412,9 +429,11 @@ final class webservices_utils_test extends advanced_testcase {
         if ($expectedreturn[0] === '[[course]]') {
             $expectedreturn[0] = $DB->get_record('course', ['id' => $course->id]);
         }
+
         if ($expectedreturn[1] === '[[coursemodule]]') {
             $expectedreturn[1] = $DB->get_record('course_modules', ['id' => $modulerecord['id']]);
         }
+
         if ($expectedreturn[2] === '[[assignment]]') {
             $expectedreturn[2] = $DB->get_record('assign', ['id' => $modulerecord['instance']]);
         }
@@ -477,8 +496,14 @@ final class webservices_utils_test extends advanced_testcase {
      *
      * @covers \local_o365\webservices\utils::get_assignment_return_info
      */
-    public function test_get_assignment_return_info($createcourse, $modulerecords, $expectedexception, $coursemoduleid, $courseid,
-        $expectedreturn): void {
+    public function test_get_assignment_return_info(
+        $createcourse,
+        $modulerecords,
+        $expectedexception,
+        $coursemoduleid,
+        $courseid,
+        $expectedreturn
+    ): void {
         [$course, $modulerecord] = $this->create_assignment_info_testdata($createcourse, $modulerecords);
 
         if (!empty($expectedexception)) {
@@ -498,9 +523,11 @@ final class webservices_utils_test extends advanced_testcase {
         if ($expectedreturn['course'] === '[[courseid]]') {
             $expectedreturn['course'] = $course->id;
         }
+
         if ($expectedreturn['coursemodule'] === '[[coursemoduleid]]') {
             $expectedreturn['coursemodule'] = (string) $modulerecord['id'];
         }
+
         if ($expectedreturn['instance'] === '[[assignid]]') {
             $expectedreturn['instance'] = (string) $modulerecord['instance'];
         }

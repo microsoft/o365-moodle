@@ -72,7 +72,7 @@ class httpclient extends curl implements httpclientinterface {
     protected function get_plugin_version(): string {
         global $CFG;
 
-        $plugin = new stdClass;
+        $plugin = new stdClass();
         require_once($CFG->dirroot . '/local/o365/version.php');
 
         return $plugin->release;
@@ -109,6 +109,7 @@ class httpclient extends curl implements httpclientinterface {
                     $this->_tmp_file_post_params[$key] = $value;
                 }
             }
+
             $options['CURLOPT_POSTFIELDS'] = $this->_tmp_file_post_params;
             unset($this->_tmp_file_post_params);
         } else {
@@ -139,6 +140,7 @@ class httpclient extends curl implements httpclientinterface {
                     $this->_tmp_file_post_params[$key] = $value;
                 }
             }
+
             $options['CURLOPT_POSTFIELDS'] = $this->_tmp_file_post_params;
             unset($this->_tmp_file_post_params);
         } else {
@@ -161,6 +163,7 @@ class httpclient extends curl implements httpclientinterface {
         if (!isset($params['file'])) {
             throw new moodle_exception('errorhttpclientnofileinput', 'local_o365');
         }
+
         if (is_file($params['file'])) {
             $fp = fopen($params['file'], 'r');
             $size = filesize($params['file']);
@@ -170,9 +173,11 @@ class httpclient extends curl implements httpclientinterface {
             if (!$fp) {
                 throw new moodle_exception('errorhttpclientbadtempfileloc', 'local_o365');
             }
+
             fwrite($fp, $params['file']);
             fseek($fp, 0);
         }
+
         $options['CURLOPT_PUT'] = 1;
         $options['CURLOPT_INFILESIZE'] = $size;
         $options['CURLOPT_INFILE'] = $fp;

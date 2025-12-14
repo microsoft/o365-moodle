@@ -33,6 +33,7 @@ require_once("$CFG->libdir/form/advcheckbox.php");
 
 // phpcs:disable moodle.NamingConventions.ValidVariableName.VariableNameLowerCase -- Parent class uses uppercase variable names.
 // phpcs:disable moodle.NamingConventions.ValidFunctionName.LowercaseMethod -- Parent class uses uppercase method names.
+// phpcs:disable PSR2.Classes.PropertyDeclaration.Underscore -- Parent class uses underscore properties.
 
 /**
  * Calendar form element. Provides checkbox to enable/disable calendar and options for sync behavior.
@@ -59,8 +60,13 @@ class calendar extends \HTML_QuickForm_advcheckbox {
      * @param array $attributes Array of checkbox attributes.
      * @param array $customdata Array of form custom data.
      */
-    public function calendarconstruct($elementname = null, $elementlabel = null, $text = null, $attributes = null,
-        $customdata = []) {
+    public function calendarconstruct(
+        $elementname = null,
+        $elementlabel = null,
+        $text = null,
+        $attributes = null,
+        $customdata = []
+    ) {
         parent::__construct($elementname, $elementlabel, $text, $attributes, null);
         $this->customdata = $customdata;
         $this->_type = 'advcheckbox';
@@ -102,9 +108,11 @@ class calendar extends \HTML_QuickForm_advcheckbox {
         if (!empty($value['checked'])) {
             $this->checked = true;
         }
+
         if (!empty($value['syncwith'])) {
             $this->syncwith = $value['syncwith'];
         }
+
         if (!empty($value['syncbehav'])) {
             $this->syncbehav = $value['syncbehav'];
         }
@@ -138,10 +146,10 @@ class calendar extends \HTML_QuickForm_advcheckbox {
      */
     public function toHtml() {
         global $SITE;
-        $checkboxid = $this->getAttribute('id').'_checkbox';
-        $checkboxname = $this->getName().'[checked]';
+        $checkboxid = $this->getAttribute('id') . '_checkbox';
+        $checkboxname = $this->getName() . '[checked]';
         $checkboxchecked = ($this->checked === true) ? 'checked="checked"' : '';
-        $checkboxonclick = 'if($(this).is(\':checked\')){$(this).parent().siblings().show();}else{$(this).parent().siblings()'.
+        $checkboxonclick = 'if($(this).is(\':checked\')){$(this).parent().siblings().show();}else{$(this).parent().siblings()' .
             '.hide();}';
         $html = '<div>';
         $html .= '<input type="checkbox" name="' . $checkboxname . '" onclick="' . $checkboxonclick . '" id="' . $checkboxid .
@@ -150,23 +158,25 @@ class calendar extends \HTML_QuickForm_advcheckbox {
         $html .= '</div>';
 
         $showcontrols = ($this->checked === true) ? 'display:block;' : 'display:none;';
-        $stylestr = 'margin-left: 2rem;'.$showcontrols;
+        $stylestr = 'margin-left: 2rem;' . $showcontrols;
 
         $availableo365calendars = (isset($this->customdata['o365calendars'])) ? $this->customdata['o365calendars'] : [];
-        $availcalid = $this->getAttribute('id').'_syncwith';
-        $availcalname = $this->getName().'[syncwith]';
-        $html .= '<div style="'.$stylestr.'" class="mb-2">';
+        $availcalid = $this->getAttribute('id') . '_syncwith';
+        $availcalname = $this->getName() . '[syncwith]';
+        $html .= '<div style="' . $stylestr . '" class="mb-2">';
         $html .= \html_writer::label(get_string('ucp_syncwith_title', 'local_o365'), $availcalid, false, ['class' => 'mr-2']);
         $calselectopts = [];
         foreach ($availableo365calendars as $i => $info) {
             $calselectopts[$info['id']] = $info['name'];
         }
+
         if (empty($this->syncwith)) {
             $selectedoption = array_search($SITE->fullname, $calselectopts);
             $html .= \html_writer::select($calselectopts, $availcalname, $selectedoption, false, ['id' => $availcalid]);
         } else {
             $html .= \html_writer::select($calselectopts, $availcalname, $this->syncwith, false, ['id' => $availcalid]);
         }
+
         $html .= '</div>';
 
         $syncbehavior = [
@@ -176,9 +186,10 @@ class calendar extends \HTML_QuickForm_advcheckbox {
             $syncbehavior['in'] = get_string('ucp_syncdir_in', 'local_o365');
             $syncbehavior['both'] = get_string('ucp_syncdir_both', 'local_o365');
         }
-        $syncbehavid = $this->getAttribute('id').'_syncbehav';
-        $syncbehavname = $this->getName().'[syncbehav]';
-        $html .= '<div style="'.$stylestr.'">';
+
+        $syncbehavid = $this->getAttribute('id') . '_syncbehav';
+        $syncbehavname = $this->getName() . '[syncbehav]';
+        $html .= '<div style="' . $stylestr . '">';
         $html .= \html_writer::label(get_string('ucp_syncdir_title', 'local_o365'), $syncbehavid, false, ['class' => 'mr-2']);
         $html .= \html_writer::select($syncbehavior, $syncbehavname, $this->syncbehav, false, ['id' => $syncbehavid]);
         $html .= '</div>';

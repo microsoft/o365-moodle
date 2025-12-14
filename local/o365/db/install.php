@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/local/o365/lib.php');
+require_once($CFG->dirroot . '/local/o365/lib.php');
 
 /**
  * Installation script.

@@ -77,7 +77,7 @@ class notifysecretexpiry extends scheduled_task {
             $appcredentials = $graphclient->get_app_credentials($appid);
         } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
-            mtrace ('Failed to get secrets');
+            mtrace('Failed to get secrets');
             $this->notify_invalid_secret();
             return false;
         }
@@ -114,6 +114,7 @@ class notifysecretexpiry extends scheduled_task {
                                     mtrace('Secret does not have expiry date');
                                     $this->notify_invalid_secret();
                                 }
+
                                 mtrace('Skip processing other secrets');
                                 break;
                             }
@@ -222,6 +223,7 @@ class notifysecretexpiry extends scheduled_task {
         } else {
             $daysstring = get_string('notification_days_days', 'local_o365', intval($days));
         }
+
         $subject = get_string('notification_subject_secret_almost_expired', 'local_o365');
         $message = get_string('notification_content_secret_almost_expired', 'local_o365', $daysstring);
 

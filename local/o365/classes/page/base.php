@@ -50,6 +50,7 @@ class base {
         if (empty($context)) {
             $context = \context_system::instance();
         }
+
         $this->set_context($context);
         $this->set_title($title);
         $this->set_url($url);
@@ -139,10 +140,11 @@ class base {
      */
     public function run($mode) {
         $this->header();
-        $methodname = (!empty($mode)) ? 'mode_'.$mode : 'mode_default';
+        $methodname = (!empty($mode)) ? 'mode_' . $mode : 'mode_default';
         if (!method_exists($this, $methodname)) {
             $methodname = 'mode_default';
         }
+
         $this->$methodname();
     }
 }

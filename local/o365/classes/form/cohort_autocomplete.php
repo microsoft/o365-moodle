@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Autocomplete for Moodle cohorts in cohort sync.
@@ -31,10 +31,15 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/form/autocomplete.php');
 
+// phpcs:disable moodle.NamingConventions.ValidVariableName.VariableNameLowerCase -- Parent class uses uppercase variable names.
+// phpcs:disable moodle.NamingConventions.ValidFunctionName.LowercaseMethod -- Parent class uses uppercase method names.
+
 use MoodleQuickForm_autocomplete;
 
+/**
+ * Autocomplete for Microsoft 365 groups in cohort sync.
+ */
 class cohort_autocomplete extends MoodleQuickForm_autocomplete {
-
     /**
      * Constructor.
      *
@@ -62,7 +67,7 @@ class cohort_autocomplete extends MoodleQuickForm_autocomplete {
      */
     public function setValue($value) {
         $values = (array) $value;
-        $cohortstofetch = array();
+        $cohortstofetch = [];
 
         foreach ($values as $onevalue) {
             if ($onevalue && !$this->optionExists($onevalue) && ($onevalue !== '_qf__force_multiselect_submission')) {

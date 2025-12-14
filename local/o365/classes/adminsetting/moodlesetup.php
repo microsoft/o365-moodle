@@ -29,13 +29,12 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/lib/adminlib.php');
 
 /**
  * Admin setting to detect and set required settings in Moodle.
  */
 class moodlesetup extends \admin_setting {
-
     /**
      * Constructor.
      *
@@ -79,28 +78,31 @@ class moodlesetup extends \admin_setting {
     public function output_html($data, $query = '') {
         global $OUTPUT;
 
-        $button = \html_writer::tag('button', get_string('settings_check_moodle_settings', 'local_o365'),
-            ['class' => 'setupmoodle', 'style' => 'margin: 0 0 0.75rem']);
+        $button = \html_writer::tag(
+            'button',
+            get_string('settings_check_moodle_settings', 'local_o365'),
+            ['class' => 'setupmoodle', 'style' => 'margin: 0 0 0.75rem']
+        );
         $results = \html_writer::tag('div', '', ['class' => 'results']);
-        $settinghtml = $button.$results;
+        $settinghtml = $button . $results;
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
         $scripturl = new \moodle_url('/local/o365/classes/adminsetting/moodlesetup.js');
-        $settinghtml .= '<script src="'.$scripturl->out().'"></script>';
+        $settinghtml .= '<script src="' . $scripturl->out() . '"></script>';
 
         $ajaxurl = new \moodle_url('/local/o365/ajax.php');
         $settinghtml .= '<script>
                             $(function() {
                                 var opts = {
-                                    url: "'.$ajaxurl->out().'",
-                                    iconsuccess: "'.addslashes($OUTPUT->pix_icon('t/check', 'success', 'moodle')).'",
-                                    iconinfo: "'.addslashes($OUTPUT->pix_icon('i/info', 'information', 'moodle')).'",
-                                    iconerror: "'.addslashes($OUTPUT->pix_icon('t/delete', 'error', 'moodle')).'",
+                                    url: "' . $ajaxurl->out() . '",
+                                    iconsuccess: "' . addslashes($OUTPUT->pix_icon('t/check', 'success', 'moodle')) . '",
+                                    iconinfo: "' . addslashes($OUTPUT->pix_icon('i/info', 'information', 'moodle')) . '",
+                                    iconerror: "' . addslashes($OUTPUT->pix_icon('t/delete', 'error', 'moodle')) . '",
 
-                                    strcheck: "'.addslashes(get_string('settings_check_moodle_settings', 'local_o365')).'",
-                                    strchecking: "'.addslashes(get_string('settings_moodlesetup_checking', 'local_o365')).'",
+                                    strcheck: "' . addslashes(get_string('settings_check_moodle_settings', 'local_o365')) . '",
+                                    strchecking: "' . addslashes(get_string('settings_moodlesetup_checking', 'local_o365')) . '",
                                 };
-                                $("#admin-'.$this->name.'").moodlesetup(opts);
+                                $("#admin-' . $this->name . '").moodlesetup(opts);
                             });
                         </script>';
 

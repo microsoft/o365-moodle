@@ -47,6 +47,7 @@ require_login(null, false);
 if (isguestuser()) {
     throw new moodle_exception('guestsarenotallowed', '', $returnurl);
 }
+
 if (empty($CFG->enablecourserequests)) {
     throw new moodle_exception('courserequestdisabled', '', $returnurl);
 }
@@ -81,12 +82,12 @@ $PAGE->set_secondary_navigation(false);
 // Standard form processing if statement.
 if ($requestform->is_cancelled()) {
     redirect($returnurl);
-
 } else if ($data = $requestform->get_data()) {
     $apiclient = main::get_unified_api();
     if (empty($apiclient)) {
         throw new moodle_exception('courserequest_graphapi_disabled', 'local_o365', $returnurl);
     }
+
     $courserequestmain = new main($apiclient);
 
     $teamdata = $courserequestmain->get_user_team_details_by_team_oid($data->team);
@@ -95,8 +96,11 @@ if ($requestform->is_cancelled()) {
         throw new moodle_exception('courserequest_invalid_team', 'local_o365', $returnurl);
     }
 
-    $data->reason .= get_string('courserequest_customrequestnote', 'local_o365',
-        ['name' => $teamdata['name'], 'url' => $teamdata['url']]);
+    $data->reason .= get_string(
+        'courserequest_customrequestnote',
+        'local_o365',
+        ['name' => $teamdata['name'], 'url' => $teamdata['url']]
+    );
 
     $request = course_request::create($data);
 
@@ -112,6 +116,7 @@ $categoryurl = new moodle_url('/course/index.php');
 if ($categoryid) {
     $categoryurl->param('categoryid', $categoryid);
 }
+
 navigation_node::override_active_url($categoryurl);
 
 $PAGE->navbar->add($strtitle);

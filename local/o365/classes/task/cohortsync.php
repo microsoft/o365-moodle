@@ -110,6 +110,7 @@ class cohortsync extends scheduled_task {
 
             return;
         }
+
         utils::mtrace("Found " . count($mappings) . " mappings.", 2);
 
         $cohorts = $cohortsync->get_cohortlist();

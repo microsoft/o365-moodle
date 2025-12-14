@@ -70,20 +70,28 @@ class courseresetteams extends admin_setting {
         $settinghtml = '';
 
         $options = [
-            COURSE_SYNC_RESET_SITE_SETTING_DO_NOTHING => new \lang_string('settings_course_reset_teams_option_do_nothing',
-                'local_o365'),
+            COURSE_SYNC_RESET_SITE_SETTING_DO_NOTHING => new \lang_string(
+                'settings_course_reset_teams_option_do_nothing',
+                'local_o365'
+            ),
         ];
 
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting == 'oncustom') {
             $options[COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_ONLY] = new \lang_string(
-                'settings_course_reset_teams_option_archive_only', 'local_o365');
+                'settings_course_reset_teams_option_archive_only',
+                'local_o365'
+            );
         }
 
         $options[COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW] = new \lang_string(
-            'settings_course_reset_teams_option_force_archive', 'local_o365');
+            'settings_course_reset_teams_option_force_archive',
+            'local_o365'
+        );
         $options[COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE] = new \lang_string(
-            'settings_course_reset_teams_option_per_course', 'local_o365');
+            'settings_course_reset_teams_option_per_course',
+            'local_o365'
+        );
 
         $currentvalue = (isset($options[$data])) ? $data : $this->get_defaultsetting();
         foreach ($options as $key => $desc) {
@@ -97,8 +105,9 @@ class courseresetteams extends admin_setting {
             if ($currentvalue == $key) {
                 $radioattributes['checked'] = 'checked';
             }
+
             $settinghtml .= \html_writer::empty_tag('input', $radioattributes);
-            $settinghtml .= \html_writer::label($desc, $this->get_id().'_'.$key, false);
+            $settinghtml .= \html_writer::label($desc, $this->get_id() . '_' . $key, false);
             $settinghtml .= \html_writer::empty_tag('br');
             $settinghtml .= \html_writer::empty_tag('br');
         }
