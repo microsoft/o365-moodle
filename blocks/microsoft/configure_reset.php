@@ -25,10 +25,10 @@
 
 use local_o365\feature\coursesync\utils;
 
-require_once(__DIR__.'/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
-require_once($CFG->dirroot . '/blocks/microsoft/forms.php');
+require_once($CFG->dirroot . '/blocks/microsoft/classes/form/course_configure_form.php');
 
 $courseid = required_param('course', PARAM_INT);
 $coursecontext = context_course::instance($courseid);
@@ -55,8 +55,12 @@ if (utils::is_course_sync_enabled($courseid)) {
         throw new moodle_exception('error_reset_setting_not_managed_per_course', 'block_microsoft', $redirecturl);
     }
 
-    if (!$o365object = $DB->get_record('local_o365_objects',
-        ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+    if (
+        !$o365object = $DB->get_record(
+            'local_o365_objects',
+            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]
+        )
+    ) {
         throw new moodle_exception('error_connected_team_missing', 'block_microsoft', $redirecturl);
     }
 } else {
