@@ -83,8 +83,10 @@ class block_microsoft extends block_base {
                 $this->content->text .= $this->get_user_content_connected();
             } else {
                 $connection = $DB->get_record('local_o365_connections', ['muserid' => $USER->id]);
-                if (!empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
-                        local_o365_connectioncapability($USER->id, 'link'))) {
+                if (
+                    !empty($connection) && (auth_oidc_connectioncapability($USER->id, 'connect') ||
+                        local_o365_connectioncapability($USER->id, 'link'))
+                ) {
                     $uselogin = (!empty($connection->uselogin)) ? true : false;
                     $this->content->text .= $this->get_user_content_matched($connection->entraidupn, $uselogin);
                 } else {
@@ -153,10 +155,15 @@ class block_microsoft extends block_base {
             $coursesyncsetting = get_config('local_o365', 'coursesync');
             $allowedmanageteamsyncpercourse = get_config('local_o365', 'course_sync_per_course');
             if ($coursesyncsetting == 'oncustom' && $allowedmanageteamsyncpercourse) {
-                $configuresyncurl = new moodle_url('/blocks/microsoft/configure_sync.php',
-                    ['course' => $courseid]);
-                $items[] = html_writer::link($configuresyncurl, get_string('configure_sync', 'block_microsoft'),
-                    ['class' => 'servicelink block_microsoft_sync']);
+                $configuresyncurl = new moodle_url(
+                    '/blocks/microsoft/configure_sync.php',
+                    ['course' => $courseid]
+                );
+                $items[] = html_writer::link(
+                    $configuresyncurl,
+                    get_string('configure_sync', 'block_microsoft'),
+                    ['class' => 'servicelink block_microsoft_sync']
+                );
             }
         }
 
@@ -178,8 +185,11 @@ class block_microsoft extends block_base {
 
                         $url = new moodle_url($microsoft365urls[$feature]);
                         $resourcename = get_string('course_feature_' . $feature, 'block_microsoft');
-                        $items[] = html_writer::link($url, $resourcename,
-                            ['target' => '_blank', 'class' => 'servicelink block_microsoft_' . $feature]);
+                        $items[] = html_writer::link(
+                            $url,
+                            $resourcename,
+                            ['target' => '_blank', 'class' => 'servicelink block_microsoft_' . $feature]
+                        );
                     }
 
                     // Link to course reset options.
@@ -187,29 +197,39 @@ class block_microsoft extends block_base {
                         switch (get_config('local_o365', 'course_reset_teams')) {
                             case COURSE_SYNC_RESET_SITE_SETTING_PER_COURSE:
                                 // Allow user to configure reset actions.
-                                $configurereseturl = new moodle_url('/blocks/microsoft/configure_reset.php',
-                                    ['course' => $courseid]);
-                                $items[] = html_writer::link($configurereseturl,
+                                $configurereseturl = new moodle_url(
+                                    '/blocks/microsoft/configure_reset.php',
+                                    ['course' => $courseid]
+                                );
+                                $items[] = html_writer::link(
+                                    $configurereseturl,
                                     get_string('configure_reset', 'block_microsoft'),
-                                    ['class' => 'servicelink block_microsoft_reset']);
+                                    ['class' => 'servicelink block_microsoft_reset']
+                                );
 
                                 break;
                             case COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW:
                                 // Force archive, show notification.
-                                $items[] = html_writer::span(get_string('course_reset_disconnect_and_create_new',
-                                    'block_microsoft'), 'servicelink block_microsoft_reset');
+                                $items[] = html_writer::span(get_string(
+                                    'course_reset_disconnect_and_create_new',
+                                    'block_microsoft'
+                                ), 'servicelink block_microsoft_reset');
 
                                 break;
                             case COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_ONLY:
                                 // Force disconnect, show notification.
-                                $items[] = html_writer::span(get_string('course_reset_disconnect_only', 'block_microsoft'),
-                                    'servicelink block_microsoft_reset');
+                                $items[] = html_writer::span(
+                                    get_string('course_reset_disconnect_only', 'block_microsoft'),
+                                    'servicelink block_microsoft_reset'
+                                );
 
                                 break;
                             default:
                                 // Force do nothing, show notification.
-                                $items[] = html_writer::span(get_string('course_reset_do_nothing', 'block_microsoft'),
-                                    'servicelink block_microsoft_reset');
+                                $items[] = html_writer::span(
+                                    get_string('course_reset_do_nothing', 'block_microsoft'),
+                                    'servicelink block_microsoft_reset'
+                                );
                         }
                     }
                 }
@@ -232,8 +252,12 @@ class block_microsoft extends block_base {
         $o365record = null;
 
         if (utils::is_course_sync_enabled($courseid)) {
-            if ($o365record = $DB->get_record('local_o365_objects',
-                ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+            if (
+                $o365record = $DB->get_record(
+                    'local_o365_objects',
+                    ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]
+                )
+            ) {
                 [$subtypesql, $params] = $DB->get_in_or_equal(['courseteam', 'teamfromgroup'], SQL_PARAMS_NAMED);
                 $params['type'] = 'group';
                 $params['moodleid'] = $courseid;
@@ -374,8 +398,11 @@ class block_microsoft extends block_base {
         if (!empty($this->globalconfig->settings_showmsstream)) {
             $streamclassicurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
             $streamclassicattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
-            $items[] = html_writer::link($streamclassicurl, get_string('linkmsstreamclassic', 'block_microsoft'),
-                $streamclassicattrs);
+            $items[] = html_writer::link(
+                $streamclassicurl,
+                get_string('linkmsstreamclassic', 'block_microsoft'),
+                $streamclassicattrs
+            );
         }
 
         // Microsoft Teams.
@@ -406,10 +433,12 @@ class block_microsoft extends block_base {
             $items[] = html_writer::link($prefsurl, $prefsstr, ['class' => 'servicelink block_microsoft_preferences']);
         }
 
-        if (auth_oidc_connectioncapability($USER->id, 'connect') === true
+        if (
+            auth_oidc_connectioncapability($USER->id, 'connect') === true
             || auth_oidc_connectioncapability($USER->id, 'disconnect') === true
             || local_o365_connectioncapability($USER->id, 'link')
-            || local_o365_connectioncapability($USER->id, 'unlink')) {
+            || local_o365_connectioncapability($USER->id, 'unlink')
+        ) {
             if (!empty($this->globalconfig->settings_showmanageo365conection)) {
                 $connecturl = new moodle_url('/local/o365/ucp.php', ['action' => 'connection']);
                 $connectstr = get_string('linkconnection', 'block_microsoft');
@@ -507,8 +536,11 @@ class block_microsoft extends block_base {
         $str = get_string('install_office', 'block_microsoft');
 
         return [
-            html_writer::link($url, $str,
-                ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']),
+            html_writer::link(
+                $url,
+                $str,
+                ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']
+            ),
         ];
     }
 
