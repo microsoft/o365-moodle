@@ -27,7 +27,6 @@
  * Class repository_onenote_generator
  */
 class repository_onenote_generator extends testing_repository_generator {
-
     /**
      * Fill in type record defaults.
      *
@@ -40,10 +39,11 @@ class repository_onenote_generator extends testing_repository_generator {
         if (!isset($record['clientid'])) {
             $record['clientid'] = 'clientid';
         }
+
         if (!isset($record['secret'])) {
             $record['secret'] = 'secret';
         }
-        return $record;
 
+        return $record;
     }
 }
