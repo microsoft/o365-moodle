@@ -55,14 +55,21 @@ class utils {
             if (isset($result['error_description'])) {
                 $isadminconsent = optional_param('admin_consent', false, PARAM_BOOL);
                 if ($isadminconsent) {
-                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
+                    if (
+                        get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
                         auth_oidc_is_local_365_installed() &&
                         $result['error'] === 'invalid_grant' &&
                         isset($result['error_codes']) && count($result['error_codes']) == 1 &&
-                        $result['error_codes'][0] == 53003) {
+                        $result['error_codes'][0] == 53003
+                    ) {
                         $localo365configurationpageurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
-                        throw new moodle_exception('settings_adminconsent_error_53003', 'local_o365',
-                            $localo365configurationpageurl, '', $result['error_description']);
+                        throw new moodle_exception(
+                            'settings_adminconsent_error_53003',
+                            'local_o365',
+                            $localo365configurationpageurl,
+                            '',
+                            $result['error_description']
+                        );
                     }
                 }
                 throw new moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
@@ -73,7 +80,7 @@ class utils {
 
         foreach ($expectedstructure as $key => $val) {
             if (!isset($result[$key])) {
-                $errmsg = 'Invalid structure received. No "'.$key.'"';
+                $errmsg = 'Invalid structure received. No "' . $key . '"';
                 self::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroroidccall', 'auth_oidc');
             }
@@ -81,7 +88,8 @@ class utils {
             if ($val !== null && $result[$key] !== $val) {
                 $strreceivedval = self::tostring($result[$key]);
                 $strval = self::tostring($val);
-                $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
+                $errmsg = 'Invalid structure received. Invalid "' . $key . '". Received "' . $strreceivedval .
+                    '", expected "' . $strval . '"';
                 self::debug($errmsg, __METHOD__, $result);
                 throw new moodle_exception('erroroidccall', 'auth_oidc');
             }
@@ -98,9 +106,9 @@ class utils {
     public static function tostring($val) {
         if (is_scalar($val)) {
             if (is_bool($val)) {
-                return '(bool)'.(string)(int)$val;
+                return '(bool)' . (string)(int)$val;
             } else {
-                return '('.gettype($val).')'.(string)$val;
+                return '(' . gettype($val) . ')' . (string)$val;
             }
         } else if (is_null($val)) {
             return '(null)';

@@ -71,8 +71,14 @@ if (empty($iid)) {
 
         echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
         $bindingusernameclaimurl = new moodle_url('/auth/oidc/binding_username_claim.php');
-        echo html_writer::tag('p', get_string('change_binding_username_claim_tool_description', 'auth_oidc',
-            $bindingusernameclaimurl->out()));
+        echo html_writer::tag(
+            'p',
+            get_string(
+                'change_binding_username_claim_tool_description',
+                'auth_oidc',
+                $bindingusernameclaimurl->out()
+            )
+        );
 
         $form1->display();
 
@@ -87,8 +93,10 @@ if (empty($iid)) {
 $process = new process($cir);
 $filecolumns = $process->get_file_columns();
 
-$mform2 = new change_binding_username_claim_tool_form2(null,
-    ['columns' => $filecolumns, 'data' => ['iid' => $iid, 'previewrows' => $previewrows]]);
+$mform2 = new change_binding_username_claim_tool_form2(
+    null,
+    ['columns' => $filecolumns, 'data' => ['iid' => $iid, 'previewrows' => $previewrows]]
+);
 
 // If a file has been uploaded, then process it.
 if ($mform2->is_cancelled()) {

@@ -210,8 +210,12 @@ class authcode extends base {
      * @param array $extraparams Additional parameters to send with the OIDC request.
      * @param bool $selectaccount Whether to prompt the user to select an account.
      */
-    public function initiateauthrequest($promptlogin = false, array $stateparams = [], array $extraparams = [],
-            bool $selectaccount = false) {
+    public function initiateauthrequest(
+        $promptlogin = false,
+        array $stateparams = [],
+        array $extraparams = [],
+        bool $selectaccount = false
+    ) {
         $client = $this->get_oidcclient();
         $client->authrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
     }
@@ -367,17 +371,19 @@ class authcode extends base {
             // Check if that Microsoft 365 account already exists in moodle.
             $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
 
-            $userrec = $DB->count_records_sql('SELECT COUNT(*)
+            $userrec = $DB->count_records_sql(
+                'SELECT COUNT(*)
                                                  FROM {user}
                                                 WHERE username = ?
                                                       AND id != ?',
-                    [$oidcusername, $USER->id]);
+                [$oidcusername, $USER->id]
+            );
 
             if (!empty($userrec)) {
                 if (empty($additionaldata['redirect'])) {
                     $redirect = '/auth/oidc/ucp.php?o365accountconnected=true';
                 } else if ($additionaldata['redirect'] == '/local/o365/ucp.php') {
-                    $redirect = $additionaldata['redirect'].'?action=connection&o365accountconnected=true';
+                    $redirect = $additionaldata['redirect'] . '?action=connection&o365accountconnected=true';
                 } else {
                     throw new moodle_exception('errorinvalidredirect_message', 'auth_oidc');
                 }
@@ -570,8 +576,10 @@ class authcode extends base {
         if (auth_oidc_is_local_365_installed()) {
             if ($existingmatching = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $oidcuniqid])) {
                 $existinguser = core_user::get_user($existingmatching->moodleid);
-                if ($existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername) &&
-                    $existinguser->username != strtolower($oidcusername)) {
+                if (
+                    $existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername) &&
+                    $existinguser->username != strtolower($oidcusername)
+                ) {
                     $usernamechanged = true;
                 }
             }
@@ -652,8 +660,12 @@ class authcode extends base {
 
                     // Update local_o365_objects table.
                     if (auth_oidc_is_local_365_installed()) {
-                        if ($o365objectrecord = $DB->get_record('local_o365_objects',
-                            ['moodleid' => $user->id, 'type' => 'user'])) {
+                        if (
+                            $o365objectrecord = $DB->get_record(
+                                'local_o365_objects',
+                                ['moodleid' => $user->id, 'type' => 'user']
+                            )
+                        ) {
                             $o365objectrecord->o365name = $oidcusername;
                             $DB->update_record('local_o365_objects', $o365objectrecord);
                         }
@@ -694,8 +706,10 @@ class authcode extends base {
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid);
-                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
-                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')) {
+                    if (
+                        !is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')
+                    ) {
                         $originalupn = $userdetails['userPrincipalName'];
                         $username = $idtoken->claim('unique_name');
                     }
@@ -754,8 +768,10 @@ class authcode extends base {
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid, true);
-                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
-                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')) {
+                    if (
+                        !is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false && $idtoken->claim('unique_name')
+                    ) {
                         $originalupn = $userdetails['userPrincipalName'];
                         $username = $idtoken->claim('unique_name');
                     }
@@ -801,7 +817,7 @@ class authcode extends base {
                 $tokenrec = $DB->get_record('auth_oidc_token', ['id' => $tokenrec->id]);
                 // This should be already done in auth_plugin_oidc::user_authenticated_hook, but just in case...
                 if (!empty($tokenrec) && empty($tokenrec->userid)) {
-                    $updatedtokenrec = new stdClass;
+                    $updatedtokenrec = new stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
@@ -815,7 +831,6 @@ class authcode extends base {
 
                 redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
             }
-
         }
         return true;
     }

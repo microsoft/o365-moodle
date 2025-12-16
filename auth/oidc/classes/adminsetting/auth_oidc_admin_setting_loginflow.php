@@ -72,7 +72,7 @@ class auth_oidc_admin_setting_loginflow extends \admin_setting {
 
         foreach ($this->flowtypes as $flowtype) {
             $html .= \html_writer::start_div();
-            $flowtypeid = $baseid.'_'.$flowtype;
+            $flowtypeid = $baseid . '_' . $flowtype;
             $radioattrs = [
                 'type' => 'radio',
                 'name' => $inputname,
@@ -82,8 +82,8 @@ class auth_oidc_admin_setting_loginflow extends \admin_setting {
             if ($data === $flowtype || (empty($data) && $flowtype === $this->get_defaultsetting())) {
                 $radioattrs['checked'] = 'checked';
             }
-            $typename = get_string('cfg_loginflow_'.$flowtype, 'auth_oidc');
-            $typedesc = get_string('cfg_loginflow_'.$flowtype.'_desc', 'auth_oidc');
+            $typename = get_string('cfg_loginflow_' . $flowtype, 'auth_oidc');
+            $typedesc = get_string('cfg_loginflow_' . $flowtype . '_desc', 'auth_oidc');
             $html .= \html_writer::empty_tag('input', $radioattrs);
             $html .= \html_writer::label($typename, $flowtypeid, false);
             $html .= '<br />';

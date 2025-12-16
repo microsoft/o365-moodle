@@ -45,10 +45,10 @@ class mockoidcclient extends \auth_oidc\oidcclient {
      * @return array Array of request parameters.
      */
     public function getauthrequestparams(
-            $promptlogin = false,
-            array $stateparams = [],
-            array $extraparams = [],
-            bool $selectaccount = false
+        $promptlogin = false,
+        array $stateparams = [],
+        array $extraparams = [],
+        bool $selectaccount = false
     ) {
         return parent::getauthrequestparams($promptlogin, $stateparams);
     }
