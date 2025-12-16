@@ -149,6 +149,7 @@ class main {
         foreach ($mappingrecordset as $mapping) {
             $mappings[$mapping->id] = $mapping;
         }
+
         $mappingrecordset->close();
 
         return $mappings;
@@ -287,6 +288,7 @@ class main {
                 $groupmembers[$memberrecord['id']] = $memberrecord;
             }
         }
+
         foreach ($ownerrecords as $ownerrecord) {
             if (!array_key_exists($ownerrecord['id'], $groupmembers)) {
                 $groupmembers[$ownerrecord['id']] = $ownerrecord;
@@ -303,8 +305,10 @@ class main {
      * @param array $microsoftuserobjects
      * @return void
      */
-    private function sync_cohort_members_by_cohort_id_and_microsoft_user_objects(int $cohortid,
-        array $microsoftuserobjects): void {
+    private function sync_cohort_members_by_cohort_id_and_microsoft_user_objects(
+        int $cohortid,
+        array $microsoftuserobjects
+    ): void {
         global $DB;
 
         $microsoftuseroids = array_column($microsoftuserobjects, 'id');
@@ -314,6 +318,7 @@ class main {
         foreach ($currentmembersrecordset as $member) {
             $currentmembers[$member->userid] = $member;
         }
+
         $currentmembersrecordset->close();
         $connectedusers = $this->get_all_potential_user_details($microsoftuseroids, array_keys($currentmembers));
 
@@ -351,8 +356,11 @@ class main {
         }
 
         if (!empty($microsoftuseroids)) {
-            [$microsoftuseroidsql, $microsoftuseroidparams] = $DB->get_in_or_equal($microsoftuseroids, SQL_PARAMS_NAMED,
-                'microsoftuseroid');
+            [$microsoftuseroidsql, $microsoftuseroidparams] = $DB->get_in_or_equal(
+                $microsoftuseroids,
+                SQL_PARAMS_NAMED,
+                'microsoftuseroid'
+            );
         }
 
         if (!empty($moodleuserids)) {
@@ -412,6 +420,7 @@ class main {
         if (is_null($this->cohortlist)) {
             $this->fetch_cohorts();
         }
+
         if (array_key_exists($cohortid, $this->cohortlist)) {
             $cohortname = $this->cohortlist[$cohortid]->name;
         }

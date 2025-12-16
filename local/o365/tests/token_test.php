@@ -80,10 +80,22 @@ final class token_test extends advanced_testcase {
         ];
         $tokenrec->id = $DB->insert_record('local_o365_token', $tokenrec);
 
-        $clientdata = new \local_o365\oauth2\clientdata($oidcconfig->clientid, $oidcconfig->clientsecret,
-            $oidcconfig->authendpoint, $oidcconfig->tokenendpoint);
-        $token = new \local_o365\oauth2\token($tokenrec->token, $tokenrec->expiry, $tokenrec->refreshtoken,
-            $tokenrec->scope, $tokenrec->tokenresource, $tokenrec->user_id, $clientdata, $httpclient);
+        $clientdata = new \local_o365\oauth2\clientdata(
+            $oidcconfig->clientid,
+            $oidcconfig->clientsecret,
+            $oidcconfig->authendpoint,
+            $oidcconfig->tokenendpoint
+        );
+        $token = new \local_o365\oauth2\token(
+            $tokenrec->token,
+            $tokenrec->expiry,
+            $tokenrec->refreshtoken,
+            $tokenrec->scope,
+            $tokenrec->tokenresource,
+            $tokenrec->user_id,
+            $clientdata,
+            $httpclient
+        );
         $token->refresh();
 
         $this->assertEquals(1, $DB->count_records('local_o365_token'));

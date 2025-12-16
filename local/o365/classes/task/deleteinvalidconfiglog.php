@@ -84,6 +84,7 @@ class deleteinvalidconfiglog extends adhoc_task {
                         break;
                     }
                 }
+
                 $recordset->close();
 
                 if (!empty($configlogids)) {

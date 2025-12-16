@@ -59,6 +59,7 @@ class syncoldevents extends \core\task\adhoc_task {
             $sql .= ' AND sub.caltypeid = ? ';
             $params[] = $caltypeid;
         }
+
         $allsubscribers = $DB->get_records_sql($sql, $params);
         foreach ($allsubscribers as $userid => $subscriber) {
             if (isset($subscriber->subisprimary) && $subscriber->subisprimary == '0') {
@@ -67,6 +68,7 @@ class syncoldevents extends \core\task\adhoc_task {
                 $subscribersprimary[$userid] = $subscriber;
             }
         }
+
         unset($allsubscribers);
         return [$subscribersprimary, $subscribersnotprimary];
     }
@@ -82,10 +84,10 @@ class syncoldevents extends \core\task\adhoc_task {
         require_once($CFG->dirroot . '/calendar/lib.php');
 
         // Remove local imports from O365 for this user if unsubscribed or outward-only.
-        $subscription = $DB->get_record('local_o365_calsub', [
-            'user_id' => $opuserid,
-            'caltype' => 'site'
-        ]);
+        $subscription = $DB->get_record(
+            'local_o365_calsub',
+            ['user_id' => $opuserid, 'caltype' => 'site']
+        );
         if (empty($subscription) || $subscription->syncbehav === 'out') {
             $sqlcleanup = 'SELECT ev.id
                              FROM {event} ev
@@ -93,7 +95,7 @@ class syncoldevents extends \core\task\adhoc_task {
                             WHERE ev.courseid = ? AND m.userid = ? AND m.origin = ?';
             $cleanuprecords = $DB->get_records_sql($sqlcleanup, [0, $opuserid, 'o365']);
             foreach ($cleanuprecords as $cleanup) {
-                mtrace('Removing imported site event #'.$cleanup->id.'.');
+                mtrace('Removing imported site event #' . $cleanup->id . '.');
                 $DB->delete_records('local_o365_calidmap', [
                     'eventid' => $cleanup->id,
                     'origin'  => 'o365',
@@ -131,7 +133,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $events = $DB->get_recordset_sql($sql, $params);
         foreach ($events as $event) {
             try {
-                mtrace('Syncing site event #'.$event->eventid);
+                mtrace('Syncing site event #' . $event->eventid);
                 $subject = $event->eventname;
                 $body = $event->eventdescription;
                 $evstart = $event->eventtimestart;
@@ -144,8 +146,11 @@ class syncoldevents extends \core\task\adhoc_task {
                         // If there's a stored outlookeventid we've already synced to o365 so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
                             try {
-                                $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
-                                    ['attendees' => $subscribersprimary]);
+                                $calsync->update_event_raw(
+                                    $event->eventuserid,
+                                    $event->outlookeventid,
+                                    ['attendees' => $subscribersprimary]
+                                );
                             } catch (moodle_exception $e) {
                                 mtrace('ERROR: ' . $e->getMessage());
                             }
@@ -164,8 +169,18 @@ class syncoldevents extends \core\task\adhoc_task {
                                     $calid = null;
                                 }
                             }
-                            $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
-                                    $subscribersprimary, [], $calid);
+
+                            $calsync->create_event_raw(
+                                $event->eventuserid,
+                                $event->eventid,
+                                $subject,
+                                $body,
+                                $evstart,
+                                $evend,
+                                $subscribersprimary,
+                                [],
+                                $calid
+                            );
                         }
                     } catch (moodle_exception $e) {
                         mtrace('ERROR: ' . $e->getMessage());
@@ -184,6 +199,7 @@ class syncoldevents extends \core\task\adhoc_task {
                     // attendees.
                     unset($idmapnosub[$event->eventuserid]);
                 }
+
                 if (!empty($idmapnosub)) {
                     mtrace('Removing event for users who have unsubscribed.');
                     foreach ($idmapnosub as $userid => $usercalidmap) {
@@ -196,16 +212,23 @@ class syncoldevents extends \core\task\adhoc_task {
                     mtrace('Syncing non-primary calendar users.');
                     foreach ($subscribersnotprimary as $userid => $user) {
                         $calid = (!empty($user->subo365calid)) ? $user->subo365calid : null;
-                        $calsync->ensure_event_synced_for_user($event->eventid, $user->id, $subject, $body, $evstart, $evend,
-                            $calid);
+                        $calsync->ensure_event_synced_for_user(
+                            $event->eventid,
+                            $user->id,
+                            $subject,
+                            $body,
+                            $evstart,
+                            $evend,
+                            $calid
+                        );
                     }
                 }
-
             } catch (moodle_exception $e) {
                 // Could not sync this site event. Log and continue.
-                mtrace('Error syncing site event #'.$event->eventid.': '.$e->getMessage());
+                mtrace('Error syncing site event #' . $event->eventid . ': ' . $e->getMessage());
             }
         }
+
         $events->close();
 
         set_config('cal_site_lastsync', $timestart, 'local_o365');
@@ -224,11 +247,10 @@ class syncoldevents extends \core\task\adhoc_task {
         require_once($CFG->dirroot . '/calendar/lib.php');
 
         // Remove local imports from O365 for this user if unsubscribed or outward-only.
-        $subscription = $DB->get_record('local_o365_calsub', [
-            'user_id' => $opuserid,
-            'caltype' => 'course',
-            'caltypeid' => $courseid
-        ]);
+        $subscription = $DB->get_record(
+            'local_o365_calsub',
+            ['user_id' => $opuserid, 'caltype' => 'course', 'caltypeid' => $courseid]
+        );
         if (empty($subscription) || $subscription->syncbehav === 'out') {
             $sqlcleanup = 'SELECT ev.id
                              FROM {event} ev
@@ -236,7 +258,7 @@ class syncoldevents extends \core\task\adhoc_task {
                             WHERE ev.courseid = ? AND m.userid = ? AND m.origin = ?';
             $cleanuprecords = $DB->get_records_sql($sqlcleanup, [$courseid, $opuserid, 'o365']);
             foreach ($cleanuprecords as $cleanup) {
-                mtrace('Removing imported course event #'.$cleanup->id.'.');
+                mtrace('Removing imported course event #' . $cleanup->id . '.');
                 $DB->delete_records('local_o365_calidmap', [
                     'eventid' => $cleanup->id,
                     'origin'  => 'o365',
@@ -279,7 +301,7 @@ class syncoldevents extends \core\task\adhoc_task {
         $events = $DB->get_recordset_sql($sql, $params);
         foreach ($events as $event) {
             try {
-                mtrace('Syncing course event #'.$event->eventid);
+                mtrace('Syncing course event #' . $event->eventid);
                 $grouplimit = null;
                 // If this is a group event, get members and save for limiting later.
                 if (!empty($event->groupid)) {
@@ -309,8 +331,11 @@ class syncoldevents extends \core\task\adhoc_task {
                         // If there's a stored outlookeventid the event exists in o365, so update it. Otherwise create it.
                         if (!empty($event->outlookeventid)) {
                             try {
-                                $calsync->update_event_raw($event->eventuserid, $event->outlookeventid,
-                                    ['attendees' => $eventattendees]);
+                                $calsync->update_event_raw(
+                                    $event->eventuserid,
+                                    $event->outlookeventid,
+                                    ['attendees' => $eventattendees]
+                                );
                             } catch (moodle_exception $e) {
                                 // Do nothing.
                                 mtrace('Error updating event #' . $event->eventid . ': ' . $e->getMessage());
@@ -330,11 +355,21 @@ class syncoldevents extends \core\task\adhoc_task {
                                     $calid = null;
                                 }
                             }
-                            $calsync->create_event_raw($event->eventuserid, $event->eventid, $subject, $body, $evstart, $evend,
-                                    $eventattendees, [], $calid);
+
+                            $calsync->create_event_raw(
+                                $event->eventuserid,
+                                $event->eventid,
+                                $subject,
+                                $body,
+                                $evstart,
+                                $evend,
+                                $eventattendees,
+                                [],
+                                $calid
+                            );
                         }
                     } catch (moodle_exception $e) {
-                        mtrace('ERROR: '.$e->getMessage());
+                        mtrace('ERROR: ' . $e->getMessage());
                     }
                 }
 
@@ -350,6 +385,7 @@ class syncoldevents extends \core\task\adhoc_task {
                     // attendees.
                     unset($idmapnosub[$event->eventuserid]);
                 }
+
                 if (!empty($idmapnosub)) {
                     mtrace('Removing event for users who have unsubscribed.');
                     foreach ($idmapnosub as $userid => $usercalidmap) {
@@ -365,9 +401,17 @@ class syncoldevents extends \core\task\adhoc_task {
                         if ($grouplimit !== null && is_array($grouplimit) && !isset($grouplimit[$user->id])) {
                             continue;
                         }
+
                         $calid = (!empty($user->subo365calid)) ? $user->subo365calid : null;
-                        $calsync->ensure_event_synced_for_user($event->eventid, $user->id, $subject, $body, $evstart, $evend,
-                            $calid);
+                        $calsync->ensure_event_synced_for_user(
+                            $event->eventid,
+                            $user->id,
+                            $subject,
+                            $body,
+                            $evstart,
+                            $evend,
+                            $calid
+                        );
                     }
                 }
             } catch (moodle_exception $e) {
@@ -375,6 +419,7 @@ class syncoldevents extends \core\task\adhoc_task {
                 mtrace('Error syncing course event #' . $event->eventid . ': ' . $e->getMessage());
             }
         }
+
         $events->close();
 
         if (!empty($lastcoursesync) && is_array($lastcoursesync)) {
@@ -382,6 +427,7 @@ class syncoldevents extends \core\task\adhoc_task {
         } else {
             $lastcoursesync = [$courseid => $timestart];
         }
+
         $lastcoursesync = serialize($lastcoursesync);
 
         set_config('cal_course_lastsync', $lastcoursesync, 'local_o365');
@@ -411,7 +457,7 @@ class syncoldevents extends \core\task\adhoc_task {
                               AND idmap.origin = ?';
             $cleanuprecords = $DB->get_records_sql($sqlcleanup, [$userid, 'o365']);
             foreach ($cleanuprecords as $cleanup) {
-                mtrace('Cleanup(user): removing imported user event #'.$cleanup->id.'.');
+                mtrace('Cleanup(user): removing imported user event #' . $cleanup->id . '.');
                 $DB->delete_records('local_o365_calidmap', [
                     'eventid' => $cleanup->id,
                     'origin'  => 'o365',
@@ -457,7 +503,7 @@ class syncoldevents extends \core\task\adhoc_task {
                        AND ev.userid = ?';
         $events = $DB->get_recordset_sql($sql, [$userid]);
         foreach ($events as $event) {
-            mtrace('Syncing user event #'.$event->eventid);
+            mtrace('Syncing user event #' . $event->eventid);
             if (!empty($subscription)) {
                 if (empty($event->outlookeventid)) {
                     // Event not synced, if outward subscription exists sync to o365.
@@ -471,6 +517,7 @@ class syncoldevents extends \core\task\adhoc_task {
                         if (isset($subscription->isprimary) && $subscription->isprimary == 1) {
                             $calid = null;
                         }
+
                         $calsync->create_event_raw($userid, $event->eventid, $subject, $body, $evstart, $evend, [], [], $calid);
                     } else {
                         mtrace('Not creating event in Outlook. (Sync settings are inward-only.)');
@@ -499,6 +546,7 @@ class syncoldevents extends \core\task\adhoc_task {
                 }
             }
         }
+
         $events->close();
 
         if (!empty($lastusersync) && is_array($lastusersync)) {
@@ -506,6 +554,7 @@ class syncoldevents extends \core\task\adhoc_task {
         } else {
             $lastusersync = [$userid => $timestart];
         }
+
         $lastusersync = serialize($lastusersync);
 
         set_config('cal_user_lastsync', $lastusersync, 'local_o365');

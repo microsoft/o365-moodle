@@ -113,6 +113,7 @@ class read_courseusers extends external_api {
         if ($courseid == SITEID) {
             return [];
         }
+
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
         $context = context_course::instance($courseid);
         self::validate_context($context);
@@ -173,6 +174,7 @@ class read_courseusers extends external_api {
                 $users[] = $userdetails;
             }
         }
+
         $enrolledusers->close();
 
         return $users;
@@ -188,18 +190,30 @@ class read_courseusers extends external_api {
             new external_single_structure(
                 [
                     'id' => new external_value(PARAM_INT, 'ID of the user'),
-                    'username' => new external_value(PARAM_RAW, 'Username policy is defined in Moodle security config',
-                        VALUE_OPTIONAL),
+                    'username' => new external_value(
+                        PARAM_RAW,
+                        'Username policy is defined in Moodle security config',
+                        VALUE_OPTIONAL
+                    ),
                     'fullname' => new external_value(PARAM_NOTAGS, 'The fullname of the user'),
                     'firstname' => new external_value(PARAM_NOTAGS, 'The first name(s) of the user', VALUE_OPTIONAL),
                     'lastname' => new external_value(PARAM_NOTAGS, 'The family name of the user', VALUE_OPTIONAL),
                     'email' => new external_value(PARAM_TEXT, 'An email address - allow email as root@localhost', VALUE_OPTIONAL),
-                    'idnumber' => new external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
-                        VALUE_OPTIONAL),
-                    'lang' => new external_value(PARAM_RAW, 'An arbitrary ID code number perhaps from the institution',
-                        VALUE_OPTIONAL),
-                    'profileimageurlsmall' => new external_value(PARAM_URL, 'User image profile URL - small version',
-                        VALUE_OPTIONAL),
+                    'idnumber' => new external_value(
+                        PARAM_RAW,
+                        'An arbitrary ID code number perhaps from the institution',
+                        VALUE_OPTIONAL
+                    ),
+                    'lang' => new external_value(
+                        PARAM_RAW,
+                        'An arbitrary ID code number perhaps from the institution',
+                        VALUE_OPTIONAL
+                    ),
+                    'profileimageurlsmall' => new external_value(
+                        PARAM_URL,
+                        'User image profile URL - small version',
+                        VALUE_OPTIONAL
+                    ),
                     'profileimageurl' => new external_value(PARAM_URL, 'User image profile URL - big version', VALUE_OPTIONAL),
                 ]
             )

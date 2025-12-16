@@ -52,7 +52,7 @@ class ratelimit implements \local_o365\healthcheck\healthcheckinterface {
         $ratelimit = explode(':', $ratelimit, 2);
 
         if (!empty($ratelimit[0]) && $ratelimit[1] > (time() - (10 * MINSECS))) {
-            $a = new \stdClass;
+            $a = new \stdClass();
             $a->level = $ratelimit[0];
             $a->timestart = date('c', $ratelimit[1]);
             if ($ratelimit[0] < 4) {

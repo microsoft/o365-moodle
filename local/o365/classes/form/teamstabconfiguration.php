@@ -41,7 +41,6 @@ require_once($CFG->dirroot . '/lib/formslib.php');
  * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 class teamstabconfiguration extends moodleform {
-
     /**
      * Definition of the form.
      */
@@ -51,24 +50,32 @@ class teamstabconfiguration extends moodleform {
         $courseoptions = self::get_course_options();
         if ($courseoptions) {
             // User can access at least one course, show tab name field and course selector.
-            $mform->addElement('text', 'local_o365_teams_tab_name', get_string('tab_name', 'local_o365'),
-                ['onchange' => 'onTabNameChange()']);
+            $mform->addElement(
+                'text',
+                'local_o365_teams_tab_name',
+                get_string('tab_name', 'local_o365'),
+                ['onchange' => 'onTabNameChange()']
+            );
             $mform->setType('local_o365_teams_tab_name', PARAM_TEXT);
             $tabname = get_config('local_o365', 'teams_moodle_tab_name');
             if (!$tabname) {
                 $tabname = 'Moodle';
             }
+
             $mform->setDefault('local_o365_teams_tab_name', $tabname);
 
-            $courseselector = $mform->createElement('select', 'local_o365_teams_course',
+            $courseselector = $mform->createElement(
+                'select',
+                'local_o365_teams_course',
                 get_string('course_selector_label', 'local_o365'),
-                $courseoptions, ['onchange' => 'onCourseChange()']);
+                $courseoptions,
+                ['onchange' => 'onCourseChange()']
+            );
             $courseselector->setSize(100);
             $courseselector->setMultiple(true);
 
             $mform->addElement($courseselector);
             $mform->setType('course', PARAM_INT);
-
         } else {
             // User cannot access any course, show message.
             $messagehtml = \html_writer::tag('p', get_string('teams_no_course', 'local_o365'));

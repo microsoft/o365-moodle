@@ -61,13 +61,16 @@ class processcourserequestapproval extends adhoc_task {
         if (empty($apiclient)) {
             throw new moodle_exception('errorcannotgetapiclient', 'local_o365');
         }
+
         $courserequest = new main($apiclient);
 
         mtrace("... Start sync between Moodle Course with ID {$coursedata->courseid} and Microsoft Team with OID " .
             "{$courserequestdata->teamoid}...");
 
-        $courserequest->enrol_team_owners_and_members_in_course_by_team_oid_and_course_id($courserequestdata->teamoid,
-            $coursedata->courseid);
+        $courserequest->enrol_team_owners_and_members_in_course_by_team_oid_and_course_id(
+            $courserequestdata->teamoid,
+            $coursedata->courseid
+        );
 
         // Update custom course request status.
         $courserequestdata->requeststatus = main::COURSE_REQUEST_STATUS_APPROVED;

@@ -60,10 +60,11 @@ class ajax extends base {
     public function run($mode) {
         try {
             $this->header();
-            $methodname = (!empty($mode)) ? 'mode_'.$mode : 'mode_default';
+            $methodname = (!empty($mode)) ? 'mode_' . $mode : 'mode_default';
             if (!method_exists($this, $methodname)) {
                 $methodname = 'mode_default';
             }
+
             $this->$methodname();
         } catch (moodle_exception $e) {
             echo $this->error_response($e->getMessage());
@@ -78,7 +79,7 @@ class ajax extends base {
      * @return false|string
      */
     protected function error_response($errormessage, $errorcode = '') {
-        $result = new stdClass;
+        $result = new stdClass();
         $result->success = false;
         $result->errorcode = $errorcode;
         $result->errormessage = $errormessage;
@@ -92,7 +93,7 @@ class ajax extends base {
      * @param bool $success General success indicator.
      */
     protected function ajax_response($data, $success = true) {
-        $result = new stdClass;
+        $result = new stdClass();
         $result->success = $success;
         $result->data = $data;
         return json_encode($result);
@@ -109,7 +110,7 @@ class ajax extends base {
      * Check if a service resource is valid using the graph API.
      */
     protected function checkserviceresource_graph() {
-        $data = new stdClass;
+        $data = new stdClass();
         $success = false;
         $setting = required_param('setting', PARAM_TEXT);
         $value = required_param('value', PARAM_TEXT);
@@ -125,7 +126,7 @@ class ajax extends base {
                     $data->valid = $apiclient->test_tenant($value);
                     $success = true;
                 } catch (moodle_exception $e) {
-                    utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
+                    utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
                     $data->valid = false;
                     $success = true;
                 }
@@ -136,12 +137,13 @@ class ajax extends base {
                     $data->valid = $apiclient->validate_resource($value, $clientdata);
                     $success = true;
                 } catch (moodle_exception $e) {
-                    utils::debug('Exception: '.$e->getMessage(), __METHOD__, $e);
+                    utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
                     $data->valid = false;
                     $success = true;
                 }
                 break;
         }
+
         echo $this->ajax_response($data, $success);
     }
 
@@ -156,7 +158,7 @@ class ajax extends base {
      * Detect the correct value for a service resource using the graph API.
      */
     protected function detectserviceresource_graph() {
-        $data = new stdClass;
+        $data = new stdClass();
         $success = false;
         $setting = required_param('setting', PARAM_TEXT);
         $tokenresource = unified::get_tokenresource();
@@ -197,13 +199,14 @@ class ajax extends base {
      * @throws moodle_exception
      */
     public function mode_checksetup() {
-        $data = new stdClass;
+        $data = new stdClass();
 
         $entratenant = required_param('entratenant', PARAM_TEXT);
         $existingentratenantsetting = get_config('local_o365', 'entratenant');
         if ($existingentratenantsetting != $entratenant) {
             add_to_config_log('entratenant', $existingentratenantsetting, $entratenant, 'local_o365');
         }
+
         set_config('entratenant', $entratenant, 'local_o365');
 
         $odburl = required_param('odburl', PARAM_TEXT);
@@ -211,12 +214,13 @@ class ajax extends base {
         if ($existingodburlsetting != $odburl) {
             add_to_config_log('odburl', $existingodburlsetting, $odburl, 'local_o365');
         }
+
         set_config('odburl', $odburl, 'local_o365');
 
         // App data.
-        $appdata = new stdClass;
+        $appdata = new stdClass();
 
-        $unifiedapi = new stdClass;
+        $unifiedapi = new stdClass();
         $unifiedapi->active = false;
 
         $clientdata = clientdata::instance_from_oidc();
@@ -230,6 +234,7 @@ class ajax extends base {
             if (empty($token)) {
                 throw new moodle_exception('errorgetapplicationtoken', 'local_o365');
             }
+
             $unifiedapiclient = new unified($token, $httpclient);
 
             // Check app-only perms.
@@ -245,6 +250,7 @@ class ajax extends base {
                 $unifiedapi->active = true;
                 $unifiedapi->missingperms = $missingdelegatedperms;
             }
+
             $appinfo = $unifiedapiclient->get_application_info();
         } catch (moodle_exception $e) {
             $unifiedapi->active = false;
@@ -257,9 +263,10 @@ class ajax extends base {
         if (isset($appinfo['value'][0]['web']) && isset($appinfo['value'][0]['web']['redirectUris'])) {
             $replyurls = $appinfo['value'][0]['web']['redirectUris'];
         }
+
         if (!empty($replyurls)) {
             $redirecturls = (array)$replyurls;
-            $appdata->replyurl = new stdClass;
+            $appdata->replyurl = new stdClass();
             $appdata->replyurl->correct = false;
             $appdata->replyurl->detected = implode(', ', $redirecturls);
             $appdata->replyurl->intended = $correctredirecturl;
@@ -272,7 +279,7 @@ class ajax extends base {
         }
 
         if (isset($appinfo['value'][0]['homepage'])) {
-            $appdata->signonurl = new stdClass;
+            $appdata->signonurl = new stdClass();
             $appdata->signonurl->correct = ($appinfo['value'][0]['homepage'] === $correctredirecturl) ? true : false;
             $appdata->signonurl->detected = $appinfo['value'][0]['homepage'];
             $appdata->signonurl->intended = $correctredirecturl;
@@ -284,12 +291,14 @@ class ajax extends base {
         if ($existingunifiedapiactivesetting != (int)$unifiedapi->active) {
             add_to_config_log('unifiedapiactive', $existingunifiedapiactivesetting, (int)$unifiedapi->active, 'local_o365');
         }
+
         set_config('unifiedapiactive', (int)$unifiedapi->active, 'local_o365');
 
         $existingverifysetupresultsetting = get_config('local_o365', 'verifysetupresult');
         if ($existingverifysetupresultsetting != serialize($data)) {
             add_to_config_log('verifysetupresult', $existingverifysetupresultsetting, serialize($data), 'local_o365');
         }
+
         set_config('verifysetupresult', serialize($data), 'local_o365');
 
         $success = true;
@@ -301,14 +310,14 @@ class ajax extends base {
      */
     public function mode_checkteamsmoodlesetup() {
         global $CFG;
-        require_once($CFG->libdir.'/adminlib.php');
+        require_once($CFG->libdir . '/adminlib.php');
         require_once($CFG->dirroot . '/webservice/lib.php');
         require_once($CFG->dirroot . '/lib/classes/component.php');
         require_once($CFG->libdir . '/sessionlib.php');
 
         $systemcontext = \context_system::instance();
 
-        $data = new stdClass;
+        $data = new stdClass();
         $data->success = [];
         $data->errormessages = [];
         $data->info = [];
@@ -325,6 +334,7 @@ class ajax extends base {
             if ($existingcookiesecuresetting != 1) {
                 add_to_config_log('cookiesecure', $existingcookiesecuresetting, 1, 'moodle');
             }
+
             set_config('cookiesecure', 1);
             $data->success[] = get_string('settings_notice_cookiesecureenabled', 'local_o365');
         }
@@ -365,6 +375,7 @@ class ajax extends base {
                 unset($activewebservices[$key]);
             }
         }
+
         if (!in_array($webservice, $activewebservices)) {
             $activewebservices[] = $webservice;
             $activewebservices = array_unique($activewebservices);

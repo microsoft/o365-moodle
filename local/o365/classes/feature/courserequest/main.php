@@ -86,6 +86,7 @@ class main {
             if ($level) {
                 $msg = str_repeat('...', $level) . ' ' . $msg;
             }
+
             mtrace($msg, $level, $eol);
         }
     }
@@ -142,8 +143,11 @@ class main {
         $matchedgroupoids = $DB->get_fieldset_sql($teamsoidsql);
 
         // Get SDS courses.
-        $sdsmatchedgroupoids = $DB->get_fieldset_select('local_o365_objects', 'objectid',
-            "type = 'sdssection' AND subtype = 'course'");
+        $sdsmatchedgroupoids = $DB->get_fieldset_select(
+            'local_o365_objects',
+            'objectid',
+            "type = 'sdssection' AND subtype = 'course'"
+        );
 
         $matchedgroupoids = array_unique(array_merge($matchedgroupoids, $sdsmatchedgroupoids));
         $unmatchedteams = [];
@@ -154,7 +158,7 @@ class main {
             }
         }
 
-        usort($unmatchedteams, function($a, $b) {
+        usort($unmatchedteams, function ($a, $b) {
             return strcmp($a['displayName'], $b['displayName']);
         });
 
@@ -245,26 +249,36 @@ class main {
             mtrace("...... No owner role defined. Skipping owner enrolments.");
         } else {
             foreach ($teamowners as $teamowner) {
-                if (!$userconnectionrecord = $DB->get_record('local_o365_objects',
-                    ['type' => 'user', 'objectid' => $teamowner['id']])) {
+                if (
+                    !$userconnectionrecord = $DB->get_record(
+                        'local_o365_objects',
+                        ['type' => 'user', 'objectid' => $teamowner['id']]
+                    )
+                ) {
                     mtrace('......... No user connection record found for user ' . $teamowner['id']);
                     continue;
                 }
+
                 $moodleuser = core_user::get_user($userconnectionrecord->moodleid);
                 if (!$moodleuser) {
                     mtrace('......... Invalid user connection record found for user ' . $teamowner['id']);
                     continue;
                 }
+
                 if ($moodleuser->suspended || $moodleuser->deleted) {
                     mtrace('......... Moodle user matching Microsoft account ' . $teamowner['id'] . ' is suspended or deleted.');
                     continue;
                 }
-                if (user_has_role_assignment($userconnectionrecord->moodleid, $ownerroleid, $context->id) &&
-                    in_array($userconnectionrecord->moodleid, $enrolleduserids)) {
+
+                if (
+                    user_has_role_assignment($userconnectionrecord->moodleid, $ownerroleid, $context->id) &&
+                    in_array($userconnectionrecord->moodleid, $enrolleduserids)
+                ) {
                     mtrace('......... Moodle user matching Microsoft account ' . $teamowner['id'] .
                         ' is already enrolled as owner.');
                     continue;
                 }
+
                 enrol_try_internal_enrol($courseid, $userconnectionrecord->moodleid, $ownerroleid);
                 mtrace("......... Enrolled user with Moodle ID {$userconnectionrecord->moodleid} in course ID $courseid " .
                     "with role ID $ownerroleid.");
@@ -275,26 +289,36 @@ class main {
             mtrace("......... No member role defined. Skipping member enrolments.");
         } else {
             foreach ($teammembers as $teammember) {
-                if (!$userconnectionrecord = $DB->get_record('local_o365_objects',
-                    ['type' => 'user', 'objectid' => $teammember['id']])) {
+                if (
+                    !$userconnectionrecord = $DB->get_record(
+                        'local_o365_objects',
+                        ['type' => 'user', 'objectid' => $teammember['id']]
+                    )
+                ) {
                     mtrace('......... No user connection record found for user ' . $teammember['id']);
                     continue;
                 }
+
                 $moodleuser = core_user::get_user($userconnectionrecord->moodleid);
                 if (!$moodleuser) {
                     mtrace('......... Invalid user connection record found for user ' . $teammember['id']);
                     continue;
                 }
+
                 if ($moodleuser->suspended || $moodleuser->deleted) {
                     mtrace('......... Moodle user matching Microsoft account ' . $teammember['id'] . ' is suspended or deleted.');
                     continue;
                 }
-                if (user_has_role_assignment($userconnectionrecord->moodleid, $memberroleid, $context->id) &&
-                    in_array($userconnectionrecord->moodleid, $enrolleduserids)) {
+
+                if (
+                    user_has_role_assignment($userconnectionrecord->moodleid, $memberroleid, $context->id) &&
+                    in_array($userconnectionrecord->moodleid, $enrolleduserids)
+                ) {
                     mtrace('......... Moodle user matching Microsoft account ' . $teammember['id'] .
                         ' is already enrolled as member.');
                     continue;
                 }
+
                 enrol_try_internal_enrol($courseid, $userconnectionrecord->moodleid, $memberroleid);
                 mtrace("......... Enrolled user with Moodle ID {$userconnectionrecord->moodleid} in course ID $courseid " .
                     "with role ID $memberroleid.");

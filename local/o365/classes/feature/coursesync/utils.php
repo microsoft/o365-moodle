@@ -74,6 +74,7 @@ class utils {
             if (!$coursesenabled) {
                 $coursesenabled = '';
             }
+
             $originalcoursesenabled = $coursesenabled;
             $coursesenabled = @json_decode($coursesenabled, true);
             if (!empty($coursesenabled) && is_array($coursesenabled)) {
@@ -84,12 +85,14 @@ class utils {
                         $changed = true;
                     }
                 }
+
                 if ($changed) {
                     if ($originalcoursesenabled !== json_encode($coursesenabled)) {
                         add_to_config_log('coursesynccustom', $originalcoursesenabled, json_encode($coursesenabled), 'local_o365');
                         set_config('coursesynccustom', json_encode($coursesenabled), 'local_o365');
                     }
                 }
+
                 return array_keys($coursesenabled);
             }
         }
@@ -114,6 +117,7 @@ class utils {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -175,6 +179,7 @@ class utils {
         if (empty($object->objectid)) {
             return null;
         }
+
         try {
             $graphapi = static::get_graphclient();
             $urls = $graphapi->get_group_urls($object->objectid);
@@ -205,16 +210,20 @@ class utils {
             $result = $graphclient->delete_group($objectrec->objectid);
 
             // Delete course and team connection records.
-            $DB->delete_records_select('local_o365_objects',
-                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?", [$courseid]);
+            $DB->delete_records_select(
+                'local_o365_objects',
+                "type = 'group' AND subtype IN ('courseteam', 'teamfromgroup') AND moodleid = ?",
+                [$courseid]
+            );
 
             if ($result === true) {
                 $metadata = (!empty($objectrec->metadata)) ? @json_decode($objectrec->metadata, true) : [];
                 if (empty($metadata) || !is_array($metadata)) {
                     $metadata = [];
                 }
+
                 $metadata['softdelete'] = true;
-                $updatedobject = new stdClass;
+                $updatedobject = new stdClass();
                 $updatedobject->id = $objectrec->id;
                 $updatedobject->metadata = json_encode($metadata);
                 $DB->update_record('local_o365_objects', $updatedobject);
@@ -232,11 +241,15 @@ class utils {
         global $DB;
 
         // Get the list of enabled courses from database rather than get_config() to avoid cache issues.
-        $customcoursesyncsetting = $DB->get_field('config_plugins', 'value',
-            ['plugin' => 'local_o365', 'name' => 'coursesynccustom']);
+        $customcoursesyncsetting = $DB->get_field(
+            'config_plugins',
+            'value',
+            ['plugin' => 'local_o365', 'name' => 'coursesynccustom']
+        );
         if ($customcoursesyncsetting === false) {
             $customcoursesyncsetting = '';
         }
+
         $originalcustomcoursesyncsetting = $customcoursesyncsetting;
         $customcoursesyncsetting = @json_decode($customcoursesyncsetting, true);
         if (empty($customcoursesyncsetting) || !is_array($customcoursesyncsetting)) {
@@ -255,8 +268,12 @@ class utils {
         }
 
         if ($originalcustomcoursesyncsetting != json_encode($customcoursesyncsetting)) {
-            add_to_config_log('coursesynccustom', $originalcustomcoursesyncsetting, json_encode($customcoursesyncsetting),
-                'local_o365');
+            add_to_config_log(
+                'coursesynccustom',
+                $originalcustomcoursesyncsetting,
+                json_encode($customcoursesyncsetting),
+                'local_o365'
+            );
             set_config('coursesynccustom', json_encode($customcoursesyncsetting), 'local_o365');
         }
     }
@@ -282,6 +299,7 @@ class utils {
                 if (!array_key_exists($teamcacherecord->name, $teamnamecache)) {
                     $teamnamecache[$teamcacherecord->name] = [];
                 }
+
                 $teamnamecache[$teamcacherecord->name][] = $teamcacherecord->objectid;
             } else {
                 unset($teamcacherecords[$key]);
@@ -293,6 +311,7 @@ class utils {
             if (count($teamnamecache[$teamcacherecord->name]) > 1) {
                 $teamoidpart = ' [' . $teamcacherecord->objectid . '] ';
             }
+
             if ($teamcacherecord->objectid == $currentoid) {
                 $teamsoptions[$teamcacherecord->id] = $teamcacherecord->name . $teamoidpart . ' - ' .
                     get_string('acp_teamconnections_current_connection', 'local_o365');
@@ -427,7 +446,7 @@ class utils {
      */
     public static function clean_up_group_mail_alias(string $mailalias) {
         $notallowedbasicchars = ['@', '(', ')', "\\", '[', ']', '"', ';', ':', '.', '<', '>', ' '];
-        $chars = preg_split( '//u', $mailalias, -1, PREG_SPLIT_NO_EMPTY);
+        $chars = preg_split('//u', $mailalias, -1, PREG_SPLIT_NO_EMPTY);
         foreach ($chars as $key => $char) {
             $charorder = ord($char);
             if ($charorder < 0 || $charorder > 127 || in_array($char, $notallowedbasicchars)) {
@@ -485,8 +504,12 @@ class utils {
     public static function get_group_object_id_by_course_id(int $courseid) {
         global $DB;
 
-        return $DB->get_field('local_o365_objects', 'objectid',
-            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid], IGNORE_MISSING);
+        return $DB->get_field(
+            'local_o365_objects',
+            'objectid',
+            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid],
+            IGNORE_MISSING
+        );
     }
 
     /**
@@ -498,8 +521,12 @@ class utils {
     public static function get_group_object_record_id_by_course_id(int $courseid) {
         global $DB;
 
-        return $DB->get_field('local_o365_objects', 'id',
-            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid], IGNORE_MISSING);
+        return $DB->get_field(
+            'local_o365_objects',
+            'id',
+            ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid],
+            IGNORE_MISSING
+        );
     }
 
     /**
@@ -622,6 +649,7 @@ class utils {
             $userchunk = ['owner' => $ownerchunk];
             $userchunks[] = $userchunk;
         }
+
         $members = array_merge($owners, $members);
         $memberchunks = array_chunk($members, 20);
         foreach ($memberchunks as $memberchunk) {
@@ -668,15 +696,24 @@ class utils {
                     if ($coursesync->has_education_license()) {
                         $syncedcourses = static::get_enabled_courses(true);
                         // Exclude SDS synced courses.
-                        $sdscourseids = $DB->get_fieldset_select('local_o365_objects', 'moodleid',
-                            'type = ? AND subtype = ?', ['sdssection', 'course']);
+                        $sdscourseids = $DB->get_fieldset_select(
+                            'local_o365_objects',
+                            'moodleid',
+                            'type = ? AND subtype = ?',
+                            ['sdssection', 'course']
+                        );
                         foreach ($syncedcourses as $courseid) {
                             if (in_array($courseid, $sdscourseids)) {
                                 continue;
                             }
+
                             if ($course = $DB->get_record('course', ['id' => $courseid])) {
-                                if ($groupobject = $DB->get_record('local_o365_objects',
-                                    ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+                                if (
+                                    $groupobject = $DB->get_record(
+                                        'local_o365_objects',
+                                        ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid]
+                                    )
+                                ) {
                                     $coursesync->set_lti_properties_in_education_group($groupobject->objectid, $course);
                                 }
                             }
@@ -737,8 +774,14 @@ class utils {
      * @param int $excluderoleid
      * @return bool
      */
-    public static function sync_user_role_in_course_group(int $userid, int $courseid, int $userobjectrecordid = 0,
-        int $coursegroupobjectrecordid = 0, bool $sdscoursechecked = false, int $excluderoleid = 0): bool {
+    public static function sync_user_role_in_course_group(
+        int $userid,
+        int $courseid,
+        int $userobjectrecordid = 0,
+        int $coursegroupobjectrecordid = 0,
+        bool $sdscoursechecked = false,
+        int $excluderoleid = 0
+    ): bool {
         global $DB;
 
         if (empty($userid) || empty($courseid)) {
@@ -817,6 +860,7 @@ class utils {
                             if (array_key_exists($userobjectid, $groupowners)) {
                                 $coursesync->remove_owner_from_group($groupobjectid, $userobjectid);
                             }
+
                             $coursesync->add_member_to_group($groupobjectid, $userobjectid);
                             break;
                     }
@@ -839,8 +883,10 @@ class utils {
     public static function is_team_created_from_group(string $groupobjectid): bool {
         global $DB;
 
-        return $DB->record_exists('local_o365_objects',
-            ['objectid' => $groupobjectid, 'type' => 'group', 'subtype' => 'teamfromgroup']);
+        return $DB->record_exists(
+            'local_o365_objects',
+            ['objectid' => $groupobjectid, 'type' => 'group', 'subtype' => 'teamfromgroup']
+        );
     }
 
     /**

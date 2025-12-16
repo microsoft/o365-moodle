@@ -64,8 +64,10 @@ class read_onenoteassignment extends external_api {
     public static function assignment_read($data) {
         $params = self::validate_parameters(self::assignment_read_parameters(), ['data' => $data]);
         $params = $params['data'];
-        [$course, $module, $assign] = utils::verify_assignment($params['coursemodule'],
-            $params['course']);
+        [$course, $module, $assign] = utils::verify_assignment(
+            $params['coursemodule'],
+            $params['course']
+        );
 
         $context = context_course::instance($params['course']);
         self::validate_context($context);

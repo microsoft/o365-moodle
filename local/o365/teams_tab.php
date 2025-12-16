@@ -58,11 +58,17 @@ $ssologinurl = new moodle_url('/local/o365/sso_login.php');
 // Output login pages.
 echo html_writer::start_div('local_o365_manual_login');
 // Microsoft Entra ID login box.
-echo html_writer::tag('button', get_string('sso_login', 'local_o365'),
-    ['onclick' => 'login()', 'class' => 'local_o365_manual_login_button']);
+echo html_writer::tag(
+    'button',
+    get_string('sso_login', 'local_o365'),
+    ['onclick' => 'login()', 'class' => 'local_o365_manual_login_button']
+);
 // Manual login link.
-echo html_writer::tag('button', get_string('other_login', 'local_o365'),
-    ['onclick' => 'otherLogin()', 'class' => 'local_o365_manual_login_button']);
+echo html_writer::tag(
+    'button',
+    get_string('other_login', 'local_o365'),
+    ['onclick' => 'otherLogin()', 'class' => 'local_o365_manual_login_button']
+);
 echo html_writer::end_div();
 
 $SESSION->wantsurl = $coursepageurl;

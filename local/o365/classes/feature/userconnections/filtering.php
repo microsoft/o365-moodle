@@ -28,13 +28,12 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/user/filters/lib.php');
+require_once($CFG->dirroot . '/user/filters/lib.php');
 
 /**
  * User filtering class.
  */
 class filtering extends \user_filtering {
-
     /**
      * Creates known user filter if present.
      *
@@ -45,7 +44,6 @@ class filtering extends \user_filtering {
     public function get_field($fieldname, $advanced) {
         global $DB, $USER;
         switch ($fieldname) {
-
             case 'username':
                 $label = get_string('acp_userconnections_filtering_musername', 'local_o365');
                 return new \user_filter_text('username', $label, $advanced, 'u.username');
@@ -83,13 +81,14 @@ class filtering extends \user_filtering {
      * @param array|null $params named params (recommended prefix ex)
      * @return array sql string and $params
      */
-    public function get_sql_filter($extra='', ?array $params=null) {
+    public function get_sql_filter($extra = '', ?array $params = null) {
         global $SESSION;
 
         $sqls = [];
         if ($extra != '') {
             $sqls[] = $extra;
         }
+
         $params = (array)$params;
 
         if (!empty($SESSION->user_filtering)) {
@@ -97,9 +96,11 @@ class filtering extends \user_filtering {
                 if (!array_key_exists($fname, $this->_fields)) {
                     continue; // Filter not used.
                 }
+
                 if ($fname == 'o365username') {
                     continue;
                 }
+
                 $field = $this->_fields[$fname];
                 foreach ($datas as $i => $data) {
                     [$s, $p] = $field->get_sql_filter($data);

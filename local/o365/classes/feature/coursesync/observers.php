@@ -72,12 +72,15 @@ class observers {
         if (empty($apiclient)) {
             return false;
         }
+
         $coursesyncmain = new main($apiclient, false);
 
         $connectedtoteam = false;
         if (utils::is_course_sync_enabled($courseid)) {
-            if (!$o365object =
-                $DB->get_record('local_o365_objects', ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])) {
+            if (
+                !$o365object =
+                $DB->get_record('local_o365_objects', ['type' => 'group', 'subtype' => 'course', 'moodleid' => $courseid])
+            ) {
                 return false;
             } else {
                 // Check if team exists.
@@ -129,6 +132,7 @@ class observers {
                                 }
                                 break;
                         }
+
                         switch ($courseresetsetting) {
                             case COURSE_SYNC_RESET_COURSE_SETTING_DISCONNECT_AND_CREATE_NEW:
                                 $coursesyncmain->process_course_reset($course, $o365object, $connectedtoteam);
@@ -140,7 +144,6 @@ class observers {
                         }
                     }
                 }
-
                 break;
             case COURSE_SYNC_RESET_SITE_SETTING_DISCONNECT_AND_CREATE_NEW:
                 $coursesyncmain->process_course_reset($course, $o365object, $connectedtoteam);

@@ -39,7 +39,6 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * Represents an oauth2 token.
  */
 class apptoken extends token {
-
     /**
      * Get a token instance for a new resource.
      *
@@ -58,6 +57,7 @@ class apptoken extends token {
                 $token['resource'] = $tokenresource;
                 $token['scope'] = null;
             }
+
             static::store_new_token(null, $token['access_token'], $expiry, null, $token['scope'], $token['resource']);
             return static::instance(null, $tokenresource, $clientdata, $httpclient);
         } else {
@@ -123,6 +123,7 @@ class apptoken extends token {
             if (empty($tokenresult['scope'])) {
                 $tokenresult['scope'] = '';
             }
+
             return $tokenresult;
         } else {
             $errmsg = 'Problem encountered getting a new token.';
@@ -130,9 +131,11 @@ class apptoken extends token {
             if (isset($tokenresult['access_token'])) {
                 $tokenresult['access_token'] = '---';
             }
+
             if (isset($tokenresult['refresh_token'])) {
                 $tokenresult['refresh_token'] = '---';
             }
+
             $debuginfo = [
                 'tokenresult' => $tokenresult,
                 'resource' => $tokenresource,
@@ -160,6 +163,7 @@ class apptoken extends token {
             if (isset($result['resource'])) {
                 $this->tokenresource = $result['resource'];
             }
+
             $existingtoken = static::get_stored_token(null, $originaltokenresource);
             if (!empty($existingtoken)) {
                 $newtoken = [
@@ -172,6 +176,7 @@ class apptoken extends token {
             } else {
                 static::store_new_token(null, $this->token, $this->expiry, $this->refreshtoken, $this->scope, $this->tokenresource);
             }
+
             return true;
         } else {
             throw new moodle_exception('errorcouldnotrefreshtoken', 'local_o365');
@@ -191,6 +196,7 @@ class apptoken extends token {
         if (empty($tokens)) {
             return false;
         }
+
         $tokens = unserialize($tokens);
         if (isset($tokens[$tokenresource])) {
             // App tokens do not have a user.
@@ -217,13 +223,16 @@ class apptoken extends token {
         } else {
             $tokens = [];
         }
+
         if (isset($tokens[$existingtoken['tokenresource']])) {
             unset($tokens[$existingtoken['tokenresource']]);
         }
+
         // App tokens do not use refresh tokens.
         if (isset($newtoken['refreshtoken'])) {
             unset($newtoken['refreshtoken']);
         }
+
         $tokens[$newtoken['tokenresource']] = $newtoken;
         $tokens = serialize($tokens);
         set_config('apptokens', $tokens, 'local_o365');
@@ -241,10 +250,12 @@ class apptoken extends token {
         if (empty($tokens)) {
             return true;
         }
+
         $tokens = unserialize($tokens);
         if (isset($tokens[$existingtoken['tokenresource']])) {
             unset($tokens[$existingtoken['tokenresource']]);
         }
+
         $tokens = serialize($tokens);
         set_config('apptokens', $tokens, 'local_o365');
         return true;
@@ -266,12 +277,14 @@ class apptoken extends token {
         if (!$tokenresource) {
             $tokenresource = 'https://graph.microsoft.com';
         }
+
         $tokens = get_config('local_o365', 'apptokens');
         if (empty($tokens)) {
             $tokens = [];
         } else {
             $tokens = unserialize($tokens);
         }
+
         $newtoken = [
             'token' => $token,
             'expiry' => $expiry,

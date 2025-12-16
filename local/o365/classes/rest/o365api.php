@@ -89,6 +89,7 @@ abstract class o365api {
         } else {
             $token = \local_o365\utils::get_application_token($tokenresource, $clientdata, $httpclient);
         }
+
         if (!empty($token)) {
             return new static($token, $httpclient);
         } else {
@@ -184,10 +185,12 @@ abstract class o365api {
         if (!empty($this->apiarea)) {
             $apiarea = $this->apiarea;
         }
+
         if (!empty($options['apiarea'])) {
             $apiarea = $options['apiarea'];
             unset($options['apiarea']);
         }
+
         if (!empty($apiarea)) {
             $useragent .= '-' . $apiarea;
         }
@@ -197,6 +200,7 @@ abstract class o365api {
         if (!empty($pluginversion)) {
             $useragent .= '-' . $pluginversion;
         }
+
         $options['CURLOPT_USERAGENT'] = $useragent;
 
         // Add headers.
@@ -249,15 +253,21 @@ abstract class o365api {
                 if ($existingratelimitsetting != $ratelimitlevel . ':' . $ratelimittime) {
                     add_to_config_log('ratelimit', $existingratelimitsetting, $ratelimitlevel . ':' . $ratelimittime, 'local_o365');
                 }
+
                 set_config('ratelimit', $ratelimitlevel . ':' . time(), 'local_o365');
 
-                return $this->apicall($origparam['httpmethod'], $origparam['apimethod'], $origparam['params'],
-                    $origparam['options']);
+                return $this->apicall(
+                    $origparam['httpmethod'],
+                    $origparam['apimethod'],
+                    $origparam['params'],
+                    $origparam['options']
+                );
             } else if ($this->httpclient->info['http_code'] == 202) {
                 // If response is 202 Accepted, return response.
                 return $this->httpclient->response;
             }
         }
+
         return $result;
     }
 
@@ -279,11 +289,13 @@ abstract class o365api {
                 throw new moodle_exception('erroro365apibadcall', 'local_o365');
             }
         }
+
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             \local_o365\utils::debug('Bad response received', __METHOD__, $response);
             throw new moodle_exception('erroro365apibadcall', 'local_o365');
         }
+
         if (isset($result['odata.error'])) {
             $errmsg = 'Error response received.';
             \local_o365\utils::debug($errmsg, __METHOD__, $result['odata.error']);
@@ -294,6 +306,7 @@ abstract class o365api {
                 throw new moodle_exception('erroro365apibadcall', 'local_o365');
             }
         }
+
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
             \local_o365\utils::debug($errmsg, __METHOD__, $result['error']);
@@ -304,6 +317,7 @@ abstract class o365api {
                 } else if (is_array($result['error']['message']) && isset($result['error']['message']['value'])) {
                     $apierrormessage = $result['error']['message']['value'];
                 }
+
                 throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($apierrormessage));
             } else {
                 throw new moodle_exception('erroro365apibadcall', 'local_o365');
@@ -327,6 +341,7 @@ abstract class o365api {
                 throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', $errmsg);
             }
         }
+
         return $result;
     }
 
@@ -343,6 +358,7 @@ abstract class o365api {
         if ($tokenvalid !== true) {
             throw new moodle_exception('erroro365apiinvalidtoken', 'local_o365');
         }
+
         $header = ['Authorization: Bearer ' . $this->token->get_token()];
         $this->httpclient->resetheader();
         $this->httpclient->setheader($header);
@@ -400,6 +416,7 @@ abstract class o365api {
             if (!isset($apis[$api])) {
                 throw new moodle_exception('errornoapifound', 'local_o365', '', $api);
             }
+
             return $apis[$api];
         } else {
             return $apis;
