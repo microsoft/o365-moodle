@@ -24,6 +24,9 @@
  */
 defined('MOODLE_INTERNAL') || die;
 
-$settings->add(new admin_setting_configcheckbox('assignfeedback_onenote/default',
-    new lang_string('default', 'assignfeedback_onenote'), new lang_string('default_help', 'assignfeedback_onenote'), 0));
-
+$settings->add(new admin_setting_configcheckbox(
+    'assignfeedback_onenote/default',
+    new lang_string('default', 'assignfeedback_onenote'),
+    new lang_string('default_help', 'assignfeedback_onenote'),
+    0
+));

@@ -68,6 +68,7 @@ function assignfeedback_onenote_pluginfile($course, $cm, context $context, $file
     if (!$file || $file->is_directory()) {
         return false;
     }
+
     // Download MUST be forced - security!
     send_stored_file($file, 0, 0, true);
 }

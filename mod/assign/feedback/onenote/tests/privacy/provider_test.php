@@ -45,7 +45,6 @@ require_once($CFG->dirroot . '/mod/assign/tests/privacy/provider_test.php');
  * @covers \assignfeedback_onenote\privacy\provider
  */
 final class provider_test extends \mod_assign\tests\provider_testcase {
-
     /**
      * Convenience function for creating feedback data.
      *
@@ -292,10 +291,22 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         $fs = new file_storage();
         // 6 including directories for assign 1.
         // 4 including directories for assign 2.
-        $this->assertCount(6, $fs->get_area_files($assign1->get_context()->id, 'assignfeedback_onenote',
-            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
-        $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignfeedback_onenote',
-            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
+        $this->assertCount(
+            6,
+            $fs->get_area_files(
+                $assign1->get_context()->id,
+                'assignfeedback_onenote',
+                base::ASSIGNFEEDBACK_ONENOTE_FILEAREA
+            )
+        );
+        $this->assertCount(
+            4,
+            $fs->get_area_files(
+                $assign2->get_context()->id,
+                'assignfeedback_onenote',
+                base::ASSIGNFEEDBACK_ONENOTE_FILEAREA
+            )
+        );
 
         $deletedata = new assign_plugin_request_data($context, $assign1);
         $deletedata->set_userids([$user1->id, $user3->id]);
@@ -317,9 +328,15 @@ final class provider_test extends \mod_assign\tests\provider_testcase {
         // We have deleted two from assign 1, and none from assign 2.
         // 2 including directories for assign 1.
         // 4 including directories for assign 2.
-        $this->assertCount(2, $fs->get_area_files($assign1->get_context()->id, 'assignfeedback_onenote',
-            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
-        $this->assertCount(4, $fs->get_area_files($assign2->get_context()->id, 'assignfeedback_onenote',
-            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA));
+        $this->assertCount(2, $fs->get_area_files(
+            $assign1->get_context()->id,
+            'assignfeedback_onenote',
+            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA
+        ));
+        $this->assertCount(4, $fs->get_area_files(
+            $assign2->get_context()->id,
+            'assignfeedback_onenote',
+            base::ASSIGNFEEDBACK_ONENOTE_FILEAREA
+        ));
     }
 }

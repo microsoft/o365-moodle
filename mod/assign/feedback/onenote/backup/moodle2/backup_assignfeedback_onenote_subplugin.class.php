@@ -39,7 +39,6 @@
  * @package   assignfeedback_onenote
  */
 class backup_assignfeedback_onenote_subplugin extends backup_subplugin {
-
     /**
      * Returns the subplugin information to attach to feedback element
      *
@@ -63,5 +62,4 @@ class backup_assignfeedback_onenote_subplugin extends backup_subplugin {
 
         return $subplugin;
     }
-
 }
