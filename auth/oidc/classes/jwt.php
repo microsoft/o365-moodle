@@ -106,7 +106,7 @@ class jwt {
      */
     public static function instance_from_encoded($encoded) {
         [$header, $body] = static::decode($encoded);
-        $jwt = new static;
+        $jwt = new static();
         $jwt->set_header($header);
         $jwt->set_claims($body);
         return $jwt;

@@ -25,29 +25,21 @@
 
 namespace auth_oidc\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core_privacy\local\metadata\collection;
-use core_privacy\local\request\contextlist;
+use core_privacy\local\metadata\provider as metadata_provider;
 use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\core_userlist_provider;
+use core_privacy\local\request\plugin\provider as plugin_provider;
 use core_privacy\local\request\writer;
-
-/**
- * Interface for handling user lists in the OIDC authentication plugin.
- *
- * @package auth_oidc
- */
-interface auth_oidc_userlist extends \core_privacy\local\request\core_userlist_provider {
-};
 
 /**
  * Privacy provider for auth_oidc.
  */
 class provider implements
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\metadata\provider,
-    auth_oidc_userlist {
-
+    core_userlist_provider,
+    metadata_provider,
+    plugin_provider {
     /**
      * Returns meta data about this system.
      *
@@ -86,12 +78,12 @@ class provider implements
         foreach ($tables as $table => $fields) {
             $fielddata = [];
             foreach ($fields as $field) {
-                $fielddata[$field] = 'privacy:metadata:'.$table.':'.$field;
+                $fielddata[$field] = 'privacy:metadata:' . $table . ':' . $field;
             }
             $collection->add_database_table(
                 $table,
                 $fielddata,
-                'privacy:metadata:'.$table
+                'privacy:metadata:' . $table
             );
         }
 
@@ -105,7 +97,7 @@ class provider implements
      * @return  contextlist   $contextlist  The contextlist containing the list of contexts used in this plugin.
      */
     public static function get_contexts_for_userid(int $userid): contextlist {
-        $contextlist = new \core_privacy\local\request\contextlist();
+        $contextlist = new contextlist();
 
         $sql = "SELECT ctx.id
                   FROM {auth_oidc_token} tk
@@ -134,7 +126,8 @@ class provider implements
     /**
      * Get the list of users who have data within a context.
      *
-     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
+     * @param \core_privacy\local\request\userlist $userlist The userlist containing the list of
+     * users who have data in this context/plugin combination.
      */
     public static function get_users_in_context(\core_privacy\local\request\userlist $userlist) {
         $context = $userlist->get_context();
@@ -188,7 +181,7 @@ class provider implements
             foreach ($records as $record) {
                 writer::with_context($context)->export_data([
                     get_string('privacy:metadata:auth_oidc', 'auth_oidc'),
-                    get_string('privacy:metadata:'.$table, 'auth_oidc'),
+                    get_string('privacy:metadata:' . $table, 'auth_oidc'),
                 ], $record);
             }
         }
@@ -212,7 +205,7 @@ class provider implements
     /**
      * Delete all data for all users in the specified context.
      *
-     * @param context $context The specific context to delete data for.
+     * @param \context $context The specific context to delete data for.
      */
     public static function delete_data_for_all_users_in_context(\context $context) {
         if ($context->contextlevel == CONTEXT_USER) {

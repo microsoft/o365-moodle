@@ -94,7 +94,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
                 // Populate token oidcusername.
                 if (empty($user->oidcusername)) {
-                    $updatedtoken = new stdClass;
+                    $updatedtoken = new stdClass();
                     $updatedtoken->id = $user->tokenid;
                     $updatedtoken->oidcusername = $oidcusername;
                     $DB->update_record('auth_oidc_token', $updatedtoken);
@@ -105,12 +105,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                     // Old username, update to upn/sub.
                     if ($oidcusername != $user->username) {
                         // Update username.
-                        $updateduser = new stdClass;
+                        $updateduser = new stdClass();
                         $updateduser->id = $user->userid;
                         $updateduser->username = $oidcusername;
                         $DB->update_record('user', $updateduser);
 
-                        $updatedtoken = new stdClass;
+                        $updatedtoken = new stdClass();
                         $updatedtoken->id = $user->tokenid;
                         $updatedtoken->username = $oidcusername;
                         $DB->update_record('auth_oidc_token', $updatedtoken);
@@ -125,7 +125,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2015012707) {
         if (!$dbman->table_exists('auth_oidc_prevlogin')) {
-            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_oidc_prevlogin');
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'auth_oidc_prevlogin');
         }
         upgrade_plugin_savepoint(true, 2015012707, 'auth', 'oidc');
     }
@@ -144,7 +144,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         foreach ($authtokensrs as $authtokenrec) {
             $newusername = trim(\core_text::strtolower($authtokenrec->username));
             if ($newusername !== $authtokenrec->username) {
-                $updatedrec = new stdClass;
+                $updatedrec = new stdClass();
                 $updatedrec->id = $authtokenrec->id;
                 $updatedrec->username = $newusername;
                 $DB->update_record('auth_oidc_token', $updatedrec);
@@ -157,14 +157,22 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         // Update old endpoints.
         $config = get_config('auth_oidc');
         if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
-            add_to_config_log('authendpoint', $config->authendpoint, 'https://login.microsoftonline.com/common/oauth2/authorize',
-                'auth_oidc');
+            add_to_config_log(
+                'authendpoint',
+                $config->authendpoint,
+                'https://login.microsoftonline.com/common/oauth2/authorize',
+                'auth_oidc'
+            );
             set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_oidc');
         }
 
         if ($config->tokenendpoint === 'https://login.windows.net/common/oauth2/token') {
-            add_to_config_log('tokenendpoint', $config->tokenendpoint, 'https://login.microsoftonline.com/common/oauth2/token',
-                'auth_oidc');
+            add_to_config_log(
+                'tokenendpoint',
+                $config->tokenendpoint,
+                'https://login.microsoftonline.com/common/oauth2/token',
+                'auth_oidc'
+            );
             set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
         }
 
@@ -181,7 +189,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                       JOIN {user} u ON u.username = tok.username';
             $records = $DB->get_recordset_sql($sql);
             foreach ($records as $record) {
-                $newrec = new stdClass;
+                $newrec = new stdClass();
                 $newrec->id = $record->id;
                 $newrec->userid = $record->userid;
                 $DB->update_record('auth_oidc_token', $newrec);
@@ -399,10 +407,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                         $existingidptype = get_config('auth_oidc', 'idptype');
                         if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                             add_to_config_log(
-                                    'idptype',
-                                    $existingidptype,
-                                    AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
-                                    'auth_oidc'
+                                'idptype',
+                                $existingidptype,
+                                AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+                                'auth_oidc'
                             );
                         }
                         set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
@@ -426,8 +434,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             if (empty($clientsecretconfig) && !empty($clientcertificateconfig) && !empty($clientprivatekeyconfig)) {
                 $existingclientauthmethod = get_config('auth_oidc', 'clientauthmethod');
                 if ($existingclientauthmethod != AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
-                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
-                        'auth_oidc');
+                    add_to_config_log(
+                        'clientauthmethod',
+                        $existingclientauthmethod,
+                        AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
+                        'auth_oidc'
+                    );
                 }
                 set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_CERTIFICATE, 'auth_oidc');
             } else {

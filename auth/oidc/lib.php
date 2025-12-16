@@ -232,8 +232,11 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
         $item->userid = $record->muserid;
         $item->oidcuniqueid = $record->oidcuniqid;
         $item->matchingstatus = get_string('mismatched', 'auth_oidc');
-        $item->details = get_string('mismatched_details', 'auth_oidc',
-            ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]);
+        $item->details = get_string(
+            'mismatched_details',
+            'auth_oidc',
+            ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]
+        );
         $deletetokenurl = new moodle_url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token_and_reference', 'auth_oidc'));
 
@@ -257,7 +260,13 @@ function auth_oidc_delete_token(int $tokenid): void {
                   JOIN {auth_oidc_token} tok ON obj.o365name = tok.username
                   JOIN {user} u ON obj.moodleid = u.id
                  WHERE obj.type = :type AND tok.id = :tokenid';
-        if ($objectrecord = $DB->get_record_sql($sql, ['type' => 'user', 'tokenid' => $tokenid], IGNORE_MULTIPLE)) {
+        if (
+            $objectrecord = $DB->get_record_sql(
+                $sql,
+                ['type' => 'user', 'tokenid' => $tokenid],
+                IGNORE_MULTIPLE
+            )
+        ) {
             // Delete record from local_o365_objects.
             $DB->delete_records('local_o365_objects', ['id' => $objectrecord->id]);
 
@@ -265,8 +274,11 @@ function auth_oidc_delete_token(int $tokenid): void {
             $DB->delete_records('local_o365_token', ['user_id' => $objectrecord->userid]);
 
             // Delete record from local_o365_connections.
-            $DB->delete_records_select('local_o365_connections', 'muserid = :userid OR LOWER(entraidupn) = :email',
-                ['userid' => $objectrecord->userid, 'email' => $objectrecord->email]);
+            $DB->delete_records_select(
+                'local_o365_connections',
+                'muserid = :userid OR LOWER(entraidupn) = :email',
+                ['userid' => $objectrecord->userid, 'email' => $objectrecord->email]
+            );
         }
     }
 
@@ -314,28 +326,45 @@ function auth_oidc_get_remote_fields() {
 
         $order = 0;
         while ($order++ < 15) {
-            $remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_oidc',
-                $order);
+            $remotefields['extensionAttribute' . $order] = get_string(
+                'settings_fieldmap_field_extensionattribute',
+                'auth_oidc',
+                $order
+            );
         }
 
         // SDS profile sync.
-        [$sdsprofilesyncenabled, $schoolid, $schoolname] = local_o365\feature\sds\utils::get_profile_sync_status_with_id_name();
+        [$sdsprofilesyncenabled, $schoolid, $schoolname] =
+            local_o365\feature\sds\utils::get_profile_sync_status_with_id_name();
 
         if ($sdsprofilesyncenabled) {
-            $remotefields['sds_school_id'] = get_string('settings_fieldmap_field_sds_school_id', 'auth_oidc',
-                get_config('local_o365', 'sdsprofilesync', $schoolid));
-            $remotefields['sds_school_name'] = get_string('settings_fieldmap_field_sds_school_name', 'auth_oidc', $schoolname);
+            $remotefields['sds_school_id'] = get_string(
+                'settings_fieldmap_field_sds_school_id',
+                'auth_oidc',
+                get_config('local_o365', 'sdsprofilesync', $schoolid)
+            );
+            $remotefields['sds_school_name'] = get_string(
+                'settings_fieldmap_field_sds_school_name',
+                'auth_oidc',
+                $schoolname
+            );
             $remotefields['sds_school_role'] = get_string('settings_fieldmap_field_sds_school_role', 'auth_oidc');
             $remotefields['sds_student_externalId'] = get_string('settings_fieldmap_field_sds_student_externalId', 'auth_oidc');
             $remotefields['sds_student_birthDate'] = get_string('settings_fieldmap_field_sds_student_birthDate', 'auth_oidc');
             $remotefields['sds_student_grade'] = get_string('settings_fieldmap_field_sds_student_grade', 'auth_oidc');
-            $remotefields['sds_student_graduationYear'] = get_string('settings_fieldmap_field_sds_student_graduationYear',
-                'auth_oidc');
-            $remotefields['sds_student_studentNumber'] = get_string('settings_fieldmap_field_sds_student_studentNumber',
-                'auth_oidc');
+            $remotefields['sds_student_graduationYear'] = get_string(
+                'settings_fieldmap_field_sds_student_graduationYear',
+                'auth_oidc'
+            );
+            $remotefields['sds_student_studentNumber'] = get_string(
+                'settings_fieldmap_field_sds_student_studentNumber',
+                'auth_oidc'
+            );
             $remotefields['sds_teacher_externalId'] = get_string('settings_fieldmap_field_sds_teacher_externalId', 'auth_oidc');
-            $remotefields['sds_teacher_teacherNumber'] = get_string('settings_fieldmap_field_sds_teacher_teacherNumber',
-                'auth_oidc');
+            $remotefields['sds_teacher_teacherNumber'] = get_string(
+                'settings_fieldmap_field_sds_teacher_teacherNumber',
+                'auth_oidc'
+            );
         }
     } else {
         $remotefields = [
@@ -452,15 +481,26 @@ function auth_oidc_apply_default_email_mapping() {
  * @param boolean $updateremotefields Allow remote updates
  * @param array $customfields list of custom profile fields
  */
-function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $helptext, $mapremotefields, $updateremotefields,
-    $customfields = []) {
+function auth_oidc_display_auth_lock_options(
+    $settings,
+    $auth,
+    $userfields,
+    $helptext,
+    $mapremotefields,
+    $updateremotefields,
+    $customfields = []
+) {
     global $DB;
 
     // Introductory explanation and help text.
     if ($mapremotefields) {
-        $settings->add(new admin_setting_heading($auth.'/data_mapping', new lang_string('auth_data_mapping', 'auth'), $helptext));
+        $settings->add(
+            new admin_setting_heading($auth . '/data_mapping', new lang_string('auth_data_mapping', 'auth'), $helptext)
+        );
     } else {
-        $settings->add(new admin_setting_heading($auth.'/auth_fieldlocks', new lang_string('auth_fieldlocks', 'auth'), $helptext));
+        $settings->add(
+            new admin_setting_heading($auth . '/auth_fieldlocks', new lang_string('auth_fieldlocks', 'auth'), $helptext)
+        );
     }
 
     // Generate the list of options.
@@ -525,36 +565,69 @@ function auth_oidc_display_auth_lock_options($settings, $auth, $userfields, $hel
             // Display a message that the field can not be mapped because it's too long.
             $url = new moodle_url('/user/profile/index.php');
             $a = (object)['fieldname' => s($fieldname), 'shortname' => s($field), 'charlimit' => 67, 'link' => $url->out()];
-            $settings->add(new admin_setting_heading($auth.'/field_not_mapped_'.sha1($field), '',
-                get_string('cannotmapfield', 'auth', $a)));
+            $settings->add(new admin_setting_heading(
+                $auth . '/field_not_mapped_' . sha1($field),
+                '',
+                get_string('cannotmapfield', 'auth', $a)
+            ));
         } else if ($mapremotefields) {
             // We are mapping to a remote field here.
             // Mapping.
             if ($field == 'email') {
-                $settings->add(new admin_setting_configselect("auth_oidc/field_map_{$field}",
-                    get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $emailremotefields));
+                $settings->add(new admin_setting_configselect(
+                    "auth_oidc/field_map_{$field}",
+                    get_string('auth_fieldmapping', 'auth', $fieldname),
+                    '',
+                    null,
+                    $emailremotefields
+                ));
             } else {
-                $settings->add(new admin_setting_configselect("auth_oidc/field_map_{$field}",
-                    get_string('auth_fieldmapping', 'auth', $fieldname), '', null, $remotefields));
+                $settings->add(new admin_setting_configselect(
+                    "auth_oidc/field_map_{$field}",
+                    get_string('auth_fieldmapping', 'auth', $fieldname),
+                    '',
+                    null,
+                    $remotefields
+                ));
             }
 
             // Update local.
-            $settings->add(new admin_setting_configselect("auth_{$auth}/field_updatelocal_{$field}",
-                get_string('auth_updatelocalfield', 'auth', $fieldname), '', 'always', $updatelocaloptions));
+            $settings->add(new admin_setting_configselect(
+                "auth_{$auth}/field_updatelocal_{$field}",
+                get_string('auth_updatelocalfield', 'auth', $fieldname),
+                '',
+                'always',
+                $updatelocaloptions
+            ));
 
             // Update remote.
             if ($updateremotefields) {
-                $settings->add(new admin_setting_configselect("auth_{$auth}/field_updateremote_{$field}",
-                    get_string('auth_updateremotefield', 'auth', $fieldname), '', 0, $updateextoptions));
+                $settings->add(new admin_setting_configselect(
+                    "auth_{$auth}/field_updateremote_{$field}",
+                    get_string('auth_updateremotefield', 'auth', $fieldname),
+                    '',
+                    0,
+                    $updateextoptions
+                ));
             }
 
             // Lock fields.
-            $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}",
-                get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
+            $settings->add(new admin_setting_configselect(
+                "auth_{$auth}/field_lock_{$field}",
+                get_string('auth_fieldlockfield', 'auth', $fieldname),
+                '',
+                'unlocked',
+                $lockoptions
+            ));
         } else {
             // Lock fields Only.
-            $settings->add(new admin_setting_configselect("auth_{$auth}/field_lock_{$field}",
-                get_string('auth_fieldlockfield', 'auth', $fieldname), '', 'unlocked', $lockoptions));
+            $settings->add(new admin_setting_configselect(
+                "auth_{$auth}/field_lock_{$field}",
+                get_string('auth_fieldlockfield', 'auth', $fieldname),
+                '',
+                'unlocked',
+                $lockoptions
+            ));
         }
     }
 }
@@ -708,8 +781,12 @@ function auth_oidc_get_binding_username_claim(): string {
         $bindingusernameclaim = 'auto';
     } else if ($bindingusernameclaim === 'custom') {
         $bindingusernameclaim = get_config('auth_oidc', 'customclaimname');
-    } else if (!in_array($bindingusernameclaim, ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid',
-        'samaccountname'])) {
+    } else if (
+        !in_array(
+            $bindingusernameclaim,
+            ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid', 'samaccountname']
+        )
+    ) {
         $bindingusernameclaim = 'auto';
     }
 
@@ -741,8 +818,10 @@ function auth_oidc_get_existing_claims(): array {
             $decodedtoken = jwt::decode($tokenrecord->$tokenkey);
             if (is_array($decodedtoken) && count($decodedtoken) > 1) {
                 foreach ($decodedtoken[1] as $claim => $value) {
-                    if (!in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value)) &&
-                        !in_array($claim, $tokenclaims)) {
+                    if (
+                        !in_array($claim, $excludedclaims) && (is_string($value) || is_numeric($value)) &&
+                        !in_array($claim, $tokenclaims)
+                    ) {
                         $tokenclaims[] = $claim;
                     }
                 }

@@ -32,7 +32,7 @@ use html_writer;
  */
 class upload_process_tracker {
     /** @var array */
-    protected $_row;
+    protected $row;
     /** @var array */
     public $columns = [];
     /** @var array */
@@ -66,7 +66,7 @@ class upload_process_tracker {
             echo html_writer::tag('th', $header, ['class' => 'header c' . $ci++, 'scope' => 'col']);
         }
         echo html_writer::end_tag('tr');
-        $this->_row = null;
+        $this->row = null;
     }
 
     /**
@@ -75,11 +75,11 @@ class upload_process_tracker {
      * @return void
      */
     public function flush() {
-        if (empty($this->_row) || empty($this->_row['line']['normal'])) {
+        if (empty($this->row) || empty($this->row['line']['normal'])) {
             // Nothing to print - each line has to have at least number.
-            $this->_row = [];
+            $this->row = [];
             foreach ($this->columns as $col) {
-                $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
+                $this->row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
             }
 
             return;
@@ -87,7 +87,7 @@ class upload_process_tracker {
         $ci = 0;
         $ri = 1;
         echo '<tr class="r' . $ri . '">';
-        foreach ($this->_row as $key => $field) {
+        foreach ($this->row as $key => $field) {
             foreach ($field as $type => $content) {
                 if ($field[$type] !== '') {
                     $field[$type] = '<span class="uu' . $type . '">' . $field[$type] . '</span>';
@@ -105,7 +105,7 @@ class upload_process_tracker {
         }
         echo '</tr>';
         foreach ($this->columns as $col) {
-            $this->_row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
+            $this->row[$col] = ['normal' => '', 'info' => '', 'warning' => '', 'error' => ''];
         }
     }
 
@@ -119,7 +119,7 @@ class upload_process_tracker {
      * @return void
      */
     public function track($col, $msg, $level = 'normal', $merge = true) {
-        if (empty($this->_row)) {
+        if (empty($this->row)) {
             $this->flush();
         }
         if (!in_array($col, $this->columns)) {
@@ -128,12 +128,12 @@ class upload_process_tracker {
             return;
         }
         if ($merge) {
-            if ($this->_row[$col][$level] != '') {
-                $this->_row[$col][$level] .= '<br />';
+            if ($this->row[$col][$level] != '') {
+                $this->row[$col][$level] .= '<br />';
             }
-            $this->_row[$col][$level] .= $msg;
+            $this->row[$col][$level] .= $msg;
         } else {
-            $this->_row[$col][$level] = $msg;
+            $this->row[$col][$level] = $msg;
         }
     }
 
