@@ -37,7 +37,6 @@ require_once("$CFG->dirroot/mod/assign/feedback/onenote/externallib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class assignfeedback_onenote_external extends external_api {
-
     /**
      * Utility function for validating an assign.
      *
@@ -64,7 +63,7 @@ class assignfeedback_onenote_external extends external_api {
      * @since Moodle 3.2
      */
     public static function feedback_onenote_delete_foruser_parameters() {
-        return new external_function_parameters (['contextid' => new external_value(PARAM_INT, 'Context id'),
+        return new external_function_parameters(['contextid' => new external_value(PARAM_INT, 'Context id'),
             'gradeid' => new external_value(PARAM_INT, 'Grade id'), 'userid' => new external_value(PARAM_INT, 'User id')]);
     }
 
@@ -81,8 +80,10 @@ class assignfeedback_onenote_external extends external_api {
         global $DB;
         $warnings = [];
 
-        self::validate_parameters(self::feedback_onenote_delete_foruser_parameters(),
-            ['contextid' => $contextid, 'gradeid' => $gradeid, 'userid' => $userid]);
+        self::validate_parameters(
+            self::feedback_onenote_delete_foruser_parameters(),
+            ['contextid' => $contextid, 'gradeid' => $gradeid, 'userid' => $userid]
+        );
 
         // This code removes the entry.
         $fs = get_file_storage();
@@ -91,8 +92,12 @@ class assignfeedback_onenote_external extends external_api {
 
         // Remove entry from local_onenote_assign_pages.
         $graderecord = $DB->get_record('assign_grades', ['id' => $gradeid], '*', MUST_EXIST);
-        $record = $DB->get_record('local_onenote_assign_pages', ['assign_id' => $graderecord->assignment, 'user_id' => $userid],
-            '*', MUST_EXIST);
+        $record = $DB->get_record(
+            'local_onenote_assign_pages',
+            ['assign_id' => $graderecord->assignment, 'user_id' => $userid],
+            '*',
+            MUST_EXIST
+        );
         $record->feedback_teacher_page_id = '';
         $DB->update_record('local_onenote_assign_pages', $record);
 
