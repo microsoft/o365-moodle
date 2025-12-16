@@ -32,7 +32,6 @@
  * @package   assignfeedback_onenote
  */
 class restore_assignfeedback_onenote_subplugin extends restore_subplugin {
-
     /**
      * Returns the paths to be handled by the subplugin at assignment level
      *

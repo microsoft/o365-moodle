@@ -26,7 +26,7 @@ namespace assignfeedback_onenote\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/assign/locallib.php');
+require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\metadata\provider as metadataprovider;
@@ -36,6 +36,7 @@ use core_privacy\local\request\writer;
 use core_privacy\local\request\contextlist;
 use mod_assign\privacy\assign_plugin_request_data;
 use mod_assign\privacy\useridlist;
+
 /**
  * Privacy class for requesting user data.
  *
@@ -45,11 +46,11 @@ use mod_assign\privacy\useridlist;
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 class provider implements
-        metadataprovider,
-        assignfeedback_provider,
-        assignfeedback_user_provider {
+    assignfeedback_provider,
+    assignfeedback_user_provider,
+    metadataprovider {
     /**
-     * Return meta data about this plugin.
+     * Return metadata about this plugin.
      *
      * @param  collection $collection A list of information to add to.
      * @return collection Return the collection after adding to it.
@@ -68,7 +69,7 @@ class provider implements
      * This is covered by the mod_assign provider.
      *
      * @param int $userid The user ID to get context IDs for.
-     * @param \core_privacy\local\request\contextlist $contextlist Use add_from_sql with this object to add your context IDs.
+     * @param contextlist $contextlist Use add_from_sql with this object to add your context IDs.
      */
     public static function get_context_for_userid_within_feedback(int $userid, contextlist $contextlist) {
     }
@@ -110,8 +111,12 @@ class provider implements
         foreach ($records as $record) {
             writer::with_context($context)
                 ->export_data($currentpath, $record);
-            writer::with_context($exportdata->get_context())->export_area_files($currentpath,
-                'assignfeedback_onenote', \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, $record->grade);
+            writer::with_context($exportdata->get_context())->export_area_files(
+                $currentpath,
+                'assignfeedback_onenote',
+                \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+                $record->grade
+            );
         }
     }
 
@@ -123,8 +128,11 @@ class provider implements
     public static function delete_feedback_for_context(assign_plugin_request_data $requestdata) {
         $assign = $requestdata->get_assign();
         $fs = get_file_storage();
-        $fs->delete_area_files($requestdata->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA);
+        $fs->delete_area_files(
+            $requestdata->get_context()->id,
+            'assignfeedback_onenote',
+            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA
+        );
         $plugin = $assign->get_plugin_by_type('assignfeedback', 'onenote');
         $plugin->delete_instance();
     }
@@ -138,8 +146,12 @@ class provider implements
         global $DB;
 
         $fs = new \file_storage();
-        $fs->delete_area_files($requestdata->get_context()->id, 'assignfeedback_onenote',
-            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, $requestdata->get_pluginobject()->id);
+        $fs->delete_area_files(
+            $requestdata->get_context()->id,
+            'assignfeedback_onenote',
+            \local_onenote\api\base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+            $requestdata->get_pluginobject()->id
+        );
 
         $filters = [
             'assignment' => $requestdata->get_assign()->get_instance()->id,
@@ -163,7 +175,7 @@ class provider implements
             return;
         }
 
-        list($sql, $params) = $DB->get_in_or_equal($deletedata->get_gradeids(), SQL_PARAMS_NAMED);
+        [$sql, $params] = $DB->get_in_or_equal($deletedata->get_gradeids(), SQL_PARAMS_NAMED);
 
         $fs = new \file_storage();
         $fs->delete_area_files_select(
