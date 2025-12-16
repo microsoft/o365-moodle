@@ -24,8 +24,8 @@
  */
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing
-require_once(__DIR__.'/../../config.php');
-require_once(__DIR__.'/auth.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/auth.php');
 
 $auth = new \auth_plugin_oidc('authcode');
 $auth->set_httpclient(new \auth_oidc\httpclient());

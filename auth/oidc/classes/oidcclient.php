@@ -91,7 +91,6 @@ class oidcclient {
             } else {
                 $this->tokenresource = 'https://graph.microsoft.com';
             }
-
         }
         $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
     }
@@ -174,11 +173,15 @@ class oidcclient {
      * @param bool $selectaccount Whether to prompt the user to select an account.
      * @return array Array of request parameters.
      */
-    protected function getauthrequestparams($promptlogin = false, array $stateparams = [], array $extraparams = [],
-        bool $selectaccount = false) {
+    protected function getauthrequestparams(
+        $promptlogin = false,
+        array $stateparams = [],
+        array $extraparams = [],
+        bool $selectaccount = false
+    ) {
         global $SESSION;
 
-        $nonce = 'N'.uniqid();
+        $nonce = 'N' . uniqid();
 
         $params = [
             'response_type' => 'code',
@@ -224,7 +227,7 @@ class oidcclient {
      * @return array
      */
     protected function getadminconsentrequestparams(array $stateparams = [], array $extraparams = []) {
-        $nonce = 'N'.uniqid();
+        $nonce = 'N' . uniqid();
 
         $params = [
             'client_id' => $this->clientid,
@@ -247,7 +250,7 @@ class oidcclient {
      */
     protected function getnewstate($nonce, array $stateparams = []) {
         global $DB;
-        $staterec = new \stdClass;
+        $staterec = new \stdClass();
         $staterec->sesskey = sesskey();
         $staterec->state = random_string(15);
         $staterec->nonce = $nonce;
@@ -265,8 +268,12 @@ class oidcclient {
      * @param array $extraparams Additional parameters to send with the OIDC request.
      * @param bool $selectaccount Whether to prompt the user to select an account.
      */
-    public function authrequest($promptlogin = false, array $stateparams = [], array $extraparams = [],
-        bool $selectaccount = false) {
+    public function authrequest(
+        $promptlogin = false,
+        array $stateparams = [],
+        array $extraparams = [],
+        bool $selectaccount = false
+    ) {
         if (empty($this->clientid)) {
             throw new moodle_exception('erroroidcclientnocreds', 'auth_oidc');
         }
