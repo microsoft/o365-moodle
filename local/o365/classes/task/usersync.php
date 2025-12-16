@@ -105,20 +105,32 @@ class usersync extends scheduled_task {
         @set_time_limit(0);
 
         $fullsyncfailed = false;
+        $totalusersprocessed = 0;
+
+        // Determine binding username claim once.
+        $bindingusernameclaim = $this->get_binding_username_claim();
+
+        // Create a callback to process users in batches.
+        $processcallback = function ($userbatch) use ($usersync, $bindingusernameclaim) {
+            $this->mtrace(count($userbatch) . ' users in batch. Syncing...');
+            $this->sync_users($usersync, $userbatch, $bindingusernameclaim);
+        };
 
         if (main::sync_option_enabled('nodelta') === true) {
             $this->mtrace('Forcing full sync.');
             $this->mtrace('Contacting Microsoft Entra ID...');
-            $users = [];
+            $this->mtrace('Processing users in batches of 500...');
+
             try {
-                $users = $usersync->get_users('default');
+                $totalusersprocessed = $usersync->process_users_batched($processcallback);
+                $this->mtrace('Total users processed: ' . $totalusersprocessed);
             } catch (moodle_exception $e) {
                 $fullsyncfailed = true;
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), __METHOD__, $e);
             }
 
-            $this->mtrace('Got response from Microsoft Entra ID');
+            $this->mtrace('Completed processing from Microsoft Entra ID');
         } else {
             $deltatoken = $this->get_token('deltatoken');
             if (!empty($deltatoken)) {
@@ -129,9 +141,18 @@ class usersync extends scheduled_task {
 
             $this->mtrace('Using delta sync.');
             $this->mtrace('Contacting Microsoft Entra ID...');
+            $this->mtrace('Processing users in batches of 500...');
 
             try {
-                [$users, $deltatoken] = $usersync->get_users_delta('default', $deltatoken);
+                [$totalusersprocessed, $deltatoken, $fieldsmappingchanged] = $usersync->process_users_delta_batched(
+                    $processcallback,
+                    'default',
+                    $deltatoken
+                );
+                if ($fieldsmappingchanged) {
+                    $this->mtrace('Field mappings changed. Invalidating delta token and starting fresh sync.');
+                }
+                $this->mtrace('Total users processed: ' . $totalusersprocessed);
             } catch (moodle_exception $e) {
                 $this->mtrace('Error in delta usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), __METHOD__, $e);
@@ -139,7 +160,7 @@ class usersync extends scheduled_task {
                 $deltatoken = null;
             }
 
-            $this->mtrace('Got response from Microsoft Entra ID');
+            $this->mtrace('Completed processing from Microsoft Entra ID');
 
             // Store deltatoken.
             if (!empty($deltatoken)) {
@@ -149,13 +170,6 @@ class usersync extends scheduled_task {
             }
 
             $this->store_token('deltatoken', $deltatoken);
-        }
-
-        if (!empty($users)) {
-            $this->mtrace(count($users) . ' users received. Syncing...');
-            $this->sync_users($usersync, $users);
-        } else {
-            $this->mtrace('No users received to sync.');
         }
 
         if (main::sync_option_enabled('suspend') || main::sync_option_enabled('reenable')) {
@@ -203,30 +217,54 @@ class usersync extends scheduled_task {
 
             if ($rundelete) {
                 $this->mtrace('Start suspend/delete users feature...');
-                if (main::sync_option_enabled('nodelta') !== true) {
-                    // Make sure $users contains all Entra ID users - if delta sync was used, do a full sync.
-                    $users = [];
 
-                    try {
-                        $users = $usersync->get_users('default');
-                    } catch (moodle_exception $e) {
-                        $fullsyncfailed = true;
-                        $this->mtrace('Error in full usersync: ' . $e->getMessage());
-                        utils::debug($e->getMessage(), __METHOD__, $e);
-                    }
+                // Suspend_users() requires the COMPLETE set of active Entra ID user IDs to identify
+                // Moodle accounts that are absent from Entra ID (set-complement logic). Accumulating
+                // all IDs is therefore unavoidable, but memory is bounded to one string ID per user
+                // rather than a full user object. reenable_suspsend_users() only needs users that ARE
+                // in Entra ID, so it is processed per batch to avoid any accumulation.
+                $allentriduserids = [];
+                $dosuspend = main::sync_option_enabled('suspend');
+                $doreenable = main::sync_option_enabled('reenable');
+                $syncdisabledstatus = main::sync_option_enabled('disabledsync');
+
+                // Fetch minimal fields (id + accountEnabled) for all Entra ID users.
+                // This runs for both nodelta and delta modes: nodelta never populates $allentriduserids
+                // via the top-level sync, so a separate minimal fetch is always required here.
+                $this->mtrace('Collecting user IDs for suspend/reenable feature...');
+                try {
+                    $batchcallback = function (array $userbatch) use (
+                        &$allentriduserids,
+                        $usersync,
+                        $doreenable,
+                        $syncdisabledstatus
+                    ) {
+                        // Accumulate only the ID string — not the full user object.
+                        foreach ($userbatch as $user) {
+                            $allentriduserids[] = $user['id'];
+                        }
+                        // Re-enable per batch: no need for the complete set.
+                        if ($doreenable) {
+                            $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
+                        }
+                    };
+                    $totalcollected = $usersync->process_users_minimal_batched($batchcallback);
+                    $this->mtrace('Collected ' . $totalcollected . ' user IDs for suspend/reenable.');
+                } catch (moodle_exception $e) {
+                    $fullsyncfailed = true;
+                    $this->mtrace('Error collecting users for suspend/reenable: ' . $e->getMessage());
+                    utils::debug($e->getMessage(), __METHOD__, $e);
                 }
 
                 if ($fullsyncfailed) {
                     $this->mtrace('Full user sync failed, skip suspending users...');
                 } else {
-                    if (main::sync_option_enabled('suspend')) {
+                    if ($dosuspend) {
                         $this->mtrace('Suspending deleted users...');
-                        $usersync->suspend_users($users, main::sync_option_enabled('delete'));
+                        $usersync->suspend_users($allentriduserids, main::sync_option_enabled('delete'));
                     }
-
-                    if (main::sync_option_enabled('reenable')) {
-                        $this->mtrace('Re-enabling suspended users...');
-                        $usersync->reenable_suspsend_users($users, main::sync_option_enabled('disabledsync'));
+                    if ($doreenable) {
+                        $this->mtrace('Re-enabling suspended users (processed per batch above).');
                     }
                 }
             }
@@ -238,17 +276,15 @@ class usersync extends scheduled_task {
     }
 
     /**
-     * Process users in chunks of 10000 at a time.
+     * Get the binding username claim to use for user sync.
+     * Outputs a trace message once with the determined claim.
      *
-     * @param main $usersync
-     * @param array $users
+     * @return string The Graph API field name to use for binding
      */
-    protected function sync_users($usersync, $users) {
+    protected function get_binding_username_claim(): string {
         global $CFG;
 
         require_once($CFG->dirroot . '/auth/oidc/lib.php');
-
-        $chunk = array_chunk($users, 10000);
 
         $bindingusernameclaim = auth_oidc_get_binding_username_claim();
         switch ($bindingusernameclaim) {
@@ -285,9 +321,17 @@ class usersync extends scheduled_task {
                 $bindingusernameclaim = 'userPrincipalName';
         }
 
-        foreach ($chunk as $u) {
-            $this->mtrace(count($u) . ' users in chunk. Syncing...');
-            $usersync->sync_users($u, $bindingusernameclaim);
-        }
+        return $bindingusernameclaim;
+    }
+
+    /**
+     * Sync a batch of users.
+     *
+     * @param main $usersync
+     * @param array $users
+     * @param string $bindingusernameclaim The Graph API field name to use for binding
+     */
+    protected function sync_users($usersync, $users, $bindingusernameclaim) {
+        $usersync->sync_users($users, $bindingusernameclaim);
     }
 }
