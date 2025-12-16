@@ -31,7 +31,6 @@ use local_onenote\api\base;
  * @package   assignfeedback_onenote
  */
 class assign_feedback_onenote extends assign_feedback_plugin {
-
     /**
      * Get the name of the onenote feedback plugin.
      *
@@ -78,9 +77,17 @@ class assign_feedback_onenote extends assign_feedback_plugin {
      * @param int $toitemid - The destination item id
      * @return boolean
      */
-    private function copy_area_files(file_storage $fs, $fromcontextid, $fromcomponent, $fromfilearea, $fromitemid, $tocontextid,
-        $tocomponent, $tofilearea, $toitemid) {
-
+    private function copy_area_files(
+        file_storage $fs,
+        $fromcontextid,
+        $fromcomponent,
+        $fromfilearea,
+        $fromitemid,
+        $tocontextid,
+        $tocomponent,
+        $tofilearea,
+        $toitemid
+    ) {
         $newfilerecord = new stdClass();
         $newfilerecord->contextid = $tocontextid;
         $newfilerecord->component = $tocomponent;
@@ -95,9 +102,11 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                     // automatically with current timestamp.
                     continue;
                 }
+
                 $newfile = $fs->create_file_from_storedfile($newfilerecord, $file);
             }
         }
+
         return true;
     }
 
@@ -133,14 +142,21 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if (!$isteacher) {
             return false;
         }
+
         $o = '<hr/><b>' . get_string('onenoteactions', 'assignfeedback_onenote') . '</b>&nbsp;&nbsp;&nbsp;&nbsp;';
 
         if ($onenoteapi->is_logged_in()) {
             // Show a link to open the OneNote page.
             $submission = $this->assignment->get_user_submission($userid, false);
-            $o .= $onenoteapi->render_action_button(get_string('addfeedback', 'assignfeedback_onenote'),
-                $this->assignment->get_course_module()->id, true, true, $userid, $submission ? $submission->id : 0,
-                $grade ? $grade->id : null);
+            $o .= $onenoteapi->render_action_button(
+                get_string('addfeedback', 'assignfeedback_onenote'),
+                $this->assignment->get_course_module()->id,
+                true,
+                true,
+                $userid,
+                $submission ? $submission->id : 0,
+                $grade ? $grade->id : null
+            );
             $o .= '<br/><p>' . get_string('addfeedbackhelp', 'assignfeedback_onenote') . '</p>';
 
             // Show a view all link if the number of files is over this limit.
@@ -152,7 +168,6 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 $o .= '" id="deleteuserfeedback"  name="deleteuserfeedback">';
                 $o .= get_string('deletefeedbackforuser', 'assignfeedback_onenote') . '</button>';
             }
-
         } else {
             $o .= $onenoteapi->render_signin_widget();
             $o .= '<br/><br/><p>' . get_string('signinhelp1', 'assignfeedback_onenote') . '</p>';
@@ -239,7 +254,6 @@ class assign_feedback_onenote extends assign_feedback_plugin {
 
             // Check if feedback size is greater than course upload limit.
             if (($COURSE->maxbytes > 0) && ($feedbacksize > $COURSE->maxbytes)) {
-
                 // Display error if true.
                 $this->set_error(get_string('feedbacklimitexceed', 'assignfeedback_onenote'));
                 return false;
@@ -248,8 +262,12 @@ class assign_feedback_onenote extends assign_feedback_plugin {
             $fs = get_file_storage();
 
             // Delete any previous feedbacks.
-            $fs->delete_area_files($this->assignment->get_context()->id, 'assignfeedback_onenote',
-                base::ASSIGNFEEDBACK_ONENOTE_FILEAREA, $grade->id);
+            $fs->delete_area_files(
+                $this->assignment->get_context()->id,
+                'assignfeedback_onenote',
+                base::ASSIGNFEEDBACK_ONENOTE_FILEAREA,
+                $grade->id
+            );
 
             // Prepare file record object.
             $fileinfo = ['contextid' => $this->assignment->get_context()->id, 'component' => 'assignfeedback_onenote',
@@ -285,6 +303,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -297,6 +316,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($this->isonfrontpage() === true) {
             return false;
         }
+
         return parent::is_enabled();
     }
 
@@ -309,6 +329,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         if ($this->isonfrontpage() === true) {
             return false;
         }
+
         return parent::is_configurable();
     }
 
@@ -335,14 +356,19 @@ class assign_feedback_onenote extends assign_feedback_plugin {
         $o = '';
 
         if ($count <= base::ASSIGNFEEDBACK_ONENOTE_MAXSUMMARYFILES) {
-
             if ($onenoteapi->is_logged_in()) {
                 // Show a link to open the OneNote page.
                 $submission = $this->assignment->get_user_submission($grade->userid, false);
                 $isteacher = $onenoteapi->is_teacher($this->assignment->get_course_module()->id, $USER->id);
-                $o .= $onenoteapi->render_action_button(get_string('viewfeedback', 'assignfeedback_onenote'),
-                    $this->assignment->get_course_module()->id, true, $isteacher, $grade->userid, $submission ? $submission->id : 0,
-                    $grade->id);
+                $o .= $onenoteapi->render_action_button(
+                    get_string('viewfeedback', 'assignfeedback_onenote'),
+                    $this->assignment->get_course_module()->id,
+                    true,
+                    $isteacher,
+                    $grade->userid,
+                    $submission ? $submission->id : 0,
+                    $grade->id
+                );
             } else {
                 $o .= $onenoteapi->render_signin_widget();
                 $o .= '<br/><br/><p>' . get_string('signinhelp2', 'assignfeedback_onenote') . '</p>';
