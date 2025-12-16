@@ -28,8 +28,10 @@ use theme_boost_o365teams\css_processor;
 
 if ($ADMIN->fulltree) {
     // Tabs.
-    $settings = new theme_boost_admin_settingspage_tabs('themesettingboost_o365teams',
-        get_string('configtitle', 'theme_boost_o365teams'));
+    $settings = new theme_boost_admin_settingspage_tabs(
+        'themesettingboost_o365teams',
+        get_string('configtitle', 'theme_boost_o365teams')
+    );
 
     // General settings.
     $page = new admin_settingpage('theme_boost_o365teams_general', get_string('generalsettings', 'theme_boost_o365teams'));

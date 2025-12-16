@@ -42,10 +42,10 @@ function theme_boost_o365teams_pluginfile($course, $cm, $context, $filearea, $ar
     if (empty($theme)) {
         $theme = theme_config::load('boost_o365teams');
     }
+
     if ($context->contextlevel == CONTEXT_SYSTEM) {
         if ($filearea === 'footer_stamp') {
             return $theme->setting_file_serve('footer_stamp', $args, $forcedownload, $options);
-
         } else {
             send_file_not_found();
         }
