@@ -332,14 +332,17 @@ final class usersync_test extends advanced_testcase {
             ],
         ];
         $response = json_encode($response);
-        $clientdata = $this->get_mock_clientdata();
         $httpclient = new mockhttpclient();
         $httpclient->set_response($response);
 
+        // Construct the REST client with the mock token/httpclient so process_users_batched()
+        // uses the mock HTTP layer rather than a real Graph API call.
+        // sync_users() only does DB work so usersync\main needs no clientdata/httpclient.
         $apiclient = new unified($this->get_mock_token(), $httpclient);
-        $usersync = new main($clientdata, $httpclient);
-        $users = $apiclient->get_users();
-        $usersync->sync_users($users);
+        $usersync = new main();
+        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
+            $usersync->sync_users($userbatch, 'userPrincipalName');
+        });
 
         $existinguser = ['auth' => 'oidc', 'username' => 'testuser1@example.onmicrosoft.com'];
         $this->assertTrue($DB->record_exists('user', $existinguser));
