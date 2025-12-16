@@ -23,9 +23,9 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once(__DIR__.'/../../config.php');
-require_once(__DIR__.'/auth.php');
-require_once(__DIR__.'/lib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/auth.php');
+require_once(__DIR__ . '/lib.php');
 
 require_login();
 
@@ -44,13 +44,13 @@ if (!empty($action)) {
     if ($action === 'connectlogin' && $oidcloginconnected === false) {
         // Use authorization request login flow to connect existing users.
         auth_oidc_connectioncapability($USER->id, 'connect', true);
-        $auth = new \auth_oidc\loginflow\authcode;
+        $auth = new \auth_oidc\loginflow\authcode();
         $auth->set_httpclient(new \auth_oidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnectlogin' && $oidcloginconnected === true) {
         if (is_enabled_auth('manual') === true) {
             auth_oidc_connectioncapability($USER->id, 'disconnect', true);
-            $auth = new \auth_plugin_oidc;
+            $auth = new \auth_plugin_oidc();
             $auth->set_httpclient(new \auth_oidc\httpclient());
             $auth->disconnect();
         }

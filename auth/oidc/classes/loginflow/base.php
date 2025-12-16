@@ -357,8 +357,13 @@ class base {
      * @param \moodle_url|null $selfurl The page this is accessed from, used for some redirects.
      * @param int|null $userid ID of the user to disconnect; uses the current user if not provided.
      */
-    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\moodle_url $redirect = null,
-            ?\moodle_url $selfurl = null, $userid = null) {
+    public function disconnect(
+        $justremovetokens = false,
+        $donotremovetokens = false,
+        ?\moodle_url $redirect = null,
+        ?\moodle_url $selfurl = null,
+        $userid = null
+    ) {
         global $USER, $DB, $CFG;
         if ($redirect === null) {
             $redirect = new \moodle_url('/auth/oidc/ucp.php');
@@ -386,7 +391,7 @@ class base {
             redirect($redirect);
         } else {
             global $OUTPUT, $PAGE;
-            require_once($CFG->dirroot.'/user/lib.php');
+            require_once($CFG->dirroot . '/user/lib.php');
             $PAGE->set_url($selfurl->out());
             $PAGE->set_context(\context_system::instance());
             $PAGE->set_pagelayout('standard');
@@ -430,12 +435,14 @@ class base {
             if ($mform->is_cancelled()) {
                 redirect($redirect);
             } else if ($fromform = $mform->get_data()) {
-                if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod &&
-                        $fromform->newmethod !== 'manual')) {
+                if (
+                    empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod &&
+                    $fromform->newmethod !== 'manual')
+                ) {
                     throw new moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
                 }
 
-                $updateduser = new stdClass;
+                $updateduser = new stdClass();
 
                 if ($fromform->newmethod === 'manual') {
                     if (empty($fromform->password)) {
@@ -462,7 +469,7 @@ class base {
                     $updateduser->auth = $prevauthmethod;
                     // We can't use user_update_user as it will rehash the value.
                     if (!empty($prevmethodrec->password)) {
-                        $manualuserupdate = new stdClass;
+                        $manualuserupdate = new stdClass();
                         $manualuserupdate->id = $userrec->id;
                         $manualuserupdate->password = $prevmethodrec->password;
                         $DB->update_record('user', $manualuserupdate);
@@ -510,7 +517,6 @@ class base {
      * @return mixed Determined by loginflow.
      */
     public function handleredirect() {
-
     }
 
     /**
@@ -595,7 +601,7 @@ class base {
                     $hasrestrictions = true;
                     ob_start();
                     try {
-                        $pattern = '/'.$restriction.'/';
+                        $pattern = '/' . $restriction . '/';
                         if (isset($this->config->userrestrictionscasesensitive) && !$this->config->userrestrictionscasesensitive) {
                             $pattern .= 'i';
                         }
@@ -640,8 +646,15 @@ class base {
      * @param null|string $originalupn
      * @return stdClass The created token database record.
      */
-    protected function createtoken($oidcuniqid, $username, $authparams, $tokenparams, jwt $idtoken, $userid = 0,
-        $originalupn = null) {
+    protected function createtoken(
+        $oidcuniqid,
+        $username,
+        $authparams,
+        $tokenparams,
+        jwt $idtoken,
+        $userid = 0,
+        $originalupn = null
+    ) {
         global $DB;
 
         if (!is_null($originalupn)) {
@@ -669,7 +682,7 @@ class base {
             }
         }
 
-        $tokenrec = new stdClass;
+        $tokenrec = new stdClass();
         $tokenrec->oidcuniqid = $oidcuniqid;
         $tokenrec->username = $username;
         $tokenrec->userid = $userid;
@@ -701,7 +714,7 @@ class base {
      */
     protected function updatetoken($tokenid, $authparams, $tokenparams) {
         global $DB;
-        $tokenrec = new stdClass;
+        $tokenrec = new stdClass();
         $tokenrec->id = $tokenid;
         $tokenrec->authcode = $authparams['code'];
         $tokenrec->token = $tokenparams['access_token'];
@@ -740,6 +753,7 @@ class base {
         switch ($bindingusernameclaim) {
             case 'custom':
                 $bindingusernameclaim = get_config('auth_oidc', 'custombindingclaim');
+                // No break.
             case 'preferred_username':
             case 'email':
             case 'upn':

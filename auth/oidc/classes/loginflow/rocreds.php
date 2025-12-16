@@ -122,11 +122,15 @@ class rocreds extends base {
             $failurereason = AUTH_LOGIN_UNAUTHORISED;
 
             // Trigger login failed event.
-            $event = \core\event\user_login_failed::create(['other' => ['username' => $username,
-                    'reason' => $failurereason]]);
+            $event = \core\event\user_login_failed::create([
+                'other' => [
+                    'username' => $username,
+                    'reason' => $failurereason,
+                ],
+            ]);
             $event->trigger();
 
-            debugging('[client '.getremoteaddr()."]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  ".
+            debugging('[client ' . getremoteaddr() . "]  $CFG->wwwroot  Unknown user, can not create new accounts:  $username  " .
                 $_SERVER['HTTP_USER_AGENT']);
 
             return false;
@@ -179,8 +183,10 @@ class rocreds extends base {
                 if (auth_oidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid);
-                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
-                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false) {
+                    if (
+                        !is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
+                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false
+                    ) {
                         $originalupn = $userdetails['userPrincipalName'];
                     }
                 }

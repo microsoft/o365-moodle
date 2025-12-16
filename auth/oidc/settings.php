@@ -39,107 +39,176 @@ if ($hassiteconfig) {
     $ADMIN->add('authsettings', $oidcfolder);
 
     // Application configuration page.
-    $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_application', get_string('settings_page_application', 'auth_oidc'),
-        new moodle_url('/auth/oidc/manageapplication.php')));
-
+    $ADMIN->add('oidcfolder', new admin_externalpage(
+        'auth_oidc_application',
+        get_string('settings_page_application', 'auth_oidc'),
+        new moodle_url('/auth/oidc/manageapplication.php')
+    ));
 
     $idptype = get_config('auth_oidc', 'idptype');
     if ($idptype) {
         // Binding username claim page.
-        $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_binding_username_claim',
+        $ADMIN->add('oidcfolder', new admin_externalpage(
+            'auth_oidc_binding_username_claim',
             get_string('settings_page_binding_username_claim', 'auth_oidc'),
-            new moodle_url('/auth/oidc/binding_username_claim.php')));
+            new moodle_url('/auth/oidc/binding_username_claim.php')
+        ));
 
         // Change binding username claim tool page.
-        $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_change_binding_username_claim_tool',
+        $ADMIN->add('oidcfolder', new admin_externalpage(
+            'auth_oidc_change_binding_username_claim_tool',
             get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'),
-            new moodle_url('/auth/oidc/change_binding_username_claim_tool.php')));
+            new moodle_url('/auth/oidc/change_binding_username_claim_tool.php')
+        ));
     }
-
 
     // Other settings page and its settings.
     $settings = new admin_settingpage($section, get_string('settings_page_other_settings', 'auth_oidc'));
 
     // Basic heading.
-    $settings->add(new admin_setting_heading('auth_oidc/basic_heading', get_string('heading_basic', 'auth_oidc'),
-        get_string('heading_basic_desc', 'auth_oidc')));
+    $settings->add(new admin_setting_heading(
+        'auth_oidc/basic_heading',
+        get_string('heading_basic', 'auth_oidc'),
+        get_string('heading_basic_desc', 'auth_oidc')
+    ));
 
     // Redirect URI.
-    $settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/redirecturi',
-        get_string('cfg_redirecturi_key', 'auth_oidc'), get_string('cfg_redirecturi_desc', 'auth_oidc'), utils::get_redirecturl()));
+    $settings->add(new auth_oidc_admin_setting_redirecturi(
+        'auth_oidc/redirecturi',
+        get_string('cfg_redirecturi_key', 'auth_oidc'),
+        get_string('cfg_redirecturi_desc', 'auth_oidc'),
+        utils::get_redirecturl()
+    ));
 
     // Link to authentication options.
     $authenticationconfigurationurl = new moodle_url('/auth/oidc/manageapplication.php');
-    $settings->add(new admin_setting_description('auth_oidc/authenticationlink',
+    $settings->add(new admin_setting_description(
+        'auth_oidc/authenticationlink',
         get_string('settings_page_application', 'auth_oidc'),
-        get_string('cfg_authenticationlink_desc', 'auth_oidc', $authenticationconfigurationurl->out())));
+        get_string('cfg_authenticationlink_desc', 'auth_oidc', $authenticationconfigurationurl->out())
+    ));
 
     // Additional options heading.
-    $settings->add(new admin_setting_heading('auth_oidc/additional_options_heading',
-        get_string('heading_additional_options', 'auth_oidc'), get_string('heading_additional_options_desc', 'auth_oidc')));
+    $settings->add(new admin_setting_heading(
+        'auth_oidc/additional_options_heading',
+        get_string('heading_additional_options', 'auth_oidc'),
+        get_string('heading_additional_options_desc', 'auth_oidc')
+    ));
 
     // Force redirect.
-    $settings->add(new admin_setting_configcheckbox('auth_oidc/forceredirect',
-        get_string('cfg_forceredirect_key', 'auth_oidc'), get_string('cfg_forceredirect_desc', 'auth_oidc'), 0));
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/forceredirect',
+        get_string('cfg_forceredirect_key', 'auth_oidc'),
+        get_string('cfg_forceredirect_desc', 'auth_oidc'),
+        0
+    ));
 
     // Silent login mode.
     $forceloginconfigurl = new moodle_url('/admin/settings.php', ['section' => 'sitepolicies']);
-    $settings->add(new admin_setting_configcheckbox('auth_oidc/silentloginmode',
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/silentloginmode',
         get_string('cfg_silentloginmode_key', 'auth_oidc'),
-        get_string('cfg_silentloginmode_desc', 'auth_oidc', $forceloginconfigurl->out(false)), 0));
+        get_string('cfg_silentloginmode_desc', 'auth_oidc', $forceloginconfigurl->out(false)),
+        0
+    ));
 
     // Auto-append.
-    $settings->add(new admin_setting_configtext('auth_oidc/autoappend',
-        get_string('cfg_autoappend_key', 'auth_oidc'), get_string('cfg_autoappend_desc', 'auth_oidc'), '', PARAM_TEXT));
+    $settings->add(new admin_setting_configtext(
+        'auth_oidc/autoappend',
+        get_string('cfg_autoappend_key', 'auth_oidc'),
+        get_string('cfg_autoappend_desc', 'auth_oidc'),
+        '',
+        PARAM_TEXT
+    ));
 
     // Domain hint.
-    $settings->add(new admin_setting_configtext('auth_oidc/domainhint',
-        get_string('cfg_domainhint_key', 'auth_oidc'), get_string('cfg_domainhint_desc', 'auth_oidc'), '' , PARAM_TEXT));
+    $settings->add(new admin_setting_configtext(
+        'auth_oidc/domainhint',
+        get_string('cfg_domainhint_key', 'auth_oidc'),
+        get_string('cfg_domainhint_desc', 'auth_oidc'),
+        '',
+        PARAM_TEXT
+    ));
 
     // Login flow.
-    $settings->add(new auth_oidc_admin_setting_loginflow('auth_oidc/loginflow',
-        get_string('cfg_loginflow_key', 'auth_oidc'), '', 'authcode'));
+    $settings->add(new auth_oidc_admin_setting_loginflow(
+        'auth_oidc/loginflow',
+        get_string('cfg_loginflow_key', 'auth_oidc'),
+        '',
+        'authcode'
+    ));
 
     // User restrictions heading.
-    $settings->add(new admin_setting_heading('auth_oidc/user_restrictions_heading',
-        get_string('heading_user_restrictions', 'auth_oidc'), get_string('heading_user_restrictions_desc', 'auth_oidc')));
+    $settings->add(new admin_setting_heading(
+        'auth_oidc/user_restrictions_heading',
+        get_string('heading_user_restrictions', 'auth_oidc'),
+        get_string('heading_user_restrictions_desc', 'auth_oidc')
+    ));
 
     // User restrictions.
-    $settings->add(new admin_setting_configtextarea('auth_oidc/userrestrictions',
-        get_string('cfg_userrestrictions_key', 'auth_oidc'), get_string('cfg_userrestrictions_desc', 'auth_oidc'), '', PARAM_TEXT));
+    $settings->add(new admin_setting_configtextarea(
+        'auth_oidc/userrestrictions',
+        get_string('cfg_userrestrictions_key', 'auth_oidc'),
+        get_string('cfg_userrestrictions_desc', 'auth_oidc'),
+        '',
+        PARAM_TEXT
+    ));
 
     // User restrictions case sensitivity.
-    $settings->add(new admin_setting_configcheckbox('auth_oidc/userrestrictionscasesensitive',
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/userrestrictionscasesensitive',
         get_string('cfg_userrestrictionscasesensitive_key', 'auth_oidc'),
-        get_string('cfg_userrestrictionscasesensitive_desc', 'auth_oidc'), '1'));
+        get_string('cfg_userrestrictionscasesensitive_desc', 'auth_oidc'),
+        '1'
+    ));
 
     // Sign out integration heading.
-    $settings->add(new admin_setting_heading('auth_oidc/sign_out_heading',
-        get_string('heading_sign_out', 'auth_oidc'), get_string('heading_sign_out_desc', 'auth_oidc')));
+    $settings->add(new admin_setting_heading(
+        'auth_oidc/sign_out_heading',
+        get_string('heading_sign_out', 'auth_oidc'),
+        get_string('heading_sign_out_desc', 'auth_oidc')
+    ));
 
     // Single sign out from Moodle to IdP.
-    $settings->add(new admin_setting_configcheckbox('auth_oidc/single_sign_off',
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/single_sign_off',
         get_string('cfg_signoffintegration_key', 'auth_oidc'),
-        get_string('cfg_signoffintegration_desc', 'auth_oidc', $CFG->wwwroot), '0'));
+        get_string('cfg_signoffintegration_desc', 'auth_oidc', $CFG->wwwroot),
+        '0'
+    ));
 
     // IdP logout endpoint.
-    $settings->add(new admin_setting_configtext('auth_oidc/logouturi',
-        get_string('cfg_logoutendpoint_key', 'auth_oidc'), get_string('cfg_logoutendpoint_desc', 'auth_oidc'),
-        'https://login.microsoftonline.com/organizations/oauth2/logout', PARAM_URL));
+    $settings->add(new admin_setting_configtext(
+        'auth_oidc/logouturi',
+        get_string('cfg_logoutendpoint_key', 'auth_oidc'),
+        get_string('cfg_logoutendpoint_desc', 'auth_oidc'),
+        'https://login.microsoftonline.com/organizations/oauth2/logout',
+        PARAM_URL
+    ));
 
     // Front channel logout URL.
-    $settings->add(new auth_oidc_admin_setting_redirecturi('auth_oidc/logoutendpoint',
-        get_string('cfg_frontchannellogouturl_key', 'auth_oidc'), get_string('cfg_frontchannellogouturl_desc', 'auth_oidc'),
-        utils::get_frontchannellogouturl()));
+    $settings->add(new auth_oidc_admin_setting_redirecturi(
+        'auth_oidc/logoutendpoint',
+        get_string('cfg_frontchannellogouturl_key', 'auth_oidc'),
+        get_string('cfg_frontchannellogouturl_desc', 'auth_oidc'),
+        utils::get_frontchannellogouturl()
+    ));
 
     // Display heading.
-    $settings->add(new admin_setting_heading('auth_oidc/display_heading',
-        get_string('heading_display', 'auth_oidc'), get_string('heading_display_desc', 'auth_oidc')));
+    $settings->add(new admin_setting_heading(
+        'auth_oidc/display_heading',
+        get_string('heading_display', 'auth_oidc'),
+        get_string('heading_display_desc', 'auth_oidc')
+    ));
 
     // Provider Name (opname).
-    $settings->add(new admin_setting_configtext('auth_oidc/opname',
-        get_string('cfg_opname_key', 'auth_oidc'), get_string('cfg_opname_desc', 'auth_oidc'),
-        get_string('pluginname', 'auth_oidc'), PARAM_TEXT));
+    $settings->add(new admin_setting_configtext(
+        'auth_oidc/opname',
+        get_string('cfg_opname_key', 'auth_oidc'),
+        get_string('cfg_opname_desc', 'auth_oidc'),
+        get_string('pluginname', 'auth_oidc'),
+        PARAM_TEXT
+    ));
 
     // Icon.
     $icons = [
@@ -219,31 +288,51 @@ if ($hassiteconfig) {
             'component' => 'moodle',
         ],
     ];
-    $settings->add(new auth_oidc_admin_setting_iconselect('auth_oidc/icon',
-        get_string('cfg_icon_key', 'auth_oidc'), get_string('cfg_icon_desc', 'auth_oidc'), 'auth_oidc:o365', $icons));
+    $settings->add(new auth_oidc_admin_setting_iconselect(
+        'auth_oidc/icon',
+        get_string('cfg_icon_key', 'auth_oidc'),
+        get_string('cfg_icon_desc', 'auth_oidc'),
+        'auth_oidc:o365',
+        $icons
+    ));
 
     // Custom icon.
     $configkey = new lang_string('cfg_customicon_key', 'auth_oidc');
     $configdesc = new lang_string('cfg_customicon_desc', 'auth_oidc');
-    $customiconsetting = new admin_setting_configstoredfile('auth_oidc/customicon',
-        get_string('cfg_customicon_key', 'auth_oidc'), get_string('cfg_customicon_desc', 'auth_oidc'), 'customicon', 0,
-        ['accepted_types' => ['.png', '.jpg', '.ico'], 'maxbytes' => get_max_upload_file_size()]);
+    $customiconsetting = new admin_setting_configstoredfile(
+        'auth_oidc/customicon',
+        get_string('cfg_customicon_key', 'auth_oidc'),
+        get_string('cfg_customicon_desc', 'auth_oidc'),
+        'customicon',
+        0,
+        ['accepted_types' => ['.png', '.jpg', '.ico'], 'maxbytes' => get_max_upload_file_size()]
+    );
     $customiconsetting->set_updatedcallback('auth_oidc_initialize_customicon');
     $settings->add($customiconsetting);
 
     // Debugging heading.
-    $settings->add(new admin_setting_heading('auth_oidc/debugging_heading',
-        get_string('heading_debugging', 'auth_oidc'), get_string('heading_debugging_desc', 'auth_oidc')));
+    $settings->add(new admin_setting_heading(
+        'auth_oidc/debugging_heading',
+        get_string('heading_debugging', 'auth_oidc'),
+        get_string('heading_debugging_desc', 'auth_oidc')
+    ));
 
     // Record debugging messages.
-    $settings->add(new admin_setting_configcheckbox('auth_oidc/debugmode',
-        get_string('cfg_debugmode_key', 'auth_oidc'), get_string('cfg_debugmode_desc', 'auth_oidc'), '0'));
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/debugmode',
+        get_string('cfg_debugmode_key', 'auth_oidc'),
+        get_string('cfg_debugmode_desc', 'auth_oidc'),
+        '0'
+    ));
 
     $ADMIN->add('oidcfolder', $settings);
 
     // Cleanup OIDC tokens page.
-    $ADMIN->add('oidcfolder', new admin_externalpage('auth_oidc_cleanup_oidc_tokens',
-        get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'), new moodle_url('/auth/oidc/cleanupoidctokens.php')));
+    $ADMIN->add('oidcfolder', new admin_externalpage(
+        'auth_oidc_cleanup_oidc_tokens',
+        get_string('settings_page_cleanup_oidc_tokens', 'auth_oidc'),
+        new moodle_url('/auth/oidc/cleanupoidctokens.php')
+    ));
 
     // Other settings page and its settings.
     $fieldmappingspage = new admin_settingpage('auth_oidc_field_mapping', get_string('settings_page_field_mapping', 'auth_oidc'));
@@ -251,8 +340,15 @@ if ($hassiteconfig) {
 
     // Display locking / mapping of profile fields.
     $authplugin = get_auth_plugin('oidc');
-    auth_oidc_display_auth_lock_options($fieldmappingspage, $authplugin->authtype, $authplugin->userfields,
-        get_string('cfg_field_mapping_desc', 'auth_oidc'), true, false, $authplugin->get_custom_user_profile_fields());
+    auth_oidc_display_auth_lock_options(
+        $fieldmappingspage,
+        $authplugin->authtype,
+        $authplugin->userfields,
+        get_string('cfg_field_mapping_desc', 'auth_oidc'),
+        true,
+        false,
+        $authplugin->get_custom_user_profile_fields()
+    );
 }
 
 $settings = null;

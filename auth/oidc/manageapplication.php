@@ -55,10 +55,14 @@ $oidcconfig = get_config('auth_oidc');
 $form = new application(null, ['oidcconfig' => $oidcconfig]);
 
 $formdata = [];
-foreach (['idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
-    'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
-    'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope', 'secretexpiryrecipients',
-    'bindingusernameclaim', 'customclaimname'] as $field) {
+foreach (
+    [
+        'idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
+        'clientcertsource', 'clientprivatekeyfile', 'clientcertfile', 'clientcertpassphrase',
+        'authendpoint', 'tokenendpoint', 'oidcresource', 'oidcscope', 'secretexpiryrecipients',
+        'bindingusernameclaim', 'customclaimname',
+    ] as $field
+) {
     if (isset($oidcconfig->$field)) {
         $formdata[$field] = $oidcconfig->$field;
     }
