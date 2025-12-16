@@ -33,4 +33,3 @@ $templatecontext = [
 ];
 
 echo $OUTPUT->render_from_template('theme_boost_o365teams/login', $templatecontext);
-
