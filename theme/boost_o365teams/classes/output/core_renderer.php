@@ -27,7 +27,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class core_renderer extends \theme_boost\output\core_renderer {
-
     /**
      * Return header html.
      * The header section includes custom content security policy setting, as well as reference to the Microsoft Teams JS lib.
@@ -92,8 +91,10 @@ class core_renderer extends \theme_boost\output\core_renderer {
         // Hardcoded URL.
         $feedbacklinksetting = 'https://microsoftteams.uservoice.com/forums/916759-moodle';
         if ($feedbacklinksetting) {
-            $feedbacklink = html_writer::link($feedbacklinksetting, html_writer::tag('span',
-                get_string('feedback', 'theme_boost_o365teams')), ['target' => '_blank', 'class' => 'feedbacklink',
+            $feedbacklink = html_writer::link($feedbacklinksetting, html_writer::tag(
+                'span',
+                get_string('feedback', 'theme_boost_o365teams')
+            ), ['target' => '_blank', 'class' => 'feedbacklink',
                 'title' => get_string('share_feedback', 'theme_boost_o365teams')]);
         }
 

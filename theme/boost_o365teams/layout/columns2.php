@@ -31,10 +31,12 @@ if (isloggedin()) {
 } else {
     $navdraweropen = false;
 }
+
 $extraclasses = [];
 if ($navdraweropen) {
     $extraclasses[] = 'drawer-open-left';
 }
+
 $bodyattributes = $OUTPUT->body_attributes($extraclasses);
 $blockshtml = $OUTPUT->blocks('side-pre');
 $hasblocks = strpos($blockshtml, 'data-block=') !== false;
@@ -48,6 +50,7 @@ if ((strpos($url, 'course/view.php') !== false) && (strpos($url, 'section=') == 
 } else {
     $iscourseoverview = true;
 }
+
 $templatecontext = [
         'sitename' => format_string($SITE->shortname, true, ['context' => context_course::instance(SITEID), "escape" => false]),
         'output' => $OUTPUT,
