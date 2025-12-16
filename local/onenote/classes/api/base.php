@@ -204,6 +204,7 @@ abstract class base {
             \local_onenote\utils::debug('Bad response received', __METHOD__, $response);
             throw new moodle_exception('erroronenoteapibadcall', 'local_onenote');
         }
+
         if (isset($result['odata.error'])) {
             $errmsg = 'Error response received.';
             \local_onenote\utils::debug($errmsg, __METHOD__, $result['odata.error']);
@@ -214,6 +215,7 @@ abstract class base {
                 throw new moodle_exception('erroronenoteapibadcall', 'local_onenote');
             }
         }
+
         if (isset($result['error'])) {
             $errmsg = 'Error response received.';
             \local_onenote\utils::debug($errmsg, __METHOD__, $result['error']);
@@ -224,6 +226,7 @@ abstract class base {
                 } else if (is_array($result['error']['message']) && isset($result['error']['message']['value'])) {
                     $apierrormessage = $result['error']['message']['value'];
                 }
+
                 throw new moodle_exception('erroronenoteapibadcall_message', 'local_onenote', '', htmlentities($apierrormessage));
             } else {
                 throw new moodle_exception('erroronenoteapibadcall', 'local_onenote');
@@ -247,6 +250,7 @@ abstract class base {
                 throw new moodle_exception('erroronenoteapibadcall_message', 'local_onenote', '', $errmsg);
             }
         }
+
         return $result;
     }
 
@@ -285,7 +289,6 @@ abstract class base {
         $tempfolder = $this->create_temp_folder();
 
         if ($imgnodes && ($imgnodes->length > 0)) {
-
             $filesfolder = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page_files']);
             if (!mkdir($filesfolder, 0777, true)) {
                 echo('Failed to create folder: ' . $filesfolder);
@@ -301,10 +304,12 @@ abstract class base {
                     if (!$srcnode) {
                         continue;
                     }
+
                     $response = $this->geturl($srcnode->nodeValue);
                     if (empty($response)) {
                         continue;
                     }
+
                     file_put_contents($filesfolder . DIRECTORY_SEPARATOR . 'img_' . $i, $response);
 
                     // Update img src paths in the html accordingly.
@@ -318,18 +323,21 @@ abstract class base {
                     // Skip image if there is a problem.
                     \local_onenote\utils::debug('Problem saving image', __METHOD__, $e);
                 }
+
                 $i++;
             }
 
             // Save the html page itself.
-            file_put_contents(join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html']),
-                mb_convert_encoding($doc->saveHTML($doc), 'HTML-ENTITIES', 'UTF-8'));
-
+            file_put_contents(
+                join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html']),
+                mb_convert_encoding($doc->saveHTML($doc), 'HTML-ENTITIES', 'UTF-8')
+            );
         } else {
             // Save the html page itself.
-            file_put_contents(join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html']),
-                mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
-
+            file_put_contents(
+                join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html']),
+                mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8')
+            );
         }
 
         // Zip up the folder, so it can be attached as a single file.
@@ -391,6 +399,7 @@ abstract class base {
                     if (isset($item['displayName'])) {
                         $itemname = $item['displayName'];
                     }
+
                     $itemlastmodified = 'now';
                     if (isset($item['lastModifiedDateTime'])) {
                         $itemlastmodified = $item['lastModifiedDateTime'];
@@ -414,6 +423,7 @@ abstract class base {
                     if (isset($item['displayName'])) {
                         $itemname = $item['displayName'];
                     }
+
                     $itemlastmodified = 'now';
                     if (isset($item['lastModifiedDateTime'])) {
                         $itemlastmodified = $item['lastModifiedDateTime'];
@@ -451,6 +461,7 @@ abstract class base {
                     break;
             }
         }
+
         return $items;
     }
 
@@ -479,6 +490,7 @@ abstract class base {
                 \local_onenote\utils::debug('Could not create Moodle notebook', __METHOD__, $e);
                 return false;
             }
+
             $sections = [];
             if (!empty($courses)) {
                 $this->sync_sections($courses, $creatednotebook['id'], $sections);
@@ -492,6 +504,7 @@ abstract class base {
             foreach ($existingsections['value'] as $section) {
                 $sections[$section['id']] = $section['displayName'];
             }
+
             if (!empty($courses)) {
                 $this->sync_sections($courses, $notebookid, $sections);
             }
@@ -567,8 +580,15 @@ abstract class base {
      * @param null $gradeid Grade id associated with the submission. Null if this calls is for a submission page.
      * @return string HTML string containing the widget to display on the page.
      */
-    public function render_action_button($buttontext, $cmid, $wantfeedbackpage = false, $isteacher = false,
-        $submissionuserid = null, $submissionid = null, $gradeid = null) {
+    public function render_action_button(
+        $buttontext,
+        $cmid,
+        $wantfeedbackpage = false,
+        $isteacher = false,
+        $submissionuserid = null,
+        $submissionid = null,
+        $gradeid = null
+    ) {
         $actionparams['action'] = 'openpage';
         $actionparams['cmid'] = $cmid;
         $actionparams['wantfeedback'] = $wantfeedbackpage;
@@ -600,6 +620,7 @@ abstract class base {
             $component = 'assignsubmission_onenote';
             $filearea = self::ASSIGNSUBMISSION_ONENOTE_FILEAREA;
         }
+
         return $fs->get_area_files($contextid, $component, $filearea, $id, 'id', false);
     }
 
@@ -729,8 +750,14 @@ abstract class base {
      * @param null $gradeid Grade id associated with the submission. Null if this call is for a submission page.
      * @return string|bool The weburl to the OneNote page created or obtained, or false if failure.
      */
-    public function get_page($cmid, $wantfeedbackpage = false, $isteacher = false, $submissionuserid = null, $submissionid = null,
-        $gradeid = null) {
+    public function get_page(
+        $cmid,
+        $wantfeedbackpage = false,
+        $isteacher = false,
+        $submissionuserid = null,
+        $submissionid = null,
+        $gradeid = null
+    ) {
         global $USER, $DB;
 
         $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
@@ -763,8 +790,10 @@ abstract class base {
                     if ($isteacher && 'submission_teacher_page_id' == $requestedpageidfield) {
                         // Delete Teacher's OneNote copy if the student's OneNote time last modified date
                         // is greater than the teacher's.
-                        if (isset($page['lastModifiedTime']) &&
-                            strtotime($page['lastModifiedTime']) < $pagerecord->student_lastmodified) {
+                        if (
+                            isset($page['lastModifiedTime']) &&
+                            strtotime($page['lastModifiedTime']) < $pagerecord->student_lastmodified
+                        ) {
                             $this->apicall('delete', '/pages/' . $pagerecord->$requestedpageidfield);
                             $page = null;
                         }
@@ -796,6 +825,7 @@ abstract class base {
         if (empty($section)) {
             throw new moodle_exception('errornosection', 'local_onenote');
         }
+
         $sectionid = $section->section_id;
 
         // If we are being called for getting a feedback page.
@@ -816,6 +846,7 @@ abstract class base {
             if (!empty($response) && $response != 'connection_error') {
                 break;
             }
+
             usleep(50000);
         }
 
@@ -835,6 +866,7 @@ abstract class base {
             $pagerecord->teacher_lastviewed = strtotime($response->$modtimeparam);
             $pagerecord->teacher_lastviewed = empty($pagerecord->teacher_lastviewed) ? null : $pagerecord->teacher_lastviewed;
         }
+
         $DB->update_record('local_onenote_assign_pages', $pagerecord);
 
         return $response->links->oneNoteWebUrl->href;
@@ -895,8 +927,14 @@ abstract class base {
                 'filename' => $filename];
 
         // Get file.
-        $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'], $fileinfo['itemid'],
-            $fileinfo['filepath'], $fileinfo['filename']);
+        $file = $fs->get_file(
+            $fileinfo['contextid'],
+            $fileinfo['component'],
+            $fileinfo['filearea'],
+            $fileinfo['itemid'],
+            $fileinfo['filepath'],
+            $fileinfo['filename']
+        );
 
         $contents = [];
 
@@ -949,6 +987,7 @@ abstract class base {
                 if (!$contents || (count($contents) == 0)) {
                     continue;
                 }
+
                 $pathparts['filename'] = urlencode($pathparts['filename']);
                 $contents['filename'] = urlencode($contents['filename']);
 
@@ -1006,6 +1045,7 @@ abstract class base {
             \local_onenote\utils::debug('Could not parse page HTML', __METHOD__, $pagefile);
             return null;
         }
+
         $xpath = new DOMXPath($dom);
         $doc = $dom->getElementsByTagName("body")->item(0);
 
@@ -1021,6 +1061,7 @@ abstract class base {
                 if (!$srcnode) {
                     continue;
                 }
+
                 $srcrelpath = urldecode($srcnode->nodeValue);
                 $srcfilename = substr($srcrelpath, strlen('./page_files/'));
                 $srcpath = join(DIRECTORY_SEPARATOR, [rtrim($folder, DIRECTORY_SEPARATOR), substr($srcrelpath, 2)]);
@@ -1029,6 +1070,7 @@ abstract class base {
                 if (!$contents || (count($contents) == 0)) {
                     continue;
                 }
+
                 $srcfilename = urlencode($srcfilename);
                 $srcnode->nodeValue = "name:" . $srcfilename;
 
@@ -1036,6 +1078,7 @@ abstract class base {
                 if ($imgnode->attributes->getNamedItem("data-fullres-src")) {
                     $imgnode->removeAttribute("data-fullres-src");
                 }
+
                 $imgdata .= '--' . $boundary . $eol;
                 $imgdata .= 'Content-Disposition: form-data; name="' . $srcfilename . '"; filename="' . $srcfilename . '"' . $eol;
                 $imgdata .= 'Content-Type: image/jpeg' . $eol . $eol;
@@ -1249,7 +1292,6 @@ abstract class base {
 
                             $spannode->appendChild($node->removeChild($childnode));
                             $node->insertBefore($spannode);
-
                         } else {
                             $node->insertBefore($node->removeChild($childnode));
                         }
@@ -1287,7 +1329,6 @@ abstract class base {
         $spannodes = $xpath->query('//span');
 
         if ($spannodes->length) {
-
             foreach ($spannodes as $span) {
                 $style = $span->getAttribute('style');
                 // Replace 12px font size with 10.5pt.
@@ -1309,6 +1350,7 @@ abstract class base {
             $debugdata = ['pageid' => $pageid, 'e' => $e];
             \local_onenote\utils::debug('Error getting page', __METHOD__, $debugdata);
         }
+
         return $page;
     }
 }

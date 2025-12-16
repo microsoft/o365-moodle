@@ -137,6 +137,7 @@ final class onenoteapi_test extends \advanced_testcase {
         } else {
             $this->setUser($this->user1->id);
         }
+
         $this->onenoteapi->get_msaccount_api()->store_refresh_token($this->config->refresh_tokens[$index]);
         $this->assertEquals(true, $this->onenoteapi->get_msaccount_api()->refresh_token());
         $this->assertEquals(true, $this->onenoteapi->get_msaccount_api()->is_logged_in());
@@ -220,11 +221,14 @@ final class onenoteapi_test extends \advanced_testcase {
                 }
             }
         }
+
         $this->assertTrue(in_array("Moodle Notebook", $notesectionnames), "Moodle Notebook not present");
         $this->assertTrue(in_array($course1, $notesectionnames), "Test course1 is not present");
         $this->assertTrue(in_array($course2, $notesectionnames), "Test course2 is  not present");
-        $this->assertTrue(count($expectednames) == count(array_intersect($expectednames, $notesectionnames)),
-            "Same elements are not present");
+        $this->assertTrue(
+            count($expectednames) == count(array_intersect($expectednames, $notesectionnames)),
+            "Same elements are not present"
+        );
         $this->assertNotEmpty($itemlist, "No value");
     }
 
@@ -276,7 +280,6 @@ final class onenoteapi_test extends \advanced_testcase {
         $gradeassign = $gradeassign->save($this->grade, $data);
 
         $this->assertFalse($gradeassign, 'Feedback limit check fails');
-
     }
 
     /**
@@ -306,27 +309,30 @@ final class onenoteapi_test extends \advanced_testcase {
         $createsubmission = $this->create_submission_feedback($this->cm, false, false, null, null, null);
         $this->submission = $this->assign->get_user_submission($this->user1->id, true);
 
-        $record = $DB->get_record('local_onenote_assign_pages',
-            ["assign_id" => $this->submission->assignment, "user_id" => $this->submission->userid]);
+        $record = $DB->get_record(
+            'local_onenote_assign_pages',
+            ["assign_id" => $this->submission->assignment, "user_id" => $this->submission->userid]
+        );
 
         $tempfolder = $this->onenoteapi->create_temp_folder();
         $tempfile = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), uniqid('asg_')]) . '.zip';
         $info = $this->onenoteapi->download_page($record->submission_student_page_id, $tempfile);
 
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         $res = $zip->open($info['path']);
         if ($res === true) {
             $zip->extractTo($tempfolder);
             $zip->close();
         }
+
         $folder = join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), '0']);
         $pagefile = join(DIRECTORY_SEPARATOR, [rtrim($folder, DIRECTORY_SEPARATOR), 'page.html']);
 
-        $htmldom = new DomDocument;
+        $htmldom = new DomDocument();
         $htmldom->loadHTMLFile($pagefile);
         $htmldom->preservewhitespace = false;
 
-        $domclone = new DOMDocument;
+        $domclone = new DOMDocument();
         $domclone->preservewhitespace = false;
         $doc = $htmldom->getElementsByTagName("div")->item(0);
 
@@ -450,8 +456,14 @@ final class onenoteapi_test extends \advanced_testcase {
      * @param null $gradeid
      * @return mixed
      */
-    public function create_submission_feedback($cm, $wantfeedbackpage = false, $isteacher = false, $submissionuserid = null,
-        $submissionid = null, $gradeid = null) {
+    public function create_submission_feedback(
+        $cm,
+        $wantfeedbackpage = false,
+        $isteacher = false,
+        $submissionuserid = null,
+        $submissionid = null,
+        $gradeid = null
+    ) {
         $submissionfeedback =
             $this->onenoteapi->get_page($cm->id, $wantfeedbackpage, $isteacher, $submissionuserid, $submissionid, $gradeid);
         return $submissionfeedback;
