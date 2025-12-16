@@ -23,8 +23,8 @@
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-require_once(__DIR__.'/../../config.php');
-require_once($CFG->dirroot . '/blocks/microsoft/forms.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/blocks/microsoft/classes/form/course_sync_form.php');
 require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
