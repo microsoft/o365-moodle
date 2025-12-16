@@ -25,25 +25,21 @@
 
 namespace local_onenote\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core_privacy\local\metadata\collection;
+use core_privacy\local\metadata\provider as metadata_provider;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\core_userlist_provider;
+use core_privacy\local\request\plugin\provider as plugin_provider;
 use core_privacy\local\request\writer;
-
-/**
- * Interface for the local_onenote user list provider.
- */
-interface local_onenote_userlist extends \core_privacy\local\request\core_userlist_provider {
-}
 
 /**
  * Provider details for onenote
  */
-class provider
-    implements \core_privacy\local\request\plugin\provider, \core_privacy\local\metadata\provider, local_onenote_userlist {
-
+class provider implements
+    core_userlist_provider,
+    metadata_provider,
+    plugin_provider {
     /**
      * Returns meta data about this system.
      *
@@ -61,6 +57,7 @@ class provider
             foreach ($fields as $field) {
                 $fielddata[$field] = 'privacy:metadata:' . $table . ':' . $field;
             }
+
             $collection->add_database_table($table, $fielddata, 'privacy:metadata:' . $table);
         }
 
@@ -78,6 +75,7 @@ class provider
         if (self::user_has_onenote_data($userid)) {
             $contextlist->add_user_context($userid);
         }
+
         return $contextlist;
     }
 
@@ -138,6 +136,7 @@ class provider
         if (empty($contextlist->count())) {
             return;
         }
+
         foreach ($contextlist->get_contexts() as $context) {
             if ($context->contextlevel == CONTEXT_USER) {
                 self::delete_user_data($context->instanceid);
@@ -172,6 +171,7 @@ class provider
                 return true;
             }
         }
+
         return false;
     }
 
