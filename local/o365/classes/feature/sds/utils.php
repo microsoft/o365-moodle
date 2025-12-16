@@ -99,6 +99,7 @@ class utils {
                     if ($existingsdsprofilesyncsetting) {
                         add_to_config_log('sdsprofilesync', $existingsdsprofilesyncsetting, '', 'local_o365');
                     }
+
                     set_config('sdsprofilesync', '', 'local_o365');
                 }
             }

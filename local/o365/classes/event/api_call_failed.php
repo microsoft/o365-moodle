@@ -48,9 +48,10 @@ class api_call_failed extends \core\event\base {
         if (!empty($this->data['other']['debugdata'])) {
             $debugstr = is_scalar($this->data['other']['debugdata'])
                     ? $this->data['other']['debugdata']
-                    : print_r($this->data['other']['debugdata'], true);
+                    : json_encode($this->data['other']['debugdata']);
             $description .= ': ' . $debugstr;
         }
+
         return $description;
     }
 

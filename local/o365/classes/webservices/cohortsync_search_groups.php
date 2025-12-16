@@ -31,8 +31,12 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . '/externallib.php');
 
+/**
+ * Class cohortsync_search_groups.
+ *
+ * @package local_o365\webservices
+ */
 class cohortsync_search_groups extends \external_api {
-
     /**
      * Parameters for search_groups.
      *
@@ -62,18 +66,19 @@ class cohortsync_search_groups extends \external_api {
         if (empty($apiclient)) {
             throw new \moodle_exception('cohortsync_unifiedapierror', 'local_o365');
         }
+
         $cohortsyncmain = new \local_o365\feature\cohortsync\main($apiclient);
         $cohortsyncmain->fetch_groups_from_cache();
         $allgroups = $cohortsyncmain->get_grouplist();
 
-        // Get mapped to exclude
+        // Get mapped to exclude.
         $mappedgroupoids = [];
         $mappings = $DB->get_records('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort'], '', 'objectid');
         foreach ($mappings as $mapping) {
             $mappedgroupoids[] = $mapping->objectid;
         }
 
-        // Filter in PHP
+        // Filter in PHP.
         $result = [];
         foreach ($allgroups as $group) {
             if (!in_array($group['id'], $mappedgroupoids) && stripos($group['displayName'], $params['query']) !== false) {
@@ -84,7 +89,7 @@ class cohortsync_search_groups extends \external_api {
             }
         }
 
-        usort($result, function($a, $b) {
+        usort($result, function ($a, $b) {
             return strcasecmp($a['displayName'], $b['displayName']);
         });
         $result = array_slice($result, 0, 30);
@@ -99,7 +104,7 @@ class cohortsync_search_groups extends \external_api {
      */
     public static function search_groups_returns() {
         return new \external_multiple_structure(
-                new \external_single_structure([
+            new \external_single_structure([
                         'id' => new \external_value(PARAM_TEXT, 'Group ID'),
                         'displayName' => new \external_value(PARAM_TEXT, 'Group display name'),
                 ])

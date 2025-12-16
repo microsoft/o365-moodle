@@ -29,11 +29,13 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot . '/lib/formslib.php');
 
-\MoodleQuickForm::registerElementType('localo365calendar',
+\MoodleQuickForm::registerElementType(
+    'localo365calendar',
     "$CFG->dirroot/local/o365/classes/feature/calsync/form/element/calendar.php",
-    '\local_o365\feature\calsync\form\element\calendar');
+    '\local_o365\feature\calsync\form\element\calendar'
+);
 
 /**
  * Microsoft 365 Calendar Sync Subscription Form.
@@ -72,19 +74,37 @@ class subscriptions extends \moodleform {
 
             $sitecalcustom = $this->_customdata;
             $sitecalcustom['cansyncin'] = $this->_customdata['cancreatesiteevents'];
-            $mform->addElement('localo365calendar', 'sitecal', '', get_string('calendar_site', 'local_o365'), $checkboxattrs,
-                $sitecalcustom);
+            $mform->addElement(
+                'localo365calendar',
+                'sitecal',
+                '',
+                get_string('calendar_site', 'local_o365'),
+                $checkboxattrs,
+                $sitecalcustom
+            );
 
             $usercalcustom = $this->_customdata;
             $usercalcustom['cansyncin'] = true;
-            $mform->addElement('localo365calendar', 'usercal', '', get_string('calendar_user', 'local_o365'), $checkboxattrs,
-                $usercalcustom);
+            $mform->addElement(
+                'localo365calendar',
+                'usercal',
+                '',
+                get_string('calendar_user', 'local_o365'),
+                $checkboxattrs,
+                $usercalcustom
+            );
 
             foreach ($this->_customdata['usercourses'] as $courseid => $course) {
                 $coursecalcustom = $this->_customdata;
                 $coursecalcustom['cansyncin'] = (!empty($this->_customdata['cancreatecourseevents'][$courseid])) ? true : false;
-                $mform->addElement('localo365calendar', 'coursecal['.$course->id.']', '', $course->fullname, $checkboxattrs,
-                    $coursecalcustom);
+                $mform->addElement(
+                    'localo365calendar',
+                    'coursecal[' . $course->id . ']',
+                    '',
+                    $course->fullname,
+                    $checkboxattrs,
+                    $coursecalcustom
+                );
             }
         }
 
@@ -101,8 +121,13 @@ class subscriptions extends \moodleform {
      * @param string $sitecalenderid The o365 ID of the user's site calendar.
      * @return bool Success/Failure.
      */
-    public static function update_subscriptions($fromform, $primarycalid, $cancreatesiteevents,
-            $cancreatecourseevents, $sitecalenderid = null) {
+    public static function update_subscriptions(
+        $fromform,
+        $primarycalid,
+        $cancreatesiteevents,
+        $cancreatecourseevents,
+        $sitecalenderid = null
+    ) {
         global $DB, $USER;
 
         // Determine outlook calendar setting check.
@@ -153,17 +178,19 @@ class subscriptions extends \moodleform {
                 $existingcoursesubs[$existingsubrec->caltypeid] = $existingsubrec;
             }
         }
+
         $existingsubsrs->close();
 
         // Handle changes to site and user calendar subscriptions.
         foreach (['site', 'user'] as $caltype) {
-            $formkey = $caltype.'cal';
+            $formkey = $caltype . 'cal';
             $calchecked = false;
             if (!empty($fromform->settingcal)) {
                 if (!empty($fromform->$formkey) && is_array($fromform->$formkey) && !empty($fromform->{$formkey}['checked'])) {
                     $calchecked = true;
                 }
             }
+
             $syncwith = ($calchecked === true && !empty($fromform->{$formkey}['syncwith'])) ?
                 $fromform->{$formkey}['syncwith'] : '';
             $syncbehav = ($calchecked === true && !empty($fromform->{$formkey}['syncbehav'])) ?
@@ -171,6 +198,7 @@ class subscriptions extends \moodleform {
             if ($caltype === 'site' && empty($cancreatesiteevents)) {
                 $syncbehav = 'out';
             }
+
             if ($calchecked !== true && $currentcaldata[$caltype]['subscribed'] === true) {
                 $DB->delete_records('local_o365_calsub', ['user_id' => $USER->id, 'caltype' => $caltype]);
                 $eventdata = [
@@ -185,9 +213,11 @@ class subscriptions extends \moodleform {
                 if ($currentcaldata[$caltype]['subscribed'] !== $calchecked) {
                     $changed = true;
                 }
+
                 if ($currentcaldata[$caltype]['syncbehav'] !== $syncbehav) {
                     $changed = true;
                 }
+
                 if ($currentcaldata[$caltype]['o365calid'] !== $syncwith) {
                     $changed = true;
                 }
@@ -225,6 +255,7 @@ class subscriptions extends \moodleform {
                             'other' => ['caltype' => $caltype],
                         ];
                     }
+
                     $event = \local_o365\event\calendar_subscribed::create($eventdata);
                     $event->trigger();
                 }
@@ -240,6 +271,7 @@ class subscriptions extends \moodleform {
                 }
             }
         }
+
         $todelete = (empty($fromform->settingcal)) ? $existingcoursesubs : array_diff_key($existingcoursesubs, $newcoursesubs);
         $toadd = (empty($fromform->settingcal)) ? [] : array_diff_key($newcoursesubs, $existingcoursesubs);
         foreach ($todelete as $courseid => $unused) {
@@ -252,12 +284,14 @@ class subscriptions extends \moodleform {
             $event = \local_o365\event\calendar_unsubscribed::create($eventdata);
             $event->trigger();
         }
+
         foreach ($newcoursesubs as $courseid => $coursecaldata) {
             $syncwith = (!empty($coursecaldata['syncwith'])) ? $coursecaldata['syncwith'] : '';
             $syncbehav = (!empty($coursecaldata['syncbehav'])) ? $coursecaldata['syncbehav'] : 'out';
             if (empty($cancreatecourseevents[$courseid])) {
                 $syncbehav = 'out';
             }
+
             if (isset($toadd[$courseid])) {
                 // Not currently subscribed.
                 $newsub = [
@@ -282,9 +316,11 @@ class subscriptions extends \moodleform {
                 if ($existingcoursesubs[$courseid]->syncbehav !== $syncbehav) {
                     $changed = true;
                 }
+
                 if ($existingcoursesubs[$courseid]->o365calid !== $syncwith) {
                     $changed = true;
                 }
+
                 if ($changed === true) {
                     // Already subscribed, update behavior.
                     $updatedrec = [

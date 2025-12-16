@@ -41,7 +41,6 @@ use local_o365\webservices\update_onenoteassignment;
  * @group office365
  */
 final class webservices_onenoteassignment_test extends advanced_testcase {
-
     // Data structure elements of the array based on old Data Provider.
     /** @var int */
     const DBSTATE = 0;
@@ -125,15 +124,19 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
         if ($expectedreturn['course'] === '[[courseid]]') {
             $expectedreturn['course'] = $course->id;
         }
+
         if ($expectedreturn['coursemodule'] === '[[coursemodule]]') {
             $expectedreturn['coursemodule'] = $actualreturn['data'][0]['coursemodule'];
         }
+
         if ($expectedreturn['section'] === '[[section]]') {
             $expectedreturn['section'] = $actualreturn['data'][0]['section'];
         }
+
         if ($expectedreturn['instance'] === '[[instance]]') {
             $expectedreturn['instance'] = $actualreturn['data'][0]['instance'];
         }
+
         $this->assertEquals($expectedreturn, $actualreturn['data'][0]);
 
         $this->assertNotEmpty($DB->get_record('course_modules', ['id' => $actualreturn['data'][0]['coursemodule']]));
@@ -289,9 +292,12 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
                                 'coursemodule' => (string) $parameters['params']['coursemodule'],
                                 'name' => 'OneNote Assignment',
                                 'intro' => 'This is a test assignment',
-                                'section' => $DB->get_field('course_sections', 'id',
+                                'section' => $DB->get_field(
+                                    'course_sections',
+                                    'id',
                                     ['course' => $parameters['params']['course'],
-                                        'section' => 1]),
+                                    'section' => 1]
+                                ),
                                 'visible' => '1',
                             ],
                         ],
@@ -380,10 +386,16 @@ final class webservices_onenoteassignment_test extends advanced_testcase {
                     'name' => 'New OneNote Assignment',
                     'intro' => 'This is a test assignment',
                     'newintro' => 'This is a new test assignment',
-                    'section' => $DB->get_field('course_sections', 'id',
-                        ['course' => $parameters['params']['course'], 'section' => 1]),
-                    'newsection' => $DB->get_field('course_sections', 'id',
-                        ['course' => $parameters['params']['course'], 'section' => 0]),
+                    'section' => $DB->get_field(
+                        'course_sections',
+                        'id',
+                        ['course' => $parameters['params']['course'], 'section' => 1]
+                    ),
+                    'newsection' => $DB->get_field(
+                        'course_sections',
+                        'id',
+                        ['course' => $parameters['params']['course'], 'section' => 0]
+                    ),
                     'visible' => 1,
                     'newvisible' => 0,
                 ];

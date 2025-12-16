@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/lib/adminlib.php');
 
 /**
  * Admin setting to perform health check.
@@ -51,13 +51,14 @@ class healthcheck extends \admin_setting {
      * @param mixed $paramtype int means PARAM_XXX type, string is a allowed format in regex
      * @param int $size default field size
      */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $paramtype=PARAM_RAW, $size=null) {
+    public function __construct($name, $visiblename, $description, $defaultsetting, $paramtype = PARAM_RAW, $size = null) {
         $this->paramtype = $paramtype;
         if (!is_null($size)) {
             $this->size = $size;
         } else {
             $this->size = ($paramtype === PARAM_INT) ? 5 : 30;
         }
+
         parent::__construct($name, $visiblename, $description, $defaultsetting);
     }
 
@@ -88,9 +89,9 @@ class healthcheck extends \admin_setting {
      * @param string $query
      * @return string
      */
-    public function output_html($data, $query='') {
+    public function output_html($data, $query = '') {
         $healthcheckurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
-        $settinghtml = '<input type="hidden" id="'.$this->get_id().'" name="'.$this->get_full_name().'" value="0" />';
+        $settinghtml = '<input type="hidden" id="' . $this->get_id() . '" name="' . $this->get_full_name() . '" value="0" />';
         $settinghtml .= \html_writer::link($healthcheckurl, get_string('settings_healthcheck_linktext', 'local_o365'));
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);
     }

@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/lib/adminlib.php');
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 /**
@@ -64,22 +64,22 @@ class serviceresource extends admin_setting_configtext {
             $buttonattrs = ['class' => 'detect'];
             $strdetect = get_string('settings_serviceresourceabstract_detect', 'local_o365');
             $detectbutton = html_writer::tag('button', $strdetect, $buttonattrs);
-            $settinghtml .= html_writer::div($input.$detectbutton);
+            $settinghtml .= html_writer::div($input . $detectbutton);
             if (!empty($data)) {
                 $icon = $OUTPUT->pix_icon('t/check', 'valid', 'moodle');
                 $strvalid = get_string('settings_serviceresourceabstract_valid', 'local_o365', $this->visiblename);
                 $statusmessage = html_writer::tag('span', $strvalid, ['class' => 'statusmessage']);
-                $settinghtml .= html_writer::div($icon.$statusmessage, 'alert-success alert local_o365_statusmessage');
+                $settinghtml .= html_writer::div($icon . $statusmessage, 'alert-success alert local_o365_statusmessage');
             } else {
                 $icon = $OUTPUT->pix_icon('i/warning', 'valid', 'moodle');
                 $strnocreds = get_string('settings_serviceresourceabstract_empty', 'local_o365');
                 $statusmessage = html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
-                $settinghtml .= html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
+                $settinghtml .= html_writer::div($icon . $statusmessage, 'alert-info alert local_o365_statusmessage');
             }
 
             // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
             $scripturl = new \moodle_url('/local/o365/classes/adminsetting/serviceresource.js');
-            $settinghtml .= '<script src="'.$scripturl->out().'"></script>';
+            $settinghtml .= '<script src="' . $scripturl->out() . '"></script>';
 
             $strvalid = get_string('settings_serviceresourceabstract_valid', 'local_o365', $this->visiblename);
             $strinvalid = get_string('settings_serviceresourceabstract_invalid', 'local_o365', $this->visiblename);
@@ -93,18 +93,18 @@ class serviceresource extends admin_setting_configtext {
             $settinghtml .= '<script>
                                 $(function() {
                                     var opts = {
-                                        url: "'.$ajaxurl->out().'",
-                                        setting: "'.$this->name.'",
-                                        strvalid: "'.$strvalid.'",
-                                        strinvalid: "'.$strinvalid.'",
-                                        iconvalid: "'.$iconvalid.'",
-                                        iconinvalid: "'.$iconinvalid.'",
-                                        iconloading: "'.$iconloading.'",
-                                        strerror: "'.$strerror.'",
-                                        strdetecting: "'.$strdetecting.'",
-                                        strdetect: "'.$strdetect.'"
+                                        url: "' . $ajaxurl->out() . '",
+                                        setting: "' . $this->name . '",
+                                        strvalid: "' . $strvalid . '",
+                                        strinvalid: "' . $strinvalid . '",
+                                        iconvalid: "' . $iconvalid . '",
+                                        iconinvalid: "' . $iconinvalid . '",
+                                        iconloading: "' . $iconloading . '",
+                                        strerror: "' . $strerror . '",
+                                        strdetecting: "' . $strdetecting . '",
+                                        strdetect: "' . $strdetect . '"
                                     };
-                                    $("#admin-'.$this->name.'").serviceresource(opts);
+                                    $("#admin-' . $this->name . '").serviceresource(opts);
                                 });
                             </script>';
         } else {
@@ -112,7 +112,7 @@ class serviceresource extends admin_setting_configtext {
             $icon = $OUTPUT->pix_icon('i/warning', 'valid', 'moodle');
             $strnocreds = get_string('settings_serviceresourceabstract_nocreds', 'local_o365');
             $statusmessage = html_writer::tag('span', $strnocreds, ['class' => 'statusmessage']);
-            $settinghtml .= html_writer::div($icon.$statusmessage, 'alert-info alert local_o365_statusmessage');
+            $settinghtml .= html_writer::div($icon . $statusmessage, 'alert-info alert local_o365_statusmessage');
         }
 
         return format_admin_setting($this, $this->visiblename, $settinghtml, $this->description);

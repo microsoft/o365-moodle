@@ -53,6 +53,7 @@ $apiclient = main::get_unified_api(__METHOD__);
 if (empty($apiclient)) {
     throw new moodle_exception('cohortsync_unifiedapierror', 'local_o365');
 }
+
 $cohortsyncmain = new main($apiclient);
 $cohortsyncmain->fetch_groups_from_cache();
 
@@ -64,6 +65,7 @@ if ($action == 'delete') {
     if (!$connectionrecord = $DB->get_record('local_o365_objects', ['id' => $connectionid])) {
         throw new moodle_exception('cohortsync_connectionnotfound', 'local_o365');
     }
+
     if ($connectionrecord->type != 'group' || $connectionrecord->subtype != 'cohort') {
         throw new moodle_exception('cohortsync_connectionnotcohortsync', 'local_o365');
     }

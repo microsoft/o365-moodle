@@ -129,8 +129,10 @@ function local_o365_connectioncapability($userid, $mode = 'link', $require = fal
  */
 function local_o365_rmdir($path) {
     $it = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
-    $files = new RecursiveIteratorIterator($it,
-        RecursiveIteratorIterator::CHILD_FIRST);
+    $files = new RecursiveIteratorIterator(
+        $it,
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
     foreach ($files as $file) {
         if ($file->isDir()) {
             rmdir($file->getRealPath());
@@ -138,6 +140,7 @@ function local_o365_rmdir($path) {
             unlink($file->getRealPath());
         }
     }
+
     rmdir($path);
 }
 
@@ -154,6 +157,7 @@ function local_o365_create_manifest_file(): array {
     if (file_exists($pathtomanifestfolder)) {
         local_o365_rmdir($pathtomanifestfolder);
     }
+
     mkdir($pathtomanifestfolder, 0777, true);
 
     // Task 2: prepare manifest params.
@@ -232,6 +236,7 @@ function local_o365_create_manifest_file(): array {
     foreach ($filenames as $filename) {
         $ziparchive->add_file_from_pathname($filename, $pathtomanifestfolder . '/' . $filename);
     }
+
     $ziparchive->close();
 
     return $zipfilename ? [null, $zipfilename] : ['errorcannotcreatezipfile', null];
@@ -297,6 +302,7 @@ function local_o365_set_default_user_sync_suspension_feature_schedule() {
         add_to_config_log('usersync_suspension_h', null, 2, 'local_o365');
         set_config('usersync_suspension_h', 2, 'local_o365');
     }
+
     if (get_config('local_o365', 'usersync_suspension_m') === false) {
         add_to_config_log('usersync_suspension_m', null, 30, 'local_o365');
         set_config('usersync_suspension_m', 30, 'local_o365');

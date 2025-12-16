@@ -49,8 +49,10 @@ class updatecourserequeststatus extends scheduled_task {
     public function execute() {
         global $DB;
 
-        $customcourserequests = $DB->get_records('local_o365_course_request',
-            ['requeststatus' => main::COURSE_REQUEST_STATUS_PENDING]);
+        $customcourserequests = $DB->get_records(
+            'local_o365_course_request',
+            ['requeststatus' => main::COURSE_REQUEST_STATUS_PENDING]
+        );
 
         if (empty($customcourserequests)) {
             mtrace('... No custom course requests to process.');
@@ -63,8 +65,12 @@ class updatecourserequeststatus extends scheduled_task {
 
         foreach ($customcourserequests as $customcourserequest) {
             if (!$DB->record_exists('course_request', ['id' => $customcourserequest->requestid])) {
-                $DB->set_field('local_o365_course_request', 'requeststatus', main::COURSE_REQUEST_STATUS_REJECTED,
-                    ['id' => $customcourserequest->id]);
+                $DB->set_field(
+                    'local_o365_course_request',
+                    'requeststatus',
+                    main::COURSE_REQUEST_STATUS_REJECTED,
+                    ['id' => $customcourserequest->id]
+                );
                 mtrace("...... Course request with id {$customcourserequest->requestid} does not exists. " .
                     "Status of custom course request with id {$customcourserequest->id} was updated to 'Rejected'.");
             }

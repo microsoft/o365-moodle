@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot . '/lib/formslib.php');
 
 /**
  * Single Teams connection form.
@@ -41,8 +41,12 @@ class teamsconnection extends \moodleform {
     protected function definition() {
         $mform = &$this->_form;
 
-        $mform->addElement('select', 'team', get_string('acp_teamconnections_form_team', 'local_o365'),
-            $this->_customdata['teamsoptions']);
+        $mform->addElement(
+            'select',
+            'team',
+            get_string('acp_teamconnections_form_team', 'local_o365'),
+            $this->_customdata['teamsoptions']
+        );
 
         $this->add_action_buttons();
     }

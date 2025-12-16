@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+require_once($CFG->dirroot . '/lib/adminlib.php');
 
 /**
  * Admin setting to control field mappings for users.
@@ -77,8 +77,11 @@ class usersynccreationrestriction extends admin_setting {
         ];
         $order = 0;
         while ($order++ < 15) {
-            $this->remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute',
-                'auth_oidc', $order);
+            $this->remotefields['extensionAttribute' . $order] = get_string(
+                'settings_fieldmap_field_extensionattribute',
+                'auth_oidc',
+                $order
+            );
         }
 
         return parent::__construct($name, $visiblename, $description, $defaultsetting);
@@ -94,6 +97,7 @@ class usersynccreationrestriction extends admin_setting {
         if (is_null($setting)) {
             $setting = '';
         }
+
         return unserialize($setting);
     }
 
@@ -135,6 +139,7 @@ class usersynccreationrestriction extends admin_setting {
         if (empty($data) || !is_array($data)) {
             $data = [];
         }
+
         $remotefield = (isset($data['remotefield']) && isset($this->remotefields[$data['remotefield']])) ?
             $data['remotefield'] : '';
         $value = (isset($data['value'])) ? $data['value'] : '';
@@ -147,14 +152,19 @@ class usersynccreationrestriction extends admin_setting {
             'style' => 'width: 350px;vertical-align: top;margin-right: 0.25rem;margin-top:0.25rem;',
             'onchange' => $onchange,
         ];
-        $html .= \html_writer::select($this->remotefields,
-            $this->get_full_name().'[remotefield]', $remotefield, ['' => 'choosedots'], $selectattrs);
+        $html .= \html_writer::select(
+            $this->remotefields,
+            $this->get_full_name() . '[remotefield]',
+            $remotefield,
+            ['' => 'choosedots'],
+            $selectattrs
+        );
 
         $inputdivattrs = ['style' => 'display:inline-block;margin-top:0.25rem;'];
         $html .= \html_writer::start_tag('div', $inputdivattrs);
         $inputattrs = [
             'type' => 'text',
-            'name' => $this->get_full_name().'[value]',
+            'name' => $this->get_full_name() . '[value]',
             'placeholder' => get_string('settings_usersynccreationrestriction_fieldval', 'local_o365'),
             'class' => 'form-control',
             'style' => 'width: 250px;display:inline-block;',
@@ -170,12 +180,13 @@ class usersynccreationrestriction extends admin_setting {
         $inputattrs = [
             'type' => 'checkbox',
             'id' => 'usercreationrestriction_useregex',
-            'name' => $this->get_full_name().'[useregex]',
+            'name' => $this->get_full_name() . '[useregex]',
             'value' => '1',
         ];
         if ($useregex === true) {
             $inputattrs['checked'] = 'checked';
         }
+
         $html .= \html_writer::empty_tag('input', $inputattrs);
         $html .= ' ';
         $regexstr = get_string('settings_usersynccreationrestriction_regex', 'local_o365');

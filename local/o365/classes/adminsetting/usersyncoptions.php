@@ -86,10 +86,12 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
         if (!$this->load_choices() || empty($this->choices)) {
             return '';
         }
+
         $default = $this->get_defaultsetting();
         if (is_null($default)) {
             $default = [];
         }
+
         if (is_null($data)) {
             $data = [];
         }
@@ -130,15 +132,18 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
                 if (!isset($this->choices[$key])) {
                     continue;
                 }
+
                 $description = $this->choices[$key];
                 if (!empty($data[$key])) {
                     $checked = 'checked="checked"';
                 } else {
                     $checked = '';
                 }
+
                 if (!empty($default[$key])) {
                     $defaults[] = $description;
                 }
+
                 $helphtml = $OUTPUT->help_icon('help_user_' . $key, 'local_o365');
                 $optionhtml = '<input type="checkbox" id="' . $this->get_id() . '_' . $key . '" name="' . $this->get_full_name()
                         . '[' . $key . ']" value="1" ' . $checked . ' />' . ' <label for="' . $this->get_id() . '_' . $key . '">'
@@ -146,6 +151,7 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
                 $style = (in_array($key, $dependents)) ? ' style="margin-left:20px;"' : '';
                 $options[] = '<li' . $style . '>' . $optionhtml . '</li>';
             }
+
             if ($options) {
                 $return .= '<ul>';
                 $return .= implode('', $options);

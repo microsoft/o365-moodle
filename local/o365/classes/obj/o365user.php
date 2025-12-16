@@ -91,6 +91,7 @@ class o365user {
         if (empty($oidctoken)) {
             return null;
         }
+
         return new \local_o365\obj\o365user($userid, $oidctoken);
     }
 }

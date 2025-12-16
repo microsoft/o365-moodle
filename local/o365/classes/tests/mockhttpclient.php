@@ -96,6 +96,7 @@ class mockhttpclient extends \local_o365\httpclient {
             if (!isset($this->mockresponse[$this->curresponse])) {
                 throw new moodle_exception('errornoresponsesavailable', 'local_o365');
             }
+
             return $this->mockresponse[$this->curresponse];
         }
     }

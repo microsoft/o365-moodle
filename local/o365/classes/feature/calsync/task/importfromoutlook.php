@@ -46,7 +46,7 @@ class importfromoutlook extends \core\task\scheduled_task {
      */
     public function execute() {
         global $DB, $CFG;
-        require_once($CFG->dirroot.'/calendar/lib.php');
+        require_once($CFG->dirroot . '/calendar/lib.php');
 
         if (\local_o365\utils::is_connected() !== true) {
             return false;
@@ -70,11 +70,12 @@ class importfromoutlook extends \core\task\scheduled_task {
             try {
                 if (!empty($calsub->o365calid) && !$calsync->calendar_exists($calsub->user_id, $calsub->o365calid)) {
                     $calsync->calendar_unsubscribe($calsub->user_id, $calsub->caltype, $calsub->caltypeid, $calsub->o365calid);
-                    mtrace('Calendar ' . $calsub->o365calid . ' not found for user ' . $calsub->user_id . '. Subscription removed and cleanup queued.');
+                    mtrace('Calendar ' . $calsub->o365calid . ' not found for user ' . $calsub->user_id .
+                        '. Subscription removed and cleanup queued.');
                     continue;
                 }
 
-                mtrace('Syncing events for user #'.$calsub->user_id);
+                mtrace('Syncing events for user #' . $calsub->user_id);
 
                 $events = $calsync->get_events($calsub->user_id, $calsub->o365calid, $laststarttime);
                 if (!empty($events) && is_array($events)) {
@@ -85,17 +86,20 @@ class importfromoutlook extends \core\task\scheduled_task {
                             mtrace($errmsg);
                             continue;
                         }
+
                         $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['id']]);
                         if (is_array($event['start'])) {
                             $starttimestring = $event['start']['dateTime'] . ' ' . $event['start']['timeZone'];
                         } else {
                             $starttimestring = $event['start'];
                         }
+
                         if (is_array($event['end'])) {
                             $endtimestring = $event['end']['dateTime'] . ' ' . $event['end']['timeZone'];
                         } else {
                             $endtimestring = $event['end'];
                         }
+
                         if ($idmapexists === false) {
                             // Create Moodle event.
                             $eventparams = [
@@ -119,10 +123,12 @@ class importfromoutlook extends \core\task\scheduled_task {
                                 if ($user->timezone == 99) {
                                     $user->timezone = core_date::get_server_timezone();
                                 }
+
                                 $userstart = strtotime(substr($starttimestring, 0, 10) . ' ' . $user->timezone);
                                 if ($userstart) {
                                     $eventparams['timestart'] = $userstart;
                                 }
+
                                 $userend = strtotime(substr($endtimestring, 0, 10) . ' ' . $user->timezone);
                                 if ($userstart && $userend) {
                                     $eventparams['timeduration'] = $userend - $userstart - 1;
@@ -132,9 +138,11 @@ class importfromoutlook extends \core\task\scheduled_task {
                             if ($calsub->caltype === 'user') {
                                 $eventparams['userid'] = $calsub->caltypeid;
                             }
+
                             if ($calsub->caltype === 'course') {
                                 $eventparams['courseid'] = $calsub->caltypeid;
                             }
+
                             $moodleevent = \calendar_event::create($eventparams, false);
                             if (!empty($moodleevent) && !empty($moodleevent->id)) {
                                 $idmaprec = [
@@ -144,7 +152,7 @@ class importfromoutlook extends \core\task\scheduled_task {
                                     'userid' => $calsub->user_id,
                                 ];
                                 $DB->insert_record('local_o365_calidmap', (object)$idmaprec);
-                                mtrace('Successfully imported event #'.$moodleevent->id);
+                                mtrace('Successfully imported event #' . $moodleevent->id);
                             }
                         }
                     }
@@ -153,9 +161,10 @@ class importfromoutlook extends \core\task\scheduled_task {
                 }
             } catch (moodle_exception $e) {
                 \local_o365\utils::debug('Error syncing events: ' . $e->getMessage(), __METHOD__, $e);
-                mtrace('Error: '.$e->getMessage());
+                mtrace('Error: ' . $e->getMessage());
             }
         }
+
         $calsubs->close();
         \local_o365\feature\calsync\observers::set_event_import(false);
 
