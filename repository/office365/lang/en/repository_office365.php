@@ -25,8 +25,11 @@
 $string['cachedef_unifiedfolderids'] = 'Microsoft 365 Repository - Unified folder IDs';
 $string['cachedef_unifiedgroupfolderids'] = 'Microsoft 365 Repository - Unified folder IDs for groups';
 $string['configplugin'] = 'Configure Microsoft 365 Repository';
+$string['controlledsharelinkdesc'] = 'Shared copy (organization members only)';
+$string['copiedfile'] = 'Copy of file';
 $string['coursegroup'] = 'Disable Groups (Courses) folder in file picker';
 $string['defaultgroupsfolder'] = 'Course Files';
+$string['directlinkdesc'] = 'Direct link (existing permissions)';
 $string['disableanonymousshare'] = 'Disable "{$a}" option';
 $string['disableanonymousshare_help'] = 'When unchecked (default), users can choose to create a copy of a file and share it with everyone in the organization. The copy is stored in the user\'s OneDrive and shared with all organization members.
 
@@ -91,9 +94,6 @@ $string['myfiles'] = 'My OneDrive';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Microsoft 365 plugins</a></p>';
 $string['office365:view'] = 'View Microsoft 365 repository';
 $string['onedrivegroup'] = 'Disable My OneDrive folder in file picker';
-$string['controlledsharelinkdesc'] = 'Shared copy (organization members only)';
-$string['copiedfile'] = 'Copy of file';
-$string['directlinkdesc'] = 'Direct link (existing permissions)';
 $string['pluginname'] = 'Microsoft 365';
 $string['pluginname_help'] = 'A Microsoft 365 Repository';
 $string['privacy:metadata'] = 'This plugin communicates with the Microsoft 365 OneDrive API as the current user. Any files uploaded will be sent to the remote server';
