@@ -100,8 +100,14 @@ echo $OUTPUT->heading(get_string('binding_username_claim_heading', 'auth_oidc'))
 $bindingusernametoolurl = new moodle_url('/auth/oidc/change_binding_username_claim_tool.php');
 echo html_writer::tag('p', get_string('binding_username_claim_description', 'auth_oidc', $bindingusernametoolurl->out()));
 if ($existingclaims) {
-    echo html_writer::tag('p', get_string('binding_username_claim_description_existing_claims', 'auth_oidc',
-        implode(' / ', $existingclaims)));
+    echo html_writer::tag(
+        'p',
+        get_string(
+            'binding_username_claim_description_existing_claims',
+            'auth_oidc',
+            implode(' / ', $existingclaims)
+        )
+    );
 }
 
 $form->display();

@@ -36,7 +36,6 @@ use auth_oidc\privacy\provider;
  * @group office365_privacy
  */
 final class privacy_provider_test extends \core_privacy\tests\provider_testcase {
-
     /**
      * Tests set up.
      */
@@ -310,5 +309,4 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $record->id = $DB->insert_record('auth_oidc_prevlogin', $record);
         return $record;
     }
-
 }

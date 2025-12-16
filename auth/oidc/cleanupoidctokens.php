@@ -47,7 +47,7 @@ $mismatchedtokens = auth_oidc_get_tokens_with_mismatched_usernames();
 
 $tokenstoclean = $emptyuseridtokens + $mismatchedtokens;
 
-uasort($tokenstoclean, function($a, $b) {
+uasort($tokenstoclean, function ($a, $b) {
     return strcmp($a->oidcusername, $b->oidcusername);
 });
 

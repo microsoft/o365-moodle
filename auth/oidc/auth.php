@@ -25,8 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir.'/authlib.php');
-require_once($CFG->dirroot.'/login/lib.php');
+require_once($CFG->libdir . '/authlib.php');
+require_once($CFG->dirroot . '/login/lib.php');
 
 /**
  * OpenID Connect Authentication Plugin.
@@ -51,8 +51,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
         global $SESSION;
         $loginflow = 'authcode';
 
-        if (isset($SESSION->stateadditionaldata) && !empty($SESSION->stateadditionaldata) &&
-            isset($SESSION->stateadditoinaldata['forceflow'])) {
+        if (
+            isset($SESSION->stateadditionaldata) && !empty($SESSION->stateadditionaldata) &&
+            isset($SESSION->stateadditoinaldata['forceflow'])
+        ) {
             $loginflow = $SESSION->stateadditoinaldata['forceflow'];
         } else {
             if (!empty($forceloginflow) && is_string($forceloginflow)) {
@@ -64,7 +66,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 }
             }
         }
-        $loginflowclass = '\auth_oidc\loginflow\\'.$loginflow;
+        $loginflowclass = '\auth_oidc\loginflow\\' . $loginflow;
         if (class_exists($loginflowclass)) {
             $this->loginflow = new $loginflowclass($this->config);
         } else {
@@ -150,8 +152,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
         $silentloginmodesetting = get_config('auth_oidc', 'silentloginmode');
         $forceredirectsetting = get_config('auth_oidc', 'forceredirect');
         $forceloginsetting = get_config('core', 'forcelogin');
-        if ($silentloginmodesetting && $forceredirectsetting && $forceloginsetting && isset($_SERVER['HTTP_REFERER']) &&
-            strpos($_SERVER['HTTP_REFERER'], $CFG->wwwroot) !== false) {
+        if (
+            $silentloginmodesetting && $forceredirectsetting && $forceloginsetting && isset($_SERVER['HTTP_REFERER']) &&
+            strpos($_SERVER['HTTP_REFERER'], $CFG->wwwroot) !== false
+        ) {
             return false;
         }
 
@@ -197,8 +201,13 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @param null $userid
      * @return mixed
      */
-    public function disconnect($justremovetokens = false, $donotremovetokens = false, ?\moodle_url $redirect = null,
-            ?\moodle_url $selfurl = null, $userid = null) {
+    public function disconnect(
+        $justremovetokens = false,
+        $donotremovetokens = false,
+        ?\moodle_url $redirect = null,
+        ?\moodle_url $selfurl = null,
+        $userid = null
+    ) {
         return $this->loginflow->disconnect($justremovetokens, $donotremovetokens, $redirect, $selfurl, $userid);
     }
 
@@ -264,7 +273,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if (!empty($tokenrec)) {
                 // If the token record username is out of sync (ie username changes), update it.
                 if ($tokenrec->username != $user->username) {
-                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec = new \stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->username = $user->username;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
@@ -276,7 +285,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
                 if (!empty($tokenrec)) {
                     $tokenrec->userid = $user->id;
-                    $updatedtokenrec = new \stdClass;
+                    $updatedtokenrec = new \stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
@@ -323,8 +332,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
                     $logouturl = 'https://login.microsoftonline.com/organizations/oauth2/logout?post_logout_redirect_uri=' .
                         urlencode($CFG->wwwroot);
                 } else {
-                    if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
-                        preg_match("/\/oauth2\/logout$/", $logouturl)) {
+                    if (
+                        preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
+                        preg_match("/\/oauth2\/logout$/", $logouturl)
+                    ) {
                         $logouturl .= '?post_logout_redirect_uri=' . urlencode($CFG->wwwroot);
                     }
                 }

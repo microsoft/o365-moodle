@@ -30,7 +30,7 @@ use core\event\user_loggedout;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/lib/filelib.php');
+require_once($CFG->dirroot . '/lib/filelib.php');
 
 /**
  * Handles events.
