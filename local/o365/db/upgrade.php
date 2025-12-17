@@ -1439,5 +1439,179 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025040807, 'local', 'o365');
     }
 
+    if ($oldversion < 2025040820.01) {
+        // Merge local_o365_teams_cache into local_o365_groups_cache.
+        // This upgrade consolidates the two cache tables to eliminate duplication,
+        // since every Team is built on top of a Microsoft 365 Group with the same objectid.
+
+        // Step 1: Extend name field length in local_o365_groups_cache from 256 to 264.
+        $table = new xmldb_table('local_o365_groups_cache');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '264', null, null, null, null, 'objectid');
+
+        // Change field precision for name.
+        $dbman->change_field_precision($table, $field);
+
+        // Step 2: Add new fields to local_o365_groups_cache.
+        // Add has_team field (indicates if this group has an associated team).
+        $field = new xmldb_field('has_team', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'description');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add url field (team URL, null for groups without teams).
+        $field = new xmldb_field('url', XMLDB_TYPE_TEXT, null, null, null, null, null, 'has_team');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add locked field (team lock status, null for groups without teams).
+        $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'url');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Step 3: Merge data from local_o365_teams_cache into local_o365_groups_cache.
+        if ($dbman->table_exists('local_o365_teams_cache')) {
+            // Process in chunks of 5000 to keep memory bounded while eliminating the N+1
+            // get_record() lookup per row. Each chunk bulk-preloads existing groups_cache
+            // rows in one query and batch-inserts new rows via insert_records().
+            $chunksize = 5000;
+            $teamrecordset = $DB->get_recordset('local_o365_teams_cache');
+            $chunk = [];
+
+            $mergeschunk = function (array $rows) use ($DB): void {
+                if (empty($rows)) {
+                    return;
+                }
+
+                // Bulk-preload all matching groups_cache rows for this chunk.
+                $objectids = array_map(fn($r) => $r->objectid, $rows);
+                $existinggroups = $DB->get_records_list('local_o365_groups_cache', 'objectid', $objectids);
+
+                // Re-key by objectid for O(1) lookup.
+                $existingbyoid = [];
+                foreach ($existinggroups as $eg) {
+                    $existingbyoid[$eg->objectid] = $eg;
+                }
+
+                $toinsert = [];
+                foreach ($rows as $team) {
+                    if (isset($existingbyoid[$team->objectid])) {
+                        // Update existing group record with team data.
+                        $eg = $existingbyoid[$team->objectid];
+                        $eg->has_team = 1;
+                        $eg->url = $team->url;
+                        $eg->locked = $team->locked;
+                        // Prefer teams_cache name/description if present.
+                        if (!empty($team->name)) {
+                            $eg->name = $team->name;
+                        }
+                        if (!empty($team->description)) {
+                            $eg->description = $team->description;
+                        }
+                        $DB->update_record('local_o365_groups_cache', $eg);
+                    } else {
+                        // No corresponding group record - queue for batch insert.
+                        $newgroup = new stdClass();
+                        $newgroup->objectid = $team->objectid;
+                        $newgroup->name = $team->name;
+                        $newgroup->description = $team->description;
+                        $newgroup->has_team = 1;
+                        $newgroup->url = $team->url;
+                        $newgroup->locked = $team->locked;
+                        $newgroup->not_found_since = 0;
+                        $toinsert[] = $newgroup;
+                    }
+                }
+
+                if (!empty($toinsert)) {
+                    $DB->insert_records('local_o365_groups_cache', $toinsert);
+                }
+            };
+
+            foreach ($teamrecordset as $team) {
+                $chunk[] = $team;
+                if (count($chunk) >= $chunksize) {
+                    $mergeschunk($chunk);
+                    $chunk = [];
+                }
+            }
+            $mergeschunk($chunk); // Process any remaining rows.
+
+            $teamrecordset->close();
+
+            // Step 4: Drop the local_o365_teams_cache table.
+            $table = new xmldb_table('local_o365_teams_cache');
+            $dbman->drop_table($table);
+        }
+
+        // Step 5: Add index on has_team field for better query performance.
+        $table = new xmldb_table('local_o365_groups_cache');
+        $index = new xmldb_index('has_team', XMLDB_INDEX_NOTUNIQUE, ['has_team']);
+
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Step 6: Initialize config setting for last cache update time.
+        set_config('groups_cache_last_update', 0, 'local_o365');
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2025040820.01, 'local', 'o365');
+    }
+
+    if ($oldversion < 2025040820.02) {
+        // Add team_details_last_attempted field to track failed team detail fetch attempts.
+        // This prevents repeated API calls for teams that don't have valid details,
+        // while still allowing retries after 24 hours.
+
+        $table = new xmldb_table('local_o365_groups_cache');
+        $field = new xmldb_field('team_details_last_attempted', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'locked');
+
+        // Conditionally add field team_details_last_attempted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2025040820.02, 'local', 'o365');
+    }
+
+    if ($oldversion < 2025040820.03) {
+        // Add composite indexes for better query performance.
+        $table = new xmldb_table('local_o365_groups_cache');
+
+        // Composite index for cleanup queries (not_found_since, objectid).
+        $index = new xmldb_index('idx_cleanup', XMLDB_INDEX_NOTUNIQUE, ['not_found_since', 'objectid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Composite index for team detail fetch queries (has_team, team_details_last_attempted).
+        $index = new xmldb_index('idx_team_details', XMLDB_INDEX_NOTUNIQUE, ['has_team', 'team_details_last_attempted']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Add lock_status_last_checked field to track when lock status was last refreshed.
+        // This allows separate refresh intervals for URL (fetch once) vs lock status (refresh periodically).
+        $field = new xmldb_field(
+            'lock_status_last_checked',
+            XMLDB_TYPE_INTEGER,
+            '10',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'team_details_last_attempted'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2025040820.03, 'local', 'o365');
+    }
+
     return true;
 }
