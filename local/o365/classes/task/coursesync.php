@@ -79,28 +79,21 @@ class coursesync extends scheduled_task {
         $coursesync = new main($graphclient, true);
         $coursesync->sync_courses();
 
-        // Wrap update_teams_cache in try-catch to handle API failures gracefully.
+        // Update the unified groups and teams cache.
+        // Returns true = cache updated, null = skipped (rate limit), false = error.
+        // Cleanup is only safe to run when the cache was actually refreshed (true).
         try {
-            if ($coursesync->update_teams_cache()) {
+            if (utils::update_groups_cache($graphclient, 1) === true) {
+                // Cleanup orphaned team connections and save not found groups.
                 $coursesync->cleanup_teams_connections();
-            }
-        } catch (Exception $e) {
-            mtrace('Error updating teams cache: ' . $e->getMessage());
-            utils::debug('Exception in update_teams_cache: ' . $e->getMessage(), __METHOD__, $e);
-            // Continue with other operations even if teams cache update fails.
-        }
-
-        $coursesync->cleanup_course_connection_records();
-
-        // Update the groups cache and save any not found groups.
-        try {
-            if (utils::update_groups_cache($graphclient, 1)) {
                 $coursesync->save_not_found_groups();
                 utils::clean_up_not_found_groups();
             }
         } catch (Exception $e) {
-            mtrace('Error updating groups cache: ' . $e->getMessage());
+            mtrace('Error updating groups/teams cache: ' . $e->getMessage());
             utils::debug('Exception in update_groups_cache: ' . $e->getMessage(), __METHOD__, $e);
         }
+
+        $coursesync->cleanup_course_connection_records();
     }
 }
