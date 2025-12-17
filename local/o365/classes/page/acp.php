@@ -1008,6 +1008,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
                     ['moodleid' => $course->id, 'type' => 'group', 'subtype' => 'course']
                 )
             ) {
+                $teamscachedata = ['objectid' => $grouprecord->objectid, 'has_team' => 1];
+
                 if (
                     $DB->record_exists(
                         'local_o365_objects',
@@ -1019,7 +1021,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                     )
                 ) {
                     // Connected to both group and team.
-                    if ($teamscache = $DB->get_record('local_o365_teams_cache', ['objectid' => $grouprecord->objectid])) {
+                    if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
                         // Team record can be found in cache.
                         $existingconnection = html_writer::link($teamscache->url, $teamscache->name);
                         if (
@@ -1057,7 +1059,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                         $connectlabel = get_string('acp_teamconnections_table_connect', 'local_o365');
 
                         $actions = [html_writer::link($connecturl, $connectlabel)];
-                    } else if ($teamscache = $DB->get_record('local_o365_teams_cache', ['objectid' => $grouprecord->objectid])) {
+                    } else if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
                         // Connect the course with the team.
                         $teamobjectrecord = ['type' => 'group', 'subtype' => 'courseteam', 'objectid' => $teamscache->objectid,
                             'moodleid' => $course->id, 'o365name' => $teamscache->name, 'timecreated' => time(),
@@ -1176,8 +1178,9 @@ var local_o365_coursesync_all_set_feature = function(state) {
         confirm_sesskey();
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
-        $coursesync = new main($graphclient);
-        $coursesync->update_teams_cache();
+        // Pass forceupdate=true so an explicit admin request is never silently skipped
+        // by the 5-minute rate limit that applies to automated task runs.
+        \local_o365\utils::update_groups_cache($graphclient, 0, true);
 
         $redirecturl = new moodle_url('/local/o365/acp.php', ['mode' => 'teamconnections']);
         redirect($redirecturl, get_string('acp_teamconnections_teams_cache_updated', 'local_o365'));
@@ -1230,7 +1233,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 redirect($redirecturl);
             }
 
-            if (!$teamcacherecord = $DB->get_record('local_o365_teams_cache', ['id' => $teamid])) {
+            if (!$teamcacherecord = $DB->get_record('local_o365_groups_cache', ['id' => $teamid, 'has_team' => 1])) {
                 throw new moodle_exception('acp_teamconnections_exception_invalid_team_id', 'local_o365', $redirecturl);
             } else if (
                 $DB->record_exists(
@@ -1377,7 +1380,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 redirect($redirecturl);
             }
 
-            if (!$teamcacherecord = $DB->get_record('local_o365_teams_cache', ['id' => $teamid])) {
+            if (!$teamcacherecord = $DB->get_record('local_o365_groups_cache', ['id' => $teamid, 'has_team' => 1])) {
                 throw new moodle_exception('acp_teamconnections_exception_invalid_team_id', 'local_o365', $redirecturl);
             } else if (
                 $teamobjectrecord = $DB->get_record(
