@@ -718,12 +718,23 @@ class main {
      */
     public function calendar_exists(int $userid, string $outlookcalendarid): bool {
         try {
-            $apiclient = $this->construct_calendar_api($userid, true);
-            $o365upn = utils::get_o365_upn($userid);
-            if (empty($o365upn) || empty($outlookcalendarid)) {
+            if (empty($outlookcalendarid)) {
                 return false;
             }
-            $calendars = $apiclient->get_calendars($o365upn) ?? [];
+
+            $apiclient = $this->construct_calendar_api($userid, true);
+            $o365upn = utils::get_o365_upn($userid);
+
+            if (empty($o365upn)) {
+                return true;
+            }
+
+            $calendars = $apiclient->get_calendars($o365upn);
+
+            if (empty($calendars)) {
+                return true;
+            }
+
             foreach ($calendars as $calendar) {
                 if (isset($calendar['id']) && $calendar['id'] === $outlookcalendarid) {
                     return true;
@@ -731,7 +742,7 @@ class main {
             }
             return false;
         } catch (moodle_exception $e) {
-            return false;
+            return true;
         }
     }
 
