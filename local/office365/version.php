@@ -31,9 +31,9 @@ $plugin->release = '5.0.4';
 $plugin->component = 'local_office365';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'auth_oidc' => 2025040810,
-    'block_microsoft' => 2025040810,
+    'auth_oidc' => 2025040815,
+    'block_microsoft' => 2025040815,
     'local_o365' => 2025040820,
-    'repository_office365' => 2025040810,
-    'theme_boost_o365teams' => 2025040810,
+    'repository_office365' => 2025040815,
+    'theme_boost_o365teams' => 2025040815,
 ];
