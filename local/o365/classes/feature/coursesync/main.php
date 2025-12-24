@@ -875,11 +875,14 @@ class main {
         }
 
         $sql = "SELECT crs.*
-                  FROM {course} crs
-             LEFT JOIN {local_o365_objects} obj ON obj.type = 'group' AND obj.subtype = 'course' AND obj.moodleid = crs.id
-                 WHERE obj.id IS NULL AND crs.id != ? AND crs.visible != 0";
-        // The "crs.visible != 0" is used to filter out courses in the process of copy or restore, which may contain incorrect or
-        // incomplete contents.
+              FROM {course} crs
+         LEFT JOIN {local_o365_objects} obj ON obj.type = 'group' AND obj.subtype = 'course' AND obj.moodleid = crs.id
+             WHERE obj.id IS NULL AND crs.id != ?";
+        if (!get_config('local_o365', 'synchiddencourses')) {
+            $sql .= " AND crs.visible != 0";
+        }
+        // By default, hidden courses (visible = 0) are filtered out to prevent syncing courses in the process of copy or restore,
+        // which may contain incorrect or incomplete contents. This filtering can be disabled via the synchiddencourses setting.
         $params = [SITEID];
         if (!empty($this->coursesinsql)) {
             $sql .= ' AND crs.id ' . $this->coursesinsql;
