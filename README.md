@@ -60,7 +60,7 @@ When updating the Microsoft 365 plugins, it is **important to update all install
 **When updating manually from GitHub:**
 1. Download the latest release for **all** Microsoft 365 plugins you have installed
 2. Replace the existing plugin folders with the new versions, maintaining the same folder structure
-3. From the Moodle Administration block, expand Site Administration and click "Notifications"  
+3. From the Moodle Administration block, expand Site Administration and click "Notifications"
 4. Follow the on-screen instructions to complete the update
 
 **Important:** Do not update only auth_oidc and local_o365. If you have other Microsoft 365 plugins installed (such as block_microsoft, repository_office365, local_onenote, etc.), they must also be updated to versions compatible with the new auth_oidc and local_o365 versions. Failure to update all plugins together may result in compatibility errors.
