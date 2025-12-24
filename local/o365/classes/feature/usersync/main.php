@@ -1754,10 +1754,45 @@ class main {
 
         $apiclient = $this->construct_user_api();
 
+        // Create a temporary table to store to the entra users then query against the user table.
+        $temptablename = 'local_o365_objects_entra';
+        $dbman = $DB->get_manager();
+        $temptable = new \xmldb_table($temptablename);
+        $temptable->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+        $temptable->add_field('objectid', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL);
+        $temptable->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        if ($dbman->table_exists($temptable)) {
+            $dbman->drop_table($temptable);
+        }
+        $dbman->create_temp_table($temptable);
+
+        // Insert entra users into the temporary table.
+        $this->mtrace("Storing " . count($entraidusers) . " Entra users.");
+        $bulk_insert_records = 1000;
+        $eusers = [];
+        foreach ($entraidusers as $entraiduser) {
+            $eusers[] = $entraiduser['id'];
+            if (count($eusers) >= $bulk_insert_records) {
+                $euserssql = 'INSERT INTO {' . $temptablename . '} (objectid) VALUES ';
+                $euserssql .= implode(",", array_fill(0, count($eusers), "(?)"));
+                $DB->execute($euserssql, array_values($eusers));
+                $eusers = [];
+            }
+        }
+
+        // Insert any remaining users.
+        if (!empty($eusers)) {
+            $euserssql = 'INSERT INTO {' . $temptablename . '} (objectid) VALUES ';
+            $euserssql .= implode(",", array_fill(0, count($eusers), "(?)"));
+            $DB->execute($euserssql, array_values($eusers));
+            $eusers = [];
+        }
+
         try {
             $deletedusersids = [];
 
             $deletedusers = $apiclient->list_deleted_users();
+            $this->mtrace("Processing " . count($deletedusers) . " Deleted users.");
             foreach ($deletedusers as $deleteduser) {
                 if (!empty($deleteduser) && isset($deleteduser['id'])) {
                     // Check for synced user.
@@ -1773,7 +1808,7 @@ class main {
                     $synceduser = $DB->get_record_sql($sql, $params);
                     if (!empty($synceduser)) {
                         $synceduser->suspended = 1;
-                        user_update_user($synceduser, false);
+                        $DB->set_field('user', 'suspended', $synceduser->suspended, array('id' => $synceduser->id));
                         $this->mtrace($synceduser->username . ' was deleted in Entra ID, the matching account is suspended.');
                     }
                     $deletedusersids[] = $deleteduser['id'];
@@ -1794,7 +1829,14 @@ class main {
                 $existingsqlparams = array_merge($existingsqlparams, $objectidparams);
             }
 
+            // Include users that aren't in Entra.
+            $existingsql .= ' AND obj.objectid not in (select objectid from {' . $temptablename . '})';
+            // Include users that aren't suspended.
+            $existingsql .= ' AND u.suspended = ?';
+            $existingsqlparams[] = 0;
             $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
+            $this->mtrace("Suspending / Deleting " . count($existingusers) . " Moodle users.");
+
             $validentraiduserids = [];
             foreach ($entraidusers as $entraiduser) {
                 $validentraiduserids[] = $entraiduser['id'];
@@ -1814,15 +1856,17 @@ class main {
                             ' in Microsoft Entra ID. Suspending user...');
                         $existinguser->suspended = 1;
                         unset($existinguser->objectid);
-                        user_update_user($existinguser, false);
+                        $DB->set_field('user', 'suspended', $existinguser->suspended, array('id' => $existinguser->id));
                     }
                 }
             }
+            $dbman->drop_table($temptable); // Drop table on completion.
 
             return true;
         } catch (moodle_exception $e) {
             utils::debug('Could not delete users', __METHOD__, $e);
 
+            $dbman->drop_table($temptable); // Drop table on failure.
             return false;
         }
     }
