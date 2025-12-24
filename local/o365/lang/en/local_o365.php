@@ -292,6 +292,9 @@ $string['settings_coursesync_details'] = 'If enabled, this will create and maint
 $string['acp_coursesynccustom_off'] = 'Disabled<br />Disable Teams creation for all courses.';
 $string['acp_coursesynccustom_oncustom'] = 'Customize<br />Allows authorized users to select which courses to create Teams for.<br> <span id="adminsetting_coursesync" style="font-weight: bold"><a href="{$a}">Customize course sync</a></span>';
 $string['acp_coursesynccustom_onall'] = 'All Features Enabled<br />Enables Teams creation for all courses.';
+$string['settings_coursesync_sync_hidden_courses'] = 'Sync hidden courses';
+$string['settings_coursesync_sync_hidden_courses_desc'] = 'By default, the plugin ignores hidden courses to prevent syncing courses that are being copied or restored. Enable this setting to force the creation of Teams for hidden courses.';
+$string['acp_coursesync_hidden_course_note'] = 'Note: Hidden courses will not be processed for Teams group creation. To allow this, you must enable the "Sync hidden courses" setting in the plugin configuration.';
 $string['settings_coursesync_delete_group_on_course_deletion'] = 'Delete Microsoft 365 groups when connected Moodle course is deleted';
 $string['settings_coursesync_delete_group_on_course_deletion_details'] = 'If enabled, Moodle will try to delete the Microsoft 365 Group (and associated Team) when the connected course is deleted from Moodle. Note this does not apply to courses created from SDS sync.';
 $string['settings_coursesync_delete_group_on_course_sync_disabled'] = 'Delete Microsoft 365 Groups when course sync is disabled';
@@ -1022,6 +1025,5 @@ Please review the secret to ensure the integration works as expected.';
 
 // Misc.
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
-
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

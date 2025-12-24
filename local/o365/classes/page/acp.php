@@ -626,7 +626,11 @@ class acp extends base {
         $search = optional_param('search', '', PARAM_TEXT);
         $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
 
-        $headers = ['fullname' => get_string('fullnamecourse'), 'shortname' => get_string('shortnamecourse')];
+        $headers = [
+            'fullname' => get_string('fullnamecourse'),
+            'shortname' => get_string('shortnamecourse'),
+            'visible' => get_string('coursevisibility'),
+        ];
         if (empty($sort) || !isset($headers[$sort])) {
             $sort = 'fullname';
         }
@@ -670,6 +674,8 @@ class acp extends base {
 
         $sdscourseids = \local_o365\feature\sds\utils::get_sds_course_ids();
 
+        $synchiddencourses = get_config('local_o365', 'synchiddencourses');
+
         foreach ($courses as $course) {
             if ($course->id == SITEID) {
                 continue;
@@ -691,8 +697,18 @@ class acp extends base {
 
             $courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
 
-            $rowdata = [html_writer::link($courseurl, $course->fullname), $course->shortname,
-                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $sdscoursetext];
+            if ($course->visible) {
+                $visiblestr = get_string('show');
+            } else {
+                $visiblestr = get_string('hide');
+            }
+
+            $rowdata = [
+                html_writer::link($courseurl, $course->fullname),
+                $course->shortname,
+                $visiblestr,
+                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $sdscoursetext,
+            ];
             $table->data[] = $rowdata;
         }
 
@@ -836,6 +852,11 @@ var local_o365_coursesync_all_set_feature = function(state) {
         echo html_writer::empty_tag('br');
 
         echo html_writer::tag('h5', get_string('courses'));
+
+        if (!$synchiddencourses) {
+            echo html_writer::tag('p', get_string('acp_coursesync_hidden_course_note', 'local_o365'));
+        }
+
         echo html_writer::table($table);
         echo html_writer::tag(
             'p',

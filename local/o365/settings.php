@@ -219,6 +219,11 @@ if ($hassiteconfig) {
         $desc = new lang_string('settings_coursesync_details', 'local_o365');
         $settings->add(new coursesync('local_o365/coursesync', $label, $desc, 'off'));
 
+        // Sync hidden courses setting.
+        $label = new lang_string('settings_coursesync_sync_hidden_courses', 'local_o365');
+        $desc = new lang_string('settings_coursesync_sync_hidden_courses_desc', 'local_o365');
+        $settings->add(new admin_setting_configcheckbox('local_o365/synchiddencourses', $label, $desc, '0'));
+
         // Course deletion action.
         $label = new lang_string('settings_coursesync_delete_group_on_course_deletion', 'local_o365');
         $desc = new lang_string('settings_coursesync_delete_group_on_course_deletion_details', 'local_o365');
