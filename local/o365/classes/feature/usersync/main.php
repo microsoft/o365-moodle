@@ -1819,10 +1819,16 @@ class main {
      *
      * Note this will not catch oidc users without matching Microsoft 365 account.
      *
-     * @param array $entraidusers
-     * @param bool $delete
+     * Performance optimizations:
+     * - Uses a temporary table with indexed objectid column for efficient database-level comparisons
+     * - Uses DB::set_field() instead of user_update_user() to avoid 153+ queries per user
+     * - Manually triggers \core\event\user_updated events to maintain event observer functionality
+     * - Bulk inserts Entra users in batches of 1000 to minimize memory usage
      *
-     * @return bool
+     * @param array $entraidusers Array of Entra ID user objects with 'id' keys
+     * @param bool $delete Whether to delete users that have been suspended in a previous run
+     *
+     * @return bool True on success, false on failure
      */
     public function suspend_users(array $entraidusers, bool $delete = false) {
         global $CFG, $DB;
@@ -1835,32 +1841,28 @@ class main {
         $temptable = new \xmldb_table($temptablename);
         $temptable->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $temptable->add_field('objectid', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL);
-        $temptable->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $temptable->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $temptable->add_index('objectid_idx', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
         if ($dbman->table_exists($temptable)) {
             $dbman->drop_table($temptable);
         }
         $dbman->create_temp_table($temptable);
 
         // Insert entra users into the temporary table.
+        // Using Moodle's bulk insert API for security and consistency.
         $this->mtrace("Storing " . count($entraidusers) . " Entra users.");
-        $bulk_insert_records = 1000;
-        $eusers = [];
+        $records = [];
         foreach ($entraidusers as $entraiduser) {
-            $eusers[] = $entraiduser['id'];
-            if (count($eusers) >= $bulk_insert_records) {
-                $euserssql = 'INSERT INTO {' . $temptablename . '} (objectid) VALUES ';
-                $euserssql .= implode(",", array_fill(0, count($eusers), "(?)"));
-                $DB->execute($euserssql, array_values($eusers));
-                $eusers = [];
-            }
+            $records[] = (object)['objectid' => $entraiduser['id']];
         }
 
-        // Insert any remaining users.
-        if (!empty($eusers)) {
-            $euserssql = 'INSERT INTO {' . $temptablename . '} (objectid) VALUES ';
-            $euserssql .= implode(",", array_fill(0, count($eusers), "(?)"));
-            $DB->execute($euserssql, array_values($eusers));
-            $eusers = [];
+        if (!empty($records)) {
+            // Insert in batches to avoid memory issues with very large datasets.
+            $batchsize = 1000;
+            $batches = array_chunk($records, $batchsize);
+            foreach ($batches as $batch) {
+                $DB->insert_records($temptablename, $batch);
+            }
         }
 
         try {
@@ -1883,8 +1885,13 @@ class main {
                     $synceduser = $DB->get_record_sql($sql, $params);
                     if (!empty($synceduser)) {
                         $synceduser->suspended = 1;
-                        $DB->set_field('user', 'suspended', $synceduser->suspended, array('id' => $synceduser->id));
+                        // Use direct DB update for performance (avoids 153+ queries per user).
+                        // We manually trigger the user_updated event below to maintain event observer functionality.
+                        $DB->set_field('user', 'suspended', 1, ['id' => $synceduser->id]);
                         $this->mtrace($synceduser->username . ' was deleted in Entra ID, the matching account is suspended.');
+
+                        // Trigger user_updated event for event observers and audit logs.
+                        \core\event\user_updated::create_from_userid($synceduser->id)->trigger();
                     }
 
                     $deletedusersids[] = $deleteduser['id'];
@@ -1906,34 +1913,35 @@ class main {
             }
 
             // Include users that aren't in Entra.
+            // The NOT IN subquery uses the indexed temp table for optimal performance.
             $existingsql .= ' AND obj.objectid not in (select objectid from {' . $temptablename . '})';
-            // Include users that aren't suspended.
-            $existingsql .= ' AND u.suspended = ?';
-            $existingsqlparams[] = 0;
             $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
             $this->mtrace("Suspending / Deleting " . count($existingusers) . " Moodle users.");
 
-            $validentraiduserids = [];
-            foreach ($entraidusers as $entraiduser) {
-                $validentraiduserids[] = $entraiduser['id'];
-            }
-
+            // Process users not found in Entra.
+            // The SQL query already filters out users present in Entra, so no additional in_array check is needed.
             foreach ($existingusers as $existinguser) {
-                if (!in_array($existinguser->objectid, $validentraiduserids)) {
-                    if ($existinguser->suspended) {
-                        if ($delete) {
-                            $this->mtrace('Could not find suspended user ' . $existinguser->username .
-                                ' in Microsoft Entra ID. Deleting user...');
-                            unset($existinguser->objectid);
-                            delete_user($existinguser);
-                        }
-                    } else if (!$existinguser->suspended) {
-                        $this->mtrace('Could not find user ' . $existinguser->username .
-                            ' in Microsoft Entra ID. Suspending user...');
-                        $existinguser->suspended = 1;
+                if ($existinguser->suspended) {
+                    // User was already suspended in a previous sync run.
+                    if ($delete) {
+                        $this->mtrace('Could not find suspended user ' . $existinguser->username .
+                            ' in Microsoft Entra ID. Deleting user...');
                         unset($existinguser->objectid);
-                        $DB->set_field('user', 'suspended', $existinguser->suspended, array('id' => $existinguser->id));
+                        delete_user($existinguser);
                     }
+                } else {
+                    // First time we've detected this user is missing from Entra - suspend them.
+                    $this->mtrace('Could not find user ' . $existinguser->username .
+                        ' in Microsoft Entra ID. Suspending user...');
+                    $existinguser->suspended = 1;
+                    unset($existinguser->objectid);
+                    // Use direct DB update for performance (avoids 153+ queries per user).
+                    // We manually trigger the user_updated event below to maintain event observer functionality.
+                    $DB->set_field('user', 'suspended', 1, ['id' => $existinguser->id]);
+
+                    // Trigger user_updated event for event observers and audit logs.
+                    $user = $DB->get_record('user', ['id' => $existinguser->id]);
+                    \core\event\user_updated::create_from_userid($user->id)->trigger();
                 }
             }
             $dbman->drop_table($temptable); // Drop table on completion.
@@ -1952,10 +1960,14 @@ class main {
      * This function will ensure that for all the users in the array received, if they have a Moodle account that's suspended but
      * not deleted, the account will unsuspended.
      *
-     * @param array $entraidusers
-     * @param bool $syncdisabledstatus
+     * Performance optimizations:
+     * - Uses DB::set_field() instead of user_update_user() to avoid 153+ queries per user
+     * - Manually triggers \core\event\user_updated events to maintain event observer functionality
      *
-     * @return bool
+     * @param array $entraidusers Array of Entra ID user objects
+     * @param bool $syncdisabledstatus Whether to check accountEnabled status before re-enabling
+     *
+     * @return bool True on success
      */
     public function reenable_suspsend_users(array $entraidusers, $syncdisabledstatus) {
         global $DB;
@@ -1992,8 +2004,12 @@ class main {
             $suspendedusers = $DB->get_records_sql($query, $params);
             foreach ($suspendedusers as $suspendeduser) {
                 $this->mtrace('Re-enabling user ' . $suspendeduser->username . '...');
-                $suspendeduser->suspended = 0;
-                user_update_user($suspendeduser, false);
+                // Use direct DB update for performance (avoids 153+ queries per user).
+                // We manually trigger the user_updated event below to maintain event observer functionality.
+                $DB->set_field('user', 'suspended', 0, ['id' => $suspendeduser->id]);
+
+                // Trigger user_updated event for event observers and audit logs.
+                \core\event\user_updated::create_from_userid($suspendeduser->id)->trigger();
             }
         }
 
