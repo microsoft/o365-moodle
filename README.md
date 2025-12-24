@@ -34,6 +34,37 @@ Alternatively you might choose to manually install the plugins from Github. If d
 
 *Don't have a Moodle site already?* You might want to check out our Moodle on Azure repo (https://github.com/azure/moodle) where you can quickly deploy a Moodle instance on Azure and customize it to your needs.
 
+## Updating the plugins
+
+When updating the Microsoft 365 plugins, it is **important to update all installed plugins together** due to version dependencies between them. The plugins have the following dependency structure:
+
+### Core Plugin Dependencies
+- **auth_oidc** - OpenID Connect authentication (no dependencies)
+- **local_o365** - Core integration library (depends on auth_oidc)
+- **block_microsoft** - Microsoft block (depends on local_o365)
+- **repository_office365** - OneDrive repository (depends on local_o365)
+
+### Optional Plugin Dependencies
+- **local_onenote** - OneNote integration (depends on local_o365)
+- **assignsubmission_onenote** - OneNote assignment submission (depends on local_onenote)
+- **assignfeedback_onenote** - OneNote assignment feedback (depends on local_onenote)
+- **theme_boost_o365teams** - Microsoft Teams theme (depends on local_o365)
+
+### Update Procedure
+
+**When updating from the Moodle plugins directory:**
+1. Update all installed Microsoft 365 plugins at the same time using the [Microsoft 365 plugin set](https://moodle.org/plugins/browse.php?list=set&id=72)
+2. From the Moodle Administration block, expand Site Administration and click "Notifications"
+3. Follow the on-screen instructions to complete the update
+
+**When updating manually from GitHub:**
+1. Download the latest release for **all** Microsoft 365 plugins you have installed
+2. Replace the existing plugin folders with the new versions, maintaining the same folder structure
+3. From the Moodle Administration block, expand Site Administration and click "Notifications"  
+4. Follow the on-screen instructions to complete the update
+
+**Important:** Do not update only auth_oidc and local_o365. If you have other Microsoft 365 plugins installed (such as block_microsoft, repository_office365, local_onenote, etc.), they must also be updated to versions compatible with the new auth_oidc and local_o365 versions. Failure to update all plugins together may result in compatibility errors.
+
 ## Documentation
 The documentation for installing, configuring, and using these plugins is available on Moodle.org [here.](https://docs.moodle.org/310/en/Microsoft_365)
 
