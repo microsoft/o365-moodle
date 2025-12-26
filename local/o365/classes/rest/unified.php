@@ -643,6 +643,19 @@ class unified extends o365api {
     }
 
     /**
+     * Get a list of transitive group members.
+     *
+     * @param string $groupobjectid The object ID of the group.
+     * @return array Array of returned members.
+     * @throws moodle_exception
+     */
+    public function get_transitive_group_members(string $groupobjectid): array {
+        $endpoint = '/groups/' . $groupobjectid . '/transitiveMembers';
+
+        return $this->paginatedapicall('get', $endpoint);
+    }
+
+    /**
      * Get a list of group owners.
      *
      * @param string $groupobjectid The object ID of the group.
