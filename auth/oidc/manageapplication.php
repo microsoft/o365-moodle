@@ -80,7 +80,7 @@ if ($form->is_cancelled()) {
 
     // Prepare config settings to save.
     $configstosave = ['idptype', 'clientid', 'clientauthmethod', 'authendpoint', 'tokenendpoint',
-        'oidcresource', 'oidcscope','customclaims'];
+        'oidcresource', 'oidcscope', 'customclaims'];
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {

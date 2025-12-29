@@ -173,10 +173,10 @@ class application extends moodleform {
         $mform->addElement('static', 'oidcscope_help', '', get_string('oidcscope_help', 'auth_oidc'));
 
         // Custom Claim.
-        $mform->addElement('text', 'customclaims', auth_oidc_config_name_in_form('customclaim'), ['size' => 120]);
+        $mform->addElement('text', 'customclaims', auth_oidc_config_name_in_form('customclaims'), ['size' => 120]);
         $mform->setType('customclaims', PARAM_TEXT);
         $mform->setDefault('customclaims', '');
-        $mform->addElement('static', 'customclaims_help', '', get_string('customclaim_help', 'auth_oidc'));
+        $mform->addElement('static', 'customclaims_help', '', get_string('customclaims_help', 'auth_oidc'));
         // Secret expiry notifications recipients.
         if (auth_oidc_is_local_365_installed()) {
             $mform->addElement(
@@ -301,6 +301,18 @@ class application extends moodleform {
         if (in_array($data['idptype'], [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_OTHER])) {
             if (empty(trim($data['oidcresource']))) {
                 $errors['oidcresource'] = get_string('error_empty_oidcresource', 'auth_oidc');
+            }
+        }
+
+        // Validate custom claims.
+        if (!empty($data['customclaims'])) {
+            $claims = explode(' ', $data['customclaims']);
+            foreach ($claims as $claim) {
+                $claim = trim($claim);
+                if (!empty($claim) && !preg_match('/^[a-zA-Z0-9_-]+$/', $claim)) {
+                    $errors['customclaims'] = get_string('error_invalid_custom_claim', 'auth_oidc');
+                    break;
+                }
             }
         }
 
