@@ -286,6 +286,44 @@ function auth_oidc_delete_token(int $tokenid): void {
 }
 
 /**
+ * Process and add custom claims to remote fields array with validation.
+ *
+ * @param array $remotefields Existing remote fields array
+ * @return array Updated remote fields array with validated custom claims
+ */
+function auth_oidc_process_custom_claims($remotefields) {
+    $customclaimsconfig = get_config('auth_oidc', 'customclaims');
+    if (empty($customclaimsconfig)) {
+        return $remotefields;
+    }
+
+    // Split by space, trim, remove empty values, and remove duplicates.
+    $customclaimsarray = array_filter(array_map('trim', explode(' ', $customclaimsconfig)));
+    $customclaimsarray = array_unique($customclaimsarray);
+
+    // Get all existing field names as reserved to prevent overriding.
+    $reserved = array_keys($remotefields);
+
+    foreach ($customclaimsarray as $value) {
+        // Validate claim name format (alphanumeric, underscore, hyphen only).
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
+            debugging("Invalid custom claim name skipped: $value", DEBUG_DEVELOPER);
+            continue;
+        }
+
+        // Prevent overriding existing fields.
+        if (in_array($value, $reserved, true)) {
+            debugging("Reserved custom claim name skipped: $value", DEBUG_DEVELOPER);
+            continue;
+        }
+
+        $remotefields[$value] = $value;
+    }
+
+    return $remotefields;
+}
+
+/**
  * Return the list of remote field options in field mapping.
  *
  * @return array
@@ -366,6 +404,9 @@ function auth_oidc_get_remote_fields() {
                 'auth_oidc'
             );
         }
+
+        // Add custom claims if configured, with validation.
+        $remotefields = auth_oidc_process_custom_claims($remotefields);
     } else {
         $remotefields = [
             '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_oidc'),
@@ -376,9 +417,9 @@ function auth_oidc_get_remote_fields() {
             'surname' => get_string('settings_fieldmap_field_surname', 'auth_oidc'),
             'mail' => get_string('settings_fieldmap_field_mail', 'auth_oidc'),
         ];
-        foreach (explode(" ",get_config('auth_oidc', 'customclaims')) as $value){
-                $remotefields[$value] = $value;
-        }
+
+        // Add custom claims if configured, with validation.
+        $remotefields = auth_oidc_process_custom_claims($remotefields);
     }
 
     return $remotefields;
