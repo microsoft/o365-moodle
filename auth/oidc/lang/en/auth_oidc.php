@@ -154,8 +154,15 @@ $string['oidcresource_help'] = 'The OpenID Connect resource for which to send th
 <b>Note</b> this is paramater is not supported in <b>Microsoft identity platform (v2.0)</b> IdP type.';
 $string['oidcscope'] = 'Scope';
 $string['oidcscope_help'] = 'The OIDC Scope to use.';
-$string['customclaims'] = 'Add custom claims';
-$string['customclaims_help'] = 'Custom claims list to get from the token (claims need to be separate by space)';
+$string['customclaims'] = 'Custom claims';
+$string['customclaims_help'] = 'Space-separated list of custom claim names from your identity provider\'s tokens.<br/>
+<b>Important:</b>
+<ul>
+<li>Claims must exist in your IdP\'s token configuration (e.g., Keycloak protocol mappers, Azure AD optional/custom claims)</li>
+<li>If a claim doesn\'t exist in the token, field mapping will silently skip it - no error will be shown</li>
+<li>Claim names are case-sensitive and can only contain alphanumeric characters, hyphens, and underscores</li>
+<li>Examples: <code>employee_type department costCenter custom_role</code></li>
+</ul>';
 $string['secretexpiryrecipients'] = 'Secret Expiry Notification Recipients';
 $string['secretexpiryrecipients_help'] = 'A comma-separated list of email addresses to send secret expiry notifications to.<br/>
 If no email address is entered, the main site administrator will be notified.';
@@ -271,6 +278,7 @@ $string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoi
 </ul>';
 $string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
 $string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
+$string['error_invalid_custom_claim'] = 'Invalid custom claim name. Custom claims can only contain alphanumeric characters, hyphens, and underscores.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';
 $string['error_no_response_available'] = 'No responses available.';
 
