@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
     'local/o365:managegroups' => [
-        'riskbitmask' => RISK_SPAM | RISK_XSS,
+        'riskbitmask' => RISK_PERSONAL | RISK_CONFIG,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [
@@ -36,7 +36,7 @@ $capabilities = [
         ],
     ],
     'local/o365:viewgroups' => [
-        'riskbitmask' => RISK_SPAM,
+        'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [
@@ -60,7 +60,7 @@ $capabilities = [
         ],
     ],
     'local/o365:teamowner' => [
-        'riskbitmask' => RISK_PERSONAL,
+        'riskbitmask' => RISK_CONFIG | RISK_PERSONAL,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [
@@ -68,7 +68,7 @@ $capabilities = [
         ],
     ],
     'local/o365:teammember' => [
-        'riskbitmask' => RISK_SPAM,
+        'riskbitmask' => RISK_PERSONAL,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [
