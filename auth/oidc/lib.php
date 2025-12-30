@@ -849,3 +849,30 @@ function auth_oidc_is_user_sync_enabled() {
 
     return false;
 }
+
+/**
+ * Mask a secret value by showing only the first 2 characters followed by asterisks.
+ * Similar to how Azure Portal masks secrets.
+ *
+ * @param string $secret The secret value to mask
+ * @return string The masked value (e.g., "Ab**********")
+ */
+function auth_oidc_mask_secret($secret) {
+    if (empty($secret) || strlen($secret) < 2) {
+        return '**********';
+    }
+    return substr($secret, 0, 2) . '**********';
+}
+
+/**
+ * Check if a value appears to be a masked secret.
+ *
+ * @param string $value The value to check
+ * @return bool True if the value is masked, false otherwise
+ */
+function auth_oidc_is_masked_secret($value) {
+    // Check if value matches pattern: exactly 10 asterisks, or 2 chars followed by 10 asterisks.
+    // This matches both cases: secrets shorter than 2 chars (masked as **********)
+    // and secrets 2+ chars (masked as XX**********).
+    return preg_match('/^(.{2})?\*{10}$/', $value) === 1;
+}
