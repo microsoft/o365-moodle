@@ -646,6 +646,17 @@ If this setting is enabled, the SDS class sync will do the following:
 $string['settings_sds_suspend_enrolment'] = 'Suspend user enrolments instead of unenrolling';
 $string['settings_sds_suspend_enrolment_desc'] = 'When this option is enabled, users who are removed from a SDS class will have their enrolment suspended in the connected Moodle course instead of being completely unenrolled. This preserves user data such as grades, submissions, and activity completion. When users are added back to the SDS class, their enrolment will be automatically reactivated.<br />
 <b>Note:</b> Teachers are never suspended or unenrolled by SDS sync. This setting only affects students.';
+$string['settings_sds_categorize_by_subject'] = 'Categorize courses by subject';
+$string['settings_sds_categorize_by_subject_desc'] = 'When enabled, courses will be organized into subject-based categories within each school category. The subject name is extracted from the class information in SDS. When disabled, all courses are placed directly in the school category.';
+$string['settings_sds_ignore_past_courses'] = 'Ignore expired/past courses';
+$string['settings_sds_ignore_past_courses_desc'] = 'When enabled, courses that have expired or ended will be skipped during sync. This includes:<br />
+<ul>
+<li>Courses with the configured expired prefix in their name (default: "Exp")</li>
+<li>Courses with an end date in the past</li>
+</ul>
+This helps keep your course catalog clean by not creating courses for old or archived classes.';
+$string['settings_sds_expired_course_prefix'] = 'Expired course name prefix';
+$string['settings_sds_expired_course_prefix_desc'] = 'Course names starting with this prefix will be considered expired and skipped during sync (if "Ignore expired/past courses" is enabled). Default: "Exp"';
 $string['settings_sds_enrolment_teacher_role'] = 'Teacher role';
 $string['settings_sds_enrolment_teacher_role_desc'] = 'If the "Enrol users" option is enabled, teachers in SDS class will be enrolled in connected Moodle course with this role.';
 $string['settings_sds_enrolment_student_role'] = 'Member role';
