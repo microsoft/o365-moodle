@@ -75,7 +75,7 @@ final class utils_test extends advanced_testcase {
      * @throws dml_exception
      * @covers ::get_connected_users
      */
-    public function test_get_connected_user(): void {
+    public function test_get_connected_users(): void {
         $this->resetAfterTest();
         global $DB;
 
@@ -151,17 +151,36 @@ final class utils_test extends advanced_testcase {
     /**
      * Active app only access is indicated correctly.
      *
+     * This method checks both is_configured_apponlyaccess() AND unified::is_configured().
+     * Note: unified::is_configured() currently always returns true (legacy APIs removed).
+     * Note: is_configured_apponlyaccess() returns true if EITHER config is set (uses OR logic, not AND).
+     *
      * @return void
      * @covers ::is_active_apponlyaccess
      */
     public function test_is_active_apponlyaccess(): void {
         $this->resetAfterTest();
+
+        // Test that it returns true when app-only is configured.
+        // (unified::is_configured() is always true in current implementation).
         set_config('entratenant', 'set', 'local_o365');
         set_config('entratenantid', 'set', 'local_o365');
         $this->assertTrue(utils::is_active_apponlyaccess());
 
+        // Test that it returns false when app-only is NOT configured,
+        // even though unified::is_configured() returns true.
         set_config('entratenant', '', 'local_o365');
         set_config('entratenantid', '', 'local_o365');
         $this->assertFalse(utils::is_active_apponlyaccess());
+
+        // Test partial configuration - if EITHER config is set, returns true.
+        // This is the current behavior: the code checks if BOTH are empty to return false.
+        set_config('entratenant', 'set', 'local_o365');
+        set_config('entratenantid', '', 'local_o365');
+        $this->assertTrue(utils::is_active_apponlyaccess());
+
+        set_config('entratenant', '', 'local_o365');
+        set_config('entratenantid', 'set', 'local_o365');
+        $this->assertTrue(utils::is_active_apponlyaccess());
     }
 }
