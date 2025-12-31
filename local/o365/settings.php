@@ -559,6 +559,21 @@ if ($hassiteconfig) {
                     $desc = new lang_string('settings_sds_teams_enabled_desc', 'local_o365');
                     $settings->add(new admin_setting_configcheckbox('local_o365/sdsteamsenabled', $label, $desc, '0'));
 
+                    // SDS categorize by subject.
+                    $label = new lang_string('settings_sds_categorize_by_subject', 'local_o365');
+                    $desc = new lang_string('settings_sds_categorize_by_subject_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscategorizebysubject', $label, $desc, '0'));
+
+                    // SDS ignore past courses.
+                    $label = new lang_string('settings_sds_ignore_past_courses', 'local_o365');
+                    $desc = new lang_string('settings_sds_ignore_past_courses_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdsignorepastcourses', $label, $desc, '0'));
+
+                    // SDS expired course prefix.
+                    $label = new lang_string('settings_sds_expired_course_prefix', 'local_o365');
+                    $desc = new lang_string('settings_sds_expired_course_prefix_desc', 'local_o365');
+                    $settings->add(new admin_setting_configtext('local_o365/sdsexpiredprefix', $label, $desc, 'Exp', PARAM_TEXT));
+
                     // SDS school sync disabled action.
                     $schooldisabledactionoptions = [
                         SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED => get_string(

@@ -255,20 +255,78 @@ class sync extends scheduled_task {
         }
 
         foreach ($syncedschools as $schoolid => $syncedschool) {
-            $coursecat = static::get_or_create_school_coursecategory($syncedschool['id'], $syncedschool['displayName']);
+            $schoolcoursecat = static::get_or_create_school_coursecategory($syncedschool['id'], $syncedschool['displayName']);
             static::mtrace('Processing school ' . $syncedschool['displayName'], 2);
 
             $schoolclasses = $apiclient->get_school_classes($schoolid);
 
+            // Get configuration options.
+            $sdscategorizebysubject = get_config('local_o365', 'sdscategorizebysubject');
+            $sdsignorepastcourses = get_config('local_o365', 'sdsignorepastcourses');
+            $sdsexpiredprefix = get_config('local_o365', 'sdsexpiredprefix');
+            if (empty($sdsexpiredprefix)) {
+                $sdsexpiredprefix = 'Exp';
+            }
+
             foreach ($schoolclasses as $schoolclass) {
                 static::mtrace('Processing school section ' . $schoolclass['displayName'], 3);
+
+                // Extract course dates from term information.
+                $classstartdate = 0;
+                $classenddate = 0;
+                if (isset($schoolclass['term']) && is_array($schoolclass['term'])) {
+                    if (isset($schoolclass['term']['startDate'])) {
+                        $classstartdate = strtotime($schoolclass['term']['startDate']);
+                    }
+                    if (isset($schoolclass['term']['endDate'])) {
+                        $classenddate = strtotime($schoolclass['term']['endDate']);
+                    }
+                }
+
+                // Filter out expired courses if configured.
+                if ($sdsignorepastcourses) {
+                    // Check for expired prefix.
+                    if (substr($schoolclass['displayName'], 0, strlen($sdsexpiredprefix)) === $sdsexpiredprefix) {
+                        static::mtrace('Skipping expired course (prefix match): ' . $schoolclass['displayName'], 4);
+                        continue;
+                    }
+                    // Check end date.
+                    if ($classenddate > 0 && $classenddate < time()) {
+                        static::mtrace('Skipping expired course (past end date): ' . $schoolclass['displayName'], 4);
+                        continue;
+                    }
+                }
+
+                // Determine course category (subject-based or school-based).
+                $coursecat = $schoolcoursecat;
+                if ($sdscategorizebysubject) {
+                    // Extract subject name from class data.
+                    $subjectname = null;
+                    if (isset($schoolclass['externalName'])) {
+                        // Try externalName first.
+                        $subjectname = $schoolclass['externalName'];
+                    } else if (isset($schoolclass['classCode'])) {
+                        // Fall back to classCode.
+                        $subjectname = $schoolclass['classCode'];
+                    }
+
+                    if (!empty($subjectname)) {
+                        $coursecat = static::get_or_create_subject_coursecategory(
+                            $subjectname,
+                            $schoolcoursecat->id
+                        );
+                        static::mtrace('Using subject category: ' . $subjectname, 4);
+                    }
+                }
 
                 // Create the course.
                 $course = static::get_or_create_class_course(
                     $schoolclass['id'],
                     $schoolclass['mailNickname'],
                     $schoolclass['displayName'],
-                    $coursecat->id
+                    $coursecat->id,
+                    $classstartdate,
+                    $classenddate
                 );
                 $coursecontext = context_course::instance($course->id);
 
@@ -509,24 +567,42 @@ class sync extends scheduled_task {
      * @param string $shortname The shortname of the class course.
      * @param string $fullname The full name of the class course.
      * @param int $categoryid The ID of the category to create the course in (if necessary).
+     * @param int $startdate Optional start date for the course (Unix timestamp).
+     * @param int $enddate Optional end date for the course (Unix timestamp).
      * @return object The course object.
      */
     public static function get_or_create_class_course(
         string $classobjectid,
         string $shortname,
         string $fullname,
-        int $categoryid = 0
+        int $categoryid = 0,
+        int $startdate = 0,
+        int $enddate = 0
     ): object {
         global $DB, $CFG;
 
         require_once($CFG->dirroot . '/course/lib.php');
 
-        // Look for existing category.
+        // Look for existing course.
         $params = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid];
         $objectrec = $DB->get_record('local_o365_objects', $params);
         if (!empty($objectrec)) {
             $course = $DB->get_record('course', ['id' => $objectrec->moodleid]);
             if (!empty($course)) {
+                // Update course dates if they have changed.
+                $updated = false;
+                if ($startdate > 0 && $course->startdate != $startdate) {
+                    $course->startdate = $startdate;
+                    $updated = true;
+                }
+                if ($enddate > 0 && $course->enddate != $enddate) {
+                    $course->enddate = $enddate;
+                    $updated = true;
+                }
+                if ($updated) {
+                    update_course($course);
+                    static::mtrace('Updated course dates for ' . $fullname, 4);
+                }
                 return $course;
             } else {
                 // Course was deleted, remove object record and recreate.
@@ -535,10 +611,25 @@ class sync extends scheduled_task {
             }
         }
 
-        // Create new course category and object record.
+        // Create new course and object record.
         $fullname = substr($fullname, 0, 254); // Course full name max length is 254, while class display name can be 256.
-        $data = ['category' => $categoryid, 'shortname' => $shortname, 'fullname' => $fullname, 'idnumber' => $classobjectid];
+        $data = [
+            'category' => $categoryid,
+            'shortname' => $shortname,
+            'fullname' => $fullname,
+            'idnumber' => $classobjectid,
+        ];
+
+        // Add dates if provided.
+        if ($startdate > 0) {
+            $data['startdate'] = $startdate;
+        }
+        if ($enddate > 0) {
+            $data['enddate'] = $enddate;
+        }
+
         $course = create_course((object) $data);
+        static::mtrace('Created course ' . $fullname . ' with dates', 4);
 
         $now = time();
         $objectrec = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid, 'moodleid' => $course->id,
@@ -585,6 +676,36 @@ class sync extends scheduled_task {
         $objectrec = ['type' => 'sdsschool', 'subtype' => 'coursecat', 'objectid' => $schoolobjectid, 'moodleid' => $coursecat->id,
             'o365name' => $schoolname, 'tenant' => '', 'timecreated' => $now, 'timemodified' => $now];
         $DB->insert_record('local_o365_objects', $objectrec);
+
+        return $coursecat;
+    }
+
+    /**
+     * Get or create a course category for a subject within a school.
+     *
+     * @param string $subjectname The name of the subject.
+     * @param int $parentcategoryid The ID of the parent category (usually school category).
+     * @return core_course_category A course category object for the retrieved or created course category.
+     */
+    public static function get_or_create_subject_coursecategory(string $subjectname, int $parentcategoryid): core_course_category {
+        global $DB;
+
+        // Look for existing category by name and parent.
+        $params = ['name' => $subjectname, 'parent' => $parentcategoryid];
+        $existingcat = $DB->get_record('course_categories', $params);
+        if (!empty($existingcat)) {
+            return core_course_category::get($existingcat->id);
+        }
+
+        // Create new course category.
+        $data = ['visible' => 1, 'name' => $subjectname, 'parent' => $parentcategoryid];
+        if (strlen($data['name']) > 255) {
+            static::mtrace('Subject name was over 255 chars when creating course category, truncating to 255.', 4);
+            $data['name'] = substr($data['name'], 0, 255);
+        }
+
+        $coursecat = core_course_category::create($data);
+        static::mtrace('Created subject category: ' . $subjectname, 4);
 
         return $coursecat;
     }
