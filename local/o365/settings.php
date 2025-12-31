@@ -630,6 +630,11 @@ if ($hassiteconfig) {
                     $desc = new lang_string('settings_sds_suspend_enrolment_desc', 'local_o365');
                     $settings->add(new admin_setting_configcheckbox('local_o365/sdssuspendenrolment', $label, $desc, '1'));
 
+                    // SDS two-way course sync setting.
+                    $label = new lang_string('settings_sds_enable_course_sync', 'local_o365');
+                    $desc = new lang_string('settings_sds_enable_course_sync_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdsenablecoursesync', $label, $desc, '0'));
+
                     // SDS course sync teacher role setting.
                     $label = new lang_string('settings_sds_enrolment_teacher_role', 'local_o365');
                     $desc = new lang_string('settings_sds_enrolment_teacher_role_desc', 'local_o365');

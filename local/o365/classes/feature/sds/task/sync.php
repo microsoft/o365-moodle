@@ -330,27 +330,32 @@ class sync extends scheduled_task {
                 );
                 $coursecontext = context_course::instance($course->id);
 
-                // Associate the section group with the course.
-                $groupobjectparams = ['type' => 'group', 'subtype' => 'course', 'objectid' => $schoolclass['id'],
-                    'moodleid' => $course->id];
-                $groupobjectrec = $DB->get_record('local_o365_objects', $groupobjectparams);
+                // Enable two-way sync (course sync) if configured.
+                $sdsenablecoursesync = get_config('local_o365', 'sdsenablecoursesync');
+                if ($sdsenablecoursesync) {
+                    // Associate the section group with the course for two-way sync.
+                    $groupobjectparams = ['type' => 'group', 'subtype' => 'course', 'objectid' => $schoolclass['id'],
+                        'moodleid' => $course->id];
+                    $groupobjectrec = $DB->get_record('local_o365_objects', $groupobjectparams);
 
-                if (empty($groupobjectrec)) {
-                    $now = time();
-                    $groupobjectrec = $groupobjectparams;
-                    $groupobjectrec['o365name'] = $schoolclass['displayName'];
-                    $groupobjectrec['timecreated'] = $now;
-                    $groupobjectrec['timemodified'] = $now;
-                    $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $groupobjectrec);
-                    \local_o365\feature\coursesync\utils::set_course_sync_enabled($course->id);
+                    if (empty($groupobjectrec)) {
+                        $now = time();
+                        $groupobjectrec = $groupobjectparams;
+                        $groupobjectrec['o365name'] = $schoolclass['displayName'];
+                        $groupobjectrec['timecreated'] = $now;
+                        $groupobjectrec['timemodified'] = $now;
+                        $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $groupobjectrec);
+                        \local_o365\feature\coursesync\utils::set_course_sync_enabled($course->id);
+                        static::mtrace('Enabled two-way sync for course ' . $course->id, 4);
 
-                    if ($teamsyncenabled) {
-                        $teamobjectrec = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $schoolclass['id'],
-                            'moodleid' => $course->id];
-                        $teamobjectrec['o365name'] = $schoolclass['displayName'];
-                        $teamobjectrec['timecreated'] = $now;
-                        $teamobjectrec['timemodified'] = $now;
-                        $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrec);
+                        if ($teamsyncenabled) {
+                            $teamobjectrec = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $schoolclass['id'],
+                                'moodleid' => $course->id];
+                            $teamobjectrec['o365name'] = $schoolclass['displayName'];
+                            $teamobjectrec['timecreated'] = $now;
+                            $teamobjectrec['timemodified'] = $now;
+                            $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrec);
+                        }
                     }
                 }
 
@@ -477,17 +482,20 @@ class sync extends scheduled_task {
                                 if ($suspendusers) {
                                     $enrolinstances = $DB->get_records('enrol', ['courseid' => $course->id]);
                                     foreach ($enrolinstances as $enrolinstance) {
-                                        $userenrolment = $DB->get_record('user_enrolments', [
-                                            'enrolid' => $enrolinstance->id,
-                                            'userid' => $objectrec->moodleid
-                                        ]);
+                                        $userenrolment = $DB->get_record(
+                                            'user_enrolments',
+                                            ['enrolid' => $enrolinstance->id, 'userid' => $objectrec->moodleid]
+                                        );
                                         if ($userenrolment && $userenrolment->status == ENROL_USER_SUSPENDED) {
                                             static::mtrace('Reactivating suspended user ' . $objectrec->moodleid .
                                                 ' in course ' . $course->id, 5);
                                             $enrolplugin = enrol_get_plugin($enrolinstance->enrol);
                                             if ($enrolplugin && method_exists($enrolplugin, 'update_user_enrol')) {
-                                                $enrolplugin->update_user_enrol($enrolinstance, $objectrec->moodleid,
-                                                    ENROL_USER_ACTIVE);
+                                                $enrolplugin->update_user_enrol(
+                                                    $enrolinstance,
+                                                    $objectrec->moodleid,
+                                                    ENROL_USER_ACTIVE
+                                                );
                                             }
                                         }
                                     }
@@ -534,7 +542,7 @@ class sync extends scheduled_task {
                             $isteacher = $DB->record_exists('role_assignments', [
                                 'roleid' => $teacherroleid,
                                 'contextid' => $coursecontext->id,
-                                'userid' => $userid
+                                'userid' => $userid,
                             ]);
 
                             if ($isteacher) {
@@ -553,8 +561,11 @@ class sync extends scheduled_task {
                                     if (isset($enrols[$userenrolment->enrolid])) {
                                         $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
                                         if ($enrolplugin && method_exists($enrolplugin, 'update_user_enrol')) {
-                                            $enrolplugin->update_user_enrol($enrols[$userenrolment->enrolid], $userid,
-                                                ENROL_USER_SUSPENDED);
+                                            $enrolplugin->update_user_enrol(
+                                                $enrols[$userenrolment->enrolid],
+                                                $userid,
+                                                ENROL_USER_SUSPENDED
+                                            );
                                         }
                                     }
                                 }
