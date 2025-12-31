@@ -646,6 +646,9 @@ If this setting is enabled, the SDS class sync will do the following:
 $string['settings_sds_suspend_enrolment'] = 'Suspend user enrolments instead of unenrolling';
 $string['settings_sds_suspend_enrolment_desc'] = 'When this option is enabled, users who are removed from a SDS class will have their enrolment suspended in the connected Moodle course instead of being completely unenrolled. This preserves user data such as grades, submissions, and activity completion. When users are added back to the SDS class, their enrolment will be automatically reactivated.<br />
 <b>Note:</b> Teachers are never suspended or unenrolled by SDS sync. This setting only affects students.';
+$string['settings_sds_enable_course_sync'] = 'Enable two-way course sync';
+$string['settings_sds_enable_course_sync_desc'] = 'When enabled, SDS courses will be associated with their corresponding Microsoft 365 groups to enable two-way synchronization. This allows course content, assignments, and activities created in Moodle to be synchronized with Microsoft Teams and other Office 365 services.<br />
+<b>Note:</b> Two-way sync requires additional configuration in the course sync settings and Microsoft 365 group permissions.';
 $string['settings_sds_categorize_by_subject'] = 'Categorize courses by subject';
 $string['settings_sds_categorize_by_subject_desc'] = 'When enabled, courses will be organized into subject-based categories within each school category. The subject name is extracted from the class information in SDS. When disabled, all courses are placed directly in the school category.';
 $string['settings_sds_ignore_past_courses'] = 'Ignore expired/past courses';
