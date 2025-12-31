@@ -30,34 +30,47 @@ use dml_exception;
  */
 final class cleanup_oidc_sid_test extends advanced_testcase {
     /**
-     * SIDs created before yesterday are deleted.
+     * SIDs older than 1 day are deleted.
+     *
+     * The cleanup task deletes records where timecreated < strtotime('-1 day').
+     * Records created exactly 1 day ago or more recently are kept.
      *
      * @return void
      * @throws dml_exception
      * @covers ::execute
      */
     public function test_sids_older_than_yesterday_are_deleted(): void {
-        global $DB, $USER;
+        global $DB;
         $this->resetAfterTest();
-        $twodaysago = strtotime('-2 day');
-        $yesterday = strtotime('-1 day');
-        $today = time();
-        // Create entries in auth_oidc_sid.
+
+        // Create a test user to own the SID records.
+        $user = $this->getDataGenerator()->create_user();
+
+        // Calculate cutoff time once to avoid timing issues if test runs slowly.
+        // This matches what the cleanup task will calculate during execute().
+        $cutofftime = strtotime('-1 day');
+
+        // Create timestamps relative to the cutoff time.
+        $twodaysago = $cutofftime - DAYSECS;  // Older than cutoff, should be deleted.
+        $yesterday = $cutofftime;              // Exactly at cutoff, should be kept (< operator).
+        $today = time();                       // Newer than cutoff, should be kept.
+
+        // Create entries in auth_oidc_sid with unique SIDs.
         $entry1id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $USER->id, 'sid' => 'sid', 'timecreated' => $twodaysago],
+            ['userid' => $user->id, 'sid' => 'sid_old_1', 'timecreated' => $twodaysago],
         );
         $entry2id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $USER->id, 'sid' => 'sid', 'timecreated' => ($twodaysago - 1000)],
+            ['userid' => $user->id, 'sid' => 'sid_old_2', 'timecreated' => ($twodaysago - 1000)],
         );
         $entry3id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $USER->id, 'sid' => 'sid', 'timecreated' => $today],
+            ['userid' => $user->id, 'sid' => 'sid_new_1', 'timecreated' => $today],
         );
         $entry4id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $USER->id, 'sid' => 'sid', 'timecreated' => $yesterday],
+            ['userid' => $user->id, 'sid' => 'sid_boundary', 'timecreated' => $yesterday],
         );
 
         $cleanup = new cleanup_oidc_sid();
