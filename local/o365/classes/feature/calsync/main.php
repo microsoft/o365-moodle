@@ -579,7 +579,7 @@ class main {
             try {
                 $apiclient = $this->construct_calendar_api($idmaprec->userid);
 
-                if ($isgroupevent) {
+                if ($isgroupevent && !empty($groupobject->objectid)) {
                     try {
                         $apiclient->update_event($idmaprec->outlookeventid, $updated, $groupobject->objectid, 'group');
                         continue;
@@ -646,7 +646,7 @@ class main {
 
             $apiclient = $this->construct_calendar_api($idmaprec->userid);
 
-            if ($isgroupevent) {
+            if ($isgroupevent && !empty($groupobject->objectid)) {
                 try {
                     $apiclient->delete_event($idmaprec->outlookeventid, $groupobject->objectid, 'group');
                     continue;
