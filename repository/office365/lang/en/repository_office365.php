@@ -59,7 +59,8 @@ $string['disableanonymousshare_help'] = 'When unchecked (default), users can cho
 * Changes made to the original file will NOT be reflected in the shared copy, and vice versa.
 
 Check this box to disable this option and prevent users from creating organization-shared copies.';
-$string['disableanonymoussharewarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, a copy of the original file is created and shares with all organization members. The original file remains unchanged. Users should ensure the file content is appropriate for organization-wide access.</div>';
+$string['disableanonymoussharewarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, a copy of the original file is created and shares with all organization members. The original file remains unchanged. Users should ensure the file content is appropriate for organization-wide access.
+<br><br><strong>Embedding Limitation:</strong> Files shared using this option may not display correctly when the resource Display option is set to "Embed" due to OneDrive connection restrictions. For embedded display, consider copying the file to Moodle instead.</div>';
 $string['disabledirectlink'] = 'Disable "{$a}" option';
 $string['disabledirectlink_help'] = 'When unchecked (default), users can add a direct link to a file in their OneDrive instead of copying it to Moodle. The file remains in OneDrive and Moodle stores only a reference link.
 
@@ -76,7 +77,8 @@ $string['disabledirectlink_help'] = 'When unchecked (default), users can add a d
 * Edits to the OneDrive file should be reflected in Moodle.
 
 Check this box to disable this option and require all files to be copied to Moodle.';
-$string['disabledirectlinkwarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, no sharing setting changes are made to the OneDrive file. Users adding the file must ensure that file permissions in OneDrive are set correctly.</div>';
+$string['disabledirectlinkwarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, no sharing setting changes are made to the OneDrive file. Users adding the file must ensure that file permissions in OneDrive are set correctly.
+<br><br><strong>Embedding Limitation:</strong> Files linked using this option may not display correctly when the resource Display option is set to "Embed" due to OneDrive connection restrictions. For embedded display, consider copying the file to Moodle instead.</div>';
 
 $string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the Microsoft 365 repository.';
