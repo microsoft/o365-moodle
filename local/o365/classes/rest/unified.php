@@ -429,8 +429,8 @@ class unified extends o365api {
 
         if (!empty($extra)) {
             // Set extra parameters.
-            foreach ($extra as $name => $value) {
-                $groupdata[$name] = $value;
+            foreach ($extra as $extraname => $value) {
+                $groupdata[$extraname] = $value;
             }
         }
 
