@@ -1374,22 +1374,8 @@ class repository_office365 extends repository {
                     $errstr = 'Embed was requested, but could not get file info to complete request.';
                     utils::debug($errstr, __METHOD__, ['reference' => $reference, 'fileinfo' => $fileinfo]);
                 } else {
-                    try {
-                        $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
-                        $embedurl = (isset($embedurl['value'])) ? $embedurl['value'] : '';
-                    } catch (moodle_exception $e) {
-                        // Note: exceptions will already be logged in get_embed_url.
-                        $embedurl = '';
-                    }
-
-                    if (!empty($embedurl)) {
-                        redirect($embedurl);
-                    } else if (!empty($fileurl)) {
-                        redirect($fileurl);
-                    } else {
-                        $errstr = 'Embed was requested, but could not complete.';
-                        utils::debug($errstr, __METHOD__, $reference);
-                    }
+                    // Redirect to the file's webUrl for display.
+                    redirect($fileurl);
                 }
             } else {
                 utils::debug('Could not construct OneDrive client for system api user.', __METHOD__);
