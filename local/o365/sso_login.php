@@ -33,12 +33,46 @@ $PAGE->set_context(context_system::instance());
 
 $authtoken = local_o365_get_auth_token();
 
-[$headerencoded, $payloadencoded, $signatureencoded] = explode('.', $authtoken);
+if (empty($authtoken)) {
+    http_response_code(401);
+    die();
+}
+
+// Decode the JWT.
+$parts = explode('.', $authtoken);
+if (count($parts) !== 3) {
+    http_response_code(401);
+    die();
+}
+
+[$headerencoded, $payloadencoded, $signatureencoded] = $parts;
 
 $payload = json_decode(local_o365_base64urldecode($payloadencoded));
 
+if (empty($payload)) {
+    http_response_code(401);
+    die();
+}
+
+// Try to get username from various possible claims.
+$username = null;
+if (!empty($payload->upn)) {
+    $username = $payload->upn;
+} else if (!empty($payload->unique_name)) {
+    $username = $payload->unique_name;
+} else if (!empty($payload->preferred_username)) {
+    $username = $payload->preferred_username;
+} else if (!empty($payload->email)) {
+    $username = $payload->email;
+}
+
+if (empty($username)) {
+    http_response_code(401);
+    die();
+}
+
 $loginsuccess = false;
-if ($authoidctoken = $DB->get_record('auth_oidc_token', ['oidcusername' => $payload->upn])) {
+if ($authoidctoken = $DB->get_record('auth_oidc_token', ['oidcusername' => $username])) {
     if ($user = core_user::get_user($authoidctoken->userid)) {
         $_POST['code'] = $authoidctoken->authcode;
         $user = authenticate_user_login($user->username, $user->password, true);
