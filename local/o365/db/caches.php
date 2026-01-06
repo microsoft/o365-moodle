@@ -29,4 +29,8 @@ $definitions = [
     'groups' => [
         'mode' => cache_store::MODE_SESSION,
     ],
+    'jwks' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'ttl' => 86400, // Cache JWKS for 24 hours.
+    ],
 ];
