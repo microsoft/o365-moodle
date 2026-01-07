@@ -373,6 +373,27 @@ class sync extends scheduled_task {
                             if (!$DB->record_exists('role_assignments', $roleparams)) {
                                 static::mtrace('Enrolling user ' . $objectrec->moodleid . ' into course ' . $course->id, 5);
                                 enrol_try_internal_enrol($course->id, $objectrec->moodleid, $role->id);
+                            } else {
+                                // User is already enrolled - check if they are suspended and need to be reactivated.
+                                $suspendusers = get_config('local_o365', 'sdssuspendenrolment');
+                                if ($suspendusers) {
+                                    $enrolinstances = $DB->get_records('enrol', ['courseid' => $course->id]);
+                                    foreach ($enrolinstances as $enrolinstance) {
+                                        $userenrolment = $DB->get_record('user_enrolments', [
+                                            'enrolid' => $enrolinstance->id,
+                                            'userid' => $objectrec->moodleid
+                                        ]);
+                                        if ($userenrolment && $userenrolment->status == ENROL_USER_SUSPENDED) {
+                                            static::mtrace('Reactivating suspended user ' . $objectrec->moodleid .
+                                                ' in course ' . $course->id, 5);
+                                            $enrolplugin = enrol_get_plugin($enrolinstance->enrol);
+                                            if ($enrolplugin && method_exists($enrolplugin, 'update_user_enrol')) {
+                                                $enrolplugin->update_user_enrol($enrolinstance, $objectrec->moodleid,
+                                                    ENROL_USER_ACTIVE);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -385,7 +406,7 @@ class sync extends scheduled_task {
                         }
                     }
 
-                    // Unenrol users who have been removed from the SDS class.
+                    // Handle users who have been removed from the SDS class.
                     $enrolledusers = get_enrolled_users($coursecontext);
                     if (!$enrolledusers) {
                         continue;
@@ -404,20 +425,54 @@ class sync extends scheduled_task {
                         $enrols = $DB->get_records('enrol', ['courseid' => $course->id]);
                     }
 
+                    $suspendusers = get_config('local_o365', 'sdssuspendenrolment');
+
                     if ($enrols) {
                         [$enrolsql, $enrolparams] = $DB->get_in_or_equal(array_keys($enrols), SQL_PARAMS_NAMED);
                         foreach ($userstoberemoved as $userobjectid) {
                             $userid = $courseuserobjectids[$userobjectid]->userid;
-                            static::mtrace('Unenrol user ' . $userid . ' from course ' . $course->id, 5);
-                            $sql = 'SELECT *
-                                      FROM {user_enrolments}
-                                     WHERE userid = :userid
-                                       AND enrolid ' . $enrolsql;
-                            $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
-                            foreach ($userenrolments as $userenrolment) {
-                                if (isset($enrols[$userenrolment->enrolid])) {
-                                    $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
-                                    $enrolplugin->unenrol_user($enrols[$userenrolment->enrolid], $userid);
+
+                            // Check if user is a teacher - don't suspend/unenrol teachers.
+                            $isteacher = $DB->record_exists('role_assignments', [
+                                'roleid' => $teacherroleid,
+                                'contextid' => $coursecontext->id,
+                                'userid' => $userid
+                            ]);
+
+                            if ($isteacher) {
+                                continue;
+                            }
+
+                            if ($suspendusers) {
+                                // Suspend the user's enrolment instead of removing it.
+                                static::mtrace('Suspending user ' . $userid . ' in course ' . $course->id, 5);
+                                $sql = 'SELECT *
+                                          FROM {user_enrolments}
+                                         WHERE userid = :userid
+                                           AND enrolid ' . $enrolsql;
+                                $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
+                                foreach ($userenrolments as $userenrolment) {
+                                    if (isset($enrols[$userenrolment->enrolid])) {
+                                        $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
+                                        if ($enrolplugin && method_exists($enrolplugin, 'update_user_enrol')) {
+                                            $enrolplugin->update_user_enrol($enrols[$userenrolment->enrolid], $userid,
+                                                ENROL_USER_SUSPENDED);
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Unenrol the user completely.
+                                static::mtrace('Unenrol user ' . $userid . ' from course ' . $course->id, 5);
+                                $sql = 'SELECT *
+                                          FROM {user_enrolments}
+                                         WHERE userid = :userid
+                                           AND enrolid ' . $enrolsql;
+                                $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
+                                foreach ($userenrolments as $userenrolment) {
+                                    if (isset($enrols[$userenrolment->enrolid])) {
+                                        $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
+                                        $enrolplugin->unenrol_user($enrols[$userenrolment->enrolid], $userid);
+                                    }
                                 }
                             }
                         }

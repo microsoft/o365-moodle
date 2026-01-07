@@ -643,6 +643,9 @@ If this setting is enabled, the SDS class sync will do the following:
 <li>Changes in SDS class ownership / membership status will be synced to Moodle course and reflected in Moodle user role changes.</li>
 <li>User enrolment changes, such as enrolments and unenrolments, that are made in Moodle course connected to SDS classes will be synchronised back to SDS classes. The ownership / membership status of the user will depend on the "local/o365:teamowner" and "local/o365:teammember" capabilities in the course context.</li>
 </ul>';
+$string['settings_sds_suspend_enrolment'] = 'Suspend user enrolments instead of unenrolling';
+$string['settings_sds_suspend_enrolment_desc'] = 'When this option is enabled, users who are removed from a SDS class will have their enrolment suspended in the connected Moodle course instead of being completely unenrolled. This preserves user data such as grades, submissions, and activity completion. When users are added back to the SDS class, their enrolment will be automatically reactivated.<br />
+<b>Note:</b> Teachers are never suspended or unenrolled by SDS sync. This setting only affects students.';
 $string['settings_sds_enrolment_teacher_role'] = 'Teacher role';
 $string['settings_sds_enrolment_teacher_role_desc'] = 'If the "Enrol users" option is enabled, teachers in SDS class will be enrolled in connected Moodle course with this role.';
 $string['settings_sds_enrolment_student_role'] = 'Member role';
