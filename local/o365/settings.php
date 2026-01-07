@@ -574,6 +574,21 @@ if ($hassiteconfig) {
                     $desc = new lang_string('settings_sds_expired_course_prefix_desc', 'local_o365');
                     $settings->add(new admin_setting_configtext('local_o365/sdsexpiredprefix', $label, $desc, 'Exp', PARAM_TEXT));
 
+                    // SDS cohort sync header.
+                    $label = new lang_string('settings_sds_cohortsync', 'local_o365');
+                    $desc = new lang_string('settings_sds_cohortsync_desc', 'local_o365');
+                    $settings->add(new admin_setting_heading('local_o365_sds_cohortsync', $label, $desc));
+
+                    // SDS create cohorts.
+                    $label = new lang_string('settings_sds_create_cohorts', 'local_o365');
+                    $desc = new lang_string('settings_sds_create_cohorts_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscreatecohorts', $label, $desc, '0'));
+
+                    // SDS cohort include teachers.
+                    $label = new lang_string('settings_sds_cohort_include_teachers', 'local_o365');
+                    $desc = new lang_string('settings_sds_cohort_include_teachers_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscohortincludeteachers', $label, $desc, '0'));
+
                     // SDS school sync disabled action.
                     $schooldisabledactionoptions = [
                         SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED => get_string(
