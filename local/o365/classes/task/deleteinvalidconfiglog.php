@@ -35,6 +35,12 @@ class deleteinvalidconfiglog extends adhoc_task {
     /** @var int Number of records to process per batch */
     const BATCH_SIZE = 10000;
 
+    /** @var int Number of records to delete from logstore_standard_log per chunk to avoid long locks */
+    const DELETE_CHUNK_SIZE = 500;
+
+    /** @var int Maximum execution time in seconds before queuing next task (5 minutes) */
+    const MAX_EXECUTION_TIME = 300;
+
     /** @var array List of config names that should not have been logged */
     const CONFIG_NAMES = [
         'apptokens',
@@ -56,6 +62,7 @@ class deleteinvalidconfiglog extends adhoc_task {
         global $DB;
 
         $hasmore = false;
+        $starttime = time();
 
         foreach (self::CONFIG_NAMES as $configname) {
             mtrace("Processing config name: {$configname}");
@@ -88,21 +95,58 @@ class deleteinvalidconfiglog extends adhoc_task {
                 $recordset->close();
 
                 if (!empty($configlogids)) {
-                    // Delete corresponding logstore_standard_log records.
-                    [$insql, $inparams] = $DB->get_in_or_equal($configlogids, SQL_PARAMS_NAMED);
-                    $params = array_merge(['eventname' => '\core\event\config_log_created'], $inparams);
-                    $DB->delete_records_select('logstore_standard_log', "eventname = :eventname AND objectid $insql", $params);
+                    // Delete corresponding logstore_standard_log records in chunks to avoid long table locks.
+                    // The logstore_standard_log table is typically very large and a single DELETE with thousands
+                    // of IDs can lock the table for extended periods, making the site unavailable.
+                    $deletechunks = array_chunk($configlogids, self::DELETE_CHUNK_SIZE);
+                    $totaldeleted = 0;
 
-                    // Delete config_log records.
-                    $DB->delete_records_list('config_log', 'id', $configlogids);
+                    foreach ($deletechunks as $chunk) {
+                        [$insql, $inparams] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED);
+                        $params = array_merge(['eventname' => '\core\event\config_log_created'], $inparams);
+                        $DB->delete_records_select('logstore_standard_log', "eventname = :eventname AND objectid $insql", $params);
 
-                    mtrace("... Deleted {$count} records for {$configname}");
+                        $totaldeleted += count($chunk);
 
-                    // Check if there are more records to process.
-                    $remaining = $DB->count_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
-                    if ($remaining > 0) {
-                        mtrace("... {$remaining} records remaining for {$configname}");
-                        $hasmore = true;
+                        // Brief pause to allow locks to be released and other queries to execute.
+                        // This prevents lock table exhaustion and reduces database contention.
+                        usleep(100000); // 0.1 seconds.
+
+                        // Check if we've exceeded the maximum execution time.
+                        // Break early to avoid long-running tasks and queue another task to continue.
+                        if (time() > $starttime + self::MAX_EXECUTION_TIME) {
+                            mtrace("... Reached time limit. Deleted {$totaldeleted} logstore records so far.");
+                            $hasmore = true;
+                            break 2; // Break out of both foreach loops.
+                        }
+                    }
+
+                    // Only delete config_log records if we processed all logstore deletions.
+                    // This ensures we don't orphan config_log records if we hit the time limit.
+                    if (!$hasmore) {
+                        // Delete config_log records in chunks as well.
+                        foreach ($deletechunks as $chunk) {
+                            $DB->delete_records_list('config_log', 'id', $chunk);
+
+                            // Brief pause between chunks.
+                            usleep(100000); // 0.1 seconds.
+
+                            // Check time limit again.
+                            if (time() > $starttime + self::MAX_EXECUTION_TIME) {
+                                mtrace("... Reached time limit during config_log deletion.");
+                                $hasmore = true;
+                                break 2;
+                            }
+                        }
+
+                        mtrace("... Deleted {$count} records for {$configname}");
+
+                        // Check if there are more records to process.
+                        $remaining = $DB->count_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
+                        if ($remaining > 0) {
+                            mtrace("... {$remaining} records remaining for {$configname}");
+                            $hasmore = true;
+                        }
                     }
                 }
             }
