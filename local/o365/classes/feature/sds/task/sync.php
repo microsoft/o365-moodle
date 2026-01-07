@@ -354,6 +354,46 @@ class sync extends scheduled_task {
                     }
                 }
 
+                // Sync cohorts if enabled.
+                $sdscreatecohorts = get_config('local_o365', 'sdscreatecohorts');
+                if ($sdscreatecohorts) {
+                    static::mtrace('Running cohort sync', 4);
+
+                    // Create or get the cohort for this class.
+                    $cohort = static::get_or_create_class_cohort(
+                        $schoolclass['id'],
+                        $schoolclass['mailNickname'],
+                        $schoolclass['displayName'],
+                        $coursecat->id
+                    );
+
+                    // Sync cohort membership.
+                    $includeteachers = get_config('local_o365', 'sdscohortincludeteachers');
+                    $allclassmembers = [];
+
+                    // Get teachers.
+                    $classteacherlist = $apiclient->get_school_class_teachers($schoolclass['id']);
+                    if (!empty($classteacherlist)) {
+                        foreach ($classteacherlist as $teacher) {
+                            $teacher['@odata.type'] = '#microsoft.graph.educationTeacher';
+                            $allclassmembers[] = $teacher;
+                        }
+                    }
+
+                    // Get students/members.
+                    $classmemberlist = $apiclient->get_school_class_members($schoolclass['id']);
+                    if (!empty($classmemberlist)) {
+                        foreach ($classmemberlist as $member) {
+                            $member['@odata.type'] = '#microsoft.graph.educationStudent';
+                            $allclassmembers[] = $member;
+                        }
+                    }
+
+                    if (!empty($allclassmembers)) {
+                        static::sync_cohort_members($cohort, $allclassmembers, $includeteachers);
+                    }
+                }
+
                 // Sync enrolments.
                 if (!empty($enrolenabled)) {
                     static::mtrace('Running enrol sync', 4);
@@ -708,6 +748,120 @@ class sync extends scheduled_task {
         static::mtrace('Created subject category: ' . $subjectname, 4);
 
         return $coursecat;
+    }
+
+    /**
+     * Get or create a cohort for a SDS class.
+     *
+     * @param string $classobjectid The object ID of the class.
+     * @param string $shortname The shortname for the cohort.
+     * @param string $fullname The full name for the cohort.
+     * @param int $categoryid The ID of the category (for context).
+     * @return object The cohort object.
+     */
+    public static function get_or_create_class_cohort(
+        string $classobjectid,
+        string $shortname,
+        string $fullname,
+        int $categoryid
+    ): object {
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        // Look for existing cohort with the class object ID as idnumber.
+        $cohort = $DB->get_record('cohort', ['idnumber' => $classobjectid]);
+
+        if (!empty($cohort)) {
+            static::mtrace('Found existing cohort for ' . $fullname, 4);
+            return $cohort;
+        }
+
+        // Create new cohort.
+        $catcontext = \context_coursecat::instance($categoryid);
+        $cohortdata = [
+            'idnumber' => $classobjectid,
+            'name' => substr($fullname, 0, 254), // Cohort name max length is 254.
+            'contextid' => $catcontext->id,
+            'description' => 'Cohort synced from SDS class',
+            'descriptionformat' => FORMAT_HTML,
+        ];
+
+        $cohortid = cohort_add_cohort((object) $cohortdata);
+        $cohort = $DB->get_record('cohort', ['id' => $cohortid]);
+        static::mtrace('Created cohort for ' . $fullname, 4);
+
+        // Track this cohort in local_o365_objects.
+        $now = time();
+        $objectrec = [
+            'type' => 'sdssection',
+            'subtype' => 'cohort',
+            'objectid' => $classobjectid,
+            'moodleid' => $cohort->id,
+            'o365name' => $shortname,
+            'tenant' => '',
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $DB->insert_record('local_o365_objects', $objectrec);
+
+        return $cohort;
+    }
+
+    /**
+     * Sync cohort membership from SDS class members.
+     *
+     * @param object $cohort The cohort object.
+     * @param array $classmembers Array of class members from Microsoft Graph API.
+     * @param bool $includeteachers Whether to include teachers in the cohort.
+     * @return void
+     */
+    public static function sync_cohort_members(object $cohort, array $classmembers, bool $includeteachers): void {
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        // Get current cohort members.
+        $currentmembers = $DB->get_records('cohort_members', ['cohortid' => $cohort->id], '', 'userid, id');
+        $currentmemberids = array_keys($currentmembers);
+
+        $newmemberids = [];
+
+        // Process each class member.
+        foreach ($classmembers as $classmember) {
+            // Get Moodle user ID from Office 365 object ID.
+            $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classmember['id']]);
+
+            if (empty($objectrec)) {
+                continue;
+            }
+
+            // Check if this is a teacher.
+            $isteacher = false;
+            if (isset($classmember['@odata.type'])) {
+                $isteacher = (strpos($classmember['@odata.type'], 'teacher') !== false);
+            }
+
+            // Skip teachers if configured.
+            if ($isteacher && !$includeteachers) {
+                continue;
+            }
+
+            $newmemberids[] = $objectrec->moodleid;
+
+            // Add to cohort if not already a member.
+            if (!in_array($objectrec->moodleid, $currentmemberids)) {
+                static::mtrace('Adding user ' . $objectrec->moodleid . ' to cohort ' . $cohort->id, 5);
+                cohort_add_member($cohort->id, $objectrec->moodleid);
+            }
+        }
+
+        // Remove members who are no longer in the SDS class.
+        $memberstoremove = array_diff($currentmemberids, $newmemberids);
+        foreach ($memberstoremove as $userid) {
+            static::mtrace('Removing user ' . $userid . ' from cohort ' . $cohort->id, 5);
+            cohort_remove_member($cohort->id, $userid);
+        }
     }
 
     /**

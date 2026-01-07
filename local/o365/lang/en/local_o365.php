@@ -657,6 +657,13 @@ $string['settings_sds_ignore_past_courses_desc'] = 'When enabled, courses that h
 This helps keep your course catalog clean by not creating courses for old or archived classes.';
 $string['settings_sds_expired_course_prefix'] = 'Expired course name prefix';
 $string['settings_sds_expired_course_prefix_desc'] = 'Course names starting with this prefix will be considered expired and skipped during sync (if "Ignore expired/past courses" is enabled). Default: "Exp"';
+$string['settings_sds_cohortsync'] = 'Cohort Sync';
+$string['settings_sds_cohortsync_desc'] = 'These options control creating and synchronizing cohorts from SDS classes. Cohorts provide an alternative way to group users that can be used for site-wide enrollment or other Moodle features.';
+$string['settings_sds_create_cohorts'] = 'Create cohorts from SDS classes';
+$string['settings_sds_create_cohorts_desc'] = 'When enabled, a cohort will be created for each SDS class and membership will be kept synchronized with the SDS class. Cohorts are created in the context of the course category (school or subject category depending on your categorization settings).<br />
+<b>Note:</b> Cohorts are created in addition to courses, not instead of them. This allows you to use cohorts for site-wide enrollment or grouping while still maintaining SDS-synced courses.';
+$string['settings_sds_cohort_include_teachers'] = 'Include teachers in cohorts';
+$string['settings_sds_cohort_include_teachers_desc'] = 'When enabled, teachers from the SDS class will be added to the cohort along with students. When disabled, only students will be added to cohorts.';
 $string['settings_sds_enrolment_teacher_role'] = 'Teacher role';
 $string['settings_sds_enrolment_teacher_role_desc'] = 'If the "Enrol users" option is enabled, teachers in SDS class will be enrolled in connected Moodle course with this role.';
 $string['settings_sds_enrolment_student_role'] = 'Member role';
