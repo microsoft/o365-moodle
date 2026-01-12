@@ -53,9 +53,9 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
         if (
             isset($SESSION->stateadditionaldata) && !empty($SESSION->stateadditionaldata) &&
-            isset($SESSION->stateadditoinaldata['forceflow'])
+            isset($SESSION->stateadditionaldata['forceflow'])
         ) {
-            $loginflow = $SESSION->stateadditoinaldata['forceflow'];
+            $loginflow = $SESSION->stateadditionaldata['forceflow'];
         } else {
             if (!empty($forceloginflow) && is_string($forceloginflow)) {
                 $loginflow = $forceloginflow;
