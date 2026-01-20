@@ -674,6 +674,9 @@ class base {
         // Cleanup old invalid token with the same oidcusername.
         $DB->delete_records('auth_oidc_token', ['oidcusername' => $oidcusername]);
 
+        // Cleanup old token with the same Moodle username to prevent duplicates.
+        $DB->delete_records('auth_oidc_token', ['username' => $username]);
+
         // Handle "The existing token for this user does not contain a valid user ID" error.
         if ($userid == 0) {
             $userrec = $DB->get_record('user', ['username' => $username]);

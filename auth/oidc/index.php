@@ -29,4 +29,38 @@ require_once(__DIR__ . '/auth.php');
 
 $auth = new \auth_plugin_oidc('authcode');
 $auth->set_httpclient(new \auth_oidc\httpclient());
-$auth->handleredirect();
+
+try {
+    $auth->handleredirect();
+} catch (moodle_exception $e) {
+    // If debugging is off, re-throw to let Moodle handle it with generic message.
+    if (empty($CFG->debug) || $CFG->debug < DEBUG_MINIMAL) {
+        throw $e;
+    }
+
+    // Only display detailed debug information if debug display is enabled.
+    // This prevents leaking sensitive internal details to unauthenticated users.
+    $showdetails = !empty($CFG->debugdisplay);
+
+    if ($showdetails) {
+        // Display error details when debug display is enabled.
+        $errormessage = $e->getMessage();
+        if (!empty($e->debuginfo)) {
+            $errormessage .= ' (' . $e->debuginfo . ')';
+        }
+    } else {
+        // Show generic error message to prevent information disclosure.
+        $errormessage = get_string('errorauthgeneral', 'auth_oidc');
+    }
+
+    $PAGE->set_url('/auth/oidc/');
+    $PAGE->set_context(context_system::instance());
+    $PAGE->set_pagelayout('login');
+    $PAGE->set_title(get_string('error'));
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->notification($errormessage, 'error');
+    echo $OUTPUT->single_button(new moodle_url('/login/index.php'), get_string('login'), 'get');
+    echo $OUTPUT->footer();
+    exit;
+}
