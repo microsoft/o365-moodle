@@ -98,13 +98,27 @@ class deleteinvalidconfiglog extends adhoc_task {
                     // Delete corresponding logstore_standard_log records in chunks to avoid long table locks.
                     // The logstore_standard_log table is typically very large and a single DELETE with thousands
                     // of IDs can lock the table for extended periods, making the site unavailable.
+                    // We use an EXISTS subquery with timecreated correlation to leverage the index on timecreated,
+                    // as the objectid field is not indexed and would cause full table scans.
                     $deletechunks = array_chunk($configlogids, self::DELETE_CHUNK_SIZE);
                     $totaldeleted = 0;
 
                     foreach ($deletechunks as $chunk) {
                         [$insql, $inparams] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED);
+                        // Use EXISTS with timecreated correlation to leverage the index.
+                        // We check both exact match and +1 second offset to handle potential timing differences
+                        // between when records are added to config_log and logstore_standard_log tables.
+                        $sql = "DELETE FROM {logstore_standard_log}
+                                WHERE eventname = :eventname
+                                  AND EXISTS (
+                                    SELECT 1 FROM {config_log} cfg
+                                    WHERE cfg.id = {logstore_standard_log}.objectid
+                                      AND cfg.id $insql
+                                      AND ({logstore_standard_log}.timecreated = cfg.timemodified
+                                           OR {logstore_standard_log}.timecreated = cfg.timemodified + 1)
+                                  )";
                         $params = array_merge(['eventname' => '\core\event\config_log_created'], $inparams);
-                        $DB->delete_records_select('logstore_standard_log', "eventname = :eventname AND objectid $insql", $params);
+                        $DB->execute($sql, $params);
 
                         $totaldeleted += count($chunk);
 
