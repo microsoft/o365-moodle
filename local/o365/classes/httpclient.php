@@ -155,9 +155,10 @@ class httpclient extends curl implements httpclientinterface {
      * @param string $url
      * @param array $params
      * @param array $options
-     * @return bool|string
+     * @param bool $includeuserpwd Whether to include CURLOPT_USERPWD if not already set
+     * @return ?string
      */
-    public function put($url, $params = [], $options = []): bool|string {
+    public function put($url, $params = [], $options = [], $includeuserpwd = true) {
         if (!isset($params['file'])) {
             throw new moodle_exception('errorhttpclientnofileinput', 'local_o365');
         }
