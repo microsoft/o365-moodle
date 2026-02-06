@@ -38,6 +38,12 @@ class deleteinvalidconfiglog extends adhoc_task {
     /** @var int Number of records to delete from logstore_standard_log per chunk to avoid long locks */
     const DELETE_CHUNK_SIZE = 500;
 
+    /**
+     * @var int Maximum items for IN clause to support Oracle's 1000-item limit.
+     * Set to 900 to provide safety margin.
+     */
+    const MAX_IN_CLAUSE_ITEMS = 900;
+
     /** @var int Maximum execution time in seconds before queuing next task (5 minutes) */
     const MAX_EXECUTION_TIME = 300;
 
@@ -98,36 +104,86 @@ class deleteinvalidconfiglog extends adhoc_task {
                     // Delete corresponding logstore_standard_log records in chunks to avoid long table locks.
                     // The logstore_standard_log table is typically very large and a single DELETE with thousands
                     // of IDs can lock the table for extended periods, making the site unavailable.
-                    // We use an EXISTS subquery with timecreated correlation to leverage the index on timecreated,
-                    // as the objectid field is not indexed and would cause full table scans.
+                    //
+                    // Strategy: Use SELECT-then-DELETE approach to leverage existing indexes:
+                    // 1. Get config_log records with timemodified values
+                    // 2. Use timecreated index to find matching logstore records
+                    // 3. Delete by primary key ID (very fast)
+                    //
+                    // This avoids full table scans on unindexed columns (eventname, objectid).
                     $deletechunks = array_chunk($configlogids, self::DELETE_CHUNK_SIZE);
                     $totaldeleted = 0;
 
                     foreach ($deletechunks as $chunk) {
-                        [$insql, $inparams] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED);
-                        // Use EXISTS with timecreated correlation to leverage the index.
-                        // We check both exact match and +1 second offset to handle potential timing differences
-                        // between when records are added to config_log and logstore_standard_log tables.
-                        $sql = "DELETE FROM {logstore_standard_log}
-                                WHERE eventname = :eventname
-                                  AND EXISTS (
-                                    SELECT 1 FROM {config_log} cfg
-                                    WHERE cfg.id = {logstore_standard_log}.objectid
-                                      AND cfg.id $insql
-                                      AND ({logstore_standard_log}.timecreated = cfg.timemodified
-                                           OR {logstore_standard_log}.timecreated = cfg.timemodified + 1)
-                                  )";
-                        $params = array_merge(['eventname' => '\core\event\config_log_created'], $inparams);
-                        $DB->execute($sql, $params);
+                        // First, get the config_log records with their timemodified values.
+                        $configrecords = $DB->get_records_list('config_log', 'id', $chunk, '', 'id, timemodified');
 
-                        $totaldeleted += count($chunk);
+                        if (empty($configrecords)) {
+                            continue;
+                        }
+
+                        // Build map of objectid => [possible timecreated values].
+                        $objectidtotimes = [];
+                        $alltimecreated = [];
+                        foreach ($configrecords as $record) {
+                            $objectidtotimes[$record->id] = [
+                                $record->timemodified,
+                                $record->timemodified + 1,
+                            ];
+                            $alltimecreated[] = $record->timemodified;
+                            $alltimecreated[] = $record->timemodified + 1;
+                        }
+
+                        // Remove duplicates and use timecreated index to narrow search.
+                        $alltimecreated = array_unique($alltimecreated);
+
+                        if (empty($alltimecreated)) {
+                            continue;
+                        }
+
+                        // Oracle has a 1000-item limit for IN clauses. Split into chunks if needed.
+                        // This also improves performance on other databases by avoiding huge IN clauses.
+                        $timechunks = array_chunk($alltimecreated, self::MAX_IN_CLAUSE_ITEMS);
+                        $logidstoDelete = [];
+
+                        foreach ($timechunks as $timechunk) {
+                            // Use timecreated index to find potential matching records.
+                            // This dramatically reduces the search space from 202M rows to just thousands.
+                            [$timesql, $timeparams] = $DB->get_in_or_equal($timechunk, SQL_PARAMS_NAMED);
+                            $selectsql = "SELECT id, objectid, timecreated
+                                            FROM {logstore_standard_log}
+                                           WHERE eventname = :eventname
+                                             AND timecreated $timesql";
+                            $params = array_merge(['eventname' => '\core\event\config_log_created'], $timeparams);
+
+                            $logrecords = $DB->get_records_sql($selectsql, $params);
+
+                            // Filter to exact matches (objectid and timecreated correlation).
+                            foreach ($logrecords as $logrec) {
+                                if (isset($objectidtotimes[$logrec->objectid])) {
+                                    if (in_array($logrec->timecreated, $objectidtotimes[$logrec->objectid])) {
+                                        $logidstoDelete[] = $logrec->id;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Delete by primary key (very efficient).
+                        if (!empty($logidstoDelete)) {
+                            // Further chunk the deletes to avoid holding locks too long.
+                            $microdeletechunks = array_chunk($logidstoDelete, 100);
+                            foreach ($microdeletechunks as $microchunk) {
+                                $DB->delete_records_list('logstore_standard_log', 'id', $microchunk);
+                                usleep(50000); // 0.05 seconds between micro-deletes.
+                            }
+                            $totaldeleted += count($logidstoDelete);
+                            mtrace("... Deleted " . count($logidstoDelete) . " logstore records for chunk");
+                        }
 
                         // Brief pause to allow locks to be released and other queries to execute.
-                        // This prevents lock table exhaustion and reduces database contention.
                         usleep(100000); // 0.1 seconds.
 
                         // Check if we've exceeded the maximum execution time.
-                        // Break early to avoid long-running tasks and queue another task to continue.
                         if (time() > $starttime + self::MAX_EXECUTION_TIME) {
                             mtrace("... Reached time limit. Deleted {$totaldeleted} logstore records so far.");
                             $hasmore = true;
