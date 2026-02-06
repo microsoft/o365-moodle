@@ -122,7 +122,8 @@ class deleteinvalidconfiglog extends adhoc_task {
                             continue;
                         }
 
-                        // Build map of objectid => [possible timecreated values].
+                        // Build map of config_log ID => [possible timecreated values].
+                        // The objectid in logstore_standard_log references these config_log IDs.
                         $objectidtotimes = [];
                         $alltimecreated = [];
                         foreach ($configrecords as $record) {
@@ -144,7 +145,7 @@ class deleteinvalidconfiglog extends adhoc_task {
                         // Oracle has a 1000-item limit for IN clauses. Split into chunks if needed.
                         // This also improves performance on other databases by avoiding huge IN clauses.
                         $timechunks = array_chunk($alltimecreated, self::MAX_IN_CLAUSE_ITEMS);
-                        $logidstoDelete = [];
+                        $logidstodelete = [];
 
                         foreach ($timechunks as $timechunk) {
                             // Use timecreated index to find potential matching records.
@@ -162,56 +163,44 @@ class deleteinvalidconfiglog extends adhoc_task {
                             foreach ($logrecords as $logrec) {
                                 if (isset($objectidtotimes[$logrec->objectid])) {
                                     if (in_array($logrec->timecreated, $objectidtotimes[$logrec->objectid])) {
-                                        $logidstoDelete[] = $logrec->id;
+                                        $logidstodelete[] = $logrec->id;
                                     }
                                 }
                             }
                         }
 
                         // Delete by primary key (very efficient).
-                        if (!empty($logidstoDelete)) {
+                        if (!empty($logidstodelete)) {
                             // Further chunk the deletes to avoid holding locks too long.
-                            $microdeletechunks = array_chunk($logidstoDelete, 100);
+                            $microdeletechunks = array_chunk($logidstodelete, 100);
                             foreach ($microdeletechunks as $microchunk) {
                                 $DB->delete_records_list('logstore_standard_log', 'id', $microchunk);
                                 usleep(50000); // 0.05 seconds between micro-deletes.
                             }
-                            $totaldeleted += count($logidstoDelete);
-                            mtrace("... Deleted " . count($logidstoDelete) . " logstore records for chunk");
-                        }
+                            $totaldeleted += count($logidstodelete);
+                            mtrace("... Deleted " . count($logidstodelete) . " logstore records for chunk");
 
-                        // Brief pause to allow locks to be released and other queries to execute.
-                        usleep(100000); // 0.1 seconds.
+                            // Delete config_log records for this chunk immediately after logstore deletion.
+                            // This ensures atomic per-chunk processing: either both tables are cleaned up,
+                            // or neither is touched. Prevents orphaning logstore deletions on timeout.
+                            $DB->delete_records_list('config_log', 'id', $chunk);
+                            mtrace("... Deleted " . count($chunk) . " config_log records for chunk");
 
-                        // Check if we've exceeded the maximum execution time.
-                        if (time() > $starttime + self::MAX_EXECUTION_TIME) {
-                            mtrace("... Reached time limit. Deleted {$totaldeleted} logstore records so far.");
-                            $hasmore = true;
-                            break 2; // Break out of both foreach loops.
+                            // Check if we've exceeded the maximum execution time.
+                            if (time() >= $starttime + self::MAX_EXECUTION_TIME) {
+                                mtrace("... Reached time limit. Processed {$totaldeleted} records so far.");
+                                $hasmore = true;
+                                break 2; // Break out of both foreach loops.
+                            }
+
+                            // Brief pause to allow locks to be released and other queries to execute.
+                            usleep(100000); // 0.1 seconds.
                         }
                     }
 
-                    // Only delete config_log records if we processed all logstore deletions.
-                    // This ensures we don't orphan config_log records if we hit the time limit.
+                    // Check if there are more records to process for this config name.
                     if (!$hasmore) {
-                        // Delete config_log records in chunks as well.
-                        foreach ($deletechunks as $chunk) {
-                            $DB->delete_records_list('config_log', 'id', $chunk);
-
-                            // Brief pause between chunks.
-                            usleep(100000); // 0.1 seconds.
-
-                            // Check time limit again.
-                            if (time() > $starttime + self::MAX_EXECUTION_TIME) {
-                                mtrace("... Reached time limit during config_log deletion.");
-                                $hasmore = true;
-                                break 2;
-                            }
-                        }
-
-                        mtrace("... Deleted {$count} records for {$configname}");
-
-                        // Check if there are more records to process.
+                        mtrace("... Completed processing for {$configname}");
                         $remaining = $DB->count_records('config_log', ['plugin' => 'local_o365', 'name' => $configname]);
                         if ($remaining > 0) {
                             mtrace("... {$remaining} records remaining for {$configname}");
