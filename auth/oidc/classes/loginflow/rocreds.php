@@ -25,6 +25,7 @@
 
 namespace auth_oidc\loginflow;
 
+use auth_oidc\event\user_created;
 use auth_oidc\utils;
 
 defined('MOODLE_INTERNAL') || die();
@@ -137,6 +138,16 @@ class rocreds extends base {
         }
 
         $user = create_user_record($username, $password, $auth);
+
+        // Trigger user_created event.
+        $eventdata = [
+            'objectid' => $user->id,
+            'userid' => $user->id,
+            'relateduserid' => $user->id,
+        ];
+        $event = user_created::create($eventdata);
+        $event->trigger();
+
         return true;
     }
 
