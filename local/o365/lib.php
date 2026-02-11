@@ -325,3 +325,35 @@ function local_o365_get_duplicate_emails() {
 
     return array_keys($records);
 }
+
+/**
+ * Build Bootstrap nav-tabs HTML for navigating between local_o365 settings pages.
+ *
+ * Renders a row of tab links to each settings sub-page, with the current page
+ * marked as active. The Moodle App tab is included only when its feature is enabled.
+ *
+ * @param string $currentpage Section ID of the currently active page.
+ * @return string HTML for the navigation bar.
+ */
+function local_o365_get_settings_nav_html(string $currentpage): string {
+    $pages = [
+        'local_o365' => get_string('settings_header_setup', 'local_o365'),
+        'local_o365_sync' => get_string('settings_header_syncsettings', 'local_o365'),
+        'local_o365_advanced' => get_string('settings_header_advanced', 'local_o365'),
+        'local_o365_sds' => get_string('settings_header_sds', 'local_o365'),
+        'local_o365_teams' => get_string('settings_header_teams', 'local_o365'),
+    ];
+    if (local_o365_show_teams_moodle_app_id_tab()) {
+        $pages['local_o365_moodle_app'] = get_string('settings_header_moodle_app', 'local_o365');
+    }
+
+    $html = html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
+    foreach ($pages as $section => $label) {
+        $url = new moodle_url('/admin/settings.php', ['section' => $section]);
+        $linkattrs = ['class' => 'nav-link' . ($section === $currentpage ? ' active' : '')];
+        $html .= html_writer::tag('li', html_writer::link($url, $label, $linkattrs), ['class' => 'nav-item']);
+    }
+    $html .= html_writer::end_tag('ul');
+
+    return $html;
+}
