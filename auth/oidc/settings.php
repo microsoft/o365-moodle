@@ -26,6 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
@@ -38,23 +39,356 @@ if ($hassiteconfig) {
     $oidcfolder = new admin_category('oidcfolder', get_string('pluginname', 'auth_oidc'));
     $ADMIN->add('authsettings', $oidcfolder);
 
-    // Application configuration page.
-    $ADMIN->add('oidcfolder', new admin_externalpage(
+    // Application configuration settings page.
+    $applicationsettings = new admin_settingpage(
         'auth_oidc_application',
-        get_string('settings_page_application', 'auth_oidc'),
-        new moodle_url('/auth/oidc/manageapplication.php')
+        get_string('settings_page_application', 'auth_oidc')
+    );
+
+    // Link to the guided Application Configuration Wizard.
+    $wizardurl = new moodle_url('/auth/oidc/manageapplication.php');
+    $applicationsettings->add(new admin_setting_description(
+        'auth_oidc/application_wizard_link',
+        '',
+        get_string('settings_application_wizard_desc', 'auth_oidc', $wizardurl->out())
     ));
+
+    // Basic settings heading.
+    $applicationsettings->add(new admin_setting_heading(
+        'auth_oidc/application_basic_heading',
+        get_string('settings_section_basic', 'auth_oidc'),
+        ''
+    ));
+
+    // IdP type.
+    $idptypeoptions = [
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID => get_string('idp_type_microsoft_entra_id', 'auth_oidc'),
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM => get_string('idp_type_microsoft_identity_platform', 'auth_oidc'),
+        AUTH_OIDC_IDP_TYPE_OTHER => get_string('idp_type_other', 'auth_oidc'),
+    ];
+    $idptypesetting = new admin_setting_configselect(
+        'auth_oidc/idptype',
+        get_string('idptype', 'auth_oidc'),
+        get_string('idptype_help', 'auth_oidc'),
+        AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID,
+        $idptypeoptions
+    );
+    $idptypesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($idptypesetting);
+
+    // Client ID.
+    $clientidsetting = new admin_setting_configtext(
+        'auth_oidc/clientid',
+        get_string('clientid', 'auth_oidc'),
+        get_string('clientid_help', 'auth_oidc'),
+        '',
+        PARAM_TEXT
+    );
+    $clientidsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($clientidsetting);
+
+    // Authentication heading.
+    $applicationsettings->add(new admin_setting_heading(
+        'auth_oidc/application_auth_heading',
+        get_string('settings_section_authentication', 'auth_oidc'),
+        ''
+    ));
+
+    // Client authentication method.
+    $clientauthmethoptions = [
+        AUTH_OIDC_AUTH_METHOD_SECRET => get_string('auth_method_secret', 'auth_oidc'),
+        AUTH_OIDC_AUTH_METHOD_CERTIFICATE => get_string('auth_method_certificate', 'auth_oidc'),
+    ];
+    $clientauthmethodsetting = new admin_setting_configselect(
+        'auth_oidc/clientauthmethod',
+        get_string('clientauthmethod', 'auth_oidc'),
+        get_string('clientauthmethod_help', 'auth_oidc'),
+        AUTH_OIDC_AUTH_METHOD_SECRET,
+        $clientauthmethoptions
+    );
+    $clientauthmethodsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($clientauthmethodsetting);
+
+    // Client secret.
+    $clientsecretsetting = new admin_setting_configpasswordunmask(
+        'auth_oidc/clientsecret',
+        get_string('clientsecret', 'auth_oidc'),
+        get_string('clientsecret_help', 'auth_oidc'),
+        ''
+    );
+    $clientsecretsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($clientsecretsetting);
+
+    // Certificate source.
+    $certsourceoptions = [
+        AUTH_OIDC_AUTH_CERT_SOURCE_TEXT => get_string('cert_source_text', 'auth_oidc'),
+        AUTH_OIDC_AUTH_CERT_SOURCE_FILE => get_string('cert_source_path', 'auth_oidc'),
+    ];
+    $applicationsettings->add(new admin_setting_configselect(
+        'auth_oidc/clientcertsource',
+        get_string('clientcertsource', 'auth_oidc'),
+        get_string('clientcertsource_help', 'auth_oidc'),
+        AUTH_OIDC_AUTH_CERT_SOURCE_TEXT,
+        $certsourceoptions
+    ));
+
+    // Client certificate private key (plain text).
+    $applicationsettings->add(new admin_setting_configtextarea(
+        'auth_oidc/clientprivatekey',
+        get_string('clientprivatekey', 'auth_oidc'),
+        get_string('clientprivatekey_help', 'auth_oidc'),
+        '',
+        PARAM_TEXT
+    ));
+
+    // Client certificate public key (plain text).
+    $applicationsettings->add(new admin_setting_configtextarea(
+        'auth_oidc/clientcert',
+        get_string('clientcert', 'auth_oidc'),
+        get_string('clientcert_help', 'auth_oidc'),
+        '',
+        PARAM_TEXT
+    ));
+
+    // Client certificate private key file name.
+    $applicationsettings->add(new admin_setting_configtext(
+        'auth_oidc/clientprivatekeyfile',
+        get_string('clientprivatekeyfile', 'auth_oidc'),
+        get_string('clientprivatekeyfile_help', 'auth_oidc'),
+        '',
+        PARAM_FILE
+    ));
+
+    // Client certificate public key file name.
+    $applicationsettings->add(new admin_setting_configtext(
+        'auth_oidc/clientcertfile',
+        get_string('clientcertfile', 'auth_oidc'),
+        get_string('clientcertfile_help', 'auth_oidc'),
+        '',
+        PARAM_FILE
+    ));
+
+    // Client certificate passphrase.
+    $applicationsettings->add(new admin_setting_configpasswordunmask(
+        'auth_oidc/clientcertpassphrase',
+        get_string('clientcertpassphrase', 'auth_oidc'),
+        get_string('clientcertpassphrase_help', 'auth_oidc'),
+        ''
+    ));
+
+    // Endpoints heading.
+    $applicationsettings->add(new admin_setting_heading(
+        'auth_oidc/application_endpoints_heading',
+        get_string('settings_section_endpoints', 'auth_oidc'),
+        ''
+    ));
+
+    // Authorization endpoint.
+    $authendpointsetting = new auth_oidc_admin_setting_endpoint(
+        'auth_oidc/authendpoint',
+        get_string('authendpoint', 'auth_oidc'),
+        get_string('authendpoint_help', 'auth_oidc'),
+        'https://login.microsoftonline.com/organizations/oauth2/authorize',
+        'auth'
+    );
+    $authendpointsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($authendpointsetting);
+
+    // Token endpoint.
+    $tokenendpointsetting = new auth_oidc_admin_setting_endpoint(
+        'auth_oidc/tokenendpoint',
+        get_string('tokenendpoint', 'auth_oidc'),
+        get_string('tokenendpoint_help', 'auth_oidc'),
+        'https://login.microsoftonline.com/organizations/oauth2/token',
+        'token'
+    );
+    $tokenendpointsetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($tokenendpointsetting);
+
+    // Other parameters heading.
+    $applicationsettings->add(new admin_setting_heading(
+        'auth_oidc/application_otherparams_heading',
+        get_string('settings_section_other_params', 'auth_oidc'),
+        ''
+    ));
+
+    // OIDC resource.
+    $oidcresourcesetting = new admin_setting_configtext(
+        'auth_oidc/oidcresource',
+        get_string('oidcresource', 'auth_oidc'),
+        get_string('oidcresource_help', 'auth_oidc'),
+        'https://graph.microsoft.com',
+        PARAM_TEXT
+    );
+    $oidcresourcesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($oidcresourcesetting);
+
+    // OIDC scope.
+    $oidcscopesetting = new admin_setting_configtext(
+        'auth_oidc/oidcscope',
+        get_string('oidcscope', 'auth_oidc'),
+        get_string('oidcscope_help', 'auth_oidc'),
+        'openid profile email',
+        PARAM_TEXT
+    );
+    $oidcscopesetting->set_updatedcallback('auth_oidc_reset_app_tokens');
+    $applicationsettings->add($oidcscopesetting);
+
+    // Secret expiry notification (only when local_o365 is installed).
+    if (auth_oidc_is_local_365_installed()) {
+        $applicationsettings->add(new admin_setting_heading(
+            'auth_oidc/application_secretexpiry_heading',
+            get_string('settings_section_secret_expiry_notification', 'auth_oidc'),
+            ''
+        ));
+
+        $applicationsettings->add(new admin_setting_configtext(
+            'auth_oidc/secretexpiryrecipients',
+            get_string('secretexpiryrecipients', 'auth_oidc'),
+            get_string('secretexpiryrecipients_help', 'auth_oidc'),
+            '',
+            PARAM_TEXT
+        ));
+    }
+
+    // Conditional display: show secret field only when auth method is "secret".
+    $applicationsettings->hide_if(
+        'auth_oidc/clientsecret', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET
+    );
+
+    // Conditional display: show certificate fields only when auth method is "certificate".
+    $applicationsettings->hide_if(
+        'auth_oidc/clientcertsource', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientcertpassphrase', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE
+    );
+
+    // Conditional display: certificate text fields only when cert source is "text".
+    $applicationsettings->hide_if(
+        'auth_oidc/clientprivatekey', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientprivatekey', 'auth_oidc/clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientcert', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientcert', 'auth_oidc/clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT
+    );
+
+    // Conditional display: certificate file fields only when cert source is "file".
+    $applicationsettings->hide_if(
+        'auth_oidc/clientprivatekeyfile', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientprivatekeyfile', 'auth_oidc/clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_FILE
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientcertfile', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE
+    );
+    $applicationsettings->hide_if(
+        'auth_oidc/clientcertfile', 'auth_oidc/clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_FILE
+    );
+
+    // Conditional display: secret expiry recipients only for non-OTHER Microsoft IdP using secret auth.
+    if (auth_oidc_is_local_365_installed()) {
+        $applicationsettings->hide_if(
+            'auth_oidc/secretexpiryrecipients', 'auth_oidc/clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET
+        );
+        $applicationsettings->hide_if(
+            'auth_oidc/secretexpiryrecipients', 'auth_oidc/idptype', 'eq', AUTH_OIDC_IDP_TYPE_OTHER
+        );
+    }
+
+    $ADMIN->add('oidcfolder', $applicationsettings);
 
     $idptype = get_config('auth_oidc', 'idptype');
     if ($idptype) {
-        // Binding username claim page.
-        $ADMIN->add('oidcfolder', new admin_externalpage(
+        // Binding username claim settings page.
+        $bindingusernamesettings = new admin_settingpage(
             'auth_oidc_binding_username_claim',
-            get_string('settings_page_binding_username_claim', 'auth_oidc'),
-            new moodle_url('/auth/oidc/binding_username_claim.php')
+            get_string('settings_page_binding_username_claim', 'auth_oidc')
+        );
+
+        // Determine options and description based on IdP type and user sync state.
+        switch ($idptype) {
+            case AUTH_OIDC_IDP_TYPE_OTHER:
+                $bindingclaimdesc = 'binding_username_claim_help_non_ms';
+                $bindingusernameoptions = [
+                    'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                    'preferred_username' => 'preferred_username',
+                    'email' => 'email',
+                    'unique_name' => 'unique_name',
+                    'sub' => 'sub',
+                    'samaccountname' => 'samaccountname',
+                    'custom' => get_string('binding_username_custom', 'auth_oidc'),
+                ];
+                break;
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+                if (auth_oidc_is_local_365_installed() && auth_oidc_is_user_sync_enabled()) {
+                    $bindingclaimdesc = 'binding_username_claim_help_ms_with_user_sync';
+                    $bindingusernameoptions = [
+                        'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                        'email' => 'email',
+                        'upn' => 'upn',
+                        'oid' => 'oid',
+                        'samaccountname' => 'samaccountname',
+                    ];
+                } else {
+                    $bindingclaimdesc = 'binding_username_claim_help_ms_no_user_sync';
+                    $bindingusernameoptions = [
+                        'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                        'preferred_username' => 'preferred_username',
+                        'email' => 'email',
+                        'upn' => 'upn',
+                        'unique_name' => 'unique_name',
+                        'oid' => 'oid',
+                        'sub' => 'sub',
+                        'samaccountname' => 'samaccountname',
+                        'custom' => get_string('binding_username_custom', 'auth_oidc'),
+                    ];
+                }
+                break;
+            default:
+                $bindingclaimdesc = 'binding_username_claim_help_ms_no_user_sync';
+                $bindingusernameoptions = [
+                    'auto' => get_string('binding_username_auto', 'auth_oidc'),
+                    'preferred_username' => 'preferred_username',
+                    'email' => 'email',
+                    'upn' => 'upn',
+                    'unique_name' => 'unique_name',
+                    'sub' => 'sub',
+                    'oid' => 'oid',
+                    'samaccountname' => 'samaccountname',
+                    'custom' => get_string('binding_username_custom', 'auth_oidc'),
+                ];
+        }
+
+        $bindingusernamesettings->add(new admin_setting_configselect(
+            'auth_oidc/bindingusernameclaim',
+            get_string('bindingusernameclaim', 'auth_oidc'),
+            get_string($bindingclaimdesc, 'auth_oidc'),
+            'auto',
+            $bindingusernameoptions
         ));
 
-        // Change binding username claim tool page.
+        // Custom claim name (only when the 'custom' option is available for the current IdP type).
+        if (array_key_exists('custom', $bindingusernameoptions)) {
+            $bindingusernamesettings->add(new admin_setting_configtext(
+                'auth_oidc/customclaimname',
+                get_string('customclaimname', 'auth_oidc'),
+                get_string('customclaimname_description', 'auth_oidc'),
+                '',
+                PARAM_TEXT
+            ));
+        }
+
+        $ADMIN->add('oidcfolder', $bindingusernamesettings);
+
+        // Change binding username claim tool page (bulk migration tool, not a settings page).
         $ADMIN->add('oidcfolder', new admin_externalpage(
             'auth_oidc_change_binding_username_claim_tool',
             get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'),
@@ -80,13 +414,6 @@ if ($hassiteconfig) {
         utils::get_redirecturl()
     ));
 
-    // Link to authentication options.
-    $authenticationconfigurationurl = new moodle_url('/auth/oidc/manageapplication.php');
-    $settings->add(new admin_setting_description(
-        'auth_oidc/authenticationlink',
-        get_string('settings_page_application', 'auth_oidc'),
-        get_string('cfg_authenticationlink_desc', 'auth_oidc', $authenticationconfigurationurl->out())
-    ));
 
     // Additional options heading.
     $settings->add(new admin_setting_heading(

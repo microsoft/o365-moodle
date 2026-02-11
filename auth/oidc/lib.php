@@ -82,6 +82,37 @@ const AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
 const AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
 
 /**
+ * Callback invoked when application credentials or endpoint settings are updated.
+ *
+ * Clears cached application tokens and the setup verification result so that
+ * the connection is re-validated with the new values.
+ *
+ * @param string $settingname The full name of the setting that was updated.
+ * @return void
+ */
+function auth_oidc_reset_app_tokens($settingname) {
+    unset_config('apptokens', 'local_o365');
+    unset_config('azuresetupresult', 'local_o365');
+    purge_all_caches();
+
+    if (auth_oidc_is_local_365_installed()) {
+        $idptype = get_config('auth_oidc', 'idptype');
+        if ($idptype && $idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
+            // Use a static flag so only one notification is queued per request,
+            // even when multiple settings with this callback change in the same save.
+            static $notificationqueued = false;
+            if (!$notificationqueued) {
+                $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
+                \core\notification::warning(
+                    get_string('application_updated_microsoft_notify', 'auth_oidc', $localo365configurl->out())
+                );
+                $notificationqueued = true;
+            }
+        }
+    }
+}
+
+/**
  * Initialize custom icon for OIDC authentication.
  *
  * This function sets up a custom icon for the OIDC plugin by creating necessary directories

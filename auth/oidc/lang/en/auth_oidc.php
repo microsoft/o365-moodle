@@ -65,6 +65,7 @@ $string['idp_type_microsoft_entra_id'] = 'Microsoft Entra ID (v1.0)';
 $string['idp_type_microsoft_identity_platform'] = 'Microsoft identity platform (v2.0)';
 $string['idp_type_other'] = 'Other';
 $string['cfg_authenticationlink_desc'] = '<a href="{$a}" target="_blank">Link to IdP and authentication configuration</a>';
+$string['settings_application_wizard_desc'] = 'To configure these settings using a guided form with step-by-step instructions and input validation, use the <a href="{$a}">Application Configuration Wizard</a>.';
 $string['authendpoint'] = 'Authorization Endpoint';
 $string['authendpoint_help'] = 'The URI of the Authorization endpoint from your IdP to use.<br/>
 Note if the site is to be configured to allow users from other tenants to access, tenant specific authorization endpoint cannot be used.';
@@ -202,6 +203,8 @@ $string['authentication_and_endpoints_saved'] = 'Authentication and endpoint set
 $string['application_updated'] = 'OpenID Connect application setting have been updated.';
 $string['application_updated_microsoft'] = 'OpenID Connect application setting was updated.<br/>
 <span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the Microsoft 365 integration configuration page if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
+$string['application_updated_microsoft_notify'] = 'OpenID Connect application setting was updated.<br/>
+<span class="warning" style="color: red;">Azure administrator will need to <b>Provide admin consent</b> and <b>Verify setup</b> again on the <a href="{$a}">Microsoft 365 integration configuration page</a> if "Identity Provider (IdP) Type" or "Client authentication method" settings are updated.</span>';
 $string['application_not_changed'] = 'OpenID Connect application setting was not changed.';
 
 $string['event_debug'] = 'Debug message';
@@ -257,16 +260,8 @@ $string['error_empty_client_cert'] = 'Client certificate public key cannot be em
 $string['error_empty_client_private_key_file'] = 'Client certificate private key file cannot be empty when using "certificate" authentication method';
 $string['error_empty_client_cert_file'] = 'Client certificate public key file cannot be empty when using "certificate" authentication method';
 $string['error_empty_tenantname_or_guid'] = 'Tenant name or GUID cannot be empty when using "certificate" authentication method';
-$string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match configured IdP type.<br/>
-<ul>
-<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/authorize</li>
-<li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize</li>
-</ul>';
-$string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoint does not match configured IdP type.<br/>
-<ul>
-<li>When using "Microsoft Entra ID (v1.0)" IdP type, use v1.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/token</li>
-<li>When using "Microsoft identity platform (v2.0)" IdP type, use v2.0 endpoint, e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/token</li>
-</ul>';
+$string['error_endpoint_mismatch_auth_endpoint'] = 'The configured authorization endpoint does not match the configured IdP type. For "Microsoft Entra ID (v1.0)" use a v1.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/authorize). For "Microsoft identity platform (v2.0)" use a v2.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize).';
+$string['error_endpoint_mismatch_token_endpoint'] = 'The configured token endpoint does not match the configured IdP type. For "Microsoft Entra ID (v1.0)" use a v1.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/token). For "Microsoft identity platform (v2.0)" use a v2.0 endpoint (e.g. https://login.microsoftonline.com/organizations/oauth2/v2.0/token).';
 $string['error_tenant_specific_endpoint_required'] = 'When using "Microsoft identity platform (v2.0)" IdP type and "Certificate" authentication method, tenant specific endpoint (i.e. not common/organizations/consumers) is required.';
 $string['error_empty_oidcresource'] = 'Resource cannot be empty when using Microsoft Entra ID (v1.0) or other types of IdP.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';

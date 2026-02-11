@@ -70,7 +70,7 @@ if (empty($iid)) {
         echo $OUTPUT->header();
 
         echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
-        $bindingusernameclaimurl = new moodle_url('/auth/oidc/binding_username_claim.php');
+        $bindingusernameclaimurl = new moodle_url('/admin/settings.php', ['section' => 'auth_oidc_binding_username_claim']);
         echo html_writer::tag(
             'p',
             get_string(
