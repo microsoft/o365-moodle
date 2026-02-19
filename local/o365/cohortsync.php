@@ -77,7 +77,7 @@ if ($action == 'delete') {
 
 if ($fromform = $cohortsyncform->get_data()) {
     $groupoid = $fromform->groupoid;
-    $cohortid = $fromform->cohortid;
+    $cohortid = (int) $fromform->cohortid;
 
     if ($cohortsyncmain->add_mapping($groupoid, $cohortid)) {
         redirect($pageurl, get_string('cohortsync_mappingadded', 'local_o365'));
