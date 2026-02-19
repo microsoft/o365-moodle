@@ -57,6 +57,7 @@ use local_o365\obj\o365user;
 use local_o365\rest\unified;
 use local_o365\task\groupmembershipsync;
 use local_o365\task\processcourserequestapproval;
+use local_o365\task\usergroupmembershipsync;
 use moodle_exception;
 use moodle_url;
 
@@ -441,7 +442,10 @@ class observers {
             return false;
         }
 
-        return \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($event->relateduserid, $event->courseid);
+        $task = new usergroupmembershipsync();
+        $task->set_custom_data(['userid' => $event->relateduserid, 'courseid' => $event->courseid, 'excluderoleid' => 0]);
+        manager::queue_adhoc_task($task, true);
+        return true;
     }
 
     /**
@@ -494,13 +498,17 @@ class observers {
         $userenrolmentsrecordset = $DB->get_recordset('user_enrolments', ['enrolid' => $event->objectid]);
 
         foreach ($userenrolmentsrecordset as $userenrolment) {
-            \local_o365\feature\coursesync\utils::sync_user_role_in_course_group(
-                $userenrolment->userid,
-                $courseid,
-                0,
-                $coursegroupobjectrecordid,
-                true
+            $task = new usergroupmembershipsync();
+            $task->set_custom_data(
+                [
+                    'userid' => $userenrolment->userid,
+                    'courseid' => $courseid,
+                    'excluderoleid' => 0,
+                    'coursegroupobjectrecordid' => $coursegroupobjectrecordid,
+                    'sdscoursechecked' => true,
+                ]
             );
+            manager::queue_adhoc_task($task, true);
         }
 
         $userenrolmentsrecordset->close();
@@ -694,7 +702,10 @@ class observers {
             \local_o365\feature\coursesync\utils::is_enabled() === true &&
             \local_o365\feature\coursesync\utils::is_course_sync_enabled($event->courseid) === true
         ) {
-            return \local_o365\feature\coursesync\utils::sync_user_role_in_course_group($event->relateduserid, $event->courseid);
+            $task = new usergroupmembershipsync();
+            $task->set_custom_data(['userid' => $event->relateduserid, 'courseid' => $event->courseid, 'excluderoleid' => 0]);
+            manager::queue_adhoc_task($task, true);
+            return true;
         }
 
         return true;
@@ -725,14 +736,16 @@ class observers {
             \local_o365\feature\coursesync\utils::is_enabled() === true &&
             \local_o365\feature\coursesync\utils::is_course_sync_enabled($event->courseid) === true
         ) {
-            return \local_o365\feature\coursesync\utils::sync_user_role_in_course_group(
-                $event->relateduserid,
-                $event->courseid,
-                0,
-                0,
-                false,
-                $event->objectid
+            $task = new usergroupmembershipsync();
+            $task->set_custom_data(
+                [
+                    'userid' => $event->relateduserid,
+                    'courseid' => $event->courseid,
+                    'excluderoleid' => $event->objectid,
+                ]
             );
+            manager::queue_adhoc_task($task, true);
+            return true;
         }
 
         return true;

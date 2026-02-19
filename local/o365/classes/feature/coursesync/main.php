@@ -2013,7 +2013,25 @@ class main {
             $this->mtrace('No user to have teacher role added.', 2);
         }
 
+        // Check for pending adhoc tasks that would add users to the team.
+        // Exclude those users from unenrollment to prevent race conditions.
+        $pendingtasks = manager::get_adhoc_tasks('\local_o365\task\usergroupmembershipsync');
+        $userswithoendingsyncs = [];
+        foreach ($pendingtasks as $task) {
+            $customdata = $task->get_custom_data();
+            if (!empty($customdata->courseid) && $customdata->courseid == $courseid && !empty($customdata->userid)) {
+                $userswithoendingsyncs[] = (int) $customdata->userid;
+            }
+        }
+
+        if (!empty($userswithoendingsyncs)) {
+            $this->mtrace('Found ' . count($userswithoendingsyncs) . ' pending sync tasks for this course. ' .
+                'Excluding these users from unenrollment.', 2);
+        }
+
         $teacherstounenrol = array_diff($connectedcurrentcourseteachers, $connectedintendedcourseteachers);
+        // Exclude users with pending sync tasks to avoid race conditions.
+        $teacherstounenrol = array_diff($teacherstounenrol, $userswithoendingsyncs);
         if ($teacherstounenrol) {
             $this->mtrace('Removing teacher role from ' . count($teacherstounenrol) . ' users...', 2);
             foreach ($teacherstounenrol as $userid) {
@@ -2042,6 +2060,8 @@ class main {
         }
 
         $studentstounenrol = array_diff($connectedcurrentcoursestudents, $connectedintendedcoursestudents);
+        // Exclude users with pending sync tasks to avoid race conditions.
+        $studentstounenrol = array_diff($studentstounenrol, $userswithoendingsyncs);
         if ($studentstounenrol) {
             $this->mtrace('Removing student role from ' . count($studentstounenrol) . ' users...', 2);
             foreach ($studentstounenrol as $userid) {
