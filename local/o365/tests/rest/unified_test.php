@@ -14,21 +14,32 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Unit tests for the unified class.
+ *
+ * @package local_o365
+ * @author Christian Abila <christian.abila@edaktik.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright (C) 2025 onwards Microsoft, Inc. (http://microsoft.com/)
+ */
+
 namespace local_o365\rest;
 
 use advanced_testcase;
 use core\component;
 use dml_exception;
-use local_o365\httpclient;
 use local_o365\oauth2\token;
+use local_o365\tests\mockhttpclient;
 
 /**
- * Unit tests for the class unified_test
+ * Unit tests for the class unified
  *
  * @package   local_o365
  * @copyright 2025 eDaktik GmbH {@link https://www.edaktik.at/}
  * @author    Christian Abila <christian.abila@edaktik.at>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group local_o365
+ * @group office365
  * @coversDefaultClass \local_o365\rest\unified
  */
 final class unified_test extends advanced_testcase {
@@ -49,7 +60,7 @@ final class unified_test extends advanced_testcase {
         $resource = 'resource';
         set_config('oidcresource', $resource, 'auth_oidc');
 
-        $this->assertEquals($resource, get_config('auth_oidc', 'oidcresource'));
+        $this->assertEquals($resource, unified::get_tokenresource());
     }
 
     /**
@@ -69,7 +80,7 @@ final class unified_test extends advanced_testcase {
         $this->assertEquals(unified::RESOURCE_URL, unified::get_tokenresource());
     }
 
-    /**#
+    /**
      * If oidcresource is not set and chineseapi is active, then the Chinese resource is returned.
      *
      * @return void
@@ -115,8 +126,8 @@ final class unified_test extends advanced_testcase {
         $token->method('is_expired')->willReturn(false);
         $token->method('get_token')->willReturn('token');
 
-        $httpclient = self::createMock(httpclient::class);
-        $httpclient->method('get')->willReturn($expectedresult);
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($expectedresult);
 
         $unified = new unified($token, $httpclient);
         $this->assertEquals($expectedresult, $unified->betaapicall('get', 'users'));
@@ -135,10 +146,10 @@ final class unified_test extends advanced_testcase {
         $token->method('is_expired')->willReturn(false);
         $token->method('get_token')->willReturn('token');
 
-        $httpclient = self::createMock(httpclient::class);
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($expectedresult);
         $httpclient->info = ['http_code' => 202];
         $httpclient->response = $expectedresult;
-        $httpclient->method('get')->willReturn($expectedresult);
 
         $unified = new unified($token, $httpclient);
         $this->assertEquals($expectedresult, $unified->betaapicall('get', 'users'));
