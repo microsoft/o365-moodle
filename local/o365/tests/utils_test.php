@@ -20,13 +20,15 @@ use advanced_testcase;
 use dml_exception;
 
 /**
- * Unit tests for the class utils_test
+ * Unit tests for the class utils
  *
  * @package   local_o365
  * @copyright 2025 eDaktik GmbH {@link https://www.edaktik.at/}
  * @author    Christian Abila <christian.abila@edaktik.at>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \local_o365\utils
+ * @group local_o365
+ * @group office365
  */
 final class utils_test extends advanced_testcase {
     /**
@@ -45,18 +47,6 @@ final class utils_test extends advanced_testcase {
             'local_o365_objects',
             [
                 'moodleid' => $USER->id,
-                'type' => 'user',
-                'objectid' => $expected,
-                'o365name' => 'name',
-                'timecreated' => time(),
-                'timemodified' => time(),
-            ],
-        );
-
-        $DB->insert_record(
-            'local_o365_objects',
-            [
-                'moodleid' => $USER->id + 1,
                 'type' => 'user',
                 'objectid' => $expected,
                 'o365name' => 'name',
@@ -91,7 +81,7 @@ final class utils_test extends advanced_testcase {
             [
                 'moodleid' => $user1->id,
                 'type' => 'user',
-                'objectid' => $user1->id,
+                'objectid' => '00000000-0000-0000-0000-000000000001',
                 'o365name' => 'name',
                 'timecreated' => time(),
                 'timemodified' => time(),
@@ -103,7 +93,7 @@ final class utils_test extends advanced_testcase {
             [
                 'moodleid' => $user2->id,
                 'type' => 'user',
-                'objectid' => $user2->id,
+                'objectid' => '00000000-0000-0000-0000-000000000002',
                 'o365name' => 'name',
                 'timecreated' => time(),
                 'timemodified' => time(),
@@ -115,7 +105,7 @@ final class utils_test extends advanced_testcase {
             [
                 'moodleid' => $user3->id,
                 'type' => 'user',
-                'objectid' => $user3->id,
+                'objectid' => '00000000-0000-0000-0000-000000000003',
                 'o365name' => 'name',
                 'timecreated' => time(),
                 'timemodified' => time(),
@@ -123,9 +113,9 @@ final class utils_test extends advanced_testcase {
         );
 
         $expected = [
-            $user1->id => $user1->id,
-            $user2->id => $user2->id,
-            $user3->id => $user3->id,
+            $user1->id => '00000000-0000-0000-0000-000000000001',
+            $user2->id => '00000000-0000-0000-0000-000000000002',
+            $user3->id => '00000000-0000-0000-0000-000000000003',
         ];
 
         $this->assertEquals($expected, utils::get_connected_users());
