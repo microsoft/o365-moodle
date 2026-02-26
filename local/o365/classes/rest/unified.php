@@ -643,14 +643,16 @@ class unified extends o365api {
     }
 
     /**
-     * Get a list of transitive group members.
+     * Get a list of transitive group members (users only).
+     *
+     * Uses the typed endpoint to return only user objects and limit fields to reduce payload size.
      *
      * @param string $groupobjectid The object ID of the group.
-     * @return array Array of returned members.
+     * @return array Array of returned user members with id field only.
      * @throws moodle_exception
      */
     public function get_transitive_group_members(string $groupobjectid): array {
-        $endpoint = '/groups/' . $groupobjectid . '/transitiveMembers';
+        $endpoint = '/groups/' . $groupobjectid . '/transitiveMembers/microsoft.graph.user?$select=id';
 
         return $this->paginatedapicall('get', $endpoint);
     }
