@@ -279,7 +279,7 @@ class utils {
     public static function debug($message, $where = '', $debugdata = null) {
         $debugmode = (bool)get_config('local_o365', 'debugmode');
         if ($debugmode === true) {
-            $backtrace = debug_backtrace();
+            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $otherdata = [
                 'other' => [
                     'message' => $message,
