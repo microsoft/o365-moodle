@@ -28,6 +28,7 @@ namespace local_o365\task;
 
 use core\task\scheduled_task;
 use local_o365\feature\usersync\main;
+use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
 
@@ -110,16 +111,28 @@ class usersync extends scheduled_task {
         // Determine binding username claim once.
         $bindingusernameclaim = $this->get_binding_username_claim();
 
+        // Initialize sync cache ONCE before batch processing to avoid redundant queries.
+        $this->mtrace('Initializing user sync cache...');
+        $synccache = $usersync->init_sync_cache($bindingusernameclaim);
+
+        // Accumulate user IDs during main sync for reuse in suspend/reenable.
+        $allentriduserids = [];
+
         // Create a callback to process users in batches.
-        $processcallback = function ($userbatch) use ($usersync, $bindingusernameclaim) {
+        $processcallback = function ($userbatch) use ($usersync, $synccache, $bindingusernameclaim, &$allentriduserids) {
+            // Accumulate user IDs for suspend/reenable feature.
+            foreach ($userbatch as $user) {
+                $allentriduserids[] = $user['id'];
+            }
+
             $this->mtrace(count($userbatch) . ' users in batch. Syncing...');
-            $this->sync_users($usersync, $userbatch, $bindingusernameclaim);
+            $usersync->sync_users_with_cache($userbatch, $synccache, $bindingusernameclaim);
         };
 
         if (main::sync_option_enabled('nodelta') === true) {
             $this->mtrace('Forcing full sync.');
             $this->mtrace('Contacting Microsoft Entra ID...');
-            $this->mtrace('Processing users in batches of 500...');
+            $this->mtrace('Processing users in batches of ' . unified::GRAPH_API_BATCH_SIZE . '...');
 
             try {
                 $totalusersprocessed = $usersync->process_users_batched($processcallback);
@@ -141,7 +154,7 @@ class usersync extends scheduled_task {
 
             $this->mtrace('Using delta sync.');
             $this->mtrace('Contacting Microsoft Entra ID...');
-            $this->mtrace('Processing users in batches of 500...');
+            $this->mtrace('Processing users in batches of ' . unified::GRAPH_API_BATCH_SIZE . '...');
 
             try {
                 [$totalusersprocessed, $deltatoken, $fieldsmappingchanged] = $usersync->process_users_delta_batched(
@@ -218,42 +231,29 @@ class usersync extends scheduled_task {
             if ($rundelete) {
                 $this->mtrace('Start suspend/delete users feature...');
 
-                // Suspend_users() requires the COMPLETE set of active Entra ID user IDs to identify
-                // Moodle accounts that are absent from Entra ID (set-complement logic). Accumulating
-                // all IDs is therefore unavoidable, but memory is bounded to one string ID per user
-                // rather than a full user object. reenable_suspsend_users() only needs users that ARE
-                // in Entra ID, so it is processed per batch to avoid any accumulation.
-                $allentriduserids = [];
+                // User IDs already collected during main sync (accumulated in $processcallback).
+                // No need for a separate API scan.
+                $this->mtrace('Using ' . count($allentriduserids) . ' user IDs collected from main sync.');
+
                 $dosuspend = main::sync_option_enabled('suspend');
                 $doreenable = main::sync_option_enabled('reenable');
                 $syncdisabledstatus = main::sync_option_enabled('disabledsync');
 
-                // Fetch minimal fields (id + accountEnabled) for all Entra ID users.
-                // This runs for both nodelta and delta modes: nodelta never populates $allentriduserids
-                // via the top-level sync, so a separate minimal fetch is always required here.
-                $this->mtrace('Collecting user IDs for suspend/reenable feature...');
-                try {
-                    $batchcallback = function (array $userbatch) use (
-                        &$allentriduserids,
-                        $usersync,
-                        $doreenable,
-                        $syncdisabledstatus
-                    ) {
-                        // Accumulate only the ID string — not the full user object.
-                        foreach ($userbatch as $user) {
-                            $allentriduserids[] = $user['id'];
-                        }
-                        // Re-enable per batch: no need for the complete set.
-                        if ($doreenable) {
+                // For reenable, we need to process users with accountEnabled status.
+                // If reenable is enabled, we need to make one pass to get accountEnabled status.
+                if ($doreenable) {
+                    $this->mtrace('Processing reenable for users...');
+                    try {
+                        $reenablecallback = function (array $userbatch) use ($usersync, $syncdisabledstatus) {
                             $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
-                        }
-                    };
-                    $totalcollected = $usersync->process_users_minimal_batched($batchcallback);
-                    $this->mtrace('Collected ' . $totalcollected . ' user IDs for suspend/reenable.');
-                } catch (moodle_exception $e) {
-                    $fullsyncfailed = true;
-                    $this->mtrace('Error collecting users for suspend/reenable: ' . $e->getMessage());
-                    utils::debug($e->getMessage(), __METHOD__, $e);
+                        };
+                        $totalreenabled = $usersync->process_users_minimal_batched($reenablecallback);
+                        $this->mtrace('Processed ' . $totalreenabled . ' users for reenable.');
+                    } catch (moodle_exception $e) {
+                        $fullsyncfailed = true;
+                        $this->mtrace('Error processing reenable: ' . $e->getMessage());
+                        utils::debug($e->getMessage(), __METHOD__, $e);
+                    }
                 }
 
                 if ($fullsyncfailed) {

@@ -77,6 +77,13 @@ class main {
     protected array $connectionsbyentraidupn = [];
 
     /**
+     * Cache object for storing one-time query results across batches.
+     *
+     * @var stdClass|null
+     */
+    protected ?stdClass $synccache = null;
+
+    /**
      * Constructor
      *
      * @param clientdata|null $clientdata $clientdata The client data to use for API construction.
@@ -1208,7 +1215,16 @@ class main {
         if (isset($usersyncsettings['emailsync'])) {
             $select = "SELECT LOWER(u.email) AS email, LOWER(u.username) AS username, ";
 
-            $duplicateemailaddresses = local_o365_get_duplicate_emails();
+            // Use cached duplicate emails if available, otherwise fetch fresh.
+            if (isset($this->synccache) && $this->synccache->duplicateemailaddresses !== null) {
+                $duplicateemailaddresses = $this->synccache->duplicateemailaddresses;
+            } else {
+                $duplicateemailaddresses = local_o365_get_duplicate_emails();
+                // Cache for subsequent batches if cache is available.
+                if (isset($this->synccache)) {
+                    $this->synccache->duplicateemailaddresses = $duplicateemailaddresses;
+                }
+            }
             if ($duplicateemailaddresses) {
                 // Match by email, but duplicate email exists, revert to match by username.
                 $fallbackselect = "SELECT LOWER(u.username) AS username, LOWER(u.email) AS email, ";
@@ -1948,6 +1964,51 @@ class main {
         }
 
         return true;
+    }
+
+    /**
+     * Initialize sync cache by pre-fetching all database data once.
+     * This eliminates redundant queries when processing batches.
+     *
+     * @param string $bindingusernameclaim Binding username claim
+     * @return stdClass Cache object with pre-fetched data
+     */
+    public function init_sync_cache(string $bindingusernameclaim): stdClass {
+        global $DB, $CFG;
+
+        $cache = new stdClass();
+        $cache->usersyncsettings = $this->get_sync_options();
+        $cache->bindingusernameclaim = $bindingusernameclaim;
+
+        // Cache one-time queries that don't change per batch.
+        $cache->duplicateemailaddresses = null;  // Lazy-loaded on first use.
+
+        return $cache;
+    }
+
+    /**
+     * Sync users using pre-initialized cache (eliminates redundant queries).
+     *
+     * @param array $entraidusers Batch of Entra ID users
+     * @param stdClass $cache Pre-initialized cache
+     * @param string $bindingusernameclaim Binding claim
+     * @return bool Success
+     */
+    public function sync_users_with_cache(
+        array $entraidusers,
+        stdClass $cache,
+        string $bindingusernameclaim = 'userPrincipalName'
+    ): bool {
+        // Store cache in instance variable so sync_users can access it.
+        $this->synccache = $cache;
+
+        // Call the original sync_users method.
+        $result = $this->sync_users($entraidusers, $bindingusernameclaim);
+
+        // Clear cache reference.
+        $this->synccache = null;
+
+        return $result;
     }
 
     /**
