@@ -44,6 +44,14 @@ require_once($CFG->dirroot . '/local/o365/lib.php');
  */
 class unified extends o365api {
     /**
+     * Maximum number of records per page for Microsoft Graph API batch requests.
+     * This is the Graph API maximum limit.
+     *
+     * @var int
+     */
+    const GRAPH_API_BATCH_SIZE = 999;
+
+    /**
      * @var string The general API area of the class.
      */
     public $apiarea = 'graph';
@@ -1100,7 +1108,7 @@ class unified extends o365api {
             $odataqueries['$select'] = implode(',', $params);
         }
 
-        $odataqueries['$top'] = '500';
+        $odataqueries['$top'] = (string)self::GRAPH_API_BATCH_SIZE;
 
         $pagehandler = function (array $result) use ($callback): int {
             if (!empty($result['value']) && is_array($result['value'])) {
@@ -1168,7 +1176,7 @@ class unified extends o365api {
             $odataqueries['$deltatoken'] = $deltatoken;
         }
 
-        $odataqueries['$top'] = '500';
+        $odataqueries['$top'] = (string)self::GRAPH_API_BATCH_SIZE;
 
         // Track seen IDs across pages to handle the known Graph API issue where
         // the same user can appear in multiple delta pages.
@@ -1212,7 +1220,7 @@ class unified extends o365api {
     public function process_users_minimal_batched(callable $callback): int {
         $odataqueries = [
             '$select' => 'id,accountEnabled',
-            '$top'    => '500',
+            '$top'    => (string)self::GRAPH_API_BATCH_SIZE,
         ];
 
         $pagehandler = function (array $result) use ($callback): int {
