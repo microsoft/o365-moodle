@@ -30,8 +30,8 @@ $string['copiedfile'] = 'Copy of file';
 $string['coursegroup'] = 'Disable Groups (Courses) folder in file picker';
 $string['defaultgroupsfolder'] = 'Course Files';
 $string['directlinkdesc'] = 'Direct link (existing permissions)';
-$string['disableanonymousshare'] = 'Disable "{$a}" option';
-$string['disableanonymousshare_help'] = 'When unchecked (default), users can choose to create a copy of a file and share it with everyone in the organization. The copy is stored in the user\'s OneDrive and shared with all organization members.
+$string['enableanonymousshare'] = 'Enable "{$a}" option';
+$string['enableanonymousshare_help'] = 'When checked, users can choose to create a copy of a file and share it with everyone in the organization. The copy is stored in the user\'s OneDrive and shared with all organization members.
 
 **How It Works:**
 * Creates a copy of the selected file with a " - Shared" suffix.
@@ -40,7 +40,7 @@ $string['disableanonymousshare_help'] = 'When unchecked (default), users can cho
 * The original file remains unchanged with its existing permissions.
 
 **Access Control:**
-* Only members of your Microsoft 365 organization can access the fil.e
+* Only members of your Microsoft 365 organization can access the file.
 * Anyone in the organization with the link can VIEW the file.
 * External users and anonymous users CANNOT access the file.
 * The link does not expire automatically.
@@ -58,11 +58,45 @@ $string['disableanonymousshare_help'] = 'When unchecked (default), users can cho
 * The copied file will appear in the user\'s OneDrive with " - Shared" suffix.
 * Changes made to the original file will NOT be reflected in the shared copy, and vice versa.
 
-Check this box to disable this option and prevent users from creating organization-shared copies.';
-$string['disableanonymoussharewarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, a copy of the original file is created and shares with all organization members. The original file remains unchanged. Users should ensure the file content is appropriate for organization-wide access.
-<br><br><strong>Embedding Limitation:</strong> Files shared using this option may not display correctly when the resource Display option is set to "Embed" due to OneDrive connection restrictions. For embedded display, consider copying the file to Moodle instead.</div>';
-$string['disabledirectlink'] = 'Disable "{$a}" option';
-$string['disabledirectlink_help'] = 'When unchecked (default), users can add a direct link to a file in their OneDrive instead of copying it to Moodle. The file remains in OneDrive and Moodle stores only a reference link.
+**This option is disabled by default due to display limitations and potential confusion. Check this box only if you want to allow users to create organization-shared copies.**';
+$string['enableanonymoussharewarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, a copy of the original file is created and shared with all organization members. The original file remains unchanged. Users should ensure the file content is appropriate for organization-wide access.
+<br><br><strong>Display Limitations:</strong> Files shared using this option have limitations depending on the file type and display option used in resources. The behavior varies as follows:
+<table class="table table-sm table-bordered">
+<thead>
+<tr>
+<th>Display Option</th>
+<th>Images</th>
+<th>Files (e.g. .docx)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Automatic</strong></td>
+<td style="background-color: #ffdddd;">Not working - nothing displayed, connection blocked</td>
+<td>Working - redirected to OneDrive</td>
+</tr>
+<tr>
+<td><strong>Embed</strong></td>
+<td>Working - image is embedded</td>
+<td style="background-color: #ffdddd;">Not working - iframe showing refused to connect error</td>
+</tr>
+<tr>
+<td><strong>Force download</strong></td>
+<td colspan="2">Working - redirect to OneDrive</td>
+</tr>
+<tr>
+<td><strong>Open</strong></td>
+<td colspan="2">Working - redirect to OneDrive</td>
+</tr>
+<tr>
+<td><strong>In pop-up</strong></td>
+<td colspan="2">Working - open in pop-up</td>
+</tr>
+</tbody>
+</table>
+For best compatibility with all display options, consider copying the file to Moodle instead.</div>';
+$string['enabledirectlink'] = 'Enable "{$a}" option';
+$string['enabledirectlink_help'] = 'When checked, users can add a direct link to a file in their OneDrive instead of copying it to Moodle. The file remains in OneDrive and Moodle stores only a reference link.
 
 **Important Access Control Considerations:**
 * The file\'s existing OneDrive permissions are NOT changed.
@@ -76,9 +110,43 @@ $string['disabledirectlink_help'] = 'When unchecked (default), users can add a d
 * Storage space in Moodle is a concern.
 * Edits to the OneDrive file should be reflected in Moodle.
 
-Check this box to disable this option and require all files to be copied to Moodle.';
-$string['disabledirectlinkwarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, no sharing setting changes are made to the OneDrive file. Users adding the file must ensure that file permissions in OneDrive are set correctly.
-<br><br><strong>Embedding Limitation:</strong> Files linked using this option may not display correctly when the resource Display option is set to "Embed" due to OneDrive connection restrictions. For embedded display, consider copying the file to Moodle instead.</div>';
+**This option is disabled by default due to display limitations and access control complexities. Check this box only if you want to allow users to link files directly from OneDrive.**';
+$string['enabledirectlinkwarning'] = '<div class="alert alert-info"><strong>Note:</strong> When using the "{$a}" option, no sharing setting changes are made to the OneDrive file. Users adding the file must ensure that file permissions in OneDrive are set correctly.
+<br><br><strong>Display Limitations:</strong> Files linked using this option have limitations depending on the file type and display option used in resources. The behavior varies as follows:
+<table class="table table-sm table-bordered">
+<thead>
+<tr>
+<th>Display Option</th>
+<th>Images</th>
+<th>Files (e.g. .docx)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Automatic</strong></td>
+<td style="background-color: #ffdddd;">Not working - nothing displayed, connection blocked</td>
+<td>Redirected to OneDrive, working if the user has permission to access the OneDrive file, otherwise showing permission denied page</td>
+</tr>
+<tr>
+<td><strong>Embed</strong></td>
+<td style="background-color: #ffdddd;">Not working - nothing displayed, connection blocked</td>
+<td style="background-color: #ffdddd;">Not working - refused to connect error displayed in embedded iframe</td>
+</tr>
+<tr>
+<td><strong>Force download</strong></td>
+<td colspan="2">Redirected to OneDrive, working if the user has permission to access the OneDrive file, otherwise showing permission denied page</td>
+</tr>
+<tr>
+<td><strong>Open</strong></td>
+<td colspan="2">Redirected to OneDrive, working if the user has permission to access the OneDrive file, otherwise showing permission denied page</td>
+</tr>
+<tr>
+<td><strong>In pop-up</strong></td>
+<td colspan="2">Open in pop-up, working if the user has permission to access the OneDrive file, otherwise showing permission denied page</td>
+</tr>
+</tbody>
+</table>
+For best compatibility, consider copying the file to Moodle instead of using a direct link.</div>';
 
 $string['erroraccessdenied'] = 'Access denied';
 $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authentication plugin before attempting to use the Microsoft 365 repository.';
