@@ -1568,9 +1568,71 @@ class unified extends o365api {
      *
      * @param string $url The file's URL.
      * @return string The file's content.
+     * @deprecated Use get_file_by_url_unauthenticated() instead for Microsoft Graph download URLs.
      */
     public function get_file_by_url(string $url): string {
         return $this->httpclient->download_file($url);
+    }
+
+    /**
+     * Get a file's content by its pre-authenticated download URL.
+     *
+     * This method should be used for Microsoft Graph download URLs (e.g., @microsoft.graph.downloadUrl)
+     * which are pre-authenticated and should NOT include OAuth Bearer tokens.
+     *
+     * Security: This method validates that the URL is from a trusted Microsoft domain before downloading.
+     *
+     * @param string $url The pre-authenticated download URL from Microsoft Graph.
+     * @return string The file's content.
+     * @throws moodle_exception If the URL is not from a trusted Microsoft domain.
+     */
+    public function get_file_by_url_unauthenticated(string $url): string {
+        // Security: Validate URL is from Microsoft Graph domain.
+        $alloweddomains = [
+            'graph.microsoft.com',
+            'microsoftgraph.chinacloudapi.cn',
+            '*.sharepoint.com',
+            '*.sharepoint.cn',
+        ];
+
+        $parsedurl = parse_url($url);
+        if (empty($parsedurl['host'])) {
+            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+        }
+
+        $isallowed = false;
+        foreach ($alloweddomains as $domain) {
+            if (strpos($domain, '*') === 0) {
+                // Wildcard domain (e.g., *.sharepoint.com).
+                $suffix = substr($domain, 1); // Remove the *.
+                if (substr($parsedurl['host'], -strlen($suffix)) === $suffix) {
+                    $isallowed = true;
+                    break;
+                }
+            } else {
+                // Exact domain match.
+                if ($parsedurl['host'] === $domain) {
+                    $isallowed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$isallowed) {
+            utils::debug('Attempted to download file from untrusted domain.', __METHOD__, ['url' => $url]);
+            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+        }
+
+        // Download without OAuth Bearer token (download URLs are pre-authenticated).
+        $curl = new \curl();
+        $options = ['timeout' => 60, 'followlocation' => true, 'maxredirs' => 5];
+        $result = $curl->get($url, [], $options);
+
+        if ($result === false) {
+            throw new moodle_exception('errorwhiledownload', 'repository_office365');
+        }
+
+        return $result;
     }
 
     /**
