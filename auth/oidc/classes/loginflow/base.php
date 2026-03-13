@@ -752,7 +752,7 @@ class base {
 
         switch ($bindingusernameclaim) {
             case 'custom':
-                $bindingusernameclaim = get_config('auth_oidc', 'custombindingclaim');
+                $bindingusernameclaim = get_config('auth_oidc', 'customclaimname');
                 // No break.
             case 'preferred_username':
             case 'email':
