@@ -78,7 +78,7 @@ class usersync extends scheduled_task {
      * @param string $msg
      */
     protected function mtrace($msg) {
-        mtrace('...... ' . $msg);
+        utils::mtrace($msg, 2);
     }
 
     /**
@@ -229,26 +229,27 @@ class usersync extends scheduled_task {
             }
 
             if ($rundelete) {
-                $this->mtrace('Start suspend/delete users feature...');
+                $this->mtrace('Checking for users to suspend/reenable...');
 
                 // User IDs already collected during main sync (accumulated in $processcallback).
-                // No need for a separate API scan.
-                $this->mtrace('Using ' . count($allentriduserids) . ' user IDs collected from main sync.');
+                // No need for a separate API scan for suspension.
 
                 $dosuspend = main::sync_option_enabled('suspend');
                 $doreenable = main::sync_option_enabled('reenable');
                 $syncdisabledstatus = main::sync_option_enabled('disabledsync');
 
                 // For reenable, we need to process users with accountEnabled status.
-                // If reenable is enabled, we need to make one pass to get accountEnabled status.
+                // This makes a fresh API call to get all users with accountEnabled status.
                 if ($doreenable) {
-                    $this->mtrace('Processing reenable for users...');
                     try {
-                        $reenablecallback = function (array $userbatch) use ($usersync, $syncdisabledstatus) {
-                            $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
+                        $actualreenablecount = 0;
+                        $reenablecallback = function (array $userbatch) use ($usersync, $syncdisabledstatus, &$actualreenablecount) {
+                            $actualreenablecount += $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
                         };
-                        $totalreenabled = $usersync->process_users_minimal_batched($reenablecallback);
-                        $this->mtrace('Processed ' . $totalreenabled . ' users for reenable.');
+                        $usersync->process_users_minimal_batched($reenablecallback);
+                        if ($actualreenablecount > 0) {
+                            $this->mtrace('Re-enabled ' . $actualreenablecount . ' user(s).');
+                        }
                     } catch (moodle_exception $e) {
                         $fullsyncfailed = true;
                         $this->mtrace('Error processing reenable: ' . $e->getMessage());
@@ -257,14 +258,10 @@ class usersync extends scheduled_task {
                 }
 
                 if ($fullsyncfailed) {
-                    $this->mtrace('Full user sync failed, skip suspending users...');
+                    $this->mtrace('Full user sync failed, skipping user suspension.');
                 } else {
                     if ($dosuspend) {
-                        $this->mtrace('Suspending deleted users...');
                         $usersync->suspend_users($allentriduserids, main::sync_option_enabled('delete'));
-                    }
-                    if ($doreenable) {
-                        $this->mtrace('Re-enabling suspended users (processed per batch above).');
                     }
                 }
             }
