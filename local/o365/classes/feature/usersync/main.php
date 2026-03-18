@@ -77,6 +77,35 @@ class main {
     protected array $connectionsbyentraidupn = [];
 
     /**
+     * Pre-fetched connection records keyed by Moodle user ID, populated during batch sync.
+     *
+     * @var array
+     */
+    protected array $connectionsbymoodleid = [];
+
+    /**
+     * Pre-fetched O365 object records keyed by object ID, populated during batch sync.
+     *
+     * @var array
+     */
+    protected array $o365objectsbyobjectid = [];
+
+    /**
+     * Pre-fetched O365 object records keyed by Moodle user ID, populated during batch sync.
+     *
+     * @var array
+     */
+    protected array $o365objectsbymoodleid = [];
+
+    /**
+     * Pre-fetched auth_oidc_token records keyed by Moodle user ID, populated during batch sync.
+     * Each user ID maps to an array of token records (may be multiple).
+     *
+     * @var array
+     */
+    protected array $tokensbymoodleid = [];
+
+    /**
      * Cache object for storing one-time query results across batches.
      *
      * @var stdClass|null
@@ -1312,8 +1341,8 @@ class main {
         }
 
         // Bulk fetch local_o365_objects records by objectid.
-        $o365objectsbyobjectid = [];
-        $o365objectsbymoodleid = [];
+        $this->o365objectsbyobjectid = [];
+        $this->o365objectsbymoodleid = [];
         if ($entraiduserids) {
             [$objectidsql, $objectidparams] = $DB->get_in_or_equal($entraiduserids);
             $o365objects = $DB->get_records_select(
@@ -1322,19 +1351,19 @@ class main {
                 array_merge(['user'], $objectidparams)
             );
             foreach ($o365objects as $o365object) {
-                $o365objectsbyobjectid[$o365object->objectid] = $o365object;
-                $o365objectsbymoodleid[$o365object->moodleid] = $o365object;
+                $this->o365objectsbyobjectid[$o365object->objectid] = $o365object;
+                $this->o365objectsbymoodleid[$o365object->moodleid] = $o365object;
             }
         }
 
         // Bulk fetch local_o365_connections records.
-        $connectionsbymoodleid = [];
+        $this->connectionsbymoodleid = [];
         $this->connectionsbyentraidupn = [];
         if ($moodleuserids) {
             [$museridssql, $museridsparams] = $DB->get_in_or_equal($moodleuserids);
             $connections = $DB->get_records_select('local_o365_connections', "muserid $museridssql", $museridsparams);
             foreach ($connections as $connection) {
-                $connectionsbymoodleid[$connection->muserid] = $connection;
+                $this->connectionsbymoodleid[$connection->muserid] = $connection;
             }
         }
         if ($useridentifiers) {
@@ -1346,12 +1375,16 @@ class main {
         }
 
         // Bulk fetch auth_oidc_token records.
-        $tokensbymoodleid = [];
+        // Store all tokens per user (may be multiple) to avoid N+1 queries later.
+        $this->tokensbymoodleid = [];
         if ($moodleuserids) {
             [$museridssql, $museridsparams] = $DB->get_in_or_equal($moodleuserids);
             $tokens = $DB->get_records_select('auth_oidc_token', "userid $museridssql", $museridsparams);
             foreach ($tokens as $token) {
-                $tokensbymoodleid[$token->userid] = $token;
+                if (!isset($this->tokensbymoodleid[$token->userid])) {
+                    $this->tokensbymoodleid[$token->userid] = [];
+                }
+                $this->tokensbymoodleid[$token->userid][] = $token;
             }
         }
 
@@ -1458,7 +1491,7 @@ class main {
                 $syncnewuser = array_key_exists('create', $usersyncsettings);
                 if (
                     isset($entraiduser['id']) && $entraiduser['id'] &&
-                    $existingusermatching = ($o365objectsbyobjectid[$entraiduser['id']] ?? null)
+                    $existingusermatching = ($this->o365objectsbyobjectid[$entraiduser['id']] ?? null)
                 ) {
                     // This is a previously connected user who has been renamed in Microsoft.
                     $needsyncprofile = true;
@@ -1470,7 +1503,7 @@ class main {
 
                         if ($supportuseridentifierchangeconfig == 1) {
                             // Check if manually matched users, who shouldn't be renamed.
-                            if (isset($connectionsbymoodleid[$renamedmoodleuser->id])) {
+                            if (isset($this->connectionsbymoodleid[$renamedmoodleuser->id])) {
                                 $this->mtrace('The user is manually matched, skipping renaming...');
                             } else {
                                 $this->mtrace('Updating Moodle username...');
@@ -1490,7 +1523,9 @@ class main {
                                 $DB->update_record('local_o365_objects', $existingusermatching);
 
                                 // Update token record.
-                                if ($existingtoken = ($tokensbymoodleid[$renamedmoodleuser->id] ?? null)) {
+                                $usertokens = $this->tokensbymoodleid[$renamedmoodleuser->id] ?? [];
+                                if (!empty($usertokens)) {
+                                    $existingtoken = reset($usertokens);
                                     $existingtoken->useridentifier = $entraiduser['useridentifier'];
                                     $existingtoken->username = $username;
                                     $bindingusernameclaim = auth_oidc_get_binding_username_claim();
@@ -1548,7 +1583,7 @@ class main {
                 $syncexistinguser = true;
                 if (
                     isset($entraiduser['id']) && $entraiduser['id'] &&
-                    $existingusermatching = ($o365objectsbyobjectid[$entraiduser['id']] ?? null)
+                    $existingusermatching = ($this->o365objectsbyobjectid[$entraiduser['id']] ?? null)
                 ) {
                     $possibleo365names = [$entraiduser['useridentifierlower'], $entraiduser['convertedidentifier'],
                         $entraiduser['useridentifier']];
@@ -1561,7 +1596,7 @@ class main {
                         $this->mtrace('The user has been renamed in Microsoft...');
                         if ($supportuseridentifierchangeconfig == 1) {
                             // Check if the user is manually matched, which shouldn't be renamed.
-                            if (isset($connectionsbymoodleid[$existingusermatching->moodleid])) {
+                            if (isset($this->connectionsbymoodleid[$existingusermatching->moodleid])) {
                                 $this->mtrace('The user is manually matched, skipping renaming...');
                             } else {
                                 // This is a previously connected user who has been renamed in Microsoft.
@@ -1593,9 +1628,9 @@ class main {
                                         $DB->update_record('local_o365_objects', $existingusermatching);
 
                                         // Update token record.
-                                        if (
-                                            $existingtoken = ($tokensbymoodleid[$renamedmoodleuser->id] ?? null)
-                                        ) {
+                                        $usertokens = $this->tokensbymoodleid[$renamedmoodleuser->id] ?? [];
+                                        if (!empty($usertokens)) {
+                                            $existingtoken = reset($usertokens);
                                             $existingtoken->useridentifier = $entraiduser['useridentifier'];
                                             $existingtoken->username = $username;
                                             $DB->update_record('auth_oidc_token', $existingtoken);
@@ -1673,8 +1708,7 @@ class main {
                     if (isset($usersyncsettings['update'])) {
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                         if ($fullexistinguser) {
-                            $existingusercopy = core_user::get_user_by_username($existinguser->username);
-                            $fullexistinguser->description = $existingusercopy->description;
+                            // get_complete_user_data() already includes description field, no need to fetch again.
                             $this->update_user_from_entra_id_data($entraiduser, $fullexistinguser);
                             $this->mtrace('Field mapping applied.');
                         } else {
@@ -1893,19 +1927,20 @@ class main {
         $userobjectid = (unified::is_configured()) ? $entraiduserdata['id'] : $entraiduserdata['objectId'];
 
         // Check for user GUID changes.
-        // There shouldn't be multiple token records, but just in case.
-        $oidctokenrecords = $DB->get_records(
-            'auth_oidc_token',
-            ['userid' => $existinguser->muserid, 'useridentifier' => $existinguser->username]
-        );
+        // Use pre-fetched tokens to avoid N+1 query problem.
+        $oidctokenrecords = $this->tokensbymoodleid[$existinguser->muserid] ?? [];
         foreach ($oidctokenrecords as $oidctokenrecord) {
-            if ($oidctokenrecord->oidcuniqid != $userobjectid) {
+            // Check if token matches the expected useridentifier and has correct GUID.
+            if ($oidctokenrecord->useridentifier == $existinguser->username &&
+                $oidctokenrecord->oidcuniqid != $userobjectid) {
                 $DB->delete_records('auth_oidc_token', ['id' => $oidctokenrecord->id]);
                 $this->mtrace('Deleted auth_oidc token due to conflicts.');
             }
         }
 
-        if ($localo365objectrecord = $DB->get_record('local_o365_objects', ['id' => $existinguser->objectid])) {
+        // Use pre-fetched O365 object record to avoid N+1 query problem.
+        $localo365objectrecord = $this->o365objectsbymoodleid[$existinguser->muserid] ?? null;
+        if ($localo365objectrecord && $localo365objectrecord->id == $existinguser->objectid) {
             if ($localo365objectrecord->objectid != $userobjectid) {
                 $localo365objectrecord->objectid = $userobjectid;
                 $DB->update_record('local_o365_objects', $localo365objectrecord);
