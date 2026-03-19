@@ -243,7 +243,11 @@ class usersync extends scheduled_task {
                 if ($doreenable) {
                     try {
                         $actualreenablecount = 0;
-                        $reenablecallback = function (array $userbatch) use ($usersync, $syncdisabledstatus, &$actualreenablecount) {
+                        $reenablecallback = function (array $userbatch) use (
+                            $usersync,
+                            $syncdisabledstatus,
+                            &$actualreenablecount
+                        ) {
                             $actualreenablecount += $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
                         };
                         $usersync->process_users_minimal_batched($reenablecallback);
