@@ -898,6 +898,7 @@ $string['task_coursemembershipsync'] = 'Sync Microsoft Teams owners and members 
 $string['task_sds_sync'] = 'Sync with SDS';
 $string['task_syncusers'] = 'Sync users from Microsoft Entra ID';
 $string['task_syncusersphotostimezones'] = 'Sync user photos and timezones from Microsoft Entra ID';
+$string['task_userenabledstatussync'] = 'Suspend/re-enable/delete users based on Microsoft Entra ID status';
 $string['task_processmatchqueue'] = 'Process Match Queue';
 $string['task_notifysecretexpiry'] = 'Notify site admin about Microsoft Entra ID app secret expiry';
 $string['task_checkinvalidconfiglog'] = 'Check and clean up invalid config log records';
