@@ -1708,7 +1708,7 @@ class main {
                     if (isset($usersyncsettings['update'])) {
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                         if ($fullexistinguser) {
-                            // get_complete_user_data() already includes description field, no need to fetch again.
+                            // Get_complete_user_data() already includes description field, no need to fetch again.
                             $this->update_user_from_entra_id_data($entraiduser, $fullexistinguser);
                             $this->mtrace('Field mapping applied.');
                         } else {
@@ -1931,8 +1931,10 @@ class main {
         $oidctokenrecords = $this->tokensbymoodleid[$existinguser->muserid] ?? [];
         foreach ($oidctokenrecords as $oidctokenrecord) {
             // Check if token matches the expected useridentifier and has correct GUID.
-            if ($oidctokenrecord->useridentifier == $existinguser->username &&
-                $oidctokenrecord->oidcuniqid != $userobjectid) {
+            if (
+                $oidctokenrecord->useridentifier == $existinguser->username &&
+                $oidctokenrecord->oidcuniqid != $userobjectid
+            ) {
                 $DB->delete_records('auth_oidc_token', ['id' => $oidctokenrecord->id]);
                 $this->mtrace('Deleted auth_oidc token due to conflicts.');
             }
