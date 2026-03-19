@@ -405,6 +405,26 @@ class main {
     }
 
     /**
+     * Public wrapper to apply photo to a user (for use by photosync task).
+     *
+     * @param int $muserid The Moodle user ID
+     * @param mixed $photodata The photo data (binary string or false for no photo)
+     */
+    public function apply_photo_public(int $muserid, $photodata) {
+        $this->apply_photo($muserid, $photodata, false);
+    }
+
+    /**
+     * Public wrapper to apply timezone to a user (for use by photosync task).
+     *
+     * @param int $muserid The Moodle user ID
+     * @param array $remotetimezone The timezone data from Microsoft Graph
+     */
+    public function apply_timezone_public(int $muserid, array $remotetimezone) {
+        $this->apply_timezone($muserid, $remotetimezone, false);
+    }
+
+    /**
      * Sync timezone of user from Outlook to Moodle.
      *
      * @param int $muserid
@@ -1398,49 +1418,6 @@ class main {
             }
         }
 
-        // Bulk fetch timezones if timezone sync is enabled.
-        $timezonesbyupn = [];
-        if (array_key_exists('tzsync', $usersyncsettings) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-            // Collect all UPNs that need timezone sync.
-            $upnsfortzsync = [];
-            foreach ($entraidusers as $entraiduser) {
-                if (!empty($entraiduser['userPrincipalName'])) {
-                    $upnsfortzsync[] = $entraiduser['userPrincipalName'];
-                }
-            }
-
-            if ($upnsfortzsync) {
-                $this->mtrace('Batch fetching timezones for ' . count($upnsfortzsync) . ' users...');
-                $apiclient = $this->construct_user_api();
-                $timezonesbyupn = $apiclient->get_timezones_batch($upnsfortzsync);
-                $this->mtrace('Fetched ' . count(array_filter($timezonesbyupn)) . ' timezones.');
-            }
-        }
-
-        // Bulk fetch photos if photo sync is enabled.
-        $photosbyupn = [];
-        if (array_key_exists('photosync', $usersyncsettings) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-            // Collect all UPNs that need photo sync.
-            $upnsforphotosync = [];
-            foreach ($entraidusers as $entraiduser) {
-                if (!empty($entraiduser['userPrincipalName'])) {
-                    $upnsforphotosync[] = $entraiduser['userPrincipalName'];
-                }
-            }
-
-            if ($upnsforphotosync) {
-                $this->mtrace('Batch fetching photos for ' . count($upnsforphotosync) . ' users...');
-                $apiclient = $this->construct_user_api();
-                $photosbyupn = $apiclient->get_photos_batch($upnsforphotosync);
-                $this->mtrace('Fetched ' . count(array_filter($photosbyupn)) . ' photos.');
-            }
-        }
-
-        // Add blank line after batch fetching for better readability.
-        if (!empty($timezonesbyupn) || !empty($photosbyupn)) {
-            $this->mtrace('');
-        }
-
         $processedusers = [];
 
         $supportuseridentifierchangeconfig = get_config('local_o365', 'support_user_identifier_change');
@@ -1567,9 +1544,7 @@ class main {
                     $this->sync_new_user(
                         $usersyncsettings,
                         $entraiduser,
-                        isset($usersyncsettings['guestsync']),
-                        $timezonesbyupn,
-                        $photosbyupn
+                        isset($usersyncsettings['guestsync'])
                     );
                 }
             } else {
@@ -1715,68 +1690,6 @@ class main {
                             $this->mtrace('Update failed for user with username "' . $existinguser->username . '".');
                         }
                     }
-
-                    // Perform photo sync after profile field mapping.
-                    if (isset($usersyncsettings['photosync'])) {
-                        try {
-                            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-                                if (!empty($entraiduser['userPrincipalName'])) {
-                                    $upn = $entraiduser['userPrincipalName'];
-                                    $photoexpire = get_config('local_o365', 'photoexpire');
-                                    if (empty($photoexpire) || !is_numeric($photoexpire)) {
-                                        $photoexpire = 24;
-                                    }
-                                    $photoexpiresec = $photoexpire * 3600;
-                                    $photoisstale = (
-                                        empty($existinguser->photoupdated) ||
-                                        ($existinguser->photoupdated + $photoexpiresec) < time()
-                                    );
-
-                                    if (isset($photosbyupn[$upn])) {
-                                        // Use pre-fetched photo, but only if the photo has expired.
-                                        if ($photoisstale) {
-                                            $this->apply_photo($existinguser->muserid, $photosbyupn[$upn], true);
-                                        }
-                                    } else if (empty($photosbyupn)) {
-                                        // Photo batch fetch was not done, fall back to individual fetch.
-                                        // Only fetch if photo expired to avoid unnecessary API calls.
-                                        if ($photoisstale) {
-                                            $this->assign_photo($existinguser->muserid, true);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (moodle_exception $e) {
-                            $this->mtrace('Could not assign profile photo to user "' .
-                                $entraiduser['useridentifier'] . '" Reason: ' . $e->getMessage());
-                        }
-                    }
-
-                    // Perform timezone sync after profile field mapping.
-                    if (isset($usersyncsettings['tzsync'])) {
-                        try {
-                            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-                                if (!empty($entraiduser['userPrincipalName'])) {
-                                    $upn = $entraiduser['userPrincipalName'];
-                                    if (isset($timezonesbyupn[$upn])) {
-                                        if ($timezonesbyupn[$upn] !== false) {
-                                            // Use pre-fetched timezone.
-                                            $this->apply_timezone($existinguser->muserid, $timezonesbyupn[$upn], true);
-                                        } else {
-                                            // Pre-fetched but no timezone available.
-                                            $this->mtrace('No timezone received.');
-                                        }
-                                    } else if (empty($timezonesbyupn)) {
-                                        // Timezone batch fetch was not done, fall back to individual fetch.
-                                        $this->sync_timezone($existinguser->muserid, true);
-                                    }
-                                }
-                            }
-                        } catch (moodle_exception $e) {
-                            $this->mtrace('Could not sync timezone for user "' . $entraiduser['useridentifier'] . '" Reason: ' .
-                                $e->getMessage());
-                        }
-                    }
                 }
             }
 
@@ -1792,15 +1705,11 @@ class main {
      * @param array $syncoptions
      * @param array $entraiduserdata
      * @param bool $syncguestusers
-     * @param array $timezonesbyupn
-     * @param array $photosbyupn
      */
     protected function sync_new_user(
         array $syncoptions,
         array $entraiduserdata,
-        bool $syncguestusers = false,
-        array $timezonesbyupn = [],
-        array $photosbyupn = []
+        bool $syncguestusers = false
     ): void {
         global $DB;
 
@@ -1855,53 +1764,6 @@ class main {
                 }
             } catch (moodle_exception $e) {
                 $this->mtrace('Could not assign user "' . $entraiduserdata['useridentifier'] . '" Reason: ' . $e->getMessage());
-            }
-        }
-
-        // User photo sync.
-        if (!empty($syncoptions['photosync'])) {
-            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-                try {
-                    if (!empty($newmuser) && !empty($entraiduserdata['userPrincipalName'])) {
-                        $upn = $entraiduserdata['userPrincipalName'];
-                        if (isset($photosbyupn[$upn])) {
-                            // Use pre-fetched photo.
-                            $this->apply_photo($newmuser->id, $photosbyupn[$upn], true);
-                        } else if (empty($photosbyupn)) {
-                            // Photo batch fetch was not done, fall back to individual fetch.
-                            $this->assign_photo($newmuser->id, true);
-                        }
-                    }
-                } catch (moodle_exception $e) {
-                    $this->mtrace('Could not assign photo to user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
-                        $e->getMessage());
-                }
-            }
-        }
-
-        // User timezone.
-        if (!empty($syncoptions['tzsync'])) {
-            if (!PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
-                try {
-                    if (!empty($newmuser) && !empty($entraiduserdata['userPrincipalName'])) {
-                        $upn = $entraiduserdata['userPrincipalName'];
-                        if (isset($timezonesbyupn[$upn])) {
-                            if ($timezonesbyupn[$upn] !== false) {
-                                // Use pre-fetched timezone.
-                                $this->apply_timezone($newmuser->id, $timezonesbyupn[$upn], true);
-                            } else {
-                                // Pre-fetched but no timezone available.
-                                $this->mtrace('No timezone received.');
-                            }
-                        } else if (empty($timezonesbyupn)) {
-                            // Timezone batch fetch was not done, fall back to individual fetch.
-                            $this->sync_timezone($newmuser->id, true);
-                        }
-                    }
-                } catch (moodle_exception $e) {
-                    $this->mtrace('Could not sync timezone for user "' . $entraiduserdata['useridentifier'] . '" Reason: ' .
-                        $e->getMessage());
-                }
             }
         }
     }
