@@ -2011,21 +2011,18 @@ class main {
      *
      * Note this will not catch oidc users without matching Microsoft 365 account.
      *
-     * Performance optimizations:
+     * Performance optimizations (scalable to 500K+ users):
+     * - Uses recordset streaming to avoid loading all user IDs into memory
      * - Uses a temporary table with indexed objectid column for efficient database-level comparisons
-     * - Uses DB::set_field() instead of user_update_user() to avoid 153+ queries per user
+     * - Processes and inserts Entra users in batches of 1000 to minimize memory usage
+     * - Uses bulk SQL updates instead of individual user_update_user() calls (avoids 153+ queries per user)
      * - Manually triggers \core\event\user_updated events to maintain event observer functionality
-     * - Bulk inserts Entra users in batches of 1000 to minimize memory usage
      *
-     * @param array $entraiduserids Flat array of Entra ID object ID strings for all currently active users.
-     *                              suspend_users() must receive the COMPLETE set of active IDs because it
-     *                              identifies Moodle accounts absent from Entra ID by set-complement logic.
-     *                              Callers are responsible for collecting all IDs before calling this method.
      * @param bool $delete Whether to delete users that have been suspended in a previous run
      *
-     * @return bool True on success, false on failure
+     * @return array Array with keys 'suspended' and 'deleted' containing counts, or empty array on failure
      */
-    public function suspend_users(array $entraiduserids, bool $delete = false) {
+    public function suspend_users(bool $delete = false) {
         global $CFG, $DB;
 
         $apiclient = $this->construct_user_api();
@@ -2043,53 +2040,87 @@ class main {
         }
         $dbman->create_temp_table($temptable);
 
-        // Insert entra users into the temporary table.
-        // Using Moodle's bulk insert API for security and consistency.
-        if (!empty($entraiduserids)) {
-            // Chunk the ID array first to avoid loading all objects into memory at once.
-            $batchsize = 1000;
-            $batches = array_chunk($entraiduserids, $batchsize);
-            foreach ($batches as $batch) {
-                $records = [];
-                foreach ($batch as $entraidid) {
-                    $records[] = (object)['objectid' => $entraidid];
-                }
+        // Query all Microsoft 365 synced user object IDs using recordset (memory-efficient for 500K+ users).
+        $sql = "SELECT obj.objectid
+                  FROM {local_o365_objects} obj
+                  JOIN {user} u ON u.id = obj.moodleid
+                 WHERE obj.type = 'user'
+                   AND u.deleted = 0";
+        $entraiduserrs = $DB->get_recordset_sql($sql);
+
+        // Insert entra users into the temporary table in batches.
+        // Process using recordset streaming to avoid loading all 500K+ IDs into memory.
+        $batchsize = 1000;
+        $records = [];
+        $count = 0;
+
+        foreach ($entraiduserrs as $record) {
+            $records[] = (object)['objectid' => $record->objectid];
+            $count++;
+
+            // Insert batch when we reach batch size.
+            if (count($records) >= $batchsize) {
                 $DB->insert_records($temptablename, $records);
+                $records = []; // Clear batch.
             }
         }
+
+        // Insert any remaining records.
+        if (!empty($records)) {
+            $DB->insert_records($temptablename, $records);
+        }
+
+        // Close recordset to free memory.
+        $entraiduserrs->close();
 
         try {
             $deletedusersids = [];
             $suspendedfromdeletedcount = 0;
 
             $deletedusers = $apiclient->list_deleted_users();
+
+            // Collect all deleted user IDs first.
             foreach ($deletedusers as $deleteduser) {
                 if (!empty($deleteduser) && isset($deleteduser['id'])) {
-                    // Check for synced user.
-                    $sql = 'SELECT u.*
-                              FROM {user} u
-                              JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
-                             WHERE u.mnethostid = ?
-                               AND u.deleted = ?
-                               AND u.suspended = ?
-                               AND u.auth = ?
-                               AND obj.objectid = ? ';
-                    $params = ['user', $CFG->mnet_localhost_id, '0', '0', 'oidc', $deleteduser['id']];
-                    $synceduser = $DB->get_record_sql($sql, $params);
-                    if (!empty($synceduser)) {
-                        $synceduser->suspended = 1;
-                        // Use direct DB update for performance (avoids 153+ queries per user).
-                        // We manually trigger the user_updated event below to maintain event observer functionality.
-                        $DB->set_field('user', 'suspended', 1, ['id' => $synceduser->id]);
-                        $this->mtrace('Suspended ' . $synceduser->username . ' (deleted in Entra ID)');
-
-                        // Trigger user_updated event for event observers and audit logs.
-                        \core\event\user_updated::create_from_userid($synceduser->id)->trigger();
-
-                        $suspendedfromdeletedcount++;
-                    }
-
                     $deletedusersids[] = $deleteduser['id'];
+                }
+            }
+
+            // Bulk query for all synced users that are deleted in Entra (avoids N+1 queries).
+            if (!empty($deletedusersids)) {
+                [$objectidsql, $objectidparams] = $DB->get_in_or_equal($deletedusersids, SQL_PARAMS_QM);
+                $sql = 'SELECT u.id, u.username
+                          FROM {user} u
+                          JOIN {local_o365_objects} obj ON obj.type = ? AND obj.moodleid = u.id
+                         WHERE u.mnethostid = ?
+                           AND u.deleted = ?
+                           AND u.suspended = ?
+                           AND u.auth = ?
+                           AND obj.objectid ' . $objectidsql;
+                $params = array_merge(['user', $CFG->mnet_localhost_id, '0', '0', 'oidc'], $objectidparams);
+
+                // Use recordset to stream results instead of loading all into memory.
+                $syncedusersrs = $DB->get_recordset_sql($sql, $params);
+
+                $userstosuspend = [];
+                foreach ($syncedusersrs as $synceduser) {
+                    $userstosuspend[] = $synceduser->id;
+                    $this->mtrace('Suspended ' . $synceduser->username . ' (deleted in Entra ID)');
+                    $suspendedfromdeletedcount++;
+                }
+
+                // Close recordset to free memory.
+                $syncedusersrs->close();
+
+                // Bulk update all users at once (single query instead of N queries).
+                if (!empty($userstosuspend)) {
+                    [$useridsql, $useridparams] = $DB->get_in_or_equal($userstosuspend, SQL_PARAMS_QM);
+                    $DB->execute('UPDATE {user} SET suspended = 1 WHERE id ' . $useridsql, $useridparams);
+
+                    // Trigger events in batch for audit logs (much faster than individual triggers).
+                    foreach ($userstosuspend as $userid) {
+                        \core\event\user_updated::create_from_userid($userid)->trigger();
+                    }
                 }
             }
 
@@ -2110,14 +2141,17 @@ class main {
             // Include users that aren't in Entra.
             // The NOT IN subquery uses the indexed temp table for optimal performance.
             $existingsql .= ' AND obj.objectid not in (select objectid from {' . $temptablename . '})';
-            $existingusers = $DB->get_records_sql($existingsql, $existingsqlparams);
+
+            // Use recordset to stream results instead of loading all into memory.
+            $existingusersrs = $DB->get_recordset_sql($existingsql, $existingsqlparams);
 
             $suspendedfrommissingcount = 0;
             $deletedcount = 0;
+            $userstosuspend = [];
 
             // Process users not found in Entra.
             // The SQL query already filters out users present in Entra, so no additional in_array check is needed.
-            foreach ($existingusers as $existinguser) {
+            foreach ($existingusersrs as $existinguser) {
                 if ($existinguser->suspended) {
                     // User was already suspended in a previous sync run.
                     if ($delete) {
@@ -2128,41 +2162,37 @@ class main {
                     }
                 } else {
                     // First time we've detected this user is missing from Entra - suspend them.
+                    $userstosuspend[] = $existinguser->id;
                     $this->mtrace('Suspended ' . $existinguser->username . ' (not found in Entra ID)');
-                    $existinguser->suspended = 1;
-                    unset($existinguser->objectid);
-                    // Use direct DB update for performance (avoids 153+ queries per user).
-                    // We manually trigger the user_updated event below to maintain event observer functionality.
-                    $DB->set_field('user', 'suspended', 1, ['id' => $existinguser->id]);
-
-                    // Trigger user_updated event for event observers and audit logs.
-                    \core\event\user_updated::create_from_userid($existinguser->id)->trigger();
-
                     $suspendedfrommissingcount++;
                 }
             }
 
-            // Summary.
-            $totalsuspended = $suspendedfromdeletedcount + $suspendedfrommissingcount;
-            if ($totalsuspended > 0 || $deletedcount > 0) {
-                $summary = [];
-                if ($totalsuspended > 0) {
-                    $summary[] = 'suspended ' . $totalsuspended . ' user(s)';
+            // Close recordset to free memory.
+            $existingusersrs->close();
+
+            // Bulk update all users at once (single query instead of N queries).
+            if (!empty($userstosuspend)) {
+                [$useridsql, $useridparams] = $DB->get_in_or_equal($userstosuspend, SQL_PARAMS_QM);
+                $DB->execute('UPDATE {user} SET suspended = 1 WHERE id ' . $useridsql, $useridparams);
+
+                // Trigger events in batch for audit logs.
+                foreach ($userstosuspend as $userid) {
+                    \core\event\user_updated::create_from_userid($userid)->trigger();
                 }
-                if ($deletedcount > 0) {
-                    $summary[] = 'deleted ' . $deletedcount . ' user(s)';
-                }
-                $this->mtrace('Summary: ' . implode(', ', $summary) . '.');
             }
+
+            // Calculate totals for return value.
+            $totalsuspended = $suspendedfromdeletedcount + $suspendedfrommissingcount;
 
             $dbman->drop_table($temptable); // Drop table on completion.
 
-            return true;
+            return ['suspended' => $totalsuspended, 'deleted' => $deletedcount];
         } catch (moodle_exception $e) {
             utils::debug('Could not delete users', __METHOD__, $e);
 
             $dbman->drop_table($temptable); // Drop table on failure.
-            return false;
+            return [];
         }
     }
 
@@ -2213,17 +2243,38 @@ class main {
                 'suspended' => 1,
             ];
             $params = array_merge($params, $objectidparams);
-            $suspendedusers = $DB->get_records_sql($query, $params);
-            foreach ($suspendedusers as $suspendeduser) {
+
+            // Simplify query to only get id and username (reduce data transfer).
+            $simplequery = 'SELECT u.id, u.username
+                              FROM {user} u
+                              JOIN {local_o365_objects} obj ON obj.type = :user AND obj.moodleid = u.id
+                             WHERE u.auth = :oidc
+                               AND u.deleted = :deleted
+                               AND u.suspended = :suspended
+                               AND obj.objectid ' . $objectidsql;
+
+            // Use recordset to stream results instead of loading all into memory.
+            $suspendedusersrs = $DB->get_recordset_sql($simplequery, $params);
+            $userstoreenable = [];
+
+            foreach ($suspendedusersrs as $suspendeduser) {
                 $this->mtrace('Re-enabling user ' . $suspendeduser->username . '...');
-                // Use direct DB update for performance (avoids 153+ queries per user).
-                // We manually trigger the user_updated event below to maintain event observer functionality.
-                $DB->set_field('user', 'suspended', 0, ['id' => $suspendeduser->id]);
-
-                // Trigger user_updated event for event observers and audit logs.
-                \core\event\user_updated::create_from_userid($suspendeduser->id)->trigger();
-
+                $userstoreenable[] = $suspendeduser->id;
                 $reenablecount++;
+            }
+
+            // Close recordset to free memory.
+            $suspendedusersrs->close();
+
+            // Bulk update all users at once (single query instead of N queries).
+            if (!empty($userstoreenable)) {
+                [$useridsql, $useridparams] = $DB->get_in_or_equal($userstoreenable, SQL_PARAMS_QM);
+                $DB->execute('UPDATE {user} SET suspended = 0 WHERE id ' . $useridsql, $useridparams);
+
+                // Trigger events in batch for audit logs.
+                foreach ($userstoreenable as $userid) {
+                    \core\event\user_updated::create_from_userid($userid)->trigger();
+                }
             }
         }
 
