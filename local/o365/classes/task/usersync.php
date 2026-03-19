@@ -76,9 +76,10 @@ class usersync extends scheduled_task {
      * Print debugging information using mtrace.
      *
      * @param string $msg
+     * @param int $additionallevel
      */
-    protected function mtrace($msg) {
-        utils::mtrace($msg, 2);
+    protected function mtrace(string $msg, int $additionallevel = 0) {
+        utils::mtrace($msg, 2 + $additionallevel);
     }
 
     /**
@@ -97,7 +98,7 @@ class usersync extends scheduled_task {
             return true;
         }
 
-        $this->mtrace('Starting sync');
+        $this->mtrace('Starting sync.');
         raise_memory_limit(MEMORY_HUGE);
 
         $usersync = new main();
@@ -105,57 +106,62 @@ class usersync extends scheduled_task {
         // Do not time out when syncing users.
         @set_time_limit(0);
 
-        $fullsyncfailed = false;
         $totalusersprocessed = 0;
 
         // Determine binding username claim once.
         $bindingusernameclaim = $this->get_binding_username_claim();
 
-        // Initialize sync cache ONCE before batch processing to avoid redundant queries.
-        $this->mtrace('Initializing user sync cache...');
-        $synccache = $usersync->init_sync_cache($bindingusernameclaim);
+        // Display sync settings.
+        $this->display_sync_settings();
 
-        // Accumulate user IDs during main sync for reuse in suspend/reenable.
-        $allentriduserids = [];
+        // Display field mappings.
+        $this->display_field_mappings();
 
-        // Create a callback to process users in batches.
-        $processcallback = function ($userbatch) use ($usersync, $synccache, $bindingusernameclaim, &$allentriduserids) {
-            // Accumulate user IDs for suspend/reenable feature.
-            foreach ($userbatch as $user) {
-                $allentriduserids[] = $user['id'];
-            }
-
-            $this->mtrace(count($userbatch) . ' users in batch. Syncing...');
-            $usersync->sync_users_with_cache($userbatch, $synccache, $bindingusernameclaim);
-        };
-
+        // Announce sync type first.
+        $deltatoken = null;
         if (main::sync_option_enabled('nodelta') === true) {
-            $this->mtrace('Forcing full sync.');
-            $this->mtrace('Contacting Microsoft Entra ID...');
-            $this->mtrace('Processing users in batches of ' . unified::GRAPH_API_BATCH_SIZE . '...');
-
-            try {
-                $totalusersprocessed = $usersync->process_users_batched($processcallback);
-                $this->mtrace('Total users processed: ' . $totalusersprocessed);
-            } catch (moodle_exception $e) {
-                $fullsyncfailed = true;
-                $this->mtrace('Error in full usersync: ' . $e->getMessage());
-                utils::debug($e->getMessage(), __METHOD__, $e);
-            }
-
-            $this->mtrace('Completed processing from Microsoft Entra ID');
+            $this->mtrace('Forcing full sync.', 1);
         } else {
             $deltatoken = $this->get_token('deltatoken');
             if (!empty($deltatoken)) {
-                $this->mtrace('Using deltatoken.');
+                $this->mtrace('Using deltatoken.', 1);
             } else {
-                $this->mtrace('No deltatoken stored.');
+                $this->mtrace('No deltatoken stored.', 1);
             }
+            $this->mtrace('Using delta sync.', 1);
+        }
 
-            $this->mtrace('Using delta sync.');
-            $this->mtrace('Contacting Microsoft Entra ID...');
-            $this->mtrace('Processing users in batches of ' . unified::GRAPH_API_BATCH_SIZE . '...');
+        // List users batch size.
+        $this->mtrace('Graph API list users batch size: ' . unified::GRAPH_API_BATCH_SIZE . '.', 1);
 
+        // Initialize sync cache ONCE before batch processing to avoid redundant queries.
+        $this->mtrace('');
+        $this->mtrace('Initializing user sync cache...');
+        $synccache = $usersync->init_sync_cache($bindingusernameclaim);
+        $this->mtrace('User sync cache initialized.');
+        $this->mtrace('');
+
+        $batchnumber = 0;
+
+        // Create a callback to process users in batches.
+        $processcallback = function ($userbatch) use ($usersync, $synccache, $bindingusernameclaim, &$batchnumber) {
+            $batchnumber++;
+
+            $this->mtrace('Batch ' . $batchnumber . ': ' . count($userbatch) . ' users.');
+            $usersync->sync_users_with_cache($userbatch, $synccache, $bindingusernameclaim);
+            $this->mtrace('');
+        };
+
+        if (main::sync_option_enabled('nodelta') === true) {
+            try {
+                $totalusersprocessed = $usersync->process_users_batched($processcallback);
+                $this->mtrace('Total users processed: ' . $totalusersprocessed);
+                $this->mtrace('');
+            } catch (moodle_exception $e) {
+                $this->mtrace('Error in full usersync: ' . $e->getMessage());
+                utils::debug($e->getMessage(), __METHOD__, $e);
+            }
+        } else {
             try {
                 [$totalusersprocessed, $deltatoken, $fieldsmappingchanged] = $usersync->process_users_delta_batched(
                     $processcallback,
@@ -166,14 +172,13 @@ class usersync extends scheduled_task {
                     $this->mtrace('Field mappings changed. Invalidating delta token and starting fresh sync.');
                 }
                 $this->mtrace('Total users processed: ' . $totalusersprocessed);
+                $this->mtrace('');
             } catch (moodle_exception $e) {
                 $this->mtrace('Error in delta usersync: ' . $e->getMessage());
                 utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting delta tokens.');
                 $deltatoken = null;
             }
-
-            $this->mtrace('Completed processing from Microsoft Entra ID');
 
             // Store deltatoken.
             if (!empty($deltatoken)) {
@@ -204,39 +209,120 @@ class usersync extends scheduled_task {
         $bindingusernameclaim = auth_oidc_get_binding_username_claim();
         switch ($bindingusernameclaim) {
             case 'upn':
-                $this->mtrace('Binding username claim: userPrincipalName.');
+                $this->mtrace('Binding username claim: userPrincipalName.', 1);
                 $bindingusernameclaim = 'userPrincipalName';
                 break;
             case 'oid':
-                $this->mtrace('Binding username claim: id.');
+                $this->mtrace('Binding username claim: id.', 1);
                 $bindingusernameclaim = 'id';
                 break;
             case 'samaccountname':
-                $this->mtrace('Binding username claim: onPremisesSamAccountName.');
+                $this->mtrace('Binding username claim: onPremisesSamAccountName.', 1);
                 $bindingusernameclaim = 'onPremisesSamAccountName';
                 break;
             case 'email':
-                $this->mtrace('Binding username claim: mail.');
+                $this->mtrace('Binding username claim: mail.', 1);
                 $bindingusernameclaim = 'mail';
                 break;
             case 'auto':
-                $this->mtrace('Binding username claim: auto-detected. Use userPrincipalName.');
+                $this->mtrace('Binding username claim: auto-detected. Use userPrincipalName.', 1);
                 $bindingusernameclaim = 'userPrincipalName';
                 break;
             case 'unique_name':
             case 'sub':
             case 'preferred_username':
                 $this->mtrace('Binding user claim "' . $bindingusernameclaim . '" is unavailable in Graph user resource. ' .
-                    'Fall back to userPrincipalName.');
+                    'Fall back to userPrincipalName.', 1);
                 $bindingusernameclaim = 'userPrincipalName';
                 break;
             default:
                 $this->mtrace('Unsupported binding username claim: ' . $bindingusernameclaim .
-                    '. Fall back to userPrincipalName.');
+                    '. Fall back to userPrincipalName.', 1);
                 $bindingusernameclaim = 'userPrincipalName';
         }
 
         return $bindingusernameclaim;
+    }
+
+    /**
+     * Display user sync settings.
+     */
+    protected function display_sync_settings() {
+        $syncoptions = main::get_sync_options();
+
+        if (empty($syncoptions)) {
+            $this->mtrace('No sync options enabled.', 1);
+            return;
+        }
+
+        $this->mtrace('Sync options:', 1);
+
+        foreach ($syncoptions as $option => $value) {
+            // Skip photo and timezone sync - they're handled by separate task.
+            if ($option === 'photosync' || $option === 'tzsync') {
+                continue;
+            }
+
+            // Skip status sync options - they're handled by separate task.
+            if ($option === 'suspend' || $option === 'reenable' || $option === 'delete' || $option === 'disabledsync') {
+                continue;
+            }
+
+            // Try to get the language string for this option.
+            $stringkey = 'settings_usersync_' . $option;
+            if (get_string_manager()->string_exists($stringkey, 'local_o365')) {
+                $description = get_string($stringkey, 'local_o365');
+                $this->mtrace($option . ' - ' . $description, 2);
+            } else {
+                // Fallback if no language string exists.
+                $this->mtrace($option, 2);
+            }
+        }
+    }
+
+    /**
+     * Display configured field mappings that apply during user sync task.
+     */
+    protected function display_field_mappings() {
+        global $CFG;
+
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+
+        if (PHPUNIT_TEST || defined('BEHAT_SITE_RUNNING')) {
+            return; // Skip in test environments.
+        }
+
+        $fieldmappings = auth_oidc_get_field_mappings();
+
+        if (empty($fieldmappings)) {
+            $this->mtrace('No field mappings configured.', 1);
+            return;
+        }
+
+        $this->mtrace('Field mappings:', 1);
+
+        $displayedcount = 0;
+
+        foreach ($fieldmappings as $localfield => $mapping) {
+            if (empty($mapping['field_map'])) {
+                continue; // Skip if no remote field mapped.
+            }
+
+            $updatebehavior = $mapping['update_local'] ?? 'always';
+
+            // Only show mappings that apply during sync task (not 'onlogin').
+            if ($updatebehavior === 'onlogin') {
+                continue;
+            }
+
+            $remotefield = $mapping['field_map'];
+            $this->mtrace($localfield . ' <- ' . $remotefield, 2);
+            $displayedcount++;
+        }
+
+        if ($displayedcount === 0) {
+            $this->mtrace('No field mappings apply during sync.', 2);
+        }
     }
 
     /**

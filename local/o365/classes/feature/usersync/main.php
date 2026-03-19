@@ -1422,7 +1422,11 @@ class main {
 
         $supportuseridentifierchangeconfig = get_config('local_o365', 'support_user_identifier_change');
 
+        $totalusers = count($entraidusers);
+        $currentuserindex = 0;
+
         foreach ($entraidusers as $entraiduser) {
+            $currentuserindex++;
             if (unified::is_configured()) {
                 $userobjectid = $entraiduser['id'];
             } else {
@@ -1672,7 +1676,7 @@ class main {
                         }
 
                         // User already connected.
-                        $this->mtrace('Linked to Moodle account.');
+                        $this->mtrace('Linked to Moodle account #' . $existinguser->muserid . '.');
                     }
                 }
             }
@@ -1693,7 +1697,10 @@ class main {
                 }
             }
 
-            $this->mtrace(' ');
+            // Add blank line between users, but not after the last user in the batch.
+            if ($currentuserindex < $totalusers) {
+                $this->mtrace('');
+            }
         }
 
         return true;
