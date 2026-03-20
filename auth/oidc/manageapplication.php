@@ -55,6 +55,11 @@ $oidcconfig = get_config('auth_oidc');
 $form = new application(null, ['oidcconfig' => $oidcconfig]);
 
 $formdata = [];
+$secretfields = ['clientsecret', 'clientcertpassphrase'];
+
+// Check if form was submitted (to handle validation errors).
+$formsubmitted = optional_param('submitbutton', '', PARAM_TEXT);
+
 foreach (
     [
         'idptype', 'clientid', 'clientauthmethod', 'clientsecret', 'clientprivatekey', 'clientcert',
@@ -64,7 +69,25 @@ foreach (
     ] as $field
 ) {
     if (isset($oidcconfig->$field)) {
-        $formdata[$field] = $oidcconfig->$field;
+        // Mask sensitive secret fields for display only.
+        if (in_array($field, $secretfields) && !empty($oidcconfig->$field)) {
+            $formdata[$field] = auth_oidc_mask_secret($oidcconfig->$field);
+        } else {
+            $formdata[$field] = $oidcconfig->$field;
+        }
+    }
+}
+
+// After form validation errors, if the change checkbox wasn't checked, restore the masked value.
+if ($formsubmitted) {
+    $changesecret = optional_param('changesecret', 0, PARAM_BOOL);
+    $changecertpassphrase = optional_param('changecertpassphrase', 0, PARAM_BOOL);
+
+    if (!$changesecret && !empty($oidcconfig->clientsecret)) {
+        $formdata['clientsecret'] = auth_oidc_mask_secret($oidcconfig->clientsecret);
+    }
+    if (!$changecertpassphrase && !empty($oidcconfig->clientcertpassphrase)) {
+        $formdata['clientcertpassphrase'] = auth_oidc_mask_secret($oidcconfig->clientcertpassphrase);
     }
 }
 
@@ -109,9 +132,37 @@ if ($form->is_cancelled()) {
     $settingschanged = false;
     foreach ($configstosave as $config) {
         $existingsetting = get_config('auth_oidc', $config);
-        if ($fromform->$config != $existingsetting) {
-            add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
-            set_config($config, $fromform->$config, 'auth_oidc');
+        $newvalue = $fromform->$config;
+
+        // Handle secret fields specially.
+        if (in_array($config, $secretfields)) {
+            // If the value is a masked secret and hasn't changed, skip updating it.
+            if (auth_oidc_is_masked_secret($newvalue)) {
+                // Check if the masked value matches what we would have displayed.
+                if ($existingsetting && auth_oidc_mask_secret($existingsetting) === $newvalue) {
+                    // Value hasn't been changed, skip this field.
+                    continue;
+                }
+            }
+
+            // CRITICAL: Prevent saving empty secret when there's an existing one.
+            // This handles cases where the field is disabled and submits empty.
+            if (empty(trim($newvalue)) && !empty($existingsetting)) {
+                // Don't delete existing secret with empty value - skip this field.
+                continue;
+            }
+        }
+
+        if ($newvalue != $existingsetting) {
+            // Redact secret fields in the config log to prevent exposing sensitive values.
+            if (in_array($config, $secretfields)) {
+                $logoldvalue = !empty($existingsetting) ? '[REDACTED]' : '';
+                $lognewvalue = !empty($newvalue) ? '[REDACTED]' : '';
+                add_to_config_log($config, $logoldvalue, $lognewvalue, 'auth_oidc');
+            } else {
+                add_to_config_log($config, $existingsetting, $newvalue, 'auth_oidc');
+            }
+            set_config($config, $newvalue, 'auth_oidc');
             $settingschanged = true;
             if ($config != 'secretexpiryrecipients') {
                 $updateapplicationtokenrequired = true;
