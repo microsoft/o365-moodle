@@ -836,15 +836,15 @@ class repository_office365 extends repository {
         $returntypes = FILE_INTERNAL;
 
         // Check if direct link option is enabled.
-        $disabledirectlink = get_config('office365', 'disabledirectlink');
-        if (empty($disabledirectlink)) {
+        $enabledirectlink = get_config('office365', 'enabledirectlink');
+        if (!empty($enabledirectlink)) {
             $returntypes |= FILE_REFERENCE;
         }
 
         // Check if anonymous share option is enabled.
         // Use FILE_CONTROLLED_LINK which displays as "Create an access controlled link to the file".
-        $diableanonymousshare = get_config('office365', 'diableanonymousshare');
-        if (empty($diableanonymousshare)) {
+        $enableanonymousshare = get_config('office365', 'enableanonymousshare');
+        if (!empty($enableanonymousshare)) {
             $returntypes |= FILE_CONTROLLED_LINK;
         }
 
@@ -1374,22 +1374,8 @@ class repository_office365 extends repository {
                     $errstr = 'Embed was requested, but could not get file info to complete request.';
                     utils::debug($errstr, __METHOD__, ['reference' => $reference, 'fileinfo' => $fileinfo]);
                 } else {
-                    try {
-                        $embedurl = $sourceclient->get_embed_url($reference['id'], $fileurl);
-                        $embedurl = (isset($embedurl['value'])) ? $embedurl['value'] : '';
-                    } catch (moodle_exception $e) {
-                        // Note: exceptions will already be logged in get_embed_url.
-                        $embedurl = '';
-                    }
-
-                    if (!empty($embedurl)) {
-                        redirect($embedurl);
-                    } else if (!empty($fileurl)) {
-                        redirect($fileurl);
-                    } else {
-                        $errstr = 'Embed was requested, but could not complete.';
-                        utils::debug($errstr, __METHOD__, $reference);
-                    }
+                    // Redirect to the file's webUrl for display.
+                    redirect($fileurl);
                 }
             } else {
                 utils::debug('Could not construct OneDrive client for system api user.', __METHOD__);
@@ -1442,30 +1428,30 @@ class repository_office365 extends repository {
 
         $mform->addElement(
             'checkbox',
-            'disabledirectlink',
-            get_string('disabledirectlink', 'repository_office365', get_string('makefilereference', 'repository'))
+            'enabledirectlink',
+            get_string('enabledirectlink', 'repository_office365', get_string('makefilereference', 'repository'))
         );
-        $mform->setType('disabledirectlink', PARAM_INT);
-        $mform->addHelpButton('disabledirectlink', 'disabledirectlink', 'repository_office365');
+        $mform->setType('enabledirectlink', PARAM_INT);
+        $mform->addHelpButton('enabledirectlink', 'enabledirectlink', 'repository_office365');
         $mform->addElement(
             'static',
-            'disabledirectlinkwarning',
+            'enabledirectlinkwarning',
             '',
-            get_string('disabledirectlinkwarning', 'repository_office365', get_string('makefilereference', 'repository'))
+            get_string('enabledirectlinkwarning', 'repository_office365', get_string('makefilereference', 'repository'))
         );
 
         $mform->addElement(
             'checkbox',
-            'disableanonymousshare',
-            get_string('disableanonymousshare', 'repository_office365', get_string('makefilecontrolledlink', 'repository'))
+            'enableanonymousshare',
+            get_string('enableanonymousshare', 'repository_office365', get_string('makefilecontrolledlink', 'repository'))
         );
-        $mform->setType('disableanonymousshare', PARAM_INT);
-        $mform->addHelpButton('disableanonymousshare', 'disableanonymousshare', 'repository_office365');
+        $mform->setType('enableanonymousshare', PARAM_INT);
+        $mform->addHelpButton('enableanonymousshare', 'enableanonymousshare', 'repository_office365');
         $mform->addElement(
             'static',
-            'disableanonymoussharewarning',
+            'enableanonymoussharewarning',
             '',
-            get_string('disableanonymoussharewarning', 'repository_office365', get_string('makefilecontrolledlink', 'repository'))
+            get_string('enableanonymoussharewarning', 'repository_office365', get_string('makefilecontrolledlink', 'repository'))
         );
     }
 
@@ -1475,6 +1461,6 @@ class repository_office365 extends repository {
       * @return array
       */
     public static function get_type_option_names() {
-        return ['coursegroup', 'onedrivegroup', 'trendinggroup', 'disabledirectlink', 'disableanonymousshare', 'pluginname'];
+        return ['coursegroup', 'onedrivegroup', 'trendinggroup', 'enabledirectlink', 'enableanonymousshare', 'pluginname'];
     }
 }
