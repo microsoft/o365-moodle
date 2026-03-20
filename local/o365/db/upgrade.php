@@ -1342,31 +1342,53 @@ function xmldb_local_o365_upgrade($oldversion) {
     if ($oldversion < 2024042202) {
         // Changing precision of field objectid on table local_o365_groups_cache to (36).
         $table = new xmldb_table('local_o365_groups_cache');
-        $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
-
-        // Launch change of precision for field objectid.
-        $dbman->change_field_precision($table, $field);
+        $groupscachecolumns = $DB->get_columns('local_o365_groups_cache');
+        if (isset($groupscachecolumns['objectid']) && $groupscachecolumns['objectid']->max_length != 36) {
+            // Drop the objectid index first if it exists, as precision change cannot be made to indexed fields.
+            $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
+            if ($dbman->index_exists($table, $index)) {
+                $dbman->drop_index($table, $index);
+            }
+            $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
+            // Launch change of precision for field objectid.
+            $dbman->change_field_precision($table, $field);
+            // Recreate the objectid index after precision change.
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
+        }
 
         // Changing precision of field name on table local_o365_groups_cache to (256).
-        $table = new xmldb_table('local_o365_groups_cache');
-        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '256', null, null, null, null, 'objectid');
-
-        // Launch change of precision for field name.
-        $dbman->change_field_precision($table, $field);
+        if (isset($groupscachecolumns['name']) && $groupscachecolumns['name']->max_length != 256) {
+            $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '256', null, null, null, null, 'objectid');
+            // Launch change of precision for field name.
+            $dbman->change_field_precision($table, $field);
+        }
 
         // Changing precision of field objectid on table local_o365_teams_cache to (36).
         $table = new xmldb_table('local_o365_teams_cache');
-        $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
-
-        // Launch change of precision for field name.
-        $dbman->change_field_precision($table, $field);
+        $teamscachecolumns = $DB->get_columns('local_o365_teams_cache');
+        if (isset($teamscachecolumns['objectid']) && $teamscachecolumns['objectid']->max_length != 36) {
+            // Drop the objectid index first if it exists, as precision change cannot be made to indexed fields.
+            $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
+            if ($dbman->index_exists($table, $index)) {
+                $dbman->drop_index($table, $index);
+            }
+            $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
+            // Launch change of precision for field objectid.
+            $dbman->change_field_precision($table, $field);
+            // Recreate the objectid index after precision change.
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
+        }
 
         // Changing precision of field name on table local_o365_teams_cache to (264).
-        $table = new xmldb_table('local_o365_teams_cache');
-        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '264', null, null, null, null, 'objectid');
-
-        // Launch change of precision for field objectid.
-        $dbman->change_field_precision($table, $field);
+        if (isset($teamscachecolumns['name']) && $teamscachecolumns['name']->max_length != 264) {
+            $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '264', null, null, null, null, 'objectid');
+            // Launch change of precision for field name.
+            $dbman->change_field_precision($table, $field);
+        }
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2024042202, 'local', 'o365');
