@@ -1121,6 +1121,15 @@ class main {
     /**
      * Update Teams cache.
      *
+     * @deprecated Use \local_o365\utils::update_groups_cache() instead, which handles both
+     *             groups and teams in the unified cache table. This function is no longer
+     *             called by any production code and will be removed in a future version.
+     *
+     *             Known limitation: when updating an existing record whose team is already
+     *             locked, no API call is made and the URL field is not refreshed. The
+     *             replacement utils::update_groups_cache() handles URL fetching correctly
+     *             with lazy retry logic.
+     *
      * @return bool
      */
     public function update_teams_cache(): bool {
@@ -1155,10 +1164,10 @@ class main {
             return false;
         }
 
-        // Build existing teams records cache.
+        // Build existing teams records cache from unified groups cache table.
         $this->mtrace('Building existing teams cache records', 1);
         // Use recordset instead of get_records to reduce memory usage.
-        $existingcacherecordset = $DB->get_recordset('local_o365_teams_cache');
+        $existingcacherecordset = $DB->get_recordset('local_o365_groups_cache', ['has_team' => 1]);
         $existingcachebyoid = [];
         foreach ($existingcacherecordset as $existingcacherecord) {
             $existingcachebyoid[$existingcacherecord->objectid] = $existingcacherecord;
@@ -1171,10 +1180,12 @@ class main {
         foreach ($teams as $team) {
             if (array_key_exists($team['id'], $existingcachebyoid)) {
                 // Update existing cache record.
+                $lockstatuschecked = false;
                 if (!$existingcachebyoid[$team['id']]->locked) {
                     // Need to update lock status.
                     try {
                         [$rawteam, $teamurl, $lockstatus] = $this->graphclient->get_team($team['id']);
+                        $lockstatuschecked = true;
                     } catch (moodle_exception $e) {
                         continue;
                     }
@@ -1186,7 +1197,12 @@ class main {
                 $cacherecord->name = $team['displayName'];
                 $cacherecord->description = $team['description'];
                 $cacherecord->locked = $lockstatus;
-                $DB->update_record('local_o365_teams_cache', $cacherecord);
+                if ($lockstatuschecked) {
+                    $cacherecord->url = $teamurl;
+                    $cacherecord->team_details_last_attempted = time();
+                    $cacherecord->lock_status_last_checked = time();
+                }
+                $DB->update_record('local_o365_groups_cache', $cacherecord);
 
                 unset($existingcachebyoid[$team['id']]);
             } else {
@@ -1197,20 +1213,47 @@ class main {
                     continue;
                 }
 
-                // Create new cache record.
-                $cacherecord = new stdClass();
-                $cacherecord->objectid = $team['id'];
-                $cacherecord->name = $team['displayName'];
-                $cacherecord->description = $team['description'];
-                $cacherecord->url = $teamurl;
-                $cacherecord->locked = $lockstatus;
-                $DB->insert_record('local_o365_teams_cache', $cacherecord);
+                // Upsert: a group-only row (has_team=0) may already exist for this objectid.
+                // Inserting a second row would create duplicates and break get_record() calls.
+                $cacherecord = $DB->get_record('local_o365_groups_cache', ['objectid' => $team['id']]);
+                if ($cacherecord) {
+                    // Promote the existing group row to a team row.
+                    $cacherecord->name = $team['displayName'];
+                    $cacherecord->description = $team['description'];
+                    $cacherecord->has_team = 1;
+                    $cacherecord->url = $teamurl;
+                    $cacherecord->locked = $lockstatus;
+                    $cacherecord->not_found_since = 0;
+                    $cacherecord->team_details_last_attempted = time();
+                    $cacherecord->lock_status_last_checked = time();
+                    $DB->update_record('local_o365_groups_cache', $cacherecord);
+                } else {
+                    $cacherecord = new stdClass();
+                    $cacherecord->objectid = $team['id'];
+                    $cacherecord->name = $team['displayName'];
+                    $cacherecord->description = $team['description'];
+                    $cacherecord->has_team = 1;
+                    $cacherecord->url = $teamurl;
+                    $cacherecord->locked = $lockstatus;
+                    $cacherecord->not_found_since = 0;
+                    $cacherecord->team_details_last_attempted = time();
+                    $cacherecord->lock_status_last_checked = time();
+                    $DB->insert_record('local_o365_groups_cache', $cacherecord);
+                }
             }
         }
 
-        $this->mtrace('Deleting old teams cache records', 1);
+        // Demote groups that are no longer teams: set has_team=0 and clear team-only fields.
+        // Deleting the row would cause data loss if the underlying group still exists;
+        // this matches the demotion behaviour in utils::update_groups_cache().
+        $this->mtrace('Demoting old teams cache records to group-only', 1);
         foreach ($existingcachebyoid as $oldcacherecord) {
-            $DB->delete_records('local_o365_teams_cache', ['id' => $oldcacherecord->id]);
+            $oldcacherecord->has_team = 0;
+            $oldcacherecord->url = null;
+            $oldcacherecord->locked = null;
+            $oldcacherecord->team_details_last_attempted = 0;
+            $oldcacherecord->lock_status_last_checked = 0;
+            $DB->update_record('local_o365_groups_cache', $oldcacherecord);
         }
 
         $this->mtrace('Finished updating teams cache.');
@@ -1225,15 +1268,17 @@ class main {
 
     /**
      * Cleanup Teams connections records.
-     * This function will delete all Teams connection records with object IDs not found in the Teams cache.
-     * This function should only be called after Teams cache is updated - no cache update will be performed here.
+     * This function will delete all Teams connection records with object IDs not found in the cache.
+     * Teams are identified in the cache by has_team=1.
+     * This function should only be called after the cache is updated - no cache update will be performed here.
      *
      * @return void
      */
     public function cleanup_teams_connections() {
         global $DB;
 
-        $teamobjectids = $DB->get_fieldset_select('local_o365_teams_cache', 'objectid', '');
+        // Get all team object IDs from the unified cache (has_team=1).
+        $teamobjectids = $DB->get_fieldset_select('local_o365_groups_cache', 'objectid', 'has_team = 1');
 
         $this->mtrace('Clean up teams connection records...');
         if ($teamobjectids) {
@@ -1682,12 +1727,12 @@ class main {
     public function is_team_locked(string $groupobjectid) {
         global $DB;
 
-        if ($teamcacherecord = $DB->get_record('local_o365_teams_cache', ['objectid' => $groupobjectid])) {
+        if ($teamcacherecord = $DB->get_record('local_o365_groups_cache', ['objectid' => $groupobjectid, 'has_team' => 1])) {
             switch ($teamcacherecord->locked) {
                 case TEAM_LOCKED_STATUS_UNKNOWN:
                     try {
                         [$team, $teamurl, $lockstatus] = $this->graphclient->get_team($groupobjectid);
-                        $DB->set_field('local_o365_teams_cache', 'locked', $lockstatus, ['objectid' => $groupobjectid]);
+                        $DB->set_field('local_o365_groups_cache', 'locked', $lockstatus, ['objectid' => $groupobjectid]);
                     } catch (moodle_exception $e) {
                         $lockstatus = TEAM_UNLOCKED;
                     }
@@ -1696,7 +1741,7 @@ class main {
                     try {
                         [$team, $teamurl, $lockstatus] = $this->graphclient->get_team($groupobjectid);
                         if ($lockstatus == TEAM_UNLOCKED) {
-                            $DB->set_field('local_o365_teams_cache', 'locked', $lockstatus, ['objectid' => $groupobjectid]);
+                            $DB->set_field('local_o365_groups_cache', 'locked', $lockstatus, ['objectid' => $groupobjectid]);
                         }
                     } catch (moodle_exception $e) {
                         $lockstatus = TEAM_UNLOCKED;

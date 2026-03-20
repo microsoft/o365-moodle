@@ -622,7 +622,13 @@ class utils {
     }
 
     /**
-     * Update Groups cache.
+     * Update Groups and Teams cache.
+     * This function now handles both Microsoft 365 Groups and Teams in a single unified cache table.
+     * Teams are identified by has_team=1 and include additional fields (url, locked).
+     *
+     * Rate limiting: This function will skip the update if called within 5 minutes of the last update,
+     * unless $forceupdate is set to true.
+     *
      * This function is called at two places:
      *  - At the end of the course sync task. After the call,
      *    - all cached groups that are not found are marked as not found.
@@ -630,24 +636,57 @@ class utils {
      *  - At the start of the cohort sync task. After the call,
      *    - local_o365_objects group records, cohort cache and group cache records are cleaned up.
      *
-     * @param unified $graphclient
-     * @param int $baselevel
-     * @return bool
+     * @param unified $graphclient The Microsoft Graph client
+     * @param int $baselevel The trace level for logging
+     * @param bool $forceupdate Force update even if within 5 minutes of last update
+     * @return bool|null True if the cache was actually updated, null if the update was skipped due to the
+     *                   rate limit (callers must NOT run cache-dependent cleanup in this case), false on error.
      */
-    public static function update_groups_cache(unified $graphclient, int $baselevel = 0): bool {
+    public static function update_groups_cache(unified $graphclient, int $baselevel = 0, bool $forceupdate = false): ?bool {
         global $DB;
 
-        static::mtrace("Update groups cache.", $baselevel);
+        // Check if update is needed (rate limiting).
+        $lastupdatetime = get_config('local_o365', 'groups_cache_last_update');
+        $updateinterval = 300; // 5 minutes.
 
+        if (!$forceupdate && $lastupdatetime && (time() - $lastupdatetime) < $updateinterval) {
+            $nextupdatetime = $lastupdatetime + $updateinterval;
+            $waittime = $nextupdatetime - time();
+            static::mtrace("Groups cache was updated recently. Skipping update. Next update in {$waittime} seconds.", $baselevel);
+            return null;
+        }
+
+        static::mtrace("Update groups and teams cache.", $baselevel);
+
+        // Step 1: Fetch all groups.
         try {
             $grouplist = $graphclient->get_groups();
         } catch (moodle_exception $e) {
             static::mtrace("Failed to fetch groups. Error: " . $e->getMessage(), $baselevel + 1);
-
             return false;
         }
 
-        // Use recordset instead of get_records to reduce memory usage.
+        static::mtrace("Fetched " . count($grouplist) . " groups from Microsoft Graph API.", $baselevel + 1);
+
+        // Step 2: Fetch all teams.
+        try {
+            $teamlist = $graphclient->get_teams();
+        } catch (moodle_exception $e) {
+            static::mtrace("Failed to fetch teams. Error: " . $e->getMessage(), $baselevel + 1);
+            // CRITICAL: Don't continue with empty array - this would mark all existing teams as has_team=0.
+            // Return false to indicate failure and preserve existing team flags.
+            return false;
+        }
+
+        static::mtrace("Fetched " . count($teamlist) . " teams from Microsoft Graph API.", $baselevel + 1);
+
+        // Create a map of team IDs for quick lookup.
+        $teamidsmap = [];
+        foreach ($teamlist as $team) {
+            $teamidsmap[$team['id']] = $team;
+        }
+
+        // Step 3: Load existing cache records.
         $existingcacherecordset = $DB->get_recordset('local_o365_groups_cache');
         $existinggroupsbyoid = [];
         $existingnotfoundgroupsbyoid = [];
@@ -658,53 +697,230 @@ class utils {
                 $existinggroupsbyoid[$existingcacherecord->objectid] = $existingcacherecord;
             }
         }
-
         $existingcacherecordset->close();
 
+        // Step 4: Update/insert groups and mark teams.
+        static::mtrace("Processing groups and teams...", $baselevel + 1);
+        $updatedcount = 0;
+        $insertedcount = 0;
+
         foreach ($grouplist as $group) {
-            if (array_key_exists($group['id'], $existingnotfoundgroupsbyoid)) {
-                $cacherecord = $existingnotfoundgroupsbyoid[$group['id']];
+            $groupid = $group['id'];
+            $isteam = array_key_exists($groupid, $teamidsmap);
+
+            // Check if this group was previously marked as not found.
+            if (array_key_exists($groupid, $existingnotfoundgroupsbyoid)) {
+                $cacherecord = $existingnotfoundgroupsbyoid[$groupid];
                 $cacherecord->name = $group['displayName'];
                 $cacherecord->description = $group['description'];
                 $cacherecord->not_found_since = 0;
-                $DB->update_record('local_o365_groups_cache', $cacherecord);
-                unset($existingnotfoundgroupsbyoid[$group['id']]);
-                static::mtrace("Unset not found flag for group {$group['id']}.", $baselevel + 1);
-            } else if (array_key_exists($group['id'], $existinggroupsbyoid)) {
-                $cacherecord = $existinggroupsbyoid[$group['id']];
-                if ($cacherecord->name != $group['displayName'] || $cacherecord->description != $group['description']) {
-                    $cacherecord->name = $group['displayName'];
-                    $cacherecord->description = $group['description'];
-                    $DB->update_record('local_o365_groups_cache', $cacherecord);
-                    static::mtrace("Updated group ID {$group['id']} in cache.", $baselevel + 1);
+                $cacherecord->has_team = $isteam ? 1 : 0;
+
+                if (!$isteam) {
+                    // Clear stale team-only fields when the group is restored as a regular group.
+                    $cacherecord->url = null;
+                    $cacherecord->locked = null;
+                    $cacherecord->team_details_last_attempted = 0;
+                    $cacherecord->lock_status_last_checked = 0;
                 }
 
-                // Removed the "up to date" message to reduce unnecessary output.
-                unset($existinggroupsbyoid[$group['id']]);
+                $DB->update_record('local_o365_groups_cache', $cacherecord);
+                unset($existingnotfoundgroupsbyoid[$groupid]);
+                static::mtrace("Restored group {$groupid} from not-found status.", $baselevel + 2);
+                $updatedcount++;
+            } else if (array_key_exists($groupid, $existinggroupsbyoid)) {
+                // Update existing cache record.
+                $cacherecord = $existinggroupsbyoid[$groupid];
+                $needsupdate = false;
+
+                if ($cacherecord->name != $group['displayName']) {
+                    $cacherecord->name = $group['displayName'];
+                    $needsupdate = true;
+                }
+
+                if ($cacherecord->description != $group['description']) {
+                    $cacherecord->description = $group['description'];
+                    $needsupdate = true;
+                }
+
+                if (($cacherecord->has_team ? 1 : 0) != ($isteam ? 1 : 0)) {
+                    $cacherecord->has_team = $isteam ? 1 : 0;
+                    if (!$isteam) {
+                        // Clear team-only fields when a group is no longer a team.
+                        $cacherecord->url = null;
+                        $cacherecord->locked = null;
+                        $cacherecord->team_details_last_attempted = 0;
+                        $cacherecord->lock_status_last_checked = 0;
+                    }
+                    $needsupdate = true;
+                }
+
+                if ($needsupdate) {
+                    $DB->update_record('local_o365_groups_cache', $cacherecord);
+                    $updatedcount++;
+                }
+
+                unset($existinggroupsbyoid[$groupid]);
             } else {
+                // Insert new cache record.
                 $cacherecord = new stdClass();
-                $cacherecord->objectid = $group['id'];
+                $cacherecord->objectid = $groupid;
                 $cacherecord->name = $group['displayName'];
                 $cacherecord->description = $group['description'];
+                $cacherecord->has_team = $isteam ? 1 : 0;
+                $cacherecord->not_found_since = 0;
+                $cacherecord->url = null;
+                $cacherecord->locked = null;
+                $cacherecord->team_details_last_attempted = 0;
+                $cacherecord->lock_status_last_checked = 0;
+
                 $DB->insert_record('local_o365_groups_cache', $cacherecord);
-                static::mtrace("Added group ID {$group['id']} to cache.", $baselevel + 1);
+                static::mtrace("Added group {$groupid} to cache.", $baselevel + 2);
+                $insertedcount++;
             }
         }
 
-        foreach ($existinggroupsbyoid as $oldcacherecord) {
-            $oldcacherecord->not_found_since = time();
-            $DB->update_record('local_o365_groups_cache', $oldcacherecord);
-            static::mtrace("Marked group {$oldcacherecord->objectid} as not found in the cache.", $baselevel + 1);
+        static::mtrace("Updated {$updatedcount} records, inserted {$insertedcount} new records.", $baselevel + 1);
+
+        // Step 5: Mark groups that were not found as deleted.
+        // Chunk to stay within PostgreSQL's 65535 bind-parameter limit.
+        $notfoundcount = count($existinggroupsbyoid);
+        if ($notfoundcount > 0) {
+            $notfoundoids = array_keys($existinggroupsbyoid);
+            $now = time();
+            foreach (array_chunk($notfoundoids, 5000) as $chunk) {
+                [$insql, $inparams] = $DB->get_in_or_equal($chunk);
+                $DB->set_field_select('local_o365_groups_cache', 'not_found_since', $now, "objectid $insql", $inparams);
+            }
+            static::mtrace("Marked {$notfoundcount} groups as not found.", $baselevel + 1);
         }
 
-        static::mtrace("Finished updating groups cache.", $baselevel);
+        // Step 6: Fetch team-specific details for teams.
+        // URL is fetched once (with 24h backoff on failure).
+        // Lock status is refreshed periodically (every 7 days) to detect changes.
+        static::mtrace("Fetching team-specific details for teams...", $baselevel + 1);
+        $urlsfetched = 0;
+        $lockstatusesfetched = 0;
+        $teamsskipped = 0;
+        $urlfailretryinterval = 86400; // 24 hours for failed URL fetches.
+        $lockstatusrefreshinterval = 604800; // 7 days for lock status refresh.
+
+        // Preload all relevant cache rows to avoid N+1 DB overhead.
+        // Chunk to stay within PostgreSQL's 65535 bind-parameter limit.
+        $cacherecordsbyoid = [];
+        $teamids = array_keys($teamidsmap);
+        foreach (array_chunk($teamids, 5000) as $chunk) {
+            [$insql, $inparams] = $DB->get_in_or_equal($chunk);
+            $preloadedrecords = $DB->get_records_select('local_o365_groups_cache', "objectid $insql", $inparams);
+            foreach ($preloadedrecords as $preloadedrecord) {
+                $cacherecordsbyoid[$preloadedrecord->objectid] = $preloadedrecord;
+            }
+        }
+
+        foreach ($teamidsmap as $teamid => $team) {
+            $cacherecord = $cacherecordsbyoid[$teamid] ?? null;
+
+            if ($cacherecord) {
+                $currenttime = time();
+                $needsurlfetch = false;
+                $needslockstatusrefresh = false;
+
+                // Check if URL needs to be fetched.
+                if (!$cacherecord->url) {
+                    // URL is missing - check if we should retry.
+                    if ($cacherecord->team_details_last_attempted == 0) {
+                        // Never attempted - fetch now.
+                        $needsurlfetch = true;
+                    } else if (($currenttime - $cacherecord->team_details_last_attempted) >= $urlfailretryinterval) {
+                        // Last attempt was more than 24 hours ago - retry.
+                        $needsurlfetch = true;
+                        static::mtrace("Retrying URL fetch for {$teamid} (last attempt: " .
+                            userdate($cacherecord->team_details_last_attempted) . ")", $baselevel + 2);
+                    } else {
+                        // Last attempt was within 24 hours - skip for now.
+                        $teamsskipped++;
+                        continue;
+                    }
+                }
+
+                // Check if lock status needs to be refreshed.
+                if (is_null($cacherecord->locked)) {
+                    // Lock status is missing - need to fetch.
+                    $needslockstatusrefresh = true;
+                } else if (
+                    $cacherecord->lock_status_last_checked == 0 ||
+                    ($currenttime - $cacherecord->lock_status_last_checked) >= $lockstatusrefreshinterval
+                ) {
+                    // Lock status has never been checked (0) or is stale (>7 days) - refresh it.
+                    $needslockstatusrefresh = true;
+                    $lastcheckedlabel = $cacherecord->lock_status_last_checked
+                        ? userdate($cacherecord->lock_status_last_checked)
+                        : 'never';
+                    static::mtrace(
+                        "Refreshing lock status for {$teamid} (last checked: {$lastcheckedlabel})",
+                        $baselevel + 2
+                    );
+                }
+
+                // Fetch team details if needed.
+                if ($needsurlfetch || $needslockstatusrefresh) {
+                    try {
+                        [$rawteam, $teamurl, $lockstatus] = $graphclient->get_team($teamid);
+
+                        // Update URL if we were fetching it.
+                        if ($needsurlfetch) {
+                            $cacherecord->url = $teamurl;
+                            $cacherecord->team_details_last_attempted = $currenttime;
+                            $urlsfetched++;
+                            static::mtrace("Fetched URL for {$teamid}.", $baselevel + 2);
+                        }
+
+                        // Update lock status if we were refreshing it.
+                        if ($needslockstatusrefresh) {
+                            $cacherecord->locked = $lockstatus;
+                            $cacherecord->lock_status_last_checked = $currenttime;
+                            $lockstatusesfetched++;
+                            $lockstatuslabel = match ($lockstatus) {
+                                TEAM_LOCKED => 'LOCKED',
+                                TEAM_UNLOCKED => 'UNLOCKED',
+                                default => 'UNKNOWN',
+                            };
+                            static::mtrace("Fetched lock status for {$teamid}: {$lockstatuslabel}", $baselevel + 2);
+                        }
+
+                        $DB->update_record('local_o365_groups_cache', $cacherecord);
+                    } catch (moodle_exception $e) {
+                        static::mtrace("Failed to fetch team details for {$teamid}. Error: " . $e->getMessage(), $baselevel + 2);
+
+                        // Update timestamp to prevent immediate retry only for URL fetches.
+                        if ($needsurlfetch) {
+                            $cacherecord->team_details_last_attempted = $currenttime;
+                            $DB->update_record('local_o365_groups_cache', $cacherecord);
+                        }
+                        // For lock status refresh failures, we don't update the timestamp,
+                        // so it will be retried on the next cache update.
+                    }
+                }
+            }
+        }
+
+        static::mtrace("Fetched {$urlsfetched} team URLs, refreshed {$lockstatusesfetched} lock statuses, " .
+            "skipped {$teamsskipped} teams (URL retry in < 24h).", $baselevel + 1);
+
+        // Step 7: Update the last update timestamp.
+        set_config('groups_cache_last_update', time(), 'local_o365');
+
+        static::mtrace("Finished updating groups and teams cache.", $baselevel);
         static::mtrace("", $baselevel);
 
         return true;
     }
 
     /**
-     * Clean up non-existing groups from the database.
+     * Clean up non-existing groups and teams from the database.
+     * Uses different grace periods for groups vs teams:
+     * - Groups (has_team=0): 5 minutes grace period
+     * - Teams (has_team=1): 30 minutes grace period (longer because they might have active course connections)
      *
      * @param int $baselevel
      * @return void
@@ -712,29 +928,49 @@ class utils {
     public static function clean_up_not_found_groups(int $baselevel = 1): void {
         global $DB;
 
-        static::mtrace('Clean up non-existing groups from database', $baselevel);
+        static::mtrace('Clean up non-existing groups and teams from database', $baselevel);
 
-        $cutofftime = strtotime('-5 minutes');
+        $currenttime = time();
+        $groupsgraceperiod = 300; // 5 minutes for regular groups.
+        $teamsgraceperiod = 1800; // 30 minutes for teams (might be temporary API issue or active sync).
+
+        // Delete regular groups (has_team=0) that have been not found for > 5 minutes.
+        $groupscutofftime = $currenttime - $groupsgraceperiod;
         $sql = "SELECT objectid
                   FROM {local_o365_groups_cache}
                  WHERE not_found_since != 0
-                   AND not_found_since < :cutofftime";
-        $records = $DB->get_records_sql($sql, ['cutofftime' => $cutofftime]);
+                   AND not_found_since < :cutofftime
+                   AND has_team = 0";
+        $grouprecords = $DB->get_records_sql($sql, ['cutofftime' => $groupscutofftime]);
 
-        if (!empty($records)) {
-            $objectids = array_keys($records);
+        // Delete teams (has_team=1) that have been not found for > 30 minutes.
+        $teamscutofftime = $currenttime - $teamsgraceperiod;
+        $sql = "SELECT objectid
+                  FROM {local_o365_groups_cache}
+                 WHERE not_found_since != 0
+                   AND not_found_since < :cutofftime
+                   AND has_team = 1";
+        $teamrecords = $DB->get_records_sql($sql, ['cutofftime' => $teamscutofftime]);
+
+        // Combine and delete.
+        $allrecords = array_merge($grouprecords, $teamrecords);
+        if (!empty($allrecords)) {
+            $objectids = array_keys($allrecords);
 
             // Use bulk delete with IN clause for better performance.
             [$insql, $inparams] = $DB->get_in_or_equal($objectids, SQL_PARAMS_NAMED);
             $DB->delete_records_select('local_o365_groups_cache', "objectid $insql", $inparams);
             $DB->delete_records_select('local_o365_objects', "objectid $insql", $inparams);
-            $DB->delete_records_select('local_o365_teams_cache', "objectid $insql", $inparams);
 
-            $count = count($objectids);
-            static::mtrace("Deleted $count non-existing groups from database.", $baselevel + 1);
+            $groupcount = count($grouprecords);
+            $teamcount = count($teamrecords);
+            static::mtrace(
+                "Deleted {$groupcount} non-existing groups and {$teamcount} non-existing teams from database.",
+                $baselevel + 1
+            );
         }
 
-        static::mtrace('Finished cleaning up non-existing groups from database.', $baselevel);
+        static::mtrace('Finished cleaning up non-existing groups and teams from database.', $baselevel);
         static::mtrace('', $baselevel);
     }
 
