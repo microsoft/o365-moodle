@@ -24,7 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/quiz/renderer.php');
+if (file_exists($CFG->dirroot . '/mod/quiz/renderer.php')) {
+    require_once($CFG->dirroot . '/mod/quiz/renderer.php');
+} else {
+    // New quiz renderer location since 5.1.
+    require_once($CFG->dirroot . '/mod/quiz/classes/output/renderer.php');
+}
 
 /**
  * mod_quiz
