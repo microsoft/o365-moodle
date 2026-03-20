@@ -275,7 +275,7 @@ abstract class base {
 
         // See if the file contains any references to images or other files and if so, create a folder and download those, too.
         $doc = new DOMDocument('1.0', 'UTF-8');
-        $doc->loadHTML(mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8'));
+        $doc->loadHTML('<?xml encoding="UTF-8">' . $response, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $xpath = new DOMXPath($doc);
 
         $this->handle_garbage_chars($xpath);
@@ -330,13 +330,13 @@ abstract class base {
             // Save the html page itself.
             file_put_contents(
                 join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html']),
-                mb_convert_encoding($doc->saveHTML($doc), 'HTML-ENTITIES', 'UTF-8')
+                $doc->saveHTML($doc)
             );
         } else {
             // Save the html page itself.
             file_put_contents(
                 join(DIRECTORY_SEPARATOR, [rtrim($tempfolder, DIRECTORY_SEPARATOR), 'page.html']),
-                mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8')
+                $response
             );
         }
 
@@ -498,17 +498,24 @@ abstract class base {
         } else {
             // Moodle notebook found, sync sections with courses.
             $notebookid = array_search($notebookname, $notebooksarray);
-            $response = $this->apicall('get', '/notebooks/' . $notebookid . '/sections/');
-            $existingsections = $this->process_apicall_response($response, ['value' => null]);
-            $sections = [];
-            foreach ($existingsections['value'] as $section) {
-                $sections[$section['id']] = $section['displayName'];
-            }
+            try {
+                $response = $this->apicall('get', '/notebooks/' . $notebookid . '/sections/');
+                $existingsections = $this->process_apicall_response($response, ['value' => null]);
+                $sections = [];
+                foreach ($existingsections['value'] as $section) {
+                    $sections[$section['id']] = $section['displayName'];
+                }
 
-            if (!empty($courses)) {
-                $this->sync_sections($courses, $notebookid, $sections);
+                if (!empty($courses)) {
+                    $this->sync_sections($courses, $notebookid, $sections);
+                }
+            } catch (moodle_exception $e) {
+                \local_onenote\utils::debug('Could not sync notebook sections', __METHOD__, $e);
+                return false;
             }
         }
+
+        return true;
     }
 
     /**
@@ -532,10 +539,20 @@ abstract class base {
 
             if (!in_array($coursename, $sections)) {
                 // Create section.
-                $sectiondata = json_encode(['displayName' => $coursename]);
-                $response = $this->apicall('post', $sectionendpoint, $sectiondata);
-                $response = $this->process_apicall_response($response, ['id' => null]);
-                $this->upsert_user_section($course->id, $response['id']);
+                try {
+                    $sectiondata = json_encode(['displayName' => $coursename]);
+                    $response = $this->apicall('post', $sectionendpoint, $sectiondata);
+                    $response = $this->process_apicall_response($response, ['id' => null]);
+                    $this->upsert_user_section($course->id, $response['id']);
+                } catch (moodle_exception $e) {
+                    \local_onenote\utils::debug('Could not create section for course', __METHOD__, [
+                        'course_id' => $course->id,
+                        'course_name' => $coursename,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Continue to next course instead of failing completely.
+                    continue;
+                }
             } else {
                 $sectionid = array_search($coursename, $sections);
                 $this->upsert_user_section($course->id, $sectionid);
@@ -823,6 +840,12 @@ abstract class base {
         // Get the section id for the course so we can create the page in the approp section.
         $section = $this->get_section($cm->course, $userid);
         if (empty($section)) {
+            $debugdata = [
+                'course_id' => $cm->course,
+                'user_id' => $userid,
+                'cmid' => $cmid,
+            ];
+            \local_onenote\utils::debug('Could not get or create section after sync attempt', __METHOD__, $debugdata);
             throw new moodle_exception('errornosection', 'local_onenote');
         }
 
@@ -895,7 +918,8 @@ abstract class base {
                 }
             } catch (moodle_exception $e) {
                 // Process apicall response will log any errors.
-                return null;
+                // Don't return null here - continue to sync to try to recreate the section.
+                \local_onenote\utils::debug('Section verification failed, will attempt to sync', __METHOD__, $e);
             }
         }
 
@@ -959,7 +983,7 @@ abstract class base {
         if (!empty($bodycontent)) {
             $dom = new DOMDocument();
             libxml_use_internal_errors(true);
-            $dom->loadHTML(mb_convert_encoding($bodycontent, 'HTML-ENTITIES', 'UTF-8'));
+            $dom->loadHTML('<?xml encoding="UTF-8">' . $bodycontent, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
             libxml_clear_errors();
 
             $xpath = new DOMXPath($dom);
@@ -1041,7 +1065,12 @@ abstract class base {
         $dom = new DOMDocument();
 
         $pagefile = join(DIRECTORY_SEPARATOR, [rtrim($folder, DIRECTORY_SEPARATOR), 'page.html']);
-        if (!$dom->loadHTML(mb_convert_encoding(file_get_contents($pagefile), 'HTML-ENTITIES', 'UTF-8'))) {
+        if (
+            !$dom->loadHTML(
+                '<?xml encoding="UTF-8">' . file_get_contents($pagefile),
+                LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+            )
+        ) {
             \local_onenote\utils::debug('Could not parse page HTML', __METHOD__, $pagefile);
             return null;
         }
@@ -1067,7 +1096,7 @@ abstract class base {
                 $srcpath = join(DIRECTORY_SEPARATOR, [rtrim($folder, DIRECTORY_SEPARATOR), substr($srcrelpath, 2)]);
                 $contents = file_get_contents($srcpath);
 
-                if (!$contents || (count($contents) == 0)) {
+                if (!$contents || (strlen($contents) == 0)) {
                     continue;
                 }
 
