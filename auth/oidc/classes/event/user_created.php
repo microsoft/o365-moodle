@@ -44,7 +44,7 @@ class user_created extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "A user (user id '{$this->userid}') was creatd using the OpenID Connect authentication plugin.";
+        return "A user (user id '{$this->userid}') was created using the OpenID Connect authentication plugin.";
     }
 
     /**

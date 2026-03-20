@@ -27,6 +27,7 @@
 namespace auth_oidc\loginflow;
 
 use auth_oidc\event\user_authed;
+use auth_oidc\event\user_created;
 use auth_oidc\event\user_rename_attempt;
 use auth_oidc\jwt;
 use auth_oidc\utils;
@@ -801,6 +802,15 @@ class authcode extends base {
                         }
                     }
                     $user = create_user_record($username, '', 'oidc');
+
+                    // Trigger user_created event.
+                    $eventdata = [
+                        'objectid' => $user->id,
+                        'userid' => $user->id,
+                        'relateduserid' => $user->id,
+                    ];
+                    $event = user_created::create($eventdata);
+                    $event->trigger();
                 } else {
                     // Trigger login failed event.
                     $failurereason = AUTH_LOGIN_NOUSER;
