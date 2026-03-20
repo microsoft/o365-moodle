@@ -34,12 +34,14 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * @return string
      */
     public function standard_head_html() {
+        global $CFG;
+
         $output = parent::standard_head_html();
 
         $output .= "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src *; style-src 'self'
-                   'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://statics.teams.microsoft.com;
+                   'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval';
                     font-src data: *\">\n";
-        $output .= "<script src=\"https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js\"></script>\n";
+        $output .= "<script src=\"" . $CFG->wwwroot . "/local/o365/js/MicrosoftTeams.min.js\"></script>\n";
 
         return $output;
     }
@@ -74,7 +76,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
     public function footer() {
         $footer = parent::footer();
 
-        $js = 'microsoftTeams.initialize();';
+        $js = 'microsoftTeams.app.initialize();';
         $footer .= html_writer::script($js);
 
         return $footer;
