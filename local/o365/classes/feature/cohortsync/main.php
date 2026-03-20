@@ -434,7 +434,7 @@ class main {
      * @param string $caller The calling function, used for logging.
      * @return unified|bool A Microsoft Graph API instance.
      */
-    public static function get_unified_api(string $caller = 'local_o365/feature/courserequest/get_unified_api') {
+    public static function get_unified_api(string $caller = 'local_o365/feature/cohortsync/get_unified_api') {
         $clientdata = clientdata::instance_from_oidc();
         $httpclient = new httpclient();
         $tokenresource = unified::get_tokenresource();
