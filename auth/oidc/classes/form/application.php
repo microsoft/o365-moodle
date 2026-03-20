@@ -79,10 +79,39 @@ class application extends moodleform {
         $mform->setDefault('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET);
         $mform->addElement('static', 'clientauthmethod_help', '', get_string('clientauthmethod_help', 'auth_oidc'));
 
-        // Secret.
-        $mform->addElement('text', 'clientsecret', auth_oidc_config_name_in_form('clientsecret'), ['size' => 60]);
+        // Secret - Check if there's an existing secret to determine if we should add a "change" checkbox.
+        $hasexistingsecret = isset($this->_customdata['oidcconfig']->clientsecret) &&
+            !empty($this->_customdata['oidcconfig']->clientsecret);
+
+        if ($hasexistingsecret) {
+            $mform->addElement(
+                'advcheckbox',
+                'changesecret',
+                get_string('change_client_secret', 'auth_oidc'),
+                get_string('change_client_secret_desc', 'auth_oidc')
+            );
+            $mform->setType('changesecret', PARAM_BOOL);
+            $mform->disabledIf('changesecret', 'clientauthmethod', 'eq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+
+            // Store the original masked value in a hidden field AND as a data attribute for JavaScript to use.
+            $maskedsecret = auth_oidc_mask_secret($this->_customdata['oidcconfig']->clientsecret);
+            $mform->addElement('hidden', 'originalsecretmasked', $maskedsecret);
+            $mform->setType('originalsecretmasked', PARAM_TEXT);
+        }
+
+        $attributes = ['size' => 60, 'autocomplete' => 'off', 'class' => 'secret-field'];
+        if ($hasexistingsecret) {
+            $maskedsecret = auth_oidc_mask_secret($this->_customdata['oidcconfig']->clientsecret);
+            $attributes['data-original-masked'] = $maskedsecret;
+        }
+        $mform->addElement('text', 'clientsecret', auth_oidc_config_name_in_form('clientsecret'), $attributes);
         $mform->setType('clientsecret', PARAM_TEXT);
         $mform->disabledIf('clientsecret', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_SECRET);
+
+        if ($hasexistingsecret) {
+            $mform->disabledIf('clientsecret', 'changesecret', 'notchecked');
+        }
+
         $mform->addElement('static', 'clientsecret_help', '', get_string('clientsecret_help', 'auth_oidc'));
 
         // Certificate source.
@@ -132,10 +161,38 @@ class application extends moodleform {
         $mform->disabledIf('clientcertfile', 'clientcertsource', 'neq', AUTH_OIDC_AUTH_CERT_SOURCE_FILE);
         $mform->addElement('static', 'clientcertfile_help', '', get_string('clientcertfile_help', 'auth_oidc'));
 
-        // Certificate file passphrase.
-        $mform->addElement('text', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), ['size' => 60]);
+        // Certificate file passphrase - Check if there's an existing passphrase.
+        $hasexistingpassphrase = isset($this->_customdata['oidcconfig']->clientcertpassphrase) &&
+            !empty($this->_customdata['oidcconfig']->clientcertpassphrase);
+
+        if ($hasexistingpassphrase) {
+            $mform->addElement(
+                'advcheckbox',
+                'changecertpassphrase',
+                get_string('change_cert_passphrase', 'auth_oidc'),
+                get_string('change_cert_passphrase_desc', 'auth_oidc')
+            );
+            $mform->setType('changecertpassphrase', PARAM_BOOL);
+
+            // Store the original masked value in a hidden field AND as a data attribute for JavaScript to use.
+            $maskedpassphrase = auth_oidc_mask_secret($this->_customdata['oidcconfig']->clientcertpassphrase);
+            $mform->addElement('hidden', 'originalpassphrasemasked', $maskedpassphrase);
+            $mform->setType('originalpassphrasemasked', PARAM_TEXT);
+        }
+
+        $attributes = ['size' => 60, 'autocomplete' => 'off', 'class' => 'secret-field'];
+        if ($hasexistingpassphrase) {
+            $maskedpassphrase = auth_oidc_mask_secret($this->_customdata['oidcconfig']->clientcertpassphrase);
+            $attributes['data-original-masked'] = $maskedpassphrase;
+        }
+        $mform->addElement('text', 'clientcertpassphrase', auth_oidc_config_name_in_form('clientcertpassphrase'), $attributes);
         $mform->setType('clientcertpassphrase', PARAM_TEXT);
         $mform->disabledIf('clientcertpassphrase', 'clientauthmethod', 'neq', AUTH_OIDC_AUTH_METHOD_CERTIFICATE);
+
+        if ($hasexistingpassphrase) {
+            $mform->disabledIf('clientcertpassphrase', 'changecertpassphrase', 'notchecked');
+        }
+
         $mform->addElement('static', 'clientcertpassphrase_help', '', get_string('clientcertpassphrase_help', 'auth_oidc'));
 
         // Endpoints header.
@@ -235,7 +292,21 @@ class application extends moodleform {
         // Validate authentication variables.
         switch ($data['clientauthmethod']) {
             case AUTH_OIDC_AUTH_METHOD_SECRET:
-                if (empty(trim($data['clientsecret']))) {
+                // Check if user is attempting to change the secret.
+                $changesecret = isset($data['changesecret']) ? $data['changesecret'] : true;
+                $existingsecret = get_config('auth_oidc', 'clientsecret');
+
+                if ($changesecret) {
+                    // User wants to change the secret, validate the new value.
+                    if (empty(trim($data['clientsecret']))) {
+                        $errors['clientsecret'] = get_string('error_empty_client_secret', 'auth_oidc');
+                    } else if (auth_oidc_is_masked_secret($data['clientsecret'])) {
+                        // User checked "change secret" but didn't enter a new value.
+                        $errors['clientsecret'] = get_string('error_masked_secret_not_changed', 'auth_oidc');
+                    }
+                } else if (empty($existingsecret) && empty(trim($data['clientsecret']))) {
+                    // No existing secret and field is empty - this is invalid.
+                    // This handles edge cases where checkbox logic fails.
                     $errors['clientsecret'] = get_string('error_empty_client_secret', 'auth_oidc');
                 }
                 break;
@@ -257,6 +328,16 @@ class application extends moodleform {
                             $errors['clientcertfile'] = get_string('error_empty_client_cert_file', 'auth_oidc');
                         }
                         break;
+                }
+
+                // Validate certificate passphrase if user is attempting to change it.
+                $changecertpassphrase = isset($data['changecertpassphrase']) ? $data['changecertpassphrase'] : true;
+
+                if ($changecertpassphrase && !empty($data['clientcertpassphrase'])) {
+                    if (auth_oidc_is_masked_secret($data['clientcertpassphrase'])) {
+                        // User checked "change passphrase" but didn't enter a new value.
+                        $errors['clientcertpassphrase'] = get_string('error_masked_secret_not_changed', 'auth_oidc');
+                    }
                 }
                 break;
         }
@@ -317,5 +398,57 @@ class application extends moodleform {
         }
 
         return $errors;
+    }
+
+    /**
+     * Process data after form definition and data loading.
+     * This is called after set_data() and after validation errors, allowing us to override submitted values.
+     *
+     * @return void
+     */
+    public function definition_after_data() {
+        parent::definition_after_data();
+
+        $mform =& $this->_form;
+
+        // Get the current checkbox states using getSubmitValue (works for submitted data).
+        $changesecret = $mform->getSubmitValue('changesecret');
+        $changecertpassphrase = $mform->getSubmitValue('changecertpassphrase');
+
+        // If the "change secret" checkbox is NOT checked and there's an existing secret,
+        // ensure the field shows the masked value (especially important after validation errors).
+        if (isset($this->_customdata['oidcconfig']->clientsecret) && !empty($this->_customdata['oidcconfig']->clientsecret)) {
+            $currentvalue = $mform->getSubmitValue('clientsecret');
+
+            // If checkbox is not checked and field is empty or doesn't match masked value, restore it.
+            if (empty($changesecret) && (empty($currentvalue) || !auth_oidc_is_masked_secret($currentvalue))) {
+                $maskedsecret = auth_oidc_mask_secret($this->_customdata['oidcconfig']->clientsecret);
+                // Force the element to use the masked value.
+                $element = $mform->getElement('clientsecret');
+                $element->setValue($maskedsecret);
+
+                // Also update the data attribute for JavaScript reliability.
+                $element->updateAttributes(['data-original-masked' => $maskedsecret]);
+            }
+        }
+
+        // Same logic for certificate passphrase.
+        if (
+            isset($this->_customdata['oidcconfig']->clientcertpassphrase) &&
+            !empty($this->_customdata['oidcconfig']->clientcertpassphrase)
+        ) {
+            $currentvalue = $mform->getSubmitValue('clientcertpassphrase');
+
+            // If checkbox is not checked and field is empty or doesn't match masked value, restore it.
+            if (empty($changecertpassphrase) && (empty($currentvalue) || !auth_oidc_is_masked_secret($currentvalue))) {
+                $maskedpassphrase = auth_oidc_mask_secret($this->_customdata['oidcconfig']->clientcertpassphrase);
+                // Force the element to use the masked value.
+                $element = $mform->getElement('clientcertpassphrase');
+                $element->setValue($maskedpassphrase);
+
+                // Also update the data attribute for JavaScript reliability.
+                $element->updateAttributes(['data-original-masked' => $maskedpassphrase]);
+            }
+        }
     }
 }
