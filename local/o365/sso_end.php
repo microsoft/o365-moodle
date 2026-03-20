@@ -26,30 +26,58 @@
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
 
-echo "<script src=\"https://statics.teams.microsoft.com/sdk/v1.9.0/js/MicrosoftTeams.min.js\" crossorigin=\"anonymous\"></script>";
-echo "<script src=\"https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js\" crossorigin=\"anonymous\"></script>";
+echo "<script src=\"" . $CFG->wwwroot . "/local/o365/js/MicrosoftTeams.min.js\"></script>";
+echo "<script src=\"" . $CFG->wwwroot . "/local/o365/js/msal-browser.min.js\"></script>";
+
+$tenantid = get_config('local_o365', 'entratenantid');
+if (!$tenantid) {
+    $tenantid = 'common';
+}
 
 $js = '
-microsoftTeams.initialize();
+// Initialize Teams SDK - must wait for it to complete before using other Teams APIs
+microsoftTeams.app.initialize().then(function() {
+    // MSAL configuration
+    const msalConfig = {
+        auth: {
+            clientId: "' . get_config('auth_oidc', 'clientid') . '",
+            authority: "https://login.microsoftonline.com/' . $tenantid . '",
+            redirectUri: "' . $CFG->wwwroot . '/local/o365/sso_end.php",
+            navigateToLoginRequestUrl: false
+        },
+        cache: {
+            cacheLocation: "localStorage",
+            storeAuthStateInCookie: false
+        }
+    };
 
-// ADAL.js configuration
-let config = {
-    clientId: "' . get_config('auth_oidc', 'clientid') . '",
-    redirectUri: "' . $CFG->wwwroot . '/local/o365/sso_end.php",
-    cacheLocation: "localStorage",
-    navigateToLoginRequestUrl: false,
-};
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-let authContext = new AuthenticationContext(config);
-
-if (authContext.isCallback(window.location.hash)) {
-    authContext.handleWindowCallback(window.location.hash);
-    if (authContext.getCachedUser()) {
-        microsoftTeams.authentication.notifySuccess();
-    } else {
-        microsoftTeams.authentication.notifyFailure(authContext.getLoginError());
-    }
-}
+    return msalInstance.initialize().then(() => {
+        return msalInstance.handleRedirectPromise();
+    }).then((response) => {
+        if (response !== null) {
+            // Login successful with redirect response
+            const account = msalInstance.getAllAccounts()[0];
+            if (account) {
+                microsoftTeams.authentication.notifySuccess();
+            } else {
+                microsoftTeams.authentication.notifyFailure("No account found");
+            }
+        } else {
+            // No redirect response, check for cached accounts
+            const account = msalInstance.getAllAccounts()[0];
+            if (account) {
+                microsoftTeams.authentication.notifySuccess();
+            } else {
+                microsoftTeams.authentication.notifyFailure("No redirect response and no cached account found");
+            }
+        }
+    });
+}).catch((error) => {
+    console.error("Teams SDK or MSAL error: " + error);
+    microsoftTeams.authentication.notifyFailure(error.message || "Authentication failed");
+});
 ';
 
 echo html_writer::script($js);
