@@ -81,9 +81,14 @@ class cohortsync extends scheduled_task {
      */
     private function execute_sync(main $cohortsync): void {
         // First, update the group cache, and delete any groups that no longer exist.
+        // A null result means the update was rate-limited; proceed using the existing cache
+        // but skip cleanup (which depends on a fresh not-found list from the API).
         try {
-            if ($cohortsync->update_groups_cache()) {
+            $cacheupdateresult = $cohortsync->update_groups_cache();
+            if ($cacheupdateresult === true) {
                 utils::clean_up_not_found_groups();
+            } else if ($cacheupdateresult === null) {
+                utils::mtrace("Groups cache update skipped (rate limit). Proceeding with existing cache.", 1);
             } else {
                 utils::mtrace("Failed to update groups cache. Exiting.", 1);
                 return;
@@ -99,7 +104,7 @@ class cohortsync extends scheduled_task {
         utils::mtrace("Found " . count($grouplist) . " groups.", 2);
         $grouplistbyoid = [];
         foreach ($grouplist as $group) {
-            $grouplistbyoid[$group->objectid] = $group;
+            $grouplistbyoid[$group['id']] = $group;
         }
 
         $mappings = $cohortsync->get_mappings();

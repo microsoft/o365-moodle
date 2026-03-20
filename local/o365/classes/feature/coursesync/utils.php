@@ -293,7 +293,7 @@ class utils {
 
         $matchedoids = $DB->get_fieldset_select('local_o365_objects', 'objectid', 'type = ? AND subtype = ?', ['group', 'course']);
 
-        $teamcacherecords = $DB->get_records('local_o365_teams_cache');
+        $teamcacherecords = $DB->get_records('local_o365_groups_cache', ['has_team' => 1]);
         foreach ($teamcacherecords as $key => $teamcacherecord) {
             if ($teamcacherecord->objectid == $currentoid || !in_array($teamcacherecord->objectid, $matchedoids)) {
                 if (!array_key_exists($teamcacherecord->name, $teamnamecache)) {
