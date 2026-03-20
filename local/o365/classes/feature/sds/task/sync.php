@@ -255,44 +255,147 @@ class sync extends scheduled_task {
         }
 
         foreach ($syncedschools as $schoolid => $syncedschool) {
-            $coursecat = static::get_or_create_school_coursecategory($syncedschool['id'], $syncedschool['displayName']);
+            $schoolcoursecat = static::get_or_create_school_coursecategory($syncedschool['id'], $syncedschool['displayName']);
             static::mtrace('Processing school ' . $syncedschool['displayName'], 2);
 
             $schoolclasses = $apiclient->get_school_classes($schoolid);
 
+            // Get configuration options.
+            $sdscategorizebysubject = get_config('local_o365', 'sdscategorizebysubject');
+            $sdsignorepastcourses = get_config('local_o365', 'sdsignorepastcourses');
+            $sdsexpiredprefix = get_config('local_o365', 'sdsexpiredprefix');
+            if (empty($sdsexpiredprefix)) {
+                $sdsexpiredprefix = 'Exp';
+            }
+
             foreach ($schoolclasses as $schoolclass) {
                 static::mtrace('Processing school section ' . $schoolclass['displayName'], 3);
+
+                // Extract course dates from term information.
+                $classstartdate = 0;
+                $classenddate = 0;
+                if (isset($schoolclass['term']) && is_array($schoolclass['term'])) {
+                    if (isset($schoolclass['term']['startDate'])) {
+                        $classstartdate = strtotime($schoolclass['term']['startDate']);
+                    }
+                    if (isset($schoolclass['term']['endDate'])) {
+                        $classenddate = strtotime($schoolclass['term']['endDate']);
+                    }
+                }
+
+                // Filter out expired courses if configured.
+                if ($sdsignorepastcourses) {
+                    // Check for expired prefix.
+                    if (substr($schoolclass['displayName'], 0, strlen($sdsexpiredprefix)) === $sdsexpiredprefix) {
+                        static::mtrace('Skipping expired course (prefix match): ' . $schoolclass['displayName'], 4);
+                        continue;
+                    }
+                    // Check end date.
+                    if ($classenddate > 0 && $classenddate < time()) {
+                        static::mtrace('Skipping expired course (past end date): ' . $schoolclass['displayName'], 4);
+                        continue;
+                    }
+                }
+
+                // Determine course category (subject-based or school-based).
+                $coursecat = $schoolcoursecat;
+                if ($sdscategorizebysubject) {
+                    // Extract subject name from class data.
+                    $subjectname = null;
+                    if (isset($schoolclass['externalName'])) {
+                        // Try externalName first.
+                        $subjectname = $schoolclass['externalName'];
+                    } else if (isset($schoolclass['classCode'])) {
+                        // Fall back to classCode.
+                        $subjectname = $schoolclass['classCode'];
+                    }
+
+                    if (!empty($subjectname)) {
+                        $coursecat = static::get_or_create_subject_coursecategory(
+                            $subjectname,
+                            $schoolcoursecat->id
+                        );
+                        static::mtrace('Using subject category: ' . $subjectname, 4);
+                    }
+                }
 
                 // Create the course.
                 $course = static::get_or_create_class_course(
                     $schoolclass['id'],
                     $schoolclass['mailNickname'],
                     $schoolclass['displayName'],
-                    $coursecat->id
+                    $coursecat->id,
+                    $classstartdate,
+                    $classenddate
                 );
                 $coursecontext = context_course::instance($course->id);
 
-                // Associate the section group with the course.
-                $groupobjectparams = ['type' => 'group', 'subtype' => 'course', 'objectid' => $schoolclass['id'],
-                    'moodleid' => $course->id];
-                $groupobjectrec = $DB->get_record('local_o365_objects', $groupobjectparams);
+                // Enable two-way sync (course sync) if configured.
+                $sdsenablecoursesync = get_config('local_o365', 'sdsenablecoursesync');
+                if ($sdsenablecoursesync) {
+                    // Associate the section group with the course for two-way sync.
+                    $groupobjectparams = ['type' => 'group', 'subtype' => 'course', 'objectid' => $schoolclass['id'],
+                        'moodleid' => $course->id];
+                    $groupobjectrec = $DB->get_record('local_o365_objects', $groupobjectparams);
 
-                if (empty($groupobjectrec)) {
-                    $now = time();
-                    $groupobjectrec = $groupobjectparams;
-                    $groupobjectrec['o365name'] = $schoolclass['displayName'];
-                    $groupobjectrec['timecreated'] = $now;
-                    $groupobjectrec['timemodified'] = $now;
-                    $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $groupobjectrec);
-                    \local_o365\feature\coursesync\utils::set_course_sync_enabled($course->id);
+                    if (empty($groupobjectrec)) {
+                        $now = time();
+                        $groupobjectrec = $groupobjectparams;
+                        $groupobjectrec['o365name'] = $schoolclass['displayName'];
+                        $groupobjectrec['timecreated'] = $now;
+                        $groupobjectrec['timemodified'] = $now;
+                        $groupobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $groupobjectrec);
+                        \local_o365\feature\coursesync\utils::set_course_sync_enabled($course->id);
+                        static::mtrace('Enabled two-way sync for course ' . $course->id, 4);
 
-                    if ($teamsyncenabled) {
-                        $teamobjectrec = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $schoolclass['id'],
-                            'moodleid' => $course->id];
-                        $teamobjectrec['o365name'] = $schoolclass['displayName'];
-                        $teamobjectrec['timecreated'] = $now;
-                        $teamobjectrec['timemodified'] = $now;
-                        $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrec);
+                        if ($teamsyncenabled) {
+                            $teamobjectrec = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $schoolclass['id'],
+                                'moodleid' => $course->id];
+                            $teamobjectrec['o365name'] = $schoolclass['displayName'];
+                            $teamobjectrec['timecreated'] = $now;
+                            $teamobjectrec['timemodified'] = $now;
+                            $teamobjectrec['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrec);
+                        }
+                    }
+                }
+
+                // Sync cohorts if enabled.
+                $sdscreatecohorts = get_config('local_o365', 'sdscreatecohorts');
+                if ($sdscreatecohorts) {
+                    static::mtrace('Running cohort sync', 4);
+
+                    // Create or get the cohort for this class.
+                    $cohort = static::get_or_create_class_cohort(
+                        $schoolclass['id'],
+                        $schoolclass['mailNickname'],
+                        $schoolclass['displayName'],
+                        $coursecat->id
+                    );
+
+                    // Sync cohort membership.
+                    $includeteachers = get_config('local_o365', 'sdscohortincludeteachers');
+                    $allclassmembers = [];
+
+                    // Get teachers.
+                    $classteacherlist = $apiclient->get_school_class_teachers($schoolclass['id']);
+                    if (!empty($classteacherlist)) {
+                        foreach ($classteacherlist as $teacher) {
+                            $teacher['@odata.type'] = '#microsoft.graph.educationTeacher';
+                            $allclassmembers[] = $teacher;
+                        }
+                    }
+
+                    // Get students/members.
+                    $classmemberlist = $apiclient->get_school_class_members($schoolclass['id']);
+                    if (!empty($classmemberlist)) {
+                        foreach ($classmemberlist as $member) {
+                            $member['@odata.type'] = '#microsoft.graph.educationStudent';
+                            $allclassmembers[] = $member;
+                        }
+                    }
+
+                    if (!empty($allclassmembers)) {
+                        static::sync_cohort_members($cohort, $allclassmembers, $includeteachers);
                     }
                 }
 
@@ -373,6 +476,30 @@ class sync extends scheduled_task {
                             if (!$DB->record_exists('role_assignments', $roleparams)) {
                                 static::mtrace('Enrolling user ' . $objectrec->moodleid . ' into course ' . $course->id, 5);
                                 enrol_try_internal_enrol($course->id, $objectrec->moodleid, $role->id);
+                            } else {
+                                // User is already enrolled - check if they are suspended and need to be reactivated.
+                                $suspendusers = get_config('local_o365', 'sdssuspendenrolment');
+                                if ($suspendusers) {
+                                    $enrolinstances = $DB->get_records('enrol', ['courseid' => $course->id]);
+                                    foreach ($enrolinstances as $enrolinstance) {
+                                        $userenrolment = $DB->get_record(
+                                            'user_enrolments',
+                                            ['enrolid' => $enrolinstance->id, 'userid' => $objectrec->moodleid]
+                                        );
+                                        if ($userenrolment && $userenrolment->status == ENROL_USER_SUSPENDED) {
+                                            static::mtrace('Reactivating suspended user ' . $objectrec->moodleid .
+                                                ' in course ' . $course->id, 5);
+                                            $enrolplugin = enrol_get_plugin($enrolinstance->enrol);
+                                            if ($enrolplugin && method_exists($enrolplugin, 'update_user_enrol')) {
+                                                $enrolplugin->update_user_enrol(
+                                                    $enrolinstance,
+                                                    $objectrec->moodleid,
+                                                    ENROL_USER_ACTIVE
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -385,7 +512,7 @@ class sync extends scheduled_task {
                         }
                     }
 
-                    // Unenrol users who have been removed from the SDS class.
+                    // Handle users who have been removed from the SDS class.
                     $enrolledusers = get_enrolled_users($coursecontext);
                     if (!$enrolledusers) {
                         continue;
@@ -404,20 +531,57 @@ class sync extends scheduled_task {
                         $enrols = $DB->get_records('enrol', ['courseid' => $course->id]);
                     }
 
+                    $suspendusers = get_config('local_o365', 'sdssuspendenrolment');
+
                     if ($enrols) {
                         [$enrolsql, $enrolparams] = $DB->get_in_or_equal(array_keys($enrols), SQL_PARAMS_NAMED);
                         foreach ($userstoberemoved as $userobjectid) {
                             $userid = $courseuserobjectids[$userobjectid]->userid;
-                            static::mtrace('Unenrol user ' . $userid . ' from course ' . $course->id, 5);
-                            $sql = 'SELECT *
-                                      FROM {user_enrolments}
-                                     WHERE userid = :userid
-                                       AND enrolid ' . $enrolsql;
-                            $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
-                            foreach ($userenrolments as $userenrolment) {
-                                if (isset($enrols[$userenrolment->enrolid])) {
-                                    $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
-                                    $enrolplugin->unenrol_user($enrols[$userenrolment->enrolid], $userid);
+
+                            // Check if user is a teacher - don't suspend/unenrol teachers.
+                            $isteacher = $DB->record_exists('role_assignments', [
+                                'roleid' => $teacherroleid,
+                                'contextid' => $coursecontext->id,
+                                'userid' => $userid,
+                            ]);
+
+                            if ($isteacher) {
+                                continue;
+                            }
+
+                            if ($suspendusers) {
+                                // Suspend the user's enrolment instead of removing it.
+                                static::mtrace('Suspending user ' . $userid . ' in course ' . $course->id, 5);
+                                $sql = 'SELECT *
+                                          FROM {user_enrolments}
+                                         WHERE userid = :userid
+                                           AND enrolid ' . $enrolsql;
+                                $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
+                                foreach ($userenrolments as $userenrolment) {
+                                    if (isset($enrols[$userenrolment->enrolid])) {
+                                        $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
+                                        if ($enrolplugin && method_exists($enrolplugin, 'update_user_enrol')) {
+                                            $enrolplugin->update_user_enrol(
+                                                $enrols[$userenrolment->enrolid],
+                                                $userid,
+                                                ENROL_USER_SUSPENDED
+                                            );
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Unenrol the user completely.
+                                static::mtrace('Unenrol user ' . $userid . ' from course ' . $course->id, 5);
+                                $sql = 'SELECT *
+                                          FROM {user_enrolments}
+                                         WHERE userid = :userid
+                                           AND enrolid ' . $enrolsql;
+                                $userenrolments = $DB->get_records_sql($sql, array_merge($enrolparams, ['userid' => $userid]));
+                                foreach ($userenrolments as $userenrolment) {
+                                    if (isset($enrols[$userenrolment->enrolid])) {
+                                        $enrolplugin = enrol_get_plugin($enrols[$userenrolment->enrolid]->enrol);
+                                        $enrolplugin->unenrol_user($enrols[$userenrolment->enrolid], $userid);
+                                    }
                                 }
                             }
                         }
@@ -454,24 +618,42 @@ class sync extends scheduled_task {
      * @param string $shortname The shortname of the class course.
      * @param string $fullname The full name of the class course.
      * @param int $categoryid The ID of the category to create the course in (if necessary).
+     * @param int $startdate Optional start date for the course (Unix timestamp).
+     * @param int $enddate Optional end date for the course (Unix timestamp).
      * @return object The course object.
      */
     public static function get_or_create_class_course(
         string $classobjectid,
         string $shortname,
         string $fullname,
-        int $categoryid = 0
+        int $categoryid = 0,
+        int $startdate = 0,
+        int $enddate = 0
     ): object {
         global $DB, $CFG;
 
         require_once($CFG->dirroot . '/course/lib.php');
 
-        // Look for existing category.
+        // Look for existing course.
         $params = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid];
         $objectrec = $DB->get_record('local_o365_objects', $params);
         if (!empty($objectrec)) {
             $course = $DB->get_record('course', ['id' => $objectrec->moodleid]);
             if (!empty($course)) {
+                // Update course dates if they have changed.
+                $updated = false;
+                if ($startdate > 0 && $course->startdate != $startdate) {
+                    $course->startdate = $startdate;
+                    $updated = true;
+                }
+                if ($enddate > 0 && $course->enddate != $enddate) {
+                    $course->enddate = $enddate;
+                    $updated = true;
+                }
+                if ($updated) {
+                    update_course($course);
+                    static::mtrace('Updated course dates for ' . $fullname, 4);
+                }
                 return $course;
             } else {
                 // Course was deleted, remove object record and recreate.
@@ -480,10 +662,25 @@ class sync extends scheduled_task {
             }
         }
 
-        // Create new course category and object record.
+        // Create new course and object record.
         $fullname = substr($fullname, 0, 254); // Course full name max length is 254, while class display name can be 256.
-        $data = ['category' => $categoryid, 'shortname' => $shortname, 'fullname' => $fullname, 'idnumber' => $classobjectid];
+        $data = [
+            'category' => $categoryid,
+            'shortname' => $shortname,
+            'fullname' => $fullname,
+            'idnumber' => $classobjectid,
+        ];
+
+        // Add dates if provided.
+        if ($startdate > 0) {
+            $data['startdate'] = $startdate;
+        }
+        if ($enddate > 0) {
+            $data['enddate'] = $enddate;
+        }
+
         $course = create_course((object) $data);
+        static::mtrace('Created course ' . $fullname . ' with dates', 4);
 
         $now = time();
         $objectrec = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid, 'moodleid' => $course->id,
@@ -532,6 +729,150 @@ class sync extends scheduled_task {
         $DB->insert_record('local_o365_objects', $objectrec);
 
         return $coursecat;
+    }
+
+    /**
+     * Get or create a course category for a subject within a school.
+     *
+     * @param string $subjectname The name of the subject.
+     * @param int $parentcategoryid The ID of the parent category (usually school category).
+     * @return core_course_category A course category object for the retrieved or created course category.
+     */
+    public static function get_or_create_subject_coursecategory(string $subjectname, int $parentcategoryid): core_course_category {
+        global $DB;
+
+        // Look for existing category by name and parent.
+        $params = ['name' => $subjectname, 'parent' => $parentcategoryid];
+        $existingcat = $DB->get_record('course_categories', $params);
+        if (!empty($existingcat)) {
+            return core_course_category::get($existingcat->id);
+        }
+
+        // Create new course category.
+        $data = ['visible' => 1, 'name' => $subjectname, 'parent' => $parentcategoryid];
+        if (strlen($data['name']) > 255) {
+            static::mtrace('Subject name was over 255 chars when creating course category, truncating to 255.', 4);
+            $data['name'] = substr($data['name'], 0, 255);
+        }
+
+        $coursecat = core_course_category::create($data);
+        static::mtrace('Created subject category: ' . $subjectname, 4);
+
+        return $coursecat;
+    }
+
+    /**
+     * Get or create a cohort for a SDS class.
+     *
+     * @param string $classobjectid The object ID of the class.
+     * @param string $shortname The shortname for the cohort.
+     * @param string $fullname The full name for the cohort.
+     * @param int $categoryid The ID of the category (for context).
+     * @return object The cohort object.
+     */
+    public static function get_or_create_class_cohort(
+        string $classobjectid,
+        string $shortname,
+        string $fullname,
+        int $categoryid
+    ): object {
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        // Look for existing cohort with the class object ID as idnumber.
+        $cohort = $DB->get_record('cohort', ['idnumber' => $classobjectid]);
+
+        if (!empty($cohort)) {
+            static::mtrace('Found existing cohort for ' . $fullname, 4);
+            return $cohort;
+        }
+
+        // Create new cohort.
+        $catcontext = \context_coursecat::instance($categoryid);
+        $cohortdata = [
+            'idnumber' => $classobjectid,
+            'name' => substr($fullname, 0, 254), // Cohort name max length is 254.
+            'contextid' => $catcontext->id,
+            'description' => 'Cohort synced from SDS class',
+            'descriptionformat' => FORMAT_HTML,
+        ];
+
+        $cohortid = cohort_add_cohort((object) $cohortdata);
+        $cohort = $DB->get_record('cohort', ['id' => $cohortid]);
+        static::mtrace('Created cohort for ' . $fullname, 4);
+
+        // Track this cohort in local_o365_objects.
+        $now = time();
+        $objectrec = [
+            'type' => 'sdssection',
+            'subtype' => 'cohort',
+            'objectid' => $classobjectid,
+            'moodleid' => $cohort->id,
+            'o365name' => $shortname,
+            'tenant' => '',
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $DB->insert_record('local_o365_objects', $objectrec);
+
+        return $cohort;
+    }
+
+    /**
+     * Sync cohort membership from SDS class members.
+     *
+     * @param object $cohort The cohort object.
+     * @param array $classmembers Array of class members from Microsoft Graph API.
+     * @param bool $includeteachers Whether to include teachers in the cohort.
+     * @return void
+     */
+    public static function sync_cohort_members(object $cohort, array $classmembers, bool $includeteachers): void {
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        // Get current cohort members.
+        $currentmembers = $DB->get_records('cohort_members', ['cohortid' => $cohort->id], '', 'userid, id');
+        $currentmemberids = array_keys($currentmembers);
+
+        $newmemberids = [];
+
+        // Process each class member.
+        foreach ($classmembers as $classmember) {
+            // Get Moodle user ID from Office 365 object ID.
+            $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classmember['id']]);
+
+            if (empty($objectrec)) {
+                continue;
+            }
+
+            // Check if this is a teacher.
+            $isteacher = false;
+            if (isset($classmember['@odata.type'])) {
+                $isteacher = (strpos($classmember['@odata.type'], 'teacher') !== false);
+            }
+
+            // Skip teachers if configured.
+            if ($isteacher && !$includeteachers) {
+                continue;
+            }
+
+            $newmemberids[] = $objectrec->moodleid;
+
+            // Add to cohort if not already a member.
+            if (!in_array($objectrec->moodleid, $currentmemberids)) {
+                static::mtrace('Adding user ' . $objectrec->moodleid . ' to cohort ' . $cohort->id, 5);
+                cohort_add_member($cohort->id, $objectrec->moodleid);
+            }
+        }
+
+        // Remove members who are no longer in the SDS class.
+        $memberstoremove = array_diff($currentmemberids, $newmemberids);
+        foreach ($memberstoremove as $userid) {
+            static::mtrace('Removing user ' . $userid . ' from cohort ' . $cohort->id, 5);
+            cohort_remove_member($cohort->id, $userid);
+        }
     }
 
     /**
