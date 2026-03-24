@@ -58,29 +58,35 @@ class authcode extends base {
         if (!auth_oidc_is_setup_complete()) {
             return [];
         }
-
-        if (!empty($this->config->customicon)) {
-            $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
-        } else {
-            $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
-            $icon = explode(':', $icon);
-            if (isset($icon[1])) {
-                [$iconcomponent, $iconkey] = $icon;
-            } else {
-                $iconcomponent = 'auth_oidc';
-                $iconkey = 'o365';
-            }
-            $icon = new pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+        $showicon = isset($this->config->set_pix) ? $this->config->set_pix : true;
+        $icon_idp_key = 'iconurl';
+        $icon_idp_value = '';
+        if ($showicon){
+            $icon_idp_key = 'icon';
+                if (!empty($this->config->customicon)) {
+                    $icon_idp_value = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+                } else {
+                    $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
+                    $icon = explode(':', $icon_idp_value);
+                    if (isset($icon[1])) {
+                        [$iconcomponent, $iconkey] = $icon;
+                    } else {
+                        $iconcomponent = 'auth_oidc';
+                        $iconkey = 'o365';
+                    }
+                    $icon_idp_value = new pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+                }
         }
-
         return [
             [
                 'url' => new url('/auth/oidc/', ['source' => 'loginpage']),
-                'icon' => $icon,
+                $icon_idp_key => $showicon ? $icon_idp_value : '',
                 'name' => strip_tags(format_text($this->config->opname)),
             ],
         ];
     }
+
+
 
     /**
      * Get an OIDC parameter.
