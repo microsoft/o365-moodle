@@ -105,6 +105,25 @@ class auth_plugin_oidc extends \auth_plugin_base {
     }
 
     /**
+     * Hook for overriding behaviour of logout page.
+     */
+    public function logoutpage_hook() {
+        global $redirect;
+
+        // No need for custom logic if we don't force the redirect on login.
+        if (!$this->config->forceredirect) {
+            return;
+        }
+
+        // When we log out and are redirecting to the login page, add the noredirect to prevent our own redirect.
+        $redirecturl = is_string($redirect) ? new moodle_url($redirect) : $redirect;
+        if ($redirecturl->compare(new moodle_url('/login/index.php'), URL_MATCH_BASE)) {
+            $redirecturl->param('noredirect', 1);
+            $redirect = $redirecturl->out(false);
+        }
+    }
+
+    /**
      * Hook for overriding behaviour of login page.
      * This method is called from login/index.php page for all enabled auth plugins.
      */
@@ -123,7 +142,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
      * @return bool If this returns true then redirect
      */
     public function should_login_redirect() {
-        global $CFG, $SESSION;
+        global $SESSION;
 
         $oidc = optional_param('oidc', null, PARAM_BOOL);
         // Also support noredirect param - used by other auth plugins.
@@ -145,17 +164,6 @@ class auth_plugin_oidc extends \auth_plugin_base {
         //
         // This isn't needed when duallogin is on because $oidc will default to 0 and duallogin is not part of the request.
         if ((isset($SESSION->oidc) && $SESSION->oidc == 0)) {
-            return false;
-        }
-
-        // If the user is redirectred to the login page immediately after logging out, don't redirect.
-        $silentloginmodesetting = get_config('auth_oidc', 'silentloginmode');
-        $forceredirectsetting = get_config('auth_oidc', 'forceredirect');
-        $forceloginsetting = get_config('core', 'forcelogin');
-        if (
-            $silentloginmodesetting && $forceredirectsetting && $forceloginsetting && isset($_SERVER['HTTP_REFERER']) &&
-            strpos($_SERVER['HTTP_REFERER'], $CFG->wwwroot) !== false
-        ) {
             return false;
         }
 
