@@ -637,6 +637,8 @@ if ($hassiteconfig) {
         )
     );
 
+    $settings->hide_if('auth_oidc/logouturi', 'auth_oidc/single_sign_off', 'notchecked');
+
     // Front channel logout URL.
     $settings->add(
         new auth_oidc_admin_setting_redirecturi(
@@ -666,6 +668,13 @@ if ($hassiteconfig) {
             PARAM_TEXT
         )
     );
+
+    $settings->add(new admin_setting_configcheckbox(
+        'auth_oidc/set_pix',
+        get_string('cfg_set_pix', 'auth_oidc'),
+        '',
+        '0'
+    ));
 
     // Icon.
     $icons = [
@@ -768,6 +777,10 @@ if ($hassiteconfig) {
     );
     $customiconsetting->set_updatedcallback('auth_oidc_initialize_customicon');
     $settings->add($customiconsetting);
+
+    $settings->hide_if('auth_oidc/icon', 'auth_oidc/set_pix', 'notchecked');
+    $settings->hide_if('auth_oidc/customicon', 'auth_oidc/set_pix', 'notchecked');
+
 
     // Debugging heading.
     $settings->add(
