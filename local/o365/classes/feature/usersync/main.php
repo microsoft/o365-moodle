@@ -240,13 +240,31 @@ class main {
      * @param int $muserid The Moodle user ID
      * @param mixed $photodata The photo data (binary string or false for no photo)
      * @param bool $printtrace Whether to output trace messages
+     * @param int|null $appassignid Pre-fetched local_o365_appassign record ID, or null to look it up.
+     * @param int|null $currentpicture Pre-fetched user.picture value, or null to look it up.
      * @return bool True if photo was updated, false otherwise
      */
-    protected function apply_photo(int $muserid, $photodata, bool $printtrace = false) {
+    protected function apply_photo(
+        int $muserid,
+        $photodata,
+        bool $printtrace = false,
+        ?int $appassignid = null,
+        ?int $currentpicture = null
+    ) {
         global $DB, $CFG;
 
         $result = false;
-        $muser = core_user::get_user($muserid, 'id, picture', MUST_EXIST);
+
+        // Use the pre-fetched picture value from the batch query when available,
+        // avoiding a per-user DB round-trip just to read the picture field.
+        if ($currentpicture !== null) {
+            $muser = new stdClass();
+            $muser->id = $muserid;
+            $muser->picture = $currentpicture;
+        } else {
+            $muser = core_user::get_user($muserid, 'id, picture', MUST_EXIST);
+        }
+
         $context = context_user::instance($muserid);
 
         if (!$photodata || $photodata === false) {
@@ -289,18 +307,28 @@ class main {
             }
 
             // Update appassign record.
-            $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
-            if (empty($record)) {
+            // When the batch query has already resolved the record ID, use it directly
+            // to skip the per-user SELECT. Fall back to a full lookup (insert or update)
+            // when the ID is unknown (e.g. new users with no existing appassign record,
+            // or callers outside the batch task such as assign_photo).
+            if ($appassignid !== null) {
                 $record = new stdClass();
-                $record->muserid = $muserid;
-                $record->assigned = 0;
-            }
-
-            $record->photoupdated = time();
-            if (empty($record->id)) {
-                $DB->insert_record('local_o365_appassign', $record);
-            } else {
+                $record->id = $appassignid;
+                $record->photoupdated = time();
                 $DB->update_record('local_o365_appassign', $record);
+            } else {
+                $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
+                if (empty($record)) {
+                    $record = new stdClass();
+                    $record->muserid = $muserid;
+                    $record->assigned = 0;
+                }
+                $record->photoupdated = time();
+                if (empty($record->id)) {
+                    $DB->insert_record('local_o365_appassign', $record);
+                } else {
+                    $DB->update_record('local_o365_appassign', $record);
+                }
             }
         }
 
@@ -347,61 +375,79 @@ class main {
      * @param int $muserid
      * @param array $remotetimezone Timezone data from Graph API
      * @param bool $printtrace
+     * @param string|null $currenttimezone Pre-fetched user.timezone value for early-exit comparison.
+     * @return bool True if the timezone was changed, false if unchanged or invalid.
      */
-    protected function apply_timezone(int $muserid, array $remotetimezone, bool $printtrace = false) {
-        if (is_array($remotetimezone) && !empty($remotetimezone['value'])) {
-            $remotetimezonesetting = $remotetimezone['value'];
-            $moodletimezone = \core_date::normalise_timezone($remotetimezonesetting);
-
-            $etcgmttimezonemappings = [
-                'Etc/GMT+12' => 'Pacific/Fiji',
-                'Etc/GMT+11' => 'Pacific/Pago_Pago',
-                'Etc/GMT+10' => 'Pacific/Honolulu',
-                'Etc/GMT+9' => 'America/Anchorage',
-                'Etc/GMT+8' => 'America/Los_Angeles',
-                'Etc/GMT+7' => 'America/Denver',
-                'Etc/GMT+6' => 'America/Chicago',
-                'Etc/GMT+5' => 'America/New_York',
-                'Etc/GMT+4' => 'America/Antigua',
-                'Etc/GMT+3' => 'America/Buenos_Aires',
-                'Etc/GMT+2' => 'Atlantic/Noronha',
-                'Etc/GMT+1' => 'Atlantic/Cape_Verde',
-                'Etc/GMT' => 'Europe/London',
-                'Etc/GMT-1' => 'Europe/Paris',
-                'Etc/GMT-2' => 'Europe/Helsinki',
-                'Etc/GMT-3' => 'Asia/Qatar',
-                'Etc/GMT-4' => 'Asia/Baku',
-                'Etc/GMT-5' => 'Asia/Karachi',
-                'Etc/GMT-6' => 'Asia/Dhaka',
-                'Etc/GMT-7' => 'Asia/Bangkok',
-                'Etc/GMT-8' => 'Asia/Hong_Kong',
-                'Etc/GMT-9' => 'Asia/Tokyo',
-                'Etc/GMT-10' => 'Pacific/Guam',
-                'Etc/GMT-11' => 'Asia/Sakhalin',
-                'Etc/GMT-12' => 'Pacific/Auckland',
-                'Etc/GMT-13' => 'Pacific/Tongatapu',
-                'Etc/GMT-14' => 'Pacific/Kiritimati',
-            ];
-            if (isset($etcgmttimezonemappings[$moodletimezone])) {
-                $moodletimezone = $etcgmttimezonemappings[$moodletimezone];
-            }
-
-            $moodletimezone = clean_param($moodletimezone, PARAM_TIMEZONE);
-
-            if ($moodletimezone) {
-                $existinguser = core_user::get_user($muserid);
-                $existinguser->timezone = $moodletimezone;
-                user_update_user($existinguser, false, true);
-            }
-
-            if ($printtrace) {
-                $this->mtrace('Timezone applied.');
-            }
-        } else {
+    protected function apply_timezone(
+        int $muserid,
+        array $remotetimezone,
+        bool $printtrace = false,
+        ?string $currenttimezone = null
+    ): bool {
+        if (!is_array($remotetimezone) || empty($remotetimezone['value'])) {
             if ($printtrace) {
                 $this->mtrace('No timezone received.');
             }
+            return false;
         }
+
+        $remotetimezonesetting = $remotetimezone['value'];
+        $moodletimezone = \core_date::normalise_timezone($remotetimezonesetting);
+
+        $etcgmttimezonemappings = [
+            'Etc/GMT+12' => 'Pacific/Fiji',
+            'Etc/GMT+11' => 'Pacific/Pago_Pago',
+            'Etc/GMT+10' => 'Pacific/Honolulu',
+            'Etc/GMT+9' => 'America/Anchorage',
+            'Etc/GMT+8' => 'America/Los_Angeles',
+            'Etc/GMT+7' => 'America/Denver',
+            'Etc/GMT+6' => 'America/Chicago',
+            'Etc/GMT+5' => 'America/New_York',
+            'Etc/GMT+4' => 'America/Antigua',
+            'Etc/GMT+3' => 'America/Buenos_Aires',
+            'Etc/GMT+2' => 'Atlantic/Noronha',
+            'Etc/GMT+1' => 'Atlantic/Cape_Verde',
+            'Etc/GMT' => 'Europe/London',
+            'Etc/GMT-1' => 'Europe/Paris',
+            'Etc/GMT-2' => 'Europe/Helsinki',
+            'Etc/GMT-3' => 'Asia/Qatar',
+            'Etc/GMT-4' => 'Asia/Baku',
+            'Etc/GMT-5' => 'Asia/Karachi',
+            'Etc/GMT-6' => 'Asia/Dhaka',
+            'Etc/GMT-7' => 'Asia/Bangkok',
+            'Etc/GMT-8' => 'Asia/Hong_Kong',
+            'Etc/GMT-9' => 'Asia/Tokyo',
+            'Etc/GMT-10' => 'Pacific/Guam',
+            'Etc/GMT-11' => 'Asia/Sakhalin',
+            'Etc/GMT-12' => 'Pacific/Auckland',
+            'Etc/GMT-13' => 'Pacific/Tongatapu',
+            'Etc/GMT-14' => 'Pacific/Kiritimati',
+        ];
+        if (isset($etcgmttimezonemappings[$moodletimezone])) {
+            $moodletimezone = $etcgmttimezonemappings[$moodletimezone];
+        }
+
+        $moodletimezone = clean_param($moodletimezone, PARAM_TIMEZONE);
+
+        if (!$moodletimezone) {
+            return false;
+        }
+
+        // When the caller provides the current timezone (e.g. from the batch query),
+        // we can short-circuit here and skip fetching the full user record.
+        if ($currenttimezone !== null && $moodletimezone === $currenttimezone) {
+            return false;
+        }
+
+        $existinguser = core_user::get_user($muserid);
+        $existinguser->timezone = $moodletimezone;
+        user_update_user($existinguser, false, true);
+
+        if ($printtrace) {
+            $this->mtrace('Timezone applied.');
+        }
+
+        return true;
     }
 
     /**
@@ -409,9 +455,16 @@ class main {
      *
      * @param int $muserid The Moodle user ID
      * @param mixed $photodata The photo data (binary string or false for no photo)
+     * @param int|null $appassignid Pre-fetched local_o365_appassign record ID, or null to look it up.
+     * @param int|null $currentpicture Pre-fetched user.picture value, or null to look it up.
      */
-    public function apply_photo_public(int $muserid, $photodata) {
-        $this->apply_photo($muserid, $photodata, false);
+    public function apply_photo_public(
+        int $muserid,
+        $photodata,
+        ?int $appassignid = null,
+        ?int $currentpicture = null
+    ) {
+        $this->apply_photo($muserid, $photodata, false, $appassignid, $currentpicture);
     }
 
     /**
@@ -419,9 +472,15 @@ class main {
      *
      * @param int $muserid The Moodle user ID
      * @param array $remotetimezone The timezone data from Microsoft Graph
+     * @param string|null $currenttimezone Pre-fetched user.timezone value for early-exit comparison.
+     * @return bool True if the timezone was changed, false if unchanged or invalid.
      */
-    public function apply_timezone_public(int $muserid, array $remotetimezone) {
-        $this->apply_timezone($muserid, $remotetimezone, false);
+    public function apply_timezone_public(
+        int $muserid,
+        array $remotetimezone,
+        ?string $currenttimezone = null
+    ): bool {
+        return $this->apply_timezone($muserid, $remotetimezone, false, $currenttimezone);
     }
 
     /**

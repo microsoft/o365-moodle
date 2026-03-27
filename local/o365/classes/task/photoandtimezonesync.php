@@ -157,7 +157,9 @@ class photoandtimezonesync extends scheduled_task {
             $sql = "SELECT obj.moodleid AS muserid,
                            obj.o365name AS upn,
                            u.username,
+                           u.picture AS currentpicture,
                            u.timezone AS currenttimezone,
+                           assign.id AS appassignid,
                            assign.photoid,
                            assign.photoupdated
                       FROM {local_o365_objects} obj
@@ -212,6 +214,10 @@ class photoandtimezonesync extends scheduled_task {
                 $totalusersfortzsync += count($upnsfortzsync);
             }
 
+            // Construct the API client once per batch. Both the timezone and photo
+            // fetches share the same client so we pay the token lookup cost only once.
+            $apiclient = null;
+
             // Batch fetch timezones for users that need it.
             $timezonesbyupn = [];
             if ($tzsynceenabled && !empty($upnsfortzsync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
@@ -231,7 +237,9 @@ class photoandtimezonesync extends scheduled_task {
             if ($photosyncenabled && !empty($upnsforphotosync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     $this->mtrace('Fetching photos...', 1);
-                    $apiclient = $usersync->construct_user_api();
+                    if ($apiclient === null) {
+                        $apiclient = $usersync->construct_user_api();
+                    }
                     $photosbyupn = $apiclient->get_photos_batch($upnsforphotosync);
                     $this->mtrace('Fetched ' . count(array_filter($photosbyupn)) . ' photos from API.', 2);
                 } catch (moodle_exception $e) {
@@ -251,7 +259,12 @@ class photoandtimezonesync extends scheduled_task {
                     // Apply photo if available.
                     if (isset($photosbyupn[$user->upn]) && $photosbyupn[$user->upn] !== false) {
                         try {
-                            $usersync->apply_photo_public($user->muserid, $photosbyupn[$user->upn]);
+                            $usersync->apply_photo_public(
+                                $user->muserid,
+                                $photosbyupn[$user->upn],
+                                $user->appassignid ?? null,
+                                $user->currentpicture ?? null
+                            );
                             $this->mtrace('User "' . $user->username . '": Photo changed.', 2);
                             $batchphotoschanged++;
                         } catch (moodle_exception $e) {
@@ -267,61 +280,23 @@ class photoandtimezonesync extends scheduled_task {
                 $this->mtrace('Applying timezones...', 1);
 
                 foreach ($users as $user) {
-                    // Apply timezone if available.
+                    // Apply timezone if available. Pass the current timezone from the batch
+                    // query so apply_timezone_public can short-circuit without fetching the
+                    // full user record when the value has not changed. Normalisation and the
+                    // Etc/GMT mapping live only in apply_timezone, eliminating the duplicate
+                    // logic that previously existed here.
                     if (isset($timezonesbyupn[$user->upn]) && $timezonesbyupn[$user->upn] !== false) {
                         try {
-                            $remotetimezone = $timezonesbyupn[$user->upn];
-                            $timezonename = '';
-
-                            // Normalize the remote timezone the same way apply_timezone does.
-                            if (is_array($remotetimezone) && !empty($remotetimezone['value'])) {
-                                $remotetimezonesetting = $remotetimezone['value'];
-                                $timezonename = $remotetimezonesetting;
-                                $moodletimezone = \core_date::normalise_timezone($remotetimezonesetting);
-
-                                // Map Etc/GMT timezones to more user-friendly equivalents.
-                                $etcgmttimezonemappings = [
-                                    'Etc/GMT+12' => 'Pacific/Fiji',
-                                    'Etc/GMT+11' => 'Pacific/Pago_Pago',
-                                    'Etc/GMT+10' => 'Pacific/Honolulu',
-                                    'Etc/GMT+9' => 'America/Anchorage',
-                                    'Etc/GMT+8' => 'America/Los_Angeles',
-                                    'Etc/GMT+7' => 'America/Denver',
-                                    'Etc/GMT+6' => 'America/Chicago',
-                                    'Etc/GMT+5' => 'America/New_York',
-                                    'Etc/GMT+4' => 'America/Antigua',
-                                    'Etc/GMT+3' => 'America/Buenos_Aires',
-                                    'Etc/GMT+2' => 'Atlantic/Noronha',
-                                    'Etc/GMT+1' => 'Atlantic/Cape_Verde',
-                                    'Etc/GMT' => 'Europe/London',
-                                    'Etc/GMT-1' => 'Europe/Paris',
-                                    'Etc/GMT-2' => 'Europe/Helsinki',
-                                    'Etc/GMT-3' => 'Asia/Qatar',
-                                    'Etc/GMT-4' => 'Asia/Baku',
-                                    'Etc/GMT-5' => 'Asia/Karachi',
-                                    'Etc/GMT-6' => 'Asia/Dhaka',
-                                    'Etc/GMT-7' => 'Asia/Bangkok',
-                                    'Etc/GMT-8' => 'Asia/Hong_Kong',
-                                    'Etc/GMT-9' => 'Asia/Tokyo',
-                                    'Etc/GMT-10' => 'Pacific/Guam',
-                                    'Etc/GMT-11' => 'Asia/Sakhalin',
-                                    'Etc/GMT-12' => 'Pacific/Auckland',
-                                    'Etc/GMT-13' => 'Pacific/Tongatapu',
-                                    'Etc/GMT-14' => 'Pacific/Kiritimati',
-                                ];
-                                if (isset($etcgmttimezonemappings[$moodletimezone])) {
-                                    $moodletimezone = $etcgmttimezonemappings[$moodletimezone];
-                                }
-
-                                $moodletimezone = clean_param($moodletimezone, PARAM_TIMEZONE);
-
-                                // Only apply if the timezone is different from current.
-                                if ($moodletimezone && $moodletimezone !== $user->currenttimezone) {
-                                    $usersync->apply_timezone_public($user->muserid, $remotetimezone);
-                                    $this->mtrace('User "' . $user->username . '": Timezone changed from ' .
-                                        ($user->currenttimezone ?: '(not set)') . ' to ' . $timezonename . '.', 2);
-                                    $batchtimezoneschanged++;
-                                }
+                            $changed = $usersync->apply_timezone_public(
+                                $user->muserid,
+                                $timezonesbyupn[$user->upn],
+                                $user->currenttimezone
+                            );
+                            if ($changed) {
+                                $newtz = $timezonesbyupn[$user->upn]['value'] ?? '';
+                                $this->mtrace('User "' . $user->username . '": Timezone changed from ' .
+                                    ($user->currenttimezone ?: '(not set)') . ' to ' . $newtz . '.', 2);
+                                $batchtimezoneschanged++;
                             }
                         } catch (moodle_exception $e) {
                             $this->mtrace('User "' . $user->username . '": Error applying timezone - ' .
@@ -358,7 +333,7 @@ class photoandtimezonesync extends scheduled_task {
             set_config('photosync_progress', json_encode($progressdata), 'local_o365');
 
             // Free memory.
-            unset($users, $photosbyupn, $timezonesbyupn, $upnsforphotosync, $upnsfortzsync);
+            unset($users, $photosbyupn, $timezonesbyupn, $upnsforphotosync, $upnsfortzsync, $apiclient);
             gc_collect_cycles();
         }
 
