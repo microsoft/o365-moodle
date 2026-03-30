@@ -505,7 +505,7 @@ class main {
         }
 
         $remotetimezone = $apiclient->get_timezone($oidcusername);
-        if ($remotetimezone !== false) {
+        if (is_array($remotetimezone)) {
             $this->apply_timezone($muserid, $remotetimezone, $printtrace);
         } else {
             if ($printtrace) {
