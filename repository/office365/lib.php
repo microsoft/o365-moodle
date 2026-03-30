@@ -929,23 +929,228 @@ class repository_office365 extends repository {
     }
 
     /**
+     * Validate a URL to prevent SSRF attacks.
+     *
+     * SECURITY: URLs from user input must be validated to prevent Server-Side Request Forgery (SSRF).
+     * Only allow URLs pointing to trusted Microsoft services.
+     *
+     * @param string $url The URL to validate.
+     * @return bool True if URL is valid and safe.
+     * @throws moodle_exception If the URL is invalid or potentially malicious.
+     */
+    protected function validate_reference_url($url) {
+        // URL must be a non-empty string.
+        if (!is_string($url) || trim($url) === '') {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Parse the URL.
+        $parsed = parse_url($url);
+        if ($parsed === false || !isset($parsed['scheme']) || !isset($parsed['host'])) {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Only allow HTTPS protocol (prevent http://, file://, ftp://, gopher://, etc.).
+        if (strtolower($parsed['scheme']) !== 'https') {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Normalize hostname to lowercase for comparison.
+        $host = strtolower($parsed['host']);
+
+        // Block localhost and loopback addresses.
+        $blockedhosts = [
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0',
+            '::1',
+            '0:0:0:0:0:0:0:1',
+        ];
+
+        if (in_array($host, $blockedhosts)) {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Block cloud metadata endpoints.
+        $blockedpatterns = [
+            '169.254.169.254', // AWS, Azure, GCP metadata.
+            '169.254.', // Link-local addresses.
+            'metadata.google', // GCP metadata.
+            '100.100.100.200', // Alibaba Cloud metadata.
+        ];
+
+        foreach ($blockedpatterns as $pattern) {
+            if (strpos($host, $pattern) !== false) {
+                throw new moodle_exception('invalidfilereference', 'repository_office365');
+            }
+        }
+
+        // Block private IP ranges (RFC 1918, RFC 4193).
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                throw new moodle_exception('invalidfilereference', 'repository_office365');
+            }
+        }
+
+        // Whitelist: Only allow Microsoft/Office 365 domains.
+        $alloweddomains = [
+            '.sharepoint.com',
+            '.onedrive.com',
+            '.office.com',
+            '.microsoft.com',
+            '.office365.com',
+            '.microsoftonline.com',
+            'graph.microsoft.com',
+            'api.onedrive.com',
+        ];
+
+        $isallowed = false;
+        foreach ($alloweddomains as $allowed) {
+            if ($allowed[0] === '.') {
+                // Subdomain match: host must end with the allowed domain.
+                if (substr($host, -strlen($allowed)) === $allowed || $host === substr($allowed, 1)) {
+                    $isallowed = true;
+                    break;
+                }
+            } else {
+                // Exact match.
+                if ($host === $allowed) {
+                    $isallowed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$isallowed) {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        return true;
+    }
+
+    /**
      * Pack file reference information into a string.
      *
      * @param array $reference The information to pack.
      * @return string The packed information.
+     * @throws moodle_exception If the reference cannot be encoded.
      */
     protected function pack_reference($reference) {
-        return base64_encode(serialize($reference));
+        // Use JSON encoding instead of serialize() to prevent object injection attacks.
+        $json = json_encode($reference);
+
+        // Check for JSON encoding errors.
+        if ($json === false) {
+            $error = json_last_error_msg();
+            throw new moodle_exception('errorencodingreference', 'repository_office365', '', null, $error);
+        }
+
+        return base64_encode($json);
     }
 
     /**
      * Unpack file reference information from a string.
      *
+     * SECURITY: This method must validate all input to prevent PHP object injection attacks.
+     *
      * @param string $reference The information to unpack.
      * @return array The unpacked information.
+     * @throws moodle_exception If the reference is invalid or malformed.
      */
     protected function unpack_reference($reference) {
-        return unserialize(base64_decode($reference));
+        // Validate input is a non-empty string.
+        if (!is_string($reference) || trim($reference) === '') {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Decode base64.
+        $decoded = base64_decode($reference, true);
+        if ($decoded === false) {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Try JSON decoding first (new secure format).
+        $data = json_decode($decoded, true);
+
+        // BACKWARD COMPATIBILITY: If JSON fails, try unserialize for old references.
+        // This allows existing file references in the database to continue working.
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+            // Attempt to unserialize for backward compatibility with existing references.
+            // SECURITY: Use unserialize with allowed_classes to prevent arbitrary object instantiation.
+            // The @ suppresses warnings from malformed serialized data.
+            // We catch Throwable (not Exception) to handle PHP 8+ TypeError and other engine errors.
+            try {
+                $data = @unserialize($decoded, ['allowed_classes' => false]);
+            } catch (Throwable $e) {
+                throw new moodle_exception('invalidfilereference', 'repository_office365');
+            }
+
+            // Unserialize() returns false on failure. Check for this after potential Throwable.
+            if ($data === false) {
+                throw new moodle_exception('invalidfilereference', 'repository_office365');
+            }
+        }
+
+        // Validate that unpacked data is an array.
+        if (!is_array($data)) {
+            throw new moodle_exception('invalidfilereference', 'repository_office365');
+        }
+
+        // Validate data structure - must be a flat associative array with scalar values only.
+        if (!empty($data)) {
+            // All keys must be strings.
+            foreach (array_keys($data) as $key) {
+                if (!is_string($key)) {
+                    throw new moodle_exception('invalidfilereference', 'repository_office365');
+                }
+            }
+
+            // All values must be scalar (string, int, bool, float) - no arrays or objects.
+            // This prevents nested data structures that could be used for attacks.
+            foreach ($data as $key => $value) {
+                if (!is_scalar($value) && !is_null($value)) {
+                    throw new moodle_exception('invalidfilereference', 'repository_office365');
+                }
+            }
+
+            // Validate expected field types for known keys to prevent type confusion attacks.
+            $expectedtypes = [
+                'source' => 'string', // Required: e.g. 'onedrive', 'onedrivegroup', 'trendingaround'.
+                'id' => 'string', // Required: File ID.
+                'url' => 'string', // Optional: File URL.
+                'downloadurl' => 'string', // Optional: Download URL.
+                'linktype' => 'string', // Optional: e.g. 'default', 'directlink', 'controlledshare'.
+                'groupid' => 'string', // Optional: Group/course ID.
+                'shared' => 'boolean', // Optional: Whether file is shared.
+            ];
+
+            foreach ($data as $key => $value) {
+                if (isset($expectedtypes[$key]) && $value !== null) {
+                    $expectedtype = $expectedtypes[$key];
+                    $actualtype = gettype($value);
+
+                    // Allow integer values for string fields (they'll be cast to string when used).
+                    if ($expectedtype === 'string' && $actualtype === 'integer') {
+                        continue;
+                    }
+
+                    if ($actualtype !== $expectedtype) {
+                        throw new moodle_exception('invalidfilereference', 'repository_office365');
+                    }
+                }
+            }
+
+            // SSRF PROTECTION: Validate any URLs in the reference to prevent Server-Side Request Forgery.
+            // URLs must point to trusted Microsoft domains only.
+            $urlfields = ['url', 'downloadurl'];
+            foreach ($urlfields as $field) {
+                if (isset($data[$field]) && !empty($data[$field])) {
+                    $this->validate_reference_url($data[$field]);
+                }
+            }
+        }
+
+        return $data;
     }
 
     /**
