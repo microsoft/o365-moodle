@@ -45,6 +45,14 @@ require_once($CFG->dirroot . '/local/o365/lib.php');
  */
 class unified extends o365api {
     /**
+     * Maximum number of records per page for Microsoft Graph API batch requests.
+     * This is the Graph API maximum limit.
+     *
+     * @var int
+     */
+    const GRAPH_API_BATCH_SIZE = 999;
+
+    /**
      * @var string The general API area of the class.
      */
     public $apiarea = 'graph';
@@ -957,19 +965,202 @@ class unified extends o365api {
     }
 
     /**
-     * Get all users in the configured directory.
+     * Get required user fields based on field mappings and essential sync fields.
+     * This optimizes API calls by only requesting fields that are actually used.
      *
-     * @param string|array $params Requested user parameters.
-     * @return array|null Array of user information, or null if failure.
+     * @return array Array of required user fields.
+     */
+    protected function get_required_user_fields(): array {
+        global $CFG;
+
+        // Essential fields always needed for user sync.
+        $essentialfields = [
+            'id', // User object ID.
+            'userPrincipalName', // Primary identifier.
+            'accountEnabled', // Account status.
+            'mail', // Email address.
+        ];
+
+        // Add binding username claim field if configured.
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+        $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+        $bindingfieldmap = [
+            'upn' => 'userPrincipalName',
+            'oid' => 'id',
+            'samaccountname' => 'onPremisesSamAccountName',
+            'email' => 'mail',
+            'auto' => 'userPrincipalName',
+        ];
+        if (isset($bindingfieldmap[$bindingusernameclaim])) {
+            $essentialfields[] = $bindingfieldmap[$bindingusernameclaim];
+        }
+
+        // Get fields from auth_oidc field mappings.
+        $mappedfields = [];
+        if (function_exists('auth_oidc_get_field_mappings')) {
+            $fieldmappings = auth_oidc_get_field_mappings();
+            foreach ($fieldmappings as $fieldmapping) {
+                if (isset($fieldmapping['field_map']) && !empty($fieldmapping['field_map'])) {
+                    $remotefield = $fieldmapping['field_map'];
+
+                    // Handle extension attributes.
+                    if (strpos($remotefield, 'extensionAttribute') === 0) {
+                        $mappedfields[] = 'onPremisesExtensionAttributes';
+                    } else if ($remotefield === 'manager' || $remotefield === 'manager_email') {
+                        $mappedfields[] = 'manager';
+                    } else if (
+                        !in_array(
+                            $remotefield,
+                            ['bindingusernameclaim', 'objectId', 'teams', 'groups', 'roles',
+                            'sds_school_id', 'sds_school_name', 'sds_school_role', 'sds_student_externalId',
+                            'sds_student_birthDate', 'sds_student_grade', 'sds_student_graduationYear',
+                            'sds_student_studentNumber', 'sds_teacher_externalId', 'sds_teacher_teacherNumber']
+                        )
+                    ) {
+                        // Add valid Graph API fields, excluding special fields.
+                        $mappedfields[] = $remotefield;
+                    }
+                }
+            }
+        }
+
+        // Merge and deduplicate.
+        $requiredfields = array_unique(array_merge($essentialfields, $mappedfields));
+
+        return $requiredfields;
+    }
+
+    /**
+     * Execute a paginated OData GET query, invoking a page-handler for each API response page.
+     *
+     * This is the single shared implementation of the pagination loop used by
+     * process_users_batched, process_users_delta_batched, and process_users_minimal_batched.
+     * Each public method supplies its own $pagehandler closure containing only the logic that
+     * differs between modes (deduplication, delta-link capture, etc.).
+     *
+     * The helper automatically:
+     *  - Appends $skiptoken to queries on subsequent pages.
+     *  - Drops $deltatoken from queries when a $skiptoken is present (Graph API requirement).
+     *  - Captures @odata.deltaLink on the last page of delta queries.
+     *  - Extracts the next $skiptoken from @odata.nextLink / odata.nextLink.
+     *
+     * @param string $endpoint Base API endpoint, e.g. "/users" or "/users/delta".
+     * @param array $odataqueries Initial OData query parameters (modified in place per page).
+     * @param callable $pagehandler Receives the full parsed API result array for each page.
+     *                              Must return int: the number of items processed from that page.
+     * @return array [int $totalprocessed, string|null $deltatokenvalue]
      * @throws moodle_exception
      */
-    public function get_users($params = 'default'): ?array {
-        $endpoint = "/users";
+    private function execute_odata_paginated(string $endpoint, array $odataqueries, callable $pagehandler): array {
+        $totalprocessed = 0;
+        $deltatokenvalue = null;
+        $continue = true;
+        $skiptoken = null;
+
+        while ($continue) {
+            if (!empty($skiptoken)) {
+                $odataqueries['$skiptoken'] = $skiptoken;
+                // Graph API does not accept both $deltatoken and $skiptoken simultaneously.
+                if (isset($odataqueries['$deltatoken'])) {
+                    unset($odataqueries['$deltatoken']);
+                }
+            }
+
+            // Build OData query string.
+            $odataquerystring = '';
+            foreach ($odataqueries as $odataqueryname => $odataqueryvalue) {
+                $odataquerystring .= $odataqueryname . '=' . $odataqueryvalue . '&';
+            }
+            $apimethod = $endpoint;
+            if ($odataquerystring) {
+                $apimethod = $endpoint . '?' . rtrim($odataquerystring, '&');
+            }
+
+            $response = $this->apicall('get', $apimethod);
+            $result = $this->process_apicall_response($response, ['value' => null]);
+
+            if (!empty($result) && is_array($result)) {
+                $totalprocessed += $pagehandler($result);
+
+                // Extract skiptoken for the next page.
+                if (isset($result['odata.nextLink'])) {
+                    $skiptoken = $this->extract_param_from_link($result['odata.nextLink'], '$skiptoken');
+                } else if (isset($result['@odata.nextLink'])) {
+                    $skiptoken = $this->extract_param_from_link($result['@odata.nextLink'], '$skiptoken');
+                } else {
+                    $skiptoken = null;
+                }
+
+                // Capture deltaLink token from the last page of delta queries.
+                if (isset($result['@odata.deltaLink'])) {
+                    $deltatokenvalue = $this->extract_param_from_link($result['@odata.deltaLink'], '$deltatoken');
+                }
+            }
+
+            $continue = !empty($skiptoken);
+        }
+
+        return [$totalprocessed, $deltatokenvalue];
+    }
+
+    /**
+     * Process users in batches with a callback function.
+     * This method retrieves 500 users per API call and processes them immediately with the callback,
+     * reducing memory usage by not loading all users into memory at once.
+     *
+     * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
+     * @param string|array $params User fields to select (use 'default' for default fields)
+     * @return int Total number of users processed
+     * @throws moodle_exception
+     */
+    public function process_users_batched(callable $callback, $params = 'default'): int {
         $odataqueries = [];
 
-        // Select params.
         if ($params === 'default') {
-            $params = $this->get_default_user_fields();
+            $params = $this->get_required_user_fields();
+        }
+
+        if (is_array($params)) {
+            $excludedfields = ['preferredName', 'teams', 'groups', 'roles'];
+            foreach ($excludedfields as $excludedfield) {
+                if (($key = array_search($excludedfield, $params)) !== false) {
+                    unset($params[$key]);
+                }
+            }
+            $odataqueries['$select'] = implode(',', $params);
+        }
+
+        $odataqueries['$top'] = (string)self::GRAPH_API_BATCH_SIZE;
+
+        $pagehandler = function (array $result) use ($callback): int {
+            if (!empty($result['value']) && is_array($result['value'])) {
+                $callback($result['value']);
+                return count($result['value']);
+            }
+            return 0;
+        };
+
+        [$totalprocessed] = $this->execute_odata_paginated('/users', $odataqueries, $pagehandler);
+        return $totalprocessed;
+    }
+
+    /**
+     * Process users delta in batches with a callback function.
+     * This method retrieves 500 users per API call and processes them immediately with the callback,
+     * reducing memory usage by not loading all users into memory at once.
+     *
+     * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
+     * @param string|array $params User fields to select (use 'default' for default fields)
+     * @param string|null $deltatoken Delta token from previous sync
+     * @return array [total number of users processed, new delta token, bool fields mapping changed]
+     * @throws moodle_exception
+     */
+    public function process_users_delta_batched(callable $callback, $params = 'default', ?string $deltatoken = null): array {
+        $odataqueries = [];
+        $fieldsmappingchanged = false;
+
+        if ($params === 'default') {
+            $params = $this->get_required_user_fields();
         }
 
         if (is_array($params)) {
@@ -980,72 +1171,90 @@ class unified extends o365api {
                 }
             }
 
-            $odataqueries['$select'] = implode(',', $params);
+            // Sort to ensure consistent ordering regardless of how callers supply the field list.
+            sort($params);
+            $selectfields = implode(',', $params);
+            $odataqueries['$select'] = $selectfields;
+
+            // Check if field list has changed since last delta sync.
+            // Delta tokens include the field list, so if fields change, we must invalidate the token.
+            $currentfieldshash = md5($selectfields);
+
+            if (!empty($deltatoken)) {
+                $storedfieldshash = get_config('local_o365', 'task_usersync_fieldshash');
+
+                if ($storedfieldshash && $storedfieldshash !== $currentfieldshash) {
+                    // Field mappings have changed - invalidate delta token and start fresh.
+                    $deltatoken = null;
+                    $fieldsmappingchanged = true;
+                }
+            }
+
+            // Store current fields hash for comparison on next sync.
+            set_config('task_usersync_fieldshash', $currentfieldshash, 'local_o365');
         }
-
-        return $this->paginatedapicall('get', $endpoint, $odataqueries);
-    }
-
-    /**
-     * Return users delta.
-     *
-     * @param array|string $params
-     * @param string|null $deltatoken
-     * @return array
-     */
-    public function get_users_delta($params, ?string $deltatoken = null): array {
-        $endpoint = "/users/delta";
-        $odataqueries = [];
 
         if (!empty($deltatoken)) {
             $odataqueries['$deltatoken'] = $deltatoken;
         }
 
-        // Select params.
-        if ($params === 'default') {
-            $params = $this->get_default_user_fields();
-        }
+        $odataqueries['$top'] = (string)self::GRAPH_API_BATCH_SIZE;
 
-        if (is_array($params)) {
-            $excludedfields = ['preferredName', 'teams', 'groups', 'roles'];
-            foreach ($excludedfields as $excludedfield) {
-                if (($key = array_search($excludedfield, $params)) !== false) {
-                    unset($params[$key]);
+        // Track seen IDs across pages to handle the known Graph API issue where
+        // the same user can appear in multiple delta pages.
+        $knownids = [];
+
+        $pagehandler = function (array $result) use ($callback, &$knownids): int {
+            if (empty($result['value']) || !is_array($result['value'])) {
+                return 0;
+            }
+
+            $batch = $result['value'];
+
+            // Remove duplicates (O(1) hash-map lookup) and tombstone records.
+            foreach ($batch as $key => $user) {
+                if (isset($knownids[$user['id']]) || isset($user['@removed'])) {
+                    unset($batch[$key]);
+                } else {
+                    $knownids[$user['id']] = true;
                 }
             }
 
-            $odataqueries['$select'] = implode(',', $params);
-        }
-
-        [$users, $deltatoken] = $this->paginatedapicall(
-            'get',
-            $endpoint,
-            $odataqueries,
-            ['value' => null],
-            false,
-            '',
-            [],
-            '$skiptoken',
-            '@odata.deltaLink',
-            '$deltatoken'
-        );
-
-        $knownids = [];
-        foreach ($users as $key => $user) {
-            // There is a known issue in delta queries where the same user can be returned multiple times in the initial run.
-            if (in_array($user['id'], $knownids)) {
-                unset($users[$key]);
-            } else {
-                $knownids[] = $user['id'];
+            if (!empty($batch)) {
+                $callback($batch);
             }
+            return count($batch);
+        };
 
-            // Remove deleted users.
-            if (isset($user['@removed'])) {
-                unset($users[$key]);
+        [$totalprocessed, $deltatokenvalue] = $this->execute_odata_paginated('/users/delta', $odataqueries, $pagehandler);
+
+        return [$totalprocessed, $deltatokenvalue, $fieldsmappingchanged];
+    }
+
+    /**
+     * Process users in batches with minimal fields (id and accountEnabled only).
+     * This method is optimized for suspend/reenable operations that only need user IDs.
+     *
+     * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
+     * @return int Total number of users processed
+     * @throws moodle_exception
+     */
+    public function process_users_minimal_batched(callable $callback): int {
+        $odataqueries = [
+            '$select' => 'id,accountEnabled',
+            '$top'    => (string)self::GRAPH_API_BATCH_SIZE,
+        ];
+
+        $pagehandler = function (array $result) use ($callback): int {
+            if (!empty($result['value']) && is_array($result['value'])) {
+                $callback($result['value']);
+                return count($result['value']);
             }
-        }
+            return 0;
+        };
 
-        return [$users, $deltatoken];
+        [$totalprocessed] = $this->execute_odata_paginated('/users', $odataqueries, $pagehandler);
+        return $totalprocessed;
     }
 
     /**
@@ -1947,6 +2156,42 @@ class unified extends o365api {
     }
 
     /**
+     * Check whether binary data begins with a known image file-format magic signature.
+     *
+     * Checking the first few magic bytes is orders of magnitude faster than running a
+     * regex over potentially megabytes of photo data, and also provides stronger semantic
+     * validation that the payload is actually an image rather than an error response body.
+     *
+     * Recognised formats: JPEG, PNG, GIF87a/GIF89a, WebP.
+     *
+     * @param string $data Raw binary data to inspect.
+     * @return bool True when $data starts with a recognised image magic signature.
+     */
+    private function is_valid_photo_binary(string $data): bool {
+        if (strlen($data) < 3) {
+            return false;
+        }
+        $header = substr($data, 0, 12);
+        // JPEG: FF D8 FF.
+        if (str_starts_with($header, "\xFF\xD8\xFF")) {
+            return true;
+        }
+        // PNG: 89 50 4E 47 0D 0A 1A 0A.
+        if (str_starts_with($header, "\x89PNG\r\n\x1a\n")) {
+            return true;
+        }
+        // GIF87a / GIF89a.
+        if (str_starts_with($header, 'GIF87a') || str_starts_with($header, 'GIF89a')) {
+            return true;
+        }
+        // WebP: RIFF????WEBP (bytes 0-3 are RIFF, bytes 8-11 are WEBP).
+        if (str_starts_with($header, 'RIFF') && substr($header, 8, 4) === 'WEBP') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Get a users photo.
      *
      * @param string $user User to retrieve photo.
@@ -1960,7 +2205,7 @@ class unified extends o365api {
         if ($this->check_expected_http_code(['200'])) {
             // Successful response.
             // Return value needs to be binary.
-            if (preg_match('~[^\x20-\x7E\t\r\n]~', $photo) > 0) {
+            if ($this->is_valid_photo_binary($photo)) {
                 // Return value is a valid photo.
                 return $photo;
             } else {
@@ -2326,6 +2571,148 @@ class unified extends o365api {
         } catch (moodle_exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Get timezones for multiple users using batch requests.
+     * Microsoft Graph allows up to 20 requests per batch.
+     *
+     * @param array $upns Array of user principal names
+     * @return array Associative array with UPN as key and timezone data as value
+     */
+    public function get_timezones_batch(array $upns): array {
+        if (empty($upns)) {
+            return [];
+        }
+
+        $results = [];
+        $chunks = array_chunk($upns, 20); // Max 20 requests per batch.
+
+        foreach ($chunks as $chunk) {
+            $batchrequests = [];
+            $idtoupnmap = [];
+
+            // Pre-initialise every UPN to false so that UPNs absent from the batch
+            // response (partial API failure) are treated as "no timezone" rather than
+            // silently skipped by the caller's isset() / empty() branch logic.
+            foreach ($chunk as $upn) {
+                $results[$upn] = false;
+            }
+
+            // Build batch request.
+            foreach ($chunk as $index => $upn) {
+                $requestid = (string)($index + 1);
+                $idtoupnmap[$requestid] = $upn;
+                $batchrequests[] = [
+                    'id' => $requestid,
+                    'method' => 'GET',
+                    'url' => '/users/' . urlencode($upn) . '/mailboxSettings/timeZone',
+                ];
+            }
+
+            // Make batch request.
+            try {
+                $batchpayload = ['requests' => $batchrequests];
+                $response = $this->betaapicall('post', '/$batch', json_encode($batchpayload));
+                $batchresponse = $this->process_apicall_response($response, ['responses' => null]);
+
+                if (!empty($batchresponse['responses']) && is_array($batchresponse['responses'])) {
+                    foreach ($batchresponse['responses'] as $individualresponse) {
+                        $requestid = $individualresponse['id'];
+                        $upn = $idtoupnmap[$requestid];
+
+                        if ($individualresponse['status'] === 200 && !empty($individualresponse['body'])) {
+                            $results[$upn] = $individualresponse['body'];
+                        } else {
+                            // Request failed or returned non-200 status.
+                            $results[$upn] = false;
+                        }
+                    }
+                }
+            } catch (moodle_exception $e) {
+                // Batch call itself failed; pre-initialisation above already set all
+                // UPNs in this chunk to false, so no additional work needed here.
+                debugging('Batch timezone request failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get profile photos for multiple users using batch requests.
+     * Microsoft Graph allows up to 20 requests per batch.
+     *
+     * @param array $upns Array of user principal names
+     * @return array Associative array with UPN as key and photo data (binary or false) as value
+     */
+    public function get_photos_batch(array $upns): array {
+        if (empty($upns)) {
+            return [];
+        }
+
+        $results = [];
+        $chunks = array_chunk($upns, 20); // Max 20 requests per batch.
+
+        foreach ($chunks as $chunk) {
+            $batchrequests = [];
+            $idtoupnmap = [];
+
+            // Pre-initialise every UPN to false so that UPNs absent from the batch
+            // response (partial API failure) are treated as "no photo" rather than
+            // silently skipped by the caller's isset() / empty() branch logic.
+            foreach ($chunk as $upn) {
+                $results[$upn] = false;
+            }
+
+            // Build batch request.
+            foreach ($chunk as $index => $upn) {
+                $requestid = (string)($index + 1);
+                $idtoupnmap[$requestid] = $upn;
+                $batchrequests[] = [
+                    'id' => $requestid,
+                    'method' => 'GET',
+                    'url' => '/users/' . urlencode($upn) . '/photo/$value',
+                ];
+            }
+
+            // Make batch request.
+            try {
+                $batchpayload = ['requests' => $batchrequests];
+                $response = $this->betaapicall('post', '/$batch', json_encode($batchpayload));
+                $batchresponse = $this->process_apicall_response($response, ['responses' => null]);
+
+                if (!empty($batchresponse['responses']) && is_array($batchresponse['responses'])) {
+                    foreach ($batchresponse['responses'] as $individualresponse) {
+                        $requestid = $individualresponse['id'];
+                        $upn = $idtoupnmap[$requestid];
+
+                        if ($individualresponse['status'] === 200 && !empty($individualresponse['body'])) {
+                            // Graph batch responses encode binary content as base64 in the JSON envelope.
+                            $binarydata = base64_decode($individualresponse['body'], true);
+                            if ($binarydata !== false && $this->is_valid_photo_binary($binarydata)) {
+                                $results[$upn] = $binarydata;
+                            } else {
+                                // Decoded data is not valid binary image data.
+                                $results[$upn] = false;
+                            }
+                        } else if ($individualresponse['status'] === 404) {
+                            // No photo found for this user.
+                            $results[$upn] = false;
+                        } else {
+                            // Other error - treat as no photo.
+                            $results[$upn] = false;
+                        }
+                    }
+                }
+            } catch (moodle_exception $e) {
+                // Batch call itself failed; pre-initialisation above already set all
+                // UPNs in this chunk to false, so no additional work needed here.
+                debugging('Batch photo request failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+
+        return $results;
     }
 
     /**
