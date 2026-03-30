@@ -567,5 +567,19 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100702, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2025040815.01) {
+        // Define index to be added to auth_oidc_token.
+        $table = new xmldb_table('auth_oidc_token');
+        $index = new xmldb_index('oidcusername', XMLDB_INDEX_NOTUNIQUE, ['oidcusername']);
+
+        // Conditionally launch add index oidcusername.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2025040815.01, 'auth', 'oidc');
+    }
+
     return true;
 }
