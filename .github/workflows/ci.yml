@@ -62,7 +62,7 @@ jobs:
 
     steps:
     - name: Check out sub repository code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         sparse-checkout: |
           ${{ matrix.folder }}
