@@ -905,7 +905,23 @@ class repository_office365 extends repository {
                 throw new moodle_exception('errorwhiledownload', 'repository_office365');
             }
 
-            $file = $sourceclient->get_file_by_url($reference['url']);
+            // Security fix: Do not use user-supplied URLs directly.
+            // Instead, fetch the download URL from Microsoft Graph API using the file ID.
+            // The file ID comes from '@odata.id' in the API response.
+            if (empty($reference['id'])) {
+                utils::debug('Missing file ID for trendingaround file.', __METHOD__, $reference);
+                throw new moodle_exception('errorwhiledownload', 'repository_office365');
+            }
+
+            // Get file metadata to obtain the pre-authenticated download URL.
+            $filedata = $sourceclient->get_file_data($reference['id']);
+            if (empty($filedata['@microsoft.graph.downloadUrl'])) {
+                utils::debug('Could not obtain download URL for trendingaround file.', __METHOD__, $reference);
+                throw new moodle_exception('errorwhiledownload', 'repository_office365');
+            }
+
+            // Download file using pre-authenticated URL (without OAuth token).
+            $file = $sourceclient->get_file_by_url_unauthenticated($filedata['@microsoft.graph.downloadUrl']);
         }
 
         if (!empty($file)) {
