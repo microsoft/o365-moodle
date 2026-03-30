@@ -153,6 +153,7 @@ $string['errorauthoidcnotconfig'] = 'Please configure the OpenID Connect authent
 $string['errorbadclienttype'] = 'Invalid client type.';
 $string['errorbadpath'] = 'Bad Path';
 $string['errorcoursenotfound'] = 'Course not found';
+$string['errorencodingreference'] = 'Failed to encode file reference';
 $string['erroro365required'] = 'This file is currently only available to Microsoft 365 users.';
 $string['errorwhiledownload'] = 'An error occurred while downloading the file';
 $string['errorwhilesharing'] = 'An error occurred while creating a sharable link';
@@ -160,6 +161,7 @@ $string['errorwhilesharing'] = 'An error occurred while creating a sharable link
 $string['file'] = 'File';
 $string['filelinkingheader'] = 'File linking options';
 $string['groups'] = 'Groups (Courses)';
+$string['invalidfilereference'] = 'Invalid or malformed file reference';
 $string['myfiles'] = 'My OneDrive';
 $string['notconfigured'] = '<p class="error">To use this plugin, you must first configure the <a href="{$a}/admin/settings.php?section=local_o365">Microsoft 365 plugins</a></p>';
 $string['office365:view'] = 'View Microsoft 365 repository';
