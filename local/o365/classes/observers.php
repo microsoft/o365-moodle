@@ -485,7 +485,7 @@ class observers {
         // If the course is an SDS course and the SDS enrolment sync option is off, don't update enrolment.
         if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
             // SDS course.
-            if (!get_config('local_o365', 'sdsenrolmentenabled') || !get_config('local_o365', 'sdssyncenrolmenttosds')) {
+            if (!get_config('local_o365', 'sdssyncenrolmenttosds')) {
                 return false;
             }
         }
