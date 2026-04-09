@@ -172,6 +172,20 @@ if ($form->is_cancelled()) {
         }
     }
 
+    // If idptype changed to a Microsoft IdP, reset custom binding username claim to auto
+    // because custom is not supported for Microsoft IdP types.
+    $previousidptype = get_config('auth_oidc', 'idptype');
+    if (
+        isset($fromform->idptype) &&
+        in_array($fromform->idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM]) &&
+        $previousidptype != $fromform->idptype
+    ) {
+        $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
+        if ($bindingusernameclaim === 'custom') {
+            set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+        }
+    }
+
     // Redirect destination and message depend on IdP type.
     $isgraphapiconnected = false;
     if ($fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER) {

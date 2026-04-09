@@ -827,7 +827,13 @@ function auth_oidc_get_binding_username_claim(): string {
     if (empty($bindingusernameclaim)) {
         $bindingusernameclaim = 'auto';
     } else if ($bindingusernameclaim === 'custom') {
-        $bindingusernameclaim = get_config('auth_oidc', 'customclaimname');
+        // Custom binding username claim is not supported for Microsoft IdP types.
+        $idptype = get_config('auth_oidc', 'idptype');
+        if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM])) {
+            $bindingusernameclaim = 'auto';
+        } else {
+            $bindingusernameclaim = get_config('auth_oidc', 'customclaimname');
+        }
     } else if (
         !in_array(
             $bindingusernameclaim,
