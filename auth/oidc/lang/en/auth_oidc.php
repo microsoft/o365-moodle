@@ -427,19 +427,18 @@ $string['binding_username_custom'] = 'Custom';
 $string['bindingusernameclaim'] = 'Binding username claim';
 $string['customclaimname'] = 'Custom claim name';
 $string['customclaimname_description'] = 'This field is used only when the <b>Binding Username Claim</b> setting is set to <b>Custom</b>.';
-$string['binding_username_claim_help_ms_no_user_sync'] = 'The options for non Microsoft IdPs include:
+$string['binding_username_claim_help_ms_no_user_sync'] = 'The options for Microsoft IdP without user sync feature enabled include:
 <ul>
 <li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
 <li><b>preferred_username</b>: Default for Microsoft identity platform (v2.0) IdP type. <span class="not_support_user_sync">Does not support user sync.</span></li>
 <li><b>email</b>: Fallback for Microsoft identity platform (v2.0).</li>
-<li><b>upn</b>: Default for Microsoft Entra ID (v1.0) and other IdP types.</li>
-<li><b>unique_name</b>: Fallback for Microsoft Entra ID (v1.0) and other IdP types. <span class="not_support_user_sync">Does not support user sync.</span></li>
-<li><b>oid</b>: Fallback if no other claims are present. Only present in Microsoft IdP.</li>
+<li><b>upn</b>: Default for Microsoft Entra ID (v1.0).</li>
+<li><b>unique_name</b>: Fallback for Microsoft Entra ID (v1.0). <span class="not_support_user_sync">Does not support user sync.</span></li>
+<li><b>oid</b>: Fallback if no other claims are present.</li>
 <li><b>sub</b>: Fallback if no other claims are present. <span class="not_support_user_sync">Does not support user sync.</span></li>
 <li><b>samaccountname</b>: Custom claim.</li>
-<li><b>Custom</b>: Allows the site admin to enter a custom value. <span class="not_support_user_sync">Does not support user sync.</span></li>
 </ul>
-Note some options do not support user sync.';
+Note: Custom binding username claim is not supported for Microsoft IdP types.';
 $string['binding_username_claim_help_ms_with_user_sync'] = 'The options for Microsoft IdP with user sync feature enabled include:
 <ul>
 <li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
@@ -448,15 +447,15 @@ $string['binding_username_claim_help_ms_with_user_sync'] = 'The options for Micr
 <li><b>oid</b>: Fallback if no other claims are present. Only present in Microsoft IdP.</li>
 <li><b>samaccountname</b>: Custom claim.</li>
 </ul>';
-$string['binding_username_claim_help_non_ms'] = 'The options for Microsoft IdP without user sync feature enabled include:
+$string['binding_username_claim_help_non_ms'] = 'The options for non-Microsoft IdPs include:
 <ul>
 <li><b>Choose automatically</b>: Uses current logic, determining the token by IdP type and falling back to <b>sub</b> if no claim is found.</li>
 <li><b>preferred_username</b></li>
 <li><b>email</b></li>
 <li><b>unique_name</b></li>
 <li><b>sub</b></li>
-<li><b>samaccountname</b></li>
-<li><b>custom</b>: Custom claim.</li>
+<li><b>samaccountname</b>: Custom claim.</li>
+<li><b>Custom</b>: Allows the site admin to enter a custom value.</li>
 </ul>';
 $string['binding_username_claim_updated'] = 'Binding Username Claim was updated successfully.';
 $string['examplecsv'] = 'Example upload file';
