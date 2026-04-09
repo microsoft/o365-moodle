@@ -103,7 +103,6 @@ class binding_username_claim extends moodleform {
                         'oid' => 'oid',
                         'sub' => 'sub',
                         'samaccountname' => 'samaccountname',
-                        'custom' => get_string('binding_username_custom', 'auth_oidc'), // Custom value.
                     ];
                 }
                 break;
