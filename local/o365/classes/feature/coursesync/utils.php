@@ -811,7 +811,7 @@ class utils {
         if (!$sdscoursechecked) {
             if ($DB->record_exists('local_o365_objects', ['type' => 'sdssection', 'moodleid' => $courseid])) {
                 // For SDS courses, only perform sync if advanced enrolment sync option is enabled.
-                if (!get_config('local_o365', 'sdsenrolmentenabled') || !get_config('local_o365', 'sdssyncenrolmenttosds')) {
+                if (!get_config('local_o365', 'sdssyncenrolmenttosds')) {
                     return false;
                 }
             }

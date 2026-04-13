@@ -564,36 +564,6 @@ if ($hassiteconfig) {
                     $desc = new lang_string('settings_sds_teams_enabled_desc', 'local_o365');
                     $settings->add(new admin_setting_configcheckbox('local_o365/sdsteamsenabled', $label, $desc, '0'));
 
-                    // SDS categorize by subject.
-                    $label = new lang_string('settings_sds_categorize_by_subject', 'local_o365');
-                    $desc = new lang_string('settings_sds_categorize_by_subject_desc', 'local_o365');
-                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscategorizebysubject', $label, $desc, '0'));
-
-                    // SDS ignore past courses.
-                    $label = new lang_string('settings_sds_ignore_past_courses', 'local_o365');
-                    $desc = new lang_string('settings_sds_ignore_past_courses_desc', 'local_o365');
-                    $settings->add(new admin_setting_configcheckbox('local_o365/sdsignorepastcourses', $label, $desc, '0'));
-
-                    // SDS expired course prefix.
-                    $label = new lang_string('settings_sds_expired_course_prefix', 'local_o365');
-                    $desc = new lang_string('settings_sds_expired_course_prefix_desc', 'local_o365');
-                    $settings->add(new admin_setting_configtext('local_o365/sdsexpiredprefix', $label, $desc, 'Exp', PARAM_TEXT));
-
-                    // SDS cohort sync header.
-                    $label = new lang_string('settings_sds_cohortsync', 'local_o365');
-                    $desc = new lang_string('settings_sds_cohortsync_desc', 'local_o365');
-                    $settings->add(new admin_setting_heading('local_o365_sds_cohortsync', $label, $desc));
-
-                    // SDS create cohorts.
-                    $label = new lang_string('settings_sds_create_cohorts', 'local_o365');
-                    $desc = new lang_string('settings_sds_create_cohorts_desc', 'local_o365');
-                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscreatecohorts', $label, $desc, '0'));
-
-                    // SDS cohort include teachers.
-                    $label = new lang_string('settings_sds_cohort_include_teachers', 'local_o365');
-                    $desc = new lang_string('settings_sds_cohort_include_teachers_desc', 'local_o365');
-                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscohortincludeteachers', $label, $desc, '0'));
-
                     // SDS school sync disabled action.
                     $schooldisabledactionoptions = [
                         SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED => get_string(
@@ -615,17 +585,48 @@ if ($hassiteconfig) {
                         $schooldisabledactionoptions
                     ));
 
+                    // SDS categorize by subject.
+                    $label = new lang_string('settings_sds_categorize_by_subject', 'local_o365');
+                    $desc = new lang_string('settings_sds_categorize_by_subject_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscategorizebysubject', $label, $desc, '0'));
+
+                    // SDS ignore past courses.
+                    $label = new lang_string('settings_sds_ignore_past_courses', 'local_o365');
+                    $desc = new lang_string('settings_sds_ignore_past_courses_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdsignorepastclasses', $label, $desc, '0'));
+
+                    // SDS expired course prefix.
+                    $label = new lang_string('settings_sds_expired_course_prefix', 'local_o365');
+                    $desc = new lang_string('settings_sds_expired_course_prefix_desc', 'local_o365');
+                    $settings->add(new admin_setting_configtext('local_o365/sdsexpiredprefix', $label, $desc, 'Exp', PARAM_TEXT));
+                    $settings->hide_if('local_o365/sdsexpiredprefix', 'local_o365/sdsignorepastclasses', 'notchecked');
+
+                    // SDS cohort sync header.
+                    $label = new lang_string('settings_sds_cohortsync', 'local_o365');
+                    $desc = new lang_string('settings_sds_cohortsync_desc', 'local_o365');
+                    $settings->add(new admin_setting_heading('local_o365_sds_cohortsync', $label, $desc));
+
+                    // SDS create cohorts.
+                    $label = new lang_string('settings_sds_create_cohorts', 'local_o365');
+                    $desc = new lang_string('settings_sds_create_cohorts_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscreatecohorts', $label, $desc, '0'));
+
+                    // SDS cohort include teachers.
+                    $label = new lang_string('settings_sds_cohort_include_teachers', 'local_o365');
+                    $desc = new lang_string('settings_sds_cohort_include_teachers_desc', 'local_o365');
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdscohortincludeteachers', $label, $desc, '0'));
+
                     // SDS course user sync header.
                     $label = new lang_string('settings_sds_courseenrolsync', 'local_o365');
                     $desc = new lang_string('settings_sds_courseenrolsync_desc', 'local_o365');
                     $settings->add(new admin_setting_heading('local_o365_sds_courseenrolsync', $label, $desc));
 
-                    // SDS course sync enrol settings.
+                    // SDS to Moodle enrolment sync.
                     $label = new lang_string('settings_sds_enrolment_enabled', 'local_o365');
                     $desc = new lang_string('settings_sds_enrolment_enabled_desc', 'local_o365');
-                    $settings->add(new admin_setting_configcheckbox('local_o365/sdsenrolmentenabled', $label, $desc, '0'));
+                    $settings->add(new admin_setting_configcheckbox('local_o365/sdsenrolmentenabled', $label, $desc, '1'));
 
-                    // SDS course sync enrol from Moodle to SDS settings.
+                    // Moodle to SDS enrolment sync.
                     $label = new lang_string('settings_sds_sync_enrolment_to_sds', 'local_o365');
                     $desc = new lang_string('settings_sds_sync_enrolment_to_sds_desc', 'local_o365');
                     $settings->add(new admin_setting_configcheckbox('local_o365/sdssyncenrolmenttosds', $label, $desc, '0'));
