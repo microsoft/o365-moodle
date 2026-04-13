@@ -262,7 +262,7 @@ class sync extends scheduled_task {
 
             // Get configuration options.
             $sdscategorizebysubject = get_config('local_o365', 'sdscategorizebysubject');
-            $sdsignorepastcourses = get_config('local_o365', 'sdsignorepastcourses');
+            $sdsignorepastclasses = get_config('local_o365', 'sdsignorepastclasses');
             $sdsexpiredprefix = get_config('local_o365', 'sdsexpiredprefix');
             if (empty($sdsexpiredprefix)) {
                 $sdsexpiredprefix = 'Exp';
@@ -284,7 +284,7 @@ class sync extends scheduled_task {
                 }
 
                 // Filter out expired courses if configured.
-                if ($sdsignorepastcourses) {
+                if ($sdsignorepastclasses) {
                     // Check for expired prefix.
                     if (substr($schoolclass['displayName'], 0, strlen($sdsexpiredprefix)) === $sdsexpiredprefix) {
                         static::mtrace('Skipping expired course (prefix match): ' . $schoolclass['displayName'], 4);
@@ -407,23 +407,22 @@ class sync extends scheduled_task {
 
                     // Sync teachers.
                     $existingteacherids = [];
-                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
-                        $existingteacherroleassignments = get_users_from_role_on_context($teacherrole, $coursecontext);
-                        foreach ($existingteacherroleassignments as $roleassignment) {
-                            $existingteacherids[] = $roleassignment->userid;
-                        }
+                    $existingteacherroleassignments = get_users_from_role_on_context($teacherrole, $coursecontext);
+                    foreach ($existingteacherroleassignments as $roleassignment) {
+                        $existingteacherids[] = $roleassignment->userid;
                     }
 
                     $teachersobjectids = [];
                     $classteachers = $apiclient->get_school_class_teachers($schoolclass['id']);
+                    static::mtrace('API returned ' . count($classteachers) . ' teachers for class ' . $schoolclass['id'], 5);
                     foreach ($classteachers as $classteacher) {
                         $classuserids[] = $classteacher['id'];
                         $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classteacher['id']]);
+                        static::mtrace('Teacher ' . $classteacher['id'] . ': o365 object ' .
+                            ($objectrec ? 'found (moodleid=' . $objectrec->moodleid . ')' : 'NOT found'), 6);
                         if (!empty($objectrec)) {
-                            if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
-                                if (($key = array_search($objectrec->moodleid, $existingteacherids)) !== false) {
-                                    unset($existingteacherids[$key]);
-                                }
+                            if (($key = array_search($objectrec->moodleid, $existingteacherids)) !== false) {
+                                unset($existingteacherids[$key]);
                             }
 
                             $teachersobjectids[] = $classteacher['id'];
@@ -434,39 +433,38 @@ class sync extends scheduled_task {
                             if (!$DB->record_exists('role_assignments', $roleparams)) {
                                 static::mtrace('Enrolling user ' . $objectrec->moodleid . ' into course ' . $course->id, 5);
                                 enrol_try_internal_enrol($course->id, $objectrec->moodleid, $role->id);
+                            } else {
+                                static::mtrace('Skipping teacher ' . $objectrec->moodleid . ': role assignment already exists', 6);
                             }
                         }
                     }
 
-                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
-                        foreach ($existingteacherids as $existingteacherid) {
-                            static::mtrace('Unassign class teacher role from user ' . $existingteacherid . ' in course ' .
-                                $course->id, 5);
-                            role_unassign($teacherroleid, $existingteacherid, $coursecontext->id);
-                        }
+                    foreach ($existingteacherids as $existingteacherid) {
+                        static::mtrace('Unassign class teacher role from user ' . $existingteacherid . ' in course ' .
+                            $course->id, 5);
+                        role_unassign($teacherroleid, $existingteacherid, $coursecontext->id);
                     }
 
                     // Sync members.
                     $existingstudentids = [];
-                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
-                        $existingstudentroleassignments = get_users_from_role_on_context($studentrole, $coursecontext);
-                        foreach ($existingstudentroleassignments as $roleassignment) {
-                            $existingstudentids[] = $roleassignment->userid;
-                        }
+                    $existingstudentroleassignments = get_users_from_role_on_context($studentrole, $coursecontext);
+                    foreach ($existingstudentroleassignments as $roleassignment) {
+                        $existingstudentids[] = $roleassignment->userid;
                     }
 
                     $classmembers = $apiclient->get_school_class_members($schoolclass['id']);
+                    static::mtrace('API returned ' . count($classmembers) . ' members for class ' . $schoolclass['id'], 5);
                     foreach ($classmembers as $classmember) {
                         if (!in_array($classmember['id'], $teachersobjectids)) {
                             $classuserids[] = $classmember['id'];
                         }
 
                         $objectrec = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $classmember['id']]);
+                        static::mtrace('Member ' . $classmember['id'] . ': o365 object ' .
+                            ($objectrec ? 'found (moodleid=' . $objectrec->moodleid . ')' : 'NOT found'), 6);
                         if (!empty($objectrec)) {
-                            if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
-                                if (($key = array_search($objectrec->moodleid, $existingstudentids)) !== false) {
-                                    unset($existingstudentids[$key]);
-                                }
+                            if (($key = array_search($objectrec->moodleid, $existingstudentids)) !== false) {
+                                unset($existingstudentids[$key]);
                             }
 
                             $role = $studentrole;
@@ -477,6 +475,7 @@ class sync extends scheduled_task {
                                 static::mtrace('Enrolling user ' . $objectrec->moodleid . ' into course ' . $course->id, 5);
                                 enrol_try_internal_enrol($course->id, $objectrec->moodleid, $role->id);
                             } else {
+                                static::mtrace('Skipping member ' . $objectrec->moodleid . ': role assignment already exists', 6);
                                 // User is already enrolled - check if they are suspended and need to be reactivated.
                                 $suspendusers = get_config('local_o365', 'sdssuspendenrolment');
                                 if ($suspendusers) {
@@ -504,12 +503,10 @@ class sync extends scheduled_task {
                         }
                     }
 
-                    if (get_config('local_o365', 'sdssyncenrolmenttosds')) {
-                        foreach ($existingstudentids as $existingstudentid) {
-                            static::mtrace('Unassign class member role from user ' . $existingstudentid . ' in course ' .
-                                $course->id, 5);
-                            role_unassign($studentroleid, $existingstudentid, $coursecontext->id);
-                        }
+                    foreach ($existingstudentids as $existingstudentid) {
+                        static::mtrace('Unassign class member role from user ' . $existingstudentid . ' in course ' .
+                            $course->id, 5);
+                        role_unassign($studentroleid, $existingstudentid, $coursecontext->id);
                     }
 
                     // Handle users who have been removed from the SDS class.
