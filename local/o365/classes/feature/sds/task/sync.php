@@ -307,18 +307,20 @@ class sync extends scheduled_task {
                 $coursecat = $schoolcoursecat;
                 if ($sdscategorizebysubject) {
                     // Extract subject name from class data.
+                    // Only course.subject carries the actual academic subject; classCode and
+                    // externalName are section identifiers and must NOT be used as fallbacks
+                    // because they would create spurious categories named after the class.
+                    // When course.subject is absent the course falls back to the school category.
                     $subjectname = null;
-                    if (isset($schoolclass['externalName'])) {
-                        // Try externalName first.
-                        $subjectname = $schoolclass['externalName'];
-                    } else if (isset($schoolclass['classCode'])) {
-                        // Fall back to classCode.
-                        $subjectname = $schoolclass['classCode'];
+                    if (isset($schoolclass['course']['subject']) && $schoolclass['course']['subject'] !== '') {
+                        $subjectname = $schoolclass['course']['subject'];
                     }
 
                     if (!empty($subjectname)) {
                         // Normalize: trim leading/trailing whitespace and collapse internal runs.
                         $subjectname = trim(preg_replace('/\s+/', ' ', $subjectname));
+                        // Resolve SDS numeric subject codes to human-readable names.
+                        $subjectname = static::resolve_subject_name($subjectname);
                     }
 
                     if (!empty($subjectname)) {
@@ -327,6 +329,8 @@ class sync extends scheduled_task {
                             $schoolcoursecat->id
                         );
                         static::mtrace('Using subject category: ' . $subjectname, 4);
+                    } else {
+                        static::mtrace('No subject on class ' . $schoolclass['displayName'] . ', using school category.', 4);
                     }
                 }
 
@@ -621,6 +625,73 @@ class sync extends scheduled_task {
     }
 
     /**
+     * Resolve a Microsoft SDS subject code to its human-readable name.
+     *
+     * SDS subjects are a standardised enum defined by Microsoft. Each code has a
+     * short form (e.g. '14') and a long numeric form (e.g. '14999'); both are
+     * accepted. When the code is unknown the original value is returned unchanged
+     * so the category name is always non-empty.
+     *
+     * Reference: https://learn.microsoft.com/en-us/schooldatasync/default-list-of-values#subjects
+     *
+     * @param string $code The raw subject code returned by the Graph API.
+     * @return string The human-readable subject name, or the original code if unrecognised.
+     */
+    public static function resolve_subject_name(string $code): string {
+        // Map both the short code and the alternate long numeric code to the same label.
+        $map = [
+            '01'    => 'English language and literature',
+            '51037' => 'English language and literature',
+            '02'    => 'Mathematics',
+            '52039' => 'Mathematics',
+            '03'    => 'Life and physical sciences',
+            '51999' => 'Life and physical sciences',
+            '04'    => 'Social sciences and history',
+            '54999' => 'Social sciences and history',
+            '05'    => 'Visual and performing arts',
+            '55199' => 'Visual and performing arts',
+            '07'    => 'Religious education and theology',
+            '57999' => 'Religious education and theology',
+            '08'    => 'Physical, health, and safety education',
+            '58999' => 'Physical, health, and safety education',
+            '09'    => 'Military science',
+            '09999' => 'Military science',
+            '10'    => 'Information technology',
+            '10999' => 'Information technology',
+            '11'    => 'Communication and audio/video technology',
+            '11999' => 'Communication and audio/video technology',
+            '12'    => 'Business and marketing',
+            '62999' => 'Business and marketing',
+            '13'    => 'Manufacturing',
+            '13999' => 'Manufacturing',
+            '14'    => 'Health care sciences',
+            '14999' => 'Health care sciences',
+            '15'    => 'Public, protective, and government service',
+            '65999' => 'Public, protective, and government service',
+            '16'    => 'Hospitality and tourism',
+            '66999' => 'Hospitality and tourism',
+            '17'    => 'Architecture and construction',
+            '67997' => 'Architecture and construction',
+            '18'    => 'Agriculture, food, and natural resources',
+            '68999' => 'Agriculture, food, and natural resources',
+            '19'    => 'Human services',
+            '69001' => 'Human services',
+            '20'    => 'Transportation, distribution, and logistics',
+            '70999' => 'Transportation, distribution, and logistics',
+            '21'    => 'Engineering and technology',
+            '71999' => 'Engineering and technology',
+            '22'    => 'Miscellaneous',
+            '22999' => 'Miscellaneous',
+            '23'    => 'Non-subject-specific',
+            '72999' => 'Non-subject-specific',
+            '24'    => 'World language',
+            '24039' => 'World language',
+        ];
+
+        return $map[$code] ?? $code;
+    }
+
+    /**
      * Run mtrace if not in a unit test.
      *
      * @param string $str The trace string.
@@ -662,7 +733,7 @@ class sync extends scheduled_task {
         if (!empty($objectrec)) {
             $course = $DB->get_record('course', ['id' => $objectrec->moodleid]);
             if (!empty($course)) {
-                // Update course dates if they have changed.
+                // Update course dates and category if they have changed.
                 $updated = false;
                 if ($startdate > 0 && $course->startdate != $startdate) {
                     $course->startdate = $startdate;
@@ -672,9 +743,14 @@ class sync extends scheduled_task {
                     $course->enddate = $enddate;
                     $updated = true;
                 }
+                if ($categoryid > 0 && $course->category != $categoryid) {
+                    $course->category = $categoryid;
+                    $updated = true;
+                    static::mtrace('Moving course ' . $fullname . ' to category ' . $categoryid, 4);
+                }
                 if ($updated) {
                     update_course($course);
-                    static::mtrace('Updated course dates for ' . $fullname, 4);
+                    static::mtrace('Updated course ' . $fullname, 4);
                 }
                 return $course;
             } else {
@@ -706,6 +782,11 @@ class sync extends scheduled_task {
         $existingcourse = $DB->get_record('course', ['shortname' => $shortname]);
         if (!empty($existingcourse)) {
             static::mtrace('Found existing course with shortname ' . $shortname . ', re-linking object record.', 4);
+            if ($categoryid > 0 && $existingcourse->category != $categoryid) {
+                $existingcourse->category = $categoryid;
+                update_course($existingcourse);
+                static::mtrace('Moved re-linked course ' . $fullname . ' to category ' . $categoryid, 4);
+            }
             $now = time();
             $objectrec = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid,
                 'moodleid' => $existingcourse->id, 'o365name' => $shortname, 'tenant' => '',
