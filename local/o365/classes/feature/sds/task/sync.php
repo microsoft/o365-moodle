@@ -291,14 +291,14 @@ class sync extends scheduled_task {
                 // Filter out expired courses if configured.
                 if ($sdsignorepastclasses) {
                     // Check for expired prefix.
-                    $prefixlen = core_text::strlen($sdsexpiredprefix);
-                    if (core_text::substr($schoolclass['displayName'], 0, $prefixlen) === $sdsexpiredprefix) {
+                    if (str_starts_with($schoolclass['displayName'], $sdsexpiredprefix)) {
                         static::mtrace('Skipping expired course (prefix match): ' . $schoolclass['displayName'], 4);
                         continue;
                     }
                     // Check end date.
                     if ($classenddate > 0 && $classenddate < time()) {
-                        static::mtrace('Skipping expired course (past end date): ' . $schoolclass['displayName'], 4);
+                        static::mtrace('Skipping expired course (past end date): ' . $schoolclass['displayName'] .
+                            ' (end date: ' . date('Y-m-d', $classenddate) . ')', 4);
                         continue;
                     }
                 }
