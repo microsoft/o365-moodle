@@ -702,6 +702,18 @@ class sync extends scheduled_task {
             $data['enddate'] = $enddate;
         }
 
+        // Check if a course with this shortname already exists (e.g. object record was deleted but course was not).
+        $existingcourse = $DB->get_record('course', ['shortname' => $shortname]);
+        if (!empty($existingcourse)) {
+            static::mtrace('Found existing course with shortname ' . $shortname . ', re-linking object record.', 4);
+            $now = time();
+            $objectrec = ['type' => 'sdssection', 'subtype' => 'course', 'objectid' => $classobjectid,
+                'moodleid' => $existingcourse->id, 'o365name' => $shortname, 'tenant' => '',
+                'timecreated' => $now, 'timemodified' => $now];
+            $DB->insert_record('local_o365_objects', $objectrec);
+            return $existingcourse;
+        }
+
         $course = create_course((object) $data);
         static::mtrace('Created course ' . $fullname . ' with dates', 4);
 
@@ -742,6 +754,21 @@ class sync extends scheduled_task {
         if (core_text::strlen($data['name']) > 255) {
             static::mtrace('School name was over 255 chars when creating course category, truncating to 255.');
             $data['name'] = core_text::substr($data['name'], 0, 255);
+        }
+
+        // Check if a category with this idnumber already exists (e.g. object record was deleted but category was not).
+        $existingcatid = $DB->get_field('course_categories', 'id', ['idnumber' => $schoolobjectid]);
+        if (!empty($existingcatid)) {
+            $coursecat = core_course_category::get($existingcatid, IGNORE_MISSING, true);
+            if (!empty($coursecat)) {
+                static::mtrace('Found existing course category with idnumber ' . $schoolobjectid . ', re-linking object record.');
+                $now = time();
+                $objectrec = ['type' => 'sdsschool', 'subtype' => 'coursecat', 'objectid' => $schoolobjectid,
+                    'moodleid' => $coursecat->id, 'o365name' => $schoolname, 'tenant' => '',
+                    'timecreated' => $now, 'timemodified' => $now];
+                $DB->insert_record('local_o365_objects', $objectrec);
+                return $coursecat;
+            }
         }
 
         $coursecat = core_course_category::create($data);
