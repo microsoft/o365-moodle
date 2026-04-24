@@ -128,6 +128,8 @@ class userenabledstatussync extends scheduled_task {
 
         $this->mtrace('Checking for users to suspend/reenable...');
 
+        global $DB;
+
         $usersync = new main();
         $syncdisabledstatus = main::sync_option_enabled('disabledsync');
 
@@ -135,42 +137,58 @@ class userenabledstatussync extends scheduled_task {
         $totalsuspended = 0;
         $totaldeleted = 0;
 
-        // For reenable, we need to process users with accountEnabled status.
-        if ($doreenable) {
-            try {
-                $actualreenablecount = 0;
-                $reenablecallback = function (array $userbatch) use (
-                    $usersync,
-                    $syncdisabledstatus,
-                    &$actualreenablecount
-                ) {
-                    $actualreenablecount += $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
-                };
-                $usersync->process_users_minimal_batched($reenablecallback);
-                $totalreenabled = $actualreenablecount;
-                if ($actualreenablecount > 0) {
-                    $this->mtrace('Re-enabled ' . $actualreenablecount . ' user(s).');
+        // Create the temp table before the API call. Both reenable and suspend use it.
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        // Single Graph API call: stream all Entra users into the temp table.
+        // Both reenable and suspend query against it after this completes.
+        try {
+            $usersync->process_users_minimal_batched(
+                function (array $userbatch) use ($DB, $temptablename) {
+                    $records = [];
+                    foreach ($userbatch as $user) {
+                        if (!empty($user['id'])) {
+                            $records[] = (object)[
+                                'objectid'      => $user['id'],
+                                'accountenabled' => ($user['accountEnabled'] ?? false) ? 1 : 0,
+                            ];
+                        }
+                    }
+                    if (!empty($records)) {
+                        $DB->insert_records($temptablename, $records);
+                    }
                 }
-            } catch (moodle_exception $e) {
-                $this->mtrace('Error processing reenable: ' . $e->getMessage());
-                utils::debug($e->getMessage(), __METHOD__, $e);
-            }
+            );
+        } catch (moodle_exception $e) {
+            $this->mtrace('Error fetching users from Microsoft Entra ID: ' . $e->getMessage());
+            utils::debug($e->getMessage(), __METHOD__, $e);
+            $usersync->drop_entra_users_temp_table();
+            return true;
         }
 
-        // Process user suspension.
-        // The suspend_users() method now queries the database directly and processes in batches
-        // to handle 500K+ users efficiently without loading all IDs into memory.
-        if ($dosuspend) {
-            try {
-                $result = $usersync->suspend_users($dodelete);
-                if (!empty($result)) {
-                    $totalsuspended = $result['suspended'] ?? 0;
-                    $totaldeleted = $result['deleted'] ?? 0;
+        // Both operations now run as single queries against the pre-populated temp table.
+        try {
+            if ($doreenable) {
+                $totalreenabled = $usersync->reenable_users_from_temp_table($temptablename, $syncdisabledstatus);
+                if ($totalreenabled > 0) {
+                    $this->mtrace('Re-enabled ' . $totalreenabled . ' user(s).');
                 }
-            } catch (moodle_exception $e) {
-                $this->mtrace('Error processing suspension: ' . $e->getMessage());
-                utils::debug($e->getMessage(), __METHOD__, $e);
             }
+
+            if ($dosuspend) {
+                try {
+                    $result = $usersync->suspend_users($dodelete, $temptablename);
+                    if (!empty($result)) {
+                        $totalsuspended = $result['suspended'] ?? 0;
+                        $totaldeleted = $result['deleted'] ?? 0;
+                    }
+                } catch (moodle_exception $e) {
+                    $this->mtrace('Error processing suspension: ' . $e->getMessage());
+                    utils::debug($e->getMessage(), __METHOD__, $e);
+                }
+            }
+        } finally {
+            $usersync->drop_entra_users_temp_table();
         }
 
         // Always show summary at the end.
