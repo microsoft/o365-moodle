@@ -25,6 +25,7 @@
 
 namespace local_o365\page;
 
+use core\context\system;
 use core_component;
 use core_plugin_manager;
 use local_o365\httpclient;
@@ -315,7 +316,7 @@ class ajax extends base {
         require_once($CFG->dirroot . '/lib/classes/component.php');
         require_once($CFG->libdir . '/sessionlib.php');
 
-        $systemcontext = \context_system::instance();
+        $systemcontext = system::instance();
 
         $data = new stdClass();
         $data->success = [];

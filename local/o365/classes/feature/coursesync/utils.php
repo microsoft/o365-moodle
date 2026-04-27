@@ -26,7 +26,7 @@
 
 namespace local_o365\feature\coursesync;
 
-use context_course;
+use core\context\course;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
@@ -584,7 +584,7 @@ class utils {
      * @return array array containing IDs of teachers.
      */
     public static function get_team_owner_user_ids_by_course_id(int $courseid): array {
-        $context = context_course::instance($courseid);
+        $context = course::instance($courseid);
         $teamownerusers = get_enrolled_users($context, 'local/o365:teamowner', 0, 'u.*', null, 0, 0, true);
         $teamowneruserids = [];
         foreach ($teamownerusers as $user) {
@@ -622,7 +622,7 @@ class utils {
      * @return array
      */
     public static function get_team_member_user_ids_by_course_id(int $courseid): array {
-        $context = context_course::instance($courseid);
+        $context = course::instance($courseid);
         $teammemberusers = get_enrolled_users($context, 'local/o365:teammember', 0, 'u.*', null, 0, 0, true);
         $teammemberuserids = [];
         foreach ($teammemberusers as $user) {
@@ -739,7 +739,7 @@ class utils {
     public static function get_user_group_role_by_moodle_ids(int $userid, int $courseid, int $excluderoleid = 0): string {
         $grouprole = '';
 
-        $coursecontext = context_course::instance($courseid);
+        $coursecontext = course::instance($courseid);
 
         // Get user roles in the course.
         $userroles = get_user_roles($coursecontext, $userid, false);
@@ -836,7 +836,7 @@ class utils {
             }
         } else {
             // Check if the user was suspended, or unsuspended. Add or remove them in the Microsoft 365 group as appropriate.
-            if (!is_enrolled(context_course::instance($courseid), $userid, null, true)) {
+            if (!is_enrolled(course::instance($courseid), $userid, null, true)) {
                 // The user doesn't have a valid enrolment any more - we need to remove the user.
                 try {
                     // Remove user as owner and member from the Microsoft 365 group.

@@ -24,10 +24,12 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\system;
+
 require_once(__DIR__ . '/../../config.php');
 
 require_login();
-require_capability('moodle/site:config', \context_system::instance());
+require_capability('moodle/site:config', system::instance());
 
 $mode = optional_param('mode', null, PARAM_TEXT);
 $url = new \moodle_url('/local/o365/acp.php', ['mode' => $mode]);

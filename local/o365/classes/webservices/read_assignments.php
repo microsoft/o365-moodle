@@ -26,8 +26,8 @@
 namespace local_o365\webservices;
 
 use assign;
-use context_course;
-use context_module;
+use core\context\course;
+use core\context\module;
 use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
@@ -156,7 +156,7 @@ class read_assignments extends external_api {
 
         foreach ($courseids as $cid) {
             try {
-                $context = context_course::instance($cid);
+                $context = course::instance($cid);
                 self::validate_context($context);
 
                 // Check if this course was already loaded (by enrol_get_users_courses).
@@ -216,7 +216,7 @@ class read_assignments extends external_api {
                         continue;
                     }
 
-                    $context = context_module::instance($module->id);
+                    $context = module::instance($module->id);
                     try {
                         self::validate_context($context);
                         require_capability('mod/assign:view', $context);

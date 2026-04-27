@@ -25,8 +25,8 @@
 
 namespace local_o365\webservices;
 
-use context_course;
-use context_helper;
+use core\context\course;
+use core\context\helper;
 use moodle_exception;
 use stdClass;
 
@@ -115,7 +115,7 @@ class read_courseusers extends external_api {
         }
 
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-        $context = context_course::instance($courseid);
+        $context = course::instance($courseid);
         self::validate_context($context);
 
         try {
@@ -132,7 +132,7 @@ class read_courseusers extends external_api {
         [$enrolledsql, $enrolledparams] = get_enrolled_sql($context, $withcapability);
 
         // For user context preloading.
-        $ctxselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
+        $ctxselect = ', ' . helper::get_preload_record_columns_sql('ctx');
         $ctxjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = u.id AND ctx.contextlevel = :contextlevel)";
         $enrolledparams['contextlevel'] = CONTEXT_USER;
 
@@ -169,7 +169,7 @@ class read_courseusers extends external_api {
             }
 
             // Get user info.
-            context_helper::preload_from_record($user);
+            helper::preload_from_record($user);
             if ($userdetails = user_get_user_details($user, $course, $userfields)) {
                 $users[] = $userdetails;
             }

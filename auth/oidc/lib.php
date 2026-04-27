@@ -26,6 +26,8 @@
 
 use auth_oidc\jwt;
 use auth_oidc\utils;
+use core\context\system;
+use core\context\user;
 
 // IdP types.
 /**
@@ -94,7 +96,7 @@ function auth_oidc_initialize_customicon($filefullname) {
     global $CFG;
 
     $file = get_config('auth_oidc', 'customicon');
-    $systemcontext = \context_system::instance();
+    $systemcontext = system::instance();
     $fullpath = "/{$systemcontext->id}/auth_oidc/customicon/0{$file}";
 
     $fs = get_file_storage();
@@ -134,24 +136,24 @@ function auth_oidc_connectioncapability($userid, $mode = 'connect', $require = f
     if ($require) {
         // If requiring the capability and user has manageconnection than checking connect and disconnect is not needed.
         $check = 'require_capability';
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($userid), $userid)) {
+        if (has_capability('auth/oidc:manageconnection', user::instance($userid), $userid)) {
             return true;
         }
-    } else if ($check('auth/oidc:manageconnection', \context_user::instance($userid), $userid)) {
+    } else if ($check('auth/oidc:manageconnection', user::instance($userid), $userid)) {
         return true;
     }
 
     $result = false;
     switch ($mode) {
         case "connect":
-            $result = $check('auth/oidc:manageconnectionconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/oidc:manageconnectionconnect', user::instance($userid), $userid);
             break;
         case "disconnect":
-            $result = $check('auth/oidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/oidc:manageconnectiondisconnect', user::instance($userid), $userid);
             break;
         case "both":
-            $result = $check('auth/oidc:manageconnectionconnect', \context_user::instance($userid), $userid);
-            $result = $result && $check('auth/oidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/oidc:manageconnectionconnect', user::instance($userid), $userid);
+            $result = $result && $check('auth/oidc:manageconnectiondisconnect', user::instance($userid), $userid);
     }
     if ($require) {
         return true;

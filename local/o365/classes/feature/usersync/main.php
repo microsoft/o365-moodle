@@ -26,7 +26,7 @@
 
 namespace local_o365\feature\usersync;
 
-use context_user;
+use core\context\user;
 use core_text;
 use core_user;
 use local_o365\oauth2\clientdata;
@@ -265,7 +265,7 @@ class main {
             $muser = core_user::get_user($muserid, 'id, picture', MUST_EXIST);
         }
 
-        $context = context_user::instance($muserid);
+        $context = user::instance($muserid);
 
         if (!$photodata || $photodata === false) {
             // No profile photo found.

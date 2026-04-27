@@ -26,6 +26,8 @@
 
 namespace local_o365\webservices;
 
+use core\context\system;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -59,8 +61,8 @@ class cohortsync_search_groups extends \external_api {
 
         $params = self::validate_parameters(self::search_groups_parameters(), ['query' => $query]);
 
-        self::validate_context(\context_system::instance());
-        require_capability('moodle/site:config', \context_system::instance());
+        self::validate_context(system::instance());
+        require_capability('moodle/site:config', system::instance());
 
         $apiclient = \local_o365\feature\cohortsync\main::get_unified_api(__METHOD__);
         if (empty($apiclient)) {
