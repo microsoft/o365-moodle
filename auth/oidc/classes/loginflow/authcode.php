@@ -35,7 +35,7 @@ use core\output\notification;
 use core_text;
 use core_user;
 use moodle_exception;
-use moodle_url;
+use core\url;
 use pix_icon;
 use stdClass;
 
@@ -75,7 +75,7 @@ class authcode extends base {
 
         return [
             [
-                'url' => new moodle_url('/auth/oidc/', ['source' => 'loginpage']),
+                'url' => new url('/auth/oidc/', ['source' => 'loginpage']),
                 'icon' => $icon,
                 'name' => strip_tags(format_text($this->config->opname)),
             ],
@@ -117,14 +117,14 @@ class authcode extends base {
         if ($silentloginmode) {
             if ($error == 'login_required') {
                 // If silent login mode is enabled and the error is 'login_required', redirect to the login page.
-                $loginpageurl = new moodle_url('/login/index.php', ['noredirect' => 1]);
+                $loginpageurl = new url('/login/index.php', ['noredirect' => 1]);
                 redirect($loginpageurl);
                 die();
             } else if ($error == 'interaction_required') {
                 if (strpos($errordescription, 'multiple user identities') !== false) {
                     $selectaccount = true;
                 } else {
-                    $loginpageurl = new moodle_url('/login/index.php', ['noredirect' => 1]);
+                    $loginpageurl = new url('/login/index.php', ['noredirect' => 1]);
                     redirect($loginpageurl);
                     die();
                 }
@@ -164,7 +164,7 @@ class authcode extends base {
                     $urltogo = $SESSION->wantsurl;
                     unset($SESSION->wantsurl);
                 } else {
-                    $urltogo = new moodle_url('/');
+                    $urltogo = new url('/');
                 }
                 redirect($urltogo);
                 die();
@@ -288,7 +288,7 @@ class authcode extends base {
         $event->trigger();
 
         $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
-        redirect(new moodle_url($redirect));
+        redirect(new url($redirect));
     }
 
     /**
@@ -388,7 +388,7 @@ class authcode extends base {
                 } else {
                     throw new moodle_exception('errorinvalidredirect_message', 'auth_oidc');
                 }
-                redirect(new moodle_url($redirect));
+                redirect(new url($redirect));
             }
 
             // If the user is already logged in we can treat this as a "migration" - a user switching to OIDC.
@@ -398,7 +398,7 @@ class authcode extends base {
             }
             $this->handlemigration($oidcuniqid, $authparams, $tokenparams, $idtoken, $connectiononly);
             $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
-            redirect(new moodle_url($redirect));
+            redirect(new url($redirect));
         } else {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);

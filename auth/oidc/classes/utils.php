@@ -28,7 +28,7 @@ namespace auth_oidc;
 use Exception;
 use moodle_exception;
 use auth_oidc\event\action_failed;
-use moodle_url;
+use core\url;
 
 /**
  * General purpose utility class.
@@ -62,7 +62,7 @@ class utils {
                         isset($result['error_codes']) && count($result['error_codes']) == 1 &&
                         $result['error_codes'][0] == 53003
                     ) {
-                        $localo365configurationpageurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
+                        $localo365configurationpageurl = new url('/admin/settings.php', ['section' => 'local_o365']);
                         throw new moodle_exception(
                             'settings_adminconsent_error_53003',
                             'local_o365',
@@ -194,7 +194,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_redirecturl() {
-        $redirecturl = new moodle_url('/auth/oidc/');
+        $redirecturl = new url('/auth/oidc/');
         return $redirecturl->out(false);
     }
 
@@ -204,7 +204,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_frontchannellogouturl() {
-        $logouturl = new moodle_url('/auth/oidc/logout.php');
+        $logouturl = new url('/auth/oidc/logout.php');
         return $logouturl->out(false);
     }
 

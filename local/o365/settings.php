@@ -25,6 +25,7 @@
  */
 
 use auth_oidc\adminsetting\auth_oidc_admin_setting_label;
+use core\url;
 use local_o365\adminsetting\usersyncoptions;
 use local_o365\adminsetting\adminconsent;
 use local_o365\adminsetting\verifysetup;
@@ -80,7 +81,7 @@ if ($hassiteconfig) {
         $stepsenabled = 1;
 
         // Step 1: Registration.
-        $oidcconfigpageurl = new moodle_url('/auth/oidc/manageapplication.php');
+        $oidcconfigpageurl = new url('/auth/oidc/manageapplication.php');
         $label = new lang_string('settings_setup_step1', 'local_o365');
         $desc = new lang_string('settings_setup_step1_desc', 'local_o365', $CFG->wwwroot);
         $settings->add(new admin_setting_heading('local_o365_setup_step1', $label, $desc));
@@ -175,7 +176,7 @@ if ($hassiteconfig) {
 
         // User sync options.
         $label = new lang_string('settings_usersync', 'local_o365');
-        $scheduledtasks = new moodle_url('/admin/tool/task/scheduledtasks.php');
+        $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_usersync_details', 'local_o365', $scheduledtasks->out());
         $usersyncsettings = new usersyncoptions('local_o365/usersync', $label, $desc);
         $settings->add($usersyncsettings);
@@ -189,7 +190,7 @@ if ($hassiteconfig) {
 
         // Link to filter mapping settings.
         $label = new lang_string('settings_fieldmap', 'local_o365');
-        $oidcsettingspageurl = new moodle_url('/admin/settings.php', ['section' => 'auth_oidc_field_mapping']);
+        $oidcsettingspageurl = new url('/admin/settings.php', ['section' => 'auth_oidc_field_mapping']);
         $desc = new lang_string('settings_fieldmap_details', 'local_o365', $oidcsettingspageurl->out(false));
         $settings->add(new auth_oidc_admin_setting_label('local_o365/fieldmap', $label, $desc, null));
 
@@ -374,7 +375,7 @@ if ($hassiteconfig) {
         // Cohort sync link.
         $label = new lang_string('settings_cohortsync', 'local_o365');
         $linktext = new lang_string('settings_cohortsync_linktext', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/cohortsync.php');
+        $linkurl = new url('/local/o365/cohortsync.php');
         $desc = new lang_string('settings_cohortsync_details', 'local_o365');
         $settings->add(new toollink('local_o365/cohortsync', $label, $linktext, $linkurl, $desc));
 
@@ -423,37 +424,37 @@ if ($hassiteconfig) {
 
         $label = new lang_string('settings_tools_tenants', 'local_o365');
         $linktext = new lang_string('settings_tools_tenants_linktext', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/acp.php', ['mode' => 'tenants']);
+        $linkurl = new url('/local/o365/acp.php', ['mode' => 'tenants']);
         $desc = new lang_string('settings_tools_tenants_details', 'local_o365');
         $settings->add(new toollink('local_o365/tenants', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_healthcheck', 'local_o365');
         $linktext = new lang_string('settings_healthcheck_linktext', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/acp.php', ['mode' => 'healthcheck']);
+        $linkurl = new url('/local/o365/acp.php', ['mode' => 'healthcheck']);
         $desc = new lang_string('settings_healthcheck_details', 'local_o365');
         $settings->add(new toollink('local_o365/healthcheck', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_userconnections', 'local_o365');
         $linktext = new lang_string('settings_userconnections_linktext', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/acp.php', ['mode' => 'userconnections']);
+        $linkurl = new url('/local/o365/acp.php', ['mode' => 'userconnections']);
         $desc = new lang_string('settings_userconnections_details', 'local_o365');
         $settings->add(new toollink('local_o365/userconnections', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_teamconnections', 'local_o365');
         $linktext = new lang_string('settings_teamconnections_linktext', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/acp.php', ['mode' => 'teamconnections']);
+        $linkurl = new url('/local/o365/acp.php', ['mode' => 'teamconnections']);
         $desc = new lang_string('settings_teamconnections_details', 'local_o365');
         $settings->add(new toollink('local_o365/teamconnections', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_usermatch', 'local_o365');
         $linktext = new lang_string('settings_usermatch', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/acp.php', ['mode' => 'usermatch']);
+        $linkurl = new url('/local/o365/acp.php', ['mode' => 'usermatch']);
         $desc = new lang_string('settings_usermatch_details', 'local_o365');
         $settings->add(new toollink('local_o365/usermatch', $label, $linktext, $linkurl, $desc));
 
         $label = new lang_string('settings_maintenance', 'local_o365');
         $linktext = new lang_string('settings_maintenance_linktext', 'local_o365');
-        $linkurl = new moodle_url('/local/o365/acp.php', ['mode' => 'maintenance']);
+        $linkurl = new url('/local/o365/acp.php', ['mode' => 'maintenance']);
         $desc = new lang_string('settings_maintenance_details', 'local_o365');
         $settings->add(new toollink('local_o365/maintenance', $label, $linktext, $linkurl, $desc));
 
@@ -495,7 +496,7 @@ if ($hassiteconfig) {
         $settings->add(new admin_setting_configcheckbox('local_o365/chineseapi', $label, $desc, '0'));
 
         $label = new lang_string('settings_debugmode', 'local_o365');
-        $logurl = new moodle_url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
+        $logurl = new url('/report/log/index.php', ['chooselog' => '1', 'modid' => 'site_errors']);
         $desc = new lang_string('settings_debugmode_details', 'local_o365', $logurl->out());
         $settings->add(new admin_setting_configcheckbox('local_o365/debugmode', $label, $desc, '0'));
 
@@ -521,7 +522,7 @@ if ($hassiteconfig) {
 
     if ($tab == LOCAL_O365_TAB_SDS && empty($install)) {
         // Section header.
-        $scheduledtasks = new moodle_url('/admin/tool/task/scheduledtasks.php');
+        $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_sds_intro_previewwarning', 'local_o365');
         $desc .= new lang_string('settings_sds_intro_desc', 'local_o365', $scheduledtasks->out());
         $settings->add(new admin_setting_heading('local_o365_sds_intro', '', $desc));
@@ -698,7 +699,7 @@ if ($hassiteconfig) {
         // Banner.
         $bannerhtml = html_writer::start_div('local_o365_settings_teams_banner_part_1', ['id' => 'admin-teams-banner']);
         $bannerhtml .= html_writer::img(
-            new moodle_url('/local/o365/pix/teams_app.png'),
+            new url('/local/o365/pix/teams_app.png'),
             '',
             ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_teams_app_img']
         );
@@ -740,7 +741,7 @@ if ($hassiteconfig) {
         // Manifest download link.
         $downloadmanifesthtml = html_writer::start_div('local_o365_settings_manifest_container');
         $downloadmanifesthtml .= html_writer::start_tag('p');
-        $manifesturl = new moodle_url('/local/o365/export_manifest.php');
+        $manifesturl = new url('/local/o365/export_manifest.php');
         $downloadmanifesthtml .= html_writer::link(
             $manifesturl,
             get_string('settings_download_teams_tab_app_manifest', 'local_o365'),
@@ -808,7 +809,7 @@ if ($hassiteconfig) {
             $setmoodleappidinstructionhtml .= html_writer::end_tag('p');
             $setmoodleappidinstructionhtml .= html_writer::empty_tag('br');
             $setmoodleappidinstructionhtml .= html_writer::img(
-                new moodle_url('/local/o365/pix/moodle_app_id.png'),
+                new url('/local/o365/pix/moodle_app_id.png'),
                 '',
                 ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_moodle_app_id_img']
             );
