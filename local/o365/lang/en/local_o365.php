@@ -947,6 +947,7 @@ $string['o365:teamowner'] = 'Team owner';
 
 // Cache Stores.
 $string['cachedef_groups'] = 'Stores Microsoft 365 group data';
+$string['cachedef_jwks'] = 'Stores Microsoft JWKS keys';
 
 // Web service errors.
 $string['webservices_error_assignnotfound'] = 'The received module\'s assignment record could not be found.';
