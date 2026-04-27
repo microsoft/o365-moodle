@@ -26,6 +26,7 @@
 namespace local_o365\adminsetting;
 
 use admin_setting_configtext;
+use core\url;
 use html_writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -78,7 +79,7 @@ class serviceresource extends admin_setting_configtext {
             }
 
             // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
-            $scripturl = new \moodle_url('/local/o365/classes/adminsetting/serviceresource.js');
+            $scripturl = new url('/local/o365/classes/adminsetting/serviceresource.js');
             $settinghtml .= '<script src="' . $scripturl->out() . '"></script>';
 
             $strvalid = get_string('settings_serviceresourceabstract_valid', 'local_o365', $this->visiblename);
@@ -89,7 +90,7 @@ class serviceresource extends admin_setting_configtext {
             $iconvalid = addslashes($OUTPUT->pix_icon('t/check', 'valid', 'moodle'));
             $iconinvalid = addslashes($OUTPUT->pix_icon('t/delete', 'invalid', 'moodle'));
             $iconloading = addslashes($OUTPUT->pix_icon('i/ajaxloader', 'loading', 'moodle'));
-            $ajaxurl = new \moodle_url('/local/o365/ajax.php');
+            $ajaxurl = new url('/local/o365/ajax.php');
             $settinghtml .= '<script>
                                 $(function() {
                                     var opts = {

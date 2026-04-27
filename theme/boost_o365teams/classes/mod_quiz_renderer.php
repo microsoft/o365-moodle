@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\url;
+
 defined('MOODLE_INTERNAL') || die();
 
 if (file_exists($CFG->dirroot . '/mod/quiz/renderer.php')) {
@@ -54,7 +56,7 @@ class theme_boost_o365teams_mod_quiz_renderer extends \mod_quiz\output\renderer 
         // Start the form.
         $output .= html_writer::start_tag(
             'form',
-            ['action' => new moodle_url(
+            ['action' => new url(
                 $attemptobj->processattempt_url(),
                 ['cmid' => $attemptobj->get_cmid()]
             ), 'method' => 'post',

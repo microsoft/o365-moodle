@@ -23,6 +23,7 @@
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\url;
 use local_o365\feature\coursesync\utils;
 
 require_once(__DIR__ . '/../../config.php');
@@ -39,7 +40,7 @@ require_capability('moodle/course:reset', $coursecontext);
 
 $PAGE->set_context($coursecontext);
 
-$redirecturl = new moodle_url('/course/view.php', ['id' => $courseid]);
+$redirecturl = new url('/course/view.php', ['id' => $courseid]);
 
 // Validations.
 // Part 1, site course sync settings.

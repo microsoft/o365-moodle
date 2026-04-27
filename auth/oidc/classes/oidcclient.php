@@ -26,7 +26,7 @@
 namespace auth_oidc;
 
 use moodle_exception;
-use moodle_url;
+use core\url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -283,7 +283,7 @@ class oidcclient {
         }
 
         $params = $this->getauthrequestparams($promptlogin, $stateparams, $extraparams, $selectaccount);
-        $redirecturl = new moodle_url($this->endpoints['auth'], $params);
+        $redirecturl = new url($this->endpoints['auth'], $params);
         redirect($redirecturl);
     }
 
@@ -297,7 +297,7 @@ class oidcclient {
     public function adminconsentrequest(array $stateparams = [], array $extraparams = []) {
         $adminconsentendpoint = 'https://login.microsoftonline.com/organizations/v2.0/adminconsent';
         $params = $this->getadminconsentrequestparams($stateparams, $extraparams);
-        $redirecturl = new moodle_url($adminconsentendpoint, $params);
+        $redirecturl = new url($adminconsentendpoint, $params);
         redirect($redirecturl);
     }
 

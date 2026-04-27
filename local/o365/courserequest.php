@@ -26,18 +26,19 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
+use core\url;
 use local_o365\feature\courserequest\main;
 use local_o365\form\courserequestform;
 
 // Where we came from. Used in a number of redirects.
-$url = new moodle_url('/local/o365/courserequest.php');
+$url = new url('/local/o365/courserequest.php');
 $return = optional_param('return', null, PARAM_ALPHANUMEXT);
 $categoryid = optional_param('category', null, PARAM_INT);
 if ($return === 'management') {
     $url->param('return', $return);
-    $returnurl = new moodle_url('/course/management.php', ['categoryid' => $CFG->defaultrequestcategory]);
+    $returnurl = new url('/course/management.php', ['categoryid' => $CFG->defaultrequestcategory]);
 } else {
-    $returnurl = new moodle_url('/course/index.php');
+    $returnurl = new url('/course/index.php');
 }
 
 $PAGE->set_url($url);
@@ -112,7 +113,7 @@ if ($requestform->is_cancelled()) {
     notice(get_string('courserequestsuccess'), $returnurl);
 }
 
-$categoryurl = new moodle_url('/course/index.php');
+$categoryurl = new url('/course/index.php');
 if ($categoryid) {
     $categoryurl->param('categoryid', $categoryid);
 }

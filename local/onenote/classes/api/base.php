@@ -36,7 +36,7 @@ use local_o365\oauth2\token;
 use local_o365\rest\unified;
 use local_o365\utils;
 use moodle_exception;
-use moodle_url;
+use core\url;
 use stdClass;
 
 /**
@@ -614,7 +614,7 @@ abstract class base {
         $actionparams['submissionid'] = $submissionid;
         $actionparams['gradeid'] = $gradeid;
 
-        $url = new moodle_url('/local/onenote/onenote_actions.php', $actionparams);
+        $url = new url('/local/onenote/onenote_actions.php', $actionparams);
 
         $attrs = ['onclick' => 'window.open(this.href,\'_blank\'); return false;', 'class' => 'local_onenote_linkbutton'];
         return html_writer::link($url->out(false), $buttontext, $attrs);

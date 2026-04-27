@@ -25,6 +25,8 @@
 
 namespace local_o365\adminsetting;
 
+use core\url;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -87,10 +89,10 @@ class moodlesetup extends \admin_setting {
         $settinghtml = $button . $results;
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
-        $scripturl = new \moodle_url('/local/o365/classes/adminsetting/moodlesetup.js');
+        $scripturl = new url('/local/o365/classes/adminsetting/moodlesetup.js');
         $settinghtml .= '<script src="' . $scripturl->out() . '"></script>';
 
-        $ajaxurl = new \moodle_url('/local/o365/ajax.php');
+        $ajaxurl = new url('/local/o365/ajax.php');
         $settinghtml .= '<script>
                             $(function() {
                                 var opts = {
