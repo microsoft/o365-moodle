@@ -25,7 +25,7 @@
 
 namespace local_o365\webservices;
 
-use context_course;
+use core\context\course;
 use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
@@ -91,7 +91,7 @@ class read_teachercourses extends external_api {
                 continue;
             }
 
-            $context = context_course::instance($course->id, IGNORE_MISSING);
+            $context = course::instance($course->id, IGNORE_MISSING);
 
             // Validate the user can execute functions in this course.
             try {

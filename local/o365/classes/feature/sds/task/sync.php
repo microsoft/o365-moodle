@@ -26,7 +26,8 @@
 
 namespace local_o365\feature\sds\task;
 
-use context_course;
+use core\context\course;
+use core\context\coursecat;
 use core\task\scheduled_task;
 use core_course_category;
 use core_text;
@@ -343,7 +344,7 @@ class sync extends scheduled_task {
                     $classstartdate,
                     $classenddate
                 );
-                $coursecontext = context_course::instance($course->id);
+                $coursecontext = course::instance($course->id);
 
                 // Enable two-way sync (course sync) if configured.
                 if ($sdsenablecoursesync) {
@@ -1003,7 +1004,7 @@ class sync extends scheduled_task {
         }
 
         // Create new cohort.
-        $catcontext = \context_coursecat::instance($categoryid);
+        $catcontext = coursecat::instance($categoryid);
         $cohortdata = [
             'idnumber' => $classobjectid,
             'name' => core_text::substr($fullname, 0, 254), // Cohort name max length is 254.

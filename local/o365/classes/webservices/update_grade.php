@@ -28,7 +28,7 @@ namespace local_o365\webservices;
 defined('MOODLE_INTERNAL') || die();
 
 use assign;
-use context_module;
+use core\context\module;
 use grading_manager;
 use local_o365\webservices\exception;
 use core_external\external_api;
@@ -145,7 +145,7 @@ class update_grade extends external_api {
             'advancedgradingdata' => $advancedgradingdata]);
 
         $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
+        $context = module::instance($cm->id);
         self::validate_context($context);
 
         $assignment = new assign($context, $cm, null);

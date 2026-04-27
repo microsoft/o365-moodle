@@ -23,13 +23,15 @@
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\course;
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/blocks/microsoft/classes/form/course_sync_form.php');
 require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
 $courseid = required_param('course', PARAM_INT);
-$coursecontext = context_course::instance($courseid);
+$coursecontext = course::instance($courseid);
 
 require_login($courseid);
 

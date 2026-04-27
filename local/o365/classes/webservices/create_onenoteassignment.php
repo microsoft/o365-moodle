@@ -27,7 +27,7 @@ namespace local_o365\webservices;
 
 defined('MOODLE_INTERNAL') || die();
 
-use context_course;
+use core\context\course;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
@@ -71,7 +71,7 @@ class create_onenoteassignment extends external_api {
         $params = self::validate_parameters(self::assignment_create_parameters(), ['data' => $data]);
         $params = $params['data'];
 
-        $context = context_course::instance($params['course']);
+        $context = course::instance($params['course']);
         self::validate_context($context);
 
         $defaults = [

@@ -25,8 +25,8 @@
 
 namespace local_onenote;
 
-use context_system;
-use context_user;
+use core\context\system;
+use core\context\user;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\userlist;
@@ -70,7 +70,7 @@ final class privacy_provider_test extends provider_testcase {
         $this->assertCount(1, $contextlist);
 
         // Check that a context is returned and is the expected context.
-        $usercontext = context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
         $this->assertEquals($usercontext->id, $contextlist->get_contextids()[0]);
     }
 
@@ -85,7 +85,7 @@ final class privacy_provider_test extends provider_testcase {
         $component = 'local_onenote';
         // Create a user.
         $user = $this->getDataGenerator()->create_user();
-        $usercontext = context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
 
         // The list of users should not return anything yet (related data still haven't been created).
         $userlist = new userlist($usercontext, $component);
@@ -103,7 +103,7 @@ final class privacy_provider_test extends provider_testcase {
         $this->assertEquals($expected, $actual);
 
         // The list of users for system context should not return any users.
-        $userlist = new userlist(context_system::instance(), $component);
+        $userlist = new userlist(system::instance(), $component);
         provider::get_users_in_context($userlist);
         $this->assertCount(0, $userlist);
     }
@@ -120,7 +120,7 @@ final class privacy_provider_test extends provider_testcase {
         // Create user records.
         $userrecords = self::create_userdata($user->id);
 
-        $usercontext = context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
 
         $writer = writer::with_context($usercontext);
         $this->assertFalse($writer->has_any_data());
@@ -147,7 +147,7 @@ final class privacy_provider_test extends provider_testcase {
         // Create user data.
         $user1 = $this->getDataGenerator()->create_user();
         $user1records = self::create_userdata($user1->id);
-        $user1context = context_user::instance($user1->id);
+        $user1context = user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         $user2records = self::create_userdata($user2->id);
@@ -180,7 +180,7 @@ final class privacy_provider_test extends provider_testcase {
         // Create a user record.
         $user1 = $this->getDataGenerator()->create_user();
         $user1records = self::create_userdata($user1->id);
-        $user1context = context_user::instance($user1->id);
+        $user1context = user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         $user2records = self::create_userdata($user2->id);
@@ -215,12 +215,12 @@ final class privacy_provider_test extends provider_testcase {
         // Create user1.
         $user1 = $this->getDataGenerator()->create_user();
         $user1records = self::create_userdata($user1->id);
-        $usercontext1 = context_user::instance($user1->id);
+        $usercontext1 = user::instance($user1->id);
 
         // Create user2.
         $user2 = $this->getDataGenerator()->create_user();
         $user2records = self::create_userdata($user2->id);
-        $usercontext2 = context_user::instance($user2->id);
+        $usercontext2 = user::instance($user2->id);
 
         // The list of users for usercontext1 should return user1.
         $userlist1 = new userlist($usercontext1, $component);
@@ -254,7 +254,7 @@ final class privacy_provider_test extends provider_testcase {
         $this->assertCount(1, $userlist2);
 
         // User data should be only removed in the user context.
-        $systemcontext = context_system::instance();
+        $systemcontext = system::instance();
         // Add userlist2 to the approved user list in the system context.
         $approvedlist = new approved_userlist($systemcontext, $component, $userlist2->get_userids());
         // Delete user1 data using delete_data_for_user.

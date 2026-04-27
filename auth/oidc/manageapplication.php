@@ -24,6 +24,7 @@
  */
 
 use auth_oidc\form\application;
+use core\context\system;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -33,7 +34,7 @@ require_login();
 
 $url = new moodle_url('/auth/oidc/manageapplication.php');
 $PAGE->set_url($url);
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
 $PAGE->set_pagelayout('admin');
 $PAGE->set_heading(get_string('settings_page_application', 'auth_oidc'));
 $PAGE->set_title(get_string('settings_page_application', 'auth_oidc'));

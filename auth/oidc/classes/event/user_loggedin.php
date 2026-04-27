@@ -25,6 +25,8 @@
 
 namespace auth_oidc\event;
 
+use core\context\system;
+
 /**
  * Fired when a user uses OIDC to log in.
  */
@@ -53,7 +55,7 @@ class user_loggedin extends \core\event\base {
      * @return void
      */
     protected function init() {
-        $this->context = \context_system::instance();
+        $this->context = system::instance();
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'user';

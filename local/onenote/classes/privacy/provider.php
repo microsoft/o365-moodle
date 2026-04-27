@@ -25,12 +25,14 @@
 
 namespace local_onenote\privacy;
 
+use core\context\user;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\metadata\provider as metadata_provider;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\core_userlist_provider;
 use core_privacy\local\request\plugin\provider as plugin_provider;
+use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 /**
@@ -82,12 +84,11 @@ class provider implements
     /**
      * Get the list of users who have data within a context.
      *
-     * @param \core_privacy\local\request\userlist $userlist The userlist containing the list of users who have data in this
-     *                                                       context/plugin combination.
+     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
      */
-    public static function get_users_in_context(\core_privacy\local\request\userlist $userlist) {
+    public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
-        if (!$context instanceof \context_user) {
+        if (!$context instanceof user) {
             return;
         }
 
@@ -105,7 +106,7 @@ class provider implements
     public static function export_user_data(approved_contextlist $contextlist) {
         global $DB;
         $user = $contextlist->get_user();
-        $context = \context_user::instance($contextlist->get_user()->id);
+        $context = user::instance($contextlist->get_user()->id);
         $tables = static::get_table_user_map($user->id);
         foreach ($tables as $table => $filterparams) {
             $records = $DB->get_recordset($table, $filterparams);
@@ -152,7 +153,7 @@ class provider implements
      */
     public static function delete_data_for_users(\core_privacy\local\request\approved_userlist $userlist) {
         $context = $userlist->get_context();
-        if ($context instanceof \context_user) {
+        if ($context instanceof user) {
             self::delete_user_data($context->instanceid);
         }
     }

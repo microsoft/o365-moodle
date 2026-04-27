@@ -17,6 +17,7 @@
 namespace auth_oidc;
 
 use advanced_testcase;
+use core\context\system;
 use core\event\user_deleted;
 
 /**
@@ -76,7 +77,7 @@ final class observers_test extends advanced_testcase {
         $event = user_deleted::create([
             'objectid' => $user->id,
             'relateduserid' => $user->id,
-            'context' => \context_system::instance(),
+            'context' => system::instance(),
             'other' => [
                 'username' => $user->username,
                 'email' => $user->email,
@@ -115,7 +116,7 @@ final class observers_test extends advanced_testcase {
         $event = user_deleted::create([
             'objectid' => $user->id,
             'relateduserid' => $user->id,
-            'context' => \context_system::instance(),
+            'context' => system::instance(),
             'other' => [
                 'username' => $user->username,
                 'email' => $user->email,

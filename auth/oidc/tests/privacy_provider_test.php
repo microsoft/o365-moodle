@@ -26,6 +26,9 @@
 namespace auth_oidc;
 
 use auth_oidc\privacy\provider;
+use core\context\system;
+use core\context\user;
+use core_privacy\local\request\userlist;
 
 /**
  * Privacy test for auth_oidc
@@ -63,7 +66,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $this->assertCount(1, $contextlist);
 
         // Check that a context is returned and is the expected context.
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
         $this->assertEquals($usercontext->id, $contextlist->get_contextids()[0]);
     }
 
@@ -78,10 +81,10 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $component = 'auth_oidc';
         // Create a user.
         $user = $this->getDataGenerator()->create_user();
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
 
         // The list of users should not return anything yet (related data still haven't been created).
-        $userlist = new \core_privacy\local\request\userlist($usercontext, $component);
+        $userlist = new userlist($usercontext, $component);
         provider::get_users_in_context($userlist);
         $this->assertCount(0, $userlist);
 
@@ -97,7 +100,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $this->assertEquals($expected, $actual);
 
         // The list of users for system context should not return any users.
-        $userlist = new \core_privacy\local\request\userlist(\context_system::instance(), $component);
+        $userlist = new userlist(system::instance(), $component);
         provider::get_users_in_context($userlist);
         $this->assertCount(0, $userlist);
     }
@@ -113,7 +116,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $tokenrecord = self::create_token($user->id);
         $prevloginrecord = self::create_prevlogin($user->id);
 
-        $usercontext = \context_user::instance($user->id);
+        $usercontext = user::instance($user->id);
 
         $writer = \core_privacy\local\request\writer::with_context($usercontext);
         $this->assertFalse($writer->has_any_data());
@@ -148,7 +151,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $user1 = $this->getDataGenerator()->create_user();
         self::create_token($user1->id);
         self::create_prevlogin($user1->id);
-        $user1context = \context_user::instance($user1->id);
+        $user1context = user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         self::create_token($user2->id);
@@ -181,7 +184,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $user1 = $this->getDataGenerator()->create_user();
         self::create_token($user1->id);
         self::create_prevlogin($user1->id);
-        $user1context = \context_user::instance($user1->id);
+        $user1context = user::instance($user1->id);
 
         $user2 = $this->getDataGenerator()->create_user();
         self::create_token($user2->id);
@@ -214,18 +217,18 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $component = 'auth_oidc';
         // Create user1.
         $user1 = $this->getDataGenerator()->create_user();
-        $usercontext1 = \context_user::instance($user1->id);
+        $usercontext1 = user::instance($user1->id);
         self::create_token($user1->id);
         self::create_prevlogin($user1->id);
 
         // Create user2.
         $user2 = $this->getDataGenerator()->create_user();
-        $usercontext2 = \context_user::instance($user2->id);
+        $usercontext2 = user::instance($user2->id);
         self::create_token($user2->id);
         self::create_prevlogin($user2->id);
 
         // The list of users for usercontext1 should return user1.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
+        $userlist1 = new userlist($usercontext1, $component);
         provider::get_users_in_context($userlist1);
         $this->assertCount(1, $userlist1);
         $expected = [$user1->id];
@@ -233,7 +236,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $this->assertEquals($expected, $actual);
 
         // The list of users for usercontext2 should return user2.
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
+        $userlist2 = new userlist($usercontext2, $component);
         provider::get_users_in_context($userlist2);
         $this->assertCount(1, $userlist2);
         $expected = [$user2->id];
@@ -247,22 +250,22 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         provider::delete_data_for_users($approvedlist);
 
         // Re-fetch users in usercontext1 - The user list should now be empty.
-        $userlist1 = new \core_privacy\local\request\userlist($usercontext1, $component);
+        $userlist1 = new userlist($usercontext1, $component);
         provider::get_users_in_context($userlist1);
         $this->assertCount(0, $userlist1);
         // Re-fetch users in usercontext2 - The user list should not be empty (user2).
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
+        $userlist2 = new userlist($usercontext2, $component);
         provider::get_users_in_context($userlist2);
         $this->assertCount(1, $userlist2);
 
         // User data should be only removed in the user context.
-        $systemcontext = \context_system::instance();
+        $systemcontext = system::instance();
         // Add userlist2 to the approved user list in the system context.
         $approvedlist = new \core_privacy\local\request\approved_userlist($systemcontext, $component, $userlist2->get_userids());
         // Delete user1 data using delete_data_for_user.
         provider::delete_data_for_users($approvedlist);
         // Re-fetch users in usercontext2 - The user list should not be empty (user2).
-        $userlist2 = new \core_privacy\local\request\userlist($usercontext2, $component);
+        $userlist2 = new userlist($usercontext2, $component);
         provider::get_users_in_context($userlist2);
         $this->assertCount(1, $userlist2);
     }

@@ -23,6 +23,7 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\user;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
@@ -354,7 +355,7 @@ class repository_office365 extends repository {
         $record->itemid = $itemid;
         $record->license = $license;
         $record->author = $author;
-        $usercontext = context_user::instance($USER->id);
+        $usercontext = user::instance($USER->id);
         $now = time();
         $record->contextid = $usercontext->id;
         $record->timecreated = $now;

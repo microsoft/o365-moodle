@@ -23,6 +23,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\system;
+
 // phpcs:ignore moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/auth.php');
@@ -54,7 +56,7 @@ try {
     }
 
     $PAGE->set_url('/auth/oidc/');
-    $PAGE->set_context(context_system::instance());
+    $PAGE->set_context(system::instance());
     $PAGE->set_pagelayout('login');
     $PAGE->set_title(get_string('error'));
 

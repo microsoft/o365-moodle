@@ -26,7 +26,7 @@
 
 namespace local_o365\feature\coursesync;
 
-use context_course;
+use core\context\course;
 use core\lock\lock_config;
 use core\task\manager;
 use local_o365\rest\unified;
@@ -1907,7 +1907,7 @@ class main {
     ): bool {
         global $DB;
 
-        $coursecontext = context_course::instance($courseid, IGNORE_MISSING);
+        $coursecontext = course::instance($courseid, IGNORE_MISSING);
         if (!$coursecontext) {
             $this->mtrace('Course context not found for course #' . $courseid . '. Skipping.', 1);
             return false;
@@ -2087,9 +2087,9 @@ class main {
      *
      * @param int $userid The Moodle ID of the user.
      * @param int $roleid The ID of the role.
-     * @param context_course $context The context of the course.
+     * @param course $context The context of the course.
      */
-    private function assign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, context_course $context): void {
+    private function assign_role_by_user_id_role_id_and_course_context(int $userid, int $roleid, course $context): void {
         enrol_try_internal_enrol($context->instanceid, $userid, $roleid);
         $this->mtrace('Assigned role #' . $roleid . ' to user #' . $userid . '.', 3);
     }
@@ -2100,13 +2100,13 @@ class main {
      *
      * @param int $userid The Moodle ID of the user.
      * @param int $roleid The ID of the role.
-     * @param context_course $context The context of the course.
+     * @param course $context The context of the course.
      * @param bool $hasotherrole Whether the user has other role.
      */
     private function unassign_role_by_user_id_role_id_and_course_context(
         int $userid,
         int $roleid,
-        context_course $context,
+        course $context,
         bool $hasotherrole
     ): void {
         role_unassign($roleid, $userid, $context->id);
@@ -2171,7 +2171,7 @@ class main {
      * @param string $groupobjectid The object ID of the Microsoft 365 group.
      */
     public function process_initial_course_team_user_sync(int $courseid, string $groupobjectid): void {
-        $coursecontext = context_course::instance($courseid);
+        $coursecontext = course::instance($courseid);
 
         $this->mtrace('Perform initial Moodle course and Microsoft Teams user sync between course #' . $courseid .
             ' and Teams ' . $groupobjectid  . ' ...', 1);

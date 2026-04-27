@@ -27,7 +27,7 @@ namespace local_o365\webservices;
 
 defined('MOODLE_INTERNAL') || die();
 
-use context_course;
+use core\context\course;
 use local_o365\webservices\exception;
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -78,7 +78,7 @@ class update_onenoteassignment extends external_api {
             $params['course']
         );
 
-        $context = context_course::instance($params['course']);
+        $context = course::instance($params['course']);
         self::validate_context($context);
 
         // Update assignment information.
