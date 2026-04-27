@@ -26,6 +26,8 @@
 
 namespace local_o365\adminsetting;
 
+use core\url;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -66,7 +68,7 @@ class coursesync extends \admin_setting {
     public function output_html($data, $query = '') {
         $settinghtml = '';
 
-        $customizeurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'coursesynccustom']);
+        $customizeurl = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom']);
         $options = [
             'off' => get_string('acp_coursesynccustom_off', 'local_o365'),
             'oncustom' => get_string('acp_coursesynccustom_oncustom', 'local_o365', $customizeurl->out()),

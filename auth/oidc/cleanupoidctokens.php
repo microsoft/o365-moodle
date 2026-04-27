@@ -23,6 +23,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\url;
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
@@ -30,7 +32,7 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
 require_login();
 
 $context = context_system::instance();
-$pageurl = new moodle_url('/auth/oidc/cleanupoidctokens.php');
+$pageurl = new url('/auth/oidc/cleanupoidctokens.php');
 
 admin_externalpage_setup('auth_oidc_cleanup_oidc_tokens');
 

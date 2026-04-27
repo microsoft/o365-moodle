@@ -23,6 +23,7 @@
  * @copyright  Microsoft, Inc.
  */
 
+use core\url;
 use local_onenote\api\base;
 
 require_once(__DIR__ . '/../../config.php');
@@ -48,7 +49,7 @@ if ($url == 'connection_error') {
 }
 
 if ($url) {
-    $url = new moodle_url($url);
+    $url = new url($url);
     redirect($url);
 } else {
     throw new moodle_exception('onenote_page_error', 'local_onenote');

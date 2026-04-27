@@ -25,6 +25,7 @@
 
 namespace local_o365\feature\calsync;
 
+use core\url;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\oauth2\token;
@@ -716,12 +717,12 @@ class main {
     public function get_event_link_html($event) {
         // Update event description.
         if (isset($event->courseid) && $event->courseid == SITEID) {
-            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time=' . $event->timestart . '#event_' . $event->id);
+            $moodleeventurl = new url('/calendar/view.php?view=day&time=' . $event->timestart . '#event_' . $event->id);
         } else if (isset($event->courseid) && $event->courseid != SITEID && $event->courseid > 0) {
-            $moodleeventurl = new \moodle_url('/calendar/view.php?course=' . $event->courseid . '&view=day&time=' .
+            $moodleeventurl = new url('/calendar/view.php?course=' . $event->courseid . '&view=day&time=' .
                 $event->timestart . '#event_' . $event->id);
         } else {
-            $moodleeventurl = new \moodle_url('/calendar/view.php?view=day&time=' . $event->timestart . '#event_' . $event->id);
+            $moodleeventurl = new url('/calendar/view.php?view=day&time=' . $event->timestart . '#event_' . $event->id);
         }
 
         $linkhtml = \html_writer::link($moodleeventurl, get_string('calendar_event', 'local_o365'));
