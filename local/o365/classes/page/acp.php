@@ -88,7 +88,7 @@ class acp extends base {
         $params = ['section' => 'local_o365'];
         switch ($mode) {
             case 'coursesynccustom':
-                $params['s_local_o365_tabs'] = LOCAL_O365_TAB_SYNC;
+                $params['section'] = 'local_o365_sync';
                 $this->title = get_string('settings_header_syncsettings', 'local_o365');
                 break;
             case 'healthcheck':
@@ -99,7 +99,7 @@ class acp extends base {
             case 'maintenance_resyncgroupusers':
             case 'maintenance_cleandeltatoken':
             case 'tenants':
-                $params['s_local_o365_tabs'] = LOCAL_O365_TAB_ADVANCED;
+                $params['section'] = 'local_o365_advanced';
                 break;
         }
 
@@ -962,7 +962,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         // Check settings.
         $coursesyncsetting = get_config('local_o365', 'coursesync');
         if ($coursesyncsetting === 'off') {
-            $redirecturl = new url('/admin/settings.php', ['section' => 'local_o365', 's_local_o365_tabs' => 1]);
+            $redirecturl = new url('/admin/settings.php', ['section' => 'local_o365_sync']);
             redirect($redirecturl, get_string('acp_teamconnections_sync_disabled', 'local_o365'));
         }
 

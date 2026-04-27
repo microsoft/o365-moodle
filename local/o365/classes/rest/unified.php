@@ -84,12 +84,16 @@ class unified extends o365api {
      * @throws dml_exception
      */
     public static function get_tokenresource(): string {
+        if (static::use_chinese_api() === true) {
+            return self::RESOURCE_URL_CHINESE;
+        }
+
         $oidcresource = get_config('auth_oidc', 'oidcresource');
         if (!empty($oidcresource)) {
             return $oidcresource;
         }
 
-        return (static::use_chinese_api() === true) ? self::RESOURCE_URL_CHINESE : self::RESOURCE_URL;
+        return self::RESOURCE_URL;
     }
 
     /**

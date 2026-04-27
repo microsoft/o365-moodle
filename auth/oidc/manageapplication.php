@@ -29,6 +29,7 @@ use core\url;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
 
 require_login();
@@ -48,7 +49,7 @@ $jsmodule = [
 ];
 $PAGE->requires->js_init_call('M.auth_oidc.init', $jsparams, true, $jsmodule);
 
-admin_externalpage_setup('auth_oidc_application');
+navigation_node::require_admin_tree();
 
 require_admin();
 

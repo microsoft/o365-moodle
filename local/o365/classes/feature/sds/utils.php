@@ -54,7 +54,9 @@ class utils {
                 $apiclient = new unified($unifiedtoken, $httpclient);
                 return $apiclient;
             } else {
-                mtrace('Could not construct system API user token for SDS sync task.');
+                if (defined('CLI_SCRIPT') && CLI_SCRIPT) {
+                    mtrace('Could not construct system API user token for SDS sync task.');
+                }
             }
         } catch (moodle_exception $e) {
             return null;

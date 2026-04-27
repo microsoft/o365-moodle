@@ -85,6 +85,118 @@ const AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
 const AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
 
 /**
+ * Callback invoked when application credentials or endpoint settings are updated.
+ *
+ * Clears cached application tokens and the setup verification result so that
+ * the connection is re-validated with the new values.
+ *
+ * @param string $settingname The full name of the setting that was updated.
+ * @return void
+ */
+function auth_oidc_reset_app_tokens($settingname) {
+    // Use a static flag so cache purging and token clearing only happen once per request,
+    // even when multiple settings with this callback change in the same save.
+    static $cachespurged = false;
+    if (!$cachespurged) {
+        unset_config('apptokens', 'local_o365');
+        unset_config('azuresetupresult', 'local_o365');
+        purge_all_caches();
+        $cachespurged = true;
+    }
+
+    if (auth_oidc_is_local_365_installed()) {
+        $idptype = get_config('auth_oidc', 'idptype');
+        if ($idptype && $idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
+            // Use a static flag so only one notification is queued per request,
+            // even when multiple settings with this callback change in the same save.
+            static $notificationqueued = false;
+            if (!$notificationqueued) {
+                $localo365configurl = new \core\url('/admin/settings.php', ['section' => 'local_o365']);
+                \core\notification::warning(
+                    get_string('application_updated_microsoft_notify', 'auth_oidc', $localo365configurl->out())
+                );
+                $notificationqueued = true;
+            }
+        }
+    }
+}
+
+/**
+ * Validate authentication settings for invalid combinations.
+ *
+ * Checks for invalid combinations that could break authentication:
+ * - Certificate auth with Entra v1/Other IdP types (not supported)
+ * - Secret auth without a configured client secret
+ * - Certificate auth without required cert/key fields
+ *
+ * @param string $settingname The full name of the setting that was updated.
+ * @return void
+ */
+function auth_oidc_validate_auth_settings(string $settingname) {
+    $idptype = get_config('auth_oidc', 'idptype');
+    $clientauthmethod = get_config('auth_oidc', 'clientauthmethod');
+
+    if (empty($idptype) || empty($clientauthmethod)) {
+        return;
+    }
+
+    $errors = [];
+
+    // Validate clientauthmethod according to idptype.
+    if (in_array($idptype, [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_OTHER])) {
+        if ($clientauthmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
+            $errors[] = get_string('error_invalid_client_authentication_method', 'auth_oidc');
+        }
+    } else if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        if (!in_array($clientauthmethod, [AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE])) {
+            $errors[] = get_string('error_invalid_client_authentication_method', 'auth_oidc');
+        }
+    }
+
+    // Validate authentication-method-specific requirements.
+    if ($clientauthmethod == AUTH_OIDC_AUTH_METHOD_SECRET) {
+        $clientsecret = get_config('auth_oidc', 'clientsecret');
+        if (empty($clientsecret)) {
+            $errors[] = get_string('error_empty_client_secret', 'auth_oidc');
+        }
+    } else if ($clientauthmethod == AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
+        $clientcertsource = get_config('auth_oidc', 'clientcertsource');
+
+        if ($clientcertsource == AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
+            $clientprivatekey = get_config('auth_oidc', 'clientprivatekey');
+            $clientcert = get_config('auth_oidc', 'clientcert');
+
+            if (empty($clientprivatekey)) {
+                $errors[] = get_string('error_empty_client_private_key', 'auth_oidc');
+            }
+            if (empty($clientcert)) {
+                $errors[] = get_string('error_empty_client_cert', 'auth_oidc');
+            }
+        } else if ($clientcertsource == AUTH_OIDC_AUTH_CERT_SOURCE_FILE) {
+            $clientprivatekeyfile = get_config('auth_oidc', 'clientprivatekeyfile');
+            $clientcertfile = get_config('auth_oidc', 'clientcertfile');
+
+            if (empty($clientprivatekeyfile)) {
+                $errors[] = get_string('error_empty_client_private_key_file', 'auth_oidc');
+            }
+            if (empty($clientcertfile)) {
+                $errors[] = get_string('error_empty_client_cert_file', 'auth_oidc');
+            }
+        }
+    }
+
+    // Notify admin if validation errors are found.
+    if (!empty($errors)) {
+        $message = get_string('auth_settings_validation_error', 'auth_oidc') . '<ul>';
+        foreach ($errors as $error) {
+            $message .= '<li>' . $error . '</li>';
+        }
+        $message .= '</ul>';
+        \core\notification::error($message);
+    }
+}
+
+/**
  * Initialize custom icon for OIDC authentication.
  *
  * This function sets up a custom icon for the OIDC plugin by creating necessary directories
@@ -922,4 +1034,41 @@ function auth_oidc_is_masked_secret($value) {
     // This matches both cases: secrets shorter than 2 chars (masked as **********)
     // and secrets 2+ chars (masked as XX**********).
     return preg_match('/^(.{2})?\*{10}$/', $value) === 1;
+}
+
+/**
+ * Build Bootstrap nav-tabs HTML for navigating between auth_oidc settings pages.
+ *
+ * Renders a row of tab links to each settings sub-page, with the current page
+ * marked as active. The "Binding username claim" tab is only included if IdP type
+ * is configured, since the corresponding settings page is only registered in that case.
+ *
+ * @param string $currentpage Section ID of the currently active page.
+ * @return string HTML for the navigation bar.
+ */
+function auth_oidc_get_settings_nav_html(string $currentpage): string {
+    $pages = [
+        'auth_oidc_application' => get_string('settings_page_application', 'auth_oidc'),
+    ];
+
+    // Only include the binding username claim tab if IdP type is configured.
+    $idptype = get_config('auth_oidc', 'idptype');
+    if ($idptype) {
+        $pages['auth_oidc_binding_username_claim'] = get_string('settings_page_binding_username_claim', 'auth_oidc');
+    }
+
+    $pages += [
+        'auth_oidc_other_settings' => get_string('settings_page_other_settings', 'auth_oidc'),
+        'auth_oidc_field_mapping' => get_string('settings_page_field_mapping', 'auth_oidc'),
+    ];
+
+    $html = html_writer::start_tag('ul', ['class' => 'nav nav-tabs mb-3']);
+    foreach ($pages as $section => $label) {
+        $url = new \core\url('/admin/settings.php', ['section' => $section]);
+        $linkattrs = ['class' => 'nav-link' . ($section === $currentpage ? ' active' : '')];
+        $html .= html_writer::tag('li', html_writer::link($url, $label, $linkattrs), ['class' => 'nav-item']);
+    }
+    $html .= html_writer::end_tag('ul');
+
+    return $html;
 }
