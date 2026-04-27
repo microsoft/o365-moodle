@@ -24,6 +24,8 @@
 
 namespace local_o365\feature\userconnections;
 
+use core\url;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -205,7 +207,7 @@ class table extends \table_sql {
             'alternatename' => $values->useralternatename,
         ];
         $fullname = fullname((object)$userdata);
-        $viewurl = new \moodle_url('/user/view.php', ['id' => $values->userid]);
+        $viewurl = new url('/user/view.php', ['id' => $values->userid]);
         return \html_writer::link($viewurl, $fullname);
     }
 
@@ -270,32 +272,32 @@ class table extends \table_sql {
         if (!empty($values->toko365username)) {
             // Connected user.
             $urlparams['mode'] = 'userconnections_disconnect';
-            $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+            $url = new url('/local/o365/acp.php', $urlparams);
             $label = get_string('acp_userconnections_table_disconnect', 'local_o365');
             $links[] = \html_writer::link($url, $label);
 
             $urlparams['mode'] = 'userconnections_resync';
-            $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+            $url = new url('/local/o365/acp.php', $urlparams);
             $label = get_string('acp_userconnections_table_resync', 'local_o365');
             $links[] = \html_writer::link($url, $label, ['target' => '_blank']);
         } else {
             if (!empty($values->matchedo365username)) {
                 // Matched, unconfirmed user.
                 $urlparams['mode'] = 'userconnections_unmatch';
-                $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+                $url = new url('/local/o365/acp.php', $urlparams);
                 $label = get_string('acp_userconnections_table_unmatch', 'local_o365');
                 $links[] = \html_writer::link($url, $label);
             } else {
                 if (!empty($values->objectso365name)) {
                     // This is a synced, uninitialized user.
                     $urlparams['mode'] = 'userconnections_resync';
-                    $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+                    $url = new url('/local/o365/acp.php', $urlparams);
                     $label = get_string('acp_userconnections_table_resync', 'local_o365');
                     $links[] = \html_writer::link($url, $label, ['target' => '_blank']);
                 } else {
                     // Unconnected, unmatched user.
                     $urlparams['mode'] = 'userconnections_manualmatch';
-                    $url = new \moodle_url('/local/o365/acp.php', $urlparams);
+                    $url = new url('/local/o365/acp.php', $urlparams);
                     $label = get_string('acp_userconnections_table_match', 'local_o365');
                     $links[] = \html_writer::link($url, $label);
                 }

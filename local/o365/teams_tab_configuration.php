@@ -24,11 +24,12 @@
  */
 
 use core\context\system;
+use core\url;
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
 
-$url = new moodle_url('/local/o365/teams_tab_configuration.php');
+$url = new url('/local/o365/teams_tab_configuration.php');
 
 $PAGE->set_context(system::instance());
 
@@ -45,11 +46,11 @@ echo "<script src=\"" . $CFG->wwwroot . "/local/o365/js/MicrosoftTeams.min.js\">
 echo "<script src=\"" . $CFG->wwwroot . "/local/o365/js/msal-browser.min.js\"></script>";
 echo "<script src=\"https://code.jquery.com/jquery-3.1.1.js\" crossorigin=\"anonymous\"></script>";
 
-$redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
-$ssostarturl = new moodle_url('/local/o365/sso_start.php');
-$oidcloginurl = new moodle_url('/auth/oidc/index.php');
-$externalloginurl = new moodle_url('/login/index.php');
-$ssologinurl = new moodle_url('/local/o365/sso_login.php');
+$redirecturl = new url('/local/o365/teams_tab_redirect.php');
+$ssostarturl = new url('/local/o365/sso_start.php');
+$oidcloginurl = new url('/auth/oidc/index.php');
+$externalloginurl = new url('/login/index.php');
+$ssologinurl = new url('/local/o365/sso_login.php');
 
 $url->params(['sesskey' => sesskey()]);
 $SESSION->wantsurl = $url;

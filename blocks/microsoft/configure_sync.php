@@ -24,6 +24,7 @@
  */
 
 use core\context\course;
+use core\url;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/blocks/microsoft/classes/form/course_sync_form.php');
@@ -39,7 +40,7 @@ require_capability('local/o365:teamowner', $coursecontext);
 
 $PAGE->set_context($coursecontext);
 
-$redirecturl = new moodle_url('/course/view.php', ['id' => $courseid]);
+$redirecturl = new url('/course/view.php', ['id' => $courseid]);
 
 // Validations.
 $sitecoursesyncconfig = get_config('local_o365', 'coursesync');

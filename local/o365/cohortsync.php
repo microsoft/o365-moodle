@@ -24,6 +24,7 @@
  */
 
 use core\context\system;
+use core\url;
 use local_o365\feature\cohortsync\main;
 use local_o365\form\cohortsync;
 
@@ -33,7 +34,7 @@ require_once($CFG->libdir . '/adminlib.php');
 require_login();
 require_capability('moodle/site:config', system::instance());
 
-$pageurl = new moodle_url('/local/o365/cohortsync.php');
+$pageurl = new url('/local/o365/cohortsync.php');
 
 $PAGE->set_url($pageurl);
 $PAGE->set_context(system::instance());
@@ -44,10 +45,10 @@ $PAGE->set_heading(get_string('cohortsync_title', 'local_o365'));
 $PAGE->set_primary_active_tab('siteadminnode');
 $PAGE->set_secondary_active_tab('modules');
 
-$PAGE->navbar->add(get_string('administrationsite'), new moodle_url('/admin/search.php'));
-$PAGE->navbar->add(get_string('localplugins'), new moodle_url('/admin/category.php', ['category' => 'localplugins']));
-$PAGE->navbar->add(get_string('pluginname', 'local_o365'), new moodle_url('/admin/settings.php', ['section' => 'local_o365']));
-$PAGE->navbar->add(get_string('settings_cohortsync_title', 'local_o365'), new moodle_url('/local/o365/cohortsync.php'));
+$PAGE->navbar->add(get_string('administrationsite'), new url('/admin/search.php'));
+$PAGE->navbar->add(get_string('localplugins'), new url('/admin/category.php', ['category' => 'localplugins']));
+$PAGE->navbar->add(get_string('pluginname', 'local_o365'), new url('/admin/settings.php', ['section' => 'local_o365']));
+$PAGE->navbar->add(get_string('settings_cohortsync_title', 'local_o365'), new url('/local/o365/cohortsync.php'));
 
 $apiclient = main::get_unified_api(__METHOD__);
 if (empty($apiclient)) {

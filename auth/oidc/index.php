@@ -24,6 +24,7 @@
  */
 
 use core\context\system;
+use core\url;
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../config.php');
@@ -62,7 +63,7 @@ try {
 
     echo $OUTPUT->header();
     echo $OUTPUT->notification($errormessage, 'error');
-    echo $OUTPUT->single_button(new moodle_url('/login/index.php'), get_string('login'), 'get');
+    echo $OUTPUT->single_button(new url('/login/index.php'), get_string('login'), 'get');
     echo $OUTPUT->footer();
     exit;
 }
