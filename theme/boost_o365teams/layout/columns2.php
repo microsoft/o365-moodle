@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\context\course;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/behat/lib.php');
@@ -52,7 +54,7 @@ if ((strpos($url, 'course/view.php') !== false) && (strpos($url, 'section=') == 
 }
 
 $templatecontext = [
-        'sitename' => format_string($SITE->shortname, true, ['context' => context_course::instance(SITEID), "escape" => false]),
+        'sitename' => format_string($SITE->shortname, true, ['context' => course::instance(SITEID), "escape" => false]),
         'output' => $OUTPUT,
         'sidepreblocks' => $blockshtml,
         'hasblocks' => $hasblocks,

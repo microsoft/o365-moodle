@@ -25,7 +25,7 @@
 
 namespace local_o365\feature\courserequest;
 
-use context_course;
+use core\context\course;
 use core_user;
 use course_request;
 use local_o365\httpclient;
@@ -242,7 +242,7 @@ class main {
         $ownerroleid = get_config('local_o365', 'courserequestownerrole');
         $memberroleid = get_config('local_o365', 'courserequestmemberrole');
 
-        $context = context_course::instance($courseid);
+        $context = course::instance($courseid);
         $enrolleduserids = array_keys(get_enrolled_users($context));
 
         if (!$ownerroleid) {

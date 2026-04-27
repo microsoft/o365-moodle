@@ -25,7 +25,7 @@
 
 namespace auth_oidc\event;
 
-use context_system;
+use core\context\system;
 use core\event\base;
 
 /**
@@ -56,7 +56,7 @@ class user_rename_attempt extends base {
      * @return void
      */
     protected function init() {
-        $this->context = context_system::instance();
+        $this->context = system::instance();
         $this->data['crud'] = 'u';
         $this->data['edulevel'] = self::LEVEL_OTHER;
         $this->data['objecttable'] = 'user';

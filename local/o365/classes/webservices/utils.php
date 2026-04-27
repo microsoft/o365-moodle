@@ -25,6 +25,7 @@
 
 namespace local_o365\webservices;
 
+use core\context\module;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
@@ -50,7 +51,7 @@ class utils {
 
         [$course, $module, $assign] = static::get_assignment_info($coursemoduleid, $courseid);
 
-        require_capability('moodle/course:manageactivities', \context_module::instance($module->id));
+        require_capability('moodle/course:manageactivities', module::instance($module->id));
 
         $pluginconfigparams = [
             'assignment' => $assign->id,

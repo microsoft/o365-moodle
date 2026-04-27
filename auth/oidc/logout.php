@@ -23,11 +23,13 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\system;
+
 // phpcs:ignore moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../config.php');
 
 $PAGE->set_url('/auth/oidc/logout.php');
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
 
 $sid = optional_param('sid', '', PARAM_TEXT);
 

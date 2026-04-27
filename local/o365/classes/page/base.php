@@ -25,6 +25,8 @@
 
 namespace local_o365\page;
 
+use core\context\system;
+
 /**
  * Basic page-style class handling page setup and page modes.
  */
@@ -48,7 +50,7 @@ class base {
     public function __construct($url, $title, $context = null) {
         global $PAGE;
         if (empty($context)) {
-            $context = \context_system::instance();
+            $context = system::instance();
         }
 
         $this->set_context($context);

@@ -23,20 +23,20 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../config.php');
-
-require_once($CFG->libdir . '/adminlib.php');
-
+use core\context\system;
 use local_o365\feature\cohortsync\main;
 use local_o365\form\cohortsync;
 
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
+
 require_login();
-require_capability('moodle/site:config', context_system::instance());
+require_capability('moodle/site:config', system::instance());
 
 $pageurl = new moodle_url('/local/o365/cohortsync.php');
 
 $PAGE->set_url($pageurl);
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
 $PAGE->set_title(get_string('cohortsync_title', 'local_o365'));
 $PAGE->set_pagelayout('admin');
 $PAGE->set_heading(get_string('cohortsync_title', 'local_o365'));

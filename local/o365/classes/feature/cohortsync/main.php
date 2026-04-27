@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/cohort/lib.php');
 
-use context_system;
+use core\context\system;
 use local_o365\httpclient;
 use local_o365\oauth2\clientdata;
 use local_o365\rest\unified;
@@ -209,7 +209,7 @@ class main {
      * Fetch cohorts from the local Moodle cache.
      */
     public function fetch_cohorts(): void {
-        $systemcontext = context_system::instance();
+        $systemcontext = system::instance();
         $systemcohorts = cohort_get_cohorts($systemcontext->id, 0, 0);
         $this->cohortlist = $systemcohorts['cohorts'];
     }

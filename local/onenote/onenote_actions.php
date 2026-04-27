@@ -23,13 +23,14 @@
  * @copyright  Microsoft, Inc.
  */
 
+use core\context\system;
 use local_onenote\api\base;
 
 require_once(__DIR__ . '/../../config.php');
 
 require_login();
 $PAGE->set_url('/local/onenote/onenote_actions.php');
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(system::instance());
 
 $action = required_param('action', PARAM_TEXT);
 $cmid = (int) required_param('cmid', PARAM_INT);

@@ -32,7 +32,7 @@ use auth_oidc\event\user_disconnected;
 use auth_oidc\event\user_loggedin;
 use auth_oidc\jwt;
 use backup;
-use context_system;
+use core\context\system;
 use core\event\capability_assigned;
 use core\event\capability_unassigned;
 use core\event\config_log_created;
@@ -84,7 +84,7 @@ class observers {
      */
     public static function handle_oidc_user_authed(user_authed $event): bool {
         require_login();
-        require_capability('moodle/site:config', context_system::instance());
+        require_capability('moodle/site:config', system::instance());
 
         $eventdata = $event->get_data();
 

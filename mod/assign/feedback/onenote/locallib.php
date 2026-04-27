@@ -23,6 +23,7 @@
  * @copyright  Microsoft, Inc. (based on files by NetSpot {@link http://www.netspot.com.au})
  */
 
+use core\context\course;
 use local_onenote\api\base;
 
 /**
@@ -298,7 +299,7 @@ class assign_feedback_onenote extends assign_feedback_plugin {
     protected function isonfrontpage() {
         if (!empty($this->assignment) && $this->assignment instanceof assign) {
             $coursectx = $this->assignment->get_course_context();
-            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof context_course) ? true : false;
+            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof course) ? true : false;
             if ($coursectxvalid === true && $coursectx->instanceid == SITEID) {
                 return true;
             }

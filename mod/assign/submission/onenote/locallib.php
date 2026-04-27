@@ -27,6 +27,8 @@
 use assignsubmission_onenote\event\assessable_uploaded;
 use assignsubmission_onenote\event\submission_created;
 use assignsubmission_onenote\event\submission_updated;
+use core\context\course;
+use core\context\module;
 use local_onenote\api\base;
 
 /**
@@ -312,7 +314,7 @@ class assign_submission_onenote extends assign_submission_plugin {
         $count = $this->count_files($submission->id, base::ASSIGNSUBMISSION_ONENOTE_FILEAREA);
 
         $params = [
-            'context' => context_module::instance($this->assignment->get_course_module()->id),
+            'context' => module::instance($this->assignment->get_course_module()->id),
             'courseid' => $this->assignment->get_course()->id,
             'objectid' => $submission->id,
             'other' => [
@@ -508,7 +510,7 @@ class assign_submission_onenote extends assign_submission_plugin {
     protected function isonfrontpage() {
         if (!empty($this->assignment) && $this->assignment instanceof \assign) {
             $coursectx = $this->assignment->get_course_context();
-            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof \context_course) ? true : false;
+            $coursectxvalid = (!empty($coursectx) && $coursectx instanceof course) ? true : false;
             if ($coursectxvalid === true && $coursectx->instanceid == SITEID) {
                 return true;
             }

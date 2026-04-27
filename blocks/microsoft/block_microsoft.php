@@ -24,6 +24,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\context\course;
+use core\context\system;
 use local_o365\feature\coursesync\utils;
 use local_onenote\api\base;
 
@@ -144,7 +146,7 @@ class block_microsoft extends block_base {
 
         $courseid = $COURSE->id;
         $coursesyncenabled = utils::is_enabled();
-        $iscoursecontext = $this->page->context instanceof \context_course && $this->page->context->instanceid !== SITEID;
+        $iscoursecontext = $this->page->context instanceof course && $this->page->context->instanceid !== SITEID;
         $iscoursesyncenabled = utils::is_course_sync_enabled($courseid);
 
         $html = '';
@@ -330,7 +332,7 @@ class block_microsoft extends block_base {
 
         $userupn = \local_o365\utils::get_o365_upn($USER->id);
 
-        if ($this->page->context instanceof \context_course && $this->page->context->instanceid !== SITEID) {
+        if ($this->page->context instanceof course && $this->page->context->instanceid !== SITEID) {
             // Course SharePoint Site.
             if (!empty($this->globalconfig->settings_showcoursespsite) && !empty($o365config->sharepointlink)) {
                 $sharepointstr = get_string('linksharepoint', 'block_microsoft');
@@ -459,7 +461,7 @@ class block_microsoft extends block_base {
         $contexttocheck = null;
 
         if ($currentcontext->contextlevel == CONTEXT_SYSTEM) {
-            $contexttocheck = context_system::instance();
+            $contexttocheck = system::instance();
         } else {
             $parentcontexts = $currentcontext->get_parent_contexts(true);
             foreach ($parentcontexts as $parentcontext) {
@@ -469,7 +471,7 @@ class block_microsoft extends block_base {
                 }
             }
             if (!$contexttocheck) {
-                $contexttocheck = context_system::instance();
+                $contexttocheck = system::instance();
             }
         }
 

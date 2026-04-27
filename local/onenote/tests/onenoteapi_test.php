@@ -41,6 +41,9 @@
 
 namespace local_onenote;
 
+use core\context\course;
+use core\context\module;
+
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/assign/tests/base_test.php');
@@ -94,8 +97,8 @@ final class onenoteapi_test extends \advanced_testcase {
 
         // Setting user and enrolling to the courses created with teacher role.
         $this->setUser($this->user->id);
-        $c1ctx = context_course::instance($this->course1->id);
-        $c2ctx = context_course::instance($this->course2->id);
+        $c1ctx = course::instance($this->course1->id);
+        $c2ctx = course::instance($this->course2->id);
         $this->getDataGenerator()->enrol_user($this->user->id, $this->course1->id, 3);
         $this->getDataGenerator()->enrol_user($this->user->id, $this->course2->id, 3);
         $this->assertCount(2, enrol_get_my_courses());
@@ -248,7 +251,7 @@ final class onenoteapi_test extends \advanced_testcase {
         $params['intro'] = '<h3>Heading 1</h3><br><h4>Heading 2</h4><br><h5>Heading 3</h5>ï¿¼';
         $instance = $generator->create_instance($params);
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
-        $this->context = context_module::instance($this->cm->id);
+        $this->context = module::instance($this->cm->id);
         $this->assign = new testable_assign($this->context, $this->cm, $this->course1);
 
         // To get the notebooks of student.
@@ -299,7 +302,7 @@ final class onenoteapi_test extends \advanced_testcase {
         $params['intro'] = '<h3>Heading 1</h3><p>This is test assignment.</p><br>';
         $instance = $generator->create_instance($params);
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
-        $this->context = context_module::instance($this->cm->id);
+        $this->context = module::instance($this->cm->id);
         $this->assign = new testable_assign($this->context, $this->cm, $this->course1);
 
         // To get the notebooks of student.
@@ -369,7 +372,7 @@ final class onenoteapi_test extends \advanced_testcase {
         $params['intro'] = '<h3>Heading 1</h3><br><h4>Heading 2</h4><br><h5>Heading 3</h5>ï¿¼';
         $instance = $generator->create_instance($params);
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
-        $this->context = context_module::instance($this->cm->id);
+        $this->context = module::instance($this->cm->id);
         $this->assign = new testable_assign($this->context, $this->cm, $this->course1);
         $assigndetails = $this->assign->get_instance();
         $assignid = $assigndetails->id;
@@ -426,7 +429,7 @@ final class onenoteapi_test extends \advanced_testcase {
         $params['course'] = $this->course2->id;
         $instance = $generator->create_instance($params);
         $this->cm = get_coursemodule_from_instance('assign', $instance->id);
-        $this->context = context_module::instance($this->cm->id);
+        $this->context = module::instance($this->cm->id);
         $this->assign = new testable_assign($this->context, $this->cm, $this->course2);
         $assigndetails = $this->assign->get_instance();
         $assignid = $assigndetails->id;

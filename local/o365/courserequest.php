@@ -23,11 +23,12 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../config.php');
-require_once($CFG->dirroot . '/course/lib.php');
-
+use core\context\coursecat;
 use local_o365\feature\courserequest\main;
 use local_o365\form\courserequestform;
+
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/course/lib.php');
 
 // Where we came from. Used in a number of redirects.
 $url = new moodle_url('/local/o365/courserequest.php');
@@ -62,7 +63,7 @@ if ($CFG->lockrequestcategory) {
     $categoryid = array_key_exists($CFG->defaultrequestcategory, $list) ? $CFG->defaultrequestcategory : key($list);
 }
 
-$context = context_coursecat::instance($categoryid ?: $CFG->defaultrequestcategory);
+$context = coursecat::instance($categoryid ?: $CFG->defaultrequestcategory);
 $PAGE->set_context($context);
 require_capability('moodle/course:request', $context);
 

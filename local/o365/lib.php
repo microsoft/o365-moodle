@@ -23,6 +23,9 @@
  * @copyright (C) 2016 onwards Microsoft Open Technologies, Inc. (http://msopentech.com/)
  */
 
+use core\context\system;
+use core\context\user;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
@@ -116,8 +119,8 @@ const COURSE_USER_SYNC_DIRECTION_BOTH = 3;
 function local_o365_connectioncapability($userid, $mode = 'link', $require = false) {
     $check = $require ? 'require_capability' : 'has_capability';
     $cap = ($mode == 'link') ? 'local/o365:manageconnectionlink' : 'local/o365:manageconnectionunlink';
-    $contextsys = \context_system::instance();
-    $contextuser = \context_user::instance($userid);
+    $contextsys = system::instance();
+    $contextuser = user::instance($userid);
 
     return has_capability($cap, $contextsys) || $check($cap, $contextuser);
 }

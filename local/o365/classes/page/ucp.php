@@ -25,6 +25,7 @@
 
 namespace local_o365\page;
 
+use core\context\course;
 use html_writer;
 use moodle_exception;
 
@@ -137,9 +138,9 @@ class ucp extends base {
         $primarycalid = $customdata['o365calendars'][0]['id'];
 
         // Determine permissions to create events. Determines whether user can sync from o365 to Moodle.
-        $customdata['cancreatesiteevents'] = has_capability('moodle/calendar:manageentries', \context_course::instance(SITEID));
+        $customdata['cancreatesiteevents'] = has_capability('moodle/calendar:manageentries', course::instance(SITEID));
         foreach ($customdata['usercourses'] as $courseid => $course) {
-            $cancreateincourse = has_capability('moodle/calendar:manageentries', \context_course::instance($courseid));
+            $cancreateincourse = has_capability('moodle/calendar:manageentries', course::instance($courseid));
             $customdata['cancreatecourseevents'][$courseid] = $cancreateincourse;
         }
 
