@@ -63,10 +63,10 @@ class assessable_uploaded extends \core\event\assessable_uploaded {
     /**
      * Get URL related to the action.
      *
-     * @return \moodle_url
+     * @return \core\url
      */
     public function get_url() {
-        return new \moodle_url('/mod/assign/view.php', ['id' => $this->contextinstanceid]);
+        return new \core\url('/mod/assign/view.php', ['id' => $this->contextinstanceid]);
     }
 
     /**

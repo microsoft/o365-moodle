@@ -25,6 +25,8 @@
 
 namespace local_o365\adminsetting;
 
+use core\url;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -102,7 +104,7 @@ class verifysetup extends \admin_setting {
         }
 
         // Using a <script> tag here instead of $PAGE->requires->js() because using $PAGE object loads file too late.
-        $scripturl = new \moodle_url('/local/o365/classes/adminsetting/verifysetup.js');
+        $scripturl = new url('/local/o365/classes/adminsetting/verifysetup.js');
         $settinghtml .= '<script src="' . $scripturl->out() . '"></script>';
 
         $lastresults = get_config('local_o365', 'verifysetupresult');
@@ -116,7 +118,7 @@ class verifysetup extends \admin_setting {
 
         $unifiedenabled = 'true';
 
-        $ajaxurl = new \moodle_url('/local/o365/ajax.php');
+        $ajaxurl = new url('/local/o365/ajax.php');
         $settinghtml .= '<script>
 $(function() {
     var opts = {

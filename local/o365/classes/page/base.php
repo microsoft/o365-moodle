@@ -92,7 +92,7 @@ class base {
     /**
      * Set the URL of the page.
      *
-     * @param string|moodle_url $url The new page URL.
+     * @param string|\core\url $url The new page URL.
      */
     public function set_url($url) {
         global $PAGE;

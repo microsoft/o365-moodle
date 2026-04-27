@@ -24,12 +24,13 @@
  */
 
 use core\context\system;
+use core\url;
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
-$url = new moodle_url('/local/o365/sso_login.php');
+$url = new url('/local/o365/sso_login.php');
 
 $PAGE->set_context(system::instance());
 
@@ -161,8 +162,8 @@ if (!$loginsuccess && !empty($payload->upn)) {
     if ($potentialuser) {
         // User exists with matching email but not set up for OIDC.
         // Redirect them to the OIDC authorization flow.
-        $wantsurl = new moodle_url('/');
-        $loginurl = new moodle_url('/auth/oidc/', ['wantsurl' => $wantsurl->out()]);
+        $wantsurl = new url('/');
+        $loginurl = new url('/auth/oidc/', ['wantsurl' => $wantsurl->out()]);
         redirect($loginurl);
     }
 }
