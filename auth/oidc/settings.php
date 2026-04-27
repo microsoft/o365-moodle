@@ -671,9 +671,9 @@ if ($hassiteconfig) {
 
     $settings->add(new admin_setting_configcheckbox(
         'auth_oidc/set_pix',
-        get_string('cfg_set_pix', 'auth_oidc'),
-        '',
-        '0'
+        get_string('cfg_set_pix_key', 'auth_oidc'),
+        get_string('cfg_set_pix_desc', 'auth_oidc'),
+        '1'
     ));
 
     // Icon.
@@ -780,7 +780,6 @@ if ($hassiteconfig) {
 
     $settings->hide_if('auth_oidc/icon', 'auth_oidc/set_pix', 'notchecked');
     $settings->hide_if('auth_oidc/customicon', 'auth_oidc/set_pix', 'notchecked');
-
 
     // Debugging heading.
     $settings->add(
