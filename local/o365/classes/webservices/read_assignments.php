@@ -39,7 +39,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use core_external\external_warnings;
-use moodle_url;
+use core\url;
 
 global $CFG;
 
@@ -305,7 +305,7 @@ class read_assignments extends external_api {
                                 $assignment['introattachments'][] = [
                                     'filename' => $filename,
                                     'mimetype' => $file->get_mimetype(),
-                                    'fileurl' => moodle_url::make_webservice_pluginfile_url(
+                                    'fileurl' => url::make_webservice_pluginfile_url(
                                         $context->id,
                                         'mod_assign',
                                         ASSIGN_INTROATTACHMENT_FILEAREA,

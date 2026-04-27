@@ -23,6 +23,8 @@
  * @copyright (C) 2018 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use core\url;
+
 // phpcs:ignore moodle.Files.RequireLogin.Missing -- This file is called from Microsoft Teams tab.
 require_once(__DIR__ . '/../../config.php');
 
@@ -48,12 +50,12 @@ if ($logout) {
 
 $USER->editing = false; // Turn off editing if the page is opened in iframe.
 
-$redirecturl = new moodle_url('/local/o365/teams_tab_redirect.php');
-$coursepageurl = new moodle_url('/course/view.php', ['id' => $id]);
-$oidcloginurl = new moodle_url('/auth/oidc/index.php');
-$externalloginurl = new moodle_url('/login/index.php');
-$ssostarturl = new moodle_url('/local/o365/sso_start.php');
-$ssologinurl = new moodle_url('/local/o365/sso_login.php');
+$redirecturl = new url('/local/o365/teams_tab_redirect.php');
+$coursepageurl = new url('/course/view.php', ['id' => $id]);
+$oidcloginurl = new url('/auth/oidc/index.php');
+$externalloginurl = new url('/login/index.php');
+$ssostarturl = new url('/local/o365/sso_start.php');
+$ssologinurl = new url('/local/o365/sso_login.php');
 
 // Output login pages.
 echo html_writer::start_div('local_o365_manual_login');

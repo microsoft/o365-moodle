@@ -17,7 +17,7 @@
 namespace theme_boost_o365teams\output;
 
 use html_writer;
-use moodle_url;
+use core\url;
 
 /**
  * Core Render.
@@ -55,7 +55,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         global $USER;
 
         if (!empty($USER->id)) {
-            $profilepagelink = new moodle_url('/user/profile.php', ['id' => $USER->id]);
+            $profilepagelink = new url('/user/profile.php', ['id' => $USER->id]);
             $profilepic = $this->user_picture($USER, ['size' => 26, 'link' => false]);
             $userfullname = fullname($USER);
             $piclink = html_writer::link($profilepagelink, $profilepic, ['target' => '_blank', 'class' => 'user_details']);
@@ -114,10 +114,10 @@ class core_renderer extends \theme_boost\output\core_renderer {
 
         if (!empty($this->page->theme->setting_file_url('footer_stamp', 'footer_stamp'))) {
             $fileurl = $this->page->theme->setting_file_url('footer_stamp', 'footer_stamp');
-            // Get a URL suitable for moodle_url.
+            // Get a URL suitable for \core\url.
             $relativebaseurl = preg_replace('|^https?://|i', '//', $CFG->wwwroot);
             $relativefileurl = str_replace($relativebaseurl, '', $fileurl);
-            $url = new moodle_url($relativefileurl);
+            $url = new url($relativefileurl);
             $img = html_writer::empty_tag('img', ["src" => $url]);
 
             $coursepageurl = $this->page->url;

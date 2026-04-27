@@ -26,6 +26,7 @@
 namespace local_o365\adminsetting;
 
 use admin_setting;
+use core\url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -96,7 +97,7 @@ class detectoidc extends admin_setting {
      */
     public function output_html($data, $query = '') {
         global $OUTPUT;
-        $settingspage = new \moodle_url('/admin/settings.php?section=authsettingoidc');
+        $settingspage = new url('/admin/settings.php?section=authsettingoidc');
         if (static::setup_step_complete() === true) {
             $icon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
             $message = \html_writer::tag('span', get_string('settings_detectoidc_credsvalid', 'local_o365'));

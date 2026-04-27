@@ -31,7 +31,7 @@ require_once($CFG->libdir . '/formslib.php');
 
 use html_table;
 use html_writer;
-use moodle_url;
+use core\url;
 use moodleform;
 use MoodleQuickForm;
 
@@ -112,9 +112,9 @@ class cohortsync extends moodleform {
                 $groupname = $cohortsyncmain->get_group_name_by_group_oid($mapping->objectid);
                 $cohortname = $cohortsyncmain->get_cohort_name_by_cohort_id($mapping->moodleid);
 
-                $cohorturl = new moodle_url('/cohort/edit.php', ['id' => $mapping->moodleid]);
+                $cohorturl = new url('/cohort/edit.php', ['id' => $mapping->moodleid]);
 
-                $deletemappingurl = new moodle_url(
+                $deletemappingurl = new url(
                     '/local/o365/cohortsync.php',
                     ['action' => 'delete', 'connectionid' => $mapping->id]
                 );

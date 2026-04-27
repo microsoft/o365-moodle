@@ -59,7 +59,7 @@ use local_o365\task\groupmembershipsync;
 use local_o365\task\processcourserequestapproval;
 use local_o365\task\usergroupmembershipsync;
 use moodle_exception;
-use moodle_url;
+use core\url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -109,7 +109,7 @@ class observers {
                     }
                 }
 
-                redirect(new moodle_url('/admin/settings.php?section=local_o365'));
+                redirect(new url('/admin/settings.php?section=local_o365'));
                 break;
 
             case 'addtenant':
@@ -158,7 +158,7 @@ class observers {
                 $tenantid = utils::get_tenant_from_idtoken($idtoken);
                 utils::enableadditionaltenant($tenantid, $domainnames);
 
-                redirect(new moodle_url('/local/o365/acp.php', ['mode' => 'tenants']));
+                redirect(new url('/local/o365/acp.php', ['mode' => 'tenants']));
                 break;
 
             default:

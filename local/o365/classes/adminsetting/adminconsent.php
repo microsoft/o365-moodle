@@ -25,6 +25,8 @@
 
 namespace local_o365\adminsetting;
 
+use core\url;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -91,7 +93,7 @@ class adminconsent extends \admin_setting {
      */
     public function output_html($data, $query = '') {
         $settinghtml = '<input type="hidden" id="' . $this->get_id() . '" name="' . $this->get_full_name() . '" value="0" />';
-        $setuserurl = new \moodle_url('/local/o365/acp.php', ['mode' => 'adminconsent']);
+        $setuserurl = new url('/local/o365/acp.php', ['mode' => 'adminconsent']);
 
         $linkstr = get_string('settings_adminconsent_btn', 'local_o365');
         $message = \html_writer::link($setuserurl, $linkstr, ['class' => 'btn btn-primary', 'style' => 'margin-bottom: 0.5rem']);
