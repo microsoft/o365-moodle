@@ -1385,6 +1385,30 @@ class unified extends o365api {
     }
 
     /**
+     * Process recently deleted users with a callback, streaming to avoid memory overhead.
+     *
+     * Calls the callback for each batch of deleted users from the API, allowing processing
+     * without loading all deleted users into memory at once.
+     *
+     * @param callable $callback Function called with array of deleted user objects from each API page.
+     * @return void
+     * @throws moodle_exception
+     */
+    public function process_deleted_users_batched(callable $callback): void {
+        $odataqueries = ['$top' => (string)self::GRAPH_API_BATCH_SIZE];
+
+        $pagehandler = function (array $result) use ($callback): int {
+            if (!empty($result['value']) && is_array($result['value'])) {
+                $callback($result['value']);
+                return count($result['value']);
+            }
+            return 0;
+        };
+
+        $this->execute_odata_paginated('/directory/deleteditems/Microsoft.Graph.User', $odataqueries, $pagehandler);
+    }
+
+    /**
      * Get a user by the user's userPrincipalName
      *
      * @param string $upn The user's userPrincipalName
