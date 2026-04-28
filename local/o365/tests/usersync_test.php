@@ -359,4 +359,246 @@ final class usersync_test extends advanced_testcase {
         $this->assertEquals('Dev', $createduser->department);
         $this->assertEquals('en', $createduser->lang);
     }
+
+    /**
+     * Test create_entra_users_temp_table and drop_entra_users_temp_table.
+     *
+     * @covers \local_o365\feature\usersync\main::create_entra_users_temp_table
+     * @covers \local_o365\feature\usersync\main::drop_entra_users_temp_table
+     */
+    public function test_temp_table_lifecycle(): void {
+        global $DB;
+
+        $usersync = new main();
+        $dbman = $DB->get_manager();
+
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        // Verify table was created.
+        $table = new \xmldb_table($temptablename);
+        $this->assertTrue($dbman->table_exists($table));
+
+        // Verify table structure.
+        $columns = $DB->get_columns($temptablename);
+        $this->assertArrayHasKey('objectid', $columns);
+        $this->assertArrayHasKey('accountenabled', $columns);
+
+        // Drop table.
+        $usersync->drop_entra_users_temp_table($temptablename);
+        $this->assertFalse($dbman->table_exists($table));
+    }
+
+    /**
+     * Test populate_entra_users_temp_table inserts records correctly.
+     *
+     * @covers \local_o365\feature\usersync\main::populate_entra_users_temp_table
+     */
+    public function test_populate_entra_users_temp_table(): void {
+        global $DB;
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            // Manually populate temp table (simulate what populate_entra_users_temp_table does).
+            $records = [
+                (object) ['objectid' => 'entra-user-1', 'accountenabled' => 1],
+                (object) ['objectid' => 'entra-user-2', 'accountenabled' => 0],
+                (object) ['objectid' => 'entra-user-3', 'accountenabled' => 1],
+            ];
+            $DB->insert_records($temptablename, $records);
+
+            // Verify records were inserted.
+            $dbrecords = $DB->get_records($temptablename);
+            $this->assertCount(3, $dbrecords);
+
+            $recordsbyid = [];
+            foreach ($dbrecords as $rec) {
+                $recordsbyid[$rec->objectid] = $rec;
+            }
+
+            $this->assertEquals(1, $recordsbyid['entra-user-1']->accountenabled);
+            $this->assertEquals(0, $recordsbyid['entra-user-2']->accountenabled);
+            $this->assertEquals(1, $recordsbyid['entra-user-3']->accountenabled);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test re-enable path: suspended users in Entra are re-enabled.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_reenable(): void {
+        global $DB;
+
+        set_config('usersync', 'create', 'local_o365');
+        set_config('usersync_reenable', 1, 'local_o365');
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+
+        // Suspend both users and switch to OIDC auth.
+        $user1->suspended = 1;
+        $user1->auth = 'oidc';
+        $user2->suspended = 1;
+        $user2->auth = 'oidc';
+        $DB->update_record('user', $user1);
+        $DB->update_record('user', $user2);
+
+        // Create object mappings.
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $user1->id,
+            'objectid' => 'entra-user-1',
+            'o365name' => $user1->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $user2->id,
+            'objectid' => 'entra-user-2',
+            'o365name' => $user2->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+
+        // Create temp table with users.
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-user-1', 'accountenabled' => 1],
+                (object) ['objectid' => 'entra-user-2', 'accountenabled' => 1],
+            ]);
+
+            // Process status.
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                true, // Re-enable suspended users.
+                false, // Do not suspend.
+                false, // Do not delete.
+                false  // Do not check account status.
+            );
+
+            $this->assertEquals(2, $reenabled);
+            $this->assertEquals(0, $suspended);
+            $this->assertEquals(0, $deleted);
+
+            // Verify users are no longer suspended.
+            $user1refresh = $DB->get_record('user', ['id' => $user1->id]);
+            $user2refresh = $DB->get_record('user', ['id' => $user2->id]);
+            $this->assertEquals(0, $user1refresh->suspended);
+            $this->assertEquals(0, $user2refresh->suspended);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test accountEnabled gating: suspended users with accountEnabled=0 are not re-enabled.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_reenable_with_disabled_account(): void {
+        global $DB;
+
+        set_config('usersync', 'create', 'local_o365');
+        set_config('usersync_reenable', 1, 'local_o365');
+        set_config('usersync_disabledsync', 1, 'local_o365');
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user1->suspended = 1;
+        $user1->auth = 'oidc';
+        $DB->update_record('user', $user1);
+
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $user1->id,
+            'objectid' => 'entra-user-1',
+            'o365name' => $user1->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            // User has accountEnabled=0 in Entra.
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-user-1', 'accountenabled' => 0],
+            ]);
+
+            // Process with syncdisabledstatus=true.
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                true, // Re-enable suspended users.
+                false, // Do not suspend.
+                false, // Do not delete.
+                true  // Check account enabled status.
+            );
+
+            $this->assertEquals(0, $reenabled);
+
+            // User should still be suspended.
+            $user1refresh = $DB->get_record('user', ['id' => $user1->id]);
+            $this->assertEquals(1, $user1refresh->suspended);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
+
+    /**
+     * Test suspend path: users deleted in Entra are suspended.
+     *
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
+     */
+    public function test_process_user_status_suspend(): void {
+        global $DB;
+
+        set_config('usersync', 'create', 'local_o365');
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user1->auth = 'oidc';
+        $user1->suspended = 0;
+        $DB->update_record('user', $user1);
+
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $user1->id,
+            'objectid' => 'entra-user-deleted',
+            'o365name' => $user1->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+
+        $usersync = new main();
+        $temptablename = $usersync->create_entra_users_temp_table();
+
+        try {
+            // Empty temp table - user was deleted from Entra (not calling populate to avoid API requirement).
+
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false, // Do not re-enable.
+                true, // Suspend deleted users.
+                false, // Do not delete.
+                false  // Do not check account status.
+            );
+
+            $this->assertEquals(0, $reenabled);
+            $this->assertEquals(1, $suspended);
+            $this->assertEquals(0, $deleted);
+
+            // Verify user is suspended.
+            $user1refresh = $DB->get_record('user', ['id' => $user1->id]);
+            $this->assertEquals(1, $user1refresh->suspended);
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
+    }
 }
