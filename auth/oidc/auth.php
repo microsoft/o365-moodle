@@ -113,13 +113,21 @@ class auth_plugin_oidc extends \auth_plugin_base {
         global $redirect;
 
         // No need for custom logic if we don't force the redirect on login.
-        if (!$this->config->forceredirect) {
+        if (!isset($this->config->forceredirect) || !$this->config->forceredirect) {
             return;
         }
 
         // When we log out and are redirecting to the login page, add the noredirect to prevent our own redirect.
-        $redirecturl = is_string($redirect) ? new moodle_url($redirect) : $redirect;
-        if ($redirecturl->compare(new moodle_url('/login/index.php'), URL_MATCH_BASE)) {
+        if (empty($redirect)) {
+            return;
+        }
+
+        $redirecturl = is_string($redirect) ? new url($redirect) : $redirect;
+        if (!($redirecturl instanceof url)) {
+            return;
+        }
+
+        if ($redirecturl->compare(new url('/login/index.php'), URL_MATCH_BASE)) {
             $redirecturl->param('noredirect', 1);
             $redirect = $redirecturl->out(false);
         }
