@@ -667,9 +667,10 @@ class unified extends o365api {
      * @throws moodle_exception
      */
     public function get_transitive_group_members(string $groupobjectid): array {
-        $endpoint = '/groups/' . $groupobjectid . '/transitiveMembers/microsoft.graph.user?$select=id';
+        $endpoint = '/groups/' . $groupobjectid . '/transitiveMembers/microsoft.graph.user';
+        $odataqueries = ['$select' => 'id'];
 
-        return $this->paginatedapicall('get', $endpoint);
+        return $this->paginatedapicall('get', $endpoint, $odataqueries);
     }
 
     /**
