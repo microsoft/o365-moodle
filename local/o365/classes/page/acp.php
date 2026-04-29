@@ -1722,7 +1722,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
                 'enableunifiedapi',
                 'disablegraphapi',
                 'odburl',
-                'photoexpire',
                 'usersynccreationrestriction',
                 'task_usersync_lastdelete',
                 'task_usersync_lastdeltatoken',
