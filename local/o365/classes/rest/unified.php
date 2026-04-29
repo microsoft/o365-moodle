@@ -2716,7 +2716,6 @@ class unified extends o365api {
      *           - 'batch_error': Batch request failed or UPN not in response
      *         - 'data' (string|false): Binary photo data on success, false otherwise
      *         - 'http_status' (int|null): HTTP status code from API response, null if batch error
-     * @since Changed to return status array format for better error diagnostics
      */
     public function get_photos_batch(array $upns): array {
         if (empty($upns)) {
