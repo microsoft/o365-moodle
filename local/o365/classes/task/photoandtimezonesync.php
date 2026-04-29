@@ -234,6 +234,14 @@ class photoandtimezonesync extends scheduled_task {
 
             // Batch fetch photos only for users with stale photos.
             $photosbyupn = [];
+            $photofetchstats = [
+                'success' => 0,
+                'not_found' => 0,
+                'error' => 0,
+                'invalid_data' => 0,
+                'batch_error' => 0,
+            ];
+
             if ($photosyncenabled && !empty($upnsforphotosync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     $this->mtrace('Fetching photos...', 1);
@@ -241,7 +249,31 @@ class photoandtimezonesync extends scheduled_task {
                         $apiclient = $usersync->construct_user_api();
                     }
                     $photosbyupn = $apiclient->get_photos_batch($upnsforphotosync);
-                    $this->mtrace('Fetched ' . count(array_filter($photosbyupn)) . ' photos from API.', 2);
+
+                    // Count results by status.
+                    foreach ($photosbyupn as $response) {
+                        if (is_array($response) && isset($response['status'])) {
+                            $status = $response['status'];
+                            if (isset($photofetchstats[$status])) {
+                                $photofetchstats[$status]++;
+                            }
+                        }
+                    }
+
+                    // Log detailed fetch results.
+                    $this->mtrace('Photo fetch results:', 2);
+                    $this->mtrace('Successful: ' . $photofetchstats['success'], 2);
+                    $this->mtrace('Not found (no photo in M365): ' . $photofetchstats['not_found'], 2);
+                    if ($photofetchstats['error'] > 0) {
+                        $this->mtrace('Errors (permissions/rate limit/server): ' . $photofetchstats['error'], 2);
+                    }
+                    if ($photofetchstats['invalid_data'] > 0) {
+                        $this->mtrace('Invalid photo data: ' . $photofetchstats['invalid_data'], 2);
+                    }
+                    if ($photofetchstats['batch_error'] > 0) {
+                        $this->mtrace('Missing from batch response: ' . $photofetchstats['batch_error'] .
+                            ' (requested: ' . count($upnsforphotosync) . ')', 2);
+                    }
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error fetching photos: ' . $e->getMessage(), 1);
                     utils::debug($e->getMessage(), __METHOD__, $e);
@@ -256,21 +288,35 @@ class photoandtimezonesync extends scheduled_task {
                 $this->mtrace('Applying photos...', 1);
 
                 foreach ($users as $user) {
-                    // Apply photo if available.
-                    if (isset($photosbyupn[$user->upn]) && $photosbyupn[$user->upn] !== false) {
-                        try {
-                            $usersync->apply_photo_public(
-                                $user->muserid,
-                                $photosbyupn[$user->upn],
-                                $user->appassignid ?? null,
-                                $user->currentpicture ?? null
-                            );
-                            $this->mtrace('User "' . $user->username . '": Photo changed.', 2);
-                            $batchphotoschanged++;
-                        } catch (moodle_exception $e) {
-                            $this->mtrace('User "' . $user->username . '": Error applying photo - ' .
-                                $e->getMessage(), 2);
-                            utils::debug($e->getMessage(), __METHOD__, $e);
+                    // Apply photo if available and successful.
+                    if (isset($photosbyupn[$user->upn])) {
+                        $response = $photosbyupn[$user->upn];
+                        // Handle new format (status array).
+                        $photodata = false;
+                        if (is_array($response) && isset($response['status'])) {
+                            if ($response['status'] === 'success') {
+                                $photodata = $response['data'];
+                            }
+                        } else if ($response !== false) {
+                            // Fallback for old format compatibility.
+                            $photodata = $response;
+                        }
+
+                        if ($photodata !== false) {
+                            try {
+                                $usersync->apply_photo_public(
+                                    $user->muserid,
+                                    $photodata,
+                                    $user->appassignid ?? null,
+                                    $user->currentpicture ?? null
+                                );
+                                $this->mtrace('User "' . $user->username . '": Photo changed.', 2);
+                                $batchphotoschanged++;
+                            } catch (moodle_exception $e) {
+                                $this->mtrace('User "' . $user->username . '": Error applying photo - ' .
+                                    $e->getMessage(), 2);
+                                utils::debug($e->getMessage(), __METHOD__, $e);
+                            }
                         }
                     }
                 }
@@ -287,15 +333,14 @@ class photoandtimezonesync extends scheduled_task {
                     // logic that previously existed here.
                     if (isset($timezonesbyupn[$user->upn]) && $timezonesbyupn[$user->upn] !== false) {
                         try {
-                            $changed = $usersync->apply_timezone_public(
+                            $result = $usersync->apply_timezone_public(
                                 $user->muserid,
                                 $timezonesbyupn[$user->upn],
                                 $user->currenttimezone
                             );
-                            if ($changed) {
-                                $newtz = $timezonesbyupn[$user->upn]['value'] ?? '';
+                            if ($result['changed']) {
                                 $this->mtrace('User "' . $user->username . '": Timezone changed from ' .
-                                    ($user->currenttimezone ?: '(not set)') . ' to ' . $newtz . '.', 2);
+                                    ($user->currenttimezone ?: '(not set)') . ' to ' . $result['timezone'] . '.', 2);
                                 $batchtimezoneschanged++;
                             }
                         } catch (moodle_exception $e) {
