@@ -376,7 +376,7 @@ class main {
      * @param array $remotetimezone Timezone data from Graph API
      * @param bool $printtrace
      * @param string|null $currenttimezone Pre-fetched user.timezone value for early-exit comparison.
-     * @return bool True if the timezone was changed, false if unchanged or invalid.
+     * @return array Array with keys 'changed' (bool) and 'timezone' (string IANA name, empty if invalid).
      */
     protected function apply_timezone(
         int $muserid,
