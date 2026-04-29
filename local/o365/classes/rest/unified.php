@@ -2706,7 +2706,17 @@ class unified extends o365api {
      * Microsoft Graph allows up to 20 requests per batch.
      *
      * @param array $upns Array of user principal names
-     * @return array Associative array with UPN as key and photo data (binary or false) as value
+     * @return array Associative array with UPN as key and status array as value.
+     *         Each status array contains:
+     *         - 'status' (string): One of:
+     *           - 'success': Photo fetched successfully (data contains binary photo)
+     *           - 'not_found': No photo in Office 365 (HTTP 404)
+     *           - 'error': API error (permissions, rate limit, server error, etc.)
+     *           - 'invalid_data': Photo data failed validation (not a valid image)
+     *           - 'batch_error': Batch request failed or UPN not in response
+     *         - 'data' (string|false): Binary photo data on success, false otherwise
+     *         - 'http_status' (int|null): HTTP status code from API response, null if batch error
+     * @since Changed to return status array format for better error diagnostics
      */
     public function get_photos_batch(array $upns): array {
         if (empty($upns)) {
@@ -2720,11 +2730,14 @@ class unified extends o365api {
             $batchrequests = [];
             $idtoupnmap = [];
 
-            // Pre-initialise every UPN to false so that UPNs absent from the batch
-            // response (partial API failure) are treated as "no photo" rather than
-            // silently skipped by the caller's isset() / empty() branch logic.
+            // Pre-initialise every UPN with status info. UPNs absent from the batch
+            // response (partial API failure) are marked as 'batch_error'.
             foreach ($chunk as $upn) {
-                $results[$upn] = false;
+                $results[$upn] = [
+                    'status' => 'batch_error',
+                    'data' => false,
+                    'http_status' => null,
+                ];
             }
 
             // Build batch request.
@@ -2748,28 +2761,45 @@ class unified extends o365api {
                     foreach ($batchresponse['responses'] as $individualresponse) {
                         $requestid = $individualresponse['id'];
                         $upn = $idtoupnmap[$requestid];
+                        $httpstatus = $individualresponse['status'] ?? null;
 
-                        if ($individualresponse['status'] === 200 && !empty($individualresponse['body'])) {
+                        if ($httpstatus === 200 && !empty($individualresponse['body'])) {
                             // Graph batch responses encode binary content as base64 in the JSON envelope.
                             $binarydata = base64_decode($individualresponse['body'], true);
                             if ($binarydata !== false && $this->is_valid_photo_binary($binarydata)) {
-                                $results[$upn] = $binarydata;
+                                $results[$upn] = [
+                                    'status' => 'success',
+                                    'data' => $binarydata,
+                                    'http_status' => $httpstatus,
+                                ];
                             } else {
                                 // Decoded data is not valid binary image data.
-                                $results[$upn] = false;
+                                $results[$upn] = [
+                                    'status' => 'invalid_data',
+                                    'data' => false,
+                                    'http_status' => $httpstatus,
+                                ];
                             }
-                        } else if ($individualresponse['status'] === 404) {
-                            // No photo found for this user.
-                            $results[$upn] = false;
+                        } else if ($httpstatus === 404) {
+                            // No photo found for this user (legitimate case).
+                            $results[$upn] = [
+                                'status' => 'not_found',
+                                'data' => false,
+                                'http_status' => $httpstatus,
+                            ];
                         } else {
-                            // Other error - treat as no photo.
-                            $results[$upn] = false;
+                            // Other error (permission denied, rate limited, server error, etc).
+                            $results[$upn] = [
+                                'status' => 'error',
+                                'data' => false,
+                                'http_status' => $httpstatus,
+                            ];
                         }
                     }
                 }
             } catch (moodle_exception $e) {
                 // Batch call itself failed; pre-initialisation above already set all
-                // UPNs in this chunk to false, so no additional work needed here.
+                // UPNs in this chunk to batch_error status.
                 debugging('Batch photo request failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
         }
