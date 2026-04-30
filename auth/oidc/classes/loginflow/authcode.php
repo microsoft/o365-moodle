@@ -169,6 +169,10 @@ class authcode extends base {
                 redirect($urltogo);
                 die();
             }
+            // Handle guest account session termination.
+            if (isguestuser()) {
+                \core\session\manager::terminate_current();
+            }
             // Initial login request.
             $stateparams = ['forceflow' => 'authcode'];
             $extraparams = [];
