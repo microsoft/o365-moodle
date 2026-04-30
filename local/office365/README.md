@@ -10,23 +10,37 @@ This plugin requires all Microsoft 365 plugins:
   - [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
   - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
   - [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
-  - [moodle-filter_oembed](https://github.com/Microsoft/moodle-filter_oembed)
+  - [moodle-theme_boost_o365teams](https://github.com/Microsoft/moodle-theme_boost_o365teams)
 
 
 This is part of the suite of Microsoft 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 
+## Requirements
+
+This plugin requires the following Microsoft 365 plugins to be installed:
+  - [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
+  - [moodle-block_microsoft](https://github.com/Microsoft/moodle-block_microsoft)
+  - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
+  - [moodle-repository_office365](https://github.com/Microsoft/moodle-repository_office365)
+  - [moodle-theme_boost_o365teams](https://github.com/Microsoft/moodle-theme_boost_o365teams)
+
 ## Installation
 
 1. Unpack the plugin into /local/office365 within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
-3. Follow the on-screen instuctions to attempt to install the plugins.
-4. You'll see a list of missing dependencies needed to complete the installation. Each of these is also available from Github at the links above. Install each of the dependencies. When complete, you'll have the entire set of plugins installed and this plugin's install can complete.
+3. Follow the on-screen instructions to attempt to install the plugins.
+4. You'll see a list of missing dependencies needed to complete the installation. Each of these is also available from GitHub at the links above. Install each of the dependencies. When complete, you'll have the entire set of plugins installed and this plugin's install can complete.
 
-For more documentation, visit https://docs.moodle.org/34/en/Office365
+For more documentation, visit https://docs.moodle.org/500/en/Microsoft_365
 
 For more information including support and instructions on how to contribute, please see: https://github.com/Microsoft/o365-moodle/blob/master/README.md
+
+## Issues and Contributing
+Please post issues for this plugin to: https://github.com/Microsoft/o365-moodle/issues/
+
+Pull requests for this plugin should be submitted against our main repository: https://github.com/Microsoft/o365-moodle
 
 ## Copyright
 

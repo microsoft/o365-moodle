@@ -1,4 +1,5 @@
-# Microsoft 365 and Microsoft Entra ID Plugins for Moodle
+# Moodle Plugins for Microsoft Services
+*including* **Microsoft 365** *and other Microsoft services*
 
 ## o365 Local Plugin
 
@@ -8,13 +9,18 @@ This is part of the suite of Microsoft 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 
+## Requirements
+
+This plugin requires the following Microsoft 365 plugins to be installed:
+  - [moodle-auth_oidc](https://github.com/Microsoft/moodle-auth_oidc)
+
 ## Installation
 
 1. Unpack the plugin into /local/o365 within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
-3. Follow the on-screen instuctions to install the plugin.
+3. Follow the on-screen instructions to install the plugin.
 
-For more documentation, visit https://docs.moodle.org/34/en/Office365
+For more documentation, visit https://docs.moodle.org/500/en/Microsoft_365
 
 For more information including support and instructions on how to contribute, please see: https://github.com/Microsoft/o365-moodle/blob/master/README.md
 

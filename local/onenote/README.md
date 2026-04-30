@@ -5,18 +5,6 @@
 
 This plugin provides a common client API for various other Moodle plugins that allow Moodle users to take advantage of Microsoft OneNote Online. This includes  operations such as browsing your notebooks, sections, and pages; students doing assignments in OneNote and teachers providing feedback on those assignments in OneNote. It uses the Microsoft Account local plugin for authentication and using the OneNote Oneline REST API.
 
-## Usage
-
-Instantiation:
-        $onenoteapi = \local_onenote\api\base::getinstance();
-
-Logging the user in:
-        $onenoteapi->is_logged_in();
-
-Making a REST API call:
-        $notebooks = $onenoteapi->get_items_list('');
-
-
 ## Design details
 
 There are several parts that make up the Microsoft OneNote Online API Local plugin.
@@ -26,7 +14,7 @@ None. This plugin depends upon the Microsoft Account local plugin to be configur
 
 ### \local_onenote\api\base class
 This is a singleton class that provides simple wrappers for various authentication and the OneNote online REST API. Some of the functionality provided includes:
-- render_signin_widget: Returns the HTML for displaying the signin widget for Microsoft OneNote.
+- render_signin_widget: Returns the HTML for displaying the sign-in widget for Microsoft OneNote.
 - get_items_list: Used for drilling down the hierarchy of OneNote notebooks, sections, and pages.
 - download_page: Downloads the contents of a OneNote page, including the HTML and any images; saves them in a folder and creates a .zip file out of it.
 - render_action_button: Returns the HTML for displaying action buttons that allow students to view or work on OneNote assignments and teachers to provide feedback on them.
@@ -42,7 +30,7 @@ When a user (student or teacher) clicks on the "Work on this" or "View Submissio
 - A notebook is created called "Moodle Notebook" in the OneNote account of the user
 - Sections are created in that notebook with the names of all the courses the user is currently enrolled into.
 - A page is created inside that section corresponding to the submission or feedback as necessary.
-- The title of the submission / feedback page is the name of the assignment, prefixed by "Submission: " / "Feedback: ", and postfixed by "[firstname lastname]" of the student.
+- The title of the submission / feedback page is the name of the assignment, prefixed by "Submission: " / "Feedback: ", and suffixed by "[firstname lastname]" of the student.
 - Note that these actions take place in a lazy manner and only when necessary i.e. when the corresponding notebook, section, or page does not exist.
 - These actions will also occur if the user subsequently goes into OneNote and deletes the notebook, section, or page.
 - The connection between Moodle and the OneNote section or page is via the unique id of the section or page. This connection is loose i.e. if the user deletes the section or page, a new one will be created in its place and the appropriate ID maintained in the related Moodle database is updated.
@@ -55,15 +43,25 @@ This is part of the suite of Microsoft Services plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 
+## Requirements
+
+This plugin requires the following Microsoft 365 plugins to be installed:
+  - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
+
 ## Installation
 
 1. Unpack the plugin into /local/onenote within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
 3. Follow the on-screen instructions to install the plugin.
 
-For more documentation, visit https://docs.moodle.org/34/en/Office365
+For more documentation, visit https://docs.moodle.org/500/en/Microsoft_365
 
 For more information including support and instructions on how to contribute, please see: https://github.com/Microsoft/o365-moodle/blob/master/README.md
+
+## Issues and Contributing
+Please post issues for this plugin to: https://github.com/Microsoft/o365-moodle/issues/
+
+Pull requests for this plugin should be submitted against our main repository: https://github.com/Microsoft/o365-moodle
 
 ## Copyright
 
