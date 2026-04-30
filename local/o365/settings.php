@@ -36,6 +36,7 @@ use local_o365\adminsetting\tabs;
 use local_o365\adminsetting\toollink;
 use local_o365\adminsetting\coursesync;
 use local_o365\adminsetting\usersynccreationrestriction;
+use local_o365\adminsetting\team_type_custom_id;
 use local_o365\feature\coursesync\main;
 use local_o365\feature\coursesync\utils;
 
@@ -239,6 +240,57 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_coursesync_courses_per_task', 'local_o365');
         $desc = new lang_string('settings_coursesync_courses_per_task_details', 'local_o365');
         $settings->add(new admin_setting_configtext('local_o365/courses_per_task', $label, $desc, 20, PARAM_INT));
+
+        // Team type / template setting.
+        // Use cached license detection to avoid Graph API calls on every settings page load.
+        // The cache is updated by a scheduled task or can be manually refreshed.
+        $haseducationlicense = false;
+        $cachedlicense = get_config('local_o365', 'education_license_cached');
+        if ($cachedlicense !== false) {
+            $haseducationlicense = (bool)$cachedlicense;
+        }
+
+        if ($haseducationlicense) {
+            $defaultteamtype = 'educationClass';
+            $teamtypeoptions = [
+                'standard' => new lang_string('settings_coursesync_team_type_standard', 'local_o365'),
+                'educationClass' => new lang_string('settings_coursesync_team_type_educationclass', 'local_o365'),
+                'educationStaff' => new lang_string('settings_coursesync_team_type_educationstaff', 'local_o365'),
+                'educationProfessionalLearningCommunity' => new lang_string(
+                    'settings_coursesync_team_type_educationplc',
+                    'local_o365'
+                ),
+                'custom' => new lang_string('settings_coursesync_team_type_custom', 'local_o365'),
+            ];
+        } else {
+            $defaultteamtype = 'standard';
+            $teamtypeoptions = [
+                'standard' => new lang_string('settings_coursesync_team_type_standard', 'local_o365'),
+                'custom'   => new lang_string('settings_coursesync_team_type_custom', 'local_o365'),
+            ];
+        }
+
+        $label = new lang_string('settings_coursesync_team_type', 'local_o365');
+        $desc  = new lang_string('settings_coursesync_team_type_desc', 'local_o365');
+        $syncsettings->add(new admin_setting_configselect(
+            'local_o365/team_type',
+            $label,
+            $desc,
+            $defaultteamtype,
+            $teamtypeoptions
+        ));
+
+        // Custom template ID — only applied when 'custom' is selected above.
+        // Includes a test button for validating the template ID.
+        $label = new lang_string('settings_coursesync_team_type_custom_id', 'local_o365');
+        $desc  = new lang_string('settings_coursesync_team_type_custom_id_desc', 'local_o365');
+        $syncsettings->add(new team_type_custom_id(
+            'local_o365/team_type_custom_id',
+            $label,
+            $desc,
+            '',
+            PARAM_TEXT
+        ));
 
         // Sync direction setting.
         $label = new lang_string('settings_coursesync_sync_direction', 'local_o365');
