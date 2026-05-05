@@ -48,14 +48,18 @@ final class cleanup_oidc_sid_test extends advanced_testcase {
         // Create a test user to own the SID records.
         $user = $this->getDataGenerator()->create_user();
 
-        // Calculate cutoff time once to avoid timing issues if test runs slowly.
-        // This matches what the cleanup task will calculate during execute().
-        $cutofftime = strtotime('-1 day');
+        // Use a fixed reference time to avoid timing race conditions.
+        // The cleanup task will calculate strtotime('-1 day') at execution time, which may differ slightly
+        // from when we calculate it here. Use a large safety margin to ensure records fall clearly on one side.
+        $now = time();
+        $cutofftime = strtotime('-1 day', $now);
 
-        // Create timestamps relative to the cutoff time.
-        $twodaysago = $cutofftime - DAYSECS;  // Older than cutoff, should be deleted.
-        $yesterday = $cutofftime;              // Exactly at cutoff, should be kept (< operator).
-        $today = time();                       // Newer than cutoff, should be kept.
+        // Create timestamps with clear margins to avoid boundary conditions.
+        // Add a 5-minute buffer before and after the cutoff to account for execution time variance.
+        $twodaysago = $cutofftime - DAYSECS;           // Well before cutoff, will be deleted.
+        $beforecutoff = $cutofftime - (MINSECS * 5);   // 5 minutes before cutoff, will be deleted.
+        $aftercutoff = $cutofftime + (MINSECS * 5);    // 5 minutes after cutoff, will be kept.
+        $muchlater = $now;                             // Current time, will be kept.
 
         // Create entries in auth_oidc_sid with unique SIDs.
         $entry1id = $DB->insert_record(
@@ -64,15 +68,15 @@ final class cleanup_oidc_sid_test extends advanced_testcase {
         );
         $entry2id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_old_2', 'timecreated' => ($twodaysago - 1000)],
+            ['userid' => $user->id, 'sid' => 'sid_old_2', 'timecreated' => $beforecutoff],
         );
         $entry3id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_new_1', 'timecreated' => $today],
+            ['userid' => $user->id, 'sid' => 'sid_new_1', 'timecreated' => $muchlater],
         );
         $entry4id = $DB->insert_record(
             'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_boundary', 'timecreated' => $yesterday],
+            ['userid' => $user->id, 'sid' => 'sid_new_2', 'timecreated' => $aftercutoff],
         );
 
         $cleanup = new cleanup_oidc_sid();
