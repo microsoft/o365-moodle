@@ -143,6 +143,17 @@ class base {
                         $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
                         if ($userdata) {
                             $userdatafetchedfromgraph = true;
+                            // Add custom claims from tokens even when using Graph API.
+                            $tokenames = ['idtoken', 'token'];
+                            foreach ($tokenames as $tokename) {
+                                try {
+                                    $token = jwt::instance_from_encoded($tokenrec->$tokename);
+                                    $this->add_configured_custom_claims_to_userdata($userdata, $token);
+                                } catch (moodle_exception $e) {
+                                    // Error occurred when decoding a token, skip.
+                                    continue;
+                                }
+                            }
                         }
                     }
                 }
@@ -215,6 +226,8 @@ class base {
                                 $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
                             }
                         }
+
+                        $this->add_configured_custom_claims_to_userdata($userdata, $token);
                     }
                 }
 
@@ -302,6 +315,8 @@ class base {
                         $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
                     }
                 }
+
+                $this->add_configured_custom_claims_to_userdata($userdata, $token);
             }
 
             $updateduser = static::apply_configured_fieldmap_from_token($userdata, $eventtype);
@@ -795,5 +810,29 @@ class base {
         }
 
         return $oidcusername;
+    }
+
+    /**
+     * Add configured custom claims from a token into the user data array.
+     *
+     * @param array $userdata User data array to update.
+     * @param jwt $token The JWT token to extract claims from.
+     */
+    protected function add_configured_custom_claims_to_userdata(array &$userdata, jwt $token): void {
+        $customclaims = auth_oidc_get_validated_custom_claim_names();
+        if (empty($customclaims)) {
+            return;
+        }
+
+        foreach ($customclaims as $claimname) {
+            if (isset($userdata[$claimname])) {
+                continue;
+            }
+
+            $claimvalue = $token->claim($claimname);
+            if (is_scalar($claimvalue) && $claimvalue !== null && $claimvalue !== '') {
+                $userdata[$claimname] = $claimvalue;
+            }
+        }
     }
 }
