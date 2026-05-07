@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<libraries>
+  <library>
+    <location>lib/datatables</location>
+    <name>DataTables</name>
+    <version>2.0+</version>
+    <license>MIT</license>
+  </library>
+</libraries>
