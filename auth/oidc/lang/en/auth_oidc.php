@@ -115,6 +115,8 @@ $string['error_masked_secret_not_changed'] = 'Please enter a new value. The mask
 $string['cfg_err_invalidclientsecret'] = 'Invalid client secret';
 $string['cfg_forceredirect_key'] = 'Force redirect';
 $string['cfg_forceredirect_desc'] = 'If enabled, will skip the login index page and redirect to the OpenID Connect page. Can be bypassed with ?noredirect=1 URL param';
+$string['cfg_set_pix_key'] = 'Show icon on login page';
+$string['cfg_set_pix_desc'] = 'If enabled, displays an icon next to the provider name on the login page.';
 $string['cfg_icon_key'] = 'Icon';
 $string['cfg_icon_desc'] = 'An icon to display next to the provider name on the login page.';
 $string['cfg_iconalt_o365'] = 'Microsoft 365 icon';
