@@ -275,7 +275,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if (!empty($tokenrec)) {
                 // If the token record username is out of sync (ie username changes), update it.
                 if ($tokenrec->username != $user->username) {
-                    $updatedtokenrec = new \stdClass();
+                    $updatedtokenrec = new stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->username = $user->username;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
@@ -287,7 +287,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
                 if (!empty($tokenrec)) {
                     $tokenrec->userid = $user->id;
-                    $updatedtokenrec = new \stdClass();
+                    $updatedtokenrec = new stdClass();
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
@@ -302,6 +302,46 @@ class auth_plugin_oidc extends \auth_plugin_base {
             ];
             $event = \auth_oidc\event\user_loggedin::create($eventdata);
             $event->trigger();
+        }
+    }
+
+    /**
+     * Build logout URL with appropriate IdP-specific parameters.
+     *
+     * @param string $logouturl Base logout URL from config.
+     * @param string $idptype IdP type (from constants).
+     * @param stdClass $user User object.
+     * @return string|null Logout URL, or null if logout should be skipped.
+     */
+    private function build_logout_url(string $logouturl, string $idptype, stdClass $user): ?string {
+        global $CFG, $DB;
+
+        $params = [
+            'post_logout_redirect_uri' => $CFG->wwwroot,
+        ];
+
+        switch ($idptype) {
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
+            case AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
+                if (!$logouturl) {
+                    $logouturl = 'https://login.microsoftonline.com/organizations/oauth2/logout';
+                }
+                $url = new url($logouturl, $params);
+                return $url->out(false);
+
+            case AUTH_OIDC_IDP_TYPE_OTHER:
+                if (!$logouturl) {
+                    return null;
+                }
+                $token = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+                if ($token) {
+                    $params['id_token_hint'] = $token->idtoken;
+                }
+                $url = new url($logouturl, $params);
+                return $url->out(false);
+
+            default:
+                return null;
         }
     }
 
@@ -328,21 +368,19 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 }
             }
 
+            // Do not redirect to logout endpoint when using loginas feature.
+            if (!empty($user->loginascontext)) {
+                $redirect = false;
+            }
+
             if ($redirect) {
                 $logouturl = get_config('auth_oidc', 'logouturi');
-                if (!$logouturl) {
-                    $logouturl = 'https://login.microsoftonline.com/organizations/oauth2/logout?post_logout_redirect_uri=' .
-                        urlencode($CFG->wwwroot);
-                } else {
-                    if (
-                        preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
-                        preg_match("/\/oauth2\/logout$/", $logouturl)
-                    ) {
-                        $logouturl .= '?post_logout_redirect_uri=' . urlencode($CFG->wwwroot);
-                    }
-                }
+                $idptype = get_config('auth_oidc', 'idptype');
 
-                redirect($logouturl);
+                $redirecturl = $this->build_logout_url($logouturl, $idptype, $user);
+                if ($redirecturl) {
+                    redirect($redirecturl);
+                }
             }
         }
 
