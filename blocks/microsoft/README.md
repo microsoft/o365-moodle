@@ -9,16 +9,26 @@ This is part of the suite of Microsoft 365 plugins for Moodle.
 
 This repository is updated with stable releases. To follow active development, see: https://github.com/Microsoft/o365-moodle
 
+## Requirements
+
+This plugin requires the following Microsoft 365 plugins to be installed:
+  - [moodle-local_o365](https://github.com/Microsoft/moodle-local_o365)
+
 ## Installation
 
 1. Unpack the plugin into /blocks/microsoft within your Moodle install.
 2. From the Moodle Administration block, expand Site Administration and click "Notifications".
-3. Follow the on-screen instuctions to install the plugin.
+3. Follow the on-screen instructions to install the plugin.
 4. Add the block to any page you want it displayed.
 
-For more documentation, visit https://docs.moodle.org/34/en/Office365
+For more documentation, visit https://docs.moodle.org/405/en/Microsoft_365
 
 For more information including support and instructions on how to contribute, please see: https://github.com/Microsoft/o365-moodle/blob/master/README.md
+
+## Issues and Contributing
+Please post issues for this plugin to: https://github.com/Microsoft/o365-moodle/issues/
+
+Pull requests for this plugin should be submitted against our main repository: https://github.com/Microsoft/o365-moodle
 
 ## Copyright
 
