@@ -85,7 +85,9 @@ class authcode extends base {
     /**
      * Get an OIDC parameter.
      *
-     * This is a modification to PARAM_ALPHANUMEXT to add a few additional characters from Base64-variants.
+     * Validates the parameter against visible ASCII characters (0x21-0x7E), excluding spaces.
+     * While RFC 6749 allows VSCHAR (0x20-0x7E), we exclude space for practical URL parsing safety.
+     * This allows authorization codes from any RFC-compliant OIDC provider that uses visible ASCII.
      *
      * @param string $name The name of the parameter.
      * @param string $fallback The fallback value.
@@ -94,7 +96,7 @@ class authcode extends base {
     protected function getoidcparam($name, $fallback = '') {
         $val = optional_param($name, $fallback, PARAM_RAW);
         $val = trim($val);
-        $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
+        $valclean = preg_replace('/[^\x21-\x7E]/', '', $val);
         if ($valclean !== $val) {
             utils::debug('Authorization error.', __METHOD__, $name);
             throw new moodle_exception('errorauthgeneral', 'auth_oidc');
