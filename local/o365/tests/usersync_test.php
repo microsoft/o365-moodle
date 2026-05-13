@@ -601,4 +601,130 @@ final class usersync_test extends advanced_testcase {
             $usersync->drop_entra_users_temp_table($temptablename);
         }
     }
+
+    /**
+     * Test sync_users when user is renamed in Entra ID with username update disabled.
+     *
+     * Regression test for issue #3107: When a user is renamed in Azure AD (e.g., uppercase to lowercase),
+     * and the "Update Moodle username" setting is disabled, both o365name and auth_oidc_token.useridentifier
+     * should still be updated to prevent OIDC login failures and sync issues.
+     *
+     * @covers \local_o365\feature\usersync\main::sync_users
+     */
+    public function test_sync_users_renamed_with_username_update_disabled(): void {
+        global $CFG, $DB;
+
+        // Disable username updates.
+        set_config('supportuseridentifierchange', '0', 'local_o365');
+
+        // Configure minimal sync settings (sync existing users only, no new user creation).
+        set_config('usersync', 'sync', 'local_o365');
+
+        // Create initial user with lowercase UPN (as it currently exists in Moodle).
+        // This simulates a user that was previously synced from Entra ID.
+        $muser = [
+            'auth' => 'oidc',
+            'deleted' => '0',
+            'mnethostid' => $CFG->mnet_localhost_id,
+            'username' => 'testuser@example.onmicrosoft.com', // Lowercase - current state.
+            'firstname' => 'Test',
+            'lastname' => 'User',
+            'email' => 'testuser@example.onmicrosoft.com',
+            'lang' => 'en',
+        ];
+        $muser['id'] = $DB->insert_record('user', (object) $muser);
+        $userid = $muser['id'];
+
+        // Create o365 object with UPPERCASE o365name.
+        // This simulates what was stored when the user was synced with uppercase UPN.
+        // Now the user has been renamed in Azure AD to lowercase.
+        $o365object = (object) [
+            'type' => 'user',
+            'subtype' => 'default',
+            'objectid' => '00000000-0000-0000-0000-000000000001',
+            'moodleid' => $userid,
+            'o365name' => 'TestUser@example.onmicrosoft.com', // Uppercase - old value before rename.
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ];
+        $o365id = $DB->insert_record('local_o365_objects', $o365object);
+
+        // Create auth token with UPPERCASE useridentifier (the stale value).
+        // This simulates what happens after a user is renamed in Azure AD but token isn't updated.
+        $token = (object) [
+            'oidcuniqid' => '00000000-0000-0000-0000-000000000001',
+            'authcode' => '000',
+            'username' => 'testuser@example.onmicrosoft.com', // Current lowercase.
+            'useridentifier' => 'TestUser@example.onmicrosoft.com', // Uppercase - stale, will be updated.
+            'userid' => $userid,
+            'scope' => 'test',
+            'tokenresource' => unified::get_tokenresource(),
+            'token' => '000',
+            'expiry' => '9999999999',
+            'refreshtoken' => 'refreshtoken1',
+            'idtoken' => 'idtoken1',
+        ];
+        $tokenid = $DB->insert_record('auth_oidc_token', $token);
+
+        // Simulate Entra ID response with lowercase UPN (renamed).
+        $response = [
+            'value' => [
+                [
+                    'odata.type' => 'Microsoft.WindowsAzure.ActiveDirectory.User',
+                    'objectType' => 'User',
+                    'objectId' => '00000000-0000-0000-0000-000000000001',
+                    'id' => '00000000-0000-0000-0000-000000000001',
+                    'givenName' => 'Test',
+                    'mail' => 'testuser@example.onmicrosoft.com',
+                    'surname' => 'User',
+                    'userPrincipalName' => 'testuser@example.onmicrosoft.com', // Lowercase - renamed.
+                    'useridentifier' => 'testuser@example.onmicrosoft.com', // Lowercase - renamed.
+                    'useridentifierlower' => 'testuser@example.onmicrosoft.com', // Lowercase - renamed.
+                    'upnsplit0' => 'testuser',
+                ],
+            ],
+        ];
+        $response = json_encode($response);
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($response);
+
+        // Run sync.
+        $apiclient = new unified($this->get_mock_token(), $httpclient);
+        $usersync = new main();
+        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
+            $usersync->sync_users($userbatch, 'userPrincipalName');
+        });
+
+        // Verify Moodle username was NOT changed (because username update is disabled).
+        $updateduser = $DB->get_record('user', ['id' => $userid]);
+        $this->assertEquals(
+            'testuser@example.onmicrosoft.com',
+            $updateduser->username,
+            'Moodle username should remain unchanged when username update is disabled'
+        );
+
+        // Verify o365name WAS updated from uppercase to lowercase.
+        $updatedo365object = $DB->get_record('local_o365_objects', ['id' => $o365id]);
+        $this->assertEquals(
+            'testuser@example.onmicrosoft.com',
+            $updatedo365object->o365name,
+            'o365name should be updated from uppercase to the new lowercase identifier'
+        );
+
+        // Verify token useridentifier WAS updated from uppercase to lowercase.
+        $updatedtoken = $DB->get_record('auth_oidc_token', ['id' => $tokenid]);
+        $this->assertEquals(
+            'testuser@example.onmicrosoft.com',
+            $updatedtoken->useridentifier,
+            'auth_oidc_token.useridentifier should be updated from uppercase to the new lowercase identifier'
+        );
+
+        // Verify only one OIDC user exists (no new user created).
+        $usercount = $DB->count_records('user', ['auth' => 'oidc']);
+        $this->assertEquals(
+            1,
+            $usercount,
+            'Exactly one OIDC user should exist; no new user should be created'
+        );
+    }
 }
