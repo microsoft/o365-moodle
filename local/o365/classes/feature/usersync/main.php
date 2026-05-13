@@ -1599,6 +1599,25 @@ class main {
                             }
                         } else {
                             $this->mtrace('The option to update Moodle username is disabled...');
+                            // Even though we're not updating the Moodle username, we should update the o365name
+                            // and token record so that future syncs and OIDC logins work correctly.
+                            $existingusermatching->o365name = $entraiduser['useridentifierlower'];
+                            $DB->update_record('local_o365_objects', $existingusermatching);
+
+                            // Update token record to prevent OIDC login failures.
+                            $usertokens = $this->tokensbymoodleid[$renamedmoodleuser->id] ?? [];
+                            if (!empty($usertokens)) {
+                                $existingtoken = reset($usertokens);
+                                $existingtoken->useridentifier = $entraiduser['useridentifier'];
+                                $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                                if (in_array($bindingusernameclaim, ['upn', 'auto'])) {
+                                    $existingtoken->oidcusername = $entraiduser['useridentifier'];
+                                }
+
+                                $DB->update_record('auth_oidc_token', $existingtoken);
+                            }
+
+                            $this->mtrace('Updated o365name and token to maintain sync and OIDC login mapping.');
                         }
                     }
                 }
@@ -1678,6 +1697,28 @@ class main {
                             }
                         } else {
                             $this->mtrace('The option to update Moodle username is disabled...');
+                            // Even though we're not updating the Moodle username, we should update the o365name
+                            // and token record so that future syncs and OIDC logins work correctly.
+                            $existingusermatching->o365name = $entraiduser['useridentifierlower'];
+                            $DB->update_record('local_o365_objects', $existingusermatching);
+
+                            // Update token record to prevent OIDC login failures.
+                            $renamedmoodleuser = $this->fullusersbymoodleid[$existingusermatching->moodleid] ?? null;
+                            if ($renamedmoodleuser) {
+                                $usertokens = $this->tokensbymoodleid[$renamedmoodleuser->id] ?? [];
+                                if (!empty($usertokens)) {
+                                    $existingtoken = reset($usertokens);
+                                    $existingtoken->useridentifier = $entraiduser['useridentifier'];
+                                    $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                                    if (in_array($bindingusernameclaim, ['upn', 'auto'])) {
+                                        $existingtoken->oidcusername = $entraiduser['useridentifier'];
+                                    }
+
+                                    $DB->update_record('auth_oidc_token', $existingtoken);
+                                }
+                            }
+
+                            $this->mtrace('Updated o365name and token to maintain sync and OIDC login mapping.');
                         }
                     }
                 }
