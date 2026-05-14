@@ -297,3 +297,17 @@ button.local_o365_manual_login_button.enabled {
     font-weight: normal;
     font-size: 0.8rem;
 }
+
+.local-o365-load-more {
+    padding: 6px 16px;
+    cursor: pointer;
+    color: #06c;
+    border-top: 1px solid #dee2e6;
+    list-style: none;
+}
+
+.local-o365-dropdown-notice {
+    padding: 6px 16px;
+    color: #6c757d;
+    list-style: none;
+}
