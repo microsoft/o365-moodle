@@ -59,6 +59,7 @@ $cohortsyncmain = new main($apiclient);
 $cohortsyncmain->fetch_groups_from_cache();
 
 $cohortsyncform = new cohortsync(null, ['cohortsyncmain' => $cohortsyncmain]);
+$PAGE->requires->js_call_amd('local_o365/cohortsync_form', 'init');
 
 $action = optional_param('action', '', PARAM_ALPHA);
 if ($action == 'delete') {

@@ -136,4 +136,25 @@ class cohortsync extends moodleform {
 
         $mform->addElement('html', $existingmappingscontent);
     }
+
+    /**
+     * Validate that both selectors have a selected value before submitting.
+     *
+     * @param array $data Form data.
+     * @param array $files Uploaded files.
+     * @return array Validation errors keyed by element name.
+     */
+    public function validation($data, $files): array {
+        $errors = parent::validation($data, $files);
+
+        if (empty($data['groupoid'])) {
+            $errors['groupoid'] = get_string('cohortsync_error_no_group', 'local_o365');
+        }
+
+        if (empty($data['cohortid'])) {
+            $errors['cohortid'] = get_string('cohortsync_error_no_cohort', 'local_o365');
+        }
+
+        return $errors;
+    }
 }
