@@ -54,6 +54,22 @@ class userenabledstatussync extends scheduled_task {
     }
 
     /**
+     * Display user status sync settings.
+     */
+    protected function display_sync_settings() {
+        $dosuspend = main::sync_option_enabled('suspend');
+        $doreenable = main::sync_option_enabled('reenable');
+        $dodelete = main::sync_option_enabled('delete');
+        $syncdisabledstatus = main::sync_option_enabled('disabledsync');
+
+        $this->mtrace('Status sync options:');
+        $this->mtrace('Suspend: ' . ($dosuspend ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Re-enable: ' . ($doreenable ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Delete: ' . ($dodelete ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Check account enabled status: ' . ($syncdisabledstatus ? 'enabled' : 'disabled'), 1);
+    }
+
+    /**
      * Do the job.
      */
     public function execute() {
@@ -73,6 +89,8 @@ class userenabledstatussync extends scheduled_task {
         }
 
         $this->mtrace('Starting user suspension/re-enable task.');
+        $this->mtrace('');
+        $this->display_sync_settings();
         $this->mtrace('');
         raise_memory_limit(MEMORY_HUGE);
 
@@ -135,41 +153,39 @@ class userenabledstatussync extends scheduled_task {
         $totalsuspended = 0;
         $totaldeleted = 0;
 
-        // For reenable, we need to process users with accountEnabled status.
-        if ($doreenable) {
-            try {
-                $actualreenablecount = 0;
-                $reenablecallback = function (array $userbatch) use (
-                    $usersync,
-                    $syncdisabledstatus,
-                    &$actualreenablecount
-                ) {
-                    $actualreenablecount += $usersync->reenable_suspsend_users($userbatch, $syncdisabledstatus);
-                };
-                $usersync->process_users_minimal_batched($reenablecallback);
-                $totalreenabled = $actualreenablecount;
-                if ($actualreenablecount > 0) {
-                    $this->mtrace('Re-enabled ' . $actualreenablecount . ' user(s).');
-                }
-            } catch (moodle_exception $e) {
-                $this->mtrace('Error processing reenable: ' . $e->getMessage());
-                utils::debug($e->getMessage(), __METHOD__, $e);
-            }
-        }
+        $temptablename = null;
 
-        // Process user suspension.
-        // The suspend_users() method now queries the database directly and processes in batches
-        // to handle 500K+ users efficiently without loading all IDs into memory.
-        if ($dosuspend) {
-            try {
-                $result = $usersync->suspend_users($dodelete);
-                if (!empty($result)) {
-                    $totalsuspended = $result['suspended'] ?? 0;
-                    $totaldeleted = $result['deleted'] ?? 0;
-                }
-            } catch (moodle_exception $e) {
-                $this->mtrace('Error processing suspension: ' . $e->getMessage());
-                utils::debug($e->getMessage(), __METHOD__, $e);
+        try {
+            // Create temp table to hold Entra users fetched from API.
+            $temptablename = $usersync->create_entra_users_temp_table();
+
+            // Populate temp table by streaming from Entra API (no PHP array accumulation).
+            $usersync->populate_entra_users_temp_table($temptablename);
+
+            // Process all status changes in a single pass to minimize memory overhead.
+            [$totalreenabled, $totalsuspended, $totaldeleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                $doreenable,
+                $dosuspend,
+                $dodelete,
+                $syncdisabledstatus
+            );
+
+            if ($totalreenabled > 0) {
+                $this->mtrace('Re-enabled ' . $totalreenabled . ' user(s).');
+            }
+            if ($totalsuspended > 0) {
+                $this->mtrace('Suspended ' . $totalsuspended . ' user(s).');
+            }
+            if ($totaldeleted > 0) {
+                $this->mtrace('Deleted ' . $totaldeleted . ' user(s).');
+            }
+        } catch (moodle_exception $e) {
+            $this->mtrace('Error processing user status sync: ' . $e->getMessage());
+            utils::debug($e->getMessage(), __METHOD__, $e);
+        } finally {
+            if ($temptablename !== null) {
+                $usersync->drop_entra_users_temp_table($temptablename);
             }
         }
 
