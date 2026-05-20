@@ -46,55 +46,71 @@ class cohortsync_search_cohorts extends \external_api {
      */
     public static function search_cohorts_parameters() {
         return new \external_function_parameters([
-                'query' => new \external_value(PARAM_TEXT, 'Search query', VALUE_REQUIRED),
+            'query' => new \external_value(PARAM_TEXT, 'Search query', VALUE_REQUIRED),
+            'offset' => new \external_value(PARAM_INT, 'Pagination offset', VALUE_DEFAULT, 0),
+            'limit' => new \external_value(PARAM_INT, 'Maximum results per page', VALUE_DEFAULT, 20),
         ]);
     }
 
     /**
-     * Search Moodle cohorts using existing functions.
+     * Search Moodle cohorts using direct SQL with paging.
+     *
+     * Filtering, sorting, and paging are all performed in SQL so only the
+     * requested page is transferred from the database.
      *
      * @param string $query The search query.
-     * @return array Cohorts matching the query, excluding already mapped ones.
+     * @param int $offset Pagination offset.
+     * @param int $limit Maximum results per page.
+     * @return array Results page and whether more exist.
      */
-    public static function search_cohorts($query) {
+    public static function search_cohorts($query, $offset = 0, $limit = 20) {
         global $DB;
 
-        $params = self::validate_parameters(self::search_cohorts_parameters(), ['query' => $query]);
+        $params = self::validate_parameters(self::search_cohorts_parameters(), [
+            'query' => $query,
+            'offset' => $offset,
+            'limit' => $limit,
+        ]);
 
         self::validate_context(system::instance());
         require_capability('moodle/site:config', system::instance());
 
-        $apiclient = \local_o365\feature\cohortsync\main::get_unified_api(__METHOD__);
-        if (empty($apiclient)) {
-            throw new \moodle_exception('cohortsync_unifiedapierror', 'local_o365');
+        $query = trim($params['query']);
+        $offset = max(0, $params['offset']);
+        $limit = min(max(1, $params['limit']), 50);
+
+        if (strlen($query) < 2) {
+            return ['results' => [], 'hasmore' => false];
         }
 
-        $cohortsyncmain = new \local_o365\feature\cohortsync\main($apiclient);
-        $allcohorts = $cohortsyncmain->get_cohortlist();
+        $systemcontext = system::instance();
+        $likename = $DB->sql_like('name', ':query', false, false);
+        $sqlparams = [
+            'query' => '%' . $DB->sql_like_escape($query) . '%',
+            'contextid' => $systemcontext->id,
+        ];
 
-        // Get mapped to exclude.
-        $mappedcohortids = [];
-        $mappings = $DB->get_records('local_o365_objects', ['type' => 'group', 'subtype' => 'cohort'], '', 'moodleid');
-        foreach ($mappings as $mapping) {
-            $mappedcohortids[] = $mapping->moodleid;
-        }
+        $sql = "SELECT id, name
+                  FROM {cohort}
+                 WHERE contextid = :contextid
+                   AND $likename
+                   AND id NOT IN (
+                       SELECT moodleid
+                         FROM {local_o365_objects}
+                        WHERE type = 'group' AND subtype = 'cohort'
+                   )
+                 ORDER BY name";
 
-        $result = [];
-        foreach ($allcohorts as $cohort) {
-            if (!in_array($cohort->id, $mappedcohortids) && stripos($cohort->name, $params['query']) !== false) {
-                $result[] = [
-                        'id' => $cohort->id,
-                        'name' => $cohort->name,
-                ];
-            }
-        }
+        // Fetch one extra row to detect whether a further page exists.
+        $records = array_values($DB->get_records_sql($sql, $sqlparams, $offset, $limit + 1));
+        $hasmore = count($records) > $limit;
+        $page = array_slice($records, 0, $limit);
 
-        usort($result, function ($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
-        });
-        $result = array_slice($result, 0, 30);
+        $results = array_map(function ($r) {
+            return ['id' => (int)$r->id, 'name' => $r->name];
+        }, $page);
 
-        return $result;
+        return ['results' => $results, 'hasmore' => $hasmore];
     }
 
     /**
@@ -103,11 +119,14 @@ class cohortsync_search_cohorts extends \external_api {
      * @return \external_description
      */
     public static function search_cohorts_returns() {
-        return new \external_multiple_structure(
-            new \external_single_structure([
-                        'id' => new \external_value(PARAM_INT, 'Cohort ID'),
-                        'name' => new \external_value(PARAM_TEXT, 'Cohort name'),
+        return new \external_single_structure([
+            'results' => new \external_multiple_structure(
+                new \external_single_structure([
+                    'id' => new \external_value(PARAM_INT, 'Cohort ID'),
+                    'name' => new \external_value(PARAM_TEXT, 'Cohort name'),
                 ])
-        );
+            ),
+            'hasmore' => new \external_value(PARAM_BOOL, 'Whether more results exist beyond this page'),
+        ]);
     }
 }
