@@ -285,6 +285,7 @@ $string['error_empty_oidcresource'] = 'Resource cannot be empty when using Micro
 $string['error_invalid_custom_claim'] = 'Invalid custom claim name. Custom claims can only contain alphanumeric characters, hyphens, and underscores.';
 $string['error_masked_secret_not_changed'] = 'Please enter a new value or uncheck the "Change" checkbox to keep the current value.';
 $string['auth_settings_validation_error'] = 'Invalid authentication settings detected. The following configuration issues must be resolved to ensure successful authentication:';
+$string['errorupnchangeisnotsupported'] = 'Your Microsoft account UPN has changed. Please contact your administrator to update your Moodle account.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';
 $string['error_no_response_available'] = 'No responses available.';
 
