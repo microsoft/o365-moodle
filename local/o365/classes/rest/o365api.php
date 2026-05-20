@@ -401,6 +401,7 @@ abstract class o365api {
                     'TeamsAppInstallation.ReadWriteForTeam.All' => [],
                     'TeamSettings.ReadWrite.All' => [],
                     'TeamsTab.Create' => [],
+                    'TeamTemplates.Read.All' => [],
                     'User.Read.All' => ['User.ReadWrite.All'],
                 ],
                 'requiredDelegatedPermissionsUsingAppPermissions' => [

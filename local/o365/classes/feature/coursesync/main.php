@@ -123,6 +123,10 @@ class main {
         $this->mtrace('Start syncing courses.');
 
         $this->mtrace('Tenant has education license: ' . ($this->haseducationlicense ? 'yes' : 'no'), 1);
+
+        // Display the team template that will be used.
+        $configuredtemplate = $this->get_configured_team_template('educationClass');
+        $this->mtrace('Team template to use: ' . $configuredtemplate, 1);
         $this->mtrace('', 1);
 
         // Preparation work - get list of courses that have course sync enabled.
@@ -229,13 +233,31 @@ class main {
         $externalid = $course->id;
         $externalname = $course->fullname;
 
+        // Determine the group creation options based on the configured team template.
+        // These creationOptions must be set at group creation time; they cannot be updated afterwards (immutable).
+        // Only educationStaff and educationProfessionalLearningCommunity require special options.
+        // educationClass groups do not set creationOptions (use default).
+        // educationStaff: Sets 'EducationStaff' option, though direct team creation is preferred (see create_plc_team_directly).
+        // educationProfessionalLearningCommunity: Sets 'EducationProfessionalLearningCommunity' option, but group-based
+        // team creation will fail; direct team creation is always used instead (see should_use_direct_team_creation).
+        $extra = null;
+        $templateconfig = $this->get_team_template_with_fallback('educationClass');
+        $configuredtemplate = $templateconfig['template'];
+        if ($configuredtemplate === 'educationStaff') {
+            $extra = ['creationOptions' => ['EducationStaff']];
+        } else if ($configuredtemplate === 'educationProfessionalLearningCommunity') {
+            // Note: PLC requires special handling and likely won't work with group-based creation.
+            $extra = ['creationOptions' => ['EducationProfessionalLearningCommunity']];
+        }
+
         try {
             $response = $this->graphclient->create_educationclass_group(
                 $displayname,
                 $mailnickname,
                 $description,
                 $externalid,
-                $externalname
+                $externalname,
+                $extra
             );
         } catch (moodle_exception $e) {
             $this->mtrace(
@@ -334,8 +356,10 @@ class main {
             }
         }
 
+        $options = ['description' => $description];
+
         try {
-            $response = $this->graphclient->create_group($displayname, $mailnickname, ['description' => $description]);
+            $response = $this->graphclient->create_group($displayname, $mailnickname, $options);
         } catch (moodle_exception $e) {
             $this->mtrace(
                 'Could not create standard group for course #' . $course->id . '. Reason: ' . $e->getMessage(),
@@ -376,79 +400,106 @@ class main {
             return false;
         }
 
-        // Remove existing owners and members.
-        try {
-            $skip = false;
-            $existingowners = [];
+        // Whether this group was just created in this run (prone to Azure AD propagation delay).
+        $isnewlycreated = isset($SESSION->o365_newly_created_groups) &&
+            in_array($groupobjectid, $SESSION->o365_newly_created_groups);
 
-            $this->mtrace('Get existing owners of group with ID ' . $groupobjectid, $baselevel);
-
-            if (isset($SESSION->o365_groups_not_exist)) {
-                if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                    $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
-                    $skip = true;
+        // Fetch existing owners, retrying for newly created groups to handle Azure AD propagation delay.
+        $existingowners = [];
+        $this->mtrace('Get existing owners of group with ID ' . $groupobjectid, $baselevel);
+        if (isset($SESSION->o365_groups_not_exist) && in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+            $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
+        } else {
+            $fetchretry = 0;
+            while ($fetchretry <= ($isnewlycreated ? API_CALL_RETRY_LIMIT : 0)) {
+                if ($fetchretry > 0) {
+                    $this->mtrace('Newly created group not yet accessible, retry #' . $fetchretry . '...', $baselevel + 1);
+                    sleep(10);
                 }
-            }
-
-            if (!$skip) {
-                $existingowners = $this->get_group_owners($groupobjectid);
-            }
-        } catch (moodle_exception $e) {
-            $this->mtrace(
-                'Could not get existing owners of group with ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(),
-                $baselevel + 1
-            );
-            $existingowners = [];
-
-            if (isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups)) {
-                if (static::is_resource_not_exist_exception($e->getMessage())) {
-                    if (stripos($e->getMessage(), $groupobjectid) !== false) {
-                        // The group doesn't exist.
-                        if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                            $SESSION->o365_groups_not_exist[] = $groupobjectid;
+                try {
+                    $existingowners = $this->get_group_owners($groupobjectid);
+                    if ($fetchretry > 0) {
+                        $this->mtrace('Retry succeeded.', $baselevel + 1);
+                    }
+                    break;
+                } catch (moodle_exception $e) {
+                    if (
+                        $isnewlycreated &&
+                        static::is_resource_not_exist_exception($e->getMessage()) &&
+                        stripos($e->getMessage(), $groupobjectid) !== false &&
+                        $fetchretry < API_CALL_RETRY_LIMIT
+                    ) {
+                        $fetchretry++;
+                    } else {
+                        $this->mtrace(
+                            'Could not get existing owners of group with ID ' . $groupobjectid .
+                            '. Reason: ' . $e->getMessage(),
+                            $baselevel + 1
+                        );
+                        if (
+                            isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
+                            static::is_resource_not_exist_exception($e->getMessage()) &&
+                            stripos($e->getMessage(), $groupobjectid) !== false
+                        ) {
+                            if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+                                $SESSION->o365_groups_not_exist[] = $groupobjectid;
+                            }
+                            $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
                         }
-
-                        $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
+                        break;
                     }
                 }
             }
+            $this->mtrace('Found ' . count($existingowners) . ' existing owner(s).', $baselevel + 1);
         }
 
-        try {
-            $skip = false;
-            $existingmembers = [];
-
-            $this->mtrace('Get existing members of group with ID ' . $groupobjectid, $baselevel);
-
-            if (isset($SESSION->o365_groups_not_exist)) {
-                if (in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                    $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
-                    $skip = true;
+        // Fetch existing members, retrying for newly created groups to handle Azure AD propagation delay.
+        $existingmembers = [];
+        $this->mtrace('Get existing members of group with ID ' . $groupobjectid, $baselevel);
+        if (isset($SESSION->o365_groups_not_exist) && in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+            $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
+        } else {
+            $fetchretry = 0;
+            while ($fetchretry <= ($isnewlycreated ? API_CALL_RETRY_LIMIT : 0)) {
+                if ($fetchretry > 0) {
+                    $this->mtrace('Newly created group not yet accessible, retry #' . $fetchretry . '...', $baselevel + 1);
+                    sleep(10);
                 }
-            }
-
-            if (!$skip) {
-                $existingmembers = $this->get_group_members($groupobjectid);
-            }
-        } catch (moodle_exception $e) {
-            $this->mtrace(
-                'Could not get existing members of group with ID ' . $groupobjectid . '. Reason: ' . $e->getMessage(),
-                $baselevel + 1
-            );
-            $existingmembers = [];
-
-            if (isset($SESSION->o365_groups_not_exist)) {
-                if (static::is_resource_not_exist_exception($e->getMessage())) {
-                    if (stripos($e->getMessage(), $groupobjectid) !== false) {
-                        // The group doesn't exist.
-                        if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
-                            $SESSION->o365_groups_not_exist[] = $groupobjectid;
+                try {
+                    $existingmembers = $this->get_group_members($groupobjectid);
+                    if ($fetchretry > 0) {
+                        $this->mtrace('Retry succeeded.', $baselevel + 1);
+                    }
+                    break;
+                } catch (moodle_exception $e) {
+                    if (
+                        $isnewlycreated &&
+                        static::is_resource_not_exist_exception($e->getMessage()) &&
+                        stripos($e->getMessage(), $groupobjectid) !== false &&
+                        $fetchretry < API_CALL_RETRY_LIMIT
+                    ) {
+                        $fetchretry++;
+                    } else {
+                        $this->mtrace(
+                            'Could not get existing members of group with ID ' . $groupobjectid .
+                            '. Reason: ' . $e->getMessage(),
+                            $baselevel + 1
+                        );
+                        if (
+                            isset($SESSION->o365_groups_not_exist) &&
+                            static::is_resource_not_exist_exception($e->getMessage()) &&
+                            stripos($e->getMessage(), $groupobjectid) !== false
+                        ) {
+                            if (!in_array($groupobjectid, $SESSION->o365_groups_not_exist)) {
+                                $SESSION->o365_groups_not_exist[] = $groupobjectid;
+                            }
+                            $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
                         }
-
-                        $this->mtrace('Group does not exist. Skipping.', $baselevel + 1);
+                        break;
                     }
                 }
             }
+            $this->mtrace('Found ' . count($existingmembers) . ' existing member(s).', $baselevel + 1);
         }
 
         $existingownerids = array_keys($existingowners);
@@ -542,7 +593,141 @@ class main {
     }
 
     /**
+     * Resolve the configured Teams template, falling back to $default if unset or invalid.
+     *
+     * Behavior:
+     * - If 'team_type' config is not set: Auto-configure with appropriate default based on education license availability.
+     *   If $default is 'educationClass' but education license is not available, use 'standard' instead.
+     *   This ensures admins don't have to manually configure the setting; it self-configures on first run.
+     * - If 'team_type' config is set to 'custom': Return the value of 'team_type_custom_id', or $default if the ID is empty.
+     * - Otherwise: Return the configured 'team_type' value.
+     *
+     * @param string $default Fallback template ID ('educationClass' or 'standard').
+     * @return string
+     */
+    private function get_configured_team_template(string $default): string {
+        $teamtype = get_config('local_o365', 'team_type');
+        if (!$teamtype) {
+            // Determine appropriate default based on education license availability.
+            $defaultvalue = $default;
+            if ($this->haseducationlicense === false && $default === 'educationClass') {
+                // Education license not available, use standard instead of education default.
+                $defaultvalue = 'standard';
+            }
+            // Save the default value to config so it's set for future runs.
+            set_config('team_type', $defaultvalue, 'local_o365');
+            return $defaultvalue;
+        }
+        if ($teamtype === 'custom') {
+            $customid = trim((string) get_config('local_o365', 'team_type_custom_id'));
+            return $customid !== '' ? $customid : $default;
+        }
+        return $teamtype;
+    }
+
+    /**
+     * Resolve which template to use and whether to attempt fallback on failure.
+     *
+     * Returns an array with 'template' (the template to try) and 'fallback' (the fallback template if configured differs).
+     *
+     * @param string $default The default template to fall back to.
+     * @return array Array with 'template', 'fallback' keys.
+     */
+    private function get_team_template_with_fallback(string $default): array {
+        $configured = $this->get_configured_team_template($default);
+        return [
+            'template' => $configured,
+            'fallback' => ($configured !== $default ? $default : null),
+        ];
+    }
+
+    /**
+     * Check if the configured template requires direct team creation (not group-based).
+     *
+     * Template creation method reference:
+     * ===================================
+     * Direct team creation (this method returns true):
+     * - educationProfessionalLearningCommunity: Cannot set 'EducationProfessionalLearningCommunity' creationOption via API
+     *   after group creation. Direct team creation ensures proper group provisioning.
+     * - educationStaff: Teams backend explicitly rejects group-based team creation with this specialization.
+     *
+     * Group-based team creation (this method returns false):
+     * - educationClass: Supports group-based creation via create_team_from_group.
+     * - standard: Supports group-based creation via create_team_from_group.
+     * - custom (user-defined): Supports group-based creation; must use standard groups for compatibility.
+     *
+     * @param string $default The default template ('educationClass' or 'standard').
+     * @return bool True if the configured template requires direct team creation.
+     */
+    private function should_use_direct_team_creation(string $default): bool {
+        $configured = $this->get_configured_team_template($default);
+        return in_array($configured, ['educationProfessionalLearningCommunity', 'educationStaff']);
+    }
+
+    /**
+     * Check if a template is incompatible with the expected group type and log a warning if so.
+     *
+     * @param string $template The template being used.
+     * @param string $grouptype Either 'education' or 'standard'.
+     * @param int $baselevel The indentation level for logging.
+     * @param ?string $teamtype The configured team_type ('custom', 'standard', etc.). If null, fetched from config.
+     */
+    private function check_template_compatibility(
+        string $template,
+        string $grouptype,
+        int $baselevel = 1,
+        ?string $teamtype = null
+    ): void {
+        if ($teamtype === null) {
+            $teamtype = get_config('local_o365', 'team_type');
+        }
+
+        $educationtemplates = ['educationClass', 'educationStaff', 'educationProfessionalLearningCommunity'];
+        $isedtemplate = in_array($template, $educationtemplates);
+        $iscustom = $teamtype === 'custom';
+
+        if ($grouptype === 'education' && !$isedtemplate && !$iscustom) {
+            $this->mtrace(
+                'WARNING: Configured template "' . $template .
+                '" is not suitable for education groups. Consider using an education template instead.',
+                $baselevel
+            );
+        } else if ($grouptype === 'standard' && $isedtemplate) {
+            $this->mtrace(
+                'WARNING: Configured template "' . $template .
+                '" is an education template but this is a standard group. Education templates cannot be used with standard groups.',
+                $baselevel
+            );
+        }
+
+        if ($template === 'educationProfessionalLearningCommunity') {
+            if ($grouptype === 'education') {
+                $this->mtrace(
+                    'INFO: Using educationProfessionalLearningCommunity template with education tenant. ' .
+                    'A standard group will be created (instead of education group) to enable PLC provisioning. ' .
+                    'This group will use the PLC template and will not have education-specific features.',
+                    $baselevel
+                );
+            } else {
+                $this->mtrace(
+                    'INFO: Using educationProfessionalLearningCommunity template. ' .
+                    'The group will be created with PLC provisioning enabled.',
+                    $baselevel
+                );
+            }
+        }
+    }
+
+    /**
      * Create a class team from an education group with the given ID for the course with the given ID.
+     *
+     * This method is called for education groups using educationClass or educationStaff templates (when those templates
+     * are configured and the tenant has an education license). Note that educationProfessionalLearningCommunity templates
+     * use direct team creation instead (see should_use_direct_team_creation and create_plc_team_directly).
+     *
+     * NOTE: educationStaff template support via group-based creation has limitations and may not work reliably.
+     * The preferred approach for educationStaff is to use direct team creation (see should_use_direct_team_creation).
+     * However, this method attempts group-based creation first for backward compatibility if educationStaff is configured.
      *
      * @param string $groupobjectid
      * @param stdClass $course
@@ -563,6 +748,14 @@ class main {
 
         $response = null;
         $subtype = '';
+
+        $templateconfig = $this->get_team_template_with_fallback('educationClass');
+        $currenttemplate = $templateconfig['template'];
+        $fallbacktemplate = $templateconfig['fallback'];
+        $usingfallback = false;
+
+        $teamtype = get_config('local_o365', 'team_type');
+        $this->check_template_compatibility($currenttemplate, 'education', $baselevel + 1, $teamtype);
 
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
             if (isset($SESSION->o365_groups_not_exist)) {
@@ -586,7 +779,32 @@ class main {
                 $retrycounter++;
             } else {
                 try {
-                    $response = $this->graphclient->create_team_from_group($groupobjectid, 'educationClass');
+                    // For educationStaff template, attempt to set the group's creationOptions
+                    // (if not already set at creation time). NOTE: creationOptions should ideally be set
+                    // at group creation time (create_education_group).
+                    // This attempt is a fallback in case the group was created without proper creationOptions.
+                    // However, creationOptions is immutable after creation, so this will fail silently.
+                    if ($currenttemplate === 'educationStaff') {
+                        try {
+                            // Fetch existing group to preserve current mail/security settings.
+                            $existinggroup = $this->graphclient->get_group($groupobjectid);
+                            $this->graphclient->update_group([
+                                'id' => $groupobjectid,
+                                'mailEnabled' => $existinggroup['mailEnabled'] ?? false,
+                                'securityEnabled' => $existinggroup['securityEnabled'] ?? false,
+                                'groupTypes' => $existinggroup['groupTypes'] ?? ['Unified'],
+                                'creationOptions' => ['EducationStaff'],
+                            ]);
+                            $this->mtrace('Set creationOptions to EducationStaff for group ' . $groupobjectid, $baselevel + 2);
+                        } catch (moodle_exception $creationoptionserror) {
+                            $this->mtrace(
+                                'Warning: Could not set creationOptions. Continuing. Error: ' . $creationoptionserror->getMessage(),
+                                $baselevel + 2
+                            );
+                        }
+                    }
+
+                    $response = $this->graphclient->create_team_from_group($groupobjectid, $currenttemplate);
                     $this->mtrace('Created class team from class group with ID ' . $groupobjectid, $baselevel + 1);
                     $subtype = 'teamfromgroup';
                     break;
@@ -596,6 +814,17 @@ class main {
                         $response = true;
                         $subtype = 'courseteam';
                         break;
+                    } else if ($retrycounter >= API_CALL_RETRY_LIMIT && !$usingfallback && $fallbacktemplate) {
+                        // Exhausted retries with configured template; try fallback template.
+                        $this->mtrace(
+                            'Exhausted retries with template "' . $currenttemplate .
+                            '". Attempting fallback with template "' . $fallbacktemplate . '".',
+                            $baselevel + 1
+                        );
+                        $currenttemplate = $fallbacktemplate;
+                        $usingfallback = true;
+                        $retrycounter = 0;
+                        continue;
                     } else {
                         $this->mtrace(
                             'Could not create class team from education group. Reason: ' . $e->getMessage(),
@@ -658,7 +887,168 @@ class main {
     }
 
     /**
+     * Create a team directly from a configured template that requires direct provisioning.
+     *
+     * Why direct team creation for certain templates?
+     * ===============================================
+     * Some Teams templates cannot be reliably created using the group-first approach:
+     *
+     * 1. educationProfessionalLearningCommunity (PLC):
+     *    - The 'EducationProfessionalLearningCommunity' creationOption cannot be set via API on existing groups.
+     *    - Groups must be created WITH this creationOption to support PLC teams.
+     *    - Direct team creation from a template handles this correctly by creating the backing group with proper options.
+     *
+     * 2. educationStaff:
+     *    - Teams backend does not support group-based team creation with educationStaff specialization.
+     *    - Attempting create_team_from_group with educationStaff fails with specialization mismatch error.
+     *    - Direct team creation bypasses this limitation.
+     *
+     * This method creates the team directly (which automatically creates a properly provisioned backing group),
+     * then adds owners and members to that group, and installs the Moodle app.
+     *
+     * @param stdClass $course The course to create a team for.
+     * @param int $baselevel The trace indentation level.
+     * @return array|false The team object record or false on failure.
+     */
+    private function create_plc_team_directly(stdClass $course, int $baselevel = 2): array|false {
+        global $DB, $SESSION;
+
+        $now = time();
+
+        $this->mtrace('Create team directly from template for course #' . $course->id, $baselevel);
+
+        // Build team name and description.
+        $teamname = utils::get_team_display_name($course);
+        $description = $course->summary ?? '';
+        if (!empty($description)) {
+            $description = shorten_text($description, 1024, true, ' ...');
+        }
+        while (mb_strlen($description, '8bit') > 1024) {
+            $description = mb_substr($description, 0, -5) . ' ...';
+        }
+
+        // Get owners and members for the team. At least one owner is required.
+        $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
+        $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
+
+        // Check if at least one owner exists.
+        if (empty($ownerobjectids)) {
+            $this->mtrace('Cannot create team: no owners found for course #' . $course->id, $baselevel + 1);
+            return false;
+        }
+
+        // Get the configured template (default to educationClass for education groups).
+        $configuredtemplate = $this->get_configured_team_template('educationClass');
+
+        // Create team directly from the configured template.
+        // Some education templates (e.g. educationStaff) only allow a single member in the initial
+        // creation request. Pass only the first owner here; remaining owners and members are added
+        // after successful creation via add_group_owners_and_members_to_group().
+        try {
+            $response = $this->graphclient->create_team_from_template(
+                $teamname,
+                $description,
+                $configuredtemplate,
+                [reset($ownerobjectids)]
+            );
+            if (!$response) {
+                $this->mtrace('Failed to create team from template.', $baselevel + 1);
+                return false;
+            }
+
+            // Get the async operation URL from the response location header.
+            $operationlocation = $this->graphclient->get_last_async_operation_location();
+            if (!$operationlocation) {
+                $this->mtrace('No async operation location received from team creation.', $baselevel + 1);
+                return false;
+            }
+
+            $this->mtrace('Created async team operation with location: ' . $operationlocation, $baselevel + 1);
+
+            // Wait for the async operation to complete (this will retrieve the group ID).
+            // Pass the full operation location URL to poll and a callback for logging each poll.
+            $coursesyncobj = $this;
+            $groupobjectid = $this->graphclient->wait_for_async_operation_by_url(
+                $operationlocation,
+                function ($pollcount, $state) use ($coursesyncobj, $baselevel) {
+                    $coursesyncobj->mtrace("Poll #{$pollcount}: {$state}", $baselevel + 2);
+                }
+            );
+            if (!$groupobjectid) {
+                $this->mtrace('Timeout waiting for team creation to complete.', $baselevel + 1);
+                return false;
+            }
+
+            $this->mtrace('Team created successfully. Group/Team ID: ' . $groupobjectid, $baselevel + 1);
+        } catch (moodle_exception $e) {
+            $this->mtrace(
+                'Could not create team from template. Reason: ' . $e->getMessage(),
+                $baselevel + 1
+            );
+            return false;
+        }
+
+        // Record the group object.
+        $objectrecord = [
+            'type' => 'group',
+            'subtype' => 'course',
+            'objectid' => $groupobjectid,
+            'moodleid' => $course->id,
+            'o365name' => $teamname,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $objectrecord['id'] = $DB->insert_record('local_o365_objects', (object)$objectrecord);
+        $this->mtrace('Recorded group object (' . $objectrecord['objectid'] . ') into object table with record ID ' .
+            $objectrecord['id'], $baselevel + 1);
+
+        // Record the team object.
+        $teamname = utils::get_team_display_name($course);
+        $teamobjectrecord = [
+            'type' => 'group',
+            'subtype' => 'courseteam',
+            'objectid' => $groupobjectid,
+            'moodleid' => $course->id,
+            'o365name' => $teamname,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $teamobjectrecord['id'] = $DB->insert_record('local_o365_objects', (object)$teamobjectrecord);
+        $this->mtrace('Recorded team object ' . $groupobjectid . ' into object table with record ID ' .
+            $teamobjectrecord['id'], $baselevel + 1);
+
+        // Register the new group as newly created so that add_group_owners_and_members_to_group will apply
+        // retry logic when the group is not yet accessible due to Azure AD propagation delay.
+        if (isset($SESSION->o365_newly_created_groups) && !in_array($groupobjectid, $SESSION->o365_newly_created_groups)) {
+            $SESSION->o365_newly_created_groups[] = $groupobjectid;
+        }
+
+        // Add owners/members to the group (best-effort: the group may not yet be fully propagated in Azure AD).
+        // A groupmembershipsync adhoc task is always queued below as a reliable fallback for the next cron run.
+        $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
+        $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
+        $this->add_group_owners_and_members_to_group(
+            $groupobjectid,
+            $ownerobjectids,
+            $memberobjectids,
+            $baselevel + 1
+        );
+
+        // Provision app, add app tab to channel.
+        $this->install_moodle_app_in_team($groupobjectid, $course->id, $baselevel + 1);
+
+        return $teamobjectrecord;
+    }
+
+    /**
      * Create a standard team from a standard group with the given ID for the course with the given ID.
+     *
+     * This method handles three template types:
+     * 1. Standard prebuilt template ('standard'): Always safe for standard groups.
+     * 2. Custom template (user-defined template ID): Must use standard groups, even if tenant has education license.
+     *    Custom templates are created/tested on standard groups, so they may not be compatible with education group
+     *    specialization. Standard groups provide the broadest compatibility.
+     * 3. Education template when education license is unavailable: Falls back to standard group creation.
      *
      * @param string $groupobjectid
      * @param stdClass $course
@@ -672,9 +1062,23 @@ class main {
 
         $retrycounter = 0;
 
-        $this->mtrace('Create standard team from group with ID ' . $groupobjectid . ' for course #' . $course->id, $baselevel);
-
         $response = null;
+
+        $templateconfig = $this->get_team_template_with_fallback('standard');
+        $currenttemplate = $templateconfig['template'];
+        $fallbacktemplate = $templateconfig['fallback'];
+        $usingfallback = false;
+
+        $teamtype = get_config('local_o365', 'team_type');
+        $templatelabel = ($teamtype === 'custom') ? 'custom template' : 'standard template';
+        $this->mtrace(
+            'Create team from group with ID ' . $groupobjectid . ' for course #' . $course->id .
+            ' using ' . $templatelabel,
+            $baselevel
+        );
+
+        $this->check_template_compatibility($currenttemplate, 'standard', $baselevel + 1, $teamtype);
+
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
             if ($retrycounter) {
                 $this->mtrace('Retry #' . $retrycounter, $baselevel + 1);
@@ -696,10 +1100,57 @@ class main {
                         }
                     }
 
-                    $response = $this->graphclient->create_team_from_group($groupobjectid, 'standard');
+                    $response = $this->graphclient->create_team_from_group($groupobjectid, $currenttemplate);
                     break;
                 } catch (moodle_exception $e) {
-                    $this->mtrace('Could not create standard team from group. Reason: ' . $e->getMessage(), $baselevel + 1);
+                    if (strpos($e->a, "missing the 'PLC' CreationOption") !== false && !$usingfallback && $fallbacktemplate) {
+                        // PLC creation option error - group was created without PLC support.
+                        // Delete the group and fall back to default template so it can be recreated with PLC.
+                        $this->mtrace(
+                            'ERROR: The group was created but does not have the PLC creation option. ' .
+                            'Deleting group so it can be recreated with PLC provisioning enabled. ' .
+                            'Attempting fallback with template "' . $fallbacktemplate . '".',
+                            $baselevel + 1
+                        );
+
+                        global $DB;
+                        try {
+                            // Delete the group from Office 365.
+                            $this->graphclient->delete_group($groupobjectid);
+                            $this->mtrace('Deleted group ' . $groupobjectid . ' from Office 365.', $baselevel + 1);
+
+                            // Delete the local object record so it can be recreated.
+                            $DB->delete_records_select(
+                                'local_o365_objects',
+                                "type = 'group' AND subtype IN ('course', 'courseteam', 'teamfromgroup') AND objectid = ?",
+                                [$groupobjectid]
+                            );
+                            $this->mtrace('Deleted group object record from database.', $baselevel + 1);
+                        } catch (moodle_exception $e) {
+                            $this->mtrace(
+                                'Could not delete group ' . $groupobjectid . '. Reason: ' . $e->getMessage(),
+                                $baselevel + 1
+                            );
+                        }
+
+                        $currenttemplate = $fallbacktemplate;
+                        $usingfallback = true;
+                        $retrycounter = 0;
+                        continue;
+                    } else if ($retrycounter >= API_CALL_RETRY_LIMIT && !$usingfallback && $fallbacktemplate) {
+                        // Exhausted retries with configured template; try fallback template.
+                        $this->mtrace(
+                            'Exhausted retries with template "' . $currenttemplate .
+                            '". Attempting fallback with template "' . $fallbacktemplate . '".',
+                            $baselevel + 1
+                        );
+                        $currenttemplate = $fallbacktemplate;
+                        $usingfallback = true;
+                        $retrycounter = 0;
+                        continue;
+                    }
+
+                    $this->mtrace('Could not create team from group. Reason: ' . $e->getMessage(), $baselevel + 1);
 
                     if (
                         isset($SESSION->o365_groups_not_exist) && isset($SESSION->o365_newly_created_groups) &&
@@ -738,18 +1189,18 @@ class main {
 
         if (!$response) {
             $this->mtrace(
-                'Failed to create standard team from group with ID ' . $groupobjectid . ' for course #' . $course->id,
+                'Failed to create team from group with ID ' . $groupobjectid . ' for course #' . $course->id,
                 $baselevel + 1
             );
             return false;
         }
 
-        $this->mtrace('Created standard team from group with ID ' . $groupobjectid, $baselevel + 1);
+        $this->mtrace('Created team from group with ID ' . $groupobjectid, $baselevel + 1);
         $teamname = utils::get_team_display_name($course);
         $teamobjectrecord = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $groupobjectid,
             'moodleid' => $course->id, 'o365name' => $teamname, 'timecreated' => $now, 'timemodified' => $now];
         $teamobjectrecord['id'] = $DB->insert_record('local_o365_objects', (object)$teamobjectrecord);
-        $this->mtrace('Recorded standard team object ' . $groupobjectid . ' into object table with record ID ' .
+        $this->mtrace('Recorded team object ' . $groupobjectid . ' into object table with record ID ' .
             $teamobjectrecord['id'], $baselevel + 1);
 
         // Provision app, add app tab to channel.
@@ -797,13 +1248,27 @@ class main {
 
             // List all channels.
             if ($moodleappprovisioned) {
-                try {
-                    $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
-                    $this->mtrace('Located general channel in the team with object ID ' . $groupobjectid, $baselevel + 1);
-                } catch (moodle_exception $e) {
-                    $this->mtrace('Could not list channels of team with object ID ' . $groupobjectid . '. Reason: ' .
-                        $e->getMessage(), $baselevel + 1);
-                    $generalchanelid = false;
+                $generalchanelid = false;
+                $channelretries = 3;
+                while ($channelretries > 0 && !$generalchanelid) {
+                    try {
+                        $generalchanelid = $this->graphclient->get_general_channel_id($groupobjectid);
+                        $this->mtrace('Located general channel in the team with object ID ' . $groupobjectid, $baselevel + 1);
+                    } catch (moodle_exception $e) {
+                        $channelretries--;
+                        if ($channelretries > 0) {
+                            $this->mtrace(
+                                'Could not list channels. Retrying (' . $channelretries . ' attempts left). Error: ' .
+                                $e->getMessage(),
+                                $baselevel + 1
+                            );
+                            sleep(5);
+                        } else {
+                            $this->mtrace('Could not list channels of team with object ID ' . $groupobjectid . '. Reason: ' .
+                                $e->getMessage(), $baselevel + 1);
+                            $generalchanelid = false;
+                        }
+                    }
                 }
 
                 if ($generalchanelid) {
@@ -922,6 +1387,18 @@ class main {
     /**
      * Try to create a group for the given course.
      *
+     * Template routing logic:
+     * 1. If the configured template requires direct team creation (educationStaff, educationProfessionalLearningCommunity),
+     *    create the team directly. This bypasses group creation since the backing group is created automatically.
+     * 2. Otherwise, use group-based team creation:
+     *    - If education license is available AND configured template is an education template, create an education group
+     *      (with appropriate creationOptions set). Then create a team from it using the configured template.
+     *    - If configured template is 'standard' (regardless of education license), create a standard group and team.
+     *    - If configured template is 'custom' (a user-defined template ID), create a standard group and apply the custom
+     *      template. Custom templates are user-created and designed for standard groups, so they must use standard groups
+     *      even if the tenant has an education license.
+     *    - If education license is not available but the default is educationClass, fall back to standard group.
+     *
      * @param stdClass $course
      * @param int $baselevel
      * @return bool True if group creation succeeds, or False if it fails.
@@ -931,8 +1408,37 @@ class main {
 
         $this->mtrace('Process course #' . $course->id, $baselevel);
 
+        // Check if a direct team creation template is configured (educationStaff, educationProfessionalLearningCommunity).
+        // These templates cannot be used with group-based team creation due to Teams backend constraints.
+        if ($this->should_use_direct_team_creation('educationClass')) {
+            // For templates requiring direct creation, create team directly (which also creates the backing group).
+            $teamobject = $this->create_plc_team_directly($course, $baselevel + 1);
+            if (!$teamobject) {
+                return false;
+            }
+
+            if (isset($SESSION->o365_newly_created_groups)) {
+                $SESSION->o365_newly_created_groups[] = $teamobject['objectid'];
+            }
+
+            $this->mtrace('Finished processing course #' . $course->id, $baselevel);
+            return true;
+        }
+
+        // For templates that support group-based creation, use the standard group-first approach.
+        // This path handles: educationClass, standard, and custom templates.
+
+        // Determine whether to create education or standard group based on configured template and license.
+        // Education groups are only created if: (1) tenant has education license AND (2) configured template is
+        // an education template. This ensures standard template creates standard groups even on education tenants,
+        // and custom templates always use standard groups.
+        $configuredtemplate = $this->get_configured_team_template('educationClass');
+        $educationtemplates = ['educationClass', 'educationStaff', 'educationProfessionalLearningCommunity'];
+        $isedtemplate = in_array($configuredtemplate, $educationtemplates);
+        $useeducationgroup = $this->haseducationlicense && $isedtemplate;
+
         // Create group.
-        if ($this->haseducationlicense) {
+        if ($useeducationgroup) {
             $groupobject = $this->create_education_group($course, $baselevel + 1);
 
             if ($groupobject) {
@@ -964,7 +1470,7 @@ class main {
         // If owner exists, create team.
         if ($owneradded) {
             // Owner exists, proceed with Team creation.
-            if ($this->haseducationlicense) {
+            if ($useeducationgroup) {
                 $this->create_team_from_education_group($groupobject['objectid'], $course, $baselevel + 1);
             } else {
                 $this->create_team_from_standard_group($groupobject['objectid'], $course, $baselevel + 1);
@@ -1061,15 +1567,41 @@ class main {
             }
 
             if ($owners && $ownerexists) {
-                // Resync group owners and members, just in case.
-                $this->add_group_owners_and_members_to_group($course->groupobjectid, $owners, $members);
-                if ($this->haseducationlicense) {
-                    if ($this->create_team_from_education_group($course->groupobjectid, $course)) {
-                        $coursesprocessed++;
-                    }
+                // Check if a direct team creation template is configured (educationStaff, educationProfessionalLearningCommunity).
+                // These templates cannot be used with group-based team creation due to Teams backend constraints.
+                if ($this->should_use_direct_team_creation('educationClass')) {
+                    // Direct team creation is required; skip this course since it has an existing group.
+                    // Direct creation handles both team and backing group creation.
+                    $this->mtrace(
+                        'Skip creating team from group with ID ' . $course->groupobjectid . ' for course #' .
+                        $course->id . '. Reason: Direct team creation template configured ' .
+                        '(requires new team, not group-based).',
+                        3
+                    );
                 } else {
-                    if ($this->create_team_from_standard_group($course->groupobjectid, $course)) {
-                        $coursesprocessed++;
+                    // Resync group owners and members, just in case.
+                    $this->add_group_owners_and_members_to_group($course->groupobjectid, $owners, $members);
+
+                    // Determine whether to create education or standard team from this existing group.
+                    // Routing logic:
+                    // 1. Check if the configured template is an education template AND education license exists.
+                    // If both are true, create an education team. Otherwise, create a standard team.
+                    // 2. This ensures: standard template creates standard teams even on education tenants,
+                    // custom templates use standard teams (since they're designed for standard groups),
+                    // and only educationClass template on education tenants creates education teams.
+                    $configuredtemplate = $this->get_configured_team_template('educationClass');
+                    $educationtemplates = ['educationClass', 'educationStaff', 'educationProfessionalLearningCommunity'];
+                    $isedtemplate = in_array($configuredtemplate, $educationtemplates);
+                    $useeducationteam = $this->haseducationlicense && !$this->should_use_direct_team_creation('educationClass')
+                        && $isedtemplate;
+                    if ($useeducationteam) {
+                        if ($this->create_team_from_education_group($course->groupobjectid, $course)) {
+                            $coursesprocessed++;
+                        }
+                    } else {
+                        if ($this->create_team_from_standard_group($course->groupobjectid, $course)) {
+                            $coursesprocessed++;
+                        }
                     }
                 }
             } else {
@@ -1489,36 +2021,61 @@ class main {
 
         // Create a new group / team and connect it to the course.
         if ($createafterreset) {
-            // Create group.
-            if ($this->haseducationlicense) {
-                $groupobject = $this->create_education_group($course);
-
-                if ($groupobject) {
-                    $this->set_lti_properties_in_education_group($groupobject['objectid'], $course);
-                } else {
-                    $this->mtrace('Could not create education class group for course #' . $course->id);
+            // Check if a direct team creation template is configured.
+            if ($this->should_use_direct_team_creation('educationClass')) {
+                // For templates requiring direct creation, create team directly.
+                $teamobject = $this->create_plc_team_directly($course);
+                if (!$teamobject) {
+                    $this->mtrace('Could not create team for course #' . $course->id);
                     return false;
                 }
             } else {
-                $groupobject = $this->create_standard_group($course);
-                if (!$groupobject) {
-                    $this->mtrace('Could not create standard group for course #' . $course->id);
-                    return false;
-                }
-            }
+                // For non-PLC templates, use the standard group-first approach.
 
-            // Add owners to the group.
-            $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
-            $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
-            $owneradded = $this->add_group_owners_and_members_to_group($groupobject['objectid'], $ownerobjectids, $memberobjectids);
+                // Determine whether to create education or standard group.
+                // Education groups are only created if: (1) tenant has education license AND (2) configured template is
+                // an education template. This ensures standard template creates standard groups even on education tenants,
+                // and custom templates always use standard groups.
+                $configuredtemplate = $this->get_configured_team_template('educationClass');
+                $educationtemplates = ['educationClass', 'educationStaff', 'educationProfessionalLearningCommunity'];
+                $isedtemplate = in_array($configuredtemplate, $educationtemplates);
+                $useeducationgroup = $this->haseducationlicense && $isedtemplate;
 
-            // If owner exists, create team.
-            if ($owneradded) {
-                // Owner exists, proceed with Team creation.
-                if ($this->haseducationlicense) {
-                    $this->create_team_from_education_group($groupobject['objectid'], $course);
+                // Create group.
+                if ($useeducationgroup) {
+                    $groupobject = $this->create_education_group($course);
+
+                    if ($groupobject) {
+                        $this->set_lti_properties_in_education_group($groupobject['objectid'], $course);
+                    } else {
+                        $this->mtrace('Could not create education class group for course #' . $course->id);
+                        return false;
+                    }
                 } else {
-                    $this->create_team_from_standard_group($groupobject['objectid'], $course);
+                    $groupobject = $this->create_standard_group($course);
+                    if (!$groupobject) {
+                        $this->mtrace('Could not create standard group for course #' . $course->id);
+                        return false;
+                    }
+                }
+
+                // Add owners to the group.
+                $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
+                $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
+                $owneradded = $this->add_group_owners_and_members_to_group(
+                    $groupobject['objectid'],
+                    $ownerobjectids,
+                    $memberobjectids
+                );
+
+                // If owner exists, create team.
+                if ($owneradded) {
+                    // Owner exists, proceed with Team creation.
+                    if ($useeducationgroup) {
+                        $this->create_team_from_education_group($groupobject['objectid'], $course);
+                    } else {
+                        $this->create_team_from_standard_group($groupobject['objectid'], $course);
+                    }
                 }
             }
         }
