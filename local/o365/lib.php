@@ -176,11 +176,10 @@ function local_o365_create_manifest_file(): array {
 
     // Task 3: prepare manifest file.
     $manifest = [
-        '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.7/MicrosoftTeams.schema.json',
-        'manifestVersion' => '1.7',
-        'version' => '1.5',
+        '$schema' => 'https://developer.microsoft.com/en-us/json-schemas/teams/v1.25/MicrosoftTeams.schema.json',
+        'manifestVersion' => '1.25',
+        'version' => '1.6.0',
         'id' => $teamsmoodleappexternalid,
-        'packageName' => 'ie.enovation.teams.moodle',
         'developer' => [
             'name' => 'Enovation Solutions',
             'websiteUrl' => 'https://enovation.ie',
@@ -202,6 +201,8 @@ function local_o365_create_manifest_file(): array {
                 'courses from within your teams through tabs.',
         ],
         'accentColor' => '#FF7A00',
+        'defaultInstallScope' => 'team',
+        'supportsChannelFeatures' => 'tier1',
         'configurableTabs' => [
             [
                 'configurationUrl' => $CFG->wwwroot . '/local/o365/teams_tab_configuration.php',
