@@ -645,7 +645,9 @@ class authcode extends base {
             }
         }
 
-        $supportuseridentifierchangeconfig = get_config('local_o365', 'support_user_identifier_change');
+        $supportuseridentifierchangeconfig = auth_oidc_is_local_365_installed()
+            ? get_config('local_o365', 'support_user_identifier_change')
+            : 0;
 
         if (!empty($tokenrec)) {
             // Already connected user.
@@ -687,7 +689,7 @@ class authcode extends base {
                 if ($usernamechanged) {
                     if ($supportuseridentifierchangeconfig != 1) {
                         // Username change is not supported, throw exception.
-                        throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
+                        throw new moodle_exception('errorupnchangeisnotsupported', 'auth_oidc', null, null, '2');
                     }
                     $potentialduplicateuser = core_user::get_user_by_username(strtolower($oidcusername));
                     if ($potentialduplicateuser && $potentialduplicateuser->id != $tokenrec->userid) {
@@ -750,7 +752,7 @@ class authcode extends base {
             // 3. update connection record in local_o365_objects table.
 
             if ($supportuseridentifierchangeconfig != 1) {
-                throw new moodle_exception('errorupnchangeisnotsupported', 'local_o365', null, null, '2');
+                throw new moodle_exception('errorupnchangeisnotsupported', 'auth_oidc', null, null, '2');
             }
 
             $existinguser = core_user::get_user($existingmatching->moodleid);
@@ -799,8 +801,10 @@ class authcode extends base {
             $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
 
             // Update connection record in local_o365_objects table.
-            $existingmatching->o365name = $oidcusername;
-            $DB->update_record('local_o365_objects', $existingmatching);
+            if (auth_oidc_is_local_365_installed()) {
+                $existingmatching->o365name = $oidcusername;
+                $DB->update_record('local_o365_objects', $existingmatching);
+            }
 
             $user = authenticate_user_login($username, '', true);
 
