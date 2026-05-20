@@ -401,38 +401,56 @@ function auth_oidc_delete_token(int $tokenid): void {
 }
 
 /**
+ * Get validated custom claim names from configuration.
+ *
+ * Parses the customclaims configuration, validates claim name format, and returns
+ * the list of valid claim names to be used for token claim extraction and field mapping.
+ *
+ * @return array Array of validated custom claim names.
+ */
+function auth_oidc_get_validated_custom_claim_names() {
+    $customclaimsconfig = get_config('auth_oidc', 'customclaims');
+    if (empty($customclaimsconfig)) {
+        return [];
+    }
+
+    // Split by space, trim, remove empty values, and remove duplicates.
+    $customclaims = array_filter(array_map('trim', explode(' ', $customclaimsconfig)));
+    $customclaims = array_unique($customclaims);
+
+    $validated = [];
+    foreach ($customclaims as $claimname) {
+        // Validate claim name format (alphanumeric, underscore, hyphen only).
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $claimname)) {
+            debugging("Invalid custom claim name skipped: $claimname", DEBUG_DEVELOPER);
+            continue;
+        }
+        $validated[] = $claimname;
+    }
+
+    return $validated;
+}
+
+/**
  * Process and add custom claims to remote fields array with validation.
  *
  * @param array $remotefields Existing remote fields array
  * @return array Updated remote fields array with validated custom claims
  */
 function auth_oidc_process_custom_claims($remotefields) {
-    $customclaimsconfig = get_config('auth_oidc', 'customclaims');
-    if (empty($customclaimsconfig)) {
-        return $remotefields;
-    }
-
-    // Split by space, trim, remove empty values, and remove duplicates.
-    $customclaimsarray = array_filter(array_map('trim', explode(' ', $customclaimsconfig)));
-    $customclaimsarray = array_unique($customclaimsarray);
+    $customclaims = auth_oidc_get_validated_custom_claim_names();
 
     // Get all existing field names as reserved to prevent overriding.
     $reserved = array_keys($remotefields);
 
-    foreach ($customclaimsarray as $value) {
-        // Validate claim name format (alphanumeric, underscore, hyphen only).
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
-            debugging("Invalid custom claim name skipped: $value", DEBUG_DEVELOPER);
-            continue;
-        }
-
+    foreach ($customclaims as $claimname) {
         // Prevent overriding existing fields.
-        if (in_array($value, $reserved, true)) {
-            debugging("Reserved custom claim name skipped: $value", DEBUG_DEVELOPER);
+        if (in_array($claimname, $reserved, true)) {
+            debugging("Reserved custom claim name skipped: $claimname", DEBUG_DEVELOPER);
             continue;
         }
 
-        $remotefields[$value] = $value;
+        $remotefields[$claimname] = $claimname;
     }
 
     return $remotefields;
