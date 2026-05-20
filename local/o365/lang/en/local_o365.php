@@ -328,6 +328,8 @@ $string['acp_coursesynccustom_savemessage'] = 'Your changes have been saved.';
 $string['acp_coursesynccustom_searchwarning'] = 'Note: Searches will lose any unsaved progress. Press save changes to ensure your changes are saved.';
 $string['acp_coursesynccustom_confirm_all_action'] = 'Are you sure you want to change sync status of all courses? The action cannot be undone.';
 $string['acp_coursesynccustom_sds_course'] = 'Locked for SDS course';
+$string['acp_coursesynccustom_all_enabled_notice'] = 'Course sync is currently enabled for all courses. Individual course customization is disabled because "All Features Enabled" mode is active.';
+$string['acp_coursesynccustom_disabled_notice'] = 'Course sync is currently disabled globally. Individual course customization is disabled because "Disabled" mode is active.';
 
 // Settings in the "Cohort sync" section of the "Sync settings" tab.
 $string['settings_secthead_cohortsync'] = 'Cohort sync';
