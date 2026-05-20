@@ -1441,6 +1441,12 @@ function xmldb_local_o365_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
+        // Ensure not_found_since field exists.
+        $field = new xmldb_field('not_found_since', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'description');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
         $index = new xmldb_index('not_found_since', XMLDB_INDEX_NOTUNIQUE, ['not_found_since']);
 
         // Conditionally launch add index not_found_since.
