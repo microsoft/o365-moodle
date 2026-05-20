@@ -1432,6 +1432,10 @@ class main {
             foreach ($o365objects as $o365object) {
                 $this->o365objectsbyobjectid[$o365object->objectid] = $o365object;
                 $this->o365objectsbymoodleid[$o365object->moodleid] = $o365object;
+                // Include users known by object ID even if their username no longer matches (e.g. after a UPN rename).
+                if (!in_array($o365object->moodleid, $moodleuserids)) {
+                    $moodleuserids[] = $o365object->moodleid;
+                }
             }
         }
 
