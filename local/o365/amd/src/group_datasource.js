@@ -16,32 +16,20 @@
 /**
  * Group autocomplete datasource for cohort sync.
  *
+ * Delegates all paginated-search logic to local_o365/paginated_autocomplete.
+ *
  * @module local_o365/group_datasource
  * @copyright   Enovation Solutions Ltd. {@link https://enovation.ie}
  * @author      Patryk Mroczko <patryk.mroczko@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/ajax'], function($, Ajax) {
-    return {
-        processResults: function(selector, results) {
-            var groups = [];
-            $.each(results, function(index, group) {
-                groups.push({
-                    value: group.id,
-                    label: group.displayName
-                });
-            });
-            return groups;
+define(['local_o365/paginated_autocomplete'], function(PaginatedAutocomplete) {
+    return PaginatedAutocomplete.create({
+        methodname: 'local_o365_search_groups',
+        mapResult: function(g) {
+            return {value: g.id, label: g.displayName};
         },
-        transport: function(selector, query, success, failure) {
-            Ajax.call([{
-                methodname: 'local_o365_search_groups',
-                args: {
-                    query: query
-                }
-            }])[0].then(success).fail(failure);
-        }
-    };
+        noResultsKey: 'cohortsync_no_groups_found',
+    });
 });
-

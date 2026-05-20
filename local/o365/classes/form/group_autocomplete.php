@@ -50,9 +50,9 @@ class group_autocomplete extends MoodleQuickForm_autocomplete {
                 'ajax' => 'local_o365/group_datasource',
                 'multiple' => false,
                 'casesensitive' => false,
-                'placeholder' => get_string('cohortsync_select_group', 'local_o365'),
+                'placeholder' => get_string('cohortsync_typetosearch', 'local_o365'),
                 'showsuggestions' => true,
-                'noselectionstring' => get_string('cohortsync_emptygroups', 'local_o365'),
+                'noselectionstring' => get_string('cohortsync_typetosearch', 'local_o365'),
         ];
 
         parent::__construct($elementName, $elementLabel, [], $validattributes);
