@@ -280,11 +280,11 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
     private static function create_token(int $userid): \stdClass {
         global $DB;
         $record = new \stdClass();
-        $record->oidcuniqid = "user@example.com";
-        $record->username = "user@example.com";
+        $record->oidcuniqid = "user{$userid}@example.com";
+        $record->username = "user{$userid}@example.com";
         $record->userid = $userid;
-        $record->oidcusername = "user@example.com";
-        $record->useridentifier = "user@example.com";
+        $record->oidcusername = "user{$userid}@example.com";
+        $record->useridentifier = "user{$userid}@example.com";
         $record->scope = "All";
         $record->tokenresource = "https://graph.microsoft.com";
         $record->authcode = "authcode123";

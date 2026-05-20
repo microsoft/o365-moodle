@@ -27,9 +27,18 @@
  * Installation script.
  */
 function xmldb_auth_oidc_install() {
+    global $DB;
+
     // Set the default value for the bindingusernameclaim setting.
     $bindingusernameclaimconfig = get_config('auth_oidc', 'bindingusernameclaim');
     if (empty($bindingusernameclaimconfig)) {
         set_config('bindingusernameclaim', 'auto', 'auth_oidc');
     }
+
+    // Create unique constraint on (oidcuniqid, tokenresource) to prevent duplicate tokens.
+    // Use CREATE UNIQUE INDEX which works on both MySQL and PostgreSQL.
+    // Note: PostgreSQL doesn't support column length prefixes, so we use full columns.
+    // For MySQL, the columns are naturally short enough (GUID + resource URL).
+    $sql = 'CREATE UNIQUE INDEX idx_oidc_unique ON {auth_oidc_token} (oidcuniqid, tokenresource)';
+    $DB->execute($sql);
 }
