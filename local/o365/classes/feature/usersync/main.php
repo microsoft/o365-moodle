@@ -376,19 +376,19 @@ class main {
      * @param array $remotetimezone Timezone data from Graph API
      * @param bool $printtrace
      * @param string|null $currenttimezone Pre-fetched user.timezone value for early-exit comparison.
-     * @return bool True if the timezone was changed, false if unchanged or invalid.
+     * @return array Array with keys 'changed' (bool) and 'timezone' (string IANA name, empty if invalid).
      */
     protected function apply_timezone(
         int $muserid,
         array $remotetimezone,
         bool $printtrace = false,
         ?string $currenttimezone = null
-    ): bool {
+    ): array {
         if (!is_array($remotetimezone) || empty($remotetimezone['value'])) {
             if ($printtrace) {
                 $this->mtrace('No timezone received.');
             }
-            return false;
+            return ['changed' => false, 'timezone' => ''];
         }
 
         $remotetimezonesetting = $remotetimezone['value'];
@@ -430,13 +430,13 @@ class main {
         $moodletimezone = clean_param($moodletimezone, PARAM_TIMEZONE);
 
         if (!$moodletimezone) {
-            return false;
+            return ['changed' => false, 'timezone' => ''];
         }
 
         // When the caller provides the current timezone (e.g. from the batch query),
         // we can short-circuit here and skip fetching the full user record.
         if ($currenttimezone !== null && $moodletimezone === $currenttimezone) {
-            return false;
+            return ['changed' => false, 'timezone' => $moodletimezone];
         }
 
         $existinguser = core_user::get_user($muserid);
@@ -447,7 +447,7 @@ class main {
             $this->mtrace('Timezone applied.');
         }
 
-        return true;
+        return ['changed' => true, 'timezone' => $moodletimezone];
     }
 
     /**
@@ -473,13 +473,13 @@ class main {
      * @param int $muserid The Moodle user ID
      * @param array $remotetimezone The timezone data from Microsoft Graph
      * @param string|null $currenttimezone Pre-fetched user.timezone value for early-exit comparison.
-     * @return bool True if the timezone was changed, false if unchanged or invalid.
+     * @return array Array with 'changed' (bool) and 'timezone' (string) keys.
      */
     public function apply_timezone_public(
         int $muserid,
         array $remotetimezone,
         ?string $currenttimezone = null
-    ): bool {
+    ): array {
         return $this->apply_timezone($muserid, $remotetimezone, false, $currenttimezone);
     }
 
