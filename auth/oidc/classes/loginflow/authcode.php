@@ -83,6 +83,39 @@ class authcode extends base {
     }
 
     /**
+     * Validate that a URL is local to this Moodle installation.
+     *
+     * @param string $urlstring The URL to validate (as string).
+     * @return bool True if URL is safe to use as a redirect destination.
+     */
+    protected function is_valid_local_url(string $urlstring): bool {
+        global $CFG;
+
+        // Parse both URLs to compare components reliably.
+        $wwwroot = parse_url($CFG->wwwroot);
+        $checkurl = parse_url($urlstring);
+
+        if (!$wwwroot || !$checkurl) {
+            return false;
+        }
+
+        // Scheme and host must match exactly.
+        if (($wwwroot['scheme'] ?? '') !== ($checkurl['scheme'] ?? '')) {
+            return false;
+        }
+        if (($wwwroot['host'] ?? '') !== ($checkurl['host'] ?? '')) {
+            return false;
+        }
+
+        // Port must match if present.
+        if (($wwwroot['port'] ?? null) !== ($checkurl['port'] ?? null)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Get an OIDC parameter.
      *
      * Validates the parameter against visible ASCII characters (0x21-0x7E), excluding spaces.
@@ -177,6 +210,14 @@ class authcode extends base {
             }
             // Initial login request.
             $stateparams = ['forceflow' => 'authcode'];
+            if (!empty($SESSION->wantsurl)) {
+                // Normalize to string in case it's a core\url object.
+                $wantsurl = ($SESSION->wantsurl instanceof url) ? $SESSION->wantsurl->out() : (string)$SESSION->wantsurl;
+                // Validate URL is local using safe domain comparison.
+                if ($this->is_valid_local_url($wantsurl)) {
+                    $stateparams['wantsurl'] = $wantsurl;
+                }
+            }
             $extraparams = [];
             if ($promptaconsent === true) {
                 $extraparams = ['prompt' => 'admin_consent'];
@@ -408,6 +449,18 @@ class authcode extends base {
         } else {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
+            if (!empty($additionaldata['wantsurl'])) {
+                // Normalize to string in case it's a core\url object from unserialization.
+                if ($additionaldata['wantsurl'] instanceof url) {
+                    $wantsurl = $additionaldata['wantsurl']->out();
+                } else {
+                    $wantsurl = (string)$additionaldata['wantsurl'];
+                }
+                // Validate URL is local using safe domain comparison.
+                if ($this->is_valid_local_url($wantsurl)) {
+                    $SESSION->wantsurl = $wantsurl;
+                }
+            }
             if ($USER->id && $DB->record_exists('auth_oidc_token', ['userid' => $USER->id])) {
                 $authoidsidrecord = new stdClass();
                 $authoidsidrecord->userid = $USER->id;
