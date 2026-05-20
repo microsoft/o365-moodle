@@ -618,101 +618,26 @@ class acp extends base {
             new url($this->url, ['mode' => 'coursesynccustom'])
         );
 
-        $totalcount = 0;
-        $perpage = 20;
-
-        $curpage = optional_param('page', 0, PARAM_INT);
-        $sort = optional_param('sort', '', PARAM_ALPHA);
-        $search = optional_param('search', '', PARAM_TEXT);
-        $sortdir = strtolower(optional_param('sortdir', 'asc', PARAM_ALPHA));
-
-        $headers = [
-            'fullname' => get_string('fullnamecourse'),
-            'shortname' => get_string('shortnamecourse'),
-            'visible' => get_string('coursevisibility'),
-        ];
-        if (empty($sort) || !isset($headers[$sort])) {
-            $sort = 'fullname';
-        }
-
-        if (!in_array($sortdir, ['asc', 'desc'], true)) {
-            $sortdir = 'asc';
-        }
-
-        $table = new html_table();
-        foreach ($headers as $hkey => $desc) {
-            $diffsortdir = ($sort === $hkey && $sortdir === 'asc') ? 'desc' : 'asc';
-            $linkattrs = ['mode' => 'coursesynccustom', 'sort' => $hkey, 'sortdir' => $diffsortdir];
-            $link = new url('/local/o365/acp.php', $linkattrs);
-
-            if ($sort === $hkey) {
-                $desc .= ' ' . $OUTPUT->pix_icon('t/' . 'sort_' . $sortdir, 'sort');
-            }
-
-            $table->head[] = html_writer::link($link, $desc);
-        }
-
-        $table->head[] = get_string('acp_coursesynccustom_enabled', 'local_o365');
-
-        $limitfrom = $curpage * $perpage;
-        $coursesid = [];
-
-        if (empty($search)) {
-            $sortdir = 1;
-            if ($sortdir == 'desc') {
-                $sortdir = -1;
-            }
-
-            $options = ['recursive' => true, 'sort' => [$sort => $sortdir], 'offset' => $limitfrom, 'limit' => $perpage];
-            $topcat = core_course_category::get(0);
-            $courses = $topcat->get_courses($options);
-            $totalcount = $topcat->get_courses_count($options);
-        } else {
-            $searchar = explode(' ', $search);
-            $courses = get_courses_search($searchar, 'c.' . $sort . ' ' . $sortdir, $curpage, $perpage, $totalcount);
-        }
-
-        $sdscourseids = \local_o365\feature\sds\utils::get_sds_course_ids();
-
         $synchiddencourses = get_config('local_o365', 'synchiddencourses');
+        $coursesyncmode = get_config('local_o365', 'coursesync');
+        $isallfeaturesenabledmode = ($coursesyncmode === 'onall');
+        $isdisabledmode = ($coursesyncmode === 'off');
+        $iseditable = !$isallfeaturesenabledmode && !$isdisabledmode;
 
-        foreach ($courses as $course) {
-            if ($course->id == SITEID) {
-                continue;
-            }
-
-            $coursesid[] = $course->id;
-            $isenabled = \local_o365\feature\coursesync\utils::is_course_sync_enabled($course->id);
-            $enabledname = 'course_' . $course->id . '_enabled';
-
-            $enablecheckboxattrs = ['class' => 'course_sync_enabled',
-                'onchange' => 'local_o365_set_coursesync(\'' . $course->id . '\', $(this).prop(\'checked\'), $(this))'];
-
-            $sdscoursetext = '';
-
-            if (in_array($course->id, $sdscourseids)) {
-                $enablecheckboxattrs['disabled'] = 'disabled';
-                $sdscoursetext = get_string('acp_coursesynccustom_sds_course', 'local_o365');
-            }
-
-            $courseurl = new url('/course/view.php', ['id' => $course->id]);
-
-            if ($course->visible) {
-                $visiblestr = get_string('show');
-            } else {
-                $visiblestr = get_string('hide');
-            }
-
-            $rowdata = [
-                html_writer::link($courseurl, $course->fullname),
-                $course->shortname,
-                $visiblestr,
-                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $sdscoursetext,
-            ];
-            $table->data[] = $rowdata;
-        }
+        // Build empty table for DataTables server-side mode.
+        $table = new html_table();
+        $table->id = 'coursesynccustom_table';
+        $table->attributes = ['class' => 'stripe hover', 'style' => 'width: 100%;'];
+        $table->head = [
+            get_string('fullnamecourse'),
+            get_string('shortnamecourse'),
+            get_string('coursevisibility'),
+            get_string('acp_coursesynccustom_enabled', 'local_o365'),
+        ];
+        $table->data = [];
 
         $PAGE->requires->jquery();
+        $PAGE->requires->css('/local/o365/lib/datatables/css/jquery.dataTables.min.css');
         $this->standard_header();
 
         $endpoint = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom_change', 'sesskey' => sesskey()]);
@@ -726,16 +651,19 @@ var local_o365_coursesync_bulk_set_enable = function(state) {
     $("input.course_sync_enabled:not(:disabled)").prop("checked", enabled);
 };
 
-var local_o365_coursesync_coursesid = ' . json_encode($coursesid) . ';
-
 var local_o365_coursesync_save = function() {
     var coursedata = {};
-    for (var i = 0; i < local_o365_coursesync_coursesid.length; i++) {
-        var courseid = local_o365_coursesync_coursesid[i];
-        var enabled = $("input[name=\'course_"+courseid+"_enabled\']").is(\':checked\');
-        var syncstatus = {enabled: enabled};
-        coursedata[courseid] = syncstatus;
-    }
+    // Collect all visible course checkboxes from the current DataTables page
+    $("input.course_sync_enabled").each(function() {
+        var name = $(this).attr("name");
+        var match = name.match(/course_(\d+)_enabled/);
+        if (match) {
+            var courseid = match[1];
+            var enabled = $(this).is(\':checked\');
+            var syncstatus = {enabled: enabled};
+            coursedata[courseid] = syncstatus;
+        }
+    });
     // Send data to server.
     $.ajax({
         url: \'' . $endpoint->out(false) . '\',
@@ -782,22 +710,43 @@ var local_o365_coursesync_all_set_feature = function(state) {
         echo $coursesynccustomisesettingheader->output_html(null);
 
         // Option to enable sync by default for new courses.
-        $enablefornewcoursesetting = new admin_setting_configcheckbox(
-            'local_o365/sync_new_course',
-            get_string('acp_coursesynccustom_new_course', 'local_o365'),
-            get_string('acp_coursesynccustom_new_course_desc', 'local_o365'),
-            '0'
-        );
-        echo $enablefornewcoursesetting->output_html(get_config('local_o365', 'sync_new_course'));
+        if ($iseditable) {
+            $enablefornewcoursesetting = new admin_setting_configcheckbox(
+                'local_o365/sync_new_course',
+                get_string('acp_coursesynccustom_new_course', 'local_o365'),
+                get_string('acp_coursesynccustom_new_course_desc', 'local_o365'),
+                '0'
+            );
+            echo $enablefornewcoursesetting->output_html(get_config('local_o365', 'sync_new_course'));
+        } else {
+            $syncnewcoursevalue = get_config('local_o365', 'sync_new_course');
+            echo html_writer::start_tag('div', ['class' => 'admin-setting']);
+            echo html_writer::tag('h3', get_string('acp_coursesynccustom_new_course', 'local_o365'));
+            echo html_writer::tag('p', get_string('acp_coursesynccustom_new_course_desc', 'local_o365'), ['class' => 'form-text']);
+            $synctext = $syncnewcoursevalue ? get_string('yes') : get_string('no');
+            echo html_writer::tag('p', $synctext, ['class' => 'form-control-static']);
+            echo html_writer::end_tag('div');
+        }
 
         // Allow course sync controlled at course level.
-        $controlpercoursesetting = new admin_setting_configcheckbox(
-            'local_o365/course_sync_per_course',
-            get_string('acp_coursesynccustom_controlled_per_course', 'local_o365'),
-            get_string('acp_coursesynccustom_controlled_per_course_desc', 'local_o365'),
-            '0'
-        );
-        echo $controlpercoursesetting->output_html(get_config('local_o365', 'course_sync_per_course'));
+        if ($iseditable) {
+            $controlpercoursesetting = new admin_setting_configcheckbox(
+                'local_o365/course_sync_per_course',
+                get_string('acp_coursesynccustom_controlled_per_course', 'local_o365'),
+                get_string('acp_coursesynccustom_controlled_per_course_desc', 'local_o365'),
+                '0'
+            );
+            echo $controlpercoursesetting->output_html(get_config('local_o365', 'course_sync_per_course'));
+        } else {
+            $percoursesyncvalue = get_config('local_o365', 'course_sync_per_course');
+            echo html_writer::start_tag('div', ['class' => 'admin-setting']);
+            echo html_writer::tag('h3', get_string('acp_coursesynccustom_controlled_per_course', 'local_o365'));
+            $percoursedesc = get_string('acp_coursesynccustom_controlled_per_course_desc', 'local_o365');
+            echo html_writer::tag('p', $percoursedesc, ['class' => 'form-text']);
+            $percoursetext = $percoursesyncvalue ? get_string('yes') : get_string('no');
+            echo html_writer::tag('p', $percoursetext, ['class' => 'form-control-static']);
+            echo html_writer::end_tag('div');
+        }
 
         echo html_writer::empty_tag('hr');
 
@@ -806,50 +755,39 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         // Option to enable all sync features on all pages.
         echo html_writer::start_tag('div', ['style' => 'display: block; margin: 1rem']);
+        $enableallattrs = $iseditable ? ['onclick' => 'local_o365_coursesync_all_set_feature(1)'] : ['disabled' => 'disabled'];
         echo html_writer::tag(
             'button',
             get_string('acp_coursesynccustom_enable_all', 'local_o365'),
-            ['onclick' => 'local_o365_coursesync_all_set_feature(1)']
+            $enableallattrs
         );
         echo html_writer::tag('span', '&nbsp;');
+        $disableallattrs = $iseditable ? ['onclick' => 'local_o365_coursesync_all_set_feature(0)'] : ['disabled' => 'disabled'];
         echo html_writer::tag(
             'button',
             get_string('acp_coursesynccustom_disable_all', 'local_o365'),
-            ['onclick' => 'local_o365_coursesync_all_set_feature(0)']
+            $disableallattrs
         );
         echo html_writer::end_tag('div');
 
         // Option to enable sync features on this page only.
         echo html_writer::start_tag('div', ['style' => 'display: block;margin: 1rem']);
+        $bulkenableattrs = $iseditable ? ['onclick' => 'local_o365_coursesync_bulk_set_enable(1)'] : ['disabled' => 'disabled'];
         echo html_writer::tag(
             'button',
             get_string('acp_coursesynccustom_bulk_enable', 'local_o365'),
-            ['onclick' => 'local_o365_coursesync_bulk_set_enable(1)']
+            $bulkenableattrs
         );
         echo html_writer::tag('span', '&nbsp;');
+        $bulkdisableattrs = $iseditable ? ['onclick' => 'local_o365_coursesync_bulk_set_enable(0)'] : ['disabled' => 'disabled'];
         echo html_writer::tag(
             'button',
             get_string('acp_coursesynccustom_bulk_disable', 'local_o365'),
-            ['onclick' => 'local_o365_coursesync_bulk_set_enable(0)']
+            $bulkdisableattrs
         );
         echo html_writer::end_tag('div');
 
         echo html_writer::empty_tag('hr');
-
-        // Search form.
-        echo html_writer::tag('h3', get_string('search'));
-        echo html_writer::start_tag('form', ['id' => 'coursesearchform', 'method' => 'get']);
-        echo html_writer::start_tag('fieldset', ['class' => 'coursesearchbox invisiblefieldset']);
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => 'coursesynccustom']);
-        echo html_writer::empty_tag(
-            'input',
-            ['type' => 'text', 'id' => 'coursesearchbox', 'size' => 30, 'name' => 'search', 'value' => s($search)]
-        );
-        echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go')]);
-        echo html_writer::div(html_writer::tag('strong', get_string('acp_coursesynccustom_searchwarning', 'local_o365')));
-        echo html_writer::end_tag('fieldset');
-        echo html_writer::end_tag('form');
-        echo html_writer::empty_tag('br');
 
         echo html_writer::tag('h5', get_string('courses'));
 
@@ -857,22 +795,158 @@ var local_o365_coursesync_all_set_feature = function(state) {
             echo html_writer::tag('p', get_string('acp_coursesync_hidden_course_note', 'local_o365'));
         }
 
+        // Output the table.
         echo html_writer::table($table);
+
+        // Initialize DataTables via AMD module.
+        $ajaxendpoint = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom_ajax']);
+        $PAGE->requires->js_call_amd('local_o365/coursesynccustom_datatables', 'init', [$ajaxendpoint->out(false), $iseditable]);
+
         echo html_writer::tag(
             'p',
             get_string('acp_coursesynccustom_savemessage', 'local_o365'),
             ['id' => 'acp_coursesynccustom_savemessage', 'style' => 'display: none; font-weight: bold; color: red']
         );
-        echo html_writer::tag(
-            'button',
-            get_string('savechanges'),
-            ['class' => 'buttonsbar', 'onclick' => 'local_o365_coursesync_save()']
-        );
 
-        $searchtext = optional_param('search', '', PARAM_TEXT);
-        $cururl = new url('/local/o365/acp.php', ['mode' => 'coursesynccustom', 'search' => $searchtext]);
-        echo $OUTPUT->paging_bar($totalcount, $curpage, $perpage, $cururl);
+        if (!$iseditable) {
+            if ($isdisabledmode) {
+                echo html_writer::tag(
+                    'p',
+                    get_string('acp_coursesynccustom_disabled_notice', 'local_o365'),
+                    ['style' => 'font-weight: bold; color: blue; margin: 1rem 0;']
+                );
+            } else if ($isallfeaturesenabledmode) {
+                echo html_writer::tag(
+                    'p',
+                    get_string('acp_coursesynccustom_all_enabled_notice', 'local_o365'),
+                    ['style' => 'font-weight: bold; color: blue; margin: 1rem 0;']
+                );
+            }
+            echo html_writer::tag(
+                'button',
+                get_string('savechanges'),
+                ['class' => 'buttonsbar', 'disabled' => 'disabled']
+            );
+        } else {
+            echo html_writer::tag(
+                'button',
+                get_string('savechanges'),
+                ['class' => 'buttonsbar', 'onclick' => 'local_o365_coursesync_save()']
+            );
+        }
+
         $this->standard_footer();
+    }
+
+    /**
+     * AJAX endpoint for DataTables server-side course loading.
+     *
+     * Returns paginated, filtered, and sorted course data in DataTables format.
+     */
+    public function mode_coursesynccustom_ajax() {
+        global $CFG;
+
+        // Get DataTables parameters from $_GET (Moodle's optional_param doesn't handle nested arrays).
+        $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
+        $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
+        $length = isset($_GET['length']) ? (int)$_GET['length'] : 50;
+        $searchvalue = isset($_GET['search']['value']) ? trim($_GET['search']['value']) : '';
+        $ordercolumn = isset($_GET['order'][0]['column']) ? (int)$_GET['order'][0]['column'] : 0;
+        $orderdir = isset($_GET['order'][0]['dir']) ? strtolower($_GET['order'][0]['dir']) : 'asc';
+
+        // Validate sort direction.
+        $orderdir = ($orderdir === 'desc') ? 'DESC' : 'ASC';
+
+        // Get all courses (recursive).
+        $topcat = core_course_category::get(0);
+        $options = ['recursive' => true];
+        $allcourses = $topcat->get_courses($options);
+
+        $sdscourseids = \local_o365\feature\sds\utils::get_sds_course_ids();
+
+        // Filter and search.
+        $filteredcourses = [];
+        foreach ($allcourses as $course) {
+            if ($course->id == SITEID) {
+                continue;
+            }
+
+            // Apply search filter (search in fullname and shortname).
+            if (!empty($searchvalue)) {
+                $fullname = strtolower($course->fullname);
+                $shortname = strtolower($course->shortname);
+                $search = strtolower($searchvalue);
+
+                if (strpos($fullname, $search) === false && strpos($shortname, $search) === false) {
+                    continue;
+                }
+            }
+
+            $filteredcourses[] = $course;
+        }
+
+        $recordsfiltered = count($filteredcourses);
+        $recordstotal = count($allcourses) - 1; // Exclude SITEID.
+
+        // Sort.
+        usort($filteredcourses, function ($a, $b) use ($ordercolumn, $orderdir) {
+            $result = 0;
+            switch ($ordercolumn) {
+                case 0: // Course full name.
+                    $result = strcasecmp($a->fullname, $b->fullname);
+                    break;
+                case 1: // Course short name.
+                    $result = strcasecmp($a->shortname, $b->shortname);
+                    break;
+                case 2: // Course visibility.
+                    $avis = $a->visible ? 1 : 0;
+                    $bvis = $b->visible ? 1 : 0;
+                    $result = $avis - $bvis;
+                    break;
+            }
+            return ($orderdir === 'DESC') ? -$result : $result;
+        });
+
+        // Paginate.
+        $paginatedcourses = array_slice($filteredcourses, $start, $length);
+
+        // Build response data.
+        $data = [];
+        foreach ($paginatedcourses as $course) {
+            $isenabled = \local_o365\feature\coursesync\utils::is_course_sync_enabled($course->id);
+            $enabledname = 'course_' . $course->id . '_enabled';
+
+            $enablecheckboxattrs = [
+                'class' => 'course_sync_enabled',
+                'onchange' => 'local_o365_set_coursesync(\'' . $course->id . '\', $(this).prop(\'checked\'), $(this))',
+            ];
+
+            $sdscoursetext = '';
+            if (in_array($course->id, $sdscourseids)) {
+                $enablecheckboxattrs['disabled'] = 'disabled';
+                $sdscoursetext = get_string('acp_coursesynccustom_sds_course', 'local_o365');
+            }
+
+            $courseurl = new url('/course/view.php', ['id' => $course->id]);
+            $visiblestr = $course->visible ? get_string('show') : get_string('hide');
+
+            $data[] = [
+                html_writer::link($courseurl, $course->fullname),
+                $course->shortname,
+                $visiblestr,
+                html_writer::checkbox($enabledname, 1, $isenabled, '', $enablecheckboxattrs) . ' ' . $sdscoursetext,
+            ];
+        }
+
+        // Return DataTables format JSON.
+        header('Content-Type: application/json');
+        echo json_encode([
+            'draw' => $draw,
+            'recordsTotal' => $recordstotal,
+            'recordsFiltered' => $recordsfiltered,
+            'data' => $data,
+        ]);
+        die;
     }
 
     /**
