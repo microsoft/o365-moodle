@@ -25,15 +25,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2025040825;
+$plugin->version = 2025040830;
 $plugin->requires = 2025040800;
-$plugin->release = '5.0.5';
+$plugin->release = '5.0.6';
 $plugin->component = 'local_office365';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [
-    'auth_oidc' => 2025040825,
-    'block_microsoft' => 2025040815,
-    'local_o365' => 2025040825,
-    'repository_office365' => 2025040825,
-    'theme_boost_o365teams' => 2025040825,
+    'auth_oidc' => 2025040830,
+    'block_microsoft' => 2025040830,
+    'local_o365' => 2025040830,
+    'repository_office365' => 2025040830,
+    'theme_boost_o365teams' => 2025040830,
 ];
