@@ -51,9 +51,9 @@ class cohort_autocomplete extends MoodleQuickForm_autocomplete {
                 'ajax' => 'local_o365/cohort_datasource',
                 'multiple' => false,
                 'casesensitive' => false,
-                'placeholder' => get_string('cohortsync_select_cohort', 'local_o365'),
+                'placeholder' => get_string('cohortsync_typetosearch_cohort', 'local_o365'),
                 'showsuggestions' => true,
-                'noselectionstring' => get_string('cohortsync_emptycohorts', 'local_o365'),
+                'noselectionstring' => get_string('cohortsync_typetosearch_cohort', 'local_o365'),
         ];
 
         parent::__construct($elementName, $elementLabel, [], $validattributes);
