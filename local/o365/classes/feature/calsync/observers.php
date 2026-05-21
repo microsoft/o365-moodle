@@ -118,8 +118,10 @@ class observers {
             return true;
         }
 
-        $calsync = new \local_o365\feature\calsync\main();
-        return $calsync->create_outlook_event_from_moodle_event($event->objectid);
+        $task = new \local_o365\feature\calsync\task\synccalendarevent();
+        $task->set_custom_data(['eventid' => $event->objectid, 'action' => 'create']);
+        \core\task\manager::queue_adhoc_task($task);
+        return true;
     }
 
     /**
@@ -133,8 +135,10 @@ class observers {
             return false;
         }
 
-        $calsync = new \local_o365\feature\calsync\main();
-        return $calsync->update_outlook_event($event->objectid);
+        $task = new \local_o365\feature\calsync\task\synccalendarevent();
+        $task->set_custom_data(['eventid' => $event->objectid, 'action' => 'update']);
+        \core\task\manager::queue_adhoc_task($task);
+        return true;
     }
 
     /**
@@ -148,11 +152,16 @@ class observers {
             return false;
         }
 
-        $calsync = new \local_o365\feature\calsync\main();
-
         $snapshot = $event->get_record_snapshot('event', $event->objectid);
 
-        return $calsync->delete_outlook_event($event->objectid, $snapshot);
+        $task = new \local_o365\feature\calsync\task\synccalendarevent();
+        $task->set_custom_data([
+            'eventid' => $event->objectid,
+            'action' => 'delete',
+            'snapshot' => (array)$snapshot,
+        ]);
+        \core\task\manager::queue_adhoc_task($task);
+        return true;
     }
 
     /**
