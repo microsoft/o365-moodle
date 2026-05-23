@@ -36,7 +36,6 @@ use core_text;
 use core_user;
 use moodle_exception;
 use core\url;
-use pix_icon;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -64,8 +63,9 @@ class authcode extends base {
             'name' => strip_tags(format_text($this->config->opname)),
         ];
         if ($showicon) {
+            global $OUTPUT;
             if (!empty($this->config->customicon)) {
-                $iconvalue = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+                $idpentry['iconurl'] = $OUTPUT->image_url('0/customicon', 'auth_oidc')->out(false);
             } else {
                 $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
                 $icon = explode(':', $icon);
@@ -75,9 +75,8 @@ class authcode extends base {
                     $iconcomponent = 'auth_oidc';
                     $iconname = 'o365';
                 }
-                $iconvalue = new pix_icon($iconname, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+                $idpentry['iconurl'] = $OUTPUT->image_url($iconname, $iconcomponent)->out(false);
             }
-            $idpentry['icon'] = $iconvalue;
         }
         return [$idpentry];
     }
