@@ -16,7 +16,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -40,8 +40,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        moodle-branch: ['MOODLE_501_STABLE']
-        php: [8.2, 8.3, 8.4]
+        moodle-branch: ['MOODLE_502_STABLE']
+        php: [8.3, 8.4]
         database: [pgsql, mariadb]
 
     steps:

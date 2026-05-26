@@ -18,7 +18,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -27,7 +27,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
 
       mariadb:
-        image: mariadb:10
+        image: mariadb:10.11
         env:
           MYSQL_USER: 'root'
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
@@ -43,8 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         folder: [auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote]
-        moodle-branch: ['MOODLE_501_STABLE']
-        php: [8.2, 8.3, 8.4]
+        moodle-branch: ['MOODLE_502_STABLE']
+        php: [8.3, 8.4]
         database: [pgsql, mariadb]
         include:
           - folder: auth/oidc
