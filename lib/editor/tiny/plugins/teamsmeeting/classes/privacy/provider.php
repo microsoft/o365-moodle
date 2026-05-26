@@ -27,8 +27,6 @@ namespace tiny_teamsmeeting\privacy;
 
 use core_privacy\local\metadata\collection;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy API implementation for the Teams Meeting plugin.
  *
@@ -36,7 +34,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements \core_privacy\local\metadata\provider {
-
     /**
      * Get the metadata about this system.
      *
@@ -44,8 +41,11 @@ class provider implements \core_privacy\local\metadata\provider {
      * @return collection The collection with information about the system.
      */
     public static function get_metadata(collection $collection): collection {
-        $collection->add_external_location_link('msteamsapp', ['userlang' => 'privacy:metadata:msteamsapp:userlang'],
-            'privacy:metadata:msteamsapp');
+        $collection->add_external_location_link(
+            'msteamsapp',
+            ['userlang' => 'privacy:metadata:msteamsapp:userlang'],
+            'privacy:metadata:msteamsapp'
+        );
 
         return $collection;
     }

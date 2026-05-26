@@ -42,13 +42,12 @@ require_once($CFG->dirroot . '/repository/url/lib.php');
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class plugininfo extends plugin implements plugin_with_buttons, plugin_with_configuration {
-
     /**
      * Return the buttons for the editor plugin.
      *
      * @return string[] List of buttons this plugin provides.
      */
-    public static function get_available_buttons() : array {
+    public static function get_available_buttons(): array {
         return [
             'tiny_teamsmeeting/plugin',
         ];
@@ -81,8 +80,12 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
      * @param editor|null $editor
      * @return array
      */
-    public static function get_plugin_configuration_for_context(context $context, array $options, array $fpoptions,
-        ?editor $editor = null) : array {
+    public static function get_plugin_configuration_for_context(
+        context $context,
+        array $options,
+        array $fpoptions,
+        ?editor $editor = null
+    ): array {
         global $CFG, $SESSION, $USER;
 
         // Add courseid parameter if we're in a course context or below.
