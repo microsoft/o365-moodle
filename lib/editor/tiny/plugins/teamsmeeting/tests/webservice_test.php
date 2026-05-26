@@ -32,8 +32,8 @@ global $CFG;
 require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 
 use externallib_advanced_testcase;
-use \context_course;
-use \context_system;
+use context_course;
+use context_system;
 
 /**
  * REST test case for tiny_teamsmeeting webservice.
@@ -42,51 +42,51 @@ use \context_system;
  * @copyright   2023 Enovation Solutions
  * @author      Oliwer Banach <oliwer.banach@enovation.ie>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers \tiny_teamsmeeting\external\get_meeting_details
  */
-class webservice_test extends externallib_advanced_testcase {
-
+final class webservice_test extends externallib_advanced_testcase {
     /**
      * Set up test data.
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
     /**
      * Test that users with capability can access Teams Meeting functionality.
      */
-    public function test_teamsmeeting_capability_with_access() {
+    public function test_teamsmeeting_capability_with_access(): void {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($user->id, $course->id, 'editingteacher');
 
         $this->setUser($user);
-        $context = \context_course::instance($course->id);
+        $context = context_course::instance($course->id);
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $context));
     }
 
     /**
      * Test that users without capability cannot access Teams Meeting functionality.
      */
-    public function test_teamsmeeting_capability_without_access() {
+    public function test_teamsmeeting_capability_without_access(): void {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
 
         $this->setUser($user);
-        $context = \context_course::instance($course->id);
+        $context = context_course::instance($course->id);
         $this->assertFalse(has_capability('tiny/teamsmeeting:add', $context));
     }
 
     /**
      * Test capability in system context.
      */
-    public function test_teamsmeeting_system_context_capability() {
+    public function test_teamsmeeting_system_context_capability(): void {
         $user = $this->getDataGenerator()->create_user();
 
         $this->setUser($user);
-        $context = \context_system::instance();
-        
+        $context = context_system::instance();
         $this->assignUserCapability('tiny/teamsmeeting:add', $context->id, null);
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $context));
     }
@@ -94,35 +94,37 @@ class webservice_test extends externallib_advanced_testcase {
     /**
      * Test capability in course context.
      */
-    public function test_teamsmeeting_course_context_capability() {
+    public function test_teamsmeeting_course_context_capability(): void {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($user->id, $course->id, 'editingteacher');
 
         $this->setUser($user);
-        $context = \context_course::instance($course->id);
+        $context = context_course::instance($course->id);
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $context));
     }
 
     /**
      * Test capability enforcement across different roles.
      */
-    public function test_teamsmeeting_capability_enforcement() {
+    public function test_teamsmeeting_capability_enforcement(): void {
         $course = $this->getDataGenerator()->create_course();
-        
         $roles = ['student', 'editingteacher', 'teacher'];
-        
         foreach ($roles as $role) {
             $user = $this->getDataGenerator()->create_user();
             $this->getDataGenerator()->enrol_user($user->id, $course->id, $role);
-            
             $this->setUser($user);
-            $context = \context_course::instance($course->id);
-            
+            $context = context_course::instance($course->id);
             if ($role === 'editingteacher') {
-                $this->assertTrue(has_capability('tiny/teamsmeeting:add', $context), "User with role $role should have capability");
+                $this->assertTrue(
+                    has_capability('tiny/teamsmeeting:add', $context),
+                    "User with role $role should have capability"
+                );
             } else {
-                $this->assertFalse(has_capability('tiny/teamsmeeting:add', $context), "User with role $role should not have capability");
+                $this->assertFalse(
+                    has_capability('tiny/teamsmeeting:add', $context),
+                    "User with role $role should not have capability"
+                );
             }
         }
     }
@@ -130,36 +132,29 @@ class webservice_test extends externallib_advanced_testcase {
     /**
      * Test capability in different contexts.
      */
-    public function test_teamsmeeting_context_variations() {
+    public function test_teamsmeeting_context_variations(): void {
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($user->id, $course->id, 'editingteacher');
 
         $this->setUser($user);
-        
-        $coursecontext = \context_course::instance($course->id);
+        $coursecontext = context_course::instance($course->id);
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $coursecontext));
-        
-        $systemcontext = \context_system::instance();
+        $systemcontext = context_system::instance();
         $this->assertFalse(has_capability('tiny/teamsmeeting:add', $systemcontext));
     }
 
     /**
      * Test capability inheritance from parent contexts.
      */
-    public function test_teamsmeeting_capability_inheritance() {
+    public function test_teamsmeeting_capability_inheritance(): void {
         $user = $this->getDataGenerator()->create_user();
-        
         $this->setUser($user);
-        
-        $systemcontext = \context_system::instance();
+        $systemcontext = context_system::instance();
         $this->assignUserCapability('tiny/teamsmeeting:add', $systemcontext->id, null);
-        
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $systemcontext));
-        
         $course = $this->getDataGenerator()->create_course();
-        $coursecontext = \context_course::instance($course->id);
-        
+        $coursecontext = context_course::instance($course->id);
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $coursecontext));
     }
 }
