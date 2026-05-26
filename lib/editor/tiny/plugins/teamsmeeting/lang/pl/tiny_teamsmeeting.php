@@ -25,6 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder -- The strings are organised by features.
+// phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment -- The strings are organised by features.
+
 $string['pluginname'] = 'Teams Meeting';
 $string['settings'] = 'Ustawienia Teams Meeting';
 
@@ -32,7 +35,7 @@ $string['settings'] = 'Ustawienia Teams Meeting';
 $string['settings_meetings_app_link'] = 'Link do Teams Meeting';
 $string['settings_meetings_app_link_desc'] = 'Link do aplikacji Teams Meeting';
 
-// iFrame.
+// IFrame.
 $string['iframe_meeting_options'] = 'Opcje spotkania';
 $string['iframe_meeting_created'] = 'Spotkanie online "{$a}" utworzone!';
 $string['iframe_go_to_meeting'] = 'Go to meeting';
@@ -50,3 +53,6 @@ $string['tiny_checkbox_new_window_label'] = 'Otwórz w nowym oknie';
 $string['privacy:metadata'] = 'Wtyczka Tiny Teams Meeting nie przechowuje żadnych danych osobowych.';
 $string['privacy:metadata:msteamsapp'] = 'Wtyczka Tiny Teams Meeting nie przechowuje żadnych danych. Jednak wysyła kod języka użytkownika do aplikacji Microsoft Teams, aby zapewnić interfejs użytkownika oparty na języku użytkownika.';
 $string['privacy:metadata:msteamsapp:userlang'] = 'Kod języka użytkownika jest wysyłany do aplikacji Microsoft Teams.';
+
+// phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
+// phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
