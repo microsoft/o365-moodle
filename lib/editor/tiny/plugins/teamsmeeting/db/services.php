@@ -32,6 +32,7 @@ $functions = [
         'description' => 'Get existing meeting details',
         'type' => 'read',
         'ajax' => true,
+        'capabilities' => 'tiny/teamsmeeting:add',
         'services' => ['tiny_teamsmeeting_service'],
     ],
 ];

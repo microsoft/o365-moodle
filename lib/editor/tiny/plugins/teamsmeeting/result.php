@@ -29,24 +29,31 @@ require_login();
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
+$meetinglink = optional_param('link', null, PARAM_URL);
+$title = optional_param('title', null, PARAM_TEXT);
+$preview = optional_param('preview', null, PARAM_CLEANHTML);
+$optionslink = optional_param('options', null, PARAM_URL);
+$session = optional_param('session', '', PARAM_ALPHANUM);
+
 if ($viewexisting) {
     require_sesskey();
-    $context = context_system::instance();
+    $viewrecord = $meetinglink
+        ? $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($meetinglink)])
+        : null;
+    $context = ($viewrecord && !empty($viewrecord->contextid))
+        ? context::instance_by_id($viewrecord->contextid)
+        : context_system::instance();
+    require_capability('tiny/teamsmeeting:add', $context);
 } else {
+    confirm_sesskey($session);
     if ($courseid) {
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
         $context = context_course::instance($course->id);
     } else {
         $context = context_system::instance();
     }
-
     require_capability('tiny/teamsmeeting:add', $context);
 }
-
-$meetinglink = optional_param('link', null, PARAM_URL);
-$title = optional_param('title', null, PARAM_TEXT);
-$preview = optional_param('preview', null, PARAM_CLEANHTML);
-$optionslink = optional_param('options', null, PARAM_URL);
 
 $meetingoptions = null;
 
@@ -62,24 +69,28 @@ if (!empty($preview)) {
         }
     }
 
-    $meetingdata = new stdClass();
-    $meetingdata->title = $title;
-    $meetingdata->link = $meetinglink;
-    $meetingdata->options = $meetingoptions;
-    $meetingdata->timecreated = time();
-    $meetingdata->userid = $USER->id;
-    $meetingdata->contextid = $context->id;
-    $DB->insert_record('tiny_teamsmeeting', $meetingdata);
-} else if (!empty($optionslink)) {
-    if (filter_var($optionslink, FILTER_VALIDATE_URL)) {
-        $meetingoptions = $optionslink;
+    $linkhash = sha1($meetinglink);
+    if (!$DB->record_exists('tiny_teamsmeeting', ['linkhash' => $linkhash])) {
+        $meetingdata = new stdClass();
+        $meetingdata->title = $title;
+        $meetingdata->link = $meetinglink;
+        $meetingdata->linkhash = $linkhash;
+        $meetingdata->options = $meetingoptions;
+        $meetingdata->timecreated = time();
+        $meetingdata->userid = $USER->id;
+        $meetingdata->contextid = $context->id;
+        $DB->insert_record('tiny_teamsmeeting', $meetingdata);
     }
+} else if (!empty($optionslink) && filter_var($optionslink, FILTER_VALIDATE_URL)) {
+    $meetingoptions = $optionslink;
 }
 
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url(new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', ['link' => $meetinglink, 'title' => $title,
-    'preview' => $preview, 'options' => $optionslink, 'courseid' => $courseid]));
+$PAGE->set_url(new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
+    'courseid'    => $courseid,
+    'viewexisting' => $viewexisting,
+]));
 
 // Build success SVG icon.
 $svgattributes = [
@@ -157,13 +168,31 @@ $divattributes = [
 ];
 echo html_writer::div($content, '', $divattributes);
 
-// Output postMessage script.
-$scriptcontent = "
-window.parent.postMessage({
-    action: 'meetingUrl',
-    url: '" . addslashes($meetinglink) . "'
-}, '*');
-";
+$parsed = parse_url($CFG->wwwroot);
+$origin = $parsed['scheme'] . '://' . $parsed['host'];
+if (!empty($parsed['port'])) {
+    $origin .= ':' . $parsed['port'];
+}
+
+$payload = json_encode(['action' => 'meetingUrl', 'url' => $meetinglink ?? '']);
+$encodedorigin = json_encode($origin);
+$scriptcontent = <<<JS
+(function() {
+    var moodleOrigin = {$encodedorigin};
+    if (window.parent === window) {
+        return;
+    }
+    try {
+        if (window.parent.location.origin !== moodleOrigin) {
+            return;
+        }
+    } catch (e) {
+        // Cross-origin parent: suppress the postMessage call.
+        return;
+    }
+    window.parent.postMessage({$payload}, moodleOrigin);
+}());
+JS;
 echo html_writer::script($scriptcontent);
 
 exit;

@@ -49,7 +49,7 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
      */
     public static function get_available_buttons(): array {
         return [
-            'tiny_teamsmeeting/plugin',
+            'tiny_teamsmeeting_createMeeting',
         ];
     }
 
