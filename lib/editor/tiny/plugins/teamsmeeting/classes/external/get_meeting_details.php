@@ -25,11 +25,15 @@
 
 namespace tiny_teamsmeeting\external;
 
+use context;
+use context_system;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use moodle_exception;
 use moodle_url;
+use required_capability_exception;
 use stdClass;
 
 /**
@@ -54,9 +58,15 @@ class get_meeting_details extends external_api {
      *
      * @param string $url
      * @return array
+     * @throws moodle_exception
+     * @throws required_capability_exception
      */
     public static function execute(string $url): array {
+        global $USER;
+
         $params = self::validate_parameters(self::execute_parameters(), ['url' => $url]);
+
+        self::validate_context(context_system::instance());
 
         $record = self::get_meeting($params['url']);
         if (!$record) {
@@ -64,6 +74,15 @@ class get_meeting_details extends external_api {
                 'status' => false,
                 'url' => (new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/error.php'))->out(),
             ];
+        }
+
+        $context = !empty($record->contextid)
+            ? context::instance_by_id($record->contextid)
+            : context_system::instance();
+        require_capability('tiny/teamsmeeting:add', $context);
+
+        if ((int) $record->userid !== (int) $USER->id) {
+            throw new moodle_exception('nopermissions', 'error', '', get_string('pluginname', 'tiny_teamsmeeting'));
         }
 
         $resulturl = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
@@ -80,7 +99,11 @@ class get_meeting_details extends external_api {
     }
 
     /**
-     * Find existing meeting in database by url.
+     * Find the existing meeting record in the database for the given URL.
+     *
+     * The lookup uses the indexed linkhash column (SHA1 of the URL) rather than
+     * a full TEXT comparison so it benefits from the unique index. Duplicates are
+     * prevented at insert time, so at most one row will match.
      *
      * @param string $url
      * @return stdClass|null
@@ -88,27 +111,8 @@ class get_meeting_details extends external_api {
     private static function get_meeting(string $url): ?stdClass {
         global $DB;
 
-        $sql = 'SELECT *
-                  FROM {tiny_teamsmeeting}
-                 WHERE ' . $DB->sql_compare_text('link') . ' = ' . $DB->sql_compare_text(':url') . ' ORDER BY id ASC';
-        $records = $DB->get_records_sql($sql, ['url' => $url]);
-
-        $count = count($records);
-        if ($count == 0) {
-            return null;
-        }
-
-        $result = reset($records);
-        if ($count > 1) {
-            array_shift($records);
-            $ids = [];
-            foreach ($records as $record) {
-                $ids[] = $record->id;
-            }
-            $DB->delete_records_list('tiny_teamsmeeting', 'id', $ids);
-        }
-
-        return $result;
+        $record = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($url)]);
+        return $record ?: null;
     }
 
     /**
