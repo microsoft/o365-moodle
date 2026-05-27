@@ -73,6 +73,10 @@ const LOCAL_O365_TAB_SDS = 3;
 const LOCAL_O365_TAB_TEAMS = 5;
 /** @var int configuration tab "Teams Moodle app". */
 const LOCAL_O365_TAB_MOODLE_APP = 6;
+/** @var int configuration tab "User Sync settings". */
+const LOCAL_O365_TAB_USERSYNC = 7;
+/** @var int configuration tab "Course Sync settings". */
+const LOCAL_O365_TAB_COURSESYNC = 8;
 
 // Group roles.
 /** @var int group role owner */
@@ -461,7 +465,8 @@ function local_o365_get_duplicate_emails() {
 function local_o365_get_settings_nav_html(string $currentpage): string {
     $pages = [
         'local_o365' => get_string('settings_header_setup', 'local_o365'),
-        'local_o365_sync' => get_string('settings_header_syncsettings', 'local_o365'),
+        'local_o365_usersync' => get_string('settings_header_usersync', 'local_o365'),
+        'local_o365_coursesync' => get_string('settings_header_coursesync', 'local_o365'),
         'local_o365_advanced' => get_string('settings_header_advanced', 'local_o365'),
         'local_o365_sds' => get_string('settings_header_sds', 'local_o365'),
         'local_o365_teams' => get_string('settings_header_teams', 'local_o365'),
