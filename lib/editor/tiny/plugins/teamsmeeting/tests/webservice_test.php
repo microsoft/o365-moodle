@@ -34,6 +34,7 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 use externallib_advanced_testcase;
 use context_course;
 use context_system;
+use tiny_teamsmeeting\external\get_meeting_details;
 
 /**
  * REST test case for tiny_teamsmeeting webservice.
@@ -156,5 +157,123 @@ final class webservice_test extends externallib_advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $coursecontext = context_course::instance($course->id);
         $this->assertTrue(has_capability('tiny/teamsmeeting:add', $coursecontext));
+    }
+
+    // Execute() behaviour tests.
+
+    /**
+     * execute() returns status=false and an error.php URL when no record matches.
+     */
+    public function test_execute_missing_record_returns_status_false(): void {
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'editingteacher');
+        $this->setUser($user);
+
+        $result = get_meeting_details::execute(
+            'https://teams.microsoft.com/l/meetup-join/does-not-exist'
+        );
+
+        $this->assertFalse($result['status']);
+        $this->assertStringContainsString('error.php', $result['url']);
+    }
+
+    /**
+     * execute() throws required_capability_exception when the caller lacks
+     * tiny/teamsmeeting:add in the meeting's stored context.
+     *
+     * Capability is checked before ownership, so the record is owned by the
+     * student to isolate this case from the ownership check.
+     */
+    public function test_execute_throws_on_missing_capability(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $course->id, 'student');
+        $context = context_course::instance($course->id);
+
+        $meetingurl = 'https://teams.microsoft.com/l/meetup-join/capability-test';
+        $DB->insert_record('tiny_teamsmeeting', (object) [
+            'userid' => $student->id,
+            'contextid' => $context->id,
+            'title' => 'Capability test meeting',
+            'link' => $meetingurl,
+            'linkhash' => sha1($meetingurl),
+            'options' => null,
+            'timecreated' => time(),
+        ]);
+
+        $this->setUser($student);
+
+        $this->expectException(\required_capability_exception::class);
+        get_meeting_details::execute($meetingurl);
+    }
+
+    /**
+     * execute() throws moodle_exception when a user with the capability tries
+     * to retrieve a meeting record they did not create.
+     */
+    public function test_execute_throws_on_wrong_owner(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $owner = $this->getDataGenerator()->create_user();
+        $other = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($owner->id, $course->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($other->id, $course->id, 'editingteacher');
+        $context = context_course::instance($course->id);
+
+        $meetingurl = 'https://teams.microsoft.com/l/meetup-join/ownership-test';
+        $DB->insert_record('tiny_teamsmeeting', (object) [
+            'userid' => $owner->id,
+            'contextid' => $context->id,
+            'title' => 'Ownership test meeting',
+            'link' => $meetingurl,
+            'linkhash' => sha1($meetingurl),
+            'options' => null,
+            'timecreated' => time(),
+        ]);
+
+        // Other user has the same capability but is not the record owner.
+        $this->setUser($other);
+
+        $this->expectException(\moodle_exception::class);
+        get_meeting_details::execute($meetingurl);
+    }
+
+    /**
+     * execute() returns status=true and a correctly constructed result.php URL
+     * when the caller is the record owner with the required capability.
+     */
+    public function test_execute_returns_correct_url_for_owner(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'editingteacher');
+        $context = context_course::instance($course->id);
+
+        $meetingurl = 'https://teams.microsoft.com/l/meetup-join/success-test';
+        $optionsurl = 'https://teams.microsoft.com/meetingOptions/success-test';
+        $DB->insert_record('tiny_teamsmeeting', (object) [
+            'userid' => $user->id,
+            'contextid' => $context->id,
+            'title' => 'Success test meeting',
+            'link' => $meetingurl,
+            'linkhash' => sha1($meetingurl),
+            'options' => $optionsurl,
+            'timecreated' => time(),
+        ]);
+
+        $this->setUser($user);
+
+        $result = get_meeting_details::execute($meetingurl);
+
+        $this->assertTrue($result['status']);
+        $this->assertStringContainsString('result.php', $result['url']);
+        $this->assertStringContainsString('viewexisting=1', $result['url']);
+        $this->assertStringContainsString(urlencode($meetingurl), $result['url']);
+        $this->assertStringContainsString('sesskey=', $result['url']);
     }
 }
