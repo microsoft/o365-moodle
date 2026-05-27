@@ -1641,5 +1641,39 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025040820.03, 'local', 'o365');
     }
 
+    if ($oldversion < 2025040830.01) {
+        // Add dedicated photohash field to local_o365_appassign.
+        // Previously the photoid column (originally the MS 365 photo etag ID) was repurposed
+        // to store a SHA-256 hash of the photo bytes, causing confusion with the field's stated
+        // purpose. This step introduces a separate, correctly-named column for the hash so that
+        // photoid retains its original meaning.
+        $table = new xmldb_table('local_o365_appassign');
+        $field = new xmldb_field(
+            'photohash',
+            XMLDB_TYPE_CHAR,
+            '64',
+            null,
+            null,
+            null,
+            null,
+            'photoid'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Migrate any SHA-256 hashes already stored in photoid into the new photohash column.
+        // A SHA-256 hex string is exactly 64 characters; a genuine MS 365 photo etag ID is
+        // typically much shorter, so length == 64 is a reliable discriminator.
+        $DB->execute(
+            "UPDATE {local_o365_appassign}
+                SET photohash = photoid, photoid = ''
+              WHERE " . $DB->sql_length('photoid') . " = 64"
+        );
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2025040830.01, 'local', 'o365');
+    }
+
     return true;
 }
