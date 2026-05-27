@@ -242,6 +242,7 @@ class main {
      * @param bool $printtrace Whether to output trace messages
      * @param int|null $appassignid Pre-fetched local_o365_appassign record ID, or null to look it up.
      * @param int|null $currentpicture Pre-fetched user.picture value, or null to look it up.
+     * @param string|null $photohash Pre-fetched photo hash, or null to look it up.
      * @return bool True if photo was updated, false otherwise
      */
     protected function apply_photo(
@@ -249,7 +250,8 @@ class main {
         $photodata,
         bool $printtrace = false,
         ?int $appassignid = null,
-        ?int $currentpicture = null
+        ?int $currentpicture = null,
+        ?string $photohash = null
     ) {
         global $DB, $CFG;
 
@@ -268,53 +270,34 @@ class main {
         $context = user::instance($muserid);
 
         if (!$photodata || $photodata === false) {
-            // No profile photo found.
+            // No profile photo found in M365.
             if ($printtrace) {
                 $this->mtrace('No photo received.');
             }
 
-            if (!empty($muser->picture)) {
-                // User has no photo. Deleting previous profile photo.
+            // Return true (state changed) only when there was an existing picture to clear.
+            // Returning false when the picture was already absent avoids spurious "changed" counts.
+            $result = !empty($muser->picture);
+
+            if ($result) {
+                // User had a photo; clear it now.
                 $fs = get_file_storage();
                 $fs->delete_area_files($context->id, 'user', 'icon');
                 $DB->set_field('user', 'picture', 0, ['id' => $muser->id]);
+
+                if ($printtrace) {
+                    $this->mtrace('Profile photo cleared.');
+                }
             }
 
-            $result = false;
-        } else {
-            // Both get_photo() and get_photos_batch() guarantee that $photodata is valid
-            // binary image data at this point (validated via is_valid_photo_binary() in
-            // unified.php), so no JSON-error guard is needed here.
-            $tempfile = tempnam($CFG->tempdir . '/', 'profileimage') . '.jpg';
-            if (!$fp = fopen($tempfile, 'w+b')) {
-                @unlink($tempfile);
-                return false;
-            }
-
-            fwrite($fp, $photodata);
-            fclose($fp);
-
-            $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
-            if ($newpicture != $muser->picture) {
-                $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
-                $result = true;
-            }
-
-            @unlink($tempfile);
-
-            if ($printtrace) {
-                $this->mtrace('Photo applied.');
-            }
-
-            // Update appassign record.
-            // When the batch query has already resolved the record ID, use it directly
-            // to skip the per-user SELECT. Fall back to a full lookup (insert or update)
-            // when the ID is unknown (e.g. new users with no existing appassign record,
-            // or callers outside the batch task such as assign_photo).
+            // Update appassign regardless of whether a picture existed, so that photoupdated
+            // reflects when M365 was last checked (enabling the expiry logic to skip future
+            // re-fetches) and any stale photohash is cleared to avoid false "unchanged" matches.
             if ($appassignid !== null) {
                 $record = new stdClass();
                 $record->id = $appassignid;
                 $record->photoupdated = time();
+                $record->photohash = null;
                 $DB->update_record('local_o365_appassign', $record);
             } else {
                 $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
@@ -324,6 +307,109 @@ class main {
                     $record->assigned = 0;
                 }
                 $record->photoupdated = time();
+                $record->photohash = null;
+                if (empty($record->id)) {
+                    $DB->insert_record('local_o365_appassign', $record);
+                } else {
+                    $DB->update_record('local_o365_appassign', $record);
+                }
+            }
+        } else if ($photohash !== null) {
+            // Photo hash provided: check if photo actually changed by comparing hashes.
+            $appassign = null;
+            if ($appassignid !== null) {
+                $appassign = $DB->get_record('local_o365_appassign', ['id' => $appassignid]);
+            } else {
+                $appassign = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
+            }
+
+            // If the stored photo hash matches the new hash, photo hasn't changed.
+            if ($appassign && $appassign->photohash === $photohash) {
+                if ($printtrace) {
+                    $this->mtrace('Photo unchanged (same hash).');
+                }
+                $result = false;
+            } else {
+                // Hash is different or no previous hash stored: photo has changed.
+                // Process and store the new photo.
+                $result = $this->process_new_photo($muserid, $photodata, $printtrace, $muser, $context, $photohash, $appassignid);
+            }
+        } else {
+            // Both get_photo() and get_photos_batch() guarantee that $photodata is valid
+            // binary image data at this point (validated via is_valid_photo_binary() in
+            // unified.php), so no JSON-error guard is needed here.
+            $result = $this->process_new_photo($muserid, $photodata, $printtrace, $muser, $context, $photohash, $appassignid);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Process new photo data by storing it and updating user record.
+     *
+     * @param int $muserid The Moodle user ID
+     * @param string $photodata Binary photo data
+     * @param bool $printtrace Whether to output trace messages
+     * @param stdClass $muser User object with id and picture fields
+     * @param context_user $context User context
+     * @param string|null $photohash SHA256 hash of the photo data
+     * @param int|null $appassignid ID of the appassign record
+     * @return bool True if photo was updated, false otherwise
+     */
+    protected function process_new_photo(
+        int $muserid,
+        string $photodata,
+        bool $printtrace,
+        stdClass $muser,
+        $context,
+        ?string $photohash,
+        ?int $appassignid
+    ): bool {
+        global $DB, $CFG;
+
+        $tempfile = tempnam($CFG->tempdir . '/', 'profileimage') . '.jpg';
+        if (!$fp = fopen($tempfile, 'w+b')) {
+            @unlink($tempfile);
+            return false;
+        }
+
+        fwrite($fp, $photodata);
+        fclose($fp);
+
+        $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
+        $result = false;
+        if ($newpicture != $muser->picture) {
+            $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
+            $result = true;
+        }
+
+        @unlink($tempfile);
+
+        if ($printtrace) {
+            $this->mtrace('Photo applied.');
+        }
+
+        // Update appassign record only if photo changed.
+        if ($result) {
+            if ($appassignid !== null) {
+                $record = new stdClass();
+                $record->id = $appassignid;
+                $record->photoupdated = time();
+                if ($photohash !== null) {
+                    $record->photohash = $photohash;
+                }
+                $DB->update_record('local_o365_appassign', $record);
+            } else {
+                $record = $DB->get_record('local_o365_appassign', ['muserid' => $muserid]);
+                if (empty($record)) {
+                    $record = new stdClass();
+                    $record->muserid = $muserid;
+                    $record->assigned = 0;
+                }
+                $record->photoupdated = time();
+                if ($photohash !== null) {
+                    $record->photohash = $photohash;
+                }
                 if (empty($record->id)) {
                     $DB->insert_record('local_o365_appassign', $record);
                 } else {
@@ -457,14 +543,17 @@ class main {
      * @param mixed $photodata The photo data (binary string or false for no photo)
      * @param int|null $appassignid Pre-fetched local_o365_appassign record ID, or null to look it up.
      * @param int|null $currentpicture Pre-fetched user.picture value, or null to look it up.
+     * @param string|null $photohash Pre-fetched photo hash, or null to look it up.
+     * @return bool True if photo was updated, false otherwise
      */
     public function apply_photo_public(
         int $muserid,
         $photodata,
         ?int $appassignid = null,
-        ?int $currentpicture = null
-    ) {
-        $this->apply_photo($muserid, $photodata, false, $appassignid, $currentpicture);
+        ?int $currentpicture = null,
+        ?string $photohash = null
+    ): bool {
+        return $this->apply_photo($muserid, $photodata, false, $appassignid, $currentpicture, $photohash);
     }
 
     /**
@@ -564,6 +653,12 @@ class main {
      */
     public function process_users_batched(callable $callback, $params = 'default'): int {
         $apiclient = $this->construct_user_api();
+
+        $groupfilter = $this->get_usersync_group_filter();
+        if (!empty($groupfilter)) {
+            return $apiclient->process_group_members_batched($groupfilter, $callback, $params);
+        }
+
         return $apiclient->process_users_batched($callback, $params);
     }
 
@@ -580,12 +675,26 @@ class main {
      */
     public function process_users_delta_batched(callable $callback, $params = 'default', ?string $deltatoken = null): array {
         $apiclient = $this->construct_user_api();
+
+        $groupfilter = $this->get_usersync_group_filter();
+        if (!empty($groupfilter)) {
+            return $apiclient->process_group_members_delta_batched($groupfilter, $callback, $params, $deltatoken);
+        }
+
         return $apiclient->process_users_delta_batched($callback, $params, $deltatoken);
     }
 
     /**
      * Process users in batches with minimal fields (id and accountEnabled only).
      * This method is optimized for suspend/reenable operations that only need user IDs.
+     *
+     * NOTE: This method intentionally does NOT apply the usersyncgroupfilter setting.
+     * Enabled-status sync (suspend/reenable/delete) operates across all Entra users so
+     * that accounts disabled or deleted in Microsoft 365 are always suspended in Moodle,
+     * even when the user was never in the configured sync group. This is a deliberate
+     * safety-net behaviour and is documented in the settings_usersyncgroupfilter_details
+     * language string. If you need group-filtered status checks, call
+     * process_users_batched() with the appropriate callback instead.
      *
      * @param callable $callback Function to call for each batch of users. Receives array of users as parameter.
      * @return int Total number of users processed
@@ -1309,6 +1418,7 @@ class main {
                      conn.id as existingconnectionid,
                      assign.assigned assigned,
                      assign.photoid photoid,
+                     assign.photohash photohash,
                      assign.photoupdated photoupdated,
                      obj.id AS objectid
                 FROM {user} u
@@ -1388,6 +1498,7 @@ class main {
                        conn.id as existingconnectionid,
                        assign.assigned assigned,
                        assign.photoid photoid,
+                       assign.photohash photohash,
                        assign.photoupdated photoupdated,
                        obj.id AS objectid
                   FROM {user} u
@@ -2282,6 +2393,15 @@ class main {
      *
      * Streams API results directly into database without accumulating in PHP memory.
      *
+     * This method deliberately fetches ALL Entra users regardless of any usersyncgroupfilter
+     * setting. The temporary table is consumed by the enabled-status sync task
+     * (userenabledstatussync), which must be able to suspend or delete Moodle accounts for
+     * users who have been disabled or removed from Entra ID — even if those users were never
+     * members of the configured sync group. Scoping this query to the group would create a
+     * blind spot where deleted non-member accounts are never suspended.
+     *
+     * See also: process_users_minimal_batched() and settings_usersyncgroupfilter_details.
+     *
      * @param string $temptablename The name of the temporary table to populate.
      */
     public function populate_entra_users_temp_table(string $temptablename): void {
@@ -2290,6 +2410,7 @@ class main {
         $apiclient = $this->construct_user_api();
         $insertcount = 0;
 
+        // Intentionally unfiltered — see method docblock for rationale.
         $apiclient->process_users_minimal_batched(function (array $entrabatch) use ($DB, $temptablename, &$insertcount) {
             $records = [];
             foreach ($entrabatch as $user) {
@@ -2414,5 +2535,15 @@ class main {
         }
 
         return [$reenabled, $suspended, $deleted];
+    }
+
+    /**
+     * Get the configured Microsoft 365 group filter for user sync.
+     *
+     * @return string|null The group object ID if configured, null otherwise
+     */
+    public function get_usersync_group_filter(): ?string {
+        $groupid = get_config('local_o365', 'usersyncgroupfilter');
+        return !empty($groupid) ? trim($groupid) : null;
     }
 }
