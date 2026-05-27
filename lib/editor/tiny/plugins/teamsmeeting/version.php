@@ -25,8 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$plugin->version = 2025100306;
+$plugin->requires = 2025040800;
+$plugin->release = '5.0.6';
 $plugin->component = 'tiny_teamsmeeting';
-$plugin->release = '1.5';
-$plugin->version = 2025100207;
-$plugin->requires = 2022112800;
 $plugin->maturity = MATURITY_STABLE;
