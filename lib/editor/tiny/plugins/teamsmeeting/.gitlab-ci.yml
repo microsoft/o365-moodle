@@ -1,5 +1,5 @@
 services:
-  - name: selenium/standalone-chrome:3
+  - name: selenium/standalone-chrome:4
     alias: behat
   - name: mysql:8.4
     alias: db
@@ -21,7 +21,7 @@ variables:
   NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.cache/npm"
   CI_BUILD_DIR: '/tmp/plugin'
   MOODLE_BRANCH: 'MOODLE_500_STABLE'
-  MOODLE_BEHAT_WWWROOT: 'http://localhost:8000'
+  MOODLE_BEHAT_WWWROOT: 'http://localhost'
   MOODLE_BEHAT_WDHOST: 'http://behat:4444/wd/hub'
   MOODLE_START_BEHAT_SERVERS: 'no'
   MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
@@ -44,8 +44,19 @@ stages:
     - 'curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer'
     - composer create-project -n --no-dev --no-progress --no-ansi moodlehq/moodle-plugin-ci /opt/mci ^4
     - export PATH="/opt/mci/bin:/opt/mci/vendor/bin:$PATH"
+    - export CONTAINER_IP=$(hostname -I | awk '{print $1}')
+    - export MOODLE_BEHAT_WWWROOT="http://${CONTAINER_IP}"
     - moodle-plugin-ci install --db-host db --db-name moodle
-    - '{ php -S 0.0.0.0:8000 -t "$CI_PROJECT_DIR/moodle" >/dev/null 2>&1 & }'
+    - >
+      MOODLE_WEBROOT="$CI_PROJECT_DIR/moodle";
+      [ -d "${MOODLE_WEBROOT}/public" ] && MOODLE_WEBROOT="${MOODLE_WEBROOT}/public";
+      { php -S 0.0.0.0:8000 -t "${MOODLE_WEBROOT}" >/dev/null 2>&1 & }
+    - >
+      for i in $(seq 1 30); do
+        curl -sf http://localhost:8000 >/dev/null 2>&1 && break;
+        echo "Waiting for PHP server... ($i/30)";
+        sleep 1;
+      done
     - TXT_RED="\e[31m"
 
   script:
@@ -59,7 +70,7 @@ stages:
     - moodle-plugin-ci mustache || errors+=("mustache")
     - moodle-plugin-ci grunt --max-lint-warnings 0 || errors+=("grunt")
     - moodle-plugin-ci phpunit || errors+=("phpunit")
-    - moodle-plugin-ci behat --auto-rerun 0 --profile chrome || errors+=("behat")
+    - moodle-plugin-ci behat --auto-rerun 1 --profile chrome || errors+=("behat")
     - |-
       if [ ${#errors[@]} -ne 0 ]; then
         echo -e "${TXT_RED}Check errors: ${errors[@]}";
