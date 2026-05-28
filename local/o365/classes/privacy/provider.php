@@ -97,6 +97,7 @@ class provider implements
                 'muserid',
                 'assigned',
                 'photoid',
+                'photohash',
                 'photoupdated',
             ],
             'local_o365_matchqueue' => [
