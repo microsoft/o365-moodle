@@ -134,6 +134,12 @@ class usersync extends scheduled_task {
         // List users batch size.
         $this->mtrace('Graph API list users batch size: ' . unified::GRAPH_API_BATCH_SIZE . '.', 1);
 
+        // Check for group filter.
+        $groupfilter = $usersync->get_usersync_group_filter();
+        if (!empty($groupfilter)) {
+            $this->mtrace('User sync group filter enabled: ' . $groupfilter, 1);
+        }
+
         // Initialize sync cache ONCE before batch processing to avoid redundant queries.
         $this->mtrace('');
         $this->mtrace('Initializing user sync cache...');
@@ -159,6 +165,15 @@ class usersync extends scheduled_task {
                 $this->mtrace('');
             } catch (moodle_exception $e) {
                 $this->mtrace('Error in full usersync: ' . $e->getMessage());
+                if (!empty($groupfilter)) {
+                    $this->mtrace('');
+                    $this->mtrace('NOTE: Group filter is enabled (Group ID: ' . $groupfilter . ')');
+                    $this->mtrace('This error may indicate:');
+                    $this->mtrace('  - The group ID is invalid or does not exist');
+                    $this->mtrace('  - The application does not have permission to access the group');
+                    $this->mtrace('  - The group was deleted or the ID changed');
+                    $this->mtrace('Please verify the group ID is correct and the application has the necessary permissions.');
+                }
                 utils::debug($e->getMessage(), __METHOD__, $e);
             }
         } else {
@@ -175,6 +190,15 @@ class usersync extends scheduled_task {
                 $this->mtrace('');
             } catch (moodle_exception $e) {
                 $this->mtrace('Error in delta usersync: ' . $e->getMessage());
+                if (!empty($groupfilter)) {
+                    $this->mtrace('');
+                    $this->mtrace('NOTE: Group filter is enabled (Group ID: ' . $groupfilter . ')');
+                    $this->mtrace('This error may indicate:');
+                    $this->mtrace('  - The group ID is invalid or does not exist');
+                    $this->mtrace('  - The application does not have permission to access the group');
+                    $this->mtrace('  - The group was deleted or the ID changed');
+                    $this->mtrace('Please verify the group ID is correct and the application has the necessary permissions.');
+                }
                 utils::debug($e->getMessage(), __METHOD__, $e);
                 $this->mtrace('Resetting delta tokens.');
                 $deltatoken = null;
@@ -258,8 +282,9 @@ class usersync extends scheduled_task {
         $this->mtrace('Sync options:', 1);
 
         foreach ($syncoptions as $option => $value) {
-            // Skip photo and timezone sync - they're handled by separate task.
-            if ($option === 'photosync' || $option === 'tzsync') {
+            // Skip all photo and timezone sync options (both scheduled and on-login variants) —
+            // they are handled by the dedicated photoandtimezonesync task, not this one.
+            if ($option === 'photosync' || $option === 'photosynconlogin' || $option === 'tzsync' || $option === 'tzsynconlogin') {
                 continue;
             }
 
