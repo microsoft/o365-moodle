@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        folder: [auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote]
+        folder: [auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote, lib/editor/tiny/plugins/teamsmeeting]
         moodle-branch: ['MOODLE_501_STABLE']
         php: [8.2, 8.3, 8.4]
         database: [pgsql, mariadb]
@@ -59,6 +59,7 @@ jobs:
             internal-deps: "local/onenote"
           - folder: mod/assign/submission/onenote
             internal-deps: "local/onenote"
+          - folder: lib/editor/tiny/plugins/teamsmeeting
 
     steps:
     - name: Check out sub repository code
