@@ -112,7 +112,7 @@ if ($form->is_cancelled()) {
     switch ($fromform->clientauthmethod) {
         case AUTH_OIDC_AUTH_METHOD_SECRET:
             $configstosave[] = 'clientsecret';
-            if ($fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER && auth_oidc_is_local_365_installed()) {
+            if (isset($fromform->secretexpiryrecipients)) {
                 $configstosave[] = 'secretexpiryrecipients';
             }
             break;
