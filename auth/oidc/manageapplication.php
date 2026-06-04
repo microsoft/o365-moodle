@@ -112,7 +112,9 @@ if ($form->is_cancelled()) {
     switch ($fromform->clientauthmethod) {
         case AUTH_OIDC_AUTH_METHOD_SECRET:
             $configstosave[] = 'clientsecret';
-            $configstosave[] = 'secretexpiryrecipients';
+            if (isset($fromform->secretexpiryrecipients)) {
+                $configstosave[] = 'secretexpiryrecipients';
+            }
             break;
         case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
             $configstosave[] = 'clientcertsource';
