@@ -274,13 +274,14 @@ class main {
             }
 
             if (!empty($muser->picture)) {
-                // User has no photo. Deleting previous profile photo.
+                // User had a photo — clear it.
                 $fs = get_file_storage();
                 $fs->delete_area_files($context->id, 'user', 'icon');
                 $DB->set_field('user', 'picture', 0, ['id' => $muser->id]);
+                $result = true;
+            } else {
+                $result = false;
             }
-
-            $result = false;
         } else {
             // Both get_photo() and get_photos_batch() guarantee that $photodata is valid
             // binary image data at this point (validated via is_valid_photo_binary() in
@@ -294,10 +295,27 @@ class main {
             fwrite($fp, $photodata);
             fclose($fp);
 
+            // Capture the existing f1 file content hash before process_new_icon
+            // deletes it. process_new_icon always returns a new file ID even for
+            // identical image content, so $newpicture != $muser->picture is not a
+            // reliable content-change indicator — we must compare hashes instead.
+            $fs = get_file_storage();
+            $existingfile = $fs->get_file($context->id, 'user', 'icon', 0, '/', 'f1.png')
+                         ?: $fs->get_file($context->id, 'user', 'icon', 0, '/', 'f1.jpg');
+            $existinghash = $existingfile ? $existingfile->get_contenthash() : null;
+
             $newpicture = process_new_icon($context, 'user', 'icon', 0, $tempfile);
-            if ($newpicture != $muser->picture) {
+
+            if ($newpicture) {
+                // Always update user.picture because process_new_icon deleted the old
+                // files — the old ID is now stale regardless of content equality.
                 $DB->set_field('user', 'picture', $newpicture, ['id' => $muser->id]);
-                $result = true;
+
+                // Determine whether content actually changed by comparing hashes.
+                $newfile = $fs->get_file($context->id, 'user', 'icon', 0, '/', 'f1.png')
+                        ?: $fs->get_file($context->id, 'user', 'icon', 0, '/', 'f1.jpg');
+                $newhash = $newfile ? $newfile->get_contenthash() : null;
+                $result = ($existinghash !== $newhash);
             }
 
             @unlink($tempfile);
@@ -463,8 +481,8 @@ class main {
         $photodata,
         ?int $appassignid = null,
         ?int $currentpicture = null
-    ) {
-        $this->apply_photo($muserid, $photodata, false, $appassignid, $currentpicture);
+    ): bool {
+        return $this->apply_photo($muserid, $photodata, false, $appassignid, $currentpicture);
     }
 
     /**
