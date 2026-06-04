@@ -2670,36 +2670,36 @@ class unified extends o365api {
      * Get timezones for multiple users using batch requests.
      * Microsoft Graph allows up to 20 requests per batch.
      *
-     * @param array $upns Array of user principal names
-     * @return array Associative array with UPN as key and timezone data as value
+     * @param array $objectids Array of Azure AD object IDs (GUIDs)
+     * @return array Associative array with objectid as key and timezone data as value
      */
-    public function get_timezones_batch(array $upns): array {
-        if (empty($upns)) {
+    public function get_timezones_batch(array $objectids): array {
+        if (empty($objectids)) {
             return [];
         }
 
         $results = [];
-        $chunks = array_chunk($upns, 20); // Max 20 requests per batch.
+        $chunks = array_chunk($objectids, 20); // Max 20 requests per batch.
 
         foreach ($chunks as $chunk) {
             $batchrequests = [];
-            $idtoupnmap = [];
+            $idtoobjectidmap = [];
 
-            // Pre-initialise every UPN to false so that UPNs absent from the batch
-            // response (partial API failure) are treated as "no timezone" rather than
-            // silently skipped by the caller's isset() / empty() branch logic.
-            foreach ($chunk as $upn) {
-                $results[$upn] = false;
+            // Pre-initialise every objectid to false so that objectids absent from
+            // the batch response (partial API failure) are treated as "no timezone"
+            // rather than silently skipped by the caller's isset() / empty() branch.
+            foreach ($chunk as $objectid) {
+                $results[$objectid] = false;
             }
 
             // Build batch request.
-            foreach ($chunk as $index => $upn) {
+            foreach ($chunk as $index => $objectid) {
                 $requestid = (string)($index + 1);
-                $idtoupnmap[$requestid] = $upn;
+                $idtoobjectidmap[$requestid] = $objectid;
                 $batchrequests[] = [
                     'id' => $requestid,
                     'method' => 'GET',
-                    'url' => '/users/' . urlencode($upn) . '/mailboxSettings/timeZone',
+                    'url' => '/users/' . urlencode($objectid) . '/mailboxSettings/timeZone',
                 ];
             }
 
@@ -2712,19 +2712,19 @@ class unified extends o365api {
                 if (!empty($batchresponse['responses']) && is_array($batchresponse['responses'])) {
                     foreach ($batchresponse['responses'] as $individualresponse) {
                         $requestid = $individualresponse['id'];
-                        $upn = $idtoupnmap[$requestid];
+                        $objectid = $idtoobjectidmap[$requestid];
 
                         if ($individualresponse['status'] === 200 && !empty($individualresponse['body'])) {
-                            $results[$upn] = $individualresponse['body'];
+                            $results[$objectid] = $individualresponse['body'];
                         } else {
                             // Request failed or returned non-200 status.
-                            $results[$upn] = false;
+                            $results[$objectid] = false;
                         }
                     }
                 }
             } catch (moodle_exception $e) {
                 // Batch call itself failed; pre-initialisation above already set all
-                // UPNs in this chunk to false, so no additional work needed here.
+                // objectids in this chunk to false, so no additional work needed here.
                 debugging('Batch timezone request failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
         }
