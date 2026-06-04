@@ -141,20 +141,24 @@ class photoandtimezonesync extends scheduled_task {
 
             $this->mtrace('Batch ' . ($batchnum + 1) . '/' . $numbatches . ' (offset: ' . $offset . ')...');
 
-            // Fetch batch of users. LEFT JOIN with appassign to check if assigned, but only
-            // get the first appassign id per user to avoid duplicate rows.
+            // Azure AD Object ID (GUID) is used as the photo API identifier because
+            // o365name may contain a bare username on some installations, which Graph rejects
+            // with HTTP 400. A GUID is always a valid user identifier for the Graph API.
+            // local_o365_appassign.muserid has a UNIQUE index, so a direct LEFT JOIN is safe.
             $sql = "SELECT obj.moodleid AS muserid,
-                           obj.o365name AS upn,
+                           obj.objectid,
                            u.username,
                            u.picture AS currentpicture,
                            u.timezone AS currenttimezone,
-                           (SELECT id FROM {local_o365_appassign}
-                             WHERE muserid = obj.moodleid LIMIT 1) AS appassignid
+                           appassign.id AS appassignid
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
+                 LEFT JOIN {local_o365_appassign} appassign ON appassign.muserid = obj.moodleid
                      WHERE obj.type = 'user'
                        AND u.deleted = 0
                        AND u.suspended = 0
+                       AND obj.objectid IS NOT NULL
+                       AND obj.objectid != ''
                        AND obj.o365name IS NOT NULL
                        AND obj.o365name != ''
                   ORDER BY obj.moodleid";
@@ -169,29 +173,28 @@ class photoandtimezonesync extends scheduled_task {
             $this->mtrace('Loaded ' . count($users) . ' users from database.', 1);
 
             // Separate users by what needs updating.
-            $upnsforphotosync = [];
-            $upnsfortzsync = [];
+            // Both photos and timezones use objectid (GUID) as the API identifier.
+            $objectidsforphotosync = [];
+            $objectidsfortzsync = [];
 
             foreach ($users as $user) {
-                // Sync photos for all users if photo sync is enabled.
                 if ($photosyncenabled) {
-                    $upnsforphotosync[] = $user->upn;
+                    $objectidsforphotosync[] = $user->objectid;
                 }
 
-                // Sync timezone if enabled.
                 if ($tzsynceenabled) {
-                    $upnsfortzsync[] = $user->upn;
+                    $objectidsfortzsync[] = $user->objectid;
                 }
             }
 
             if ($photosyncenabled) {
-                $this->mtrace('Users for photo sync: ' . count($upnsforphotosync), 1);
-                $totalusersforphotosync += count($upnsforphotosync);
+                $this->mtrace('Users for photo sync: ' . count($objectidsforphotosync), 1);
+                $totalusersforphotosync += count($objectidsforphotosync);
             }
 
             if ($tzsynceenabled) {
-                $this->mtrace('Users for timezone sync: ' . count($upnsfortzsync), 1);
-                $totalusersfortzsync += count($upnsfortzsync);
+                $this->mtrace('Users for timezone sync: ' . count($objectidsfortzsync), 1);
+                $totalusersfortzsync += count($objectidsfortzsync);
             }
 
             // Construct the API client once per batch. Both the timezone and photo
@@ -199,21 +202,21 @@ class photoandtimezonesync extends scheduled_task {
             $apiclient = null;
 
             // Batch fetch timezones for users that need it.
-            $timezonesbyupn = [];
-            if ($tzsynceenabled && !empty($upnsfortzsync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
+            $timezonesbyobjectid = [];
+            if ($tzsynceenabled && !empty($objectidsfortzsync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     $this->mtrace('Fetching timezones...', 1);
                     $apiclient = $usersync->construct_user_api();
-                    $timezonesbyupn = $apiclient->get_timezones_batch($upnsfortzsync);
-                    $this->mtrace('Fetched ' . count(array_filter($timezonesbyupn)) . ' timezones from API.', 2);
+                    $timezonesbyobjectid = $apiclient->get_timezones_batch($objectidsfortzsync);
+                    $this->mtrace('Fetched ' . count(array_filter($timezonesbyobjectid)) . ' timezones from API.', 2);
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error fetching timezones: ' . $e->getMessage(), 1);
                     utils::debug($e->getMessage(), __METHOD__, $e);
                 }
             }
 
-            // Batch fetch photos for all users.
-            $photosbyupn = [];
+            // Batch fetch photos for all users, keyed by objectid.
+            $photosbyobjectid = [];
             $photofetchstats = [
                 'success' => 0,
                 'not_found' => 0,
@@ -222,16 +225,16 @@ class photoandtimezonesync extends scheduled_task {
                 'batch_error' => 0,
             ];
 
-            if ($photosyncenabled && !empty($upnsforphotosync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
+            if ($photosyncenabled && !empty($objectidsforphotosync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     $this->mtrace('Fetching photos...', 1);
                     if ($apiclient === null) {
                         $apiclient = $usersync->construct_user_api();
                     }
-                    $photosbyupn = $apiclient->get_photos_batch($upnsforphotosync);
+                    $photosbyobjectid = $apiclient->get_photos_batch($objectidsforphotosync);
 
                     // Count results by status.
-                    foreach ($photosbyupn as $response) {
+                    foreach ($photosbyobjectid as $response) {
                         if (is_array($response) && isset($response['status'])) {
                             $status = $response['status'];
                             if (isset($photofetchstats[$status])) {
@@ -252,7 +255,7 @@ class photoandtimezonesync extends scheduled_task {
                     }
                     if ($photofetchstats['batch_error'] > 0) {
                         $this->mtrace('Missing from batch response: ' . $photofetchstats['batch_error'] .
-                            ' (requested: ' . count($upnsforphotosync) . ')', 2);
+                            ' (requested: ' . count($objectidsforphotosync) . ')', 2);
                     }
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error fetching photos: ' . $e->getMessage(), 1);
@@ -264,57 +267,120 @@ class photoandtimezonesync extends scheduled_task {
             $batchphotoschanged = 0;
             $batchtimezoneschanged = 0;
 
-            if ($photosyncenabled && !empty($photosbyupn)) {
+            if ($photosyncenabled && !empty($photosbyobjectid)) {
                 $this->mtrace('Applying photos...', 1);
+
+                // Batch-fetch stored raw-photo hashes so we can skip process_new_icon
+                // entirely for users whose photo binary hasn't changed since last sync.
+                // Chunk to 1000 IDs per query to stay within SQL Server's 2100-parameter limit.
+                $userids = array_keys($users);
+                $storedphotohashes = [];
+                foreach (array_chunk($userids, 1000) as $chunkedids) {
+                    [$insql, $inparams] = $DB->get_in_or_equal($chunkedids);
+                    $chunk = $DB->get_records_sql(
+                        "SELECT userid, value FROM {user_preferences}
+                          WHERE userid $insql AND name = 'local_o365_photo_hash'",
+                        $inparams
+                    );
+                    $storedphotohashes += $chunk;
+                }
 
                 foreach ($users as $user) {
                     // Apply photo if available, successful, or needs clearing.
-                    if (isset($photosbyupn[$user->upn])) {
-                        $response = $photosbyupn[$user->upn];
+                    if (isset($photosbyobjectid[$user->objectid])) {
+                        $response = $photosbyobjectid[$user->objectid];
                         // Handle new format (status array).
                         $shouldapply = false;
                         $photodata = false;
                         $logmessage = '';
+                        $incominghash = null;
 
                         if (is_array($response) && isset($response['status'])) {
                             $status = $response['status'];
                             if ($status === 'success') {
+                                $incominghash = sha1($response['data']);
+                                $storedhash = isset($storedphotohashes[$user->muserid])
+                                    ? $storedphotohashes[$user->muserid]->value
+                                    : null;
+                                if ($storedhash === $incominghash) {
+                                    // Raw photo binary unchanged — skip image processing.
+                                    continue;
+                                }
                                 $photodata = $response['data'];
                                 $shouldapply = true;
                                 $logmessage = 'Photo changed.';
                             } else if ($status === 'not_found') {
+                                if (empty($user->currentpicture)) {
+                                    // Already has no photo — nothing to clear.
+                                    continue;
+                                }
                                 $photodata = false;
                                 $shouldapply = true;
                                 $logmessage = 'Photo cleared (not in M365).';
                             }
                         } else if ($response !== false) {
                             // Fallback for old format compatibility.
+                            $incominghash = sha1($response);
+                            $storedhash = $storedphotohashes[$user->muserid]->value ?? null;
+                            if ($storedhash === $incominghash) {
+                                continue;
+                            }
                             $photodata = $response;
                             $shouldapply = true;
                             $logmessage = 'Photo changed.';
                         }
 
                         if ($shouldapply) {
+                            $applysucceeded = false;
                             try {
-                                $usersync->apply_photo_public(
+                                $changed = $usersync->apply_photo_public(
                                     $user->muserid,
                                     $photodata,
                                     $user->appassignid ?? null,
                                     $user->currentpicture ?? null
                                 );
-                                $this->mtrace('User "' . $user->username . '": ' . $logmessage, 2);
-                                $batchphotoschanged++;
+                                if ($changed) {
+                                    $this->mtrace('User "' . $user->username . '": ' . $logmessage, 2);
+                                    $batchphotoschanged++;
+                                }
+                                $applysucceeded = true;
                             } catch (moodle_exception $e) {
                                 $this->mtrace('User "' . $user->username . '": Error applying photo - ' .
                                     $e->getMessage(), 2);
                                 utils::debug($e->getMessage(), __METHOD__, $e);
+                            }
+                            // Manage stored hash outside the try/catch. Direct DB write
+                            // avoids Moodle's static preference cache accumulating across
+                            // large batches; $storedphotohashes tells us whether to INSERT,
+                            // UPDATE, or DELETE without an extra SELECT.
+                            if ($applysucceeded && $incominghash !== null) {
+                                // Photo was applied — store/update the hash for future runs.
+                                if (isset($storedphotohashes[$user->muserid])) {
+                                    $DB->set_field('user_preferences', 'value', $incominghash, [
+                                        'userid' => $user->muserid,
+                                        'name'   => 'local_o365_photo_hash',
+                                    ]);
+                                } else {
+                                    $DB->insert_record('user_preferences', (object)[
+                                        'userid' => $user->muserid,
+                                        'name'   => 'local_o365_photo_hash',
+                                        'value'  => $incominghash,
+                                    ]);
+                                }
+                            } else if ($applysucceeded && $changed && isset($storedphotohashes[$user->muserid])) {
+                                // Photo was cleared — remove stale hash so a future re-upload
+                                // with identical binary content is not skipped by the hash check.
+                                $DB->delete_records('user_preferences', [
+                                    'userid' => $user->muserid,
+                                    'name'   => 'local_o365_photo_hash',
+                                ]);
                             }
                         }
                     }
                 }
             }
 
-            if ($tzsynceenabled && !empty($timezonesbyupn)) {
+            if ($tzsynceenabled && !empty($timezonesbyobjectid)) {
                 $this->mtrace('Applying timezones...', 1);
 
                 foreach ($users as $user) {
@@ -323,11 +389,11 @@ class photoandtimezonesync extends scheduled_task {
                     // full user record when the value has not changed. Normalisation and the
                     // Etc/GMT mapping live only in apply_timezone, eliminating the duplicate
                     // logic that previously existed here.
-                    if (isset($timezonesbyupn[$user->upn]) && $timezonesbyupn[$user->upn] !== false) {
+                    if (isset($timezonesbyobjectid[$user->objectid]) && $timezonesbyobjectid[$user->objectid] !== false) {
                         try {
                             $result = $usersync->apply_timezone_public(
                                 $user->muserid,
-                                $timezonesbyupn[$user->upn],
+                                $timezonesbyobjectid[$user->objectid],
                                 $user->currenttimezone
                             );
                             if ($result['changed']) {
@@ -370,7 +436,8 @@ class photoandtimezonesync extends scheduled_task {
             set_config('photosync_progress', json_encode($progressdata), 'local_o365');
 
             // Free memory.
-            unset($users, $photosbyupn, $timezonesbyupn, $upnsforphotosync, $upnsfortzsync, $apiclient);
+            unset($users, $photosbyobjectid, $storedphotohashes, $timezonesbyobjectid);
+            unset($objectidsforphotosync, $objectidsfortzsync, $apiclient);
             gc_collect_cycles();
         }
 
