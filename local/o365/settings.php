@@ -473,6 +473,10 @@ if ($hassiteconfig) {
             $desc
         ));
 
+        $label = new lang_string('settings_cohortsync_excludeowners', 'local_o365');
+        $desc = new lang_string('settings_cohortsync_excludeowners_desc', 'local_o365');
+        $syncsettings->add(new admin_setting_configcheckbox('local_o365/cohortsync_excludeowners', $label, $desc, '0'));
+
         // Course request section.
         $label = new lang_string('settings_secthead_course_request', 'local_o365');
         $desc = new lang_string('settings_secthead_course_request_desc', 'local_o365');
