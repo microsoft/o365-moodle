@@ -274,9 +274,11 @@ class main {
             return false;
         }
 
+        $excludeowners = (bool) get_config('local_o365', 'cohortsync_excludeowners');
+
         try {
             $memberrecords = $this->graphclient->get_transitive_group_members($groupoid);
-            $ownerrecords = $this->graphclient->get_group_owners($groupoid);
+            $ownerrecords = $excludeowners ? [] : $this->graphclient->get_group_owners($groupoid);
         } catch (moodle_exception $e) {
             if (strpos($e->getMessage(), utils::RESOURCE_NOT_EXIST_ERROR) !== false) {
                 $DB->delete_records('local_o365_objects', ['objectid' => $groupoid]);
@@ -295,7 +297,10 @@ class main {
         }
 
         foreach ($ownerrecords as $ownerrecord) {
-            if (!array_key_exists($ownerrecord['id'], $groupmembers)) {
+            if ($excludeowners) {
+                // Owners can also be returned as group members - remove them from the sync set.
+                unset($groupmembers[$ownerrecord['id']]);
+            } else if (!array_key_exists($ownerrecord['id'], $groupmembers)) {
                 $groupmembers[$ownerrecord['id']] = $ownerrecord;
             }
         }
