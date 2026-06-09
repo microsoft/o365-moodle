@@ -390,6 +390,31 @@ class block_microsoft extends block_base {
             }
         }
 
+        // Microsoft Word.
+        if (!empty($this->globalconfig->settings_showword)) {
+            $wordurl = 'https://word.cloud.microsoft';
+            $wordattrs = ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'servicelink block_microsoft_word'];
+            $items[] = html_writer::link($wordurl, get_string('linkword', 'block_microsoft'), $wordattrs);
+        }
+
+        // Microsoft Excel.
+        if (!empty($this->globalconfig->settings_showexcel)) {
+            $excelurl = 'https://excel.cloud.microsoft';
+            $excelattrs = ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'servicelink block_microsoft_excel'];
+            $items[] = html_writer::link($excelurl, get_string('linkexcel', 'block_microsoft'), $excelattrs);
+        }
+
+        // Microsoft PowerPoint.
+        if (!empty($this->globalconfig->settings_showpowerpoint)) {
+            $powerpointurl = 'https://powerpoint.cloud.microsoft';
+            $powerpointattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_powerpoint',
+            ];
+            $items[] = html_writer::link($powerpointurl, get_string('linkpowerpoint', 'block_microsoft'), $powerpointattrs);
+        }
+
         // Microsoft Stream (on SharePoint).
         if (!empty($this->globalconfig->settings_showmsstreamonsharepoint)) {
             $streamurl = 'https://www.microsoft365.com/launch/stream';
@@ -413,6 +438,28 @@ class block_microsoft extends block_base {
             $teamsurl = 'https://teams.microsoft.com';
             $teamsattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msteams'];
             $items[] = html_writer::link($teamsurl, get_string('linkmsteams', 'block_microsoft'), $teamsattrs);
+        }
+
+        // Viva Engage.
+        if (!empty($this->globalconfig->settings_showvivaengage)) {
+            $vivaengageurl = 'https://engage.cloud.microsoft';
+            $vivaengageattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_vivaengage',
+            ];
+            $items[] = html_writer::link($vivaengageurl, get_string('linkvivaengage', 'block_microsoft'), $vivaengageattrs);
+        }
+
+        // Viva Learning.
+        if (!empty($this->globalconfig->settings_showvivalearning)) {
+            $vivalearningurl = 'https://learning.cloud.microsoft';
+            $vivalearningattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_vivalearning',
+            ];
+            $items[] = html_writer::link($vivalearningurl, get_string('linkvivalearning', 'block_microsoft'), $vivalearningattrs);
         }
 
         // My Sways.
