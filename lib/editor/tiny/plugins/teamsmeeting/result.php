@@ -25,6 +25,24 @@
 
 require_once(__DIR__ . '/../../../../../config.php');
 
+// Cross-site repost handshake for SameSite=Lax compatibility (MDL-83526).
+// The external Teams app POSTs back cross-site; the browser withholds the session cookie on
+// that request. Rendering a same-site auto-submit form causes the browser to include it on
+// the second request, after which require_login() succeeds normally.
+if (!empty($_POST['repost'])) {
+    unset($_POST['repost']);
+} else if (!isloggedin()) {
+    $PAGE->set_context(context_system::instance());
+    $PAGE->set_pagelayout('popup');
+    header_remove('Set-Cookie');
+    $output = $PAGE->get_renderer('mod_lti');
+    $page = new \mod_lti\output\repost_crosssite_page($_SERVER['REQUEST_URI'], $_POST);
+    echo $output->header();
+    echo $output->render($page);
+    echo $output->footer();
+    exit;
+}
+
 require_login();
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
