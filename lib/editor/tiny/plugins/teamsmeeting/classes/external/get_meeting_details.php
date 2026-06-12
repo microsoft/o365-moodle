@@ -111,7 +111,19 @@ class get_meeting_details extends external_api {
     private static function get_meeting(string $url): ?stdClass {
         global $DB;
 
-        $record = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($url)]);
+        // Normalise percent-encoding to uppercase before hashing so lookups
+        // succeed whether or not Moodle re-saved the HTML (which uppercases %xx).
+        $normalised = preg_replace_callback('/%[0-9a-f]{2}/i', fn($m) => strtoupper($m[0]), $url);
+        $record = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($normalised)]);
+
+        if (!$record) {
+            // Fallback for rows created before normalisation: try lowercase hex digits.
+            $lowercased = preg_replace_callback('/%[0-9A-F]{2}/', fn($m) => strtolower($m[0]), $normalised);
+            if ($lowercased !== $normalised) {
+                $record = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($lowercased)]);
+            }
+        }
+
         return $record ?: null;
     }
 
