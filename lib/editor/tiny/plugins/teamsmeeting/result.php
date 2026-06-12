@@ -30,6 +30,12 @@ require_login();
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
 $meetinglink = optional_param('link', null, PARAM_URL);
+// Normalise percent-encoding to uppercase (RFC 3986) so the SHA1 hash is
+// stable regardless of whether Moodle has re-saved the HTML (which uppercases
+// %xx sequences) since the meeting was first created.
+if ($meetinglink !== null) {
+    $meetinglink = preg_replace_callback('/%[0-9a-f]{2}/i', fn($m) => strtoupper($m[0]), $meetinglink);
+}
 $title = optional_param('title', null, PARAM_TEXT);
 $preview = optional_param('preview', null, PARAM_CLEANHTML);
 $optionslink = optional_param('options', null, PARAM_URL);
@@ -37,9 +43,18 @@ $session = optional_param('session', '', PARAM_ALPHANUM);
 
 if ($viewexisting) {
     require_sesskey();
-    $viewrecord = $meetinglink
-        ? $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($meetinglink)])
-        : null;
+    if ($meetinglink) {
+        $viewrecord = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($meetinglink)]);
+        if (!$viewrecord) {
+            // Fallback for rows stored before normalisation (lowercase hex in %xx sequences).
+            $lowercased = preg_replace_callback('/%[0-9A-F]{2}/', fn($m) => strtolower($m[0]), $meetinglink);
+            if ($lowercased !== $meetinglink) {
+                $viewrecord = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($lowercased)]);
+            }
+        }
+    } else {
+        $viewrecord = null;
+    }
     $context = ($viewrecord && !empty($viewrecord->contextid))
         ? context::instance_by_id($viewrecord->contextid)
         : context_system::instance();
