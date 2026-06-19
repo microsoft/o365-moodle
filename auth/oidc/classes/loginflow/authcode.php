@@ -38,6 +38,7 @@ use moodle_exception;
 use core\url;
 use pix_icon;
 use stdClass;
+use core\di;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -737,6 +738,10 @@ class authcode extends base {
             $username = $user->username;
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             $user = authenticate_user_login($username, '', true);
+
+            // Look for plugins that want to add extra checks before user login is completed.
+            $hook = new \auth_oidc\hook\before_login_completed($idtoken);
+            di::get(\core\hook\manager::class)->dispatch($hook);
 
             if (!empty($user)) {
                 complete_user_login($user);
