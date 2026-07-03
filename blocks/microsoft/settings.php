@@ -50,6 +50,21 @@ $label = new lang_string('settings_showonedrive', 'block_microsoft');
 $desc = new lang_string('settings_showonedrive_desc', 'block_microsoft');
 $settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showonedrive', $label, $desc, 1));
 
+// Settings to show Microsoft Word link in the block.
+$label = new lang_string('settings_showword', 'block_microsoft');
+$desc = new lang_string('settings_showword_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showword', $label, $desc, 0));
+
+// Settings to show Microsoft Excel link in the block.
+$label = new lang_string('settings_showexcel', 'block_microsoft');
+$desc = new lang_string('settings_showexcel_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showexcel', $label, $desc, 0));
+
+// Settings to show Microsoft PowerPoint link in the block.
+$label = new lang_string('settings_showpowerpoint', 'block_microsoft');
+$desc = new lang_string('settings_showpowerpoint_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showpowerpoint', $label, $desc, 0));
+
 // Settings to show Microsoft Stream (on SharePoint) link in the block.
 $label = new lang_string('settings_showmsstream', 'block_microsoft');
 $desc = new lang_string('settings_showmsstream_desc', 'block_microsoft');
@@ -64,6 +79,16 @@ $settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showms
 $label = new lang_string('settings_showmsteams', 'block_microsoft');
 $desc = new lang_string('settings_showmsteams_desc', 'block_microsoft');
 $settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showmsteams', $label, $desc, 1));
+
+// Settings to show Viva Engage link in the block.
+$label = new lang_string('settings_showvivaengage', 'block_microsoft');
+$desc = new lang_string('settings_showvivaengage_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showvivaengage', $label, $desc, 0));
+
+// Settings to show Viva Learning link in the block.
+$label = new lang_string('settings_showvivalearning', 'block_microsoft');
+$desc = new lang_string('settings_showvivalearning_desc', 'block_microsoft');
+$settings->add(new admin_setting_configcheckbox('block_microsoft/settings_showvivalearning', $label, $desc, 0));
 
 // Settings to show sways link in the block.
 $label = new lang_string('settings_showsways', 'block_microsoft');
