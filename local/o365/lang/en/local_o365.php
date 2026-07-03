@@ -370,6 +370,8 @@ $string['settings_cohortsync'] = 'Cohort synchronization';
 $string['settings_cohortsync_linktext'] = 'Manage Cohort sync';
 $string['settings_cohortsync_details'] = 'Review and manage synchronization between Moodle Cohorts and Microsoft Groups.';
 $string['settings_cohortsync_title'] = 'Cohort sync';
+$string['settings_cohortsync_excludeowners'] = 'Exclude group owners from cohort sync';
+$string['settings_cohortsync_excludeowners_desc'] = 'If enabled, group owners are not synchronised to Moodle cohorts, even if they are also group members. Owners already in a cohort will be removed on the next sync run.';
 
 // Settings in the "Team / group names" section of the "Sync settings" tab.
 $string['settings_secthead_team_group_name'] = 'Team / group names';
