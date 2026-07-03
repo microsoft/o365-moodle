@@ -41,6 +41,26 @@
     background-image: url([[pix:block_microsoft|msteams]]);
 }
 
+.block_microsoft .block_microsoft_word {
+    background-image: url([[pix:block_microsoft|word]]);
+}
+
+.block_microsoft .block_microsoft_excel {
+    background-image: url([[pix:block_microsoft|excel]]);
+}
+
+.block_microsoft .block_microsoft_powerpoint {
+    background-image: url([[pix:block_microsoft|powerpoint]]);
+}
+
+.block_microsoft .block_microsoft_vivaengage {
+    background-image: url([[pix:block_microsoft|vivaengage]]);
+}
+
+.block_microsoft .block_microsoft_vivalearning {
+    background-image: url([[pix:block_microsoft|vivalearning]]);
+}
+
 .block_microsoft .block_microsoft_onenote {
     background-image: url([[pix:block_microsoft|onenotecolor]]);
 }
