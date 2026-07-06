@@ -170,7 +170,8 @@ $string['customclaims_help'] = 'Space-separated list of custom claim names from 
 </ul>';
 $string['secretexpiryrecipients'] = 'Secret Expiry Notification Recipients';
 $string['secretexpiryrecipients_help'] = 'A comma-separated list of email addresses to send secret expiry notifications to.<br/>
-If no email address is entered, the main site administrator will be notified.';
+If no email address is entered, the main site administrator will be notified.<br/>
+Nofications are sent daily from four weeks before expiration until the secret has been renewed.';
 $string['cfg_opname_key'] = 'Provider Display Name';
 $string['cfg_opname_desc'] = 'This is an end-user-facing label that identifies the type of credentials the user must use to login. This label is used throughout the user-facing portions of this plugin to identify your provider.';
 $string['cfg_redirecturi_key'] = 'Redirect URI';
