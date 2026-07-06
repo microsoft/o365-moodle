@@ -169,6 +169,26 @@ if (!$loginsuccess && !empty($payload->upn)) {
 }
 
 if ($loginsuccess) {
+    // Force theme.
+    $customtheme = get_config('local_o365', 'customtheme');
+    if (!empty($customtheme) && get_config('theme_' . $customtheme, 'version')) {
+        $SESSION->theme = $customtheme;
+    } else if (get_config('theme_boost_o365teams', 'version')) {
+        $SESSION->theme = 'boost_o365teams';
+    }
+
+    // The session cookie set by core carries SameSite=Lax (MDL-83526), which browsers reject in
+    // the cross-site iframe of the Teams tab, so re-emit it with "SameSite=None; Secure".
+    if (is_https() || !empty($CFG->sslproxy)) {
+        $cookieparams = session_get_cookie_params();
+        setcookie(session_name(), session_id(), [
+            'path' => $cookieparams['path'],
+            'domain' => $cookieparams['domain'],
+            'secure' => true,
+            'httponly' => $cookieparams['httponly'],
+            'samesite' => 'None',
+        ]);
+    }
     http_response_code(200);
 } else {
     http_response_code(401);
