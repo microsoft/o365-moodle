@@ -28,7 +28,6 @@
     * sidepreblocks - HTML for the blocks
     * hasblocks - true if there are blocks on this page
     * showfeedback - true if feedback link needs to show
-    * navdraweropen - true if the nav drawer should be open on page load
     * regionmainsettingsmenu - HTML for the region main settings menu
     * hasregionmainsettingsmenu - There is a region main settings menu on this page.
 
@@ -45,7 +44,6 @@
         "sidepreblocks": "<h2>Blocks html goes here</h2>",
         "hasblocks":true,
         "showfeedback":true,
-        "navdraweropen":true,
         "regionmainsettingsmenu": "",
         "hasregionmainsettingsmenu": false
     }
@@ -106,7 +104,6 @@
             </div>
         </div>
     </div>
-    {{> theme_boost/nav-drawer }}
 </div>
 <div class="footerlogo">
     <div class="footerleft">
@@ -125,9 +122,6 @@
 </html>
 {{#js}}
     require(['theme_boost/loader']);
-    require(['theme_boost/drawer'], function(mod) {
-    mod.init();
-    });
     require(['theme_boost_o365teams/iframeChecker'], function(iframeChecker) {
     iframeChecker.init();
     });
