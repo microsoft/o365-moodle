@@ -834,6 +834,8 @@ $string['errornoresponsesavailable'] = 'No responses available.';
 $string['erroro365badphoto'] = 'Invalid profile photo received from Microsoft 365.';
 $string['erroro365nophoto'] = 'This user does not have a photo in Microsoft 365.';
 $string['errorcannotgetapiclient'] = 'Cannot get Graph API client.';
+$string['errorfailedtogetsecrets'] = 'Failed to get secrets';
+$string['errorunsupportedsecretauthenticationmethod'] = 'Unsupported client secret authentication method.';
 
 // Privacy API.
 $string['privacy:metadata:local_o365'] = 'Microsoft 365 Local Plugin';

@@ -54,21 +54,21 @@ class notifysecretexpiry extends scheduled_task {
      */
     public function execute(): bool {
         if (utils::is_connected() !== true) {
-            return false;
+            throw new moodle_exception('error_not_connected', 'local_o365');
         }
 
         try {
             $graphclient = utils::get_api();
         } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
-            mtrace('Failed to get Graph API client');
-            return false;
+            mtrace(get_string('errorcannotgetapiclient', 'local_o365'));
+            throw new moodle_exception('errorcannotgetapiclient', 'local_o365', debuginfo: $e->getMessage());
         }
 
         $authenticationmethod = get_config('auth_oidc', 'clientauthmethod');
         if ($authenticationmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
             // Currently only support client secret authentication method.
-            return false;
+            throw new moodle_exception('errorunsupportedsecretauthenticationmethod', 'local_o365',);
         }
 
         $appid = get_config('auth_oidc', 'clientid');
@@ -77,9 +77,9 @@ class notifysecretexpiry extends scheduled_task {
             $appcredentials = $graphclient->get_app_credentials($appid);
         } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
-            mtrace('Failed to get secrets');
+            mtrace(get_string('errorfailedtogetsecrets', 'local_o365'));
             $this->notify_invalid_secret();
-            return false;
+            throw new moodle_exception('errorfailedtogetsecrets', 'local_o365', debuginfo: $e->getMessage());
         }
 
         $fourweeksinseconds = 60 * 60 * 24 * 7 * 4;
