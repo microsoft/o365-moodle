@@ -1791,7 +1791,8 @@ class main {
                     if (isset($usersyncsettings['update'])) {
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                         if ($fullexistinguser) {
-                            // Get_complete_user_data() already includes description field, no need to fetch again.
+                            $existingusercopy = core_user::get_user_by_username($existinguser->username);
+                            $fullexistinguser->description = $existingusercopy->description;
                             $this->update_user_from_entra_id_data($entraiduser, $fullexistinguser);
                             $this->mtrace('Field mapping applied.');
                         } else {
