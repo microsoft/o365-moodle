@@ -79,6 +79,9 @@ class authcode extends base {
             }
             $idpentry['icon'] = $iconvalue;
         }
+        else{
+            $idpentry['iconurl'] = '';
+        }
         return [$idpentry];
     }
 
