@@ -313,7 +313,7 @@ function auth_oidc_get_tokens_with_empty_ids() {
         $item->oidcuniqueid = $record->oidcuniqid;
         $item->matchingstatus = get_string('unmatched', 'auth_oidc');
         $item->details = get_string('na', 'auth_oidc');
-        $deletetokenurl = new url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id, 'sesskey' => sesskey()]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token', 'auth_oidc'));
 
         $emptyuseridtokens[$record->id] = $item;
@@ -352,7 +352,7 @@ function auth_oidc_get_tokens_with_mismatched_usernames() {
             'auth_oidc',
             ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]
         );
-        $deletetokenurl = new url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id, 'sesskey' => sesskey()]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token_and_reference', 'auth_oidc'));
 
         $mismatchedtokens[$record->id] = $item;
