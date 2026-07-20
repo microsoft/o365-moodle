@@ -45,6 +45,7 @@ $id = required_param('id', PARAM_INT);
 $logout = optional_param('logout', 0, PARAM_INT);
 
 if ($logout) {
+    require_sesskey();
     require_logout();
 }
 
