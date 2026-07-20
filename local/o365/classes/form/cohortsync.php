@@ -119,8 +119,8 @@ class cohortsync extends moodleform {
                     ['action' => 'delete', 'connectionid' => $mapping->id]
                 );
                 $existingmappingstable->data[] = [
-                    $groupname,
-                    html_writer::link($cohorturl, $cohortname),
+                    s($groupname),
+                    html_writer::link($cohorturl, s($cohortname)),
                     html_writer::link(
                         $deletemappingurl,
                         get_string('cohortsync_deletemapping', 'local_o365'),
