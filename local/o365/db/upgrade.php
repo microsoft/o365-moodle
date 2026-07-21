@@ -993,11 +993,13 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // Define field locked to be added to local_o365_teams_cache.
         $table = new xmldb_table('local_o365_teams_cache');
-        $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'url');
+        if ($dbman->table_exists($table)) {
+            $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'url');
 
-        // Conditionally launch add field locked.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
+            // Conditionally launch add field locked.
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
         }
 
         // O365 savepoint reached.
@@ -1367,27 +1369,29 @@ function xmldb_local_o365_upgrade($oldversion) {
 
         // Changing precision of field objectid on table local_o365_teams_cache to (36).
         $table = new xmldb_table('local_o365_teams_cache');
-        $teamscachecolumns = $DB->get_columns('local_o365_teams_cache');
-        if (isset($teamscachecolumns['objectid']) && $teamscachecolumns['objectid']->max_length != 36) {
-            // Drop the objectid index first if it exists, as precision change cannot be made to indexed fields.
-            $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
-            if ($dbman->index_exists($table, $index)) {
-                $dbman->drop_index($table, $index);
+        if ($dbman->table_exists($table)) {
+            $teamscachecolumns = $DB->get_columns('local_o365_teams_cache');
+            if (isset($teamscachecolumns['objectid']) && $teamscachecolumns['objectid']->max_length != 36) {
+                // Drop the objectid index first if it exists, as precision change cannot be made to indexed fields.
+                $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
+                if ($dbman->index_exists($table, $index)) {
+                    $dbman->drop_index($table, $index);
+                }
+                $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
+                // Launch change of precision for field objectid.
+                $dbman->change_field_precision($table, $field);
+                // Recreate the objectid index after precision change.
+                if (!$dbman->index_exists($table, $index)) {
+                    $dbman->add_index($table, $index);
+                }
             }
-            $field = new xmldb_field('objectid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'id');
-            // Launch change of precision for field objectid.
-            $dbman->change_field_precision($table, $field);
-            // Recreate the objectid index after precision change.
-            if (!$dbman->index_exists($table, $index)) {
-                $dbman->add_index($table, $index);
-            }
-        }
 
-        // Changing precision of field name on table local_o365_teams_cache to (264).
-        if (isset($teamscachecolumns['name']) && $teamscachecolumns['name']->max_length != 264) {
-            $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '264', null, null, null, null, 'objectid');
-            // Launch change of precision for field name.
-            $dbman->change_field_precision($table, $field);
+            // Changing precision of field name on table local_o365_teams_cache to (264).
+            if (isset($teamscachecolumns['name']) && $teamscachecolumns['name']->max_length != 264) {
+                $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '264', null, null, null, null, 'objectid');
+                // Launch change of precision for field name.
+                $dbman->change_field_precision($table, $field);
+            }
         }
 
         // O365 savepoint reached.
@@ -1425,11 +1429,13 @@ function xmldb_local_o365_upgrade($oldversion) {
     if ($oldversion < 2025040807) {
         // Add index to local_o365_teams_cache.objectid for better query performance.
         $table = new xmldb_table('local_o365_teams_cache');
-        $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
+        if ($dbman->table_exists($table)) {
+            $index = new xmldb_index('objectid', XMLDB_INDEX_NOTUNIQUE, ['objectid']);
 
-        // Conditionally launch add index objectid.
-        if (!$dbman->index_exists($table, $index)) {
-            $dbman->add_index($table, $index);
+            // Conditionally launch add index objectid.
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
         }
 
         // Add indexes to local_o365_groups_cache for better query performance.
