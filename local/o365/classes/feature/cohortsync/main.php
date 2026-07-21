@@ -245,67 +245,65 @@ class main {
     }
 
     /**
+     * Fetch owners and transitive members for multiple Microsoft groups using batched Graph API calls.
+     *
+     * @param array $groupoids Array of Microsoft group object IDs.
+     * @return array Associative array keyed by group object ID; see
+     *         unified::get_groups_owners_and_members_batch() for the value structure.
+     */
+    public function get_owners_and_members_for_groups(array $groupoids): array {
+        return $this->graphclient->get_groups_owners_and_members_batch($groupoids);
+    }
+
+    /**
      * Synchronize the members of a Moodle cohort based on a Microsoft group.
      *
      * @param string $groupoid
      * @param int $cohortid
+     * @param array|null $groupdata One entry from get_owners_and_members_for_groups(), or null if missing.
      * @return void
      */
-    public function sync_members_by_group_oid_and_cohort_id(string $groupoid, int $cohortid): void {
-        $groupownersandmembers = $this->get_group_owners_and_members($groupoid);
-
-        if ($groupownersandmembers !== false) {
-            $this->sync_cohort_members_by_cohort_id_and_microsoft_user_objects($cohortid, $groupownersandmembers);
-        }
-    }
-
-    /**
-     * Fetches members and owners of a specific Microsoft group.
-     *
-     * @param string $groupoid
-     * @return array|false
-     */
-    public function get_group_owners_and_members(string $groupoid) {
+    public function sync_members_by_group_oid_and_cohort_id(string $groupoid, int $cohortid, ?array $groupdata): void {
         global $DB;
 
-        $groupmembers = [];
+        if ($groupdata === null) {
+            mtrace("...... No group data available for group ID $groupoid. Skipping.");
 
-        if (empty($this->graphclient)) {
-            return false;
+            return;
+        }
+
+        if ($groupdata['members'] === null || $groupdata['owners'] === null) {
+            $error = $groupdata['error'] ?? 'Unknown error.';
+
+            if (strpos($error, utils::RESOURCE_NOT_EXIST_ERROR) !== false) {
+                $DB->delete_records('local_o365_objects', ['objectid' => $groupoid]);
+                mtrace("...... Deleted mapping for non-existing group ID $groupoid.");
+            } else {
+                mtrace("...... Error fetching group members for group ID $groupoid: " . $error);
+            }
+
+            return;
         }
 
         $excludeowners = (bool) get_config('local_o365', 'cohortsync_excludeowners');
 
-        try {
-            $memberrecords = $this->graphclient->get_transitive_group_members($groupoid);
-            $ownerrecords = $this->graphclient->get_group_owners($groupoid);
-        } catch (moodle_exception $e) {
-            if (strpos($e->getMessage(), utils::RESOURCE_NOT_EXIST_ERROR) !== false) {
-                $DB->delete_records('local_o365_objects', ['objectid' => $groupoid]);
-                mtrace("...... Deleted mapping for non-existing group ID $groupoid.");
-            } else {
-                mtrace("...... Error fetching group members for group ID $groupoid: " . $e->getMessage());
-            }
-
-            return false;
-        }
-
-        foreach ($memberrecords as $memberrecord) {
-            if (!array_key_exists($memberrecord['id'], $groupmembers)) {
-                $groupmembers[$memberrecord['id']] = $memberrecord;
+        $groupownersandmembers = [];
+        foreach ($groupdata['members'] as $record) {
+            if (!array_key_exists($record['id'], $groupownersandmembers)) {
+                $groupownersandmembers[$record['id']] = $record;
             }
         }
 
-        foreach ($ownerrecords as $ownerrecord) {
+        foreach ($groupdata['owners'] as $ownerrecord) {
             if ($excludeowners) {
                 // Owners can also be returned as group members - remove them from the sync set.
-                unset($groupmembers[$ownerrecord['id']]);
-            } else if (!array_key_exists($ownerrecord['id'], $groupmembers)) {
-                $groupmembers[$ownerrecord['id']] = $ownerrecord;
+                unset($groupownersandmembers[$ownerrecord['id']]);
+            } else if (!array_key_exists($ownerrecord['id'], $groupownersandmembers)) {
+                $groupownersandmembers[$ownerrecord['id']] = $ownerrecord;
             }
         }
 
-        return $groupmembers;
+        $this->sync_cohort_members_by_cohort_id_and_microsoft_user_objects($cohortid, $groupownersandmembers);
     }
 
     /**
