@@ -809,10 +809,10 @@ class main {
                     $subtype = 'teamfromgroup';
                     break;
                 } catch (moodle_exception $e) {
-                    if (strpos($e->a, 'The group is already provisioned') !== false) {
+                    if (strpos($e->getMessage(), 'The group is already provisioned') !== false) {
                         $this->mtrace('Found existing team from class group with ID ' . $groupobjectid, $baselevel + 1);
                         $response = true;
-                        $subtype = 'courseteam';
+                        $subtype = 'teamfromgroup';
                         break;
                     } else if ($retrycounter >= API_CALL_RETRY_LIMIT && !$usingfallback && $fallbacktemplate) {
                         // Exhausted retries with configured template; try fallback template.
@@ -1063,6 +1063,8 @@ class main {
         $retrycounter = 0;
 
         $response = null;
+        $subtype = 'teamfromgroup';
+        $alreadyprovisioned = false;
 
         $templateconfig = $this->get_team_template_with_fallback('standard');
         $currenttemplate = $templateconfig['template'];
@@ -1103,7 +1105,16 @@ class main {
                     $response = $this->graphclient->create_team_from_group($groupobjectid, $currenttemplate);
                     break;
                 } catch (moodle_exception $e) {
-                    if (strpos($e->a, "missing the 'PLC' CreationOption") !== false && !$usingfallback && $fallbacktemplate) {
+                    if (strpos($e->getMessage(), 'The group is already provisioned') !== false) {
+                        $this->mtrace('Found existing team from group with ID ' . $groupobjectid, $baselevel + 1);
+                        $response = true;
+                        $alreadyprovisioned = true;
+                        break;
+                    } else if (
+                        strpos($e->getMessage(), "missing the 'PLC' CreationOption") !== false
+                        && !$usingfallback
+                        && $fallbacktemplate
+                    ) {
                         // PLC creation option error - group was created without PLC support.
                         // Delete the group and fall back to default template so it can be recreated with PLC.
                         $this->mtrace(
@@ -1195,9 +1206,11 @@ class main {
             return false;
         }
 
-        $this->mtrace('Created team from group with ID ' . $groupobjectid, $baselevel + 1);
+        if (!$alreadyprovisioned) {
+            $this->mtrace('Created team from group with ID ' . $groupobjectid, $baselevel + 1);
+        }
         $teamname = utils::get_team_display_name($course);
-        $teamobjectrecord = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $groupobjectid,
+        $teamobjectrecord = ['type' => 'group', 'subtype' => $subtype, 'objectid' => $groupobjectid,
             'moodleid' => $course->id, 'o365name' => $teamname, 'timecreated' => $now, 'timemodified' => $now];
         $teamobjectrecord['id'] = $DB->insert_record('local_o365_objects', (object)$teamobjectrecord);
         $this->mtrace('Recorded team object ' . $groupobjectid . ' into object table with record ID ' .
