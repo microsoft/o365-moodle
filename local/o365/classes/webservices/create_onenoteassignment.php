@@ -73,6 +73,7 @@ class create_onenoteassignment extends external_api {
 
         $context = course::instance($params['course']);
         self::validate_context($context);
+        require_capability('moodle/course:manageactivities', $context);
 
         $defaults = [
             'submissiondrafts' => 0,
