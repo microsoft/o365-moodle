@@ -25,17 +25,16 @@
 
 require_once(__DIR__ . '/../../../../../config.php');
 
-require_login();
-
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
 $meetinglink = optional_param('link', null, PARAM_URL);
 $title = optional_param('title', null, PARAM_TEXT);
 $preview = optional_param('preview', null, PARAM_CLEANHTML);
 $optionslink = optional_param('options', null, PARAM_URL);
-$session = optional_param('session', '', PARAM_ALPHANUM);
+$session = optional_param('session', '', PARAM_RAW_TRIMMED);
 
 if ($viewexisting) {
+    require_login();
     require_sesskey();
     $viewrecord = $meetinglink
         ? $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($meetinglink)])
@@ -45,14 +44,38 @@ if ($viewexisting) {
         : context_system::instance();
     require_capability('tiny/teamsmeeting:add', $context);
 } else {
-    confirm_sesskey($session);
     if ($courseid) {
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
         $context = context_course::instance($course->id);
     } else {
         $context = context_system::instance();
     }
-    require_capability('tiny/teamsmeeting:add', $context);
+
+    // The app's redirect back here is a subframe navigation from a cross-origin iframe,
+    // so the browser may not send the Moodle session cookie. Authenticate via the
+    // short-lived opaque token minted when the dialog was opened instead of
+    // require_login()'s cookie check; older, already-rendered pages whose session value
+    // predates this token fall back to the previous cookie-based flow.
+    $tokenuserid = \tiny_teamsmeeting\result_token::validate($session, $context->id);
+    if ($tokenuserid) {
+        $tokenuser = $DB->get_record('user', ['id' => $tokenuserid]);
+        if (
+            $tokenuser
+            && empty($tokenuser->suspended)
+            && empty($tokenuser->deleted)
+            && !empty($tokenuser->confirmed)
+        ) {
+            complete_user_login($tokenuser);
+        } else {
+            $tokenuserid = null;
+        }
+    }
+    if (!$tokenuserid) {
+        require_login();
+        confirm_sesskey($session);
+    }
+
+    require_capability('tiny/teamsmeeting:add', $context, $tokenuserid ?: null);
 }
 
 $meetingoptions = null;
@@ -81,8 +104,31 @@ if (!empty($preview)) {
         $meetingdata->contextid = $context->id;
         $DB->insert_record('tiny_teamsmeeting', $meetingdata);
     }
-} else if (!empty($optionslink) && filter_var($optionslink, FILTER_VALIDATE_URL)) {
+} else if (
+    !empty($optionslink)
+    && filter_var($optionslink, FILTER_VALIDATE_URL)
+    && parse_url($optionslink, PHP_URL_SCHEME) === 'https'
+) {
     $meetingoptions = $optionslink;
+
+    if (!empty($meetinglink) && !empty($title)) {
+        $linkhash = sha1($meetinglink);
+        $existingrecord = $DB->get_record('tiny_teamsmeeting', ['linkhash' => $linkhash]);
+        if (!$existingrecord) {
+            $meetingdata = new stdClass();
+            $meetingdata->title = $title;
+            $meetingdata->link = $meetinglink;
+            $meetingdata->linkhash = $linkhash;
+            $meetingdata->options = $meetingoptions;
+            $meetingdata->timecreated = time();
+            $meetingdata->userid = $USER->id;
+            $meetingdata->contextid = $context->id;
+            $DB->insert_record('tiny_teamsmeeting', $meetingdata);
+        } else if ($existingrecord->options !== $meetingoptions) {
+            $existingrecord->options = $meetingoptions;
+            $DB->update_record('tiny_teamsmeeting', $existingrecord);
+        }
+    }
 }
 
 $PAGE->set_context($context);
