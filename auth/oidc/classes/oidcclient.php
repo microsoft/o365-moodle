@@ -302,44 +302,6 @@ class oidcclient {
     }
 
     /**
-     * Make a token request using the resource-owner credentials login flow.
-     *
-     * @param string $username The resource owner's username.
-     * @param string $password The resource owner's password.
-     * @return array Received parameters.
-     */
-    public function rocredsrequest($username, $password) {
-        if (empty($this->endpoints['token'])) {
-            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
-        }
-
-        if (strpos($this->endpoints['token'], 'https://') !== 0) {
-            throw new moodle_exception('erroroidcclientinsecuretokenendpoint', 'auth_oidc');
-        }
-
-        $params = [
-            'grant_type' => 'password',
-            'username' => $username,
-            'password' => $password,
-            'scope' => 'openid profile email',
-            'client_id' => $this->clientid,
-            'client_secret' => $this->clientsecret,
-        ];
-
-        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            $params['resource'] = $this->tokenresource;
-        }
-
-        try {
-            $returned = $this->httpclient->post($this->endpoints['token'], $params);
-            return utils::process_json_response($returned, ['token_type' => null, 'id_token' => null]);
-        } catch (moodle_exception $e) {
-            utils::debug('Error in rocredsrequest request', __METHOD__, $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
      * Exchange an authorization code for an access token.
      *
      * @param string $code An authorization code.

@@ -586,6 +586,16 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100601.01, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2026042000.01) {
+        // The rocreds (Resource Owner Password Credentials Grant) login flow has been removed.
+        // Reset any site still configured to use it back to the authcode flow.
+        if (get_config('auth_oidc', 'loginflow') === 'rocreds') {
+            set_config('loginflow', 'authcode', 'auth_oidc');
+        }
+
+        upgrade_plugin_savepoint(true, 2026042000.01, 'auth', 'oidc');
+    }
+
     return true;
 }
 
