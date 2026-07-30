@@ -59,6 +59,24 @@ $observers = [
         'internal'    => false,
     ],
     [
+        'eventname'   => '\core\event\course_module_updated',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_course_module_updated',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\group_member_added',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_group_member_added',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
+        'eventname'   => '\core\event\group_member_removed',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_group_member_removed',
+        'priority'    => 200,
+        'internal'    => false,
+    ],
+    [
         'eventname'   => '\local_o365\event\calendar_subscribed',
         'callback'    => '\local_o365\feature\calsync\observers::handle_calendar_subscribed',
         'priority'    => 200,
@@ -75,6 +93,12 @@ $observers = [
         'callback'    => '\local_o365\feature\calsync\observers::handle_user_deleted',
         'priority'    => 200,
         'internal'    => false,
+    ],
+    [
+        'eventname'   => '\mod_assign\event\extension_granted',
+        'callback'    => '\local_o365\feature\calsync\observers::handle_assign_extension_granted',
+        'priority'    => 200,
+        'internal'    => true,
     ],
 
     // Events from auth_oidc.
