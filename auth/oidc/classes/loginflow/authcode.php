@@ -739,11 +739,11 @@ class authcode extends base {
             $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             $user = authenticate_user_login($username, '', true);
 
-            // Look for plugins that want to add extra checks before user login is completed.
-            $hook = new \auth_oidc\hook\before_login_completed($idtoken);
-            di::get(\core\hook\manager::class)->dispatch($hook);
-
             if (!empty($user)) {
+                // Look for plugins that want to add extra checks before user login is completed.
+                $hook = new \auth_oidc\hook\before_login_completed($idtoken);
+                di::get(\core\hook\manager::class)->dispatch($hook);
+
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login.
@@ -814,6 +814,10 @@ class authcode extends base {
             $user = authenticate_user_login($username, '', true);
 
             if (!empty($user)) {
+                // Look for plugins that want to add extra checks before user login is completed.
+                $hook = new \auth_oidc\hook\before_login_completed($idtoken);
+                di::get(\core\hook\manager::class)->dispatch($hook);
+
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login.
@@ -900,6 +904,11 @@ class authcode extends base {
                     $updatedtokenrec->userid = $user->id;
                     $DB->update_record('auth_oidc_token', $updatedtokenrec);
                 }
+
+                // Look for plugins that want to add extra checks before user login is completed.
+                $hook = new \auth_oidc\hook\before_login_completed($idtoken);
+                di::get(\core\hook\manager::class)->dispatch($hook);
+
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login. Clean up incomplete token record.
