@@ -1792,7 +1792,10 @@ class main {
                         $fullexistinguser = get_complete_user_data('username', $existinguser->username);
                         if ($fullexistinguser) {
                             $existingusercopy = core_user::get_user_by_username($existinguser->username);
-                            $fullexistinguser->description = $existingusercopy->description;
+                            if ($existingusercopy) {
+                                $fullexistinguser->description = $existingusercopy->description;
+                                $fullexistinguser->descriptionformat = $existingusercopy->descriptionformat;
+                            }
                             $this->update_user_from_entra_id_data($entraiduser, $fullexistinguser);
                             $this->mtrace('Field mapping applied.');
                         } else {
