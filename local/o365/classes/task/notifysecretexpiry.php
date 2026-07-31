@@ -68,7 +68,7 @@ class notifysecretexpiry extends scheduled_task {
         $authenticationmethod = get_config('auth_oidc', 'clientauthmethod');
         if ($authenticationmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
             // Currently only support client secret authentication method.
-            throw new moodle_exception('errorunsupportedsecretauthenticationmethod', 'local_o365',);
+            throw new moodle_exception('errorunsupportedsecretauthenticationmethod', 'local_o365');
         }
 
         $appid = get_config('auth_oidc', 'clientid');
