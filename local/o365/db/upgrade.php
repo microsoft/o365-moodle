@@ -838,7 +838,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         set_config('aadsync', $newaadsyncsetting, 'local_o365');
 
         // Force clear user sync delta token.
-        unset_config('local_o365', 'task_usersync_lastdeltatoken');
+        unset_config('task_usersync_lastdeltatoken', 'local_o365');
         purge_all_caches();
 
         // O365 savepoint reached.
