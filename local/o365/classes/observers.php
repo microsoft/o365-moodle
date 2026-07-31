@@ -856,7 +856,7 @@ class observers {
                     $DB->delete_records('local_o365_objects', ['type' => 'user']);
 
                     // Delete delta user token, and force a user sync task run.
-                    unset_config('local_o365', 'task_usersync_lastdeltatoken');
+                    unset_config('task_usersync_lastdeltatoken', 'local_o365');
                     if (
                         $usersynctask = $DB->get_record(
                             'task_scheduled',
