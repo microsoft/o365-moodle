@@ -1066,7 +1066,7 @@ function auth_oidc_is_masked_secret($value) {
  */
 function auth_oidc_get_settings_nav_html(string $currentpage): string {
     $pages = [
-        'auth_oidc_application' => get_string('settings_page_application', 'auth_oidc'),
+        'authsettingoidc' => get_string('settings_page_application', 'auth_oidc'),
     ];
 
     // Only include the binding username claim tab if IdP type is configured.
