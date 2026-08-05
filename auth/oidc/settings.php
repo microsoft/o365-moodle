@@ -30,6 +30,7 @@ use auth_oidc\adminsetting\auth_oidc_admin_setting_endpoint;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_iconselect;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_loginflow;
 use auth_oidc\adminsetting\auth_oidc_admin_setting_redirecturi;
+use auth_oidc\adminsetting\auth_oidc_admin_setting_stateexpiry;
 use auth_oidc\utils;
 use core\url;
 
@@ -576,6 +577,60 @@ if ($hassiteconfig) {
             'authcode'
         )
     );
+
+    // Login state error page heading.
+    $settings->add(
+        new admin_setting_heading(
+            'auth_oidc/stateredirect_heading',
+            get_string('heading_stateredirect', 'auth_oidc'),
+            get_string('heading_stateredirect_desc', 'auth_oidc')
+        )
+    );
+
+    // Login state expiry.
+    $settings->add(
+        new auth_oidc_admin_setting_stateexpiry(
+            'auth_oidc/stateexpiry',
+            get_string('cfg_stateexpiry_key', 'auth_oidc'),
+            get_string('cfg_stateexpiry_desc', 'auth_oidc'),
+            5,
+            PARAM_INT
+        )
+    );
+
+    // Enable friendly login state error page.
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'auth_oidc/stateredirect_enabled',
+            get_string('cfg_stateredirect_enabled_key', 'auth_oidc'),
+            get_string('cfg_stateredirect_enabled_desc', 'auth_oidc'),
+            '0'
+        )
+    );
+
+    // Message to display on the friendly login state error page.
+    $settings->add(
+        new admin_setting_confightmleditor(
+            'auth_oidc/stateredirect_message',
+            get_string('cfg_stateredirect_message_key', 'auth_oidc'),
+            get_string('cfg_stateredirect_message_desc', 'auth_oidc'),
+            get_string('cfg_stateredirect_message_default', 'auth_oidc')
+        )
+    );
+
+    // Redirect delay for the friendly login state error page.
+    $settings->add(
+        new admin_setting_configtext(
+            'auth_oidc/stateredirect_delay',
+            get_string('cfg_stateredirect_delay_key', 'auth_oidc'),
+            get_string('cfg_stateredirect_delay_desc', 'auth_oidc'),
+            5,
+            PARAM_INT
+        )
+    );
+
+    $settings->hide_if('auth_oidc/stateredirect_message', 'auth_oidc/stateredirect_enabled', 'notchecked');
+    $settings->hide_if('auth_oidc/stateredirect_delay', 'auth_oidc/stateredirect_enabled', 'notchecked');
 
     // User restrictions heading.
     $settings->add(
