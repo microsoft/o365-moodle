@@ -56,7 +56,8 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
             'suspend' => new \lang_string('settings_usersync_suspend', 'local_o365'),
             'delete' => new \lang_string('settings_usersync_delete', 'local_o365'),
             'reenable' => new \lang_string('settings_usersync_reenable', 'local_o365'),
-            'disabledsync' => new \lang_string('settings_usersync_disabledsync', 'local_o365'),
+            'disabledsyncsuspend' => new \lang_string('settings_usersync_disabledsyncsuspend', 'local_o365'),
+            'disabledsyncreenable' => new \lang_string('settings_usersync_disabledsyncreenable', 'local_o365'),
             'match' => new \lang_string('settings_usersync_match', 'local_o365'),
             'matchswitchauth' => new \lang_string('settings_usersync_matchswitchauth', 'local_o365'),
             'appassign' => new \lang_string('settings_usersync_appassign', 'local_o365'),
@@ -103,7 +104,7 @@ class usersyncoptions extends admin_setting_configmulticheckbox {
                 ],
                 'suspension' => [
                         'title' => new \lang_string('settings_usersync_suspension', 'local_o365'),
-                        'options' => ['suspend', 'delete', 'reenable', 'disabledsync'],
+                        'options' => ['suspend', 'delete', 'reenable', 'disabledsyncsuspend', 'disabledsyncreenable'],
                 ],
                 'matching' => [
                         'title' => new \lang_string('settings_usersync_matching', 'local_o365'),
