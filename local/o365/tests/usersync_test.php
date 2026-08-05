@@ -603,6 +603,140 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
+     * Test that the 'disabledsyncsuspend' sync option suspends an existing Moodle account when its linked Microsoft
+     * Entra ID account is disabled, and that it does NOT re-enable a suspended account when the Microsoft Entra ID
+     * account is enabled again (that direction is controlled independently by 'disabledsyncreenable').
+     *
+     * @covers \local_o365\feature\usersync\main::sync_existing_user
+     */
+    public function test_sync_existing_user_disabledsyncsuspend(): void {
+        global $CFG, $DB;
+
+        set_config('usersync', 'disabledsyncsuspend', 'local_o365');
+
+        // Active user whose Microsoft Entra ID account becomes disabled should be suspended.
+        $activeuser = [
+            'auth' => 'oidc',
+            'deleted' => '0',
+            'suspended' => '0',
+            'mnethostid' => $CFG->mnet_localhost_id,
+            'username' => 'testuser1@example.onmicrosoft.com',
+            'firstname' => 'Test',
+            'lastname' => 'User1',
+            'email' => 'testuser1@example.onmicrosoft.com',
+            'lang' => 'en',
+        ];
+        $activeuserid = $DB->insert_record('user', (object) $activeuser);
+
+        // Already-suspended user whose Microsoft Entra ID account is enabled should NOT be re-enabled, since
+        // 'disabledsyncreenable' is not set.
+        $suspendeduser = [
+            'auth' => 'oidc',
+            'deleted' => '0',
+            'suspended' => '1',
+            'mnethostid' => $CFG->mnet_localhost_id,
+            'username' => 'testuser2@example.onmicrosoft.com',
+            'firstname' => 'Test',
+            'lastname' => 'User2',
+            'email' => 'testuser2@example.onmicrosoft.com',
+            'lang' => 'en',
+        ];
+        $suspendeduserid = $DB->insert_record('user', (object) $suspendeduser);
+
+        $entraiduser1 = array_merge($this->get_entra_id_userinfo(1), ['accountEnabled' => false]);
+        $entraiduser2 = array_merge($this->get_entra_id_userinfo(2), ['accountEnabled' => true]);
+
+        $response = json_encode(['value' => [$entraiduser1, $entraiduser2]]);
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($response);
+
+        $apiclient = new unified($this->get_mock_token(), $httpclient);
+        $usersync = new main();
+        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
+            $usersync->sync_users($userbatch, 'userPrincipalName');
+        });
+
+        $this->assertEquals(
+            1,
+            $DB->get_field('user', 'suspended', ['id' => $activeuserid]),
+            'User should be suspended when their Microsoft Entra ID account is disabled.'
+        );
+        $this->assertEquals(
+            1,
+            $DB->get_field('user', 'suspended', ['id' => $suspendeduserid]),
+            'User should remain suspended when their Microsoft Entra ID account is enabled again, ' .
+                'since disabledsyncreenable is not set.'
+        );
+    }
+
+    /**
+     * Test that the 'disabledsyncreenable' sync option re-enables a suspended Moodle account when its linked Microsoft
+     * Entra ID account is enabled again, and that it does NOT suspend an active account when the Microsoft Entra ID
+     * account is disabled (that direction is controlled independently by 'disabledsyncsuspend').
+     *
+     * @covers \local_o365\feature\usersync\main::sync_existing_user
+     */
+    public function test_sync_existing_user_disabledsyncreenable(): void {
+        global $CFG, $DB;
+
+        set_config('usersync', 'disabledsyncreenable', 'local_o365');
+
+        // Suspended user whose Microsoft Entra ID account is enabled again should be re-enabled.
+        $suspendeduser = [
+            'auth' => 'oidc',
+            'deleted' => '0',
+            'suspended' => '1',
+            'mnethostid' => $CFG->mnet_localhost_id,
+            'username' => 'testuser1@example.onmicrosoft.com',
+            'firstname' => 'Test',
+            'lastname' => 'User1',
+            'email' => 'testuser1@example.onmicrosoft.com',
+            'lang' => 'en',
+        ];
+        $suspendeduserid = $DB->insert_record('user', (object) $suspendeduser);
+
+        // Active user whose Microsoft Entra ID account becomes disabled should NOT be suspended, since
+        // 'disabledsyncsuspend' is not set.
+        $activeuser = [
+            'auth' => 'oidc',
+            'deleted' => '0',
+            'suspended' => '0',
+            'mnethostid' => $CFG->mnet_localhost_id,
+            'username' => 'testuser2@example.onmicrosoft.com',
+            'firstname' => 'Test',
+            'lastname' => 'User2',
+            'email' => 'testuser2@example.onmicrosoft.com',
+            'lang' => 'en',
+        ];
+        $activeuserid = $DB->insert_record('user', (object) $activeuser);
+
+        $entraiduser1 = array_merge($this->get_entra_id_userinfo(1), ['accountEnabled' => true]);
+        $entraiduser2 = array_merge($this->get_entra_id_userinfo(2), ['accountEnabled' => false]);
+
+        $response = json_encode(['value' => [$entraiduser1, $entraiduser2]]);
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response($response);
+
+        $apiclient = new unified($this->get_mock_token(), $httpclient);
+        $usersync = new main();
+        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
+            $usersync->sync_users($userbatch, 'userPrincipalName');
+        });
+
+        $this->assertEquals(
+            0,
+            $DB->get_field('user', 'suspended', ['id' => $suspendeduserid]),
+            'User should be re-enabled when their Microsoft Entra ID account is enabled again.'
+        );
+        $this->assertEquals(
+            0,
+            $DB->get_field('user', 'suspended', ['id' => $activeuserid]),
+            'User should remain active when their Microsoft Entra ID account is disabled, ' .
+                'since disabledsyncsuspend is not set.'
+        );
+    }
+
+    /**
      * Test sync_users when user is renamed in Entra ID with username update disabled.
      *
      * Regression test for issue #3107: When a user is renamed in Azure AD (e.g., uppercase to lowercase),
