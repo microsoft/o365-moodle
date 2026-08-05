@@ -39,7 +39,7 @@ if ($hassiteconfig) {
     // Redirect the category overview page to the first settings tab, so that the Bootstrap
     // nav-tabs behave correctly instead of showing all sub-pages' content at once.
     if ($PAGE->has_set_url() && $PAGE->url->get_param('category') === 'oidcfolder') {
-        redirect(new \core\url('/admin/settings.php', ['section' => 'auth_oidc_application']));
+        redirect(new \core\url('/admin/settings.php', ['section' => 'authsettingoidc']));
     }
 
     // Add folder for OIDC settings.
@@ -47,8 +47,13 @@ if ($hassiteconfig) {
     $ADMIN->add('authsettings', $oidcfolder);
 
     // Application configuration settings page.
+    // Registered as 'authsettingoidc' (Moodle's "authsetting<authname>" convention for auth
+    // plugins) rather than a custom id, because the core "Manage authentication" page
+    // (admin_setting_manageauths::output_html in lib/adminlib.php) hardcodes the settings
+    // link for each auth plugin to section "authsetting<authname>". Using any other id here
+    // leaves that link pointing at a non-existent section and triggers a "section error".
     $applicationsettings = new admin_settingpage(
-        'auth_oidc_application',
+        'authsettingoidc',
         get_string('settings_page_application', 'auth_oidc')
     );
 
@@ -56,7 +61,7 @@ if ($hassiteconfig) {
     $applicationsettings->add(new admin_setting_heading(
         'auth_oidc_application_nav',
         '',
-        auth_oidc_get_settings_nav_html('auth_oidc_application')
+        auth_oidc_get_settings_nav_html('authsettingoidc')
     ));
 
     // Link to the guided Application Configuration Wizard.
