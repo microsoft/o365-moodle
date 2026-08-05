@@ -45,7 +45,12 @@ class cleanup_oidc_state_and_token extends scheduled_task {
         global $DB;
 
         // Clean up oidc state.
-        $DB->delete_records_select('auth_oidc_state', 'timecreated < ?', [strtotime('-5 min')]);
+        $stateexpiry = (int) get_config('auth_oidc', 'stateexpiry');
+        if ($stateexpiry <= 0) {
+            $stateexpiry = 5;
+        }
+        $cutoff = time() - ($stateexpiry * MINSECS);
+        $DB->delete_records_select('auth_oidc_state', 'timecreated < ?', [$cutoff]);
 
         // Clean up invalid oidc token.
         $DB->delete_records('auth_oidc_token', ['userid' => 0]);
