@@ -31,6 +31,7 @@ use auth_oidc\event\user_created;
 use auth_oidc\event\user_rename_attempt;
 use auth_oidc\jwt;
 use auth_oidc\utils;
+use core\context\system;
 use core\output\notification;
 use core_text;
 use core_user;
@@ -281,6 +282,48 @@ class authcode extends base {
     }
 
     /**
+     * Handle a login state that could not be matched to a stored state record.
+     *
+     * This normally happens when the user takes longer than the state record's lifetime to
+     * complete login at the identity provider (for example, while approving a multi-factor
+     * authentication prompt), so the scheduled cleanup task has already deleted the record by
+     * the time the identity provider redirects back. When the "stateredirect_enabled" setting is
+     * on, this shows a customizable, friendly message and automatically redirects the user back
+     * to the login page instead of surfacing the generic Moodle error page.
+     *
+     * @return never
+     * @throws moodle_exception If the friendly redirect setting is disabled.
+     */
+    protected function handlemissingstaterecord(): never {
+        global $OUTPUT, $PAGE;
+
+        if (empty(get_config('auth_oidc', 'stateredirect_enabled'))) {
+            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
+
+        $PAGE->set_url('/auth/oidc/');
+        $PAGE->set_context(system::instance());
+        $PAGE->set_pagelayout('redirect');
+        $PAGE->set_title(get_string('pageshouldredirect'));
+
+        $message = get_config('auth_oidc', 'stateredirect_message');
+        if (empty($message)) {
+            $message = get_string('errorauthunknownstate', 'auth_oidc');
+        }
+        $message = format_text($message, FORMAT_HTML, ['context' => system::instance()]);
+
+        $delay = (int) get_config('auth_oidc', 'stateredirect_delay');
+        if ($delay < 0) {
+            $delay = 0;
+        }
+
+        $url = new url('/login/index.php');
+
+        echo $OUTPUT->redirect_message($url->out(), $message, $delay, false, notification::NOTIFY_ERROR);
+        exit;
+    }
+
+    /**
      * Handles the response for certificate-based admin consent authorization.
      *
      * @param array $authparams Array of authorization parameters.
@@ -297,13 +340,13 @@ class authcode extends base {
 
         if (!isset($authparams['state'])) {
             utils::debug('No state received.', __METHOD__, $authparams);
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            $this->handlemissingstaterecord();
         }
 
         // Validate and expire state.
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            $this->handlemissingstaterecord();
         }
 
         $orignonce = $staterec->nonce;
@@ -360,13 +403,13 @@ class authcode extends base {
 
         if (!isset($authparams['state'])) {
             utils::debug('No state received.', __METHOD__, $authparams);
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            $this->handlemissingstaterecord();
         }
 
         // Validate and expire state.
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            $this->handlemissingstaterecord();
         }
 
         $orignonce = $staterec->nonce;
