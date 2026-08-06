@@ -264,6 +264,7 @@ class authcode extends base {
         array $extraparams = [],
         bool $selectaccount = false
     ) {
+        $this->set_csrf_cookie();
         $client = $this->get_oidcclient();
         $client->authrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
     }
@@ -276,8 +277,72 @@ class authcode extends base {
      * @return void
      */
     public function initiateadminconsentrequest(array $stateparams = [], array $extraparams = []) {
+        $this->set_csrf_cookie();
         $client = $this->get_oidcclient();
         $client->adminconsentrequest($stateparams, $extraparams);
+    }
+
+    /**
+     * Set a dedicated CSRF cookie (SameSite=None; Secure) before redirecting to the IdP.
+     *
+     * The main session cookie carries SameSite=Lax (MDL-83526), which browsers drop on
+     * cross-site form_post callbacks, so a separate cookie is required to carry the sesskey.
+     */
+    protected function set_csrf_cookie(): void {
+        global $CFG;
+        // Always attempt to set the cookie with the Secure flag: browsers on plain HTTP will
+        // simply refuse to store it (safe no-op), while HTTPS terminated by a reverse proxy that
+        // Moodle isn't aware of (missing $CFG->sslproxy) will still honour it correctly.
+        $cookiepath = parse_url($CFG->wwwroot, PHP_URL_PATH) ?: '/';
+        setcookie('auth_oidc_csrf', sesskey(), [
+            'expires' => time() + 5 * MINSECS,
+            'path' => $cookiepath,
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+    }
+
+    /**
+     * Clear the CSRF cookie set by set_csrf_cookie().
+     */
+    protected function clear_csrf_cookie(): void {
+        global $CFG;
+        setcookie('auth_oidc_csrf', '', [
+            'expires' => time() - HOURSECS,
+            'path' => parse_url($CFG->wwwroot, PHP_URL_PATH) ?: '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+    }
+
+    /**
+     * Verify the state record's sesskey against the CSRF cookie, falling back to the current
+     * session's sesskey when the cookie is absent. Always clears the cookie and, on failure,
+     * deletes the state record.
+     *
+     * @param stdClass $staterec
+     * @throws moodle_exception if the CSRF check fails.
+     */
+    protected function verify_csrf_cookie(stdClass $staterec): void {
+        global $DB;
+
+        $csrfcookie = $_COOKIE['auth_oidc_csrf'] ?? null;
+        $csrftoken = (is_string($csrfcookie) && $csrfcookie !== '') ? $csrfcookie : sesskey();
+        $valid = hash_equals((string) $staterec->sesskey, (string) $csrftoken);
+
+        $this->clear_csrf_cookie();
+
+        if (!$valid) {
+            $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
+            utils::debug(
+                $csrfcookie === null ? 'CSRF cookie missing on OIDC callback.' : 'CSRF cookie mismatch on OIDC callback.',
+                __METHOD__,
+                ['staterecid' => $staterec->id]
+            );
+            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
     }
 
     /**
@@ -304,6 +369,10 @@ class authcode extends base {
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
+
+        if (is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf'])) {
+            $this->verify_csrf_cookie($staterec);
         }
 
         $orignonce = $staterec->nonce;
@@ -367,6 +436,10 @@ class authcode extends base {
         $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+        }
+
+        if (is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf'])) {
+            $this->verify_csrf_cookie($staterec);
         }
 
         $orignonce = $staterec->nonce;
