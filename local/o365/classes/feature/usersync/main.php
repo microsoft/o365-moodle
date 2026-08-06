@@ -1310,7 +1310,8 @@ class main {
                      assign.assigned assigned,
                      assign.photoid photoid,
                      assign.photoupdated photoupdated,
-                     obj.id AS objectid
+                     obj.id AS objectid,
+                     obj.objectid AS o365objectid
                 FROM {user} u
            LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
            LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
@@ -1389,7 +1390,8 @@ class main {
                        assign.assigned assigned,
                        assign.photoid photoid,
                        assign.photoupdated photoupdated,
-                       obj.id AS objectid
+                       obj.id AS objectid,
+                       obj.objectid AS o365objectid
                   FROM {user} u
              LEFT JOIN {auth_oidc_token} tok ON tok.userid = u.id
              LEFT JOIN {local_o365_connections} conn ON conn.muserid = u.id
@@ -1913,13 +1915,22 @@ class main {
             }
         }
 
-        // Use pre-fetched O365 object record to avoid N+1 query problem.
-        $localo365objectrecord = $this->o365objectsbymoodleid[$existinguser->muserid] ?? null;
-        if ($localo365objectrecord && $localo365objectrecord->id == $existinguser->objectid) {
-            if ($localo365objectrecord->objectid != $userobjectid) {
-                $localo365objectrecord->objectid = $userobjectid;
-                $DB->update_record('local_o365_objects', $localo365objectrecord);
-                $this->mtrace('Updated user object ID in local_o365_object record.');
+        // The stored Entra ID is usually already available from the existing user query. Fall back to the
+        // pre-fetched object cache (no extra DB query) if this record was built without it, to detect a
+        // changed GUID (e.g. the Entra ID account was deleted and recreated).
+        if (!empty($existinguser->objectid)) {
+            if (isset($existinguser->o365objectid)) {
+                $storedobjectid = $existinguser->o365objectid;
+            } else {
+                $cachedobject = $this->o365objectsbymoodleid[$existinguser->muserid] ?? null;
+                $storedobjectid = $cachedobject->objectid ?? null;
+            }
+
+            if ($storedobjectid != $userobjectid) {
+                $updated = $DB->set_field('local_o365_objects', 'objectid', $userobjectid, ['id' => $existinguser->objectid]);
+                if ($updated) {
+                    $this->mtrace('Updated user object ID in local_o365_objects record.');
+                }
             }
         }
 
