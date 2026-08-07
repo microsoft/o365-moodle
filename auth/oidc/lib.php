@@ -85,6 +85,17 @@ const AUTH_OIDC_AUTH_CERT_SOURCE_TEXT = 1;
 const AUTH_OIDC_AUTH_CERT_SOURCE_FILE = 2;
 
 /**
+ * File extensions accepted for the 'auth_oidc/customicon' upload setting.
+ *
+ * SVG is deliberately excluded: unlike the plugin's own bundled stock icons, this file is
+ * admin-uploaded and served as-is from dataroot, so allowing SVG here would let an admin
+ * upload active content (script/event handlers). Shared by the setting's file picker
+ * (settings.php) and the extension allow-list checked before copying the file into
+ * pix_plugins (auth_oidc_initialize_customicon()) so the two can't drift apart.
+ */
+const AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS = ['png', 'jpg', 'gif'];
+
+/**
  * Callback invoked when application credentials or endpoint settings are updated.
  *
  * Clears cached application tokens and the setup verification result so that
@@ -227,7 +238,25 @@ function auth_oidc_initialize_customicon($filefullname) {
     }
 
     if (file_exists($CFG->dataroot . '/pix_plugins/auth/oidc/0')) {
-        $file->copy_content_to($CFG->dataroot . '/pix_plugins/auth/oidc/0/customicon.jpg');
+        // Remove any previously stored custom icon so a stale file with a different
+        // extension can't take priority when the theme resolves the icon image.
+        $oldiconfiles = glob($CFG->dataroot . '/pix_plugins/auth/oidc/0/customicon.*');
+        foreach ($oldiconfiles ?: [] as $oldiconfile) {
+            // A failed unlink (e.g. permissions, or the file already being gone) isn't fatal
+            // here: copy_content_to() below will still overwrite/create the current extension's
+            // file, so at worst a stale file of a different extension is left behind.
+            @unlink($oldiconfile);
+        }
+
+        $extension = strtolower(pathinfo($file->get_filename(), PATHINFO_EXTENSION));
+        if (!in_array($extension, AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS, true)) {
+            // Unexpected/empty extension: don't create a weird or unvalidated file under
+            // pix_plugins. The stale files for previously-valid extensions were already
+            // removed above, so this leaves no custom icon in place.
+            return false;
+        }
+
+        $file->copy_content_to($CFG->dataroot . "/pix_plugins/auth/oidc/0/customicon.{$extension}");
         theme_reset_all_caches();
     }
 }
