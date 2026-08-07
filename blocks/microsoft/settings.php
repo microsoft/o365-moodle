@@ -25,6 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->dirroot . '/blocks/microsoft/lib.php');
+require_once($CFG->dirroot . '/blocks/microsoft/classes/admin_setting_required_url.php');
+
 // Settings to show My Delve link in block.
 $label = get_string('settings_showmydelve', 'block_microsoft');
 $desc = get_string('settings_showmydelve_desc', 'block_microsoft');
@@ -110,3 +113,83 @@ $settings->add(new admin_setting_configtext('block_microsoft/settings_geto365lin
 $label = new lang_string('settings_courserequest', 'block_microsoft');
 $desc = new lang_string('settings_courserequest_desc', 'block_microsoft');
 $settings->add(new \admin_setting_configcheckbox('block_microsoft/settings_courserequest', $label, $desc, 1));
+
+// Settings to show additional Microsoft 365 and Viva app links in the block. Hidden by default.
+$microsoft365apps = [
+    'word', 'excel', 'powerpoint', 'vivaengage',
+    'vivaglint', 'vivagoals', 'vivainsights', 'vivapulse', 'linkedin',
+];
+foreach ($microsoft365apps as $microsoft365app) {
+    $label = new lang_string('settings_show' . $microsoft365app, 'block_microsoft');
+    $desc = new lang_string('settings_show' . $microsoft365app . '_desc', 'block_microsoft');
+    $settings->add(new admin_setting_configcheckbox('block_microsoft/settings_show' . $microsoft365app, $label, $desc, 0));
+}
+
+// Settings to show Viva Amplify link in the block.
+// The link URL is tenant-specific and must be configured by the site administrator below.
+$label = new lang_string('settings_showvivaamplify', 'block_microsoft');
+$desc = new lang_string('settings_showvivaamplify_desc', 'block_microsoft');
+$vivaamplifycheckbox = new admin_setting_configcheckbox('block_microsoft/settings_showvivaamplify', $label, $desc, 0);
+$settings->add($vivaamplifycheckbox);
+
+$label = new lang_string('settings_vivaamplifyurl', 'block_microsoft');
+$desc = new lang_string('settings_vivaamplifyurl_desc', 'block_microsoft');
+$settings->add(new block_microsoft_admin_setting_required_url(
+    'block_microsoft/settings_vivaamplifyurl',
+    $label,
+    $desc,
+    '',
+    BLOCK_MICROSOFT_VIVAAMPLIFY_URL_REGEX,
+    $vivaamplifycheckbox
+));
+$settings->hide_if(
+    'block_microsoft/settings_vivaamplifyurl',
+    'block_microsoft/settings_showvivaamplify',
+    'notchecked'
+);
+
+// Settings to show Viva Connections link in the block.
+// The link URL is tenant-specific and must be configured by the site administrator below.
+$label = new lang_string('settings_showvivaconnections', 'block_microsoft');
+$desc = new lang_string('settings_showvivaconnections_desc', 'block_microsoft');
+$vivaconnectionscheckbox = new admin_setting_configcheckbox('block_microsoft/settings_showvivaconnections', $label, $desc, 0);
+$settings->add($vivaconnectionscheckbox);
+
+$label = new lang_string('settings_vivaconnectionsurl', 'block_microsoft');
+$desc = new lang_string('settings_vivaconnectionsurl_desc', 'block_microsoft');
+$settings->add(new block_microsoft_admin_setting_required_url(
+    'block_microsoft/settings_vivaconnectionsurl',
+    $label,
+    $desc,
+    '',
+    BLOCK_MICROSOFT_VIVACONNECTIONS_URL_REGEX,
+    $vivaconnectionscheckbox
+));
+$settings->hide_if(
+    'block_microsoft/settings_vivaconnectionsurl',
+    'block_microsoft/settings_showvivaconnections',
+    'notchecked'
+);
+
+// Settings to show Viva Learning link in the block.
+// The link URL is tenant-specific and must be configured by the site administrator below.
+$label = new lang_string('settings_showvivalearning', 'block_microsoft');
+$desc = new lang_string('settings_showvivalearning_desc', 'block_microsoft');
+$vivalearningcheckbox = new admin_setting_configcheckbox('block_microsoft/settings_showvivalearning', $label, $desc, 0);
+$settings->add($vivalearningcheckbox);
+
+$label = new lang_string('settings_vivalearningurl', 'block_microsoft');
+$desc = new lang_string('settings_vivalearningurl_desc', 'block_microsoft');
+$settings->add(new block_microsoft_admin_setting_required_url(
+    'block_microsoft/settings_vivalearningurl',
+    $label,
+    $desc,
+    '',
+    BLOCK_MICROSOFT_VIVALEARNING_URL_REGEX,
+    $vivalearningcheckbox
+));
+$settings->hide_if(
+    'block_microsoft/settings_vivalearningurl',
+    'block_microsoft/settings_showvivalearning',
+    'notchecked'
+);

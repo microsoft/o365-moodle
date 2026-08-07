@@ -29,6 +29,30 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/local/o365/lib.php');
 
+// Regex used to validate the tenant-configured Viva Connections URL (typically the tenant's SharePoint home site).
+// An empty value is also accepted, since the admin setting form is validated even while the link is disabled.
+// Note: admin_setting_configtext only recognises a custom regex paramtype when it is delimited with literal
+// forward slashes and has no trailing modifiers (see admin_setting::validate() in lib/adminlib.php), so the
+// domain part is matched case-sensitively; URLs should be entered in lowercase.
+define(
+    'BLOCK_MICROSOFT_VIVACONNECTIONS_URL_REGEX',
+    '/^$|^https:\/\/([a-zA-Z0-9-]+\.)*sharepoint\.(com|us|de|cn)(\/.*)?$/'
+);
+
+// Regex used to validate the tenant-configured Viva Learning URL.
+// An empty value is also accepted, since the admin setting form is validated even while the link is disabled.
+define(
+    'BLOCK_MICROSOFT_VIVALEARNING_URL_REGEX',
+    '/^$|^https:\/\/([a-zA-Z0-9-]+\.)*(viva\.microsoft\.com|cloud\.microsoft)(\/.*)?$/'
+);
+
+// Regex used to validate the tenant-configured Viva Amplify URL.
+// An empty value is also accepted, since the admin setting form is validated even while the link is disabled.
+define(
+    'BLOCK_MICROSOFT_VIVAAMPLIFY_URL_REGEX',
+    '/^$|^https:\/\/([a-zA-Z0-9-]+\.)*(amplify\.microsoft\.com|amplify\.cloud\.microsoft)(\/.*)?$/'
+);
+
 /**
  * Return the course sync option of the course with the given ID.
  *
