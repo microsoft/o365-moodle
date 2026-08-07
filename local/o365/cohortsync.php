@@ -63,6 +63,7 @@ $PAGE->requires->js_call_amd('local_o365/cohortsync_form', 'init');
 
 $action = optional_param('action', '', PARAM_ALPHA);
 if ($action == 'delete') {
+    require_sesskey();
     $connectionid = required_param('connectionid', PARAM_INT);
     if (!$connectionrecord = $DB->get_record('local_o365_objects', ['id' => $connectionid])) {
         throw new moodle_exception('cohortsync_connectionnotfound', 'local_o365');
