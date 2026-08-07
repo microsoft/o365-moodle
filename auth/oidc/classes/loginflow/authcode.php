@@ -59,25 +59,29 @@ class authcode extends base {
             return [];
         }
         $showicon = isset($this->config->set_pix) ? $this->config->set_pix : true;
+        $name = strip_tags(format_text($this->config->opname));
         $idpentry = [
             'url' => new url('/auth/oidc/', ['source' => 'loginpage']),
-            'name' => strip_tags(format_text($this->config->opname)),
+            'name' => $name,
         ];
         if ($showicon) {
             if (!empty($this->config->customicon)) {
                 $iconvalue = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
             } else {
-                $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
+                $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:microsoft_365';
                 $icon = explode(':', $icon);
                 if (isset($icon[1])) {
                     [$iconcomponent, $iconname] = $icon;
                 } else {
                     $iconcomponent = 'auth_oidc';
-                    $iconname = 'o365';
+                    $iconname = 'microsoft_365';
                 }
                 $iconvalue = new pix_icon($iconname, get_string('pluginname', 'auth_oidc'), $iconcomponent);
             }
             $idpentry['icon'] = $iconvalue;
+            // Two non-breaking spaces so the button text keeps a visible gap after the icon.
+            // Regular spaces would be collapsed to one by normal HTML whitespace handling.
+            $idpentry['name'] = "\u{00A0}\u{00A0}" . $name;
         }
         return [$idpentry];
     }
