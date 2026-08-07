@@ -116,7 +116,7 @@ class cohortsync extends moodleform {
 
                 $deletemappingurl = new url(
                     '/local/o365/cohortsync.php',
-                    ['action' => 'delete', 'connectionid' => $mapping->id]
+                    ['action' => 'delete', 'connectionid' => $mapping->id, 'sesskey' => sesskey()]
                 );
                 $existingmappingstable->data[] = [
                     $groupname,

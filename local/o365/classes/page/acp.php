@@ -378,6 +378,8 @@ class acp extends base {
     public function mode_usermatchclear() {
         global $DB;
 
+        require_sesskey();
+
         $type = optional_param('type', null, PARAM_TEXT);
         switch ($type) {
             case 'success':
@@ -505,8 +507,8 @@ class acp extends base {
         if ($matchqueuelength > 0) {
             echo html_writer::start_tag('div', ['class' => 'local_o365_matchqueuetoolbar']);
 
-            $clearurl = new url('/local/o365/acp.php', ['mode' => 'usermatchclear']);
-            $clearurl = $clearurl->out();
+            $clearurl = new url('/local/o365/acp.php', ['mode' => 'usermatchclear', 'sesskey' => sesskey()]);
+            $clearurl = $clearurl->out(false);
 
             // Clear successful button.
             $checkicon = $OUTPUT->pix_icon('t/check', 'success', 'moodle');
@@ -1270,7 +1272,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
      * Update Teams cache.
      */
     public function mode_teamconnections_update_cache() {
-        confirm_sesskey();
+        require_sesskey();
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
         // Pass forceupdate=true so an explicit admin request is never silently skipped
@@ -1292,7 +1294,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $this->set_title(get_string('acp_teamconnection', 'local_o365'));
 
         $courseid = required_param('course', PARAM_INT);
-        confirm_sesskey();
+        require_sesskey();
 
         $redirecturl = new url('/local/o365/acp.php', ['mode' => 'teamconnections']);
 
@@ -1431,7 +1433,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $this->set_title(get_string('acp_teamconnection', 'local_o365'));
 
         $courseid = required_param('course', PARAM_INT);
-        confirm_sesskey();
+        require_sesskey();
 
         $redirecturl = new url('/local/o365/acp.php', ['mode' => 'teamconnections']);
 
@@ -1572,6 +1574,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
     public function mode_maintenance_recreatedeletedgroups() {
         global $DB, $PAGE;
 
+        require_sesskey();
+
         $this->set_title(get_string('acp_maintenance_recreatedeletedgroups', 'local_o365'));
 
         $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
@@ -1663,6 +1667,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
      */
     public function mode_maintenance_resyncgroupusers() {
         global $DB, $PAGE;
+
+        require_sesskey();
 
         $this->set_title(get_string('acp_maintenance_resyncgroupusers', 'local_o365'));
 
@@ -1915,12 +1921,12 @@ var local_o365_coursesync_all_set_feature = function(state) {
         echo html_writer::empty_tag('br');
         echo html_writer::div(get_string('acp_maintenance_warning', 'local_o365'), 'alert alert-info');
 
-        $toolurl = new url($this->url, ['mode' => 'maintenance_resyncgroupusers']);
+        $toolurl = new url($this->url, ['mode' => 'maintenance_resyncgroupusers', 'sesskey' => sesskey()]);
         $toolname = get_string('acp_maintenance_resyncgroupusers', 'local_o365');
         echo html_writer::link($toolurl, $toolname, ['target' => '_blank']);
         echo html_writer::div(get_string('acp_maintenance_resyncgroupusers_desc', 'local_o365'));
 
-        $toolurl = new url($this->url, ['mode' => 'maintenance_recreatedeletedgroups']);
+        $toolurl = new url($this->url, ['mode' => 'maintenance_recreatedeletedgroups', 'sesskey' => sesskey()]);
         $toolname = get_string('acp_maintenance_recreatedeletedgroups', 'local_o365');
         echo html_writer::empty_tag('br');
         echo html_writer::link($toolurl, $toolname, ['target' => '_blank']);
@@ -1941,7 +1947,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         echo html_writer::div(get_string('cfg_cleanupoidctokens_desc', 'auth_oidc'));
 
         // Clear delta token.
-        $toolurl = new url($this->url, ['mode' => 'maintenance_cleandeltatoken']);
+        $toolurl = new url($this->url, ['mode' => 'maintenance_cleandeltatoken', 'sesskey' => sesskey()]);
         $toolname = get_string('acp_maintenance_cleandeltatoken', 'local_o365');
         echo html_writer::empty_tag('br');
         echo html_writer::link($toolurl, $toolname);
@@ -1955,6 +1961,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
      */
     public function mode_maintenance_cleandeltatoken() {
         global $PAGE;
+
+        require_sesskey();
 
         $this->set_title(get_string('acp_maintenance_cleandeltatoken', 'local_o365'));
 
@@ -2017,7 +2025,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
     public function mode_userconnections_resync(): bool {
         global $DB;
         $userid = required_param('userid', PARAM_INT);
-        confirm_sesskey();
+        require_sesskey();
 
         if (utils::is_connected() !== true) {
             mtrace('Microsoft 365 not configured');
@@ -2056,7 +2064,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         global $DB, $PAGE;
 
         $userid = required_param('userid', PARAM_INT);
-        confirm_sesskey();
+        require_sesskey();
 
         // Perform prechecks.
         $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
@@ -2120,7 +2128,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
         global $DB, $PAGE;
 
         $userid = required_param('userid', PARAM_INT);
-        confirm_sesskey();
+        require_sesskey();
         $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
         $confirmed = optional_param('confirmed', 0, PARAM_INT);
         if (!empty($confirmed)) {
@@ -2151,7 +2159,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         require_once($CFG->dirroot . '/auth/oidc/auth.php');
         $userid = required_param('userid', PARAM_INT);
-        confirm_sesskey();
+        require_sesskey();
         $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
         $confirmed = optional_param('confirmed', 0, PARAM_INT);
         if (!empty($confirmed)) {
