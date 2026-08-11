@@ -90,7 +90,7 @@ class serviceresource extends admin_setting_configtext {
             $iconvalid = addslashes($OUTPUT->pix_icon('t/check', 'valid', 'moodle'));
             $iconinvalid = addslashes($OUTPUT->pix_icon('t/delete', 'invalid', 'moodle'));
             $iconloading = addslashes($OUTPUT->pix_icon('i/ajaxloader', 'loading', 'moodle'));
-            $ajaxurl = new url('/local/o365/ajax.php');
+            $ajaxurl = new url('/local/o365/ajax.php', ['sesskey' => sesskey()]);
             $settinghtml .= '<script>
                                 $(function() {
                                     var opts = {
