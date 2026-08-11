@@ -25,6 +25,7 @@
 
 namespace auth_oidc\task;
 
+use core\session\manager;
 use core\task\scheduled_task;
 
 /**
@@ -40,10 +41,33 @@ class cleanup_oidc_sid extends scheduled_task {
 
     /**
      * Clean up OIDC SID records.
+     *
+     * A mapping is only removed once its Moodle session no longer exists, rather than after a fixed
+     * time period, so that SSO logout keeps working for sessions that outlive that fixed period.
      */
     public function execute() {
         global $DB;
 
-        $DB->delete_records_select('auth_oidc_sid', 'timecreated < ?', [strtotime('-1 day')]);
+        // Legacy mappings with no recorded session id (created before sessionid was tracked) can never
+        // be confirmed to have a live session, so delete them directly without a session_exists() check.
+        $DB->delete_records_select('auth_oidc_sid', 'sessionid IS NULL OR sessionid = ?', ['']);
+
+        // Fetch only the columns needed to decide what to keep, all into memory up front: issuing
+        // further queries (session_exists, delete_records) while an unbuffered recordset cursor is open
+        // can trigger "commands out of sync" errors on some DB drivers.
+        $records = $DB->get_records('auth_oidc_sid', null, '', 'id, sessionid');
+
+        $staleids = [];
+        foreach ($records as $record) {
+            if (!manager::session_exists($record->sessionid)) {
+                $staleids[] = $record->id;
+            }
+        }
+
+        // Delete in chunks to avoid hitting parameter/query-length limits on some DB drivers if a large
+        // number of mappings have accumulated between cleanup runs.
+        foreach (array_chunk($staleids, 1000) as $chunk) {
+            $DB->delete_records_list('auth_oidc_sid', 'id', $chunk);
+        }
     }
 }
