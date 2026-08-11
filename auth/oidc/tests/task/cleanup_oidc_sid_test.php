@@ -32,64 +32,73 @@ use dml_exception;
  */
 final class cleanup_oidc_sid_test extends advanced_testcase {
     /**
-     * SIDs older than 1 day are deleted.
+     * Insert a row into the core {sessions} table so that
+     * \core\session\manager::session_exists() reports it as existing.
      *
-     * The cleanup task deletes records where timecreated < strtotime('-1 day').
-     * Records created exactly 1 day ago or more recently are kept.
+     * @param string $sid
+     * @param int $userid
+     * @return void
+     * @throws dml_exception
+     */
+    private function create_moodle_session(string $sid, int $userid): void {
+        global $DB;
+
+        $DB->insert_record('sessions', [
+            'state' => 0,
+            'sid' => $sid,
+            'userid' => $userid,
+            'sessdata' => '',
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+    }
+
+    /**
+     * Mappings whose Moodle session still exists are kept; mappings whose session no longer exists, or
+     * that were never given a session id, are deleted.
      *
      * @return void
      * @throws dml_exception
      * @covers ::execute
      */
-    public function test_sids_older_than_yesterday_are_deleted(): void {
+    public function test_sid_records_are_cleaned_up_based_on_session_existence(): void {
         global $DB;
         $this->resetAfterTest();
 
-        // Create a test user to own the SID records.
         $user = $this->getDataGenerator()->create_user();
 
-        // Use a fixed reference time to avoid timing race conditions.
-        // The cleanup task will calculate strtotime('-1 day') at execution time, which may differ slightly
-        // from when we calculate it here. Use a large safety margin to ensure records fall clearly on one side.
-        $now = time();
-        $cutofftime = strtotime('-1 day', $now);
+        // Mapping tied to a session that still exists: must be kept.
+        $this->create_moodle_session('session_active', $user->id);
+        $activeid = $DB->insert_record('auth_oidc_sid', [
+            'userid' => $user->id,
+            'sid' => 'sid_active',
+            'timecreated' => time(),
+            'sessionid' => 'session_active',
+        ]);
 
-        // Create timestamps with clear margins to avoid boundary conditions.
-        // Add a 5-minute buffer before and after the cutoff to account for execution time variance.
-        $twodaysago = $cutofftime - DAYSECS;           // Well before cutoff, will be deleted.
-        $beforecutoff = $cutofftime - (MINSECS * 5);   // 5 minutes before cutoff, will be deleted.
-        $aftercutoff = $cutofftime + (MINSECS * 5);    // 5 minutes after cutoff, will be kept.
-        $muchlater = $now;                             // Current time, will be kept.
+        // Mapping tied to a session id that does not exist (e.g. the user's session has already
+        // expired or been terminated some other way): must be deleted.
+        $expiredid = $DB->insert_record('auth_oidc_sid', [
+            'userid' => $user->id,
+            'sid' => 'sid_expired',
+            'timecreated' => time(),
+            'sessionid' => 'session_does_not_exist',
+        ]);
 
-        // Create entries in auth_oidc_sid with unique SIDs.
-        $entry1id = $DB->insert_record(
-            'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_old_1', 'timecreated' => $twodaysago],
-        );
-        $entry2id = $DB->insert_record(
-            'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_old_2', 'timecreated' => $beforecutoff],
-        );
-        $entry3id = $DB->insert_record(
-            'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_new_1', 'timecreated' => $muchlater],
-        );
-        $entry4id = $DB->insert_record(
-            'auth_oidc_sid',
-            ['userid' => $user->id, 'sid' => 'sid_new_2', 'timecreated' => $aftercutoff],
-        );
+        // Legacy mapping created before sessionid was tracked: must be deleted, since there is no way
+        // to confirm whether its session still exists.
+        $legacyid = $DB->insert_record('auth_oidc_sid', [
+            'userid' => $user->id,
+            'sid' => 'sid_legacy',
+            'timecreated' => time(),
+            'sessionid' => null,
+        ]);
 
         $cleanup = new cleanup_oidc_sid();
-
         $cleanup->execute();
 
-        $records = $DB->get_records('auth_oidc_sid');
-
-        $this->assertCount(2, $records);
-
-        $this->assertTrue($DB->record_exists('auth_oidc_sid', ['id' => $entry3id]));
-        $this->assertFalse($DB->record_exists('auth_oidc_sid', ['id' => $entry1id]));
-        $this->assertFalse($DB->record_exists('auth_oidc_sid', ['id' => $entry2id]));
-        $this->assertTrue($DB->record_exists('auth_oidc_sid', ['id' => $entry4id]));
+        $this->assertTrue($DB->record_exists('auth_oidc_sid', ['id' => $activeid]));
+        $this->assertFalse($DB->record_exists('auth_oidc_sid', ['id' => $expiredid]));
+        $this->assertFalse($DB->record_exists('auth_oidc_sid', ['id' => $legacyid]));
     }
 }
