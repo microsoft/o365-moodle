@@ -24,6 +24,7 @@
  */
 
 use core\context\system;
+use core\session\manager;
 
 // phpcs:ignore moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../config.php');
@@ -32,19 +33,35 @@ $PAGE->set_url('/auth/oidc/logout.php');
 $PAGE->set_context(system::instance());
 
 $sid = optional_param('sid', '', PARAM_TEXT);
+$iss = optional_param('iss', '', PARAM_TEXT);
 
 if ($sid) {
-    if ($authoidcsidrecord = $DB->get_record('auth_oidc_sid', ['sid' => $sid])) {
-        if ($authoidcsidrecord->userid == $USER->id) {
-            $authsequence = get_enabled_auth_plugins(); // Auths, in sequence.
-            foreach ($authsequence as $authname) {
-                $authplugin = get_auth_plugin($authname);
-                $authplugin->logoutpage_hook();
-            }
+    // This request is made by the IdP directly (e.g. via a hidden iframe), so it will not carry the
+    // MoodleSession cookie of the user(s) being logged out, and there is no way to authenticate it.
+    // Do not call auth plugin logout hooks here: this is an unauthenticated endpoint, so anyone could
+    // trigger them merely by supplying a known sid.
+    $conditions = ['sid' => $sid];
+    if ($iss) {
+        // When the IdP includes iss, use it as an extra check that the mapping was created for this
+        // issuer, so a sid alone (without also knowing the issuer it was created for) cannot be used to
+        // force a logout. Not all IdPs include iss on front-channel logout requests (e.g. Azure AD
+        // currently does not), so this is applied only when present rather than required.
+        $conditions['iss'] = $iss;
+    }
 
-            $DB->delete_records('auth_oidc_sid', ['sid' => $sid]);
-            require_logout();
+    $authoidcsidrecords = $DB->get_records('auth_oidc_sid', $conditions);
+    if ($authoidcsidrecords) {
+        // The same IdP sid can be mapped to more than one Moodle session (e.g. logins from different
+        // browsers/devices during the same IdP session), so destroy every session mapped to this sid.
+        $matchedids = [];
+        foreach ($authoidcsidrecords as $authoidcsidrecord) {
+            if (!empty($authoidcsidrecord->sessionid)) {
+                manager::destroy($authoidcsidrecord->sessionid);
+            }
+            $matchedids[] = $authoidcsidrecord->id;
         }
+
+        $DB->delete_records_list('auth_oidc_sid', 'id', $matchedids);
     }
 }
 
