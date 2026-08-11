@@ -322,6 +322,8 @@ $string['privacy:metadata:auth_oidc_sid'] = 'IdP session identifiers (sid) used 
 $string['privacy:metadata:auth_oidc_sid:userid'] = 'The ID of the Moodle user';
 $string['privacy:metadata:auth_oidc_sid:sid'] = 'The IdP session identifier (sid)';
 $string['privacy:metadata:auth_oidc_sid:timecreated'] = 'The time when the mapping was created';
+$string['privacy:metadata:auth_oidc_sid:sessionid'] = 'The Moodle session id active at the time the mapping was created';
+$string['privacy:metadata:auth_oidc_sid:iss'] = 'The issuer (iss claim) of the id_token the mapping was created from';
 
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
 // "Microsoft 365", "OpenID Connect", etc.
