@@ -30,6 +30,7 @@ require_once(__DIR__ . '/../../config.php');
 require_login();
 $mode = required_param('mode', PARAM_TEXT);
 require_capability('moodle/site:config', system::instance());
+require_sesskey();
 $url = '/local/o365/ajax.php';
 $page = new \local_o365\page\ajax($url, '');
 $page->run($mode);
