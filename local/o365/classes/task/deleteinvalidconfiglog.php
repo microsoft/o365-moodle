@@ -179,23 +179,24 @@ class deleteinvalidconfiglog extends adhoc_task {
                             }
                             $totaldeleted += count($logidstodelete);
                             mtrace("... Deleted " . count($logidstodelete) . " logstore records for chunk");
-
-                            // Delete config_log records for this chunk immediately after logstore deletion.
-                            // This ensures atomic per-chunk processing: either both tables are cleaned up,
-                            // or neither is touched. Prevents orphaning logstore deletions on timeout.
-                            $DB->delete_records_list('config_log', 'id', $chunk);
-                            mtrace("... Deleted " . count($chunk) . " config_log records for chunk");
-
-                            // Check if we've exceeded the maximum execution time.
-                            if (time() >= $starttime + self::MAX_EXECUTION_TIME) {
-                                mtrace("... Reached time limit. Processed {$totaldeleted} records so far.");
-                                $hasmore = true;
-                                break 2; // Break out of both foreach loops.
-                            }
-
-                            // Brief pause to allow locks to be released and other queries to execute.
-                            usleep(100000); // 0.1 seconds.
                         }
+
+                        // Delete config_log records for this chunk, whether or not matching
+                        // logstore_standard_log records were found. Those log records are routinely
+                        // removed by \logstore_standard\task\cleanup_task (loglifetime setting), while
+                        // config_log is never purged by Moodle, so a match is not guaranteed.
+                        $DB->delete_records_list('config_log', 'id', $chunk);
+                        mtrace("... Deleted " . count($chunk) . " config_log records for chunk");
+
+                        // Check if we've exceeded the maximum execution time.
+                        if (time() >= $starttime + self::MAX_EXECUTION_TIME) {
+                            mtrace("... Reached time limit. Processed {$totaldeleted} records so far.");
+                            $hasmore = true;
+                            break 2; // Break out of both foreach loops.
+                        }
+
+                        // Brief pause to allow locks to be released and other queries to execute.
+                        usleep(100000); // 0.1 seconds.
                     }
 
                     // Check if there are more records to process for this config name.
