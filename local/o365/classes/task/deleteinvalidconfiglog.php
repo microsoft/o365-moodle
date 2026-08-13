@@ -186,6 +186,7 @@ class deleteinvalidconfiglog extends adhoc_task {
                         // removed by \logstore_standard\task\cleanup_task (loglifetime setting), while
                         // config_log is never purged by Moodle, so a match is not guaranteed.
                         $DB->delete_records_list('config_log', 'id', $chunk);
+                        $totaldeleted += count($chunk);
                         mtrace("... Deleted " . count($chunk) . " config_log records for chunk");
 
                         // Check if we've exceeded the maximum execution time.
