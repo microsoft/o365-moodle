@@ -112,7 +112,8 @@ class deleteinvalidconfiglog extends adhoc_task {
                     //
                     // This avoids full table scans on unindexed columns (eventname, objectid).
                     $deletechunks = array_chunk($configlogids, self::DELETE_CHUNK_SIZE);
-                    $totaldeleted = 0;
+                    $totalconfigdeleted = 0;
+                    $totallogstoredeleted = 0;
 
                     foreach ($deletechunks as $chunk) {
                         // First, get the config_log records with their timemodified values.
@@ -177,7 +178,7 @@ class deleteinvalidconfiglog extends adhoc_task {
                                 $DB->delete_records_list('logstore_standard_log', 'id', $microchunk);
                                 usleep(50000); // 0.05 seconds between micro-deletes.
                             }
-                            $totaldeleted += count($logidstodelete);
+                            $totallogstoredeleted += count($logidstodelete);
                             mtrace("... Deleted " . count($logidstodelete) . " logstore records for chunk");
                         }
 
@@ -186,12 +187,13 @@ class deleteinvalidconfiglog extends adhoc_task {
                         // removed by \logstore_standard\task\cleanup_task (loglifetime setting), while
                         // config_log is never purged by Moodle, so a match is not guaranteed.
                         $DB->delete_records_list('config_log', 'id', $chunk);
-                        $totaldeleted += count($chunk);
+                        $totalconfigdeleted += count($chunk);
                         mtrace("... Deleted " . count($chunk) . " config_log records for chunk");
 
                         // Check if we've exceeded the maximum execution time.
                         if (time() >= $starttime + self::MAX_EXECUTION_TIME) {
-                            mtrace("... Reached time limit. Processed {$totaldeleted} records so far.");
+                            mtrace("... Reached time limit. Processed {$totalconfigdeleted} config_log records " .
+                                "and {$totallogstoredeleted} logstore records so far.");
                             $hasmore = true;
                             break 2; // Break out of both foreach loops.
                         }
