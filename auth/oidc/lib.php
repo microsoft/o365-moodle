@@ -133,6 +133,8 @@ function auth_oidc_reset_app_tokens($settingname) {
  * @return void
  */
 function auth_oidc_validate_auth_settings(string $settingname) {
+    auth_oidc_validate_binding_username_claim();
+
     $idptype = get_config('auth_oidc', 'idptype');
     $clientauthmethod = get_config('auth_oidc', 'clientauthmethod');
 
@@ -193,6 +195,27 @@ function auth_oidc_validate_auth_settings(string $settingname) {
         }
         $message .= '</ul>';
         \core\notification::error($message);
+    }
+}
+
+/**
+ * Warn the admin if the stored "Custom" binding username claim is no longer supported for the
+ * currently configured IdP type and user sync setting.
+ *
+ * @return void
+ */
+function auth_oidc_validate_binding_username_claim() {
+    $idptype = get_config('auth_oidc', 'idptype');
+    if (empty($idptype) || get_config('auth_oidc', 'bindingusernameclaim') !== 'custom') {
+        return;
+    }
+
+    $mstypes = [AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM];
+    if (in_array($idptype, $mstypes) && auth_oidc_is_local_365_installed() && auth_oidc_is_user_sync_enabled()) {
+        $bindingclaimurl = new url('/admin/settings.php', ['section' => 'auth_oidc_binding_username_claim']);
+        \core\notification::warning(
+            get_string('warning_binding_username_claim_custom_unsupported', 'auth_oidc', $bindingclaimurl->out())
+        );
     }
 }
 
