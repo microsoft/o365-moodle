@@ -41,6 +41,25 @@ require_once($CFG->dirroot . '/lib/filelib.php');
  */
 class httpclient extends curl implements httpclientinterface {
     /**
+     * Constructor.
+     *
+     * Sets an overall request timeout so calls to Microsoft endpoints (including scheduled tasks, which
+     * are not bound by a PHP execution time limit) cannot hang indefinitely when the remote endpoint is
+     * unreachable or stops responding mid-request. Connect timeout is already 30s in the parent curl
+     * class, so only the missing overall timeout needs to be set here.
+     *
+     * @param array $settings Accepts the same keys as the parent curl class, plus an optional 'timeout'
+     *                         (seconds) to override the default overall request timeout.
+     */
+    public function __construct($settings = []) {
+        parent::__construct($settings);
+
+        $this->setopt([
+            'CURLOPT_TIMEOUT' => $settings['timeout'] ?? 300,
+        ]);
+    }
+
+    /**
      * Generate client tag headers.
      *
      * @return string[]
