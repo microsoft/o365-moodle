@@ -197,7 +197,9 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_usersync', 'local_o365');
         $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_usersync_details', 'local_o365', $scheduledtasks->out());
-        $syncsettings->add(new usersyncoptions('local_o365/usersync', $label, $desc));
+        $usersyncsetting = new usersyncoptions('local_o365/usersync', $label, $desc);
+        $usersyncsetting->set_updatedcallback('auth_oidc_validate_binding_username_claim');
+        $syncsettings->add($usersyncsetting);
 
         // User creation restrictions.
         $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
