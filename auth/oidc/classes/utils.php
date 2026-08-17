@@ -28,6 +28,7 @@ namespace auth_oidc;
 use Exception;
 use moodle_exception;
 use auth_oidc\event\action_failed;
+use core\context\system;
 use core\url;
 
 /**
@@ -308,5 +309,100 @@ class utils {
         $indexname = $DB->get_prefix() . 'authoidctoken_uniq_ix';
         $sql = "CREATE UNIQUE INDEX {$indexname} ON {auth_oidc_token} (oidcuniqid, tokenresource)";
         $DB->execute($sql);
+    }
+
+    /**
+     * Migrate a site's selected stock icon to the custom icon setting if it used one of the
+     * icon choices that have been removed from the icon selector.
+     *
+     * The 'auth_oidc/icon' setting stores a "component:pix" identifier. The set of stock
+     * choices has been reduced to a handful of icons relevant to this plugin; any site that had
+     * selected one of the removed choices (all generic core Moodle icons) needs that icon copied
+     * into the custom icon file area so the login page keeps showing the same image.
+     *
+     * Safe to call more than once: once a site has been migrated (or its 'icon' setting was
+     * never one of the removed choices), every subsequent call is a no-op, since the checks
+     * above always return early once either 'auth_oidc/icon' is empty/unset or
+     * 'auth_oidc/customicon' is populated. The file and config writes are wrapped in a
+     * delegated transaction so a failure partway through can't leave those two settings out of
+     * sync with each other, which is what the early-return checks rely on.
+     */
+    public static function migrate_removed_icon_choices(): void {
+        global $CFG, $DB;
+
+        $currenticon = get_config('auth_oidc', 'icon');
+        if (empty($currenticon)) {
+            return;
+        }
+
+        if (!empty(get_config('auth_oidc', 'customicon'))) {
+            // A custom icon is already in use and takes priority, so the stock icon setting is
+            // not currently affecting what is displayed. Nothing to migrate.
+            return;
+        }
+
+        // The old default icon has simply been replaced with a new image under a new pix name.
+        if ($currenticon === 'auth_oidc:o365') {
+            set_config('icon', 'auth_oidc:office_365', 'auth_oidc');
+            return;
+        }
+
+        $keepicons = [
+            'auth_oidc:microsoft_365',
+            'auth_oidc:microsoft',
+            'auth_oidc:microsoft_365_copilot',
+            'auth_oidc:office_365',
+            'auth_oidc:openid',
+            'auth_oidc:keycloak',
+        ];
+        if (in_array($currenticon, $keepicons, true)) {
+            return;
+        }
+
+        $parts = explode(':', $currenticon, 2);
+        if (count($parts) !== 2) {
+            return;
+        }
+        [, $pix] = $parts;
+
+        $sourcefile = null;
+        $extension = null;
+        foreach (['svg', 'png', 'gif', 'jpg', 'jpeg'] as $candidateextension) {
+            $candidatefile = "{$CFG->dirroot}/pix/{$pix}.{$candidateextension}";
+            if (file_exists($candidatefile)) {
+                $sourcefile = $candidatefile;
+                $extension = $candidateextension;
+                break;
+            }
+        }
+        if ($sourcefile === null) {
+            // Can't locate the source image for the removed choice, so there is nothing to copy.
+            return;
+        }
+
+        $systemcontext = system::instance();
+        $fs = get_file_storage();
+        $filename = 'migrated_' . clean_param(str_replace('/', '_', $pix), PARAM_FILE) . '.' . $extension;
+        $filerecord = [
+            'contextid' => $systemcontext->id,
+            'component' => 'auth_oidc',
+            'filearea' => 'customicon',
+            'itemid' => 0,
+            'filepath' => '/',
+            'filename' => $filename,
+        ];
+
+        // Wrapped in a transaction so a failure partway through (e.g. the file write succeeding
+        // but a config write failing) can't leave 'icon' and 'customicon' out of sync, which
+        // would break the early-return guards above on any later call.
+        $transaction = $DB->start_delegated_transaction();
+        $fs->delete_area_files($systemcontext->id, 'auth_oidc', 'customicon', 0);
+        $fs->create_file_from_pathname($filerecord, $sourcefile);
+        set_config('customicon', '/' . $filename, 'auth_oidc');
+        unset_config('icon', 'auth_oidc');
+        $transaction->allow_commit();
+
+        require_once($CFG->dirroot . '/auth/oidc/lib.php');
+        auth_oidc_initialize_customicon('/' . $filename);
     }
 }
