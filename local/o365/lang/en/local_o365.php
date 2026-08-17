@@ -306,7 +306,7 @@ $string['settings_coursesync_team_type_desc'] = 'The Microsoft Teams template to
 &bull; Standard template creates standard groups and teams (compatible with all tenants).<br>
 &bull; Education templates create education groups/teams (education tenants only; enables education-specific features).<br>
 &bull; Custom templates use standard groups (for compatibility with custom template design).<br><br>
-<strong>âš ï¸ WARNING: Once a team is created with a specific template, the template cannot be changed.</strong> Teams remain associated with their original template. Changing this setting only affects newly created teams, not existing ones. Plan your template selection carefully before enabling course sync.';
+<strong>⚠️ WARNING: Once a team is created with a specific template, the template cannot be changed.</strong> Teams remain associated with their original template. Changing this setting only affects newly created teams, not existing ones. Plan your template selection carefully before enabling course sync.';
 $string['settings_coursesync_team_type_standard'] = 'Standard';
 $string['settings_coursesync_team_type_educationclass'] = 'Education - Class Team';
 $string['settings_coursesync_team_type_educationstaff'] = 'Education - Staff Team';
@@ -314,24 +314,24 @@ $string['settings_coursesync_team_type_educationplc'] = 'Education - Professiona
 $string['settings_coursesync_team_type_custom'] = 'Custom template';
 $string['settings_coursesync_team_type_custom_id'] = 'Custom template ID';
 $string['settings_coursesync_team_type_custom_id_desc'] = 'The full ID of a custom template defined in the Teams admin centre. Only used when "Custom template" is selected above. <br><br><strong>Template ID must be in GUID format</strong> (e.g., e41de7bb-859a-4a0f-aa39-5725a0529c1c). You can find the template ID in the Teams admin centre when viewing your custom template details. <br><br>
-<strong>âš ï¸ ADDITIONAL AZURE PERMISSION REQUIRED:</strong> Validating and using custom team templates requires an additional Microsoft Graph API application permission (<strong>TeamTemplates.Read.All</strong>) that may not be present in your Azure app registration. Without this permission, the validation step will fail and the custom template ID cannot be set. If validation fails with a permission error, contact your Azure administrator to add this permission to your app registration. <br><br>
-<strong>âš ï¸ IMPORTANT LIMITATION:</strong> The Microsoft Teams framework currently only supports creating teams from custom templates when the template includes an <strong>en-US locale definition</strong>. Custom templates without en-US locale support will fail to create teams. Please ensure your custom template has an en-US locale defined in the Teams admin centre. <br><br>
-<strong>âš ï¸ WARNING: Once a team is created using this custom template, the template cannot be changed.</strong> If you need to use a different custom template for new teams, you must leave this setting empty or change it before the next team creation. Existing teams will continue to use their original template. <br><br>
+<strong>⚠️ ADDITIONAL AZURE PERMISSION REQUIRED:</strong> Validating and using custom team templates requires an additional Microsoft Graph API application permission (<strong>TeamTemplates.Read.All</strong>) that may not be present in your Azure app registration. Without this permission, the validation step will fail and the custom template ID cannot be set. If validation fails with a permission error, contact your Azure administrator to add this permission to your app registration. <br><br>
+<strong>⚠️ IMPORTANT LIMITATION:</strong> The Microsoft Teams framework currently only supports creating teams from custom templates when the template includes an <strong>en-US locale definition</strong>. Custom templates without en-US locale support will fail to create teams. Please ensure your custom template has an en-US locale defined in the Teams admin centre. <br><br>
+<strong>⚠️ WARNING: Once a team is created using this custom template, the template cannot be changed.</strong> If you need to use a different custom template for new teams, you must leave this setting empty or change it before the next team creation. Existing teams will continue to use their original template. <br><br>
 Teams will not be created correctly if an incorrect template ID is configured. Use the "Test Template ID" button to validate the template ID before running course sync.';
 $string['error_custom_template_id_required'] = 'Custom template ID is required when using the "Custom template" option. Please enter a valid template ID.';
 $string['error_custom_template_id_not_found'] = 'Custom template ID "{$a}" not found. Please verify the template ID exists in the Teams admin centre.';
 $string['error_custom_template_id_permission'] = 'Permission denied. Your Office 365 account cannot use this template. Check with your Teams administrator.';
 $string['error_custom_template_id_validation_failed'] = 'Custom template ID validation failed. The template may not support direct team creation or there may be a configuration issue. Please verify the template ID in the Teams admin centre.';
 $string['settings_team_type_custom_id_test_button'] = 'Validate Custom Template ID';
-$string['settings_team_type_custom_id_validating'] = 'ðŸ”„ Validating...';
-$string['settings_team_type_custom_id_error_empty'] = 'âš ï¸ Please enter a template ID first.';
-$string['settings_team_type_custom_id_error_not_found'] = 'âœ— Template not found. The template ID "{$a}" does not exist. Please verify it in the Teams admin centre.';
-$string['settings_team_type_custom_id_error_validation'] = 'âœ— Validation error. {$a}';
+$string['settings_team_type_custom_id_validating'] = '🔄 Validating...';
+$string['settings_team_type_custom_id_error_empty'] = '⚠️ Please enter a template ID first.';
+$string['settings_team_type_custom_id_error_not_found'] = '✗ Template not found. The template ID "{$a}" does not exist. Please verify it in the Teams admin centre.';
+$string['settings_team_type_custom_id_error_validation'] = '✗ Validation error. {$a}';
 $string['settings_team_type_custom_id_error_default'] = 'Failed to validate the template. Please try again or contact your administrator.';
-$string['settings_team_type_custom_id_error_timeout'] = 'âœ— Validation timed out. The request took longer than 10 seconds. Please try again.';
-$string['settings_team_type_custom_id_error_network'] = 'âœ— Network error. Cannot reach the validation service. Please check your internet connection and try again.';
-$string['settings_team_type_custom_id_error_parsererror'] = 'âœ— Server response error. The validation service returned invalid data. Please check your Office 365 integration.';
-$string['settings_team_type_custom_id_error_http'] = 'âœ— Validation error (HTTP {$a}). Please try again or contact your administrator.';
+$string['settings_team_type_custom_id_error_timeout'] = '✗ Validation timed out. The request took longer than 10 seconds. Please try again.';
+$string['settings_team_type_custom_id_error_network'] = '✗ Network error. Cannot reach the validation service. Please check your internet connection and try again.';
+$string['settings_team_type_custom_id_error_parsererror'] = '✗ Server response error. The validation service returned invalid data. Please check your Office 365 integration.';
+$string['settings_team_type_custom_id_error_http'] = '✗ Validation error (HTTP {$a}). Please try again or contact your administrator.';
 $string['settings_coursesync_team_type_educationplc_desc'] = 'The Professional Learning Community template. Teams are created directly from this template with automatic backing group provisioning. This template is only available on education tenants.';
 $string['settings_coursesync_sync_direction'] = 'Course user sync behavior';
 $string['settings_coursesync_sync_direction_details'] = 'Select the direction in which you want the users to be synchronized between Moodle and Microsoft Teams.';
@@ -444,7 +444,7 @@ $string['settings_usersynccreationrestriction'] = 'User creation restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only Microsoft Entra ID users matching the condition will be created during user sync.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Field value';
 $string['settings_usersynccreationrestriction_o365group'] = 'Microsoft 365 Group Membership (group name)';
-$string['settings_usersynccreationrestriction_o365groupid'] = 'Microsoft 365 Group Membership (group object IDs, comma-separated)';
+$string['settings_usersynccreationrestriction_o365groupid'] = 'Microsoft 365 Group Membership (group object ID)';
 $string['settings_usersynccreationrestriction_regex'] = 'Value is a regular expression';
 $string['settings_maintenance'] = 'Maintenance';
 $string['settings_maintenance_details'] = 'Various maintenance tasks are available to resolve some common issues.';
@@ -994,7 +994,7 @@ $string['help_user_update_help'] = 'This will update all users in Moodle from ea
 $string['help_user_suspend'] = 'Suspend Accounts Help';
 $string['help_user_suspend_help'] = 'This will suspend users from Moodle if they are marked as deleted in Microsoft Entra ID.';
 $string['help_user_delete'] = 'Delete Accounts Help';
-$string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Microsoft Entra ID. This will only work if the suspend user option is enabled. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful! Note: By default, deletion occurs 30 days after the account was deleted in Microsoft Entra ID due to Entra IDâ€™s soft-delete retention period (accounts can be restored during this time).';
+$string['help_user_delete_help'] = 'This will delete users from Moodle if they are marked as deleted in Microsoft Entra ID. This will only work if the suspend user option is enabled. The Moodle account will be deleted and all associated user information will be removed from Moodle. Be careful! Note: By default, deletion occurs 30 days after the account was deleted in Microsoft Entra ID due to Entra ID’s soft-delete retention period (accounts can be restored during this time).';
 $string['help_user_reenable'] = 'Re-enable Accounts Help';
 $string['help_user_reenable_help'] = 'This will re-enable suspended Moodle accounts if they are returned from Microsoft Entra ID.';
 $string['help_user_disabledsync'] = 'Sync disabled status help';
@@ -1095,13 +1095,13 @@ $string['unknownasyncstate'] = 'Unknown async operation state: {$a}';
 $string['error_template_id_empty'] = 'Template ID cannot be empty.';
 $string['error_not_connected'] = 'Not connected to Microsoft 365. Please set up the Office 365 integration first.';
 $string['error_graph_client_not_available'] = 'Cannot connect to Microsoft Graph API. Please check your Office 365 integration setup.';
-$string['success_template_id_valid'] = 'âœ“ Template ID "{$a}" is valid and accessible.';
-$string['error_template_id_not_found'] = 'âœ— Template ID "{$a}" was not found. Please verify the template ID in the Teams admin centre.';
-$string['error_template_validation_permission'] = 'âœ— Permission denied. The Office 365 account does not have permission to use this template. Check with your Teams administrator.';
-$string['error_template_validation_invalid_format'] = 'âœ— Template ID "{$a}" has an invalid format. Template IDs typically look like: com.microsoft.teams.template.custom_template_id';
-$string['error_template_validation_failed'] = 'âœ— Template validation failed: {$a}';
-$string['error_template_validation_error'] = 'âœ— An error occurred while validating the template. Please try again or contact your administrator.';
-$string['error_template_validation_generic'] = 'âœ— Cannot validate template due to an error: {$a} Please check the template ID format and try again. If the problem persists, contact your administrator.';
+$string['success_template_id_valid'] = '✓ Template ID "{$a}" is valid and accessible.';
+$string['error_template_id_not_found'] = '✗ Template ID "{$a}" was not found. Please verify the template ID in the Teams admin centre.';
+$string['error_template_validation_permission'] = '✗ Permission denied. The Office 365 account does not have permission to use this template. Check with your Teams administrator.';
+$string['error_template_validation_invalid_format'] = '✗ Template ID "{$a}" has an invalid format. Template IDs typically look like: com.microsoft.teams.template.custom_template_id';
+$string['error_template_validation_failed'] = '✗ Template validation failed: {$a}';
+$string['error_template_validation_error'] = '✗ An error occurred while validating the template. Please try again or contact your administrator.';
+$string['error_template_validation_generic'] = '✗ Cannot validate template due to an error: {$a} Please check the template ID format and try again. If the problem persists, contact your administrator.';
 
 // Misc.
 $string['spsite_group_contributors_desc'] = 'All users who have access to manage files for course {$a}';
