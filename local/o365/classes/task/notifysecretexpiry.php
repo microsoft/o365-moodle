@@ -53,22 +53,28 @@ class notifysecretexpiry extends scheduled_task {
      * @return bool
      */
     public function execute(): bool {
+        if (!utils::is_configured()) {
+            // Microsoft 365 integration has not been set up; nothing to do.
+            mtrace('Microsoft 365 integration is not configured. Skipping.');
+            return true;
+        }
+
         if (utils::is_connected() !== true) {
-            return false;
+            throw new moodle_exception('error_not_connected', 'local_o365');
         }
 
         try {
             $graphclient = utils::get_api();
         } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
-            mtrace('Failed to get Graph API client');
-            return false;
+            mtrace(get_string('errorcannotgetapiclient', 'local_o365'));
+            throw new moodle_exception('errorcannotgetapiclient', 'local_o365');
         }
 
         $authenticationmethod = get_config('auth_oidc', 'clientauthmethod');
         if ($authenticationmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
             // Currently only support client secret authentication method.
-            return false;
+            throw new moodle_exception('errorunsupportedsecretauthenticationmethod', 'local_o365');
         }
 
         $appid = get_config('auth_oidc', 'clientid');
@@ -77,9 +83,11 @@ class notifysecretexpiry extends scheduled_task {
             $appcredentials = $graphclient->get_app_credentials($appid);
         } catch (moodle_exception $e) {
             utils::debug('Exception: ' . $e->getMessage(), __METHOD__, $e);
-            mtrace('Failed to get secrets');
+            mtrace(get_string('errorfailedtogetsecrets', 'local_o365'));
+            // The task fails here because the secrets could not be retrieved, not because of
+            // the notification outcome, so the exception is thrown regardless of it.
             $this->notify_invalid_secret();
-            return false;
+            throw new moodle_exception('errorfailedtogetsecrets', 'local_o365');
         }
 
         $fourweeksinseconds = 60 * 60 * 24 * 7 * 4;
@@ -100,11 +108,15 @@ class notifysecretexpiry extends scheduled_task {
                                     $endtime = strtotime($secret['endDateTime']);
                                     if ($endtime < time()) {
                                         // Secret already expired, notify site admin.
-                                        $this->notify_secret_expired();
+                                        if (!$this->notify_secret_expired()) {
+                                            throw new moodle_exception('errorfailedtosendnotification', 'local_o365');
+                                        }
                                     } else if ($endtime - $fourweeksinseconds < time()) {
                                         // Secret to be expired in less than 4 weeks, notify site admin.
                                         mtrace('... Found secret that will expire soon.');
-                                        $this->notify_secret_almost_expired($endtime);
+                                        if (!$this->notify_secret_almost_expired($endtime)) {
+                                            throw new moodle_exception('errorfailedtosendnotification', 'local_o365');
+                                        }
                                     } else {
                                         // Nothing to do.
                                         mtrace('... Secret will expire well in the future.');
@@ -112,7 +124,9 @@ class notifysecretexpiry extends scheduled_task {
                                 } else {
                                     // This should never happen.
                                     mtrace('Secret does not have expiry date');
-                                    $this->notify_invalid_secret();
+                                    if (!$this->notify_invalid_secret()) {
+                                        throw new moodle_exception('errorfailedtosendnotification', 'local_o365');
+                                    }
                                 }
 
                                 mtrace('Skip processing other secrets');
@@ -129,7 +143,9 @@ class notifysecretexpiry extends scheduled_task {
                         // This should only happen in very rare cases,
                         // e.g. secret has been deleted, but existing token is still working.
                         mtrace('Secret used in the integration has not been found');
-                        $this->notify_invalid_secret();
+                        if (!$this->notify_invalid_secret()) {
+                            throw new moodle_exception('errorfailedtosendnotification', 'local_o365');
+                        }
                     }
                 }
             }
@@ -190,28 +206,34 @@ class notifysecretexpiry extends scheduled_task {
     /**
      * Notify site admin about secret already expired.
      *
-     * @return void
+     * @return bool True if the notification was sent to all recipients successfully.
      */
-    private function notify_secret_expired() {
+    private function notify_secret_expired(): bool {
         $supportuser = core_user::get_support_user();
         $subject = get_string('notification_subject_secret_expired', 'local_o365');
         $message = get_string('notification_content_secret_expired', 'local_o365');
 
         $notificationreciepients = $this->get_notification_recipients();
 
+        $allsucceeded = true;
         foreach ($notificationreciepients as $recipient) {
             mtrace('...... Sending notification to ' . $recipient->email . '.');
-            email_to_user($recipient, $supportuser, $subject, $message);
+            if (!email_to_user($recipient, $supportuser, $subject, $message)) {
+                $allsucceeded = false;
+                mtrace('...... Failed to send notification to ' . $recipient->email . '.');
+            }
         }
+
+        return $allsucceeded;
     }
 
     /**
      * Notify site admin about secret to be expired soon.
      *
      * @param int $endtime
-     * @return void
+     * @return bool True if the notification was sent to all recipients successfully.
      */
-    private function notify_secret_almost_expired(int $endtime) {
+    private function notify_secret_almost_expired(int $endtime): bool {
         $supportuser = core_user::get_support_user();
 
         // Calculate in how many days the secret will expire, and form duration string.
@@ -228,26 +250,38 @@ class notifysecretexpiry extends scheduled_task {
         $message = get_string('notification_content_secret_almost_expired', 'local_o365', $daysstring);
 
         $notificationreciepients = $this->get_notification_recipients();
+        $allsucceeded = true;
         foreach ($notificationreciepients as $recipient) {
             mtrace('...... Sending notification to ' . $recipient->email . '.');
-            email_to_user($recipient, $supportuser, $subject, $message);
+            if (!email_to_user($recipient, $supportuser, $subject, $message)) {
+                $allsucceeded = false;
+                mtrace('...... Failed to send notification to ' . $recipient->email . '.');
+            }
         }
+
+        return $allsucceeded;
     }
 
     /**
      * Notify site admin about invalid secret.
      *
-     * @return void
+     * @return bool True if the notification was sent to all recipients successfully.
      */
-    private function notify_invalid_secret() {
+    private function notify_invalid_secret(): bool {
         $supportuser = core_user::get_support_user();
         $subject = get_string('notification_subject_invalid_secret', 'local_o365');
         $message = get_string('notification_content_invalid_secret', 'local_o365');
 
         $notificationreciepients = $this->get_notification_recipients();
+        $allsucceeded = true;
         foreach ($notificationreciepients as $recipient) {
             mtrace('...... Sending notification to ' . $recipient->email . '.');
-            email_to_user($recipient, $supportuser, $subject, $message);
+            if (!email_to_user($recipient, $supportuser, $subject, $message)) {
+                $allsucceeded = false;
+                mtrace('...... Failed to send notification to ' . $recipient->email . '.');
+            }
         }
+
+        return $allsucceeded;
     }
 }
