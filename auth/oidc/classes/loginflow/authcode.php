@@ -656,7 +656,11 @@ class authcode extends base {
         global $DB;
 
         if (auth_oidc_is_local_365_installed()) {
-            $match = $DB->get_record('local_o365_connections', ['entraidupn' => $entraidupn]);
+            $entraidupn = trim($entraidupn);
+            $sql = 'SELECT *
+                      FROM {local_o365_connections}
+                     WHERE ' . $DB->sql_equal('entraidupn', ':entraidupn', false);
+            $match = $DB->get_record_sql($sql, ['entraidupn' => $entraidupn]);
             if (!empty($match) && \local_o365\utils::is_o365_connected($match->muserid) !== true) {
                 return $DB->get_record('user', ['id' => $match->muserid]);
             }
@@ -940,6 +944,10 @@ class authcode extends base {
                     $matchedwith->entraidupn = $username;
                     throw new moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
                 }
+                // The matched Moodle user is already set to auth 'oidc': bind the login to that user's own
+                // username rather than the Microsoft-derived one, which may not match it (e.g. a manual match
+                // keyed on the full UPN while the Moodle username is only the UPN prefix).
+                $username = $matchedwith->username;
             }
             $username = trim(core_text::strtolower($username));
             $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
