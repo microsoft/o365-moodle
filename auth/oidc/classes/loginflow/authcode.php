@@ -272,6 +272,16 @@ class authcode extends base {
         array $extraparams = [],
         bool $selectaccount = false
     ) {
+        global $USER;
+
+        if (isloggedin() && !isguestuser()) {
+            // Record who initiated this request against the state record. The OIDC callback can arrive as a
+            // cross-site POST (response_mode=form_post), which a SameSite=Lax session cookie is not sent on, so the
+            // session may not survive the round trip. Storing the user id here lets handleauthresponse() identify
+            // the initiating user from the (unguessable, single-use) state record instead of the live session.
+            $stateparams['initiatinguserid'] = $USER->id;
+        }
+
         $client = $this->get_oidcclient();
         $client->authrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
     }
@@ -464,8 +474,29 @@ class authcode extends base {
 
         // Check if OIDC user is already migrated.
         $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
-        if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
-            // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
+
+        // Determine who initiated this request. Prefer the user id stored against the state record over the live
+        // session: the state record is only returned by a legitimate, single-use round trip through the OP, so it
+        // can be trusted even when the session cookie did not survive the callback (e.g. SameSite=Lax blocking the
+        // cross-site POST used by response_mode=form_post). Fall back to the live session for state records created
+        // before this was captured.
+        $linkinguser = null;
+        if (!empty($additionaldata['initiatinguserid'])) {
+            $linkinguser = core_user::get_user((int)$additionaldata['initiatinguserid']);
+            if (!$linkinguser || !empty($linkinguser->deleted)) {
+                $linkinguser = null;
+            }
+        } else if (isloggedin() && !isguestuser()) {
+            $linkinguser = $USER;
+        }
+
+        if ($linkinguser && (empty($tokenrec) || (isset($linkinguser->auth) && $linkinguser->auth !== 'oidc'))) {
+            // If the initiating user is trying to link a Microsoft 365 account or use it for OIDC, make sure the
+            // current session actually belongs to them, restoring it if the cookie was dropped on the callback.
+            if (!isloggedin() || isguestuser() || (int)$USER->id !== (int)$linkinguser->id) {
+                \core\session\manager::login_user($linkinguser);
+            }
+
             // Check if that Microsoft 365 account already exists in moodle.
             $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
 
