@@ -48,6 +48,9 @@ class calendar extends \HTML_QuickForm_advcheckbox {
     /** @var string Sync behaviour: in/out/both. */
     protected $syncbehav = 'out';
 
+    /** @var array Form custom data. */
+    protected $customdata = [];
+
     /** @var string html for help button, if empty then no help will icon will be displayed. */
     public $_helpbutton = '';
 

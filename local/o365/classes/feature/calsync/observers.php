@@ -156,6 +156,92 @@ class observers {
     }
 
     /**
+     * Handle a course_module_updated event.
+     *
+     * Editing a course module's "Restrict access" rules (or anything else affecting who can see it)
+     * doesn't touch the calendar 'event' row at all, so no calendar_event_updated fires and the normal
+     * observers never re-evaluate Outlook sync for it. Moodle's own calendar looks correct regardless,
+     * since it recomputes visibility live on every render (see is_event_module_visible_to_user() in
+     * \local_o365\feature\calsync\main) - but Outlook sync is event-driven, so it needs an explicit
+     * trigger. course_module_updated doesn't tell us specifically whether availability changed, so this
+     * queues a reconciliation task for every calendar event tied to the module on every edit.
+     *
+     * @param \core\event\course_module_updated $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_course_module_updated(\core\event\course_module_updated $event) {
+        if (\local_o365\utils::is_connected() !== true) {
+            return false;
+        }
+
+        $modulename = $event->other['modulename'] ?? null;
+        $instanceid = $event->other['instanceid'] ?? null;
+
+        if (empty($modulename) || empty($instanceid)) {
+            return true;
+        }
+
+        $task = new \local_o365\feature\calsync\task\syncmoduleavailability();
+        $task->set_custom_data([
+            'modulename' => $modulename,
+            'instanceid' => $instanceid,
+        ]);
+        \core\task\manager::queue_adhoc_task($task);
+
+        return true;
+    }
+
+    /**
+     * Handle a group_member_added event.
+     *
+     * A group-based "Restrict access" rule doesn't just change when the rule itself is edited - it also
+     * changes whenever the affected user's group membership changes, which editing the module obviously
+     * doesn't cover. See handle_group_member_removed() and queue_user_availability_sync() for details.
+     *
+     * @param \core\event\group_member_added $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_group_member_added(\core\event\group_member_added $event) {
+        return static::queue_user_availability_sync($event->courseid, $event->relateduserid);
+    }
+
+    /**
+     * Handle a group_member_removed event.
+     *
+     * @param \core\event\group_member_removed $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_group_member_removed(\core\event\group_member_removed $event) {
+        return static::queue_user_availability_sync($event->courseid, $event->relateduserid);
+    }
+
+    /**
+     * Queue an adhoc task to re-check Outlook sync for one user's group-restricted events in a course.
+     *
+     * @param int $courseid The course the group membership change happened in.
+     * @param int $userid The user whose group membership changed.
+     * @return bool Success/Failure.
+     */
+    protected static function queue_user_availability_sync($courseid, $userid) {
+        if (\local_o365\utils::is_connected() !== true) {
+            return false;
+        }
+
+        if (empty($courseid) || empty($userid)) {
+            return true;
+        }
+
+        $task = new \local_o365\feature\calsync\task\syncuseravailability();
+        $task->set_custom_data([
+            'courseid' => $courseid,
+            'userid' => $userid,
+        ]);
+        \core\task\manager::queue_adhoc_task($task);
+
+        return true;
+    }
+
+    /**
      * Handle calendar_subscribed event - queue calendar sync jobs for cron.
      *
      * @param \local_o365\event\calendar_subscribed $event The triggered event.
@@ -198,6 +284,78 @@ class observers {
             'timecreated' => time(),
         ]);
         \core\task\manager::queue_adhoc_task($calunsubscribe);
+        return true;
+    }
+
+    /**
+     * Handle a mod_assign extension_granted event.
+     *
+     * mod_assign\assign::save_user_extension() updates or deletes the underlying calendar 'event' record
+     * with direct SQL when an extension is re-granted or revoked, bypassing calendar_event::update() and
+     * calendar_event::delete(). This means \core\event\calendar_event_updated/deleted never fire for those
+     * two cases, so the normal calendar sync observers never see the change.
+     *
+     * extension_granted itself, however, is always triggered - for grants, re-grants, and revokes alike -
+     * and it fires before that raw SQL runs. Registering this as an internal (synchronous) observer means
+     * it executes at that same point: assign_user_flags has already been saved with the new extension
+     * date, but the 'event' table still holds the pre-change record. That lets us diff old vs. new state
+     * to work out what needs reconciling in Outlook for the two cases core's own events miss. A
+     * first-time grant needs no special handling here, since core creates the event via
+     * calendar_event::create(), which fires calendar_event_created and is handled normally by
+     * handle_calendar_event_created().
+     *
+     * This only does cheap, local DB reads/writes. The actual Outlook sync involves outbound Graph API
+     * calls, which would add latency to the teacher's grant-extension request and hold this request's
+     * transaction open for longer than necessary if made inline here - so instead this only captures a
+     * snapshot of what changed and queues an adhoc task (\local_o365\feature\calsync\task\
+     * syncassignextension) to make those calls after the request has committed.
+     *
+     * @param \mod_assign\event\extension_granted $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_assign_extension_granted(\mod_assign\event\extension_granted $event) {
+        global $DB;
+
+        if (\local_o365\utils::is_connected() !== true) {
+            return false;
+        }
+
+        $assignid = $event->objectid;
+        $userid = $event->relateduserid;
+
+        $flags = $DB->get_record('assign_user_flags', ['assignment' => $assignid, 'userid' => $userid]);
+        $newextensionduedate = (!empty($flags)) ? (int) $flags->extensionduedate : 0;
+
+        // Still the pre-change record - see method docblock.
+        $oldevent = $DB->get_record('event', [
+            'modulename' => 'assign',
+            'instance' => $assignid,
+            'userid' => $userid,
+            'eventtype' => 'extension',
+        ]);
+
+        if (empty($oldevent)) {
+            return true;
+        }
+
+        if (empty($newextensionduedate)) {
+            // Extension is being revoked - core is about to delete the event record directly.
+            $action = 'delete';
+        } else if ((int) $oldevent->timestart !== $newextensionduedate) {
+            // Extension date is being changed - core is about to update the event record directly.
+            $action = 'update';
+        } else {
+            return true;
+        }
+
+        $task = new \local_o365\feature\calsync\task\syncassignextension();
+        $task->set_custom_data([
+            'action' => $action,
+            'event' => $oldevent,
+            'newextensionduedate' => $newextensionduedate,
+        ]);
+        \core\task\manager::queue_adhoc_task($task);
+
         return true;
     }
 
