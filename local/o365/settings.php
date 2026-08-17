@@ -34,6 +34,7 @@ use local_o365\adminsetting\moodlesetup;
 use local_o365\adminsetting\serviceresource;
 use local_o365\adminsetting\toollink;
 use local_o365\adminsetting\coursesync;
+use local_o365\adminsetting\usersyncgroupfilter;
 use local_o365\adminsetting\usersynccreationrestriction;
 use local_o365\adminsetting\team_type_custom_id;
 use local_o365\feature\coursesync\main;
@@ -207,6 +208,11 @@ if ($hassiteconfig) {
         $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_usersync_details', 'local_o365', $scheduledtasks->out());
         $usersyncsettings->add(new usersyncoptions('local_o365/usersync', $label, $desc));
+
+        // User sync group filter.
+        $label = new lang_string('settings_usersyncgroupfilter', 'local_o365');
+        $desc = new lang_string('settings_usersyncgroupfilter_details', 'local_o365');
+        $usersyncsettings->add(new usersyncgroupfilter('local_o365/usersyncgroupfilter', $label, $desc, ''));
 
         // User creation restrictions.
         $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
