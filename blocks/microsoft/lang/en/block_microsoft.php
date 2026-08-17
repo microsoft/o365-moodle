@@ -30,6 +30,7 @@
 $string['pluginname'] = 'Microsoft block';
 $string['contactadmin'] = 'Contact administrator for more information.';
 $string['error_nomoodlenotebook'] = 'Could not find your Moodle notebook.';
+$string['error_urlrequiredwhenenabled'] = 'This URL must be configured, since the "Show" option above is enabled.';
 $string['linkonedrive'] = 'My OneDrive';
 $string['linkonenote'] = 'My OneNote Notebook';
 $string['linksways'] = 'My Sways';
@@ -63,6 +64,20 @@ $string['msalogin'] = 'Log in with Microsoft Account';
 $string['logintoo365'] = 'Log in to Microsoft 365';
 $string['connecttoo365'] = 'Connect to Microsoft 365';
 $string['install_office'] = 'Install Office';
+
+// Microsoft 365 and Viva apps.
+$string['linkword'] = 'Word';
+$string['linkexcel'] = 'Excel';
+$string['linkpowerpoint'] = 'PowerPoint';
+$string['linkvivaengage'] = 'Viva Engage';
+$string['linkvivaamplify'] = 'Viva Amplify';
+$string['linkvivaconnections'] = 'Viva Connections';
+$string['linkvivaglint'] = 'Viva Glint';
+$string['linkvivagoals'] = 'Viva Goals';
+$string['linkvivainsights'] = 'Viva Insights';
+$string['linkvivalearning'] = 'Viva Learning';
+$string['linkvivapulse'] = 'Viva Pulse';
+$string['linklinkedin'] = 'Microsoft LinkedIn';
 
 // Configuration settings.
 $string['settings_showemail'] = 'Show "My Email"';
@@ -102,6 +117,36 @@ $string['defaultprofile'] = 'Profile image';
 $string['settings_geto365link'] = 'Install Office download URL';
 $string['settings_geto365link_desc'] = 'The URL to use for the "Install Office" link.';
 $string['settings_geto365link_default'] = 'https://portal.office.com/OLS/MySoftware.aspx';
+$string['settings_showword'] = 'Show "Word"';
+$string['settings_showword_desc'] = 'Enable or disable the "Word" link in the block.';
+$string['settings_showexcel'] = 'Show "Excel"';
+$string['settings_showexcel_desc'] = 'Enable or disable the "Excel" link in the block.';
+$string['settings_showpowerpoint'] = 'Show "PowerPoint"';
+$string['settings_showpowerpoint_desc'] = 'Enable or disable the "PowerPoint" link in the block.';
+$string['settings_showvivaengage'] = 'Show "Viva Engage"';
+$string['settings_showvivaengage_desc'] = 'Enable or disable the "Viva Engage" link in the block.';
+$string['settings_showvivaamplify'] = 'Show "Viva Amplify"';
+$string['settings_showvivaamplify_desc'] = 'Enable or disable the "Viva Amplify" link in the block. <br /><b>Note:</b> The Viva Amplify URL below must also be configured for the link to be shown.';
+$string['settings_vivaamplifyurl'] = 'Viva Amplify URL';
+$string['settings_vivaamplifyurl_desc'] = 'The URL of your organization\'s Viva Amplify experience, as configured by your Microsoft 365 tenant administrator, e.g. https://amplify.microsoft.com/. Only URLs on an amplify.microsoft.com or amplify.cloud.microsoft domain are accepted.';
+$string['settings_showvivaconnections'] = 'Show "Viva Connections"';
+$string['settings_showvivaconnections_desc'] = 'Enable or disable the "Viva Connections" link in the block. <br /><b>Note:</b> The Viva Connections URL below must also be configured for the link to be shown.';
+$string['settings_vivaconnectionsurl'] = 'Viva Connections URL';
+$string['settings_vivaconnectionsurl_desc'] = 'The URL of your organization\'s Viva Connections experience, as configured by your Microsoft 365 tenant administrator. This is typically your SharePoint home site, e.g. https://yourtenant.sharepoint.com/sites/yourhomesite. Only URLs on a *.sharepoint.com (or sovereign cloud equivalent) domain are accepted.';
+$string['settings_showvivaglint'] = 'Show "Viva Glint"';
+$string['settings_showvivaglint_desc'] = 'Enable or disable the "Viva Glint" link in the block.';
+$string['settings_showvivagoals'] = 'Show "Viva Goals"';
+$string['settings_showvivagoals_desc'] = 'Enable or disable the "Viva Goals" link in the block.';
+$string['settings_showvivainsights'] = 'Show "Viva Insights"';
+$string['settings_showvivainsights_desc'] = 'Enable or disable the "Viva Insights" link in the block.';
+$string['settings_showvivalearning'] = 'Show "Viva Learning"';
+$string['settings_showvivalearning_desc'] = 'Enable or disable the "Viva Learning" link in the block. <br /><b>Note:</b> The Viva Learning URL below must also be configured for the link to be shown.';
+$string['settings_vivalearningurl'] = 'Viva Learning URL';
+$string['settings_vivalearningurl_desc'] = 'The URL of your organization\'s Viva Learning experience, as configured by your Microsoft 365 tenant administrator, e.g. https://web.viva.microsoft.com/learning. Only URLs on a viva.microsoft.com or cloud.microsoft domain are accepted.';
+$string['settings_showvivapulse'] = 'Show "Viva Pulse"';
+$string['settings_showvivapulse_desc'] = 'Enable or disable the "Viva Pulse" link in the block.';
+$string['settings_showlinkedin'] = 'Show "Microsoft LinkedIn"';
+$string['settings_showlinkedin_desc'] = 'Enable or disable the "Microsoft LinkedIn" link in the block.';
 
 $string['linkmydelve'] = 'My Delve';
 $string['linkmyforms'] = 'My Forms';
