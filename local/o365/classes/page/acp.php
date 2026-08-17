@@ -1118,7 +1118,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                     // Connected to both group and team.
                     if ($teamscache = $DB->get_record('local_o365_groups_cache', $teamscachedata)) {
                         // Team record can be found in cache.
-                        $existingconnection = html_writer::link($teamscache->url, $teamscache->name);
+                        $existingconnection = html_writer::link($teamscache->url, s($teamscache->name));
                         if (
                             !$DB->record_exists(
                                 'local_o365_objects',
@@ -1137,7 +1137,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
                         }
                     } else {
                         // A matching record exists in local_o365_objects, but the team cannot be found.
-                        $existingconnection = $grouprecord->o365name . get_string('acp_teamconnections_team_missing', 'local_o365');
+                        $existingconnection = s($grouprecord->o365name) .
+                            get_string('acp_teamconnections_team_missing', 'local_o365');
 
                         $actions = [html_writer::span(get_string('acp_teamconnections_table_missing_team', 'local_o365'))];
                     }
@@ -1161,7 +1162,7 @@ var local_o365_coursesync_all_set_feature = function(state) {
                             'timemodified' => time()];
                         $teamobjectrecord['id'] = $DB->insert_record('local_o365_objects', (object) $teamobjectrecord);
 
-                        $existingconnection = html_writer::link($teamscache->url, $teamscache->name);
+                        $existingconnection = html_writer::link($teamscache->url, s($teamscache->name));
 
                         if (
                             !$DB->record_exists(
@@ -1179,7 +1180,8 @@ var local_o365_coursesync_all_set_feature = function(state) {
                         }
                     } else {
                         // A team does not exist for the synced group.
-                        $existingconnection = $grouprecord->o365name . get_string('acp_teamconnections_group_only', 'local_o365');
+                        $existingconnection = s($grouprecord->o365name) .
+                            get_string('acp_teamconnections_group_only', 'local_o365');
 
                         $actions = [html_writer::span(get_string(
                             'acp_teamconnections_table_cannot_create_team_from_group',
