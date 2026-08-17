@@ -141,8 +141,6 @@ $string['cfg_debugmode_desc'] = 'If enabled, information will be logged to the M
 $string['cfg_loginflow_key'] = 'Login Flow';
 $string['cfg_loginflow_authcode'] = 'Authorization Code Flow <b>(recommended)</b>';
 $string['cfg_loginflow_authcode_desc'] = 'Using this flow, the user clicks the name of the IdP (See "Provider Display Name" above) on the Moodle login page and is redirected to the provider to log in. Once successfully logged in, the user is redirected back to Moodle where the Moodle login takes place transparently. This is the most standardized, secure way for the user log in.';
-$string['cfg_loginflow_rocreds'] = 'Resource Owner Password Credentials Grant <b>(deprecated)</b>';
-$string['cfg_loginflow_rocreds_desc'] = '<b>This login flow is deprecated and will be removed from the plugin soon.</b><br/>Using this flow, the user enters their username and password into the Moodle login form like they would with a manual login. This will authorize the user with the IdP, but will not create a session on the IdP\'s site. For example, if using Microsoft 365 with OpenID Connect, the user will be logged in to Moodle but not the Microsoft 365 web applications. Using the authorization request is recommended if you want users to be logged in to both Moodle and the IdP. Note that not all IdP support this flow. This option should only be used when other authorization grant types are not available.';
 $string['cfg_silentloginmode_key'] = 'Silent Login Mode';
 $string['cfg_silentloginmode_desc'] = 'If enabled, Moodle will try to use the active session of a user authenticated to the configured authorization endpoint to log the user in.<br/>
 To use this feature, the following configurations are required:
