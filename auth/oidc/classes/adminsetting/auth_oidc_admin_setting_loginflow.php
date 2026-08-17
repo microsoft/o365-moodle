@@ -30,7 +30,7 @@ namespace auth_oidc\adminsetting;
  */
 class auth_oidc_admin_setting_loginflow extends \admin_setting {
     /** @var array Array of valid login flow types. */
-    protected $flowtypes = ['authcode', 'rocreds'];
+    protected $flowtypes = ['authcode'];
 
     /**
      * Return the setting
