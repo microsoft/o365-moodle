@@ -191,7 +191,11 @@ class block_microsoft extends block_base {
                         $items[] = html_writer::link(
                             $url,
                             $resourcename,
-                            ['target' => '_blank', 'class' => 'servicelink block_microsoft_' . $feature]
+                            [
+                                'target' => '_blank',
+                                'rel' => 'noopener noreferrer',
+                                'class' => 'servicelink block_microsoft_' . $feature,
+                            ]
                         );
                     }
 
@@ -342,7 +346,11 @@ class block_microsoft extends block_base {
                     $spsite = \local_o365\rest\sharepoint::get_tokenresource();
                     if (!empty($spsite)) {
                         $spurl = $spsite . '/' . $coursespsite->siteurl;
-                        $spattrs = ['class' => 'servicelink block_microsoft_sharepoint', 'target' => '_blank'];
+                        $spattrs = [
+                            'class' => 'servicelink block_microsoft_sharepoint',
+                            'target' => '_blank',
+                            'rel' => 'noopener noreferrer',
+                        ];
                         $items[] = html_writer::link($spurl, $sharepointstr, $spattrs);
                         $items[] = '<hr/>';
                     }
@@ -352,7 +360,11 @@ class block_microsoft extends block_base {
 
         // My Delve URL.
         if (!empty($delveurl)) {
-            $delveattrs = ['class' => 'servicelink block_microsoft_delve', 'target' => '_blank'];
+            $delveattrs = [
+                'class' => 'servicelink block_microsoft_delve',
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+            ];
             $delvestr = get_string('linkmydelve', 'block_microsoft');
             $items[] = html_writer::link($delveurl, $delvestr, $delveattrs);
         }
@@ -360,14 +372,22 @@ class block_microsoft extends block_base {
         // My email.
         if (!empty($this->globalconfig->settings_showemail)) {
             $emailurl = 'https://outlook.office365.com/';
-            $emailattrs = ['class' => 'servicelink block_microsoft_outlook', 'target' => '_blank'];
+            $emailattrs = [
+                'class' => 'servicelink block_microsoft_outlook',
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+            ];
             $emailstr = get_string('linkemail', 'block_microsoft');
             $items[] = html_writer::link($emailurl, $emailstr, $emailattrs);
         }
 
         // My Forms URL.
         if (!empty($this->globalconfig->settings_showmyforms)) {
-            $formsattrs = ['class' => 'servicelink block_microsoft_forms', 'target' => '_blank'];
+            $formsattrs = [
+                'class' => 'servicelink block_microsoft_forms',
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+            ];
             $formsstr = get_string('linkmyforms', 'block_microsoft');
             $formsurl = get_string('settings_showmyforms_default', 'block_microsoft');
             if (!empty($odburl)) {
@@ -382,6 +402,7 @@ class block_microsoft extends block_base {
         if (!empty($this->globalconfig->settings_showonedrive)) {
             $odbattrs = [
                 'target' => '_blank',
+                'rel' => 'noopener noreferrer',
                 'class' => 'servicelink block_microsoft_onedrive',
             ];
             $stronedrive = get_string('linkonedrive', 'block_microsoft');
@@ -393,14 +414,22 @@ class block_microsoft extends block_base {
         // Microsoft Stream (on SharePoint).
         if (!empty($this->globalconfig->settings_showmsstreamonsharepoint)) {
             $streamurl = 'https://www.microsoft365.com/launch/stream';
-            $streamattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
+            $streamattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_msstream',
+            ];
             $items[] = html_writer::link($streamurl, get_string('linkmsstream', 'block_microsoft'), $streamattrs);
         }
 
         // Microsoft Stream (Classic).
         if (!empty($this->globalconfig->settings_showmsstream)) {
             $streamclassicurl = 'https://web.microsoftstream.com/?noSignUpCheck=1';
-            $streamclassicattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msstream'];
+            $streamclassicattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_msstream',
+            ];
             $items[] = html_writer::link(
                 $streamclassicurl,
                 get_string('linkmsstreamclassic', 'block_microsoft'),
@@ -411,15 +440,97 @@ class block_microsoft extends block_base {
         // Microsoft Teams.
         if (!empty($this->globalconfig->settings_showmsteams)) {
             $teamsurl = 'https://teams.microsoft.com';
-            $teamsattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_msteams'];
+            $teamsattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_msteams',
+            ];
             $items[] = html_writer::link($teamsurl, get_string('linkmsteams', 'block_microsoft'), $teamsattrs);
         }
 
         // My Sways.
         if (!empty($this->globalconfig->settings_showsways) && !empty($userupn)) {
             $swayurl = 'https://www.sway.com/my?auth_pvr=OrgId&auth_upn=' . $userupn;
-            $swayattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_sway'];
+            $swayattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_sway',
+            ];
             $items[] = html_writer::link($swayurl, get_string('linksways', 'block_microsoft'), $swayattrs);
+        }
+
+        // Additional Microsoft 365 and Viva apps, hidden by default.
+        $microsoft365apps = [
+            'word' => 'https://www.office.com/launch/word',
+            'excel' => 'https://www.office.com/launch/excel',
+            'powerpoint' => 'https://www.office.com/launch/powerpoint',
+            'vivaengage' => 'https://engage.cloud.microsoft/',
+            'vivaglint' => 'https://glint.cloud.microsoft/',
+            'vivagoals' => 'https://goals.microsoft.com',
+            'vivainsights' => 'https://insights.cloud.microsoft',
+            'vivapulse' => 'https://pulse.viva.cloud.microsoft/',
+            'linkedin' => 'https://www.linkedin.com/',
+        ];
+        foreach ($microsoft365apps as $appkey => $appurl) {
+            if (!empty($this->globalconfig->{'settings_show' . $appkey})) {
+                $appattrs = [
+                    'target' => '_blank',
+                    'rel' => 'noopener noreferrer',
+                    'class' => 'servicelink block_microsoft_' . $appkey,
+                ];
+                $items[] = html_writer::link($appurl, get_string('link' . $appkey, 'block_microsoft'), $appattrs);
+            }
+        }
+
+        // Viva Amplify. The URL is tenant-specific and configured by the site administrator.
+        if (!empty($this->globalconfig->settings_showvivaamplify)) {
+            $vivaamplifyurl = $this->globalconfig->settings_vivaamplifyurl ?? '';
+            if (!empty($vivaamplifyurl) && preg_match(BLOCK_MICROSOFT_VIVAAMPLIFY_URL_REGEX, $vivaamplifyurl)) {
+                $vivaamplifyattrs = [
+                    'target' => '_blank',
+                    'rel' => 'noopener noreferrer',
+                    'class' => 'servicelink block_microsoft_vivaamplify',
+                ];
+                $items[] = html_writer::link(
+                    $vivaamplifyurl,
+                    get_string('linkvivaamplify', 'block_microsoft'),
+                    $vivaamplifyattrs
+                );
+            }
+        }
+
+        // Viva Connections. The URL is tenant-specific and configured by the site administrator.
+        if (!empty($this->globalconfig->settings_showvivaconnections)) {
+            $vivaconnectionsurl = $this->globalconfig->settings_vivaconnectionsurl ?? '';
+            if (!empty($vivaconnectionsurl) && preg_match(BLOCK_MICROSOFT_VIVACONNECTIONS_URL_REGEX, $vivaconnectionsurl)) {
+                $vivaconnectionsattrs = [
+                    'target' => '_blank',
+                    'rel' => 'noopener noreferrer',
+                    'class' => 'servicelink block_microsoft_vivaconnections',
+                ];
+                $items[] = html_writer::link(
+                    $vivaconnectionsurl,
+                    get_string('linkvivaconnections', 'block_microsoft'),
+                    $vivaconnectionsattrs
+                );
+            }
+        }
+
+        // Viva Learning. The URL is tenant-specific and configured by the site administrator.
+        if (!empty($this->globalconfig->settings_showvivalearning)) {
+            $vivalearningurl = $this->globalconfig->settings_vivalearningurl ?? '';
+            if (!empty($vivalearningurl) && preg_match(BLOCK_MICROSOFT_VIVALEARNING_URL_REGEX, $vivalearningurl)) {
+                $vivalearningattrs = [
+                    'target' => '_blank',
+                    'rel' => 'noopener noreferrer',
+                    'class' => 'servicelink block_microsoft_vivalearning',
+                ];
+                $items[] = html_writer::link(
+                    $vivalearningurl,
+                    get_string('linkvivalearning', 'block_microsoft'),
+                    $vivalearningattrs
+                );
+            }
         }
 
         // Configure Outlook Sync.
@@ -482,7 +593,11 @@ class block_microsoft extends block_base {
 
         if ($hasaccesstocourserequest && !empty($this->globalconfig->settings_courserequest)) {
             $courserequesturl = new url('/local/o365/courserequest.php');
-            $courserequestattrs = ['target' => '_blank', 'class' => 'servicelink block_microsoft_courserequest'];
+            $courserequestattrs = [
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer',
+                'class' => 'servicelink block_microsoft_courserequest',
+            ];
             $courserequeststr = get_string('linkcourserequest', 'block_microsoft');
             $items[] = html_writer::link($courserequesturl, $courserequeststr, $courserequestattrs);
         }
@@ -542,7 +657,11 @@ class block_microsoft extends block_base {
             html_writer::link(
                 $url,
                 $str,
-                ['class' => 'servicelink block_microsoft_downloado365', 'target' => '_blank']
+                [
+                    'class' => 'servicelink block_microsoft_downloado365',
+                    'target' => '_blank',
+                    'rel' => 'noopener noreferrer',
+                ]
             ),
         ];
     }
