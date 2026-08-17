@@ -118,7 +118,7 @@ class verifysetup extends \admin_setting {
 
         $unifiedenabled = 'true';
 
-        $ajaxurl = new url('/local/o365/ajax.php');
+        $ajaxurl = new url('/local/o365/ajax.php', ['sesskey' => sesskey()]);
         $settinghtml .= '<script>
 $(function() {
     var opts = {
