@@ -147,8 +147,8 @@ class main {
         $usersyncsettings = get_config('local_o365', 'usersync');
         if (!empty($usersyncsettings)) {
             $usersyncsettings = explode(',', $usersyncsettings);
-            $realsyncoptions = ['create', 'update', 'suspend', 'reenable', 'disabledsync', 'matchswitchauth', 'appassign',
-                'photosync', 'tzsync'];
+            $realsyncoptions = ['create', 'update', 'suspend', 'reenable', 'disabledsyncsuspend', 'disabledsyncreenable',
+                'matchswitchauth', 'appassign', 'photosync', 'tzsync'];
             if (!empty(array_intersect($usersyncsettings, $realsyncoptions))) {
                 // At least one sync option is enabled.
                 return true;
@@ -1218,7 +1218,7 @@ class main {
         ];
 
         // Determine if the newly created user needs to be suspended.
-        if (isset($syncoptions['disabledsync'])) {
+        if (isset($syncoptions['disabledsyncsuspend'])) {
             if (isset($entraiduserdata['accountEnabled']) && $entraiduserdata['accountEnabled'] == false) {
                 $newuser->suspended = 1;
             }
@@ -2052,22 +2052,20 @@ class main {
         }
 
         // Sync disabled status.
-        if (isset($syncoptions['disabledsync'])) {
-            if (isset($entraiduserdata['accountEnabled'])) {
-                if ($entraiduserdata['accountEnabled']) {
-                    if ($existinguser->suspended == 1) {
-                        $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
-                            ?? core_user::get_user($existinguser->muserid);
-                        $completeexistinguser->suspended = 0;
-                        user_update_user($completeexistinguser, false);
-                    }
-                } else {
-                    if ($existinguser->suspended == 0) {
-                        $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
-                            ?? core_user::get_user($existinguser->muserid);
-                        $completeexistinguser->suspended = 1;
-                        user_update_user($completeexistinguser, false);
-                    }
+        if (isset($entraiduserdata['accountEnabled'])) {
+            if ($entraiduserdata['accountEnabled']) {
+                if (isset($syncoptions['disabledsyncreenable']) && $existinguser->suspended == 1) {
+                    $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
+                        ?? core_user::get_user($existinguser->muserid);
+                    $completeexistinguser->suspended = 0;
+                    user_update_user($completeexistinguser, false);
+                }
+            } else {
+                if (isset($syncoptions['disabledsyncsuspend']) && $existinguser->suspended == 0) {
+                    $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
+                        ?? core_user::get_user($existinguser->muserid);
+                    $completeexistinguser->suspended = 1;
+                    user_update_user($completeexistinguser, false);
                 }
             }
         }
