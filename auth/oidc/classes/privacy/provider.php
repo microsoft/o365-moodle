@@ -73,6 +73,8 @@ class provider implements
                 'userid',
                 'sid',
                 'timecreated',
+                'sessionid',
+                'iss',
             ],
         ];
 
