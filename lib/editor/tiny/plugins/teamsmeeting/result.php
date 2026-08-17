@@ -25,6 +25,36 @@
 
 require_once(__DIR__ . '/../../../../../config.php');
 
+/**
+ * Render a same-site auto-submitting repost form when a cross-site POST from the Teams app
+ * arrives without the session cookie (SameSite=Lax, MDL-83526), then exit; the second,
+ * same-site request that follows carries the cookie, so a caller's require_login() then
+ * succeeds normally. A no-op when already logged in or when this is that repost itself,
+ * so callers can call it unconditionally before their own require_login().
+ */
+function tiny_teamsmeeting_handle_crosssite_repost(): void {
+    global $PAGE;
+
+    if (!empty($_POST['repost'])) {
+        unset($_POST['repost']);
+        return;
+    }
+
+    if (isloggedin()) {
+        return;
+    }
+
+    $PAGE->set_context(context_system::instance());
+    $PAGE->set_pagelayout('popup');
+    header_remove('Set-Cookie');
+    $output = $PAGE->get_renderer('mod_lti');
+    $page = new \mod_lti\output\repost_crosssite_page($_SERVER['REQUEST_URI'], $_POST);
+    echo $output->header();
+    echo $output->render($page);
+    echo $output->footer();
+    exit;
+}
+
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
 $meetinglink = optional_param('link', null, PARAM_URL);
@@ -34,6 +64,7 @@ $optionslink = optional_param('options', null, PARAM_URL);
 $session = optional_param('session', '', PARAM_RAW_TRIMMED);
 
 if ($viewexisting) {
+    tiny_teamsmeeting_handle_crosssite_repost();
     require_login();
     require_sesskey();
     $viewrecord = $meetinglink
@@ -71,6 +102,10 @@ if ($viewexisting) {
         }
     }
     if (!$tokenuserid) {
+        // Fall back to the cookie-based flow: the repost handshake (MDL-83526) ensures the
+        // session cookie is present for require_login() even on a cross-site POST from the
+        // Teams app, for pages rendered before the opaque token existed.
+        tiny_teamsmeeting_handle_crosssite_repost();
         require_login();
         confirm_sesskey($session);
     }
