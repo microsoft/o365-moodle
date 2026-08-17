@@ -111,6 +111,7 @@
         <FIELD NAME="muserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="moodle user id"/>
         <FIELD NAME="assigned" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Is assigned to application"/>
         <FIELD NAME="photoid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="photo etag id"/>
+        <FIELD NAME="photohash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="SHA-256 hash of the user photo bytes, used to detect photo changes without re-fetching the full image"/>
         <FIELD NAME="photoupdated" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="last time photo was updated"/>
       </FIELDS>
       <KEYS>
