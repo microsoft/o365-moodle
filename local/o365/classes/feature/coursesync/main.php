@@ -35,6 +35,23 @@ use stdClass;
 
 define('API_CALL_RETRY_LIMIT', 5);
 
+// Delay (in seconds) after creating a group before any action is performed against it, including checking its
+// existing owners/members. A brand new group is almost never visible yet to other Graph API calls due to Azure
+// AD propagation delay, so without this delay the first attempt reliably fails and falls back to the much
+// slower 10-second retry loop.
+define('NEW_GROUP_PROPAGATION_DELAY', 10);
+
+// Minimum time (in seconds) that must elapse between a group being created and a team being created from it in
+// the same task run. Creating a team from a group too soon after the group itself was created can leave the
+// team's chat thread permanently unable to load, because the group's Exchange Online mailbox provisioning
+// hasn't finished yet. Time already spent adding owners/members counts towards this delay.
+define('TEAM_CREATION_INLINE_DELAY', 45);
+
+// Minimum age (in seconds) a group must have before process_courses_without_teams() will create a team from it.
+// This is a fallback for groups that didn't get their team created inline in create_group_for_course() (e.g. no
+// owner was available yet), so it can safely be longer than TEAM_CREATION_INLINE_DELAY.
+define('TEAM_CREATION_MIN_GROUP_AGE', 60);
+
 /**
  * Course sync to team feature class.
  */
@@ -749,6 +766,11 @@ class main {
         $response = null;
         $subtype = '';
 
+        // Whether this group was just created in this run (prone to Azure AD propagation delay), meaning
+        // an owner was already confirmed added even though a read-after-write owner check may still lag.
+        $isnewlycreated = isset($SESSION->o365_newly_created_groups) &&
+            in_array($groupobjectid, $SESSION->o365_newly_created_groups);
+
         $templateconfig = $this->get_team_template_with_fallback('educationClass');
         $currenttemplate = $templateconfig['template'];
         $fallbacktemplate = $templateconfig['fallback'];
@@ -756,6 +778,10 @@ class main {
 
         $teamtype = get_config('local_o365', 'team_type');
         $this->check_template_compatibility($currenttemplate, 'education', $baselevel + 1, $teamtype);
+
+        // Set when the owner-visibility retry message below already announced the upcoming retry, so the
+        // generic "Retry #N" message isn't duplicated on the next iteration.
+        $skipgenericretrymessage = false;
 
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
             if (isset($SESSION->o365_groups_not_exist)) {
@@ -766,16 +792,28 @@ class main {
             }
 
             if ($retrycounter) {
-                $this->mtrace('Retry #' . $retrycounter, $baselevel + 1);
+                if (!$skipgenericretrymessage) {
+                    $this->mtrace('Retry #' . $retrycounter, $baselevel + 1);
+                }
+                $skipgenericretrymessage = false;
                 sleep(10);
             }
 
             // Ensure the group has an owner.
             if (!$this->graphclient->group_has_owner($groupobjectid)) {
-                $this->mtrace(
-                    'Group with ID ' . $groupobjectid . ' does not have an owner. Skip team creation.',
-                    $baselevel + 1
-                );
+                if ($isnewlycreated && $retrycounter < API_CALL_RETRY_LIMIT) {
+                    $this->mtrace(
+                        'Owner of newly created group with ID ' . $groupobjectid .
+                        ' not yet visible due to Azure AD propagation delay, retry #' . ($retrycounter + 1) . '...',
+                        $baselevel + 1
+                    );
+                    $skipgenericretrymessage = true;
+                } else {
+                    $this->mtrace(
+                        'Group with ID ' . $groupobjectid . ' does not have an owner. Skip team creation.',
+                        $baselevel + 1
+                    );
+                }
                 $retrycounter++;
             } else {
                 try {
@@ -809,10 +847,10 @@ class main {
                     $subtype = 'teamfromgroup';
                     break;
                 } catch (moodle_exception $e) {
-                    if (strpos($e->a, 'The group is already provisioned') !== false) {
+                    if (strpos($e->getMessage(), 'The group is already provisioned') !== false) {
                         $this->mtrace('Found existing team from class group with ID ' . $groupobjectid, $baselevel + 1);
                         $response = true;
-                        $subtype = 'courseteam';
+                        $subtype = 'teamfromgroup';
                         break;
                     } else if ($retrycounter >= API_CALL_RETRY_LIMIT && !$usingfallback && $fallbacktemplate) {
                         // Exhausted retries with configured template; try fallback template.
@@ -1063,6 +1101,13 @@ class main {
         $retrycounter = 0;
 
         $response = null;
+        $subtype = 'teamfromgroup';
+        $alreadyprovisioned = false;
+
+        // Whether this group was just created in this run (prone to Azure AD propagation delay), meaning
+        // an owner was already confirmed added even though a read-after-write owner check may still lag.
+        $isnewlycreated = isset($SESSION->o365_newly_created_groups) &&
+            in_array($groupobjectid, $SESSION->o365_newly_created_groups);
 
         $templateconfig = $this->get_team_template_with_fallback('standard');
         $currenttemplate = $templateconfig['template'];
@@ -1079,17 +1124,33 @@ class main {
 
         $this->check_template_compatibility($currenttemplate, 'standard', $baselevel + 1, $teamtype);
 
+        // Set when the owner-visibility retry message below already announced the upcoming retry, so the
+        // generic "Retry #N" message isn't duplicated on the next iteration.
+        $skipgenericretrymessage = false;
+
         while ($retrycounter <= API_CALL_RETRY_LIMIT) {
             if ($retrycounter) {
-                $this->mtrace('Retry #' . $retrycounter, $baselevel + 1);
+                if (!$skipgenericretrymessage) {
+                    $this->mtrace('Retry #' . $retrycounter, $baselevel + 1);
+                }
+                $skipgenericretrymessage = false;
                 sleep(10);
             }
 
             if (!$this->graphclient->group_has_owner($groupobjectid)) {
-                $this->mtrace(
-                    'Group with ID ' . $groupobjectid . ' does not have an owner. Skip team creation.',
-                    $baselevel + 1
-                );
+                if ($isnewlycreated && $retrycounter < API_CALL_RETRY_LIMIT) {
+                    $this->mtrace(
+                        'Owner of newly created group with ID ' . $groupobjectid .
+                        ' not yet visible due to Azure AD propagation delay, retry #' . ($retrycounter + 1) . '...',
+                        $baselevel + 1
+                    );
+                    $skipgenericretrymessage = true;
+                } else {
+                    $this->mtrace(
+                        'Group with ID ' . $groupobjectid . ' does not have an owner. Skip team creation.',
+                        $baselevel + 1
+                    );
+                }
                 $retrycounter++;
             } else {
                 try {
@@ -1103,7 +1164,16 @@ class main {
                     $response = $this->graphclient->create_team_from_group($groupobjectid, $currenttemplate);
                     break;
                 } catch (moodle_exception $e) {
-                    if (strpos($e->a, "missing the 'PLC' CreationOption") !== false && !$usingfallback && $fallbacktemplate) {
+                    if (strpos($e->getMessage(), 'The group is already provisioned') !== false) {
+                        $this->mtrace('Found existing team from group with ID ' . $groupobjectid, $baselevel + 1);
+                        $response = true;
+                        $alreadyprovisioned = true;
+                        break;
+                    } else if (
+                        strpos($e->getMessage(), "missing the 'PLC' CreationOption") !== false
+                        && !$usingfallback
+                        && $fallbacktemplate
+                    ) {
                         // PLC creation option error - group was created without PLC support.
                         // Delete the group and fall back to default template so it can be recreated with PLC.
                         $this->mtrace(
@@ -1195,9 +1265,11 @@ class main {
             return false;
         }
 
-        $this->mtrace('Created team from group with ID ' . $groupobjectid, $baselevel + 1);
+        if (!$alreadyprovisioned) {
+            $this->mtrace('Created team from group with ID ' . $groupobjectid, $baselevel + 1);
+        }
         $teamname = utils::get_team_display_name($course);
-        $teamobjectrecord = ['type' => 'group', 'subtype' => 'teamfromgroup', 'objectid' => $groupobjectid,
+        $teamobjectrecord = ['type' => 'group', 'subtype' => $subtype, 'objectid' => $groupobjectid,
             'moodleid' => $course->id, 'o365name' => $teamname, 'timecreated' => $now, 'timemodified' => $now];
         $teamobjectrecord['id'] = $DB->insert_record('local_o365_objects', (object)$teamobjectrecord);
         $this->mtrace('Recorded team object ' . $groupobjectid . ' into object table with record ID ' .
@@ -1457,6 +1529,17 @@ class main {
             $SESSION->o365_newly_created_groups[] = $groupobject['objectid'];
         }
 
+        $groupcreatedtime = time();
+
+        // A brand new group is almost never visible yet to other Graph API calls, so wait briefly before
+        // performing any action against it, including checking its existing owners/members.
+        $this->mtrace(
+            'Waiting ' . NEW_GROUP_PROPAGATION_DELAY . ' second(s) for the new group to propagate before checking ' .
+            'its owners/members.',
+            $baselevel + 1
+        );
+        sleep(NEW_GROUP_PROPAGATION_DELAY);
+
         // Add owners / members to the group.
         $ownerobjectids = utils::get_team_owner_object_ids_by_course_id($course->id);
         $memberobjectids = utils::get_team_member_object_ids_by_course_id($course->id, $ownerobjectids);
@@ -1467,9 +1550,28 @@ class main {
             $baselevel + 1
         );
 
+        // Give the group's Exchange Online mailbox time to provision before creating a team from it, otherwise
+        // the team's chat thread can end up permanently unable to load. Time already spent adding owners/members
+        // above counts towards this delay, so only sleep for whatever remains.
+        $elapsedsincegroupcreated = time() - $groupcreatedtime;
+        $remainingdelay = TEAM_CREATION_INLINE_DELAY - $elapsedsincegroupcreated;
+        if ($remainingdelay > 0) {
+            $this->mtrace(
+                'Waiting ' . $remainingdelay . ' more second(s) (elapsed ' . $elapsedsincegroupcreated . ' of required ' .
+                TEAM_CREATION_INLINE_DELAY . ' second(s)) for group mailbox provisioning before creating team.',
+                $baselevel + 1
+            );
+            sleep($remainingdelay);
+        } else {
+            $this->mtrace(
+                'Group is already ' . $elapsedsincegroupcreated . ' second(s) old. No further wait needed before ' .
+                'creating team.',
+                $baselevel + 1
+            );
+        }
+
         // If owner exists, create team.
         if ($owneradded) {
-            // Owner exists, proceed with Team creation.
             if ($useeducationgroup) {
                 $this->create_team_from_education_group($groupobject['objectid'], $course, $baselevel + 1);
             } else {
@@ -1505,8 +1607,10 @@ class main {
                    AND obj_team1.id IS NULL
                    AND obj_team2.id IS NULL
                    AND obj_sds.id IS NULL
+                   AND obj_group.timecreated <= ?
                    AND crs.id != " . SITEID;
-        $params = [];
+        // Only pick up groups old enough for their Exchange Online mailbox provisioning to have finished.
+        $params = [time() - TEAM_CREATION_MIN_GROUP_AGE];
         if (!empty($this->coursesinsql)) {
             $sql .= ' AND crs.id ' . $this->coursesinsql;
             $params = array_merge($params, $this->coursesparams);
