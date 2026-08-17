@@ -121,5 +121,20 @@ function xmldb_tiny_teamsmeeting_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100207, 'tiny', 'teamsmeeting');
     }
 
+    if ($oldversion < 2026042000.01) {
+        // Recompute linkhash using percent-encoding-normalised URLs so that
+        // hashes are stable regardless of whether Moodle has uppercased %xx
+        // sequences when saving HTML content (RFC 3986 normalisation).
+        $records = $DB->get_records('tiny_teamsmeeting', null, 'id ASC', 'id, link');
+        foreach ($records as $record) {
+            $normalised = preg_replace_callback('/%[0-9a-f]{2}/i', fn($m) => strtoupper($m[0]), $record->link);
+            $DB->set_field('tiny_teamsmeeting', 'linkhash', sha1($normalised), ['id' => $record->id]);
+            $DB->set_field('tiny_teamsmeeting', 'link', $normalised, ['id' => $record->id]);
+        }
+        unset($records);
+
+        upgrade_plugin_savepoint(true, 2026042000.01, 'tiny', 'teamsmeeting');
+    }
+
     return true;
 }
