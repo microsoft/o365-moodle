@@ -105,6 +105,54 @@
     background-image: url([[pix:block_microsoft|courserequest]]);
 }
 
+.block_microsoft .block_microsoft_word {
+    background-image: url([[pix:block_microsoft|word]]);
+}
+
+.block_microsoft .block_microsoft_excel {
+    background-image: url([[pix:block_microsoft|excel]]);
+}
+
+.block_microsoft .block_microsoft_powerpoint {
+    background-image: url([[pix:block_microsoft|powerpoint]]);
+}
+
+.block_microsoft .block_microsoft_vivaengage {
+    background-image: url([[pix:block_microsoft|vivaengage]]);
+}
+
+.block_microsoft .block_microsoft_vivaamplify {
+    background-image: url([[pix:block_microsoft|vivaamplify]]);
+}
+
+.block_microsoft .block_microsoft_vivaconnections {
+    background-image: url([[pix:block_microsoft|vivaconnections]]);
+}
+
+.block_microsoft .block_microsoft_vivaglint {
+    background-image: url([[pix:block_microsoft|vivaglint]]);
+}
+
+.block_microsoft .block_microsoft_vivagoals {
+    background-image: url([[pix:block_microsoft|vivagoals]]);
+}
+
+.block_microsoft .block_microsoft_vivainsights {
+    background-image: url([[pix:block_microsoft|vivainsights]]);
+}
+
+.block_microsoft .block_microsoft_vivalearning {
+    background-image: url([[pix:block_microsoft|vivalearning]]);
+}
+
+.block_microsoft .block_microsoft_vivapulse {
+    background-image: url([[pix:block_microsoft|vivapulse]]);
+}
+
+.block_microsoft .block_microsoft_linkedin {
+    background-image: url([[pix:block_microsoft|linkedin]]);
+}
+
 .block_microsoft hr {
     margin: 1rem 0;
 }
