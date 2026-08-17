@@ -252,4 +252,61 @@ class utils {
 
         return $CFG->dataroot . '/microsoft_certs';
     }
+
+    /**
+     * Add a unique constraint on (oidcuniqid, tokenresource) to the auth_oidc_token table, removing duplicate
+     * tokens first.
+     *
+     * Removes duplicate tokens, keeping the latest one for each (oidcuniqid, tokenresource) pair.
+     * Uses a temporary table to work around MySQL error 1093 and PostgreSQL parameter limits.
+     *
+     * The combined length of oidcuniqid (255 chars) and tokenresource (127 chars) exceeds the byte
+     * limit the XMLDB API enforces on composed indexes (xmldb_index::INDEX_COMPOSED_MAX_BYTES), even
+     * though both MySQL and PostgreSQL can create the index without issue. So the index is created
+     * with raw SQL instead of $dbman->add_index(), with the index name manually prefixed with the
+     * site's table prefix to avoid name collisions with other prefixes (e.g. PHPUnit or Behat test
+     * tables) sharing the same database/schema.
+     */
+    public static function add_token_unique_constraint(): void {
+        global $DB;
+
+        $dbman = $DB->get_manager();
+        $table = new \xmldb_table('auth_oidc_token');
+        $index = new \xmldb_index('oidcuniqid-tokenresource', XMLDB_INDEX_UNIQUE, ['oidcuniqid', 'tokenresource']);
+
+        if ($dbman->index_exists($table, $index)) {
+            // Unique constraint already present, nothing to do.
+            return;
+        }
+
+        // Deliberately let any failure here propagate: swallowing it would let the calling
+        // upgrade step reach its savepoint even though the uniqueness guarantee was never
+        // established, silently leaving the database inconsistent with the code.
+        $temptable = 'auth_oidc_token_keep_ids';
+
+        // Step 1: Create a temporary table with the IDs to keep.
+        $sql = "CREATE TEMPORARY TABLE {" . $temptable . "} (id INT PRIMARY KEY)";
+        $DB->execute($sql);
+
+        // Step 2: Insert the IDs to keep (latest token for each oidcuniqid, tokenresource pair).
+        $sql = "INSERT INTO {" . $temptable . "} (id)
+                SELECT MAX(id) FROM {auth_oidc_token}
+                GROUP BY oidcuniqid, tokenresource";
+        $DB->execute($sql);
+
+        // Step 3: Delete duplicates not in the temporary table.
+        $sql = "DELETE FROM {auth_oidc_token} WHERE id NOT IN (SELECT id FROM {" . $temptable . "})";
+        $DB->execute($sql);
+
+        // Step 4: Drop the temporary table (automatic on transaction end, but explicit for clarity).
+        // Note: PostgreSQL does not accept the TEMPORARY keyword in DROP TABLE (only in CREATE
+        // TABLE), so plain DROP TABLE is used here; it works for temporary tables on MySQL too.
+        $sql = "DROP TABLE IF EXISTS {" . $temptable . "}";
+        $DB->execute($sql);
+
+        // Step 5: Add unique constraint on (oidcuniqid, tokenresource) to prevent duplicate tokens.
+        $indexname = $DB->get_prefix() . 'authoidctoken_uniq_ix';
+        $sql = "CREATE UNIQUE INDEX {$indexname} ON {auth_oidc_token} (oidcuniqid, tokenresource)";
+        $DB->execute($sql);
+    }
 }
