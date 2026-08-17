@@ -92,7 +92,7 @@ class moodlesetup extends \admin_setting {
         $scripturl = new url('/local/o365/classes/adminsetting/moodlesetup.js');
         $settinghtml .= '<script src="' . $scripturl->out() . '"></script>';
 
-        $ajaxurl = new url('/local/o365/ajax.php');
+        $ajaxurl = new url('/local/o365/ajax.php', ['sesskey' => sesskey()]);
         $settinghtml .= '<script>
                             $(function() {
                                 var opts = {
