@@ -111,6 +111,13 @@ class authcode extends base {
             return false;
         }
 
+        // Path must start with the wwwroot path (handles subdirectory installs).
+        $wwwrootpath = rtrim($wwwroot['path'] ?? '', '/') . '/';
+        $checkpath = $checkurl['path'] ?? '/';
+        if (strpos($checkpath . '/', $wwwrootpath) !== 0) {
+            return false;
+        }
+
         return true;
     }
 
@@ -194,7 +201,7 @@ class authcode extends base {
             $this->handleauthresponse($requestparams);
         } else {
             if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent)) {
-                if (isset($SESSION->wantsurl) && (strpos($SESSION->wantsurl, $CFG->wwwroot) === 0)) {
+                if (isset($SESSION->wantsurl) && $this->is_valid_local_url($SESSION->wantsurl)) {
                     $urltogo = $SESSION->wantsurl;
                     unset($SESSION->wantsurl);
                 } else {
