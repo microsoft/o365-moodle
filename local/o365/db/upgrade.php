@@ -24,7 +24,6 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use local_o365\feature\cohortsync\main;
 use local_o365\utils;
 
 defined('MOODLE_INTERNAL') || die();
@@ -1102,16 +1101,9 @@ function xmldb_local_o365_upgrade($oldversion) {
             $dbman->create_table($table);
         }
 
-        // Update groups cache.
-        try {
-            $graphclient = main::get_unified_api(__METHOD__);
-            if ($graphclient) {
-                utils::update_groups_cache($graphclient);
-            }
-        } catch (moodle_exception $e) {
-            // Do nothing.
-            debugging('Error updating groups cache: ' . $e->getMessage());
-        }
+        // The groups cache is populated automatically by the coursesync and cohortsync scheduled tasks,
+        // so it is not warmed up here. Doing so could trigger a slow, tenant-wide Microsoft Graph API
+        // sync during upgrade even when neither feature is enabled.
 
         // O365 savepoint reached.
         upgrade_plugin_savepoint(true, 2023100901, 'local', 'o365');
