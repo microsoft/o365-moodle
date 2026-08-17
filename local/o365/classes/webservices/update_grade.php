@@ -147,6 +147,7 @@ class update_grade extends external_api {
         $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
         $context = module::instance($cm->id);
         self::validate_context($context);
+        require_capability('mod/assign:grade', $context);
 
         $assignment = new assign($context, $cm, null);
 
