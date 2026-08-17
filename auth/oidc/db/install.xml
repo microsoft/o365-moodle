@@ -67,10 +67,15 @@
         <FIELD NAME="userid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="sid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sessionid" TYPE="char" LENGTH="128" NOTNULL="false" SEQUENCE="false" COMMENT="The Moodle session id (sessions.sid) active at the time this mapping was created."/>
+        <FIELD NAME="iss" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="The issuer (iss claim) of the id_token this mapping was created from, used to verify front-channel logout requests."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="sid" UNIQUE="false" FIELDS="sid"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

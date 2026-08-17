@@ -626,5 +626,36 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100735.05, 'auth', 'oidc');
     }
 
+    if ($oldversion < 2024100735.06) {
+        // Define field sessionid to be added to auth_oidc_sid.
+        $table = new xmldb_table('auth_oidc_sid');
+        $field = new xmldb_field('sessionid', XMLDB_TYPE_CHAR, '128', null, null, null, null, 'timecreated');
+
+        // Conditionally launch add field sessionid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define index sid to be added to auth_oidc_sid.
+        $index = new xmldb_index('sid', XMLDB_INDEX_NOTUNIQUE, ['sid']);
+
+        // Conditionally launch add index sid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define field iss to be added to auth_oidc_sid.
+        $table = new xmldb_table('auth_oidc_sid');
+        $field = new xmldb_field('iss', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'sessionid');
+
+        // Conditionally launch add field iss.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Oidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100735.06, 'auth', 'oidc');
+    }
+
     return true;
 }
