@@ -1681,5 +1681,25 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100735.01, 'local', 'o365');
     }
 
+    if ($oldversion < 2024100735.03) {
+        // Split the 'disabledsync' user sync option into 'disabledsyncsuspend' and 'disabledsyncreenable', so sites can
+        // suspend Moodle accounts when disabled in Microsoft Entra ID without also automatically re-enabling them when
+        // re-enabled in Microsoft Entra ID.
+        // Preserve existing behaviour: sites with 'disabledsync' enabled get both new options enabled.
+        $usersync = get_config('local_o365', 'usersync');
+        if (!empty($usersync)) {
+            $options = explode(',', $usersync);
+            if (in_array('disabledsync', $options)) {
+                $options = array_diff($options, ['disabledsync']);
+                $options[] = 'disabledsyncsuspend';
+                $options[] = 'disabledsyncreenable';
+                set_config('usersync', implode(',', array_unique($options)), 'local_o365');
+            }
+        }
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100735.03, 'local', 'o365');
+    }
+
     return true;
 }
