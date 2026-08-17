@@ -1701,5 +1701,22 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100735.03, 'local', 'o365');
     }
 
+    if ($oldversion < 2024100735.04) {
+        // Queue adhoc task to force a one-off full user sync, repairing accounts whose linked
+        // Microsoft Entra ID object ID went stale (e.g. the Entra ID account was deleted and
+        // recreated) before the object ID repair logic in the user sync task was fixed. Delta
+        // sync only reports users that changed since the last sync, so already-stale accounts
+        // would not otherwise be picked up again on their own.
+        $task = new \local_o365\task\forcefullusersync();
+        // Set next run time to ensure it runs in the next cron cycle, not during upgrade.
+        $task->set_next_run_time(time() + 60);
+        \core\task\manager::queue_adhoc_task($task);
+
+        mtrace('Queued adhoc task to force a full user sync and repair stale Entra ID object IDs.');
+
+        // O365 savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100735.04, 'local', 'o365');
+    }
+
     return true;
 }
