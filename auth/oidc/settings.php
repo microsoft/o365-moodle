@@ -739,79 +739,34 @@ if ($hassiteconfig) {
     // Icon.
     $icons = [
         [
-            'pix' => 'o365',
+            'pix' => 'microsoft_365',
+            'alt' => new lang_string('cfg_iconalt_microsoft365', 'auth_oidc'),
+            'component' => 'auth_oidc',
+        ],
+        [
+            'pix' => 'microsoft',
+            'alt' => new lang_string('cfg_iconalt_microsoft', 'auth_oidc'),
+            'component' => 'auth_oidc',
+        ],
+        [
+            'pix' => 'microsoft_365_copilot',
+            'alt' => new lang_string('cfg_iconalt_microsoft365copilot', 'auth_oidc'),
+            'component' => 'auth_oidc',
+        ],
+        [
+            'pix' => 'office_365',
             'alt' => new lang_string('cfg_iconalt_o365', 'auth_oidc'),
             'component' => 'auth_oidc',
         ],
         [
-            'pix' => 't/locked',
-            'alt' => new lang_string('cfg_iconalt_locked', 'auth_oidc'),
-            'component' => 'moodle',
+            'pix' => 'openid',
+            'alt' => new lang_string('cfg_iconalt_openid', 'auth_oidc'),
+            'component' => 'auth_oidc',
         ],
         [
-            'pix' => 't/lock',
-            'alt' => new lang_string('cfg_iconalt_lock', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/go',
-            'alt' => new lang_string('cfg_iconalt_go', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/stop',
-            'alt' => new lang_string('cfg_iconalt_stop', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/user',
-            'alt' => new lang_string('cfg_iconalt_user', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'u/user35',
-            'alt' => new lang_string('cfg_iconalt_user2', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/permissions',
-            'alt' => new lang_string('cfg_iconalt_key', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/cohort',
-            'alt' => new lang_string('cfg_iconalt_group', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/groups',
-            'alt' => new lang_string('cfg_iconalt_group2', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/mnethost',
-            'alt' => new lang_string('cfg_iconalt_mnet', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/permissionlock',
-            'alt' => new lang_string('cfg_iconalt_userlock', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/more',
-            'alt' => new lang_string('cfg_iconalt_plus', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/approve',
-            'alt' => new lang_string('cfg_iconalt_check', 'auth_oidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/right',
-            'alt' => new lang_string('cfg_iconalt_rightarrow', 'auth_oidc'),
-            'component' => 'moodle',
+            'pix' => 'keycloak',
+            'alt' => new lang_string('cfg_iconalt_keycloak', 'auth_oidc'),
+            'component' => 'auth_oidc',
         ],
     ];
     $settings->add(
@@ -819,7 +774,7 @@ if ($hassiteconfig) {
             'auth_oidc/icon',
             get_string('cfg_icon_key', 'auth_oidc'),
             get_string('cfg_icon_desc', 'auth_oidc'),
-            'auth_oidc:o365',
+            'auth_oidc:microsoft_365',
             $icons
         )
     );
@@ -833,7 +788,13 @@ if ($hassiteconfig) {
         get_string('cfg_customicon_desc', 'auth_oidc'),
         'customicon',
         0,
-        ['accepted_types' => ['.png', '.jpg', '.ico'], 'maxbytes' => get_max_upload_file_size()]
+        [
+            'accepted_types' => array_map(
+                fn ($extension) => ".{$extension}",
+                AUTH_OIDC_CUSTOMICON_ALLOWED_EXTENSIONS
+            ),
+            'maxbytes' => get_max_upload_file_size(),
+        ]
     );
     $customiconsetting->set_updatedcallback('auth_oidc_initialize_customicon');
     $settings->add($customiconsetting);
