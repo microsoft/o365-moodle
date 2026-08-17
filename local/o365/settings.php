@@ -49,16 +49,25 @@ if ($PAGE->has_set_url() && $PAGE->url->get_param('s_local_o365_tabs') !== null)
     $legacytab = intval($PAGE->url->get_param('s_local_o365_tabs'));
     $sectionmap = [
         LOCAL_O365_TAB_SETUP => 'local_o365',
-        LOCAL_O365_TAB_SYNC => 'local_o365_sync',
+        LOCAL_O365_TAB_SYNC => 'local_o365_usersync',
         LOCAL_O365_TAB_ADVANCED => 'local_o365_advanced',
         LOCAL_O365_TAB_SDS => 'local_o365_sds',
         LOCAL_O365_TAB_TEAMS => 'local_o365_teams',
         LOCAL_O365_TAB_MOODLE_APP => 'local_o365_moodle_app',
+        LOCAL_O365_TAB_USERSYNC => 'local_o365_usersync',
+        LOCAL_O365_TAB_COURSESYNC => 'local_o365_coursesync',
     ];
     if (isset($sectionmap[$legacytab])) {
         $newurl = new url('/admin/settings.php', ['section' => $sectionmap[$legacytab]]);
         redirect($newurl);
     }
+}
+
+// Backward compatibility: the old combined "Sync Settings" page is now split into
+// separate "User Sync" and "Course Sync" pages. Redirect to "User Sync" by default.
+if ($PAGE->has_set_url() && $PAGE->url->get_param('section') === 'local_o365_sync') {
+    $newurl = new url('/admin/settings.php', ['section' => 'local_o365_usersync']);
+    redirect($newurl);
 }
 
 if (!$PAGE->requires->is_head_done()) {
@@ -177,43 +186,43 @@ if ($hassiteconfig) {
 
     // Remaining pages are only registered outside of install mode.
     if (empty($install)) {
-        // SYNC SETTINGS PAGE.
-        $syncsettings = new admin_settingpage(
-            'local_o365_sync',
-            get_string('settings_header_syncsettings', 'local_o365')
+        // USER SYNC SETTINGS PAGE.
+        $usersyncsettings = new admin_settingpage(
+            'local_o365_usersync',
+            get_string('settings_header_usersync', 'local_o365')
         );
-        $ADMIN->add('local_o365_folder', $syncsettings);
-        $syncsettings->add(new admin_setting_heading(
-            'local_o365_sync_nav',
+        $ADMIN->add('local_o365_folder', $usersyncsettings);
+        $usersyncsettings->add(new admin_setting_heading(
+            'local_o365_usersync_nav',
             '',
-            local_o365_get_settings_nav_html('local_o365_sync')
+            local_o365_get_settings_nav_html('local_o365_usersync')
         ));
 
         $label = new lang_string('settings_options_usersync', 'local_o365');
         $desc = new lang_string('settings_options_usersync_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
+        $usersyncsettings->add(new admin_setting_heading('local_o365_options_usersync', $label, $desc));
 
         // User sync options.
         $label = new lang_string('settings_usersync', 'local_o365');
         $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_usersync_details', 'local_o365', $scheduledtasks->out());
-        $syncsettings->add(new usersyncoptions('local_o365/usersync', $label, $desc));
+        $usersyncsettings->add(new usersyncoptions('local_o365/usersync', $label, $desc));
 
         // User creation restrictions.
         $label = new lang_string('settings_usersynccreationrestriction', 'local_o365');
         $desc = new lang_string('settings_usersynccreationrestriction_details', 'local_o365');
-        $syncsettings->add(new usersynccreationrestriction('local_o365/usersynccreationrestriction', $label, $desc, []));
+        $usersyncsettings->add(new usersynccreationrestriction('local_o365/usersynccreationrestriction', $label, $desc, []));
 
         // Link to field mapping settings.
         $label = new lang_string('settings_fieldmap', 'local_o365');
         $oidcsettingspageurl = new url('/admin/settings.php', ['section' => 'auth_oidc_field_mapping']);
         $desc = new lang_string('settings_fieldmap_details', 'local_o365', $oidcsettingspageurl->out(false));
-        $syncsettings->add(new auth_oidc_admin_setting_label('local_o365/fieldmap', $label, $desc, null));
+        $usersyncsettings->add(new auth_oidc_admin_setting_label('local_o365/fieldmap', $label, $desc, null));
 
         // User suspension / deletion running time.
         $label = new lang_string('settings_suspend_delete_running_time', 'local_o365');
         $desc = new lang_string('settings_suspend_delete_running_time_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configtime(
+        $usersyncsettings->add(new admin_setting_configtime(
             'local_o365/usersync_suspension_h',
             'local_o365/usersync_suspension_m',
             $label,
@@ -224,32 +233,44 @@ if ($hassiteconfig) {
         // Toggle to control whether to support UPN change.
         $label = new lang_string('settings_support_user_identifier_change', 'local_o365');
         $desc = new lang_string('settings_support_user_identifier_change_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configcheckbox(
+        $usersyncsettings->add(new admin_setting_configcheckbox(
             'local_o365/support_user_identifier_change',
             $label,
             $desc,
             '0'
         ));
 
-        // Course sync section.
+        // COURSE SYNC SETTINGS PAGE.
+        $coursesyncsettings = new admin_settingpage(
+            'local_o365_coursesync',
+            get_string('settings_header_coursesync', 'local_o365')
+        );
+        $ADMIN->add('local_o365_folder', $coursesyncsettings);
+        $coursesyncsettings->add(new admin_setting_heading(
+            'local_o365_coursesync_nav',
+            '',
+            local_o365_get_settings_nav_html('local_o365_coursesync')
+        ));
+
+        // Course sync section heading.
         $label = new lang_string('settings_secthead_coursesync', 'local_o365');
         $desc = new lang_string('settings_secthead_coursesync_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_heading('local_o365_section_coursesync', $label, $desc));
+        $coursesyncsettings->add(new admin_setting_heading('local_o365_section_coursesync', $label, $desc));
 
         // Course sync setting.
         $label = new lang_string('settings_coursesync', 'local_o365');
         $desc = new lang_string('settings_coursesync_details', 'local_o365');
-        $syncsettings->add(new coursesync('local_o365/coursesync', $label, $desc, 'off'));
+        $coursesyncsettings->add(new coursesync('local_o365/coursesync', $label, $desc, 'off'));
 
         // Sync hidden courses setting.
         $label = new lang_string('settings_coursesync_sync_hidden_courses', 'local_o365');
         $desc = new lang_string('settings_coursesync_sync_hidden_courses_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configcheckbox('local_o365/synchiddencourses', $label, $desc, '0'));
+        $coursesyncsettings->add(new admin_setting_configcheckbox('local_o365/synchiddencourses', $label, $desc, '0'));
 
         // Course deletion action.
         $label = new lang_string('settings_coursesync_delete_group_on_course_deletion', 'local_o365');
         $desc = new lang_string('settings_coursesync_delete_group_on_course_deletion_details', 'local_o365');
-        $syncsettings->add(new admin_setting_configcheckbox(
+        $coursesyncsettings->add(new admin_setting_configcheckbox(
             'local_o365/delete_group_on_course_deletion',
             $label,
             $desc,
@@ -259,7 +280,7 @@ if ($hassiteconfig) {
         // Course sync disabled action.
         $label = new lang_string('settings_coursesync_delete_group_on_course_sync_disabled', 'local_o365');
         $desc = new lang_string('settings_coursesync_delete_group_on_course_sync_disabled_details', 'local_o365');
-        $syncsettings->add(new admin_setting_configcheckbox(
+        $coursesyncsettings->add(new admin_setting_configcheckbox(
             'local_o365/delete_group_on_course_sync_disabled',
             $label,
             $desc,
@@ -269,7 +290,7 @@ if ($hassiteconfig) {
         // Courses to process per task.
         $label = new lang_string('settings_coursesync_courses_per_task', 'local_o365');
         $desc = new lang_string('settings_coursesync_courses_per_task_details', 'local_o365');
-        $syncsettings->add(new admin_setting_configtext('local_o365/courses_per_task', $label, $desc, 20, PARAM_INT));
+        $coursesyncsettings->add(new admin_setting_configtext('local_o365/courses_per_task', $label, $desc, 20, PARAM_INT));
 
         // Team type / template setting.
         // Use cached license detection to avoid Graph API calls on every settings page load.
@@ -302,7 +323,7 @@ if ($hassiteconfig) {
 
         $label = new lang_string('settings_coursesync_team_type', 'local_o365');
         $desc  = new lang_string('settings_coursesync_team_type_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configselect(
+        $coursesyncsettings->add(new admin_setting_configselect(
             'local_o365/team_type',
             $label,
             $desc,
@@ -314,7 +335,7 @@ if ($hassiteconfig) {
         // Includes a test button for validating the template ID.
         $label = new lang_string('settings_coursesync_team_type_custom_id', 'local_o365');
         $desc  = new lang_string('settings_coursesync_team_type_custom_id_desc', 'local_o365');
-        $syncsettings->add(new team_type_custom_id(
+        $coursesyncsettings->add(new team_type_custom_id(
             'local_o365/team_type_custom_id',
             $label,
             $desc,
@@ -336,7 +357,7 @@ if ($hassiteconfig) {
             ),
             COURSE_USER_SYNC_DIRECTION_BOTH => new lang_string('settings_coursesync_sync_both', 'local_o365'),
         ];
-        $syncsettings->add(new admin_setting_configselect(
+        $coursesyncsettings->add(new admin_setting_configselect(
             'local_o365/courseusersyncdirection',
             $label,
             $desc,
@@ -347,7 +368,7 @@ if ($hassiteconfig) {
         // Course sync Team owner role.
         $label = new lang_string('settings_coursesync_enrolment_owner_role', 'local_o365');
         $desc = new lang_string('settings_coursesync_enrolment_owner_role_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configselect(
+        $coursesyncsettings->add(new admin_setting_configselect(
             'local_o365/coursesyncownerrole',
             $label,
             $desc,
@@ -358,7 +379,7 @@ if ($hassiteconfig) {
         // Course sync Team member role.
         $label = new lang_string('settings_coursesync_enrolment_member_role', 'local_o365');
         $desc = new lang_string('settings_coursesync_enrolment_member_role_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configselect(
+        $coursesyncsettings->add(new admin_setting_configselect(
             'local_o365/coursesyncmemberrole',
             $label,
             $desc,
@@ -367,7 +388,7 @@ if ($hassiteconfig) {
         ));
 
         // Team / group name section.
-        $syncsettings->add(new admin_setting_heading(
+        $coursesyncsettings->add(new admin_setting_heading(
             'local_o365_section_team_name',
             new lang_string('settings_secthead_team_group_name', 'local_o365'),
             new lang_string('settings_secthead_team_group_name_desc', 'local_o365')
@@ -381,7 +402,7 @@ if ($hassiteconfig) {
         ];
 
         // Team naming convention - prefix.
-        $syncsettings->add(new admin_setting_configtext(
+        $coursesyncsettings->add(new admin_setting_configtext(
             'local_o365/team_name_prefix',
             get_string('settings_team_name_prefix', 'local_o365'),
             get_string('settings_team_name_prefix_desc', 'local_o365'),
@@ -389,7 +410,7 @@ if ($hassiteconfig) {
         ));
 
         // Team naming convention - course.
-        $syncsettings->add(new admin_setting_configselect(
+        $coursesyncsettings->add(new admin_setting_configselect(
             'local_o365/team_name_course',
             get_string('settings_team_name_course', 'local_o365'),
             get_string('settings_team_name_course_desc', 'local_o365'),
@@ -398,7 +419,7 @@ if ($hassiteconfig) {
         ));
 
         // Team naming convention - suffix.
-        $syncsettings->add(new admin_setting_configtext(
+        $coursesyncsettings->add(new admin_setting_configtext(
             'local_o365/team_name_suffix',
             get_string('settings_team_name_suffix', 'local_o365'),
             get_string('settings_team_name_suffix_desc', 'local_o365'),
@@ -406,7 +427,7 @@ if ($hassiteconfig) {
         ));
 
         // Group mail alias naming convention - prefix.
-        $syncsettings->add(new admin_setting_configtext_with_maxlength(
+        $coursesyncsettings->add(new admin_setting_configtext_with_maxlength(
             'local_o365/group_mail_alias_prefix',
             get_string('settings_group_mail_alias_prefix', 'local_o365'),
             get_string('settings_group_mail_alias_prefix_desc', 'local_o365'),
@@ -417,7 +438,7 @@ if ($hassiteconfig) {
         ));
 
         // Group mail alias naming convention - course.
-        $syncsettings->add(new admin_setting_configselect(
+        $coursesyncsettings->add(new admin_setting_configselect(
             'local_o365/group_mail_alias_course',
             get_string('settings_group_mail_alias_course', 'local_o365'),
             get_string('settings_group_mail_alias_course_desc', 'local_o365'),
@@ -426,7 +447,7 @@ if ($hassiteconfig) {
         ));
 
         // Group mail alias naming convention - suffix.
-        $syncsettings->add(new admin_setting_configtext_with_maxlength(
+        $coursesyncsettings->add(new admin_setting_configtext_with_maxlength(
             'local_o365/group_mail_alias_suffix',
             get_string('settings_group_mail_alias_suffix', 'local_o365'),
             get_string('settings_group_mail_alias_suffix_desc', 'local_o365'),
@@ -438,7 +459,7 @@ if ($hassiteconfig) {
 
         // Sample Team / group name.
         [$sampleteamname, $samplegroupalias] = utils::get_sample_team_group_names();
-        $syncsettings->add(new admin_setting_heading(
+        $coursesyncsettings->add(new admin_setting_heading(
             'local_o365_section_team_name_sample',
             '',
             get_string(
@@ -449,55 +470,11 @@ if ($hassiteconfig) {
         ));
 
         // Sync Team name.
-        $syncsettings->add(new admin_setting_configcheckbox(
+        $coursesyncsettings->add(new admin_setting_configcheckbox(
             'local_o365/team_name_sync',
             get_string('settings_team_name_sync', 'local_o365'),
             get_string('settings_team_name_sync_desc', 'local_o365'),
             0
-        ));
-
-        // Cohort sync section.
-        $label = new lang_string('settings_secthead_cohortsync', 'local_o365');
-        $desc = new lang_string('settings_secthead_cohortsync_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_heading('local_o365_section_cohortsync', $label, $desc));
-
-        $label = new lang_string('settings_cohortsync', 'local_o365');
-        $linktext = new lang_string('settings_cohortsync_linktext', 'local_o365');
-        $linkurl = new url('/local/o365/cohortsync.php');
-        $desc = new lang_string('settings_cohortsync_details', 'local_o365');
-        $syncsettings->add(new toollink(
-            'local_o365/cohortsync',
-            $label,
-            $linktext,
-            $linkurl,
-            $desc
-        ));
-
-        // Course request section.
-        $label = new lang_string('settings_secthead_course_request', 'local_o365');
-        $desc = new lang_string('settings_secthead_course_request_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_heading('local_o365_section_course_request', $label, $desc));
-
-        // Course request Team owner role.
-        $label = new lang_string('settings_course_request_enrolment_owner_role', 'local_o365');
-        $desc = new lang_string('settings_course_request_enrolment_owner_role_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configselect(
-            'local_o365/courserequestownerrole',
-            $label,
-            $desc,
-            3,
-            $courseroleoptions
-        ));
-
-        // Course request Team member role.
-        $label = new lang_string('settings_course_request_enrolment_member_role', 'local_o365');
-        $desc = new lang_string('settings_course_request_enrolment_member_role_desc', 'local_o365');
-        $syncsettings->add(new admin_setting_configselect(
-            'local_o365/courserequestmemberrole',
-            $label,
-            $desc,
-            5,
-            $courseroleoptions
         ));
 
         // ADVANCED SETTINGS PAGE.
@@ -510,6 +487,50 @@ if ($hassiteconfig) {
             'local_o365_advanced_nav',
             '',
             local_o365_get_settings_nav_html('local_o365_advanced')
+        ));
+
+        // Cohort sync section.
+        $label = new lang_string('settings_secthead_cohortsync', 'local_o365');
+        $desc = new lang_string('settings_secthead_cohortsync_desc', 'local_o365');
+        $advancedsettings->add(new admin_setting_heading('local_o365_section_cohortsync', $label, $desc));
+
+        $label = new lang_string('settings_cohortsync', 'local_o365');
+        $linktext = new lang_string('settings_cohortsync_linktext', 'local_o365');
+        $linkurl = new url('/local/o365/cohortsync.php');
+        $desc = new lang_string('settings_cohortsync_details', 'local_o365');
+        $advancedsettings->add(new toollink(
+            'local_o365/cohortsync',
+            $label,
+            $linktext,
+            $linkurl,
+            $desc
+        ));
+
+        // Course request section.
+        $label = new lang_string('settings_secthead_course_request', 'local_o365');
+        $desc = new lang_string('settings_secthead_course_request_desc', 'local_o365');
+        $advancedsettings->add(new admin_setting_heading('local_o365_section_course_request', $label, $desc));
+
+        // Course request Team owner role.
+        $label = new lang_string('settings_course_request_enrolment_owner_role', 'local_o365');
+        $desc = new lang_string('settings_course_request_enrolment_owner_role_desc', 'local_o365');
+        $advancedsettings->add(new admin_setting_configselect(
+            'local_o365/courserequestownerrole',
+            $label,
+            $desc,
+            3,
+            $courseroleoptions
+        ));
+
+        // Course request Team member role.
+        $label = new lang_string('settings_course_request_enrolment_member_role', 'local_o365');
+        $desc = new lang_string('settings_course_request_enrolment_member_role_desc', 'local_o365');
+        $advancedsettings->add(new admin_setting_configselect(
+            'local_o365/courserequestmemberrole',
+            $label,
+            $desc,
+            5,
+            $courseroleoptions
         ));
 
         // Tools section.

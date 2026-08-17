@@ -34,6 +34,8 @@ $string['pluginname'] = 'Microsoft 365 Integration';
 // Settings - tabs.
 $string['settings_header_setup'] = 'Setup';
 $string['settings_header_syncsettings'] = 'Sync Settings';
+$string['settings_header_usersync'] = 'User Sync';
+$string['settings_header_coursesync'] = 'Course Sync';
 $string['settings_header_advanced'] = 'Advanced';
 $string['settings_header_sds'] = 'SDS sync';
 $string['settings_header_teams'] = 'Teams Settings';
