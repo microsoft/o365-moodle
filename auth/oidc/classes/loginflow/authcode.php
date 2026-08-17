@@ -37,7 +37,6 @@ use core_text;
 use core_user;
 use moodle_exception;
 use core\url;
-use pix_icon;
 use stdClass;
 use core\di;
 
@@ -67,8 +66,9 @@ class authcode extends base {
             'name' => $name,
         ];
         if ($showicon) {
+            global $OUTPUT;
             if (!empty($this->config->customicon)) {
-                $iconvalue = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+                $idpentry['iconurl'] = $OUTPUT->image_url('0/customicon', 'auth_oidc')->out(false);
             } else {
                 $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:microsoft_365';
                 $icon = explode(':', $icon);
@@ -78,9 +78,8 @@ class authcode extends base {
                     $iconcomponent = 'auth_oidc';
                     $iconname = 'microsoft_365';
                 }
-                $iconvalue = new pix_icon($iconname, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+                $idpentry['iconurl'] = $OUTPUT->image_url($iconname, $iconcomponent)->out(false);
             }
-            $idpentry['icon'] = $iconvalue;
             // Two non-breaking spaces so the button text keeps a visible gap after the icon.
             // Regular spaces would be collapsed to one by normal HTML whitespace handling.
             $idpentry['name'] = "\u{00A0}\u{00A0}" . $name;
