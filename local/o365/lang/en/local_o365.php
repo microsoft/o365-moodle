@@ -442,6 +442,18 @@ $string['settings_teamconnections_linktext'] = 'Manage Team Connections';
 $string['settings_teamconnections_details'] = 'Review and manage connections between Moodle course and Microsoft Teams.';
 $string['settings_usermatch'] = 'User Matching';
 $string['settings_usermatch_details'] = 'This tool allows you to match Moodle users with Microsoft 365 users based on a custom uploaded data file.';
+$string['settings_usersyncgroupfilter'] = 'User sync group filter';
+$string['settings_usersyncgroupfilter_details'] = 'When a group object ID (GUID) is entered here, full user syncs will be restricted to members and owners of that Microsoft 365 group. Leave blank to sync all licensed users in your tenant.<br><br>
+<strong>CAUTION: This is an advanced setting. Misconfiguration can cause significant data synchronisation issues.</strong><br><br>
+<strong>When configured, the following apply:</strong><br>
+(1) Profile updates, timezone updates, and photo updates will only be applied to users who are members or owners of the group<br>
+(2) New Moodle accounts will only be created for users who are members or owners of the group<br>
+(3) Moodle accounts for non-member users will no longer receive updates and may become out-of-sync with Microsoft 365<br>
+(4) Users disabled in Microsoft 365 will still be suspended in Moodle by the enabled-status sync, which runs independently of group filtering<br>
+(5) Removing a user from the group stops future syncs for that account but does not delete or suspend their Moodle account<br><br>
+<strong>Incremental (delta) sync limitation:</strong> Microsoft Graph does not support delta queries on group membership endpoints. When this setting is configured, delta syncs will perform a full group-member sync instead of an incremental update. This is correct behaviour but may be slower than a normal delta sync.<br><br>
+Validate the group object ID before saving. Enter the group object ID (GUID).';
+$string['settings_usersyncgroupfilter_validation_error'] = 'Invalid group ID format. The group ID must be a valid GUID (e.g., 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'User creation restriction';
 $string['settings_usersynccreationrestriction_details'] = 'If enabled, only Microsoft Entra ID users matching the condition will be created during user sync.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Field value';
@@ -877,6 +889,7 @@ $string['privacy:metadata:local_o365_appassign'] = 'Information about Microsoft 
 $string['privacy:metadata:local_o365_appassign:muserid'] = 'The ID of the Moodle user';
 $string['privacy:metadata:local_o365_appassign:assigned'] = 'Whether the user has been assigned to the app';
 $string['privacy:metadata:local_o365_appassign:photoid'] = 'The ID of the user\'s photo in Microsoft 365';
+$string['privacy:metadata:local_o365_appassign:photohash'] = 'A SHA-256 hash of the user\'s profile photo bytes, stored to detect photo changes without re-fetching the full image';
 $string['privacy:metadata:local_o365_appassign:photoupdated'] = 'When the user\'s photo was last updated from Microsoft 365';
 $string['privacy:metadata:local_o365_matchqueue'] = 'Information about Moodle user to Microsoft 365 user matching';
 $string['privacy:metadata:local_o365_matchqueue:musername'] = 'The username of the Moodle user.';
