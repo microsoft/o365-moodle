@@ -612,9 +612,21 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         // exceed 36 characters (e.g. two GUIDs joined by a dot), not a fixed-length identifier.
         $table = new xmldb_table('auth_oidc_sid');
         $field = new xmldb_field('sid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'userid');
+        $index = new xmldb_index('sid', XMLDB_INDEX_NOTUNIQUE, ['sid']);
 
         if ($dbman->field_exists($table, $field)) {
+            // The sid index depends on this field, so the DDL layer refuses to alter it in
+            // place (ddl_dependency_exception); drop the index first and recreate it once the
+            // field has been widened.
+            if ($dbman->index_exists($table, $index)) {
+                $dbman->drop_index($table, $index);
+            }
+
             $dbman->change_field_precision($table, $field);
+
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
         }
 
         // Oidc savepoint reached.
