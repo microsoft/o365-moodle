@@ -26,7 +26,7 @@
 }
 
 .block_microsoft .block_microsoft_onedrive {
-    background-image: url([[pix:block_microsoft|onedriveicon]]);
+    background-image: url([[pix:block_microsoft|onedrive]]);
 }
 
 .block_microsoft .block_microsoft_sway {
@@ -34,35 +34,35 @@
 }
 
 .block_microsoft .block_microsoft_msstream {
-    background-image: url([[pix:block_microsoft|msstream]]);
+    background-image: url([[pix:block_microsoft|stream]]);
 }
 
 .block_microsoft .block_microsoft_msteams {
-    background-image: url([[pix:block_microsoft|msteams]]);
+    background-image: url([[pix:block_microsoft|teams]]);
 }
 
 .block_microsoft .block_microsoft_onenote {
-    background-image: url([[pix:block_microsoft|onenotecolor]]);
+    background-image: url([[pix:block_microsoft|onenote]]);
 }
 
 .block_microsoft .block_microsoft_outlook {
-    background-image: url([[pix:block_microsoft|outlookcolor]]);
+    background-image: url([[pix:block_microsoft|outlook]]);
 }
 
 .block_microsoft .block_microsoft_connection {
-    background-image: url([[pix:block_microsoft|o365color]]);
+    background-image: url([[pix:block_microsoft|microsoft365]]);
 }
 
 .block_microsoft .block_microsoft_delve {
-    background-image: url([[pix:block_microsoft|delvecolor]]);
+    background-image: url([[pix:block_microsoft|delve]]);
 }
 
 .block_microsoft .block_microsoft_forms {
-    background-image: url([[pix:block_microsoft|formscolor]]);
+    background-image: url([[pix:block_microsoft|forms]]);
 }
 
 .block_microsoft .block_microsoft_sharepoint {
-    background-image: url([[pix:block_microsoft|sharepointcolor]]);
+    background-image: url([[pix:block_microsoft|sharepoint]]);
 }
 
 .block_microsoft .block_microsoft_preferences {
@@ -70,7 +70,7 @@
 }
 
 .block_microsoft .block_microsoft_msasignin {
-    background-image: url([[pix:block_microsoft|msftcolor]]);
+    background-image: url([[pix:block_microsoft|microsoft]]);
 }
 
 .block_microsoft .block_microsoft_downloado365 {
@@ -78,11 +78,11 @@
 }
 
 .block_microsoft .block_microsoft_team {
-    background-image: url([[pix:block_microsoft|msteams]]);
+    background-image: url([[pix:block_microsoft|teams]]);
 }
 
 .block_microsoft .block_microsoft_conversations {
-    background-image: url([[pix:block_microsoft|outlookcolor]]);
+    background-image: url([[pix:block_microsoft|outlook]]);
 }
 
 .block_microsoft .block_microsoft_calendar {
@@ -90,7 +90,7 @@
 }
 
 .block_microsoft .block_microsoft_notebook {
-    background-image: url([[pix:block_microsoft|onenotecolor]]);
+    background-image: url([[pix:block_microsoft|onenote]]);
 }
 
 .block_microsoft .block_microsoft_sync {
