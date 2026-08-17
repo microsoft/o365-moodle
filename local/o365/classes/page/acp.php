@@ -34,6 +34,7 @@ use auth_plugin_oidc;
 use core_course_category;
 use core_php_time_limit;
 use core_plugin_manager;
+use core_text;
 use core_user;
 use finfo;
 use html_table;
@@ -2079,11 +2080,15 @@ var local_o365_coursesync_all_set_feature = function(state) {
         $customdata = ['userid' => $userid];
         $mform = new manualusermatch($redirect, $customdata);
         if ($fromform = $mform->get_data()) {
-            $o365username = trim($fromform->o365username);
+            $o365username = core_text::strtolower(trim($fromform->o365username));
 
-            // Check existing matches for Microsoft user.
-            $existingmatchforo365user = $DB->get_record('local_o365_connections', ['entraidupn' => $o365username]);
-            if (!empty($existingmatchforo365user)) {
+            // Check existing matches for Microsoft user. Compared case-insensitively so legacy rows stored
+            // with different casing (e.g. before entraidupn values were normalized to lower case) are found
+            // too, rather than allowing a duplicate match to be created for the same Microsoft 365 user.
+            $sql = 'SELECT 1
+                      FROM {local_o365_connections}
+                     WHERE ' . $DB->sql_equal('entraidupn', ':entraidupn', false);
+            if ($DB->record_exists_sql($sql, ['entraidupn' => $o365username])) {
                 throw new moodle_exception('acp_userconnections_manualmatch_error_o365usermatched', 'local_o365');
             }
 
