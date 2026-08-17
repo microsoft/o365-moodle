@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="lib/editor/tiny/plugins/teamsmeeting/db" VERSION="20200326" COMMENT="XMLDB file for Moodle tiny/teamsmeeting plugin"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../xmldb/xmldb.xsd"
+>
+    <TABLES>
+        <TABLE NAME="tiny_teamsmeeting" COMMENT="Meetings data">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the user who created the meeting"/>
+                <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The context in which the meeting was created"/>
+                <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Title of the meeting"/>
+                <FIELD NAME="link" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="The link to the meeting"/>
+                <FIELD NAME="linkhash" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="SHA1 hash of the meeting link URL, used for fast unique lookups"/>
+                <FIELD NAME="options" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The link to meeting options"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the time the meeting was created"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="contextid" TYPE="foreign" FIELDS="contextid" REFTABLE="context" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="contextid" UNIQUE="false" FIELDS="contextid"/>
+                <INDEX NAME="linkhash" UNIQUE="true" FIELDS="linkhash"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
+</XMLDB>
