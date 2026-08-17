@@ -96,11 +96,15 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
             $courseid = SITEID;
         }
 
+        // The result.php page always resolves its own context from this courseid,
+        // so the token must be scoped to that same context to be accepted there.
+        $resultcontext = \context_course::instance($courseid);
+
         return [
             'appurl' => get_config('tiny_teamsmeeting', 'meetingapplink'),
             'clientdomain' => encode_url($CFG->wwwroot),
             'localevalue' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
-            'msession' => sesskey(),
+            'msession' => result_token::generate((int) $USER->id, $resultcontext->id),
             'courseid' => $courseid,
         ];
     }
