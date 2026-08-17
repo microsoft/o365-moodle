@@ -24,6 +24,8 @@
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
+use auth_oidc\utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/auth/oidc/lib.php');
@@ -582,7 +584,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2025100601.01) {
-        upgrade_auth_oidc_add_token_constraint();
+        utils::add_token_unique_constraint();
         upgrade_plugin_savepoint(true, 2025100601.01, 'auth', 'oidc');
     }
 
@@ -596,44 +598,14 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026042000.01, 'auth', 'oidc');
     }
 
-    return true;
-}
-
-/**
- * Helper function to add unique constraint and remove duplicate tokens.
- *
- * Removes duplicate tokens, keeping the latest one for each (oidcuniqid, tokenresource) pair.
- * Uses a temporary table to work around MySQL error 1093 and PostgreSQL parameter limits.
- */
-function upgrade_auth_oidc_add_token_constraint(): void {
-    global $DB;
-
-    try {
-        $temptable = 'auth_oidc_token_keep_ids';
-
-        // Step 1: Create a temporary table with the IDs to keep.
-        $sql = "CREATE TEMPORARY TABLE {" . $temptable . "} (id INT PRIMARY KEY)";
-        $DB->execute($sql);
-
-        // Step 2: Insert the IDs to keep (latest token for each oidcuniqid, tokenresource pair).
-        $sql = "INSERT INTO {" . $temptable . "} (id)
-                SELECT MAX(id) FROM {auth_oidc_token}
-                GROUP BY oidcuniqid, tokenresource";
-        $DB->execute($sql);
-
-        // Step 3: Delete duplicates not in the temporary table.
-        $sql = "DELETE FROM {auth_oidc_token} WHERE id NOT IN (SELECT id FROM {" . $temptable . "})";
-        $DB->execute($sql);
-
-        // Step 4: Drop the temporary table (automatic on transaction end, but explicit for clarity).
-        $sql = "DROP TEMPORARY TABLE IF EXISTS {" . $temptable . "}";
-        $DB->execute($sql);
-
-        // Step 5: Add unique constraint on (oidcuniqid, tokenresource) to prevent duplicate tokens.
-        // Use CREATE UNIQUE INDEX which works on both MySQL and PostgreSQL.
-        $sql = 'CREATE UNIQUE INDEX idx_oidc_unique ON {auth_oidc_token} (oidcuniqid, tokenresource)';
-        $DB->execute($sql);
-    } catch (Exception $e) {
-        unset($e);
+    if ($oldversion < 2026042000.02) {
+        // Retry adding the unique constraint: the previous (2025100601.01) attempt used a helper
+        // that silently swallowed failures, so sites where that step failed never got the
+        // constraint despite passing the savepoint. utils::add_token_unique_constraint() is
+        // idempotent (checks index_exists() first), so this is a no-op where .01 already succeeded.
+        utils::add_token_unique_constraint();
+        upgrade_plugin_savepoint(true, 2026042000.02, 'auth', 'oidc');
     }
+
+    return true;
 }
