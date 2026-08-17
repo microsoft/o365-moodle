@@ -624,6 +624,12 @@ class authcode extends base {
                 $authoidsidrecord->userid = $USER->id;
                 $authoidsidrecord->sid = $sid;
                 $authoidsidrecord->timecreated = time();
+                // Store the Moodle session id so logout.php can terminate the correct session directly,
+                // without depending on the MoodleSession cookie being present on the IdP's logout request.
+                $authoidsidrecord->sessionid = session_id();
+                // Store the issuer so logout.php can verify that a front-channel logout request naming
+                // this sid actually originates from the same IdP/tenant that issued it.
+                $authoidsidrecord->iss = $idtoken->claim('iss');
                 $DB->insert_record('auth_oidc_sid', $authoidsidrecord);
             }
             redirect(core_login_get_return_url());
