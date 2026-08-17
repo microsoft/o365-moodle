@@ -195,9 +195,14 @@ class photoandtimezonesync extends scheduled_task {
 
             $this->mtrace('Batch ' . ($batchnum + 1) . '/' . $numbatches . ' (offset: ' . $offset . ')...');
 
-            // Fetch batch of users. LEFT JOIN with appassign to get the photo sync
-            // metadata (id, photoupdated) needed for the expiry check and apply_photo call.
+            // Azure AD Object ID (GUID) is used as the photo/timezone API identifier because
+            // o365name may contain a bare username on some installations, which Graph rejects
+            // with HTTP 400. A GUID is always a valid user identifier for the Graph API.
+            // LEFT JOIN with appassign to get the photo sync metadata (id, photoupdated)
+            // needed for the expiry check and apply_photo call; muserid has a UNIQUE index,
+            // so a direct LEFT JOIN is safe.
             $sql = "SELECT obj.moodleid AS muserid,
+                           obj.objectid,
                            obj.o365name AS upn,
                            u.username,
                            u.picture AS currentpicture,
@@ -210,6 +215,8 @@ class photoandtimezonesync extends scheduled_task {
                      WHERE obj.type = 'user'
                        AND u.deleted = 0
                        AND u.suspended = 0
+                       AND obj.objectid IS NOT NULL
+                       AND obj.objectid != ''
                        AND obj.o365name IS NOT NULL
                        AND obj.o365name != ''
                   ORDER BY obj.moodleid";
@@ -224,8 +231,9 @@ class photoandtimezonesync extends scheduled_task {
             $this->mtrace('Loaded ' . count($users) . ' users from database.', 1);
 
             // Separate users by what needs updating.
-            $upnsforphotosync = [];
-            $upnsfortzsync = [];
+            // Both photos and timezones use objectid (GUID) as the API identifier.
+            $objectidsforphotosync = [];
+            $objectidsfortzsync = [];
             $usersforprocessing = 0;
             $photosyncskipped = 0;
 
@@ -243,13 +251,13 @@ class photoandtimezonesync extends scheduled_task {
                     if (!empty($user->photoupdated) && ($user->photoupdated + $photoexpiresec) > $currenttime) {
                         $photosyncskipped++;
                     } else {
-                        $upnsforphotosync[] = $user->upn;
+                        $objectidsforphotosync[] = $user->objectid;
                     }
                 }
 
                 // Always sync timezone if enabled (no expiration check for timezone).
                 if ($tzsynceenabled) {
-                    $upnsfortzsync[] = $user->upn;
+                    $objectidsfortzsync[] = $user->objectid;
                 }
             }
 
@@ -258,14 +266,14 @@ class photoandtimezonesync extends scheduled_task {
             }
 
             if ($photosyncenabled) {
-                $this->mtrace('Users for photo sync: ' . count($upnsforphotosync) .
+                $this->mtrace('Users for photo sync: ' . count($objectidsforphotosync) .
                     ($photosyncskipped > 0 ? ' (' . $photosyncskipped . ' skipped — photo fresh within expiry window)' : ''), 1);
-                $totalusersforphotosync += count($upnsforphotosync);
+                $totalusersforphotosync += count($objectidsforphotosync);
             }
 
             if ($tzsynceenabled) {
-                $this->mtrace('Users for timezone sync: ' . count($upnsfortzsync), 1);
-                $totalusersfortzsync += count($upnsfortzsync);
+                $this->mtrace('Users for timezone sync: ' . count($objectidsfortzsync), 1);
+                $totalusersfortzsync += count($objectidsfortzsync);
             }
 
             // Construct the API client once per batch. Both the timezone and photo
@@ -273,21 +281,21 @@ class photoandtimezonesync extends scheduled_task {
             $apiclient = null;
 
             // Batch fetch timezones for users that need it.
-            $timezonesbyupn = [];
-            if ($tzsynceenabled && !empty($upnsfortzsync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
+            $timezonesbyobjectid = [];
+            if ($tzsynceenabled && !empty($objectidsfortzsync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     $this->mtrace('Fetching timezones...', 1);
                     $apiclient = $usersync->construct_user_api();
-                    $timezonesbyupn = $apiclient->get_timezones_batch($upnsfortzsync);
-                    $this->mtrace('Fetched ' . count(array_filter($timezonesbyupn)) . ' timezones from API.', 2);
+                    $timezonesbyobjectid = $apiclient->get_timezones_batch($objectidsfortzsync);
+                    $this->mtrace('Fetched ' . count(array_filter($timezonesbyobjectid)) . ' timezones from API.', 2);
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error fetching timezones: ' . $e->getMessage(), 1);
                     utils::debug($e->getMessage(), __METHOD__, $e);
                 }
             }
 
-            // Batch fetch photos for all users.
-            $photosbyupn = [];
+            // Batch fetch photos for all users, keyed by objectid.
+            $photosbyobjectid = [];
             $photofetchstats = [
                 'success' => 0,
                 'not_found' => 0,
@@ -296,16 +304,16 @@ class photoandtimezonesync extends scheduled_task {
                 'batch_error' => 0,
             ];
 
-            if ($photosyncenabled && !empty($upnsforphotosync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
+            if ($photosyncenabled && !empty($objectidsforphotosync) && !PHPUNIT_TEST && !defined('BEHAT_SITE_RUNNING')) {
                 try {
                     $this->mtrace('Fetching photos...', 1);
                     if ($apiclient === null) {
                         $apiclient = $usersync->construct_user_api();
                     }
-                    $photosbyupn = $apiclient->get_photos_batch($upnsforphotosync);
+                    $photosbyobjectid = $apiclient->get_photos_batch($objectidsforphotosync);
 
                     // Count results by status.
-                    foreach ($photosbyupn as $response) {
+                    foreach ($photosbyobjectid as $response) {
                         if (is_array($response) && isset($response['status'])) {
                             $status = $response['status'];
                             if (isset($photofetchstats[$status])) {
@@ -326,7 +334,7 @@ class photoandtimezonesync extends scheduled_task {
                     }
                     if ($photofetchstats['batch_error'] > 0) {
                         $this->mtrace('Missing from batch response: ' . $photofetchstats['batch_error'] .
-                            ' (requested: ' . count($upnsforphotosync) . ')', 2);
+                            ' (requested: ' . count($objectidsforphotosync) . ')', 2);
                     }
                 } catch (moodle_exception $e) {
                     $this->mtrace('Error fetching photos: ' . $e->getMessage(), 1);
@@ -339,13 +347,13 @@ class photoandtimezonesync extends scheduled_task {
             $batchphotosnochange = 0;
             $batchtimezoneschanged = 0;
 
-            if ($photosyncenabled && !empty($photosbyupn)) {
+            if ($photosyncenabled && !empty($photosbyobjectid)) {
                 $this->mtrace('Applying photos...', 1);
 
                 foreach ($users as $user) {
                     // Apply photo if available, successful, or needs clearing.
-                    if (isset($photosbyupn[$user->upn])) {
-                        $response = $photosbyupn[$user->upn];
+                    if (isset($photosbyobjectid[$user->objectid])) {
+                        $response = $photosbyobjectid[$user->objectid];
                         // Handle new format (status array).
                         $shouldapply = false;
                         $photodata = false;
@@ -402,7 +410,7 @@ class photoandtimezonesync extends scheduled_task {
                 }
             }
 
-            if ($tzsynceenabled && !empty($timezonesbyupn)) {
+            if ($tzsynceenabled && !empty($timezonesbyobjectid)) {
                 $this->mtrace('Applying timezones...', 1);
 
                 foreach ($users as $user) {
@@ -411,11 +419,11 @@ class photoandtimezonesync extends scheduled_task {
                     // full user record when the value has not changed. Normalisation and the
                     // Etc/GMT mapping live only in apply_timezone, eliminating the duplicate
                     // logic that previously existed here.
-                    if (isset($timezonesbyupn[$user->upn]) && $timezonesbyupn[$user->upn] !== false) {
+                    if (isset($timezonesbyobjectid[$user->objectid]) && $timezonesbyobjectid[$user->objectid] !== false) {
                         try {
                             $result = $usersync->apply_timezone_public(
                                 $user->muserid,
-                                $timezonesbyupn[$user->upn],
+                                $timezonesbyobjectid[$user->objectid],
                                 $user->currenttimezone
                             );
                             if ($result['changed']) {
@@ -462,7 +470,8 @@ class photoandtimezonesync extends scheduled_task {
             set_config('photosync_progress', json_encode($progressdata), 'local_o365');
 
             // Free memory.
-            unset($users, $photosbyupn, $timezonesbyupn, $upnsforphotosync, $upnsfortzsync, $apiclient);
+            unset($users, $photosbyobjectid, $timezonesbyobjectid);
+            unset($objectidsforphotosync, $objectidsfortzsync, $apiclient);
             gc_collect_cycles();
         }
 
