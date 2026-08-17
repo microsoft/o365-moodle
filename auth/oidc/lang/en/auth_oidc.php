@@ -465,6 +465,7 @@ $string['binding_username_claim_help_non_ms'] = 'The options for Microsoft IdP w
 <li><b>custom</b>: Custom claim.</li>
 </ul>';
 $string['binding_username_claim_updated'] = 'Binding username claim was updated successfully.';
+$string['warning_binding_username_claim_custom_unsupported'] = 'The "Binding username claim" setting is currently set to "Custom", which is not supported for the configured IdP type with user sync enabled. Review the <a href="{$a}">Binding username claim</a> settings.';
 $string['examplecsv'] = 'Example upload file';
 $string['usernamefile'] = 'File';
 $string['csvdelimiter'] = 'CSV separator';

@@ -207,7 +207,9 @@ if ($hassiteconfig) {
         $label = new lang_string('settings_usersync', 'local_o365');
         $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
         $desc = new lang_string('settings_usersync_details', 'local_o365', $scheduledtasks->out());
-        $usersyncsettings->add(new usersyncoptions('local_o365/usersync', $label, $desc));
+        $usersyncsetting = new usersyncoptions('local_o365/usersync', $label, $desc);
+        $usersyncsetting->set_updatedcallback('auth_oidc_validate_binding_username_claim');
+        $usersyncsettings->add($usersyncsetting);
 
         // User sync group filter.
         $label = new lang_string('settings_usersyncgroupfilter', 'local_o365');
@@ -541,50 +543,6 @@ if ($hassiteconfig) {
             'local_o365_advanced_nav',
             '',
             local_o365_get_settings_nav_html('local_o365_advanced')
-        ));
-
-        // Cohort sync section.
-        $label = new lang_string('settings_secthead_cohortsync', 'local_o365');
-        $desc = new lang_string('settings_secthead_cohortsync_desc', 'local_o365');
-        $advancedsettings->add(new admin_setting_heading('local_o365_section_cohortsync', $label, $desc));
-
-        $label = new lang_string('settings_cohortsync', 'local_o365');
-        $linktext = new lang_string('settings_cohortsync_linktext', 'local_o365');
-        $linkurl = new url('/local/o365/cohortsync.php');
-        $desc = new lang_string('settings_cohortsync_details', 'local_o365');
-        $advancedsettings->add(new toollink(
-            'local_o365/cohortsync',
-            $label,
-            $linktext,
-            $linkurl,
-            $desc
-        ));
-
-        // Course request section.
-        $label = new lang_string('settings_secthead_course_request', 'local_o365');
-        $desc = new lang_string('settings_secthead_course_request_desc', 'local_o365');
-        $advancedsettings->add(new admin_setting_heading('local_o365_section_course_request', $label, $desc));
-
-        // Course request Team owner role.
-        $label = new lang_string('settings_course_request_enrolment_owner_role', 'local_o365');
-        $desc = new lang_string('settings_course_request_enrolment_owner_role_desc', 'local_o365');
-        $advancedsettings->add(new admin_setting_configselect(
-            'local_o365/courserequestownerrole',
-            $label,
-            $desc,
-            3,
-            $courseroleoptions
-        ));
-
-        // Course request Team member role.
-        $label = new lang_string('settings_course_request_enrolment_member_role', 'local_o365');
-        $desc = new lang_string('settings_course_request_enrolment_member_role_desc', 'local_o365');
-        $advancedsettings->add(new admin_setting_configselect(
-            'local_o365/courserequestmemberrole',
-            $label,
-            $desc,
-            5,
-            $courseroleoptions
         ));
 
         // Tools section.
