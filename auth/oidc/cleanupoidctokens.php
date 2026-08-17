@@ -89,9 +89,9 @@ if ($tokenstoclean) {
     foreach ($tokenstoclean as $item) {
         $table->data[] = [
             $item->id,
-            $item->oidcusername,
-            $item->useridentifier,
-            $item->oidcuniqueid,
+            s($item->oidcusername),
+            s($item->useridentifier),
+            s($item->oidcuniqueid),
             $item->matchingstatus,
             $item->details,
             $item->action,
