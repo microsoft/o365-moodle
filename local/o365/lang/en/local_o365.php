@@ -458,10 +458,12 @@ $string['settings_usersyncgroupfilter_details'] = 'When a group object ID (GUID)
 Validate the group object ID before saving. Enter the group object ID (GUID).';
 $string['settings_usersyncgroupfilter_validation_error'] = 'Invalid group ID format. The group ID must be a valid GUID (e.g., 550e8400-e29b-41d4-a716-446655440000).';
 $string['settings_usersynccreationrestriction'] = 'User creation restriction';
-$string['settings_usersynccreationrestriction_details'] = 'If enabled, only Microsoft Entra ID users matching the condition will be created during user sync.';
+$string['settings_usersynccreationrestriction_details'] = 'If enabled, only Microsoft Entra ID users matching the condition will be created during user sync. For Microsoft 365 Group Membership (group object ID), enter one group object ID or multiple group object IDs separated by commas.';
 $string['settings_usersynccreationrestriction_fieldval'] = 'Field value';
 $string['settings_usersynccreationrestriction_o365group'] = 'Microsoft 365 Group Membership (group name)';
 $string['settings_usersynccreationrestriction_o365groupid'] = 'Microsoft 365 Group Membership (group object ID)';
+$string['settings_usersynccreationrestriction_invalidgroupid'] = 'Microsoft 365 group object ID "{$a}" could not be found. Check the ID and try again.';
+$string['settings_usersynccreationrestriction_groupvalidationerror'] = 'The Microsoft 365 group object IDs could not be validated. Check the IDs and Microsoft Graph configuration, then try again.';
 $string['settings_usersynccreationrestriction_regex'] = 'Value is a regular expression';
 $string['settings_maintenance'] = 'Maintenance';
 $string['settings_maintenance_details'] = 'Various maintenance tasks are available to resolve some common issues.';
