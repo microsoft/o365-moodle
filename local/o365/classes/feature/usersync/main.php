@@ -1007,24 +1007,29 @@ class main {
             $apiclient = $this->construct_user_api();
 
             try {
-                $group = $apiclient->get_group($restriction['value']);
-                if (empty($group) || !isset($group['id'])) {
-                    utils::debug('Could not find group (1)', __METHOD__, $group);
-
+                // Support one group ID (legacy behavior) or a comma-separated list.
+                $groupids = array_values(array_filter(array_map('trim', explode(',', $restriction['value']))));
+                if (empty($groupids)) {
                     return false;
                 }
 
+                // Object IDs are case-insensitive GUIDs. Normalize both sides before comparison.
+                $groupids = array_map('strtolower', $groupids);
                 $usergroups = $apiclient->get_user_transitive_groups($entraiduserdata['id']);
+                if (empty($usergroups)) {
+                    return false;
+                }
+                $usergroups = array_flip(array_map('strtolower', $usergroups));
 
-                foreach ($usergroups as $usergroup) {
-                    if ($group['id'] === $usergroup) {
+                foreach ($groupids as $groupid) {
+                    if (isset($usergroups[$groupid])) {
                         return true;
                     }
                 }
 
                 return false;
             } catch (moodle_exception $e) {
-                utils::debug('Could not find group (2)', __METHOD__, $e);
+                utils::debug('Could not check group membership', __METHOD__, $e);
 
                 return false;
             }

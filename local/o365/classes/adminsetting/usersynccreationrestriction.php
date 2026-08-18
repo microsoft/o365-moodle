@@ -26,6 +26,8 @@
 namespace local_o365\adminsetting;
 
 use admin_setting;
+use local_o365\feature\usersync\main as usersync;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -115,6 +117,30 @@ class usersynccreationrestriction extends admin_setting {
             // Broken data, wipe setting.
             $this->config_write($this->name, serialize($newconfig));
             return '';
+        }
+
+        if ($data['remotefield'] === 'o365groupid' && trim($data['value']) !== '') {
+            $groupids = array_values(array_unique(array_filter(array_map('trim', explode(',', $data['value'])))));
+            if (empty($groupids)) {
+                return get_string('settings_usersynccreationrestriction_invalidgroupid', 'local_o365', $data['value']);
+            }
+
+            try {
+                $usersync = new usersync();
+                $apiclient = $usersync->construct_user_api();
+
+                foreach ($groupids as $groupid) {
+                    $group = $apiclient->get_group($groupid);
+                    if (empty($group) || !isset($group['id'])) {
+                        return get_string('settings_usersynccreationrestriction_invalidgroupid', 'local_o365', $groupid);
+                    }
+                }
+            } catch (moodle_exception $e) {
+                return get_string('settings_usersynccreationrestriction_groupvalidationerror', 'local_o365');
+            }
+
+            // Store a predictable comma-separated value after trimming and removing duplicates.
+            $data['value'] = implode(', ', $groupids);
         }
 
         $newconfig = [
