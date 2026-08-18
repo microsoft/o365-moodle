@@ -80,9 +80,7 @@ class authcode extends base {
                 }
                 $idpentry['iconurl'] = $OUTPUT->image_url($iconname, $iconcomponent)->out(false);
             }
-            // Two non-breaking spaces so the button text keeps a visible gap after the icon.
-            // Regular spaces would be collapsed to one by normal HTML whitespace handling.
-            $idpentry['name'] = "\u{00A0}\u{00A0}" . $name;
+            $idpentry['name'] = $name;
         }
         return [$idpentry];
     }
