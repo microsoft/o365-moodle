@@ -104,6 +104,19 @@ class usersynccreationrestriction extends admin_setting {
     }
 
     /**
+     * Construct the Microsoft Graph API client used to validate group object IDs.
+     *
+     * Extracted into its own method so tests can override it to inject a stub API client.
+     *
+     * @return object An API client exposing get_groups_batch().
+     * @throws moodle_exception
+     */
+    protected function get_group_api_client() {
+        $usersync = new usersync();
+        return $usersync->construct_user_api();
+    }
+
+    /**
      * Write the setting.
      *
      * We do this manually so just pretend here.
@@ -120,18 +133,29 @@ class usersynccreationrestriction extends admin_setting {
         }
 
         if ($data['remotefield'] === 'o365groupid' && trim($data['value']) !== '') {
-            $groupids = array_values(array_unique(array_filter(array_map('trim', explode(',', $data['value'])))));
-            if (empty($groupids)) {
+            $rawgroupids = array_filter(array_map('trim', explode(',', $data['value'])));
+            if (empty($rawgroupids)) {
                 return get_string('settings_usersynccreationrestriction_invalidgroupid', 'local_o365', $data['value']);
             }
 
-            try {
-                $usersync = new usersync();
-                $apiclient = $usersync->construct_user_api();
+            // Object IDs are case-insensitive GUIDs, so deduplicate case-insensitively. The
+            // casing of the first occurrence of each ID is kept for a readable stored value.
+            $groupids = [];
+            foreach ($rawgroupids as $groupid) {
+                $lowergroupid = strtolower($groupid);
+                if (!isset($groupids[$lowergroupid])) {
+                    $groupids[$lowergroupid] = $groupid;
+                }
+            }
+            $groupids = array_values($groupids);
 
+            try {
+                $apiclient = $this->get_group_api_client();
+
+                // Validate all group IDs in a single batched call rather than one request per ID.
+                $foundgroups = $apiclient->get_groups_batch($groupids);
                 foreach ($groupids as $groupid) {
-                    $group = $apiclient->get_group($groupid);
-                    if (empty($group) || !isset($group['id'])) {
+                    if (empty($foundgroups[$groupid]['id'])) {
                         return get_string('settings_usersynccreationrestriction_invalidgroupid', 'local_o365', $groupid);
                     }
                 }
