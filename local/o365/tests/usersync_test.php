@@ -727,4 +727,98 @@ final class usersync_test extends advanced_testcase {
             'Exactly one OIDC user should exist; no new user should be created'
         );
     }
+
+    /**
+     * Test user creation restrictions with multiple Microsoft 365 group object IDs.
+     *
+     * @covers \local_o365\feature\usersync\main::check_usercreationrestriction
+     */
+    public function test_usercreationrestriction_multiple_group_ids(): void {
+        $apiclient = new class {
+            /**
+             * Transitive group IDs returned for the test user.
+             *
+             * @var array
+             */
+            public ?array $usergroups = [];
+
+            /**
+             * Return the configured test group IDs.
+             *
+             * @param string $userid User object ID.
+             * @return array
+             */
+            public function get_user_transitive_groups($userid): ?array {
+                return $this->usergroups;
+            }
+        };
+
+        $usersync = new class($apiclient) extends main {
+            /**
+             * Test API client.
+             *
+             * @var object
+             */
+            private object $testapiclient;
+
+            /**
+             * Constructor.
+             *
+             * @param object $apiclient Test API client.
+             */
+            public function __construct(object $apiclient) {
+                $this->testapiclient = $apiclient;
+            }
+
+            /**
+             * Return the test API client.
+             *
+             * @return object
+             */
+            public function construct_user_api() {
+                return $this->testapiclient;
+            }
+
+            /**
+             * Expose the protected restriction check for this regression test.
+             *
+             * @param array $entraiduserdata Entra ID user data.
+             * @return bool
+             */
+            public function check_usercreationrestriction_for_test(array $entraiduserdata): bool {
+                return $this->check_usercreationrestriction($entraiduserdata);
+            }
+        };
+
+        $restriction = [
+            'remotefield' => 'o365groupid',
+            'value' => '11111111-1111-1111-1111-111111111111, 22222222-2222-2222-2222-222222222222',
+            'useregex' => false,
+        ];
+        set_config('usersynccreationrestriction', serialize($restriction), 'local_o365');
+
+        // Membership in any configured group should pass.
+        $apiclient->usergroups = ['22222222-2222-2222-2222-222222222222'];
+        $this->assertTrue($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
+
+        // No matching configured group should fail.
+        $apiclient->usergroups = ['33333333-3333-3333-3333-333333333333'];
+        $this->assertFalse($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
+
+        // Preserve the existing single-group configuration behavior.
+        $restriction['value'] = '22222222-2222-2222-2222-222222222222';
+        set_config('usersynccreationrestriction', serialize($restriction), 'local_o365');
+        $apiclient->usergroups = ['22222222-2222-2222-2222-222222222222'];
+        $this->assertTrue($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
+
+        // Group object IDs should match regardless of GUID letter casing.
+        $restriction['value'] = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA';
+        set_config('usersynccreationrestriction', serialize($restriction), 'local_o365');
+        $apiclient->usergroups = ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];
+        $this->assertTrue($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
+
+        // A failed Graph lookup can return null. This must fail closed without a TypeError.
+        $apiclient->usergroups = null;
+        $this->assertFalse($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
+    }
 }
