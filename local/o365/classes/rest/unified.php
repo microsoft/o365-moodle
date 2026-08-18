@@ -527,6 +527,65 @@ class unified extends o365api {
     }
 
     /**
+     * Look up multiple groups by object ID using batch requests.
+     * Microsoft Graph allows up to 20 requests per batch.
+     *
+     * @param array $objectids Array of group object IDs to look up.
+     * @return array Associative array keyed by the requested object ID. Each value is the
+     *               group data array on success, or null if the group was not found.
+     * @throws moodle_exception If a batch request itself fails (e.g. network or auth error).
+     */
+    public function get_groups_batch(array $objectids): array {
+        if (empty($objectids)) {
+            return [];
+        }
+
+        $results = [];
+        $chunks = array_chunk($objectids, 20); // Max 20 requests per batch.
+
+        foreach ($chunks as $chunk) {
+            $batchrequests = [];
+            $idtoobjectidmap = [];
+
+            // Pre-initialise every object ID to null so that IDs absent from the batch
+            // response are treated as "not found" by the caller.
+            foreach ($chunk as $objectid) {
+                $results[$objectid] = null;
+            }
+
+            foreach ($chunk as $index => $objectid) {
+                $requestid = (string) ($index + 1);
+                $idtoobjectidmap[$requestid] = $objectid;
+                $batchrequests[] = [
+                    'id' => $requestid,
+                    'method' => 'GET',
+                    'url' => '/groups/' . $objectid,
+                ];
+            }
+
+            $batchpayload = ['requests' => $batchrequests];
+            $response = $this->betaapicall('post', '/$batch', json_encode($batchpayload));
+            $batchresponse = $this->process_apicall_response($response, ['responses' => null]);
+
+            if (!empty($batchresponse['responses']) && is_array($batchresponse['responses'])) {
+                foreach ($batchresponse['responses'] as $individualresponse) {
+                    $requestid = $individualresponse['id'] ?? null;
+                    if ($requestid === null || !isset($idtoobjectidmap[$requestid])) {
+                        continue;
+                    }
+
+                    $objectid = $idtoobjectidmap[$requestid];
+                    if (($individualresponse['status'] ?? null) === 200 && !empty($individualresponse['body']['id'])) {
+                        $results[$objectid] = $individualresponse['body'];
+                    }
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Get group urls.
      *
      * @param string $objectid The object ID of the group.
