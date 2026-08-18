@@ -30,6 +30,7 @@ use core\component;
 use dml_exception;
 use local_o365\oauth2\token;
 use local_o365\tests\mockhttpclient;
+use moodle_exception;
 
 /**
  * Unit tests for the class unified
@@ -153,5 +154,65 @@ final class unified_test extends advanced_testcase {
 
         $unified = new unified($token, $httpclient);
         $this->assertEquals($expectedresult, $unified->betaapicall('get', 'users'));
+    }
+
+    /**
+     * Found groups return their data, and a genuine 404 is reported as not found (null).
+     *
+     * @return void
+     * @covers ::get_groups_batch
+     */
+    public function test_get_groups_batch_found_and_not_found(): void {
+        $foundid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+        $missingid = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+        $batchresponse = [
+            'responses' => [
+                ['id' => '1', 'status' => 200, 'body' => ['id' => $foundid, 'displayName' => 'Group A']],
+                ['id' => '2', 'status' => 404, 'body' => ['error' => ['code' => 'Request_ResourceNotFound']]],
+            ],
+        ];
+
+        $token = self::createMock(token::class);
+        $token->method('is_expired')->willReturn(false);
+        $token->method('get_token')->willReturn('token');
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode($batchresponse));
+
+        $unified = new unified($token, $httpclient);
+        $results = $unified->get_groups_batch([$foundid, $missingid]);
+
+        $this->assertSame(['id' => $foundid, 'displayName' => 'Group A'], $results[$foundid]);
+        $this->assertNull($results[$missingid]);
+    }
+
+    /**
+     * A non-200/404 per-request status (e.g. throttling or a permission error) must not be
+     * silently reported as "not found" - it is a service-level failure, so it is thrown.
+     *
+     * @return void
+     * @covers ::get_groups_batch
+     */
+    public function test_get_groups_batch_service_error_throws(): void {
+        $groupid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+        $batchresponse = [
+            'responses' => [
+                ['id' => '1', 'status' => 429, 'body' => ['error' => ['code' => 'TooManyRequests']]],
+            ],
+        ];
+
+        $token = self::createMock(token::class);
+        $token->method('is_expired')->willReturn(false);
+        $token->method('get_token')->willReturn('token');
+
+        $httpclient = new mockhttpclient();
+        $httpclient->set_response(json_encode($batchresponse));
+
+        $unified = new unified($token, $httpclient);
+
+        $this->expectException(moodle_exception::class);
+        $unified->get_groups_batch([$groupid]);
     }
 }
