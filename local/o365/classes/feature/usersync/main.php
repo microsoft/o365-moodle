@@ -1019,10 +1019,10 @@ class main {
                 if (empty($usergroups)) {
                     return false;
                 }
-                $usergroups = array_map('strtolower', $usergroups);
+                $usergroups = array_flip(array_map('strtolower', $usergroups));
 
                 foreach ($groupids as $groupid) {
-                    if (in_array($groupid, $usergroups, true)) {
+                    if (isset($usergroups[$groupid])) {
                         return true;
                     }
                 }
