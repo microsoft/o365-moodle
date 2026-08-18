@@ -740,7 +740,7 @@ final class usersync_test extends advanced_testcase {
              *
              * @var array
              */
-            public array $usergroups = [];
+            public ?array $usergroups = [];
 
             /**
              * Return the configured test group IDs.
@@ -748,7 +748,7 @@ final class usersync_test extends advanced_testcase {
              * @param string $userid User object ID.
              * @return array
              */
-            public function get_user_transitive_groups($userid): array {
+            public function get_user_transitive_groups($userid): ?array {
                 return $this->usergroups;
             }
         };
@@ -816,5 +816,9 @@ final class usersync_test extends advanced_testcase {
         set_config('usersynccreationrestriction', serialize($restriction), 'local_o365');
         $apiclient->usergroups = ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];
         $this->assertTrue($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
+
+        // A failed Graph lookup can return null. This must fail closed without a TypeError.
+        $apiclient->usergroups = null;
+        $this->assertFalse($usersync->check_usercreationrestriction_for_test(['id' => 'test-user']));
     }
 }

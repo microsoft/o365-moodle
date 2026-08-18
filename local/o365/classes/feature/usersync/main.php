@@ -1016,6 +1016,9 @@ class main {
                 // Object IDs are case-insensitive GUIDs. Normalize both sides before comparison.
                 $groupids = array_map('strtolower', $groupids);
                 $usergroups = $apiclient->get_user_transitive_groups($entraiduserdata['id']);
+                if (empty($usergroups)) {
+                    return false;
+                }
                 $usergroups = array_map('strtolower', $usergroups);
 
                 foreach ($groupids as $groupid) {
