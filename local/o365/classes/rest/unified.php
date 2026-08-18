@@ -532,8 +532,12 @@ class unified extends o365api {
      *
      * @param array $objectids Array of group object IDs to look up.
      * @return array Associative array keyed by the requested object ID. Each value is the
-     *               group data array on success, or null if the group was not found.
-     * @throws moodle_exception If a batch request itself fails (e.g. network or auth error).
+     *               group data array on success, or null if the group was genuinely not found
+     *               (per-request status 404).
+     * @throws moodle_exception If the batch request itself fails (e.g. network or auth error),
+     *                          or if a per-request status other than 200/404 is returned (e.g.
+     *                          403, 429, 5xx) — such statuses indicate a service-level failure,
+     *                          not proof the group doesn't exist.
      */
     public function get_groups_batch(array $objectids): array {
         if (empty($objectids)) {
@@ -575,8 +579,19 @@ class unified extends o365api {
                     }
 
                     $objectid = $idtoobjectidmap[$requestid];
-                    if (($individualresponse['status'] ?? null) === 200 && !empty($individualresponse['body']['id'])) {
+                    $status = $individualresponse['status'] ?? null;
+
+                    if ($status === 200 && !empty($individualresponse['body']['id'])) {
                         $results[$objectid] = $individualresponse['body'];
+                    } else if ($status === 404) {
+                        // Genuinely not found; already pre-initialised to null above.
+                        continue;
+                    } else {
+                        // Any other status (403, 429, 5xx, etc.) is a service-level failure,
+                        // not proof the group doesn't exist, so don't silently report it as
+                        // "not found" and mislead callers validating group IDs.
+                        $errmsg = 'Batch lookup for group ' . $objectid . ' failed with status ' . $status;
+                        throw new moodle_exception('erroro365apibadcall_message', 'local_o365', '', htmlentities($errmsg));
                     }
                 }
             }

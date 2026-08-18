@@ -48,7 +48,7 @@ final class usersynccreationrestriction_test extends advanced_testcase {
             $this->markTestSkipped('auth_oidc needs to be installed to use this test!');
         }
 
-        return new class ('local_o365/usersynccreationrestriction', 'Test', 'Test', []) extends usersynccreationrestriction {
+        $setting = new class ('local_o365/usersynccreationrestriction', 'Test', 'Test', []) extends usersynccreationrestriction {
             /** @var object Stub API client to return from get_group_api_client(). */
             public object $testapiclient;
 
@@ -61,6 +61,9 @@ final class usersynccreationrestriction_test extends advanced_testcase {
                 return $this->testapiclient;
             }
         };
+        $setting->testapiclient = $apiclient;
+
+        return $setting;
     }
 
     /**
@@ -88,7 +91,9 @@ final class usersynccreationrestriction_test extends advanced_testcase {
              * @param bool $throw Whether get_groups_batch() should throw a moodle_exception.
              */
             public function __construct(array $validgroupids, bool $throw) {
-                $this->validgroupids = $validgroupids;
+                // Object IDs are case-insensitive GUIDs in Microsoft Graph, so match
+                // regardless of the casing the caller passes to get_groups_batch().
+                $this->validgroupids = array_map('strtolower', $validgroupids);
                 $this->throw = $throw;
             }
 
@@ -107,7 +112,8 @@ final class usersynccreationrestriction_test extends advanced_testcase {
 
                 $results = [];
                 foreach ($objectids as $objectid) {
-                    $results[$objectid] = in_array($objectid, $this->validgroupids, true) ? ['id' => $objectid] : null;
+                    $isvalid = in_array(strtolower($objectid), $this->validgroupids, true);
+                    $results[$objectid] = $isvalid ? ['id' => $objectid] : null;
                 }
 
                 return $results;
@@ -208,7 +214,7 @@ final class usersynccreationrestriction_test extends advanced_testcase {
     public function test_write_setting_dedup_case_insensitive(): void {
         $this->resetAfterTest();
 
-        $id = '11111111-1111-1111-1111-111111111111';
+        $id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
         $apiclient = $this->get_stub_group_api([$id]);
         $setting = $this->get_test_setting($apiclient);
 
