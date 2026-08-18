@@ -753,7 +753,7 @@ final class usersync_test extends advanced_testcase {
             }
         };
 
-        $usersync = new class($apiclient) extends main {
+        $usersync = new class ($apiclient) extends main {
             /**
              * Test API client.
              *
