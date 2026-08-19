@@ -384,6 +384,21 @@ if ($hassiteconfig) {
             'eq',
             AUTH_OIDC_IDP_TYPE_OTHER
         );
+
+        // Hide the section heading too, so an empty section isn't shown when the only
+        // setting in it is hidden.
+        $applicationsettings->hide_if(
+            'auth_oidc/application_secretexpiry_heading',
+            'auth_oidc/clientauthmethod',
+            'neq',
+            AUTH_OIDC_AUTH_METHOD_SECRET
+        );
+        $applicationsettings->hide_if(
+            'auth_oidc/application_secretexpiry_heading',
+            'auth_oidc/idptype',
+            'eq',
+            AUTH_OIDC_IDP_TYPE_OTHER
+        );
     }
 
     $ADMIN->add('oidcfolder', $applicationsettings);
