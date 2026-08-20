@@ -1639,7 +1639,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100600.03, 'local', 'o365');
     }
 
-    if ($oldversion < 2025100602.01) {
+    if ($oldversion < 2026042000.01) {
         // Add dedicated photohash field to local_o365_appassign.
         // Previously the photoid column (originally the MS 365 photo etag ID) was repurposed
         // to store a SHA-256 hash of the photo bytes, causing confusion with the field's stated
@@ -1670,7 +1670,7 @@ function xmldb_local_o365_upgrade($oldversion) {
         );
 
         // O365 savepoint reached.
-        upgrade_plugin_savepoint(true, 2025100602.01, 'local', 'o365');
+        upgrade_plugin_savepoint(true, 2026042000.01, 'local', 'o365');
     }
 
     if ($oldversion < 2026042000.03) {
