@@ -640,11 +640,18 @@ class main {
 
         $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
 
-        $combinedidmaprec = null;
+        // Every mapping recorded under the event's own creator identity is a candidate "combined" mapping
+        // (see create_combined_course_event()). Normally there's at most one, but {event}.userid isn't
+        // stable - Moodle's calendar_event::create() refills it from $USER->id whenever mod_assign passes
+        // an empty value, which happens on every assignment save - so an earlier reconciliation pass can
+        // fail to recognise an already-synced mapping and create a second one alongside it. Collect every
+        // match here (rather than keeping only the last one seen) so duplicates like that get cleaned up
+        // instead of leaving one permanently orphaned.
+        $combinedidmaprecs = [];
         $individualidmaprecsbyuserid = [];
         foreach ($idmaprecs as $idmaprec) {
             if ((int) $idmaprec->userid === (int) $event->userid) {
-                $combinedidmaprec = $idmaprec;
+                $combinedidmaprecs[] = $idmaprec;
             } else {
                 $individualidmaprecsbyuserid[(int) $idmaprec->userid] = $idmaprec;
             }
@@ -676,12 +683,20 @@ class main {
         $this->sync_nonprimary_attendees($event, $newlyeligiblenonprimary, $subject, $body, $timestart, $timeend);
 
         // Reconcile the combined (primary-calendar / group) event's attendee list.
-        if (!empty($combinedidmaprec)) {
+        if (!empty($combinedidmaprecs)) {
             if (empty($discovery['primary'])) {
-                // No eligible primary-calendar attendees left - remove the shared event entirely.
-                $this->delete_event_raw((int) $combinedidmaprec->userid, $combinedidmaprec->outlookeventid, $combinedidmaprec->id);
+                // No eligible primary-calendar attendees left - remove every shared-event mapping. Routed
+                // through delete_calidmap_rows() (not delete_event_raw()) since it correctly detects and
+                // deletes via the group API when the mapping is a Microsoft 365 group calendar event.
+                $this->delete_calidmap_rows($event, $combinedidmaprecs, $discovery['groupobject']);
             } else {
-                $this->update_combined_course_event_attendees($event, $discovery, $combinedidmaprec);
+                // Keep and update the first mapping found; if duplicates have accumulated, remove the
+                // rest rather than leaving them behind untouched.
+                $primarycombined = array_shift($combinedidmaprecs);
+                $this->update_combined_course_event_attendees($event, $discovery, $primarycombined);
+                if (!empty($combinedidmaprecs)) {
+                    $this->delete_calidmap_rows($event, $combinedidmaprecs, $discovery['groupobject']);
+                }
             }
         } else {
             // There was no combined event before (e.g. no eligible primary attendees at the time it was
@@ -837,13 +852,10 @@ class main {
         foreach ($idmaprecs as $idmaprec) {
             // If the user has since lost access to the module (e.g. a group restriction was added or
             // they were moved out of an allowed group), remove their synced Outlook event instead of
-            // updating it.
+            // updating it. Routed through delete_calidmap_rows() rather than delete_event_raw() directly,
+            // since it correctly detects and deletes via the group API when this is a group calendar event.
             if (!$this->is_event_module_visible_to_user($event, (int) $idmaprec->userid)) {
-                try {
-                    $this->delete_event_raw($idmaprec->userid, $idmaprec->outlookeventid, $idmaprec->id);
-                } catch (\moodle_exception $e) {
-                    mtrace('Error deleting event: ' . $e->getMessage());
-                }
+                $this->delete_calidmap_rows($event, [$idmaprec], $groupobject);
                 continue;
             }
 
@@ -955,15 +967,37 @@ class main {
         $event = $eventsnapshot;
 
         $groupobject = null;
-        $isgroupevent = false;
 
         if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
             );
-            $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
         }
+
+        $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
+
+        return true;
+    }
+
+    /**
+     * Delete a set of already-synced Outlook events, correctly routing group-calendar mappings through
+     * the group API instead of always using the individual-user endpoint (unlike delete_event_raw(),
+     * which has no way to know a mapping might be a group event).
+     *
+     * A calidmap row is only removed once we've confirmed its Outlook event was actually deleted (or that
+     * cleanup was otherwise handled, e.g. via calendar_unsubscribe()). Anything skipped (no resolvable
+     * Outlook UPN) or failed is left in place and logged via mtrace(), rather than silently forgotten.
+     *
+     * @param \stdClass|null $event The Moodle event object the mappings belong to. Null disables the
+     *                              calendar-subscription check and group-event detection (matches the
+     *                              behaviour when no event snapshot is available).
+     * @param array $idmaprecs The local_o365_calidmap rows to delete.
+     * @param \stdClass|null $groupobject The course's linked Microsoft 365 group object, if any.
+     * @return void
+     */
+    protected function delete_calidmap_rows(?\stdClass $event, array $idmaprecs, ?\stdClass $groupobject): void {
+        global $DB;
 
         foreach ($idmaprecs as $idmaprec) {
             if (!empty($event)) {
@@ -984,7 +1018,8 @@ class main {
             // individually, for that specific attendee's own calendar (the "non-primary calendar
             // subscribers" loop) - never the group calendar - so it must always be deleted via that
             // attendee's own UPN, not the group API.
-            $isrecipientgroupevent = $isgroupevent && !empty($event) && (int) $idmaprec->userid === (int) $event->userid;
+            $isrecipientgroupevent = !empty($groupobject) && !empty($groupobject->objectid) && !empty($event) &&
+                empty($event->groupid) && (int) $idmaprec->userid === (int) $event->userid;
 
             if ($isrecipientgroupevent) {
                 try {
@@ -1025,8 +1060,6 @@ class main {
                 $DB->delete_records('local_o365_calidmap', ['id' => $idmaprec->id]);
             }
         }
-
-        return true;
     }
 
     /**
