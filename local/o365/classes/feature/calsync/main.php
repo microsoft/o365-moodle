@@ -640,11 +640,18 @@ class main {
 
         $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
 
-        $combinedidmaprec = null;
+        // Every mapping recorded under the event's own creator identity is a candidate "combined" mapping
+        // (see create_combined_course_event()). Normally there's at most one, but {event}.userid isn't
+        // stable - Moodle's calendar_event::create() refills it from $USER->id whenever mod_assign passes
+        // an empty value, which happens on every assignment save - so an earlier reconciliation pass can
+        // fail to recognise an already-synced mapping and create a second one alongside it. Collect every
+        // match here (rather than keeping only the last one seen) so duplicates like that get cleaned up
+        // instead of leaving one permanently orphaned.
+        $combinedidmaprecs = [];
         $individualidmaprecsbyuserid = [];
         foreach ($idmaprecs as $idmaprec) {
             if ((int) $idmaprec->userid === (int) $event->userid) {
-                $combinedidmaprec = $idmaprec;
+                $combinedidmaprecs[] = $idmaprec;
             } else {
                 $individualidmaprecsbyuserid[(int) $idmaprec->userid] = $idmaprec;
             }
@@ -676,12 +683,20 @@ class main {
         $this->sync_nonprimary_attendees($event, $newlyeligiblenonprimary, $subject, $body, $timestart, $timeend);
 
         // Reconcile the combined (primary-calendar / group) event's attendee list.
-        if (!empty($combinedidmaprec)) {
+        if (!empty($combinedidmaprecs)) {
             if (empty($discovery['primary'])) {
-                // No eligible primary-calendar attendees left - remove the shared event entirely.
-                $this->delete_event_raw((int) $combinedidmaprec->userid, $combinedidmaprec->outlookeventid, $combinedidmaprec->id);
+                // No eligible primary-calendar attendees left - remove every shared-event mapping. Routed
+                // through delete_calidmap_rows() (not delete_event_raw()) since it correctly detects and
+                // deletes via the group API when the mapping is a Microsoft 365 group calendar event.
+                $this->delete_calidmap_rows($event, $combinedidmaprecs, $discovery['groupobject']);
             } else {
-                $this->update_combined_course_event_attendees($event, $discovery, $combinedidmaprec);
+                // Keep and update the first mapping found; if duplicates have accumulated, remove the
+                // rest rather than leaving them behind untouched.
+                $primarycombined = array_shift($combinedidmaprecs);
+                $this->update_combined_course_event_attendees($event, $discovery, $primarycombined);
+                if (!empty($combinedidmaprecs)) {
+                    $this->delete_calidmap_rows($event, $combinedidmaprecs, $discovery['groupobject']);
+                }
             }
         } else {
             // There was no combined event before (e.g. no eligible primary attendees at the time it was
@@ -837,13 +852,10 @@ class main {
         foreach ($idmaprecs as $idmaprec) {
             // If the user has since lost access to the module (e.g. a group restriction was added or
             // they were moved out of an allowed group), remove their synced Outlook event instead of
-            // updating it.
+            // updating it. Routed through delete_calidmap_rows() rather than delete_event_raw() directly,
+            // since it correctly detects and deletes via the group API when this is a group calendar event.
             if (!$this->is_event_module_visible_to_user($event, (int) $idmaprec->userid)) {
-                try {
-                    $this->delete_event_raw($idmaprec->userid, $idmaprec->outlookeventid, $idmaprec->id);
-                } catch (\moodle_exception $e) {
-                    mtrace('Error deleting event: ' . $e->getMessage());
-                }
+                $this->delete_calidmap_rows($event, [$idmaprec], $groupobject);
                 continue;
             }
 
@@ -955,15 +967,37 @@ class main {
         $event = $eventsnapshot;
 
         $groupobject = null;
-        $isgroupevent = false;
 
         if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
             );
-            $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
         }
+
+        $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
+
+        return true;
+    }
+
+    /**
+     * Delete a set of already-synced Outlook events, correctly routing group-calendar mappings through
+     * the group API instead of always using the individual-user endpoint (unlike delete_event_raw(),
+     * which has no way to know a mapping might be a group event).
+     *
+     * A calidmap row is only removed once we've confirmed its Outlook event was actually deleted (or that
+     * cleanup was otherwise handled, e.g. via calendar_unsubscribe()). Anything skipped (no resolvable
+     * Outlook UPN) or failed is left in place and logged via mtrace(), rather than silently forgotten.
+     *
+     * @param \stdClass|null $event The Moodle event object the mappings belong to. Null disables the
+     *                              calendar-subscription check and group-event detection (matches the
+     *                              behaviour when no event snapshot is available).
+     * @param array $idmaprecs The local_o365_calidmap rows to delete.
+     * @param \stdClass|null $groupobject The course's linked Microsoft 365 group object, if any.
+     * @return void
+     */
+    protected function delete_calidmap_rows(?\stdClass $event, array $idmaprecs, ?\stdClass $groupobject): void {
+        global $DB;
 
         foreach ($idmaprecs as $idmaprec) {
             if (!empty($event)) {
@@ -984,7 +1018,8 @@ class main {
             // individually, for that specific attendee's own calendar (the "non-primary calendar
             // subscribers" loop) - never the group calendar - so it must always be deleted via that
             // attendee's own UPN, not the group API.
-            $isrecipientgroupevent = $isgroupevent && !empty($event) && (int) $idmaprec->userid === (int) $event->userid;
+            $isrecipientgroupevent = !empty($groupobject) && !empty($groupobject->objectid) && !empty($event) &&
+                empty($event->groupid) && (int) $idmaprec->userid === (int) $event->userid;
 
             if ($isrecipientgroupevent) {
                 try {
@@ -1025,8 +1060,6 @@ class main {
                 $DB->delete_records('local_o365_calidmap', ['id' => $idmaprec->id]);
             }
         }
-
-        return true;
     }
 
     /**
@@ -1281,7 +1314,22 @@ class main {
                       JOIN {modules} m ON m.id = cm.module
                      WHERE m.name = :modulename AND cm.instance = :instance AND cm.course = :courseid";
             $params = ['modulename' => $event->modulename, 'instance' => $event->instance, 'courseid' => $event->courseid];
-            $cmcache[$cachekey] = $DB->get_record_sql($sql, $params);
+            $cm = $DB->get_record_sql($sql, $params);
+            $cmcache[$cachekey] = $cm;
+
+            // A date-based "Restrict access" rule has nothing to observe - unlike a group restriction
+            // being edited, or a user's group membership changing, visibility just becomes true as time
+            // passes, with no event firing to react to. Every other trigger for this method (creation,
+            // update, reconciliation) only re-evaluates visibility in response to something happening, so
+            // without this, a date-restricted event would only ever end up synced by coincidence (e.g. if
+            // the date happened to already be in the past when something else triggered a sync). Schedule
+            // a one-off recheck at the exact moment the restriction could next take effect instead.
+            if (!empty($cm) && !empty($cm->availability)) {
+                $nextchange = $this->get_next_availability_date($cm->availability);
+                if ($nextchange !== null) {
+                    $this->schedule_availability_recheck($event->modulename, (int) $event->instance, $nextchange);
+                }
+            }
         }
 
         $cm = $cmcache[$cachekey];
@@ -1305,5 +1353,90 @@ class main {
         }
 
         return $usercm->uservisible;
+    }
+
+    /**
+     * Find the earliest still-upcoming timestamp among any date-based "Restrict access" conditions
+     * anywhere in a course module's availability tree (course_modules.availability, JSON-encoded).
+     *
+     * This deliberately doesn't try to evaluate the tree's AND/OR/NOT logic - it just collects every
+     * date condition's timestamp, regardless of nesting, and returns the soonest one still in the future.
+     * That can occasionally schedule a recheck that turns out to be a no-op (e.g. a date condition
+     * ANDed with an unrelated, still-unsatisfied condition), which is harmless; the alternative - missing
+     * a genuine visibility change - is not.
+     *
+     * @param string|null $availabilityjson The raw availability JSON from course_modules.availability.
+     * @return int|null The earliest future timestamp, or null if there isn't one.
+     */
+    protected function get_next_availability_date(?string $availabilityjson): ?int {
+        if (empty($availabilityjson)) {
+            return null;
+        }
+
+        $tree = json_decode($availabilityjson);
+        if (empty($tree)) {
+            return null;
+        }
+
+        $now = time();
+        $next = null;
+
+        $walk = static function ($node) use (&$walk, &$next, $now) {
+            if (empty($node)) {
+                return;
+            }
+
+            if (is_array($node)) {
+                foreach ($node as $child) {
+                    $walk($child);
+                }
+                return;
+            }
+
+            if (!is_object($node)) {
+                return;
+            }
+
+            if (isset($node->type) && $node->type === 'date' && isset($node->t)) {
+                $time = (int) $node->t;
+                if ($time > $now && ($next === null || $time < $next)) {
+                    $next = $time;
+                }
+            }
+
+            if (isset($node->c) && is_array($node->c)) {
+                $walk($node->c);
+            }
+        };
+
+        $walk($tree);
+
+        return $next;
+    }
+
+    /**
+     * Schedule a one-off adhoc task to re-check Outlook sync for a module at the moment a date-based
+     * "Restrict access" condition could next take effect. Deduplicated (per module and target time) via
+     * queue_adhoc_task()'s $checkforexisting, so repeated calls for the same still-pending date don't pile
+     * up duplicate tasks; the target time is included in the custom data specifically so that, if the
+     * restriction is later edited to a different date, that's treated as a distinct task rather than being
+     * silently skipped as "already scheduled".
+     *
+     * @param string $modulename The module type (e.g. 'assign').
+     * @param int $instanceid The module instance ID.
+     * @param int $timestamp The timestamp the restriction could next take effect.
+     * @return void
+     */
+    protected function schedule_availability_recheck(string $modulename, int $instanceid, int $timestamp): void {
+        $task = new \local_o365\feature\calsync\task\syncmoduleavailability();
+        $task->set_custom_data([
+            'modulename' => $modulename,
+            'instanceid' => $instanceid,
+            'scheduledfor' => $timestamp,
+        ]);
+        // A few seconds of slack after the threshold, so the recheck doesn't race the exact instant the
+        // restriction takes effect.
+        $task->set_next_run_time($timestamp + 5);
+        \core\task\manager::queue_adhoc_task($task, true);
     }
 }
