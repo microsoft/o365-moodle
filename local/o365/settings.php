@@ -662,189 +662,201 @@ if ($hassiteconfig) {
             get_string('settings_header_sds', 'local_o365')
         );
         $ADMIN->add('local_o365_folder', $sdssettings);
-        $sdssettings->add(new admin_setting_heading(
-            'local_o365_sds_nav',
-            '',
-            local_o365_get_settings_nav_html('local_o365_sds')
-        ));
+        if ($ADMIN->fulltree) {
+            $sdssettings->add(new admin_setting_heading(
+                'local_o365_sds_nav',
+                '',
+                local_o365_get_settings_nav_html('local_o365_sds')
+            ));
 
-        $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
-        $desc = new lang_string('settings_sds_intro_previewwarning', 'local_o365');
-        $desc .= new lang_string('settings_sds_intro_desc', 'local_o365', $scheduledtasks->out());
-        $sdssettings->add(new admin_setting_heading('local_o365_sds_intro', '', $desc));
+            $scheduledtasks = new url('/admin/tool/task/scheduledtasks.php');
+            $desc = new lang_string('settings_sds_intro_previewwarning', 'local_o365');
+            $desc .= new lang_string('settings_sds_intro_desc', 'local_o365', $scheduledtasks->out());
+            $sdssettings->add(new admin_setting_heading('local_o365_sds_intro', '', $desc));
 
-        $apiclient = \local_o365\feature\sds\utils::get_apiclient();
-        if ($apiclient) {
-            try {
-                $schools = $apiclient->get_schools();
+            $apiclient = \local_o365\feature\sds\utils::get_apiclient();
+            if ($apiclient) {
+                try {
+                    $schools = $apiclient->get_schools();
 
-                if (!empty($schools)) {
-                    // SDS course sync school selector header.
-                    $label = new lang_string('settings_sds_coursecreation', 'local_o365');
-                    $desc = new lang_string('settings_sds_coursecreation_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_heading('local_o365_sds_coursecreation', $label, $desc));
+                    if (!empty($schools)) {
+                        // SDS course sync school selector header.
+                        $label = new lang_string('settings_sds_coursecreation', 'local_o365');
+                        $desc = new lang_string('settings_sds_coursecreation_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_heading('local_o365_sds_coursecreation', $label, $desc));
 
-                    $label = new lang_string('settings_sds_coursecreation_enabled', 'local_o365');
-                    $desc = new lang_string('settings_sds_coursecreation_enabled_desc', 'local_o365');
-                    $coursesyncdefault = [];
-                    $coursesynchoices = [];
-                    $profilesyncchoices = [];
-                    foreach ($schools as $school) {
-                        $coursesynchoices[$school['id']] = $school['displayName'];
-                        $profilesyncchoices[$school['id']] = $school['displayName'] . ' (' . $school['id'] . ')';
+                        $label = new lang_string('settings_sds_coursecreation_enabled', 'local_o365');
+                        $desc = new lang_string('settings_sds_coursecreation_enabled_desc', 'local_o365');
+                        $coursesyncdefault = [];
+                        $coursesynchoices = [];
+                        $profilesyncchoices = [];
+                        foreach ($schools as $school) {
+                            $coursesynchoices[$school['id']] = $school['displayName'];
+                            $profilesyncchoices[$school['id']] = $school['displayName'] . ' (' . $school['id'] . ')';
+                        }
+
+                        $sdssettings->add(new admin_setting_configmulticheckbox(
+                            'local_o365/sdsschools',
+                            $label,
+                            $desc,
+                            $coursesyncdefault,
+                            $coursesynchoices
+                        ));
+
+                        $label = new lang_string('settings_sds_teams_enabled', 'local_o365');
+                        $desc = new lang_string('settings_sds_teams_enabled_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdsteamsenabled', $label, $desc, '0'));
+
+                        $schooldisabledactionoptions = [
+                            SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED => get_string(
+                                'settings_sds_school_disabled_action_keep_connected',
+                                'local_o365'
+                            ),
+                            SDS_SCHOOL_DISABLED_ACTION_DISCONNECT => get_string(
+                                'settings_sds_school_disabled_action_disconnect',
+                                'local_o365'
+                            ),
+                        ];
+                        $label = new lang_string('settings_sds_school_disabled_action', 'local_o365');
+                        $desc = new lang_string('settings_sds_school_disabled_action_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configselect(
+                            'local_o365/sdsschooldisabledaction',
+                            $label,
+                            $desc,
+                            SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED,
+                            $schooldisabledactionoptions
+                        ));
+
+                        // SDS categorize by subject.
+                        $label = new lang_string('settings_sds_categorize_by_subject', 'local_o365');
+                        $desc = new lang_string('settings_sds_categorize_by_subject_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox(
+                            'local_o365/sdscategorizebysubject',
+                            $label,
+                            $desc,
+                            '0'
+                        ));
+
+                        // SDS ignore past courses.
+                        $label = new lang_string('settings_sds_ignore_past_courses', 'local_o365');
+                        $desc = new lang_string('settings_sds_ignore_past_courses_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdsignorepastclasses', $label, $desc, '0'));
+
+                        // SDS expired course prefix.
+                        $label = new lang_string('settings_sds_expired_course_prefix', 'local_o365');
+                        $desc = new lang_string('settings_sds_expired_course_prefix_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configtext(
+                            'local_o365/sdsexpiredprefix',
+                            $label,
+                            $desc,
+                            'Exp',
+                            PARAM_TEXT
+                        ));
+                        $sdssettings->hide_if(
+                            'local_o365/sdsexpiredprefix',
+                            'local_o365/sdsignorepastclasses',
+                            'notchecked'
+                        );
+
+                        // SDS cohort sync header.
+                        $label = new lang_string('settings_sds_cohortsync', 'local_o365');
+                        $desc = new lang_string('settings_sds_cohortsync_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_heading('local_o365_sds_cohortsync', $label, $desc));
+
+                        // SDS create cohorts.
+                        $label = new lang_string('settings_sds_create_cohorts', 'local_o365');
+                        $desc = new lang_string('settings_sds_create_cohorts_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdscreatecohorts', $label, $desc, '0'));
+
+                        // SDS cohort include teachers.
+                        $label = new lang_string('settings_sds_cohort_include_teachers', 'local_o365');
+                        $desc = new lang_string('settings_sds_cohort_include_teachers_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox(
+                            'local_o365/sdscohortincludeteachers',
+                            $label,
+                            $desc,
+                            '0'
+                        ));
+
+                        $label = new lang_string('settings_sds_courseenrolsync', 'local_o365');
+                        $desc = new lang_string('settings_sds_courseenrolsync_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_heading('local_o365_sds_courseenrolsync', $label, $desc));
+
+                        // SDS to Moodle enrolment sync.
+                        $label = new lang_string('settings_sds_enrolment_enabled', 'local_o365');
+                        $desc = new lang_string('settings_sds_enrolment_enabled_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox(
+                            'local_o365/sdsenrolmentenabled',
+                            $label,
+                            $desc,
+                            '1'
+                        ));
+
+                        // Moodle to SDS enrolment sync.
+                        $label = new lang_string('settings_sds_sync_enrolment_to_sds', 'local_o365');
+                        $desc = new lang_string('settings_sds_sync_enrolment_to_sds_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox(
+                            'local_o365/sdssyncenrolmenttosds',
+                            $label,
+                            $desc,
+                            '0'
+                        ));
+
+                        // SDS enrolment suspension setting.
+                        $label = new lang_string('settings_sds_suspend_enrolment', 'local_o365');
+                        $desc = new lang_string('settings_sds_suspend_enrolment_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdssuspendenrolment', $label, $desc, '1'));
+
+                        // SDS two-way course sync setting.
+                        $label = new lang_string('settings_sds_enable_course_sync', 'local_o365');
+                        $desc = new lang_string('settings_sds_enable_course_sync_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdsenablecoursesync', $label, $desc, '0'));
+
+                        $label = new lang_string('settings_sds_enrolment_teacher_role', 'local_o365');
+                        $desc = new lang_string('settings_sds_enrolment_teacher_role_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configselect(
+                            'local_o365/sdsenrolmentteacherrole',
+                            $label,
+                            $desc,
+                            3,
+                            $courseroleoptions
+                        ));
+
+                        $label = new lang_string('settings_sds_enrolment_student_role', 'local_o365');
+                        $desc = new lang_string('settings_sds_enrolment_student_role_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configselect(
+                            'local_o365/sdsenrolmentstudentrole',
+                            $label,
+                            $desc,
+                            5,
+                            $courseroleoptions
+                        ));
+
+                        $label = new lang_string('settings_sds_profilesync_header', 'local_o365');
+                        $desc = new lang_string('settings_sds_profilesync_header_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_heading('local_o365_sds_profilesync_header', $label, $desc));
+
+                        asort($profilesyncchoices);
+                        $profilesyncchoices = ['' => new lang_string('settings_sds_profilesync_disabled', 'local_o365')]
+                            + $profilesyncchoices;
+
+                        $label = new lang_string('settings_sds_profilesync', 'local_o365');
+                        $desc = new lang_string('settings_sds_profilesync_desc', 'local_o365');
+                        $sdssettings->add(new admin_setting_configselect(
+                            'local_o365/sdsprofilesync',
+                            $label,
+                            $desc,
+                            '0',
+                            $profilesyncchoices
+                        ));
+                    } else {
+                        $desc = new lang_string('settings_sds_noschools', 'local_o365');
+                        $sdssettings->add(new admin_setting_heading('local_o365_sds_noschools', '', $desc));
                     }
-
-                    $sdssettings->add(new admin_setting_configmulticheckbox(
-                        'local_o365/sdsschools',
-                        $label,
-                        $desc,
-                        $coursesyncdefault,
-                        $coursesynchoices
-                    ));
-
-                    $label = new lang_string('settings_sds_teams_enabled', 'local_o365');
-                    $desc = new lang_string('settings_sds_teams_enabled_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdsteamsenabled', $label, $desc, '0'));
-
-                    $schooldisabledactionoptions = [
-                        SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED => get_string(
-                            'settings_sds_school_disabled_action_keep_connected',
-                            'local_o365'
-                        ),
-                        SDS_SCHOOL_DISABLED_ACTION_DISCONNECT => get_string(
-                            'settings_sds_school_disabled_action_disconnect',
-                            'local_o365'
-                        ),
-                    ];
-                    $label = new lang_string('settings_sds_school_disabled_action', 'local_o365');
-                    $desc = new lang_string('settings_sds_school_disabled_action_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configselect(
-                        'local_o365/sdsschooldisabledaction',
-                        $label,
-                        $desc,
-                        SDS_SCHOOL_DISABLED_ACTION_KEEP_CONNECTED,
-                        $schooldisabledactionoptions
-                    ));
-
-                    // SDS categorize by subject.
-                    $label = new lang_string('settings_sds_categorize_by_subject', 'local_o365');
-                    $desc = new lang_string('settings_sds_categorize_by_subject_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdscategorizebysubject', $label, $desc, '0'));
-
-                    // SDS ignore past courses.
-                    $label = new lang_string('settings_sds_ignore_past_courses', 'local_o365');
-                    $desc = new lang_string('settings_sds_ignore_past_courses_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdsignorepastclasses', $label, $desc, '0'));
-
-                    // SDS expired course prefix.
-                    $label = new lang_string('settings_sds_expired_course_prefix', 'local_o365');
-                    $desc = new lang_string('settings_sds_expired_course_prefix_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configtext(
-                        'local_o365/sdsexpiredprefix',
-                        $label,
-                        $desc,
-                        'Exp',
-                        PARAM_TEXT
-                    ));
-                    $sdssettings->hide_if(
-                        'local_o365/sdsexpiredprefix',
-                        'local_o365/sdsignorepastclasses',
-                        'notchecked'
-                    );
-
-                    // SDS cohort sync header.
-                    $label = new lang_string('settings_sds_cohortsync', 'local_o365');
-                    $desc = new lang_string('settings_sds_cohortsync_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_heading('local_o365_sds_cohortsync', $label, $desc));
-
-                    // SDS create cohorts.
-                    $label = new lang_string('settings_sds_create_cohorts', 'local_o365');
-                    $desc = new lang_string('settings_sds_create_cohorts_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdscreatecohorts', $label, $desc, '0'));
-
-                    // SDS cohort include teachers.
-                    $label = new lang_string('settings_sds_cohort_include_teachers', 'local_o365');
-                    $desc = new lang_string('settings_sds_cohort_include_teachers_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdscohortincludeteachers', $label, $desc, '0'));
-
-                    $label = new lang_string('settings_sds_courseenrolsync', 'local_o365');
-                    $desc = new lang_string('settings_sds_courseenrolsync_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_heading('local_o365_sds_courseenrolsync', $label, $desc));
-
-                    // SDS to Moodle enrolment sync.
-                    $label = new lang_string('settings_sds_enrolment_enabled', 'local_o365');
-                    $desc = new lang_string('settings_sds_enrolment_enabled_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox(
-                        'local_o365/sdsenrolmentenabled',
-                        $label,
-                        $desc,
-                        '1'
-                    ));
-
-                    // Moodle to SDS enrolment sync.
-                    $label = new lang_string('settings_sds_sync_enrolment_to_sds', 'local_o365');
-                    $desc = new lang_string('settings_sds_sync_enrolment_to_sds_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox(
-                        'local_o365/sdssyncenrolmenttosds',
-                        $label,
-                        $desc,
-                        '0'
-                    ));
-
-                    // SDS enrolment suspension setting.
-                    $label = new lang_string('settings_sds_suspend_enrolment', 'local_o365');
-                    $desc = new lang_string('settings_sds_suspend_enrolment_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdssuspendenrolment', $label, $desc, '1'));
-
-                    // SDS two-way course sync setting.
-                    $label = new lang_string('settings_sds_enable_course_sync', 'local_o365');
-                    $desc = new lang_string('settings_sds_enable_course_sync_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configcheckbox('local_o365/sdsenablecoursesync', $label, $desc, '0'));
-
-                    $label = new lang_string('settings_sds_enrolment_teacher_role', 'local_o365');
-                    $desc = new lang_string('settings_sds_enrolment_teacher_role_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configselect(
-                        'local_o365/sdsenrolmentteacherrole',
-                        $label,
-                        $desc,
-                        3,
-                        $courseroleoptions
-                    ));
-
-                    $label = new lang_string('settings_sds_enrolment_student_role', 'local_o365');
-                    $desc = new lang_string('settings_sds_enrolment_student_role_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configselect(
-                        'local_o365/sdsenrolmentstudentrole',
-                        $label,
-                        $desc,
-                        5,
-                        $courseroleoptions
-                    ));
-
-                    $label = new lang_string('settings_sds_profilesync_header', 'local_o365');
-                    $desc = new lang_string('settings_sds_profilesync_header_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_heading('local_o365_sds_profilesync_header', $label, $desc));
-
-                    asort($profilesyncchoices);
-                    $profilesyncchoices = ['' => new lang_string('settings_sds_profilesync_disabled', 'local_o365')]
-                        + $profilesyncchoices;
-
-                    $label = new lang_string('settings_sds_profilesync', 'local_o365');
-                    $desc = new lang_string('settings_sds_profilesync_desc', 'local_o365');
-                    $sdssettings->add(new admin_setting_configselect(
-                        'local_o365/sdsprofilesync',
-                        $label,
-                        $desc,
-                        '0',
-                        $profilesyncchoices
-                    ));
-                } else {
-                    $desc = new lang_string('settings_sds_noschools', 'local_o365');
-                    $sdssettings->add(new admin_setting_heading('local_o365_sds_noschools', '', $desc));
+                } catch (moodle_exception $e) {
+                    $desc = new lang_string('settings_sds_get_schools_error', 'local_o365');
+                    $sdssettings->add(new admin_setting_heading('local_o365_sds_get_schools_error', '', $desc));
                 }
-            } catch (moodle_exception $e) {
-                $desc = new lang_string('settings_sds_get_schools_error', 'local_o365');
-                $sdssettings->add(new admin_setting_heading('local_o365_sds_get_schools_error', '', $desc));
             }
         }
 
@@ -931,60 +943,62 @@ if ($hassiteconfig) {
                 get_string('settings_header_moodle_app', 'local_o365')
             );
             $ADMIN->add('local_o365_folder', $moodleappsettings);
-            $moodleappsettings->add(new admin_setting_heading(
-                'local_o365_moodle_app_nav',
-                '',
-                local_o365_get_settings_nav_html('local_o365_moodle_app')
-            ));
+            if ($ADMIN->fulltree) {
+                $moodleappsettings->add(new admin_setting_heading(
+                    'local_o365_moodle_app_nav',
+                    '',
+                    local_o365_get_settings_nav_html('local_o365_moodle_app')
+                ));
 
-            $moodleappiddescription = get_string('settings_moodle_app_id_desc', 'local_o365');
-            if (\local_o365\utils::is_connected() === true) {
-                $graphclient = \local_o365\utils::get_api();
-                if ($graphclient) {
-                    $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
-                    if (!$teamsmoodleappexternalid) {
-                        $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
-                    }
-                    $moodleappid = '';
-                    try {
-                        $moodleappid = $graphclient->get_catalog_app_id($teamsmoodleappexternalid);
-                    } catch (moodle_exception $e) {
-                        debugging('Error getting catalog app ID. Details: ' . $e->getMessage(), DEBUG_NORMAL);
-                    }
-                    if ($moodleappid) {
-                        $moodleappiddescription .= get_string(
-                            'settings_moodle_app_id_desc_auto_id',
-                            'local_o365',
-                            $moodleappid
-                        );
+                $moodleappiddescription = get_string('settings_moodle_app_id_desc', 'local_o365');
+                if (\local_o365\utils::is_connected() === true) {
+                    $graphclient = \local_o365\utils::get_api();
+                    if ($graphclient) {
+                        $teamsmoodleappexternalid = get_config('local_o365', 'teams_moodle_app_external_id');
+                        if (!$teamsmoodleappexternalid) {
+                            $teamsmoodleappexternalid = TEAMS_MOODLE_APP_EXTERNAL_ID;
+                        }
+                        $moodleappid = '';
+                        try {
+                            $moodleappid = $graphclient->get_catalog_app_id($teamsmoodleappexternalid);
+                        } catch (moodle_exception $e) {
+                            debugging('Error getting catalog app ID. Details: ' . $e->getMessage(), DEBUG_NORMAL);
+                        }
+                        if ($moodleappid) {
+                            $moodleappiddescription .= get_string(
+                                'settings_moodle_app_id_desc_auto_id',
+                                'local_o365',
+                                $moodleappid
+                            );
+                        }
                     }
                 }
-            }
 
-            $moodleappsettings->add(new admin_setting_configtext(
-                'local_o365/moodle_app_id',
-                get_string('settings_moodle_app_id', 'local_o365'),
-                $moodleappiddescription,
-                '',
-                PARAM_TEXT,
-                36
-            ));
-
-            if (\local_o365\utils::is_connected() === true) {
-                $setmoodleappidinstructionhtml = html_writer::start_tag('p');
-                $setmoodleappidinstructionhtml .= get_string('settings_set_moodle_app_id_instruction', 'local_o365');
-                $setmoodleappidinstructionhtml .= html_writer::end_tag('p');
-                $setmoodleappidinstructionhtml .= html_writer::empty_tag('br');
-                $setmoodleappidinstructionhtml .= html_writer::img(
-                    new \core\url('/local/o365/pix/moodle_app_id.png'),
+                $moodleappsettings->add(new admin_setting_configtext(
+                    'local_o365/moodle_app_id',
+                    get_string('settings_moodle_app_id', 'local_o365'),
+                    $moodleappiddescription,
                     '',
-                    ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_moodle_app_id_img']
-                );
-                $moodleappsettings->add(new admin_setting_heading(
-                    'set_moodle_app_id_instruction_header',
-                    '',
-                    $setmoodleappidinstructionhtml
+                    PARAM_TEXT,
+                    36
                 ));
+
+                if (\local_o365\utils::is_connected() === true) {
+                    $setmoodleappidinstructionhtml = html_writer::start_tag('p');
+                    $setmoodleappidinstructionhtml .= get_string('settings_set_moodle_app_id_instruction', 'local_o365');
+                    $setmoodleappidinstructionhtml .= html_writer::end_tag('p');
+                    $setmoodleappidinstructionhtml .= html_writer::empty_tag('br');
+                    $setmoodleappidinstructionhtml .= html_writer::img(
+                        new \core\url('/local/o365/pix/moodle_app_id.png'),
+                        '',
+                        ['class' => 'x-hidden-focus force-vertical-align local_o365_settings_moodle_app_id_img']
+                    );
+                    $moodleappsettings->add(new admin_setting_heading(
+                        'set_moodle_app_id_instruction_header',
+                        '',
+                        $setmoodleappidinstructionhtml
+                    ));
+                }
             }
         }
     }
