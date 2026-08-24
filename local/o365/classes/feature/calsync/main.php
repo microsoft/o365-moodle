@@ -1314,7 +1314,22 @@ class main {
                       JOIN {modules} m ON m.id = cm.module
                      WHERE m.name = :modulename AND cm.instance = :instance AND cm.course = :courseid";
             $params = ['modulename' => $event->modulename, 'instance' => $event->instance, 'courseid' => $event->courseid];
-            $cmcache[$cachekey] = $DB->get_record_sql($sql, $params);
+            $cm = $DB->get_record_sql($sql, $params);
+            $cmcache[$cachekey] = $cm;
+
+            // A date-based "Restrict access" rule has nothing to observe - unlike a group restriction
+            // being edited, or a user's group membership changing, visibility just becomes true as time
+            // passes, with no event firing to react to. Every other trigger for this method (creation,
+            // update, reconciliation) only re-evaluates visibility in response to something happening, so
+            // without this, a date-restricted event would only ever end up synced by coincidence (e.g. if
+            // the date happened to already be in the past when something else triggered a sync). Schedule
+            // a one-off recheck at the exact moment the restriction could next take effect instead.
+            if (!empty($cm) && !empty($cm->availability)) {
+                $nextchange = $this->get_next_availability_date($cm->availability);
+                if ($nextchange !== null) {
+                    $this->schedule_availability_recheck($event->modulename, (int) $event->instance, $nextchange);
+                }
+            }
         }
 
         $cm = $cmcache[$cachekey];
@@ -1338,5 +1353,90 @@ class main {
         }
 
         return $usercm->uservisible;
+    }
+
+    /**
+     * Find the earliest still-upcoming timestamp among any date-based "Restrict access" conditions
+     * anywhere in a course module's availability tree (course_modules.availability, JSON-encoded).
+     *
+     * This deliberately doesn't try to evaluate the tree's AND/OR/NOT logic - it just collects every
+     * date condition's timestamp, regardless of nesting, and returns the soonest one still in the future.
+     * That can occasionally schedule a recheck that turns out to be a no-op (e.g. a date condition
+     * ANDed with an unrelated, still-unsatisfied condition), which is harmless; the alternative - missing
+     * a genuine visibility change - is not.
+     *
+     * @param string|null $availabilityjson The raw availability JSON from course_modules.availability.
+     * @return int|null The earliest future timestamp, or null if there isn't one.
+     */
+    protected function get_next_availability_date(?string $availabilityjson): ?int {
+        if (empty($availabilityjson)) {
+            return null;
+        }
+
+        $tree = json_decode($availabilityjson);
+        if (empty($tree)) {
+            return null;
+        }
+
+        $now = time();
+        $next = null;
+
+        $walk = static function ($node) use (&$walk, &$next, $now) {
+            if (empty($node)) {
+                return;
+            }
+
+            if (is_array($node)) {
+                foreach ($node as $child) {
+                    $walk($child);
+                }
+                return;
+            }
+
+            if (!is_object($node)) {
+                return;
+            }
+
+            if (isset($node->type) && $node->type === 'date' && isset($node->t)) {
+                $time = (int) $node->t;
+                if ($time > $now && ($next === null || $time < $next)) {
+                    $next = $time;
+                }
+            }
+
+            if (isset($node->c) && is_array($node->c)) {
+                $walk($node->c);
+            }
+        };
+
+        $walk($tree);
+
+        return $next;
+    }
+
+    /**
+     * Schedule a one-off adhoc task to re-check Outlook sync for a module at the moment a date-based
+     * "Restrict access" condition could next take effect. Deduplicated (per module and target time) via
+     * queue_adhoc_task()'s $checkforexisting, so repeated calls for the same still-pending date don't pile
+     * up duplicate tasks; the target time is included in the custom data specifically so that, if the
+     * restriction is later edited to a different date, that's treated as a distinct task rather than being
+     * silently skipped as "already scheduled".
+     *
+     * @param string $modulename The module type (e.g. 'assign').
+     * @param int $instanceid The module instance ID.
+     * @param int $timestamp The timestamp the restriction could next take effect.
+     * @return void
+     */
+    protected function schedule_availability_recheck(string $modulename, int $instanceid, int $timestamp): void {
+        $task = new \local_o365\feature\calsync\task\syncmoduleavailability();
+        $task->set_custom_data([
+            'modulename' => $modulename,
+            'instanceid' => $instanceid,
+            'scheduledfor' => $timestamp,
+        ]);
+        // A few seconds of slack after the threshold, so the recheck doesn't race the exact instant the
+        // restriction takes effect.
+        $task->set_next_run_time($timestamp + 5);
+        \core\task\manager::queue_adhoc_task($task, true);
     }
 }
