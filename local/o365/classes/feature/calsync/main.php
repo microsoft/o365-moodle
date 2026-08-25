@@ -284,6 +284,13 @@ class main {
 
         // Assemble basic event data.
         $event = $DB->get_record('event', ['id' => $moodleventid]);
+
+        if ($this->is_grading_due_event($event)) {
+            // Due-to-be-graded reminders are for teachers/graders, not the whole subscribed-course
+            // attendee list that due-date events use - never sync them to Outlook.
+            return true;
+        }
+
         $subject = $this->get_event_subject($event);
         $body = $event->description;
         $timestart = $event->timestart;
@@ -451,10 +458,12 @@ class main {
             $params = ['course', 'out', 'both', $event->courseid];
             $attendees = $DB->get_records_sql($sql, $params);
 
+            // DB::get_record() returns false (not null) when nothing matches - normalise here so downstream
+            // code can rely on it being either a real record or null, never false.
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            );
+            ) ?: null;
         }
 
         // Drop attendees who can't actually see the module this event belongs to (e.g. excluded by a
@@ -636,9 +645,20 @@ class main {
             return true;
         }
 
-        $discovery = $this->get_course_event_attendees($event);
-
         $idmaprecs = $DB->get_records('local_o365_calidmap', ['eventid' => $moodleeventid]);
+
+        if ($this->is_grading_due_event($event)) {
+            // Should never be synced (see create_outlook_event_from_moodle_event()) - clean up any
+            // mappings left over from before this exclusion existed, rather than leaving them orphaned.
+            if (!empty($idmaprecs)) {
+                $discovery = $this->get_course_event_attendees($event);
+                $this->delete_calidmap_rows($event, $idmaprecs, $discovery['groupobject']);
+            }
+
+            return true;
+        }
+
+        $discovery = $this->get_course_event_attendees($event);
 
         // Every mapping recorded under the event's own creator identity is a candidate "combined" mapping
         // (see create_combined_course_event()). Normally there's at most one, but {event}.userid isn't
@@ -842,11 +862,20 @@ class main {
         $isgroupevent = false;
 
         if ($event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
+            // DB::get_record() returns false (not null) when nothing matches - normalise here so
+            // delete_calidmap_rows()'s ?stdClass parameter doesn't get handed a bare false.
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            );
+            ) ?: null;
             $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
+        }
+
+        if ($this->is_grading_due_event($event)) {
+            // Should never be synced (see create_outlook_event_from_moodle_event()) - clean up any
+            // mappings left over from before this exclusion existed, rather than pushing a stale update.
+            $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
+            return true;
         }
 
         foreach ($idmaprecs as $idmaprec) {
@@ -969,10 +998,12 @@ class main {
         $groupobject = null;
 
         if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
+            // DB::get_record() returns false (not null) when nothing matches - normalise here so
+            // delete_calidmap_rows()'s ?stdClass parameter doesn't get handed a bare false.
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            );
+            ) ?: null;
         }
 
         $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
@@ -1095,6 +1126,20 @@ class main {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Check whether a calendar event is an assignment's "due to be graded" reminder.
+     *
+     * mod_assign creates this as a plain course-level event (ASSIGN_EVENT_TYPE_GRADINGDUE), so without
+     * this check it would end up in the same subscribed-course attendee list that due-date events use -
+     * but it's a teacher/grader-facing reminder, not something students should get an Outlook event for.
+     *
+     * @param \stdClass $event The Moodle event object.
+     * @return bool True if this is a "due to be graded" reminder that should never be synced.
+     */
+    protected function is_grading_due_event(\stdClass $event): bool {
+        return $event->modulename === 'assign' && $event->eventtype === 'gradingdue';
     }
 
     /**

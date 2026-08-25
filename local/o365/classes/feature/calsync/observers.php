@@ -152,13 +152,18 @@ class observers {
             return false;
         }
 
-        $snapshot = $event->get_record_snapshot('event', $event->objectid);
+        // Falls back to a raw DB::get_record() call (returning false, not null) if no snapshot was
+        // explicitly attached - normalise here so a bare false doesn't get handed to (int)$snapshot->x
+        // below, which would silently coerce courseid/groupid to 0 instead of leaving snapshot unset.
+        $snapshot = $event->get_record_snapshot('event', $event->objectid) ?: null;
 
         $task = new \local_o365\feature\calsync\task\synccalendarevent();
         $task->set_custom_data([
             'eventid' => $event->objectid,
             'action' => 'delete',
-            'snapshot' => ['courseid' => (int)$snapshot->courseid, 'groupid' => (int)$snapshot->groupid],
+            'snapshot' => $snapshot
+                ? ['courseid' => (int)$snapshot->courseid, 'groupid' => (int)$snapshot->groupid]
+                : null,
         ]);
         \core\task\manager::queue_adhoc_task($task);
         return true;
