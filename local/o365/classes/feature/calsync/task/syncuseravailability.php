@@ -25,7 +25,6 @@
 namespace local_o365\feature\calsync\task;
 
 use local_o365\utils;
-use moodle_exception;
 
 /**
  * AdHoc task to re-sync a user's Outlook events after their group membership changed.
@@ -68,7 +67,10 @@ class syncuseravailability extends \core\task\adhoc_task {
         foreach ($courseevents as $event) {
             try {
                 $calsync->reconcile_course_event_attendees($event->id);
-            } catch (moodle_exception $e) {
+            } catch (\Throwable $e) {
+                // Catches \Error (e.g. a coding bug like a TypeError) as well as moodle_exception, so one
+                // bad event can't silently abort reconciliation for the rest of this course's events - or,
+                // for this loop specifically, prevent the personal-events loop below from ever running.
                 mtrace('Error reconciling Outlook sync for event #' . $event->id . ': ' . $e->getMessage());
             }
         }
@@ -87,7 +89,9 @@ class syncuseravailability extends \core\task\adhoc_task {
         foreach ($personalevents as $event) {
             try {
                 $calsync->reconcile_personal_event($event->id);
-            } catch (moodle_exception $e) {
+            } catch (\Throwable $e) {
+                // Catches \Error (e.g. a coding bug like a TypeError) as well as moodle_exception, so one
+                // bad event can't silently abort reconciliation for the rest of this user's events.
                 mtrace('Error reconciling Outlook sync for event #' . $event->id . ': ' . $e->getMessage());
             }
         }
