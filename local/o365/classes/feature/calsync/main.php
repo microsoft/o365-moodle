@@ -1346,19 +1346,24 @@ class main {
     protected function is_event_module_visible_to_user(\stdClass $event, int $userid): bool {
         global $DB;
 
-        if (empty($event->modulename) || empty($event->instance) || empty($event->courseid)) {
+        if (empty($event->modulename) || empty($event->instance)) {
             return true;
         }
 
+        // Personal events (assignment extensions, user overrides) are always stored with courseid = 0,
+        // even though they're tied to a real module in a real course - so $event->courseid can't be used
+        // to look up the course module here. modulename+instance already uniquely identifies exactly one
+        // course_modules row regardless of course (instance is the module's own globally-unique id), so
+        // the course is resolved from that row instead of trusted from the event.
         static $cmcache = [];
-        $cachekey = $event->courseid . ':' . $event->modulename . ':' . $event->instance;
+        $cachekey = $event->modulename . ':' . $event->instance;
 
         if (!array_key_exists($cachekey, $cmcache)) {
-            $sql = "SELECT cm.visible, cm.availability
+            $sql = "SELECT cm.course, cm.visible, cm.availability
                       FROM {course_modules} cm
                       JOIN {modules} m ON m.id = cm.module
-                     WHERE m.name = :modulename AND cm.instance = :instance AND cm.course = :courseid";
-            $params = ['modulename' => $event->modulename, 'instance' => $event->instance, 'courseid' => $event->courseid];
+                     WHERE m.name = :modulename AND cm.instance = :instance";
+            $params = ['modulename' => $event->modulename, 'instance' => $event->instance];
             $cm = $DB->get_record_sql($sql, $params);
             $cmcache[$cachekey] = $cm;
 
@@ -1389,7 +1394,7 @@ class main {
             return true;
         }
 
-        $modinfo = \get_fast_modinfo($event->courseid, $userid);
+        $modinfo = \get_fast_modinfo($cm->course, $userid);
         $usercm = $modinfo->instances[$event->modulename][$event->instance] ?? null;
 
         if (empty($usercm)) {
