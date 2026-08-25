@@ -31,7 +31,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
-$string['auth_settings_validation_error'] = 'There are problems with the OpenID Connect settings:';
 
 // Configuration pages.
 $string['settings_page_other_settings'] = 'Other options';
@@ -112,7 +111,6 @@ $string['cfg_domainhint_desc'] = 'When using the <b>Authorization Code</b> login
 $string['cfg_err_invalidauthendpoint'] = 'Invalid Authorization Endpoint';
 $string['cfg_err_invalidtokenendpoint'] = 'Invalid Token Endpoint';
 $string['cfg_err_invalidclientid'] = 'Invalid client ID';
-$string['error_masked_secret_not_changed'] = 'Please enter a new value. The masked value cannot be saved.';
 $string['cfg_err_invalidclientsecret'] = 'Invalid client secret';
 $string['cfg_forceredirect_key'] = 'Force redirect';
 $string['cfg_forceredirect_desc'] = 'If enabled, will skip the login index page and redirect to the OpenID Connect page. Can be bypassed with ?noredirect=1 URL param';
@@ -237,7 +235,6 @@ $string['errorauthdisconnectusernameexists'] = 'That username is already taken. 
 $string['errorauthdisconnectnewmethod'] = 'Use Login Method';
 $string['errorauthdisconnectinvalidmethod'] = 'Invalid login method received.';
 $string['errorauthdisconnectifmanual'] = 'If using the manual login method, enter credentials below.';
-$string['errorauthdisconnectinvalidmethod'] = 'Invalid login method received.';
 $string['errorauthgeneral'] = 'There was a problem logging you in. Please contact your administrator for assistance.';
 $string['errorauthinvalididtoken'] = 'Invalid id_token received.';
 $string['errorauthloginfailednouser'] = 'Invalid login: User not found in Moodle. If this site has the "authpreventaccountcreation" setting enabled, this may mean you need an administrator to create an account for you first.';
