@@ -31,6 +31,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'OpenID Connect';
 $string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
+$string['auth_settings_validation_error'] = 'There are problems with the OpenID Connect settings:';
 
 // Configuration pages.
 $string['settings_page_other_settings'] = 'Other options';
