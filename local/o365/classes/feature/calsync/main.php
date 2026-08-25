@@ -451,10 +451,12 @@ class main {
             $params = ['course', 'out', 'both', $event->courseid];
             $attendees = $DB->get_records_sql($sql, $params);
 
+            // DB::get_record() returns false (not null) when nothing matches - normalise here so downstream
+            // code can rely on it being either a real record or null, never false.
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            );
+            ) ?: null;
         }
 
         // Drop attendees who can't actually see the module this event belongs to (e.g. excluded by a
@@ -842,10 +844,12 @@ class main {
         $isgroupevent = false;
 
         if ($event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
+            // DB::get_record() returns false (not null) when nothing matches - normalise here so
+            // delete_calidmap_rows()'s ?stdClass parameter doesn't get handed a bare false.
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            );
+            ) ?: null;
             $isgroupevent = !empty($groupobject) && !empty($groupobject->objectid);
         }
 
@@ -969,10 +973,12 @@ class main {
         $groupobject = null;
 
         if (!empty($event) && $event->courseid !== SITEID && $event->courseid !== 0 && empty($event->groupid)) {
+            // DB::get_record() returns false (not null) when nothing matches - normalise here so
+            // delete_calidmap_rows()'s ?stdClass parameter doesn't get handed a bare false.
             $groupobject = $DB->get_record(
                 'local_o365_objects',
                 ['moodleid' => $event->courseid, 'type' => 'group', 'subtype' => 'course']
-            );
+            ) ?: null;
         }
 
         $this->delete_calidmap_rows($event, $idmaprecs, $groupobject);
