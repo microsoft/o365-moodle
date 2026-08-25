@@ -150,7 +150,10 @@ class observers {
 
         $calsync = new \local_o365\feature\calsync\main();
 
-        $snapshot = $event->get_record_snapshot('event', $event->objectid);
+        // Falls back to a raw DB::get_record() call (returning false, not null) if no snapshot was
+        // explicitly attached - normalise here so delete_outlook_event()'s ?stdClass parameter doesn't
+        // get handed a bare false.
+        $snapshot = $event->get_record_snapshot('event', $event->objectid) ?: null;
 
         return $calsync->delete_outlook_event($event->objectid, $snapshot);
     }

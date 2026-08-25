@@ -25,7 +25,6 @@
 namespace local_o365\feature\calsync\task;
 
 use local_o365\utils;
-use moodle_exception;
 
 /**
  * AdHoc task to re-sync Outlook events for a course module after its availability may have changed.
@@ -61,7 +60,9 @@ class syncmoduleavailability extends \core\task\adhoc_task {
                 } else {
                     $calsync->reconcile_personal_event($event->id);
                 }
-            } catch (moodle_exception $e) {
+            } catch (\Throwable $e) {
+                // Catches \Error (e.g. a coding bug like a TypeError) as well as moodle_exception, so one
+                // bad event can't silently abort reconciliation for the rest of this module's events.
                 mtrace('Error reconciling Outlook sync for event #' . $event->id . ': ' . $e->getMessage());
             }
         }
