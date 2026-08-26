@@ -277,6 +277,12 @@ class authcode extends base {
      * @return void
      */
     public function initiateadminconsentrequest(array $stateparams = [], array $extraparams = []) {
+        global $USER;
+
+        if (!isset($stateparams['initiatinguserid']) && isloggedin() && !isguestuser()) {
+            $stateparams['initiatinguserid'] = $USER->id;
+        }
+
         $this->set_csrf_cookie();
         $client = $this->get_oidcclient();
         $client->adminconsentrequest($stateparams, $extraparams);
@@ -305,8 +311,11 @@ class authcode extends base {
 
     /**
      * Clear the CSRF cookie set by set_csrf_cookie().
+     *
+     * Public so that \auth_oidc\observers::handle_user_loggedout() can clear a stale cookie
+     * when a user logs out while an OIDC request is still pending.
      */
-    protected function clear_csrf_cookie(): void {
+    public function clear_csrf_cookie(): void {
         global $CFG;
         setcookie('auth_oidc_csrf', '', [
             'expires' => time() - HOURSECS,
@@ -371,7 +380,8 @@ class authcode extends base {
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
-        if (is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf'])) {
+        $csrfverified = is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf']);
+        if ($csrfverified) {
             $this->verify_csrf_cookie($staterec);
         }
 
@@ -402,6 +412,16 @@ class authcode extends base {
         ];
         $event = user_authed::create($eventdata);
         $event->trigger();
+
+        if ($csrfverified && !empty($additionaldata['initiatinguserid'])) {
+            $initiatinguser = core_user::get_user((int) $additionaldata['initiatinguserid']);
+            if (
+                $initiatinguser && empty($initiatinguser->deleted) &&
+                (!isloggedin() || isguestuser())
+            ) {
+                \core\session\manager::login_user($initiatinguser);
+            }
+        }
 
         $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
         redirect(new url($redirect));
@@ -438,7 +458,8 @@ class authcode extends base {
             throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
         }
 
-        if (is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf'])) {
+        $csrfverified = is_https() || !empty($CFG->sslproxy) || !empty($_COOKIE['auth_oidc_csrf']);
+        if ($csrfverified) {
             $this->verify_csrf_cookie($staterec);
         }
 
@@ -482,6 +503,21 @@ class authcode extends base {
             ];
             $event = user_authed::create($eventdata);
             $event->trigger();
+
+            if ($csrfverified && !empty($additionaldata['initiatinguserid'])) {
+                $initiatinguser = core_user::get_user((int) $additionaldata['initiatinguserid']);
+                if (
+                    $initiatinguser && empty($initiatinguser->deleted) &&
+                    (!isloggedin() || isguestuser())
+                ) {
+                    \core\session\manager::login_user($initiatinguser);
+                }
+            }
+
+            if (!empty($additionaldata['redirect'])) {
+                redirect(new url($additionaldata['redirect']));
+            }
+
             return true;
         }
 
