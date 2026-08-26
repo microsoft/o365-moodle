@@ -25,6 +25,7 @@
 
 namespace auth_oidc;
 
+use auth_oidc\loginflow\authcode;
 use core\event\user_deleted;
 use core\event\user_loggedout;
 
@@ -46,5 +47,26 @@ class observers {
         global $DB;
         $userid = $event->objectid;
         return $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+    }
+
+    /**
+     * Handle user_loggedout event - invalidate any pending OIDC state tied to the CSRF cookie
+     * of the session that just logged out, so a still-in-flight callback (e.g. admin consent)
+     * cannot silently re-authenticate a user who explicitly logged out.
+     *
+     * @param user_loggedout $event The triggered event.
+     * @return bool Success/Failure.
+     */
+    public static function handle_user_loggedout(user_loggedout $event) {
+        global $DB;
+
+        $csrfcookie = $_COOKIE['auth_oidc_csrf'] ?? null;
+        if (is_string($csrfcookie) && $csrfcookie !== '') {
+            $DB->delete_records('auth_oidc_state', ['sesskey' => $csrfcookie]);
+        }
+
+        (new authcode())->clear_csrf_cookie();
+
+        return true;
     }
 }
