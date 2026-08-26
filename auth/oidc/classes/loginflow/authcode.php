@@ -396,9 +396,33 @@ class authcode extends base {
         $SESSION->stateadditionaldata = $additionaldata;
         $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
 
-        // Get token.
+        // Re-associate the browser session with the admin who initiated the consent request before doing
+        // anything that might fail below, so a failure in the auto-detection step (see below) does not leave
+        // the admin looking logged out on the resulting page.
+        if ($csrfverified && !empty($additionaldata['initiatinguserid'])) {
+            $initiatinguser = core_user::get_user((int) $additionaldata['initiatinguserid']);
+            if (
+                $initiatinguser && empty($initiatinguser->deleted) &&
+                (!isloggedin() || isguestuser())
+            ) {
+                \core\session\manager::login_user($initiatinguser);
+            }
+        }
+
+        // Get token. This app-only token is only used to auto-detect the Microsoft Entra tenant and OneDrive for
+        // Business URL settings below; admin consent itself has already been granted by Microsoft Entra by this
+        // point. Conditional Access policies can block this specific app-only token request (AADSTS53003) even
+        // though consent succeeded, and the tenant/URL can still be auto-detected via other Graph API calls, so
+        // that failure is not fatal and is silently redirected past.
         $client = $this->get_oidcclient();
-        $tokenparams = $client->app_access_token_request();
+        try {
+            $tokenparams = $client->app_access_token_request();
+        } catch (moodle_exception $e) {
+            if ($e->errorcode === 'settings_adminconsent_error_53003' && $e->module === 'local_o365') {
+                redirect($e->link);
+            }
+            throw $e;
+        }
         if (!isset($tokenparams['access_token'])) {
             throw new moodle_exception('errorauthnoaccesstoken', 'auth_oidc');
         }
@@ -412,16 +436,6 @@ class authcode extends base {
         ];
         $event = user_authed::create($eventdata);
         $event->trigger();
-
-        if ($csrfverified && !empty($additionaldata['initiatinguserid'])) {
-            $initiatinguser = core_user::get_user((int) $additionaldata['initiatinguserid']);
-            if (
-                $initiatinguser && empty($initiatinguser->deleted) &&
-                (!isloggedin() || isguestuser())
-            ) {
-                \core\session\manager::login_user($initiatinguser);
-            }
-        }
 
         $redirect = (!empty($additionaldata['redirect'])) ? $additionaldata['redirect'] : '/auth/oidc/ucp.php';
         redirect(new url($redirect));
