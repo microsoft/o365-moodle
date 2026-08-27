@@ -35,6 +35,5 @@ $string['pluginname'] = 'Teams Meeting';
 $string['privacy:metadata:msteamsapp'] = 'The Atto Teams Meeting plugin does not store any data. However, it sends user language code to Microsoft Teams application to provide user interface based on user language.';
 $string['privacy:metadata:msteamsapp:userlang'] = 'User language code sent to Microsoft Teams application.';
 $string['settings'] = 'Teams Meeting Settings';
-$string['legacy_setting_warning'] = '<br/>
-<span style="color:red">WARNING: The Meetings app deployed at https://enovation.ie/msteams is deprecated and will be removed soon. A new app has been created at https://enomsteams.z16.web.core.windows.net.</span>';
+$string['legacy_setting_warning'] = '<div class="alert alert-warning">WARNING: The Meetings app deployed at https://enovation.ie/msteams is deprecated and will be removed soon. A new app has been created at https://enomsteams.z16.web.core.windows.net.</div>';
 $string['iframe_not_found'] = 'Meeting not found!';

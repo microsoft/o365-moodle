@@ -39,6 +39,6 @@ if ($ADMIN->fulltree) {
         $desc .= get_string('legacy_setting_warning', 'atto_teamsmeeting');
     }
 
-    $setting = new admin_setting_configtext('atto_teamsmeeting/meetingapplink', $name, $desc, $default);
+    $setting = new admin_setting_configtext('atto_teamsmeeting/meetingapplink', $name, $desc, $default, PARAM_URL);
     $settings->add($setting);
 }

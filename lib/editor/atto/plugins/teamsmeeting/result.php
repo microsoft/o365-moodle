@@ -86,10 +86,10 @@ function atto_teamsmeeting_safe_external_url(?string $url): ?string {
 $meetingoptions = null;
 
 if (!empty($preview)) {
+    // The options link is embedded in the editor preview HTML passed back by the app.
     $htmldom = new DOMDocument;
     @$htmldom->loadHTML($preview);
-    $links = $htmldom->getElementsByTagName('a');
-    foreach ($links as $link) {
+    foreach ($htmldom->getElementsByTagName('a') as $link) {
         $href = $link->getAttribute('href');
         if ($href && strpos($href, 'meetingOptions') !== false
                 && atto_teamsmeeting_safe_external_url($href) !== null) {
@@ -97,34 +97,27 @@ if (!empty($preview)) {
             break;
         }
     }
+} else if (atto_teamsmeeting_safe_external_url($optionslink) !== null) {
+    $meetingoptions = $optionslink;
+}
 
-    if ($cansave) {
+// Persist the meeting so its options link can be looked up later. Only on a
+// token-authenticated request (see $cansave above), only when we have both a
+// link and a title, and only once per link.
+if ($cansave && !empty($meetinglink) && !empty($title)) {
+    // The link column is a TEXT field, so a plain equality condition is rejected by the DB
+    // layer (textconditionsnotallowed). Compare the full link length via sql_compare_text()
+    // instead of the 32-char default, since Teams meeting links share a common URL prefix.
+    $comparelength = core_text::strlen($meetinglink);
+    $select = $DB->sql_compare_text('link', $comparelength) . ' = ' . $DB->sql_compare_text(':link', $comparelength);
+
+    if (!$DB->record_exists_select('atto_teamsmeeting', $select, ['link' => $meetinglink])) {
         $meetingdata = new stdClass();
         $meetingdata->title = $title;
         $meetingdata->link = $meetinglink;
         $meetingdata->options = $meetingoptions;
         $meetingdata->timecreated = time();
         $DB->insert_record('atto_teamsmeeting', $meetingdata);
-    }
-} else if (atto_teamsmeeting_safe_external_url($optionslink) !== null) {
-    $meetingoptions = $optionslink;
-
-    if ($cansave && !empty($meetinglink) && !empty($title)) {
-        // The link column is a TEXT field, so a plain equality condition is rejected by the DB
-        // layer (textconditionsnotallowed). Compare the full link length via sql_compare_text()
-        // instead of the 32-char default, since Teams meeting links share a common URL prefix.
-        $comparelength = core_text::strlen($meetinglink);
-        $select = $DB->sql_compare_text('link', $comparelength) . ' = ' . $DB->sql_compare_text(':link', $comparelength);
-        $linkexists = $DB->record_exists_select('atto_teamsmeeting', $select, ['link' => $meetinglink]);
-
-        if (!$linkexists) {
-            $meetingdata = new stdClass();
-            $meetingdata->title = $title;
-            $meetingdata->link = $meetinglink;
-            $meetingdata->options = $meetingoptions;
-            $meetingdata->timecreated = time();
-            $DB->insert_record('atto_teamsmeeting', $meetingdata);
-        }
     }
 }
 

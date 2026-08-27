@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/repository/url/lib.php');
-
 /**
  * Set params for this button.
  *
@@ -34,16 +32,16 @@ require_once($CFG->dirroot . '/repository/url/lib.php');
  * @param stdClass $fpoptions - unused.
  */
 function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
-    global $CFG, $SESSION, $USER;
+    global $CFG, $USER;
 
     // result.php always resolves its own context as the system context (see result.php),
     // so the token must be scoped to that same context to be accepted there.
     $resultcontext = \context_system::instance();
 
     $params = [
-        'clientdomain' => encode_url($CFG->wwwroot),
+        'clientdomain' => rawurlencode($CFG->wwwroot),
         'appurl' => get_config('atto_teamsmeeting', 'meetingapplink'),
-        'locale' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
+        'locale' => current_language(),
         'msession' => \atto_teamsmeeting\result_token::generate((int) $USER->id, $resultcontext->id),
         'editor' => 'atto',
     ];
