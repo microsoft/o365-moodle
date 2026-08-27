@@ -109,6 +109,7 @@ class userenabledstatussync extends scheduled_task {
         if ($lastrundate && $lastrundate >= date('Ymd')) {
             $alreadyruntoday = true;
             $runtoday = false;
+            $this->mtrace('Skipped - already ran today (less than 1 day ago).');
         }
 
         if (!$alreadyruntoday) {
@@ -130,13 +131,14 @@ class userenabledstatussync extends scheduled_task {
                 set_config('task_usersync_lastdelete', date('Ymd'), 'local_o365');
             } else {
                 $runtoday = false;
-            }
-        }
-
-        if ($lastrundate != false) {
-            if (date('Ymd') <= $lastrundate) {
-                $runtoday = false;
-                $this->mtrace('Skipped - already ran today (less than 1 day ago).');
+                $this->mtrace(sprintf(
+                    'Skipped - this run is before the configured time (%02d:%02d). This task only runs on its own ' .
+                    'scheduled task cron pattern, so it will keep skipping until a run occurs at or after the ' .
+                    'configured time. If runs are always skipped, align the task\'s scheduled time (Site ' .
+                    'administration > Server > Scheduled tasks) with the configured time.',
+                    $suspensiontaskhour,
+                    $suspensiontaskminute
+                ));
             }
         }
 
