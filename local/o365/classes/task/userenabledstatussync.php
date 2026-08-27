@@ -60,13 +60,15 @@ class userenabledstatussync extends scheduled_task {
         $dosuspend = main::sync_option_enabled('suspend');
         $doreenable = main::sync_option_enabled('reenable');
         $dodelete = main::sync_option_enabled('delete');
-        $syncdisabledstatus = main::sync_option_enabled('disabledsyncreenable');
+        $dodisabledsyncsuspend = main::sync_option_enabled('disabledsyncsuspend');
+        $dodisabledsyncreenable = main::sync_option_enabled('disabledsyncreenable');
 
         $this->mtrace('Status sync options:');
-        $this->mtrace('Suspend: ' . ($dosuspend ? 'enabled' : 'disabled'), 1);
-        $this->mtrace('Re-enable: ' . ($doreenable ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Suspend (deleted from Entra ID): ' . ($dosuspend ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Re-enable (reappeared in Entra ID): ' . ($doreenable ? 'enabled' : 'disabled'), 1);
         $this->mtrace('Delete: ' . ($dodelete ? 'enabled' : 'disabled'), 1);
-        $this->mtrace('Check account enabled status before re-enabling: ' . ($syncdisabledstatus ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Suspend (disabled in Entra ID): ' . ($dodisabledsyncsuspend ? 'enabled' : 'disabled'), 1);
+        $this->mtrace('Re-enable (enabled in Entra ID): ' . ($dodisabledsyncreenable ? 'enabled' : 'disabled'), 1);
     }
 
     /**
@@ -78,12 +80,14 @@ class userenabledstatussync extends scheduled_task {
             return false;
         }
 
-        // Check if suspend or reenable is enabled.
+        // Check if any status sync option is enabled.
         $dosuspend = main::sync_option_enabled('suspend');
         $doreenable = main::sync_option_enabled('reenable');
         $dodelete = main::sync_option_enabled('delete');
+        $dodisabledsyncsuspend = main::sync_option_enabled('disabledsyncsuspend');
+        $dodisabledsyncreenable = main::sync_option_enabled('disabledsyncreenable');
 
-        if (!$dosuspend && !$doreenable) {
+        if (!$dosuspend && !$doreenable && !$dodisabledsyncsuspend && !$dodisabledsyncreenable) {
             $this->mtrace('User suspension and re-enable disabled. Nothing to do.');
             return true;
         }
@@ -149,7 +153,6 @@ class userenabledstatussync extends scheduled_task {
         $this->mtrace('Checking for users to suspend/reenable...');
 
         $usersync = new main();
-        $syncdisabledstatus = main::sync_option_enabled('disabledsyncreenable');
 
         $totalreenabled = 0;
         $totalsuspended = 0;
@@ -170,7 +173,8 @@ class userenabledstatussync extends scheduled_task {
                 $doreenable,
                 $dosuspend,
                 $dodelete,
-                $syncdisabledstatus
+                $dodisabledsyncsuspend,
+                $dodisabledsyncreenable
             );
 
             if ($totalreenabled > 0) {
