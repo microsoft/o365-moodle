@@ -42,7 +42,7 @@ $tokenuserid = \atto_teamsmeeting\result_token::validate($session, $context->id)
 if ($tokenuserid) {
     $tokenuser = $DB->get_record('user', ['id' => $tokenuserid], '*', MUST_EXIST);
     if (empty($tokenuser->suspended) && empty($tokenuser->deleted) && !empty($tokenuser->confirmed)) {
-        $USER = $tokenuser;
+        \core\session\manager::set_user($tokenuser);
     } else {
         $tokenuserid = null;
     }
