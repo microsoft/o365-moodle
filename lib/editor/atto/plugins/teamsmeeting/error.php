@@ -29,7 +29,8 @@ require_login();
 
 echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;padding: 2rem;font-family: sans-serif;">
 
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink"
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32"
+         xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink"
          style="width:100px; align-self: center; display: flex; margin-bottom: 1.5rem;">
          <g><g id="Error_1_"><g id="Error">
          <circle cx="16" cy="16" id="BG" r="16" style="fill:#D72828;"/>

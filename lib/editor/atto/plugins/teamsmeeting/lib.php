@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Set params for this button.
  *
@@ -55,11 +53,5 @@ function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
 function atto_teamsmeeting_strings_for_js() {
     global $PAGE;
 
-    $PAGE->requires->strings_for_js([
-        'addlink',
-        'createteamsmeeting',
-        'meetingurl',
-        'openinnewwindow'],
-        'atto_teamsmeeting');
+    $PAGE->requires->strings_for_js(['addlink', 'createteamsmeeting', 'meetingurl', 'openinnewwindow'], 'atto_teamsmeeting');
 }
-

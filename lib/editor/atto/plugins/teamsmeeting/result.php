@@ -62,12 +62,11 @@ $meetingoptions = null;
 
 if (!empty($preview)) {
     // The options link is embedded in the editor preview HTML passed back by the app.
-    $htmldom = new DOMDocument;
+    $htmldom = new DOMDocument();
     @$htmldom->loadHTML($preview);
     foreach ($htmldom->getElementsByTagName('a') as $link) {
         $href = $link->getAttribute('href');
-        if ($href && strpos($href, 'meetingOptions') !== false
-                && atto_teamsmeeting_safe_external_url($href) !== null) {
+        if ($href && strpos($href, 'meetingOptions') !== false && atto_teamsmeeting_safe_external_url($href) !== null) {
             $meetingoptions = $href;
             break;
         }
@@ -121,14 +120,16 @@ if (!empty($meetinglink)) {
     echo '<span class="meetinglink" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
         s($meetinglink) . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
         border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px;
-        color: #fff; background-color: #6264a7; margin-top: 1rem; padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
+        color: #fff; background-color: #6264a7; margin-top: 1rem;
+        padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('gotomeeting', 'atto_teamsmeeting') . '</a></span>';
 }
 if (!empty($meetingoptions)) {
     echo '<span class="meetingoptions" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
         s($meetingoptions) . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
         border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px;
-        color: #fff; background-color: #6264a7; margin-top: 1rem; padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
+        color: #fff; background-color: #6264a7; margin-top: 1rem;
+        padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('meetingoptions', 'atto_teamsmeeting') . '</a></span>';
 }
 echo '</div>';
