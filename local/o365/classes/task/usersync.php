@@ -264,7 +264,10 @@ class usersync extends scheduled_task {
             }
 
             // Skip status sync options - they're handled by the separate user enabled status sync task.
-            if ($option === 'suspend' || $option === 'reenable' || $option === 'delete') {
+            if (
+                $option === 'suspend' || $option === 'reenable' || $option === 'delete' ||
+                $option === 'disabledsyncsuspend' || $option === 'disabledsyncreenable'
+            ) {
                 continue;
             }
 
