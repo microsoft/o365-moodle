@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,15 +12,15 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Issues and consumes the short-lived, single-use token used to authenticate
  * the return trip from the external meeting-creation app to result.php.
  *
- * @package     atto_teamsmeeting
- * @copyright   2026 Enovation Solutions
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    atto_teamsmeeting
+ * @copyright  2020 Enovation Solutions
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace atto_teamsmeeting;
@@ -40,8 +40,9 @@ defined('MOODLE_INTERNAL') || die();
  * looked up rather than merely verified, and validate() deletes it on first
  * use so a captured token cannot be replayed.
  *
- * @package     atto_teamsmeeting
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    atto_teamsmeeting
+ * @copyright  2020 Enovation Solutions
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class result_token {
     /** @var string Script identifier the token is filed under in user_private_key. */

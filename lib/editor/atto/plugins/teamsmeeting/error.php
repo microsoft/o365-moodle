@@ -17,10 +17,10 @@
 /**
  * A script that displays an error message in iframe when meeting is not found.
  *
- * @package     atto_teamsmeeting
- * @copyright   2023 Enovation Solutions
- * @author      Oliwer Banach <oliwer.banach@enovation.ie>
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    atto_teamsmeeting
+ * @copyright  2020 Enovation Solutions
+ * @author     Oliwer Banach <oliwer.banach@enovation.ie>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(__DIR__ . '/../../../../../config.php');
