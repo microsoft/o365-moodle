@@ -481,6 +481,7 @@ final class usersync_test extends advanced_testcase {
                 true, // Re-enable suspended users.
                 false, // Do not suspend.
                 false, // Do not delete.
+                false, // Do not suspend on disabled accounts.
                 false  // Do not check account status.
             );
 
@@ -533,12 +534,13 @@ final class usersync_test extends advanced_testcase {
                 (object) ['objectid' => 'entra-user-1', 'accountenabled' => 0],
             ]);
 
-            // Process with syncdisabledstatus=true.
+            // Process with dodisabledsyncreenable=true.
             [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
                 $temptablename,
                 true, // Re-enable suspended users.
                 false, // Do not suspend.
                 false, // Do not delete.
+                false, // Do not suspend on disabled accounts.
                 true  // Check account enabled status.
             );
 
@@ -587,6 +589,7 @@ final class usersync_test extends advanced_testcase {
                 false, // Do not re-enable.
                 true, // Suspend deleted users.
                 false, // Do not delete.
+                false, // Do not suspend on disabled accounts.
                 false  // Do not check account status.
             );
 
@@ -603,137 +606,138 @@ final class usersync_test extends advanced_testcase {
     }
 
     /**
-     * Test that the 'disabledsyncsuspend' sync option suspends an existing Moodle account when its linked Microsoft
-     * Entra ID account is disabled, and that it does NOT re-enable a suspended account when the Microsoft Entra ID
-     * account is enabled again (that direction is controlled independently by 'disabledsyncreenable').
+     * Test that 'disabledsyncsuspend' independently suspends a user present in Entra with accountEnabled=false,
+     * without needing 'suspend' or 'reenable' enabled, and leaves an enabled user alone. This behaviour lives
+     * exclusively in userenabledstatussync (not in the regular usersync task), so a disabled Entra account is
+     * suspended promptly regardless of when the daily-gated status sync task last ran... other than via this task.
      *
-     * @covers \local_o365\feature\usersync\main::sync_existing_user
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
      */
-    public function test_sync_existing_user_disabledsyncsuspend(): void {
-        global $CFG, $DB;
+    public function test_process_user_status_disabledsyncsuspend(): void {
+        global $DB;
 
-        set_config('usersync', 'disabledsyncsuspend', 'local_o365');
+        $activeuser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 0]);
+        $alreadysuspendeduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
 
-        // Active user whose Microsoft Entra ID account becomes disabled should be suspended.
-        $activeuser = [
-            'auth' => 'oidc',
-            'deleted' => '0',
-            'suspended' => '0',
-            'mnethostid' => $CFG->mnet_localhost_id,
-            'username' => 'testuser1@example.onmicrosoft.com',
-            'firstname' => 'Test',
-            'lastname' => 'User1',
-            'email' => 'testuser1@example.onmicrosoft.com',
-            'lang' => 'en',
-        ];
-        $activeuserid = $DB->insert_record('user', (object) $activeuser);
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $activeuser->id,
+            'objectid' => 'entra-user-active',
+            'o365name' => $activeuser->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $alreadysuspendeduser->id,
+            'objectid' => 'entra-user-alreadysuspended',
+            'o365name' => $alreadysuspendeduser->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
 
-        // Already-suspended user whose Microsoft Entra ID account is enabled should NOT be re-enabled, since
-        // 'disabledsyncreenable' is not set.
-        $suspendeduser = [
-            'auth' => 'oidc',
-            'deleted' => '0',
-            'suspended' => '1',
-            'mnethostid' => $CFG->mnet_localhost_id,
-            'username' => 'testuser2@example.onmicrosoft.com',
-            'firstname' => 'Test',
-            'lastname' => 'User2',
-            'email' => 'testuser2@example.onmicrosoft.com',
-            'lang' => 'en',
-        ];
-        $suspendeduserid = $DB->insert_record('user', (object) $suspendeduser);
-
-        $entraiduser1 = array_merge($this->get_entra_id_userinfo(1), ['accountEnabled' => false]);
-        $entraiduser2 = array_merge($this->get_entra_id_userinfo(2), ['accountEnabled' => true]);
-
-        $response = json_encode(['value' => [$entraiduser1, $entraiduser2]]);
-        $httpclient = new mockhttpclient();
-        $httpclient->set_response($response);
-
-        $apiclient = new unified($this->get_mock_token(), $httpclient);
         $usersync = new main();
-        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
-            $usersync->sync_users($userbatch, 'userPrincipalName');
-        });
+        $temptablename = $usersync->create_entra_users_temp_table();
 
-        $this->assertEquals(
-            1,
-            $DB->get_field('user', 'suspended', ['id' => $activeuserid]),
-            'User should be suspended when their Microsoft Entra ID account is disabled.'
-        );
-        $this->assertEquals(
-            1,
-            $DB->get_field('user', 'suspended', ['id' => $suspendeduserid]),
-            'User should remain suspended when their Microsoft Entra ID account is enabled again, ' .
-                'since disabledsyncreenable is not set.'
-        );
+        try {
+            // Both users are still present in Entra, but their accounts are disabled there.
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-user-active', 'accountenabled' => 0],
+                (object) ['objectid' => 'entra-user-alreadysuspended', 'accountenabled' => 0],
+            ]);
+
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false, // Do not re-enable.
+                false, // Do not suspend deleted users.
+                false, // Do not delete.
+                true, // Suspend users disabled in Entra.
+                false  // Do not re-enable users enabled in Entra.
+            );
+
+            $this->assertEquals(0, $reenabled);
+            $this->assertEquals(1, $suspended);
+            $this->assertEquals(0, $deleted);
+
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $activeuser->id]),
+                'User should be suspended when present in Entra but disabled there.'
+            );
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $alreadysuspendeduser->id]),
+                'Already-suspended user should remain suspended.'
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
     }
 
     /**
-     * Test that the 'disabledsyncreenable' sync option re-enables a suspended Moodle account when its linked Microsoft
-     * Entra ID account is enabled again, and that it does NOT suspend an active account when the Microsoft Entra ID
-     * account is disabled (that direction is controlled independently by 'disabledsyncsuspend').
+     * Test that 'disabledsyncreenable' independently re-enables a suspended user present in Entra with
+     * accountEnabled=true, without needing 'reenable' enabled, and leaves a still-disabled user suspended.
      *
-     * @covers \local_o365\feature\usersync\main::sync_existing_user
+     * @covers \local_o365\feature\usersync\main::process_user_status_from_temp_table
      */
-    public function test_sync_existing_user_disabledsyncreenable(): void {
-        global $CFG, $DB;
+    public function test_process_user_status_disabledsyncreenable(): void {
+        global $DB;
 
-        set_config('usersync', 'disabledsyncreenable', 'local_o365');
+        $suspendeduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
+        $stilldisableduser = $this->getDataGenerator()->create_user(['auth' => 'oidc', 'suspended' => 1]);
 
-        // Suspended user whose Microsoft Entra ID account is enabled again should be re-enabled.
-        $suspendeduser = [
-            'auth' => 'oidc',
-            'deleted' => '0',
-            'suspended' => '1',
-            'mnethostid' => $CFG->mnet_localhost_id,
-            'username' => 'testuser1@example.onmicrosoft.com',
-            'firstname' => 'Test',
-            'lastname' => 'User1',
-            'email' => 'testuser1@example.onmicrosoft.com',
-            'lang' => 'en',
-        ];
-        $suspendeduserid = $DB->insert_record('user', (object) $suspendeduser);
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $suspendeduser->id,
+            'objectid' => 'entra-user-reenabled',
+            'o365name' => $suspendeduser->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+        $DB->insert_record('local_o365_objects', (object) [
+            'type' => 'user',
+            'moodleid' => $stilldisableduser->id,
+            'objectid' => 'entra-user-stilldisabled',
+            'o365name' => $stilldisableduser->email,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
 
-        // Active user whose Microsoft Entra ID account becomes disabled should NOT be suspended, since
-        // 'disabledsyncsuspend' is not set.
-        $activeuser = [
-            'auth' => 'oidc',
-            'deleted' => '0',
-            'suspended' => '0',
-            'mnethostid' => $CFG->mnet_localhost_id,
-            'username' => 'testuser2@example.onmicrosoft.com',
-            'firstname' => 'Test',
-            'lastname' => 'User2',
-            'email' => 'testuser2@example.onmicrosoft.com',
-            'lang' => 'en',
-        ];
-        $activeuserid = $DB->insert_record('user', (object) $activeuser);
-
-        $entraiduser1 = array_merge($this->get_entra_id_userinfo(1), ['accountEnabled' => true]);
-        $entraiduser2 = array_merge($this->get_entra_id_userinfo(2), ['accountEnabled' => false]);
-
-        $response = json_encode(['value' => [$entraiduser1, $entraiduser2]]);
-        $httpclient = new mockhttpclient();
-        $httpclient->set_response($response);
-
-        $apiclient = new unified($this->get_mock_token(), $httpclient);
         $usersync = new main();
-        $apiclient->process_users_batched(function (array $userbatch) use ($usersync) {
-            $usersync->sync_users($userbatch, 'userPrincipalName');
-        });
+        $temptablename = $usersync->create_entra_users_temp_table();
 
-        $this->assertEquals(
-            0,
-            $DB->get_field('user', 'suspended', ['id' => $suspendeduserid]),
-            'User should be re-enabled when their Microsoft Entra ID account is enabled again.'
-        );
-        $this->assertEquals(
-            0,
-            $DB->get_field('user', 'suspended', ['id' => $activeuserid]),
-            'User should remain active when their Microsoft Entra ID account is disabled, ' .
-                'since disabledsyncsuspend is not set.'
-        );
+        try {
+            $DB->insert_records($temptablename, [
+                (object) ['objectid' => 'entra-user-reenabled', 'accountenabled' => 1],
+                (object) ['objectid' => 'entra-user-stilldisabled', 'accountenabled' => 0],
+            ]);
+
+            [$reenabled, $suspended, $deleted] = $usersync->process_user_status_from_temp_table(
+                $temptablename,
+                false, // Do not re-enable.
+                false, // Do not suspend deleted users.
+                false, // Do not delete.
+                false, // Do not suspend users disabled in Entra.
+                true   // Re-enable users enabled in Entra.
+            );
+
+            $this->assertEquals(1, $reenabled);
+            $this->assertEquals(0, $suspended);
+            $this->assertEquals(0, $deleted);
+
+            $this->assertEquals(
+                0,
+                $DB->get_field('user', 'suspended', ['id' => $suspendeduser->id]),
+                'User should be re-enabled when present and enabled again in Entra.'
+            );
+            $this->assertEquals(
+                1,
+                $DB->get_field('user', 'suspended', ['id' => $stilldisableduser->id]),
+                'User should remain suspended while still disabled in Entra.'
+            );
+        } finally {
+            $usersync->drop_entra_users_temp_table($temptablename);
+        }
     }
 
     /**

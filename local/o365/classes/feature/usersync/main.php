@@ -1936,25 +1936,6 @@ class main {
             }
         }
 
-        // Sync disabled status.
-        if (isset($entraiduserdata['accountEnabled'])) {
-            if ($entraiduserdata['accountEnabled']) {
-                if (isset($syncoptions['disabledsyncreenable']) && $existinguser->suspended == 1) {
-                    $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
-                        ?? core_user::get_user($existinguser->muserid);
-                    $completeexistinguser->suspended = 0;
-                    user_update_user($completeexistinguser, false);
-                }
-            } else {
-                if (isset($syncoptions['disabledsyncsuspend']) && $existinguser->suspended == 0) {
-                    $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
-                        ?? core_user::get_user($existinguser->muserid);
-                    $completeexistinguser->suspended = 1;
-                    user_update_user($completeexistinguser, false);
-                }
-            }
-        }
-
         // Match user if needed.
         if (isset($syncoptions['match']) || isset($syncoptions['matchswitchauth'])) {
             if ($existinguser->auth !== 'oidc') {
@@ -2315,10 +2296,12 @@ class main {
      * from multiple passes through the user table.
      *
      * @param string $temptablename The name of the temporary table with Entra users.
-     * @param bool $doreenable Whether to reenable users.
-     * @param bool $dosuspend Whether to suspend users.
+     * @param bool $doreenable Whether to reenable users who reappear in Entra.
+     * @param bool $dosuspend Whether to suspend users who are no longer in Entra.
      * @param bool $dodelete Whether to delete suspended users.
-     * @param bool $syncdisabledstatus Whether to check accountEnabled status for re-enabling.
+     * @param bool $dodisabledsyncsuspend Whether to suspend users whose Entra account is disabled.
+     * @param bool $dodisabledsyncreenable Whether to reenable users whose Entra account is (re-)enabled, and whether
+     *                                     to require accountEnabled=true before reenabling via $doreenable.
      *
      * @return array [$reenabled, $suspended, $deleted] counts.
      */
@@ -2327,7 +2310,8 @@ class main {
         bool $doreenable,
         bool $dosuspend,
         bool $dodelete,
-        bool $syncdisabledstatus
+        bool $dodisabledsyncsuspend,
+        bool $dodisabledsyncreenable
     ): array {
         global $CFG, $DB;
 
@@ -2365,21 +2349,41 @@ class main {
         $usersrs = $DB->get_recordset_sql($sql, $params);
 
         foreach ($usersrs as $user) {
-            if ($doreenable && $user->isinentra && $user->suspended) {
-                // User is in Entra and suspended - check if should be reenabled.
-                if ($syncdisabledstatus && !$user->accountenabled) {
-                    continue; // Skip if accountEnabled=0 and we're checking status.
-                }
+            if ($user->isinentra) {
+                if ($user->suspended) {
+                    // User is in Entra and currently suspended - check if they should be reenabled, either because
+                    // they reappeared in Entra (gated by $doreenable, optionally requiring accountEnabled=true) or
+                    // because their Entra account has been (re-)enabled, independent of $doreenable.
+                    $shouldreenable = false;
+                    if ($doreenable && (!$dodisabledsyncreenable || $user->accountenabled)) {
+                        $shouldreenable = true;
+                    } else if ($dodisabledsyncreenable && $user->accountenabled) {
+                        $shouldreenable = true;
+                    }
 
-                $userstoreenable[] = $user->id;
-                $this->mtrace('Re-enabling user ' . $user->username . '...');
-                $reenabled++;
+                    if ($shouldreenable) {
+                        $userstoreenable[] = $user->id;
+                        $this->mtrace('Re-enabling user ' . $user->username . '...');
+                        $reenabled++;
 
-                if (count($userstoreenable) >= 500) {
-                    $this->update_users_suspended(0, $userstoreenable);
-                    $userstoreenable = [];
+                        if (count($userstoreenable) >= 500) {
+                            $this->update_users_suspended(0, $userstoreenable);
+                            $userstoreenable = [];
+                        }
+                    }
+                } else if ($dodisabledsyncsuspend && !$user->accountenabled) {
+                    // User is in Entra but their account has been disabled, and not already suspended - suspend,
+                    // independent of $dosuspend (which only applies to users no longer in Entra at all).
+                    $userstosuspend[] = $user->id;
+                    $this->mtrace('Suspended ' . $user->username . ' (disabled in Entra ID)');
+                    $suspended++;
+
+                    if (count($userstosuspend) >= 500) {
+                        $this->update_users_suspended(1, $userstosuspend);
+                        $userstosuspend = [];
+                    }
                 }
-            } else if ($dosuspend && !$user->isinentra && !$user->suspended) {
+            } else if ($dosuspend && !$user->suspended) {
                 // User is NOT in Entra (deleted) and not suspended - suspend.
                 $userstosuspend[] = $user->id;
                 $this->mtrace('Suspended ' . $user->username . ' (deleted in Entra ID)');
@@ -2389,7 +2393,7 @@ class main {
                     $this->update_users_suspended(1, $userstosuspend);
                     $userstosuspend = [];
                 }
-            } else if ($dosuspend && !$user->isinentra && $user->suspended && $dodelete) {
+            } else if ($dosuspend && $user->suspended && $dodelete) {
                 // User is NOT in Entra, already suspended, and NOT in soft-delete retention - safe to delete.
                 // Only delete if user is not in Entra's deleted-items (soft-delete retention expired).
                 if (!isset($deletedentrajsonids[$user->objectid])) {
