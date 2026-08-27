@@ -29,7 +29,7 @@
  * @return bool result
  */
 function xmldb_atto_teamsmeeting_upgrade($oldversion) {
-    global $DB, $USER, $SITE;
+    global $DB;
 
     $dbman = $DB->get_manager();
     $result = true;
@@ -67,6 +67,26 @@ function xmldb_atto_teamsmeeting_upgrade($oldversion) {
 
         // Teamsmeeting savepoint reached.
         upgrade_plugin_savepoint(true, 2020032705, 'atto', 'teamsmeeting');
+    }
+
+    if ($oldversion < 2024100735.01) {
+        $table = new xmldb_table('atto_teamsmeeting');
+
+        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timemodified');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $key = new xmldb_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Teamsmeeting savepoint reached.
+        upgrade_plugin_savepoint(true, 2024100735.01, 'atto', 'teamsmeeting');
     }
 
     return $result;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="lib/editor/atto/plugins/teamsmeeting/db" VERSION="20200326" COMMENT="XMLDB file for Moodle atto_teamsmeeting plugin"
+<XMLDB PATH="lib/editor/atto/plugins/teamsmeeting/db" VERSION="20260827" COMMENT="XMLDB file for Moodle atto_teamsmeeting plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../../xmldb/xmldb.xsd"
 >
@@ -11,9 +11,12 @@
         <FIELD NAME="link" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="The link to the meeting"/>
         <FIELD NAME="options" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The link to meeting options"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the time the meeting was created"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The time the meeting record was last modified"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The user who created the meeting"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

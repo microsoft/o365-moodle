@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version information.
+ * Scheduled task definition for atto_teamsmeeting.
  *
  * @package    atto_teamsmeeting
  * @copyright  2020 Enovation Solutions
@@ -24,8 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024100735.01;
-$plugin->requires  = 2024100700;
-$plugin->component = 'atto_teamsmeeting';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '4.5.7';
+$tasks = [
+    [
+        'classname' => 'atto_teamsmeeting\task\purge_old_meetings',
+        'blocking' => 0,
+        'minute' => '30',
+        'hour' => '3',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
+];

@@ -41,4 +41,14 @@ if ($ADMIN->fulltree) {
 
     $setting = new admin_setting_configtext('atto_teamsmeeting/meetingapplink', $name, $desc, $default, PARAM_URL);
     $settings->add($setting);
+
+    // How long stored meeting records are kept before the scheduled task deletes them.
+    $setting = new admin_setting_configtext(
+        'atto_teamsmeeting/meetingdataretention',
+        new lang_string('meetingdataretention', 'atto_teamsmeeting'),
+        new lang_string('meetingdataretention_desc', 'atto_teamsmeeting'),
+        730,
+        PARAM_INT
+    );
+    $settings->add($setting);
 }

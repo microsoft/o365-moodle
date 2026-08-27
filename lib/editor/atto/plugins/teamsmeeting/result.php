@@ -87,11 +87,14 @@ if ($cansave && !empty($meetinglink) && !empty($title)) {
     $select = $DB->sql_compare_text('link', $comparelength) . ' = ' . $DB->sql_compare_text(':link', $comparelength);
 
     if (!$DB->record_exists_select('atto_teamsmeeting', $select, ['link' => $meetinglink])) {
+        $now = time();
         $meetingdata = new stdClass();
         $meetingdata->title = $title;
         $meetingdata->link = $meetinglink;
         $meetingdata->options = $meetingoptions;
-        $meetingdata->timecreated = time();
+        $meetingdata->userid = (int) $tokenuserid;
+        $meetingdata->timecreated = $now;
+        $meetingdata->timemodified = $now;
         $DB->insert_record('atto_teamsmeeting', $meetingdata);
     }
 }
