@@ -1,11 +1,9 @@
-# Title of the workflow
-name: Moodle Plugin CI for Microsoft plugins
+name: Moodle Plugin CI for atto_teamsmeeting
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Run this workflow every time a new commit pushed to your repository or PR created.
 on:
   push:
     branches:
@@ -42,46 +40,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        folder: [auth/oidc, blocks/microsoft, local/o365, local/office365, local/onenote, repository/office365, theme/boost_o365teams, mod/assign/feedback/onenote, mod/assign/submission/onenote, lib/editor/tiny/plugins/teamsmeeting, lib/editor/atto/plugins/teamsmeeting]
         moodle-branch: ['MOODLE_405_STABLE']
         php: [8.1, 8.2, 8.3]
         database: [pgsql, mariadb]
-        include:
-          - folder: auth/oidc
-          - folder: blocks/microsoft
-          - folder: local/o365
-            internal-deps: "auth/oidc"
-          - folder: local/office365
-          - folder: local/onenote
-          - folder: repository/office365
-          - folder: theme/boost_o365teams
-          - folder: mod/assign/feedback/onenote
-            internal-deps: "local/onenote"
-          - folder: mod/assign/submission/onenote
-            internal-deps: "local/onenote"
-          - folder: lib/editor/tiny/plugins/teamsmeeting
-          - folder: lib/editor/atto/plugins/teamsmeeting
 
     steps:
-      - name: Check out sub repository code
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - name: Check out repository code
+        uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            ${{ matrix.folder }}
-            ${{ matrix.internal-deps }}
           path: plugin
 
       - name: Setup PHP ${{ matrix.php }}
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           ini-values: max_input_vars=5000
-          # If you are not using code coverage, keep "none". Otherwise, use "pcov" (Moodle 3.10 and up) or "xdebug".
-          # If you try to use code coverage with "none", it will fallback to phpdbg (which has known problems).
           coverage: none
 
-      # Install this project into a directory called "ci", updating PATH and
-      # locale, define nvm location.
       - name: Initialise moodle-plugin-ci
         run: |
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
@@ -90,26 +65,16 @@ jobs:
           sudo locale-gen en_AU.UTF-8
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
-      # Run the default install.
       - name: Install moodle-plugin-ci
         run: |
-          mkdir -p ./extra-plugins
-          for dep in ${{ matrix.internal-deps }}; do
-            if [ -d "./plugin/$dep" ]; then
-              mkdir -p ./extra-plugins/${dep/\//_}
-              mv -v ./plugin/$dep/* ./extra-plugins/${dep/\//_}/
-            else
-              echo "Directory ./plugin/$dep does not exist"
-            fi
-          done
-          moodle-plugin-ci install --plugin ./plugin/${{ matrix.folder }} --db-host=127.0.0.1 --extra-plugins ./extra-plugins
+          moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
           SHELLOPTS: errexit:nounset:xtrace
 
       - name: PHP Lint
-        if: ${{ !cancelled() }} # prevents CI run stopping if step failed.
+        if: ${{ !cancelled() }}
         run: moodle-plugin-ci phplint
 
       - name: PHP Mess Detector
@@ -149,6 +114,12 @@ jobs:
         id: behat
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci behat --profile chrome
+
+      - name: Cleanup after behat
+        if: ${{ always() }}
+        run: |
+          sudo pkill -f chrome
+          sudo pkill -f chromedriver
 
       - name: Mark cancelled jobs as failed.
         if: ${{ cancelled() }}
