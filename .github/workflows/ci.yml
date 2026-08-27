@@ -59,6 +59,7 @@ jobs:
             internal-deps: "local/onenote"
           - folder: mod/assign/submission/onenote
             internal-deps: "local/onenote"
+          - folder: lib/editor/atto/plugins/teamsmeeting
 
     steps:
     - name: Check out sub repository code
