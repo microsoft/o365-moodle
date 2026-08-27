@@ -50,6 +50,32 @@ if (!$tokenuserid) {
     require_login();
 }
 
+/**
+ * Reduce a URL to one that is safe to store and render as a link target.
+ *
+ * Only absolute http(s) URLs are accepted; javascript:, data:, vbscript: and
+ * protocol-relative URLs are rejected so they can never reach an href attribute.
+ *
+ * @param string|null $url The candidate URL.
+ * @return string|null The URL when it is a well-formed http(s) URL, otherwise null.
+ */
+function atto_teamsmeeting_safe_external_url(?string $url): ?string {
+    if ($url === null || trim($url) === '') {
+        return null;
+    }
+    $url = trim($url);
+    if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+        return null;
+    }
+    // filter_var() on its own accepts javascript:// and data:// style URLs, so
+    // pin the scheme down explicitly.
+    $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+    if ($scheme !== 'http' && $scheme !== 'https') {
+        return null;
+    }
+    return $url;
+}
+
 $meetingoptions = null;
 
 if (!empty($preview)) {
@@ -58,7 +84,8 @@ if (!empty($preview)) {
     $links = $htmlDom->getElementsByTagName('a');
     foreach ($links as $link) {
         $href = $link->getAttribute('href');
-        if ($href && strpos($href, 'meetingOptions') !== false) {
+        if ($href && strpos($href, 'meetingOptions') !== false
+                && atto_teamsmeeting_safe_external_url($href) !== null) {
             $meetingoptions = $href;
             break;
         }
@@ -70,7 +97,7 @@ if (!empty($preview)) {
     $meetingdata->options = $meetingoptions;
     $meetingdata->timecreated = time();
     $DB->insert_record('atto_teamsmeeting', $meetingdata);
-} else if (!empty($optionslink) && filter_var($optionslink, FILTER_VALIDATE_URL)) {
+} else if (atto_teamsmeeting_safe_external_url($optionslink) !== null) {
     $meetingoptions = $optionslink;
 
     if (!empty($meetinglink) && !empty($title)) {
@@ -108,18 +135,18 @@ echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;paddin
         0 .6.2 1.2.7 1.6l4.6 4.6c.4.4 1 .7 1.6.7.6 0 1.2-.2 1.6-.7l10.1-10.1c.4-.5.7-1
         .7-1.6 0-.3-.1-.6-.2-.8-.1-.3-.3-.5-.5-.7s-.4-.4-.7-.5c-.4-.2-.7-.2-1-.2z" fill="#599c00"></path></svg>
         <span class="meetingcreatedheader" style="font-size: 20px; font-weight: 600; display: block; text-align: center;">' .
-    get_string('meetingcreatedsuccess', 'atto_teamsmeeting', $title) .
+    get_string('meetingcreatedsuccess', 'atto_teamsmeeting', s($title)) .
     '</span>';
 if (!empty($meetinglink)) {
     echo '<span class="meetinglink" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
-        $meetinglink . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
+        s($meetinglink) . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
         border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px;
         color: #fff; background-color: #6264a7; margin-top: 1rem; padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('gotomeeting', 'atto_teamsmeeting') . '</a></span>';
 }
 if (!empty($meetingoptions)) {
     echo '<span class="meetingoptions" style="display: block; text-align: center;"><a class="btn btn-primary" href="' .
-        $meetingoptions . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
+        s($meetingoptions) . '" style="display: inline-block; font-weight: 600; text-align: center; vertical-align: middle;
         border: 1px solid hsla(0,0%,100%,.04); user-select: none; font-size: .875rem; line-height: 1.5; border-radius: 3px;
         color: #fff; background-color: #6264a7; margin-top: 1rem; padding: .375rem .75rem; text-decoration: none;" target="_blank">' .
         get_string('meetingoptions', 'atto_teamsmeeting') . '</a></span>';
