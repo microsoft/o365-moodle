@@ -61,7 +61,6 @@ $string['settings_setup_step3_desc'] = 'Setup is complete. Click the "Update" bu
 // Settings in "Step 2/2" section of the "Setup" tab.
 $string['settings_adminconsent'] = 'Admin Consent';
 $string['settings_adminconsent_btn'] = 'Provide Admin Consent';
-$string['settings_adminconsent_error_53003'] = 'A known issue has happened when providing admin consent, which only applies to Microsoft identity platform (v2.0) IdP type. As a result, the integration cannot detect Microsoft Entra tenant and OneDrive for Business URL settings below automatically. Please set these values manually.';
 $string['settings_adminconsent_details'] = 'To allow access to some of the permissions needed, an administrator will need to provide admin consent. Click this button, then log in with a Microsoft Entra ID administrator account to provide consent. This will need to be done whenever you change "Admin" permissions in Entra ID.';
 $string['settings_entratenant'] = 'Microsoft Entra tenant';
 $string['settings_entratenant_details'] = 'Used to Identify your organization within Microsoft. For example: "contoso.onmicrosoft.com".<br/>
