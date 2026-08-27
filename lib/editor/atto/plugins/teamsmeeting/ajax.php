@@ -42,31 +42,25 @@ die();
  * Gets data from the database about the meeting.
  *
  * @param string $url The URL of the meeting.
- * @return object|null The meeting data or null if meeting not found.
+ * @return stdClass|null The meeting data or null if meeting not found.
  */
 function atto_teamsmeeting_get_meeting($url) {
     global $DB;
-    $sql = 'SELECT *
-                  FROM {atto_teamsmeeting}
-                 WHERE ' . $DB->sql_compare_text('link') . ' = ' . $DB->sql_compare_text(':url') . ' ORDER BY id ASC';
-    $records = $DB->get_records_sql($sql, ['url' => $url]);
 
-    $count = count($records);
-    if ($count == 0) {
+    // The link column is a TEXT field, so a plain equality condition is rejected by the DB
+    // layer (textconditionsnotallowed). Compare over the full link length via sql_compare_text()
+    // rather than its 32-char default: Teams meeting links all share a long common prefix, so a
+    // truncated comparison would match unrelated meetings (and previously deleted them as
+    // "duplicates").
+    $comparelength = core_text::strlen($url);
+    $select = $DB->sql_compare_text('link', $comparelength) . ' = ' . $DB->sql_compare_text(':url', $comparelength);
+    $records = $DB->get_records_select('atto_teamsmeeting', $select, ['url' => $url], 'id ASC', '*', 0, 1);
+
+    if (!$records) {
         return null;
     }
 
-    $result = reset($records);
-    if ($count > 1) {
-        array_shift($records);
-        $ids = [];
-        foreach ($records as $record) {
-            $ids[] = $record->id;
-        }
-        $DB->delete_records_list('atto_teamsmeeting', 'id', $ids);
-    }
-
-    return $result;
+    return reset($records);
 }
 
 /**
