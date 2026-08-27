@@ -613,6 +613,7 @@ $string['acp_maintenance_cleandeltatoken_desc'] = 'If user synchronisation is no
 // "Advanced" tab.
 $string['acp_maintenance_resyncgroupusers_course_output'] = 'Resync output';
 $string['acp_maintenance_resyncgroupusers_no_course'] = 'No course connected to Microsoft 365';
+$string['acp_maintenance_coursesync_disabled'] = 'This tool is only available when course sync is enabled. <a href="{$a}">Manage course sync</a>.';
 
 // Settings in the "Recreate deleted Microsoft 365 groups" feature in the "Maintenance Tools" feature of the "Advanced" tab.
 $string['acp_maintenance_recreatedeletedgroups_group_type'] = 'Moodle object type';
