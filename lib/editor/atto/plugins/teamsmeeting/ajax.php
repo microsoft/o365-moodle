@@ -25,6 +25,7 @@
 define('AJAX_SCRIPT', true);
 
 require_once(__DIR__ . '/../../../../../config.php');
+require_once(__DIR__ . '/locallib.php');
 
 require_login();
 
@@ -37,43 +38,3 @@ if (!empty($url)) {
 
 echo $result;
 die();
-
-/**
- * Gets data from the database about the meeting.
- *
- * @param string $url The URL of the meeting.
- * @return stdClass|null The meeting data or null if meeting not found.
- */
-function atto_teamsmeeting_get_meeting($url) {
-    global $DB;
-
-    // The link column is a TEXT field, so a plain equality condition is rejected by the DB
-    // layer (textconditionsnotallowed). Compare over the full link length via sql_compare_text()
-    // rather than its 32-char default: Teams meeting links all share a long common prefix, so a
-    // truncated comparison would match unrelated meetings (and previously deleted them as
-    // "duplicates").
-    $comparelength = core_text::strlen($url);
-    $select = $DB->sql_compare_text('link', $comparelength) . ' = ' . $DB->sql_compare_text(':url', $comparelength);
-    $records = $DB->get_records_select('atto_teamsmeeting', $select, ['url' => $url], 'id ASC', '*', 0, 1);
-
-    if (!$records) {
-        return null;
-    }
-
-    return reset($records);
-}
-
-/**
- * Gets the meeting URL from the given record.
- *
- * @param object|null $record The record containing meeting data.
- * @return string Returns the JSON-encoded meeting URL and related data.
- */
-function atto_teamsmeeting_meeting_url($record) {
-    if (is_null($record)) {
-        return json_encode([(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/error.php'))->out(), '', '', '']);
-    }
-
-    return json_encode([(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/result.php'))->out(), $record->title, $record->link,
-            $record->options]);
-}

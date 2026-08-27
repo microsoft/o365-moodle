@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../../../../config.php');
+require_once(__DIR__ . '/locallib.php');
 
 $meetinglink = optional_param('link', null, PARAM_URL);
 $title = optional_param('title', null, PARAM_TEXT);
@@ -56,32 +57,6 @@ if (!$tokenuserid) {
 // record when the request carried a valid token. Cookie-authenticated fallback
 // requests still render the confirmation page but write nothing.
 $cansave = !empty($tokenuserid);
-
-/**
- * Reduce a URL to one that is safe to store and render as a link target.
- *
- * Only absolute http(s) URLs are accepted; javascript:, data:, vbscript: and
- * protocol-relative URLs are rejected so they can never reach an href attribute.
- *
- * @param string|null $url The candidate URL.
- * @return string|null The URL when it is a well-formed http(s) URL, otherwise null.
- */
-function atto_teamsmeeting_safe_external_url(?string $url): ?string {
-    if ($url === null || trim($url) === '') {
-        return null;
-    }
-    $url = trim($url);
-    if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-        return null;
-    }
-    // filter_var() on its own accepts javascript:// and data:// style URLs, so
-    // pin the scheme down explicitly.
-    $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
-    if ($scheme !== 'http' && $scheme !== 'https') {
-        return null;
-    }
-    return $url;
-}
 
 $meetingoptions = null;
 
