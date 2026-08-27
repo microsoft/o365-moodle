@@ -2067,25 +2067,6 @@ class main {
             }
         }
 
-        // Sync disabled status.
-        if (isset($entraiduserdata['accountEnabled'])) {
-            if ($entraiduserdata['accountEnabled']) {
-                if (isset($syncoptions['disabledsyncreenable']) && $existinguser->suspended == 1) {
-                    $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
-                        ?? core_user::get_user($existinguser->muserid);
-                    $completeexistinguser->suspended = 0;
-                    user_update_user($completeexistinguser, false);
-                }
-            } else {
-                if (isset($syncoptions['disabledsyncsuspend']) && $existinguser->suspended == 0) {
-                    $completeexistinguser = $this->fullusersbymoodleid[$existinguser->muserid]
-                        ?? core_user::get_user($existinguser->muserid);
-                    $completeexistinguser->suspended = 1;
-                    user_update_user($completeexistinguser, false);
-                }
-            }
-        }
-
         // Match user if needed.
         if (isset($syncoptions['match']) || isset($syncoptions['matchswitchauth'])) {
             if ($existinguser->auth !== 'oidc') {
