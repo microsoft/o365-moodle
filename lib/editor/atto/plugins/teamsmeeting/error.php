@@ -39,6 +39,7 @@ echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;paddin
     </svg>
         <span class="meetingcreatedheader" style="font-size: 20px; font-weight: 600; display: block; text-align: center;">' .
             get_string('iframe_not_found', 'atto_teamsmeeting') .
-        '</span>';
+        '</span>
+</div>';
 
 exit;

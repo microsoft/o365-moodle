@@ -100,8 +100,10 @@ if ($cansave && !empty($meetinglink) && !empty($title)) {
 
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('standard');
-$PAGE->set_url(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/result.php', ['link' => $meetinglink, 'title' => $title,
-    'preview' => $preview, 'options' => $optionslink]));
+// Keep the canonical page URL free of the request parameters: they carry user
+// text and URLs (and $preview is a large HTML blob) that should not end up in
+// the page URL, logs or debug output.
+$PAGE->set_url(new moodle_url('/lib/editor/atto/plugins/teamsmeeting/result.php'));
 echo '<div style="display: flex; flex-direction: column; margin-top: 2rem;padding: 2rem;">
     <svg class="meetingsuccess" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width:100px; align-self: center;
         display: flex; margin-bottom: 1.5rem;">
