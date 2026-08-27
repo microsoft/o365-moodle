@@ -17,7 +17,7 @@
 /**
  * A script that displays an error message in iframe when meeting is not found.
  *
- * @package     tiny_teamsmeeting
+ * @package     atto_teamsmeeting
  * @copyright   2023 Enovation Solutions
  * @author      Oliwer Banach <oliwer.banach@enovation.ie>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

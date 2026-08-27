@@ -41,6 +41,12 @@ defined('MOODLE_INTERNAL') || die();
 class provider implements \core_privacy\local\metadata\provider,
     \core_privacy\local\request\plugin\provider, \core_privacy\local\request\core_userlist_provider {
 
+    /**
+     * Return the metadata about this plugin.
+     *
+     * @param collection $collection The initialised collection to add items to.
+     * @return collection A listing of user data stored through this system.
+     */
     public static function get_metadata(collection $collection) : collection {
         $collection->add_external_location_link('msteamsapp', [
             'userlang' => 'privacy:metadata:msteamsapp:userlang',

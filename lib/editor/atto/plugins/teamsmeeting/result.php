@@ -86,9 +86,9 @@ function atto_teamsmeeting_safe_external_url(?string $url): ?string {
 $meetingoptions = null;
 
 if (!empty($preview)) {
-    $htmlDom = new DOMDocument;
-    @$htmlDom->loadHTML($preview);
-    $links = $htmlDom->getElementsByTagName('a');
+    $htmldom = new DOMDocument;
+    @$htmldom->loadHTML($preview);
+    $links = $htmldom->getElementsByTagName('a');
     foreach ($links as $link) {
         $href = $link->getAttribute('href');
         if ($href && strpos($href, 'meetingOptions') !== false
