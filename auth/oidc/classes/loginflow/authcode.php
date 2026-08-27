@@ -474,13 +474,14 @@ class authcode extends base {
         // Get token. This app-only token is only used to auto-detect the Microsoft Entra tenant and OneDrive for
         // Business URL settings below; admin consent itself has already been granted by Microsoft Entra by this
         // point. Conditional Access policies can block this specific app-only token request (AADSTS53003) even
-        // though consent succeeded, so that failure is treated as a recoverable warning rather than a fatal error.
+        // though consent succeeded, and the tenant/URL can still be auto-detected via other Graph API calls, so
+        // that failure is not fatal and is silently redirected past.
         $client = $this->get_oidcclient();
         try {
             $tokenparams = $client->app_access_token_request();
         } catch (moodle_exception $e) {
             if ($e->errorcode === 'settings_adminconsent_error_53003' && $e->module === 'local_o365') {
-                redirect($e->link, $e->getMessage(), null, notification::NOTIFY_WARNING);
+                redirect($e->link);
             }
             throw $e;
         }
