@@ -1585,11 +1585,33 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $this->set_title(get_string('acp_maintenance_recreatedeletedgroups', 'local_o365'));
 
-        $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
+        $url = new url($this->url, ['mode' => 'recreatedeletedgroups']);
+        $PAGE->navbar->add(get_string('acp_maintenance_recreatedeletedgroups', 'local_o365'), $url);
+        $PAGE->requires->jquery();
+
+        $coursesyncsetting = get_config('local_o365', 'coursesync');
+        if ($coursesyncsetting === 'off') {
+            $manageurl = new url('/admin/settings.php', ['section' => 'local_o365_coursesync']);
+            $this->standard_header();
+            echo html_writer::tag(
+                'h5',
+                get_string('acp_maintenance_coursesync_disabled', 'local_o365', $manageurl->out())
+            );
+            $this->standard_footer();
+            return;
+        }
 
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
+        if (!($graphclient instanceof \local_o365\rest\unified)) {
+            $this->standard_header();
+            echo html_writer::tag('h5', get_string('error_not_connected', 'local_o365'));
+            $this->standard_footer();
+            return;
+        }
         $coursesync = new main($graphclient, true);
         $groupids = $coursesync->get_all_group_ids();
+
+        $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses(true);
 
         $sql = "SELECT *
                   FROM {local_o365_objects}
@@ -1653,9 +1675,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
             }
         }
 
-        $url = new url($this->url, ['mode' => 'recreatedeletedgroups']);
-        $PAGE->navbar->add(get_string('acp_maintenance_recreatedeletedgroups', 'local_o365'), $url);
-        $PAGE->requires->jquery();
         $this->standard_header();
         if ($groupcheckstatus) {
             $groupstable = new html_table();
@@ -1683,7 +1702,29 @@ var local_o365_coursesync_all_set_feature = function(state) {
         core_php_time_limit::raise();
         raise_memory_limit(MEMORY_EXTRA);
 
+        $url = new url($this->url, ['mode' => 'resyncgroupusers']);
+        $PAGE->navbar->add(get_string('acp_maintenance_resyncgroupusers', 'local_o365'), $url);
+        $PAGE->requires->jquery();
+
+        $coursesyncsetting = get_config('local_o365', 'coursesync');
+        if ($coursesyncsetting === 'off') {
+            $manageurl = new url('/admin/settings.php', ['section' => 'local_o365_coursesync']);
+            $this->standard_header();
+            echo html_writer::tag(
+                'h5',
+                get_string('acp_maintenance_coursesync_disabled', 'local_o365', $manageurl->out())
+            );
+            $this->standard_footer();
+            return;
+        }
+
         $graphclient = \local_o365\feature\coursesync\utils::get_graphclient();
+        if (!($graphclient instanceof \local_o365\rest\unified)) {
+            $this->standard_header();
+            echo html_writer::tag('h5', get_string('error_not_connected', 'local_o365'));
+            $this->standard_footer();
+            return;
+        }
         $coursesync = new main($graphclient, true);
 
         $coursesenabled = \local_o365\feature\coursesync\utils::get_enabled_courses();
@@ -1700,12 +1741,14 @@ var local_o365_coursesync_all_set_feature = function(state) {
             $params[] = $courseid;
         }
 
-        if (is_array($coursesenabled) && !empty($coursesenabled)) {
-            [$coursesinsql, $coursesparams] = $DB->get_in_or_equal($coursesenabled);
-            $sql .= ' AND crs.id ' . $coursesinsql;
-            $params = array_merge($params, $coursesparams);
-        } else {
-            $sql .= ' AND 1 = 0';
+        if ($coursesenabled !== true) {
+            if (is_array($coursesenabled) && !empty($coursesenabled)) {
+                [$coursesinsql, $coursesparams] = $DB->get_in_or_equal($coursesenabled);
+                $sql .= ' AND crs.id ' . $coursesinsql;
+                $params = array_merge($params, $coursesparams);
+            } else {
+                $sql .= ' AND 1 = 0';
+            }
         }
 
         $courses = $DB->get_recordset_sql($sql, $params);
@@ -1728,9 +1771,6 @@ var local_o365_coursesync_all_set_feature = function(state) {
 
         $courses->close();
 
-        $url = new url($this->url, ['mode' => 'resyncgroupusers']);
-        $PAGE->navbar->add(get_string('acp_maintenance_resyncgroupusers', 'local_o365'), $url);
-        $PAGE->requires->jquery();
         $this->standard_header();
         if ($outputsbycourse) {
             $coursetables = new html_table();
