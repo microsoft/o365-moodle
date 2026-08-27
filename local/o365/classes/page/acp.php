@@ -122,15 +122,17 @@ class acp extends base {
      * Provide admin consent.
      */
     public function mode_adminconsent() {
+        require_sesskey();
+
         $auth = new authcode();
         $auth->set_httpclient(new httpclient());
         $stateparams = ['redirect' => '/admin/settings.php?section=local_o365', 'justauth' => true, 'forceflow' => 'authcode',
-            'action' => 'adminconsent'];
+            'action' => 'adminconsent', 'ignorerestrictions' => true];
         $idptype = get_config('auth_oidc', 'idptype');
         if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
         } else {
-            $extraparams = ['prompt' => 'admin_consent'];
+            $extraparams = ['prompt' => 'admin_consent', 'response_mode' => 'query'];
             $auth->initiateauthrequest(true, $stateparams, $extraparams);
         }
     }
@@ -279,7 +281,7 @@ class acp extends base {
         echo html_writer::div(get_string('acp_tenantsadd_desc', 'local_o365'));
         echo html_writer::empty_tag('br');
         $addtenantstr = get_string('acp_tenantsadd_linktext', 'local_o365');
-        $addtenanturl = new url('/local/o365/acp.php', ['mode' => 'tenantsaddgo']);
+        $addtenanturl = new url('/local/o365/acp.php', ['mode' => 'tenantsaddgo', 'sesskey' => sesskey()]);
         echo html_writer::link($addtenanturl, $addtenantstr, ['class' => 'btn btn-primary']);
 
         $this->standard_footer();
@@ -313,6 +315,8 @@ class acp extends base {
      * Perform auth request for tenant addition.
      */
     public function mode_tenantsaddgo() {
+        require_sesskey();
+
         $auth = new authcode();
         $auth->set_httpclient(new httpclient());
         $stateparams = ['redirect' => '/local/o365/acp.php?mode=tenantsadd', 'justauth' => true, 'forceflow' => 'authcode',
@@ -321,7 +325,7 @@ class acp extends base {
         if ($idptype == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $auth->initiateadminconsentrequest($stateparams);
         } else {
-            $extraparams = ['prompt' => 'admin_consent'];
+            $extraparams = ['prompt' => 'admin_consent', 'response_mode' => 'query'];
             $auth->initiateauthrequest(true, $stateparams, $extraparams);
         }
     }
