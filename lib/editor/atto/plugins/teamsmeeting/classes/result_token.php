@@ -25,8 +25,6 @@
 
 namespace atto_teamsmeeting;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Issues and consumes the short-lived, single-use token used to authenticate
  * the return trip from the external meeting-creation app to result.php.

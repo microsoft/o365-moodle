@@ -81,8 +81,8 @@ function atto_teamsmeeting_safe_external_url(?string $url): ?string {
     if (filter_var($url, FILTER_VALIDATE_URL) === false) {
         return null;
     }
-    // filter_var() on its own accepts javascript:// and data:// style URLs, so
-    // pin the scheme down explicitly.
+    // The filter_var() check accepts javascript:// and data:// style URLs on its
+    // own, so pin the scheme down explicitly.
     $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
     if ($scheme !== 'http' && $scheme !== 'https') {
         return null;

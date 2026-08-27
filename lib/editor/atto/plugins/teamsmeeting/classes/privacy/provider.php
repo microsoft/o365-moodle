@@ -34,8 +34,6 @@ use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for atto_teamsmeeting.
  *
@@ -51,7 +49,7 @@ class provider implements \core_privacy\local\metadata\provider,
      * @param collection $collection The initialised collection to add items to.
      * @return collection A listing of user data stored through this system.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table('atto_teamsmeeting', [
             'userid' => 'privacy:metadata:atto_teamsmeeting:userid',
             'title' => 'privacy:metadata:atto_teamsmeeting:title',
@@ -73,7 +71,7 @@ class provider implements \core_privacy\local\metadata\provider,
      * @param int $userid The user to search.
      * @return contextlist The contextlist containing the list of contexts used in this plugin.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
         if (self::user_has_data($userid)) {
             $contextlist->add_user_context($userid);

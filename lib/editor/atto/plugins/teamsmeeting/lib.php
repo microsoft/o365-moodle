@@ -34,7 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 function atto_teamsmeeting_params_for_js($elementid, $options, $fpoptions) {
     global $CFG, $USER;
 
-    // result.php always resolves its own context as the system context (see result.php),
+    // The result.php script always resolves its own context as the system context,
     // so the token must be scoped to that same context to be accepted there.
     $resultcontext = \context_system::instance();
 
