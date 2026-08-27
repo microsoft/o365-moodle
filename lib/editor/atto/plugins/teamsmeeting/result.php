@@ -50,6 +50,13 @@ if (!$tokenuserid) {
     require_login();
 }
 
+// This endpoint is entered by a cross-origin redirect, so it cannot rely on a
+// sesskey to guard against forged requests. The single-use token is unguessable
+// and consumed on use, so treat it as the CSRF guard: only persist a meeting
+// record when the request carried a valid token. Cookie-authenticated fallback
+// requests still render the confirmation page but write nothing.
+$cansave = !empty($tokenuserid);
+
 /**
  * Reduce a URL to one that is safe to store and render as a link target.
  *
@@ -91,16 +98,18 @@ if (!empty($preview)) {
         }
     }
 
-    $meetingdata = new stdClass();
-    $meetingdata->title = $title;
-    $meetingdata->link = $meetinglink;
-    $meetingdata->options = $meetingoptions;
-    $meetingdata->timecreated = time();
-    $DB->insert_record('atto_teamsmeeting', $meetingdata);
+    if ($cansave) {
+        $meetingdata = new stdClass();
+        $meetingdata->title = $title;
+        $meetingdata->link = $meetinglink;
+        $meetingdata->options = $meetingoptions;
+        $meetingdata->timecreated = time();
+        $DB->insert_record('atto_teamsmeeting', $meetingdata);
+    }
 } else if (atto_teamsmeeting_safe_external_url($optionslink) !== null) {
     $meetingoptions = $optionslink;
 
-    if (!empty($meetinglink) && !empty($title)) {
+    if ($cansave && !empty($meetinglink) && !empty($title)) {
         // The link column is a TEXT field, so a plain equality condition is rejected by the DB
         // layer (textconditionsnotallowed). Compare the full link length via sql_compare_text()
         // instead of the 32-char default, since Teams meeting links share a common URL prefix.
