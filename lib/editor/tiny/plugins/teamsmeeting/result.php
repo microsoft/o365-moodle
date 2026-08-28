@@ -120,9 +120,11 @@ if (!empty($preview) && !empty($meetinglink)) {
         try {
             $DB->insert_record('tiny_teamsmeeting', $meetingdata);
         } catch (dml_write_exception $e) {
-            // A concurrent request inserted the same link first; the unique
-            // linkhash index turns that race into a harmless no-op.
-            debugging($e->getMessage(), DEBUG_DEVELOPER);
+            // Only tolerate losing the unique-linkhash race to a concurrent
+            // request that inserted the same link first; rethrow anything else.
+            if (!$DB->record_exists('tiny_teamsmeeting', ['linkhash' => $linkhash])) {
+                throw $e;
+            }
         }
     }
 } else if (!empty($optionslink) && filter_var($optionslink, FILTER_VALIDATE_URL)) {
