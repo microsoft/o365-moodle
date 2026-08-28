@@ -42,6 +42,7 @@ $string['iframe_meeting_options'] = 'Meeting Options';
 $string['iframe_meeting_created'] = 'Meeting "{$a}" was created successfully!';
 $string['iframe_go_to_meeting'] = 'Go to meeting';
 $string['iframe_not_found'] = 'Meeting not found';
+$string['invalidtoken'] = 'The meeting callback token is missing, invalid or has expired. Close this window and try creating the meeting again.';
 
 // TinyMCE strings.
 $string['tiny_modal_title'] = 'Create Teams meeting';
@@ -60,8 +61,10 @@ $string['privacy:metadata:tiny_teamsmeeting:title'] = 'The title of the meeting.
 $string['privacy:metadata:tiny_teamsmeeting:link'] = 'The join URL for the meeting.';
 $string['privacy:metadata:tiny_teamsmeeting:options'] = 'The URL for the meeting options page.';
 $string['privacy:metadata:tiny_teamsmeeting:timecreated'] = 'The time at which the meeting record was created.';
-$string['privacy:metadata:msteamsapp'] = 'The Tiny Teams Meeting plugin does not store any data. However, it sends user language code to Microsoft Teams application to provide user interface based on user language.';
-$string['privacy:metadata:msteamsapp:userlang'] = 'User language code sent to Microsoft Teams application.';
+$string['privacy:metadata:msteamsapp'] = 'In order to create a meeting, the Tiny Teams Meeting plugin exchanges data with the Microsoft Teams meetings application.';
+$string['privacy:metadata:msteamsapp:courseid'] = 'The ID of the course the meeting is being created in is sent to the Microsoft Teams meetings application.';
+$string['privacy:metadata:msteamsapp:moodleurl'] = 'The URL of this Moodle site is sent to the Microsoft Teams meetings application so that it can return the meeting link to the correct location.';
+$string['privacy:metadata:msteamsapp:userlang'] = 'The user language code is sent to the Microsoft Teams meetings application so that its user interface matches the user language.';
 
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment

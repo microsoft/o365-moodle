@@ -23,37 +23,19 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// This script is always loaded inside an iframe that does not carry the Moodle
+// session cookie (the meetings-app callback is cross-site; the "view existing"
+// request is same-origin but treated identically). Every request is
+// authenticated by the signed token instead, so no session is started: that
+// keeps a leaked token from being exchanged for - or clobbering - a real
+// Moodle session.
+define('NO_MOODLE_COOKIES', true);
+
 require_once(__DIR__ . '/../../../../../config.php');
 
-/**
- * Render a same-site auto-submitting repost form when a cross-site POST from the Teams app
- * arrives without the session cookie (SameSite=Lax, MDL-83526), then exit; the second,
- * same-site request that follows carries the cookie, so a caller's require_login() then
- * succeeds normally. A no-op when already logged in or when this is that repost itself,
- * so callers can call it unconditionally before their own require_login().
- */
-function tiny_teamsmeeting_handle_crosssite_repost(): void {
-    global $PAGE;
-
-    if (!empty($_POST['repost'])) {
-        unset($_POST['repost']);
-        return;
-    }
-
-    if (isloggedin()) {
-        return;
-    }
-
-    $PAGE->set_context(context_system::instance());
-    $PAGE->set_pagelayout('popup');
-    header_remove('Set-Cookie');
-    $output = $PAGE->get_renderer('mod_lti');
-    $page = new \mod_lti\output\repost_crosssite_page($_SERVER['REQUEST_URI'], $_POST);
-    echo $output->header();
-    echo $output->render($page);
-    echo $output->footer();
-    exit;
-}
+// This script echoes its response directly rather than through $OUTPUT, so the
+// standard security headers (notably X-Frame-Options) must be sent explicitly.
+send_headers('text/html; charset=utf-8', false);
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
@@ -69,10 +51,19 @@ $preview = optional_param('preview', null, PARAM_CLEANHTML);
 $optionslink = optional_param('options', null, PARAM_URL);
 $session = optional_param('session', '', PARAM_RAW_TRIMMED);
 
+// Authenticate the request from the signed token and act on behalf of the user
+// it names.
+$tokenuserid = \tiny_teamsmeeting\token::validate($session);
+if (!$tokenuserid) {
+    throw new moodle_exception('invalidtoken', 'tiny_teamsmeeting');
+}
+// The token names a user; make sure they still exist and are active.
+if (!$DB->record_exists('user', ['id' => $tokenuserid, 'deleted' => 0, 'suspended' => 0])) {
+    throw new moodle_exception('invaliduser');
+}
+
 if ($viewexisting) {
-    tiny_teamsmeeting_handle_crosssite_repost();
-    require_login();
-    require_sesskey();
+    // Showing the details of a meeting that already exists.
     if ($meetinglink) {
         $viewrecord = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($meetinglink)]);
         if (!$viewrecord) {
@@ -85,52 +76,26 @@ if ($viewexisting) {
     } else {
         $viewrecord = null;
     }
-    $context = ($viewrecord && !empty($viewrecord->contextid))
-        ? context::instance_by_id($viewrecord->contextid)
-        : context_system::instance();
-    require_capability('tiny/teamsmeeting:add', $context);
-} else {
-    if ($courseid) {
-        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-        $context = context_course::instance($course->id);
-    } else {
+    $context = null;
+    if ($viewrecord && !empty($viewrecord->contextid)) {
+        // The course the meeting was created in may since have been deleted.
+        $context = context::instance_by_id($viewrecord->contextid, IGNORE_MISSING) ?: null;
+    }
+    if (!$context) {
         $context = context_system::instance();
     }
-
-    // The app's redirect back here is a subframe navigation from a cross-origin iframe,
-    // so the browser may not send the Moodle session cookie. Authenticate via the
-    // short-lived opaque token minted when the dialog was opened instead of
-    // require_login()'s cookie check; older, already-rendered pages whose session value
-    // predates this token fall back to the previous cookie-based flow.
-    $tokenuserid = \tiny_teamsmeeting\result_token::validate($session, $context->id);
-    if ($tokenuserid) {
-        $tokenuser = $DB->get_record('user', ['id' => $tokenuserid]);
-        if (
-            $tokenuser
-            && empty($tokenuser->suspended)
-            && empty($tokenuser->deleted)
-            && !empty($tokenuser->confirmed)
-        ) {
-            complete_user_login($tokenuser);
-        } else {
-            $tokenuserid = null;
-        }
-    }
-    if (!$tokenuserid) {
-        // Fall back to the cookie-based flow: the repost handshake (MDL-83526) ensures the
-        // session cookie is present for require_login() even on a cross-site POST from the
-        // Teams app, for pages rendered before the opaque token existed.
-        tiny_teamsmeeting_handle_crosssite_repost();
-        require_login();
-        confirm_sesskey($session);
-    }
-
-    require_capability('tiny/teamsmeeting:add', $context, $tokenuserid ?: null);
+} else if ($courseid) {
+    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+    $context = context_course::instance($course->id);
+} else {
+    $context = context_system::instance();
 }
+
+require_capability('tiny/teamsmeeting:add', $context, $tokenuserid);
 
 $meetingoptions = null;
 
-if (!empty($preview)) {
+if (!empty($preview) && !empty($meetinglink)) {
     $htmldom = new DOMDocument();
     @$htmldom->loadHTML($preview);
     $links = $htmldom->getElementsByTagName('a');
@@ -150,9 +115,17 @@ if (!empty($preview)) {
         $meetingdata->linkhash = $linkhash;
         $meetingdata->options = $meetingoptions;
         $meetingdata->timecreated = time();
-        $meetingdata->userid = $USER->id;
+        $meetingdata->userid = $tokenuserid;
         $meetingdata->contextid = $context->id;
-        $DB->insert_record('tiny_teamsmeeting', $meetingdata);
+        try {
+            $DB->insert_record('tiny_teamsmeeting', $meetingdata);
+        } catch (dml_write_exception $e) {
+            // Only tolerate losing the unique-linkhash race to a concurrent
+            // request that inserted the same link first; rethrow anything else.
+            if (!$DB->record_exists('tiny_teamsmeeting', ['linkhash' => $linkhash])) {
+                throw $e;
+            }
+        }
     }
 } else if (
     !empty($optionslink)
@@ -171,7 +144,7 @@ if (!empty($preview)) {
             $meetingdata->linkhash = $linkhash;
             $meetingdata->options = $meetingoptions;
             $meetingdata->timecreated = time();
-            $meetingdata->userid = $USER->id;
+            $meetingdata->userid = $tokenuserid;
             $meetingdata->contextid = $context->id;
             $DB->insert_record('tiny_teamsmeeting', $meetingdata);
         } else if ($existingrecord->options !== $meetingoptions) {
@@ -218,7 +191,13 @@ $headerattributes = [
     'class' => 'meetingcreatedheader',
     'style' => 'font-size: 20px; font-weight: 600; display: block; text-align: center;',
 ];
-$headermessage = html_writer::tag('span', get_string('iframe_meeting_created', 'tiny_teamsmeeting', $title), $headerattributes);
+// Neither html_writer::tag() (contents) nor get_string() ($a placeholder)
+// escapes its input, so the title must be escaped before it is used here.
+$headermessage = html_writer::tag(
+    'span',
+    get_string('iframe_meeting_created', 'tiny_teamsmeeting', s($title ?? '')),
+    $headerattributes
+);
 
 $content = $svg . $headermessage;
 
@@ -270,8 +249,9 @@ if (!empty($parsed['port'])) {
     $origin .= ':' . $parsed['port'];
 }
 
-$payload = json_encode(['action' => 'meetingUrl', 'url' => $meetinglink ?? '']);
-$encodedorigin = json_encode($origin);
+$jsonflags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
+$payload = json_encode(['action' => 'meetingUrl', 'url' => $meetinglink ?? ''], $jsonflags);
+$encodedorigin = json_encode($origin, $jsonflags);
 $scriptcontent = <<<JS
 (function() {
     var moodleOrigin = {$encodedorigin};
