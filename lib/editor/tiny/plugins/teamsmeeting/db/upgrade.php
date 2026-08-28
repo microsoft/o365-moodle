@@ -136,5 +136,35 @@ function xmldb_tiny_teamsmeeting_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025100602.01, 'tiny', 'teamsmeeting');
     }
 
+    if ($oldversion < 2025100602.02) {
+        $table = new xmldb_table('tiny_teamsmeeting');
+        $columns = $DB->get_columns('tiny_teamsmeeting', false);
+
+        // The 2025100207 step added linkhash as a nullable column. Bring such
+        // databases in line with install.xml by making it NOT NULL. The column
+        // cannot be altered in place while its unique index exists, so the
+        // index is dropped and recreated around the change.
+        if (!empty($columns['linkhash']) && empty($columns['linkhash']->not_null)) {
+            $missing = $DB->get_records_select('tiny_teamsmeeting', 'linkhash IS NULL', null, 'id ASC', 'id, link');
+            foreach ($missing as $record) {
+                $normalised = preg_replace_callback('/%[0-9a-f]{2}/i', fn($m) => strtoupper($m[0]), (string) $record->link);
+                $DB->set_field('tiny_teamsmeeting', 'linkhash', sha1($normalised), ['id' => $record->id]);
+            }
+            unset($missing);
+
+            $index = new xmldb_index('linkhash', XMLDB_INDEX_UNIQUE, ['linkhash']);
+            if ($dbman->index_exists($table, $index)) {
+                $dbman->drop_index($table, $index);
+            }
+
+            $field = new xmldb_field('linkhash', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null, 'link');
+            $dbman->change_field_notnull($table, $field);
+
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint(true, 2025100602.02, 'tiny', 'teamsmeeting');
+    }
+
     return true;
 }
