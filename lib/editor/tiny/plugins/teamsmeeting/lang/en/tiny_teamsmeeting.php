@@ -42,6 +42,7 @@ $string['iframe_meeting_options'] = 'Meeting Options';
 $string['iframe_meeting_created'] = 'Meeting "{$a}" was created successfully!';
 $string['iframe_go_to_meeting'] = 'Go to meeting';
 $string['iframe_not_found'] = 'Meeting not found';
+$string['invalidtoken'] = 'The meeting callback token is missing, invalid or has expired. Close this window and try creating the meeting again.';
 
 // TinyMCE strings.
 $string['tiny_modal_title'] = 'Create Teams meeting';
