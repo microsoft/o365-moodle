@@ -66,7 +66,11 @@ class provider implements
 
         $collection->add_external_location_link(
             'msteamsapp',
-            ['userlang' => 'privacy:metadata:msteamsapp:userlang'],
+            [
+                'userlang' => 'privacy:metadata:msteamsapp:userlang',
+                'moodleurl' => 'privacy:metadata:msteamsapp:moodleurl',
+                'courseid' => 'privacy:metadata:msteamsapp:courseid',
+            ],
             'privacy:metadata:msteamsapp'
         );
 
