@@ -33,8 +33,6 @@ use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_configuration;
 
-require_once($CFG->dirroot . '/repository/url/lib.php');
-
 /**
  * Tiny Teams Meeting plugin info.
  *
@@ -98,7 +96,9 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
 
         return [
             'appurl' => get_config('tiny_teamsmeeting', 'meetingapplink'),
-            'clientdomain' => encode_url($CFG->wwwroot),
+            // The raw wwwroot is passed as-is; the JavaScript side URL-encodes it
+            // when building the query string for the meetings app.
+            'clientdomain' => $CFG->wwwroot,
             'localevalue' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
             'msession' => sesskey(),
             'courseid' => $courseid,
