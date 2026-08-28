@@ -55,7 +55,7 @@ $session = optional_param('session', '', PARAM_ALPHANUM);
 // it names.
 $tokenuserid = \tiny_teamsmeeting\token::validate($session);
 if (!$tokenuserid) {
-    throw new moodle_exception('invalidsesskey', 'error');
+    throw new moodle_exception('invalidtoken', 'tiny_teamsmeeting');
 }
 // The token names a user; make sure they still exist and are active.
 if (!$DB->record_exists('user', ['id' => $tokenuserid, 'deleted' => 0, 'suspended' => 0])) {
