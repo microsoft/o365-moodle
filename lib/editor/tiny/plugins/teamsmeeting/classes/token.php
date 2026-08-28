@@ -26,36 +26,71 @@
 namespace tiny_teamsmeeting;
 
 /**
- * Generates and validates the token handed to the external meetings app.
+ * Issues and verifies the signed token handed to the external meetings app.
  *
- * The meetings app is a third party origin, so the Moodle session key must
- * never be sent to it. Instead the app is given an opaque token derived from
- * the current user id keyed by the session key. The token proves that the
- * request that eventually calls back into result.php originated from an active,
- * authenticated Moodle session belonging to the same user, without disclosing
- * the session key itself.
+ * After a meeting is created the app navigates an iframe back to result.php to
+ * report it. That iframe lives in a cross-site context, so the browser will not
+ * send the Moodle session cookie with the navigation and result.php cannot rely
+ * on an authenticated session. Instead the app carries this token, which names
+ * the issuing user and is signed with a site-local secret, letting result.php
+ * authenticate the callback and re-establish the user on its own.
+ *
+ * The Moodle session key is never given to the app.
  *
  * @package     tiny_teamsmeeting
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class token {
+    /** @var int Seconds a freshly issued token remains valid. */
+    private const LIFETIME = 7200;
+
     /**
-     * Generate the callback token for the current user and session.
+     * Issue a token for the current user.
      *
-     * @return string A 64 character hexadecimal token.
+     * @return string Hexadecimal token, safe to pass as a URL parameter.
      */
     public static function generate(): string {
         global $USER;
-        return hash_hmac('sha256', (string) $USER->id, sesskey());
+        $payload = $USER->id . ':' . (time() + self::LIFETIME);
+        return hash_hmac('sha256', $payload, self::secret()) . bin2hex($payload);
     }
 
     /**
-     * Validate a token received from the meetings app callback.
+     * Verify a token and return the user id it was issued for.
      *
-     * @param string $token The token supplied by the request.
-     * @return bool True when the token matches the expected value.
+     * @param string $token The token received from the callback request.
+     * @return int|null The user id, or null when the token is missing, malformed,
+     *                  tampered with or expired.
      */
-    public static function validate(string $token): bool {
-        return $token !== '' && hash_equals(self::generate(), $token);
+    public static function validate(string $token): ?int {
+        if (strlen($token) <= 64 || !ctype_xdigit($token)) {
+            return null;
+        }
+        $signature = substr($token, 0, 64);
+        $payload = @hex2bin(substr($token, 64));
+        if ($payload === false || !preg_match('/^(\d+):(\d+)$/', $payload, $matches)) {
+            return null;
+        }
+        if (!hash_equals(hash_hmac('sha256', $payload, self::secret()), $signature)) {
+            return null;
+        }
+        if ((int) $matches[2] < time()) {
+            return null;
+        }
+        return (int) $matches[1];
+    }
+
+    /**
+     * Return the site-local secret used to sign tokens, creating it on first use.
+     *
+     * @return string
+     */
+    private static function secret(): string {
+        $secret = get_config('tiny_teamsmeeting', 'tokensecret');
+        if (empty($secret)) {
+            $secret = bin2hex(random_bytes(32));
+            set_config('tokensecret', $secret, 'tiny_teamsmeeting');
+        }
+        return $secret;
     }
 }

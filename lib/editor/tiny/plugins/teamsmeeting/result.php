@@ -23,9 +23,15 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../../../config.php');
+// This script is always loaded inside an iframe that does not carry the Moodle
+// session cookie (the meetings-app callback is cross-site; the "view existing"
+// request is same-origin but treated identically). Every request is
+// authenticated by the signed token instead, so no session is started: that
+// keeps a leaked token from being exchanged for - or clobbering - a real
+// Moodle session.
+define('NO_MOODLE_COOKIES', true);
 
-require_login();
+require_once(__DIR__ . '/../../../../../config.php');
 
 // This script echoes its response directly rather than through $OUTPUT, so the
 // standard security headers (notably X-Frame-Options) must be sent explicitly.
@@ -45,8 +51,16 @@ $preview = optional_param('preview', null, PARAM_CLEANHTML);
 $optionslink = optional_param('options', null, PARAM_URL);
 $session = optional_param('session', '', PARAM_ALPHANUM);
 
+// Authenticate the request from the signed token and act on behalf of the user
+// it names.
+$tokenuserid = \tiny_teamsmeeting\token::validate($session);
+if (!$tokenuserid) {
+    throw new moodle_exception('invalidsesskey', 'error');
+}
+$actinguser = $DB->get_record('user', ['id' => $tokenuserid, 'deleted' => 0, 'suspended' => 0], '*', MUST_EXIST);
+
 if ($viewexisting) {
-    require_sesskey();
+    // Showing the details of a meeting that already exists.
     if ($meetinglink) {
         $viewrecord = $DB->get_record('tiny_teamsmeeting', ['linkhash' => sha1($meetinglink)]);
         if (!$viewrecord) {
@@ -67,21 +81,14 @@ if ($viewexisting) {
     if (!$context) {
         $context = context_system::instance();
     }
-    require_capability('tiny/teamsmeeting:add', $context);
+} else if ($courseid) {
+    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+    $context = context_course::instance($course->id);
 } else {
-    // The meetings app callback carries a scoped token (not the session key).
-    // confirm_sesskey() only returns a bool, so it must be checked explicitly.
-    if (!\tiny_teamsmeeting\token::validate($session)) {
-        throw new moodle_exception('invalidsesskey', 'error');
-    }
-    if ($courseid) {
-        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-        $context = context_course::instance($course->id);
-    } else {
-        $context = context_system::instance();
-    }
-    require_capability('tiny/teamsmeeting:add', $context);
+    $context = context_system::instance();
 }
+
+require_capability('tiny/teamsmeeting:add', $context, $actinguser);
 
 $meetingoptions = null;
 
@@ -105,7 +112,7 @@ if (!empty($preview) && !empty($meetinglink)) {
         $meetingdata->linkhash = $linkhash;
         $meetingdata->options = $meetingoptions;
         $meetingdata->timecreated = time();
-        $meetingdata->userid = $USER->id;
+        $meetingdata->userid = $actinguser->id;
         $meetingdata->contextid = $context->id;
         try {
             $DB->insert_record('tiny_teamsmeeting', $meetingdata);
