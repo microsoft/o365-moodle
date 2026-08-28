@@ -35,6 +35,7 @@ use moodle_exception;
 use moodle_url;
 use required_capability_exception;
 use stdClass;
+use tiny_teamsmeeting\token;
 
 /**
  * Get existing meeting details from database.
@@ -62,8 +63,6 @@ class get_meeting_details extends external_api {
      * @throws required_capability_exception
      */
     public static function execute(string $url): array {
-        global $USER;
-
         $params = self::validate_parameters(self::execute_parameters(), ['url' => $url]);
 
         self::validate_context(context_system::instance());
@@ -76,21 +75,27 @@ class get_meeting_details extends external_api {
             ];
         }
 
-        $context = !empty($record->contextid)
-            ? context::instance_by_id($record->contextid)
-            : context_system::instance();
+        // Access is gated on holding the capability in the meeting's context,
+        // not on being the original creator: content containing a meeting link
+        // is routinely edited by more than one teacher, and every editor with
+        // the capability must be able to load its details.
+        $context = null;
+        if (!empty($record->contextid)) {
+            // The course the meeting was created in may since have been deleted.
+            $context = context::instance_by_id($record->contextid, IGNORE_MISSING) ?: null;
+        }
+        if (!$context) {
+            $context = context_system::instance();
+        }
         require_capability('tiny/teamsmeeting:add', $context);
 
-        if ((int) $record->userid !== (int) $USER->id) {
-            throw new moodle_exception('nopermissions', 'error', '', get_string('pluginname', 'tiny_teamsmeeting'));
-        }
-
+        // The result.php page runs without a session and authenticates from this token.
         $resulturl = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
             'title' => $record->title,
             'link' => $record->link,
             'options' => $record->options,
             'viewexisting' => 1,
-            'sesskey' => sesskey(),
+            'session' => token::generate(),
         ]);
         return [
             'status' => true,
