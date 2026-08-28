@@ -57,7 +57,10 @@ $tokenuserid = \tiny_teamsmeeting\token::validate($session);
 if (!$tokenuserid) {
     throw new moodle_exception('invalidsesskey', 'error');
 }
-$actinguser = $DB->get_record('user', ['id' => $tokenuserid, 'deleted' => 0, 'suspended' => 0], '*', MUST_EXIST);
+// The token names a user; make sure they still exist and are active.
+if (!$DB->record_exists('user', ['id' => $tokenuserid, 'deleted' => 0, 'suspended' => 0])) {
+    throw new moodle_exception('invaliduser');
+}
 
 if ($viewexisting) {
     // Showing the details of a meeting that already exists.
@@ -88,7 +91,7 @@ if ($viewexisting) {
     $context = context_system::instance();
 }
 
-require_capability('tiny/teamsmeeting:add', $context, $actinguser);
+require_capability('tiny/teamsmeeting:add', $context, $tokenuserid);
 
 $meetingoptions = null;
 
@@ -112,7 +115,7 @@ if (!empty($preview) && !empty($meetinglink)) {
         $meetingdata->linkhash = $linkhash;
         $meetingdata->options = $meetingoptions;
         $meetingdata->timecreated = time();
-        $meetingdata->userid = $actinguser->id;
+        $meetingdata->userid = $tokenuserid;
         $meetingdata->contextid = $context->id;
         try {
             $DB->insert_record('tiny_teamsmeeting', $meetingdata);
