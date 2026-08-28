@@ -78,9 +78,14 @@ class get_meeting_details extends external_api {
         // not on being the original creator: content containing a meeting link
         // is routinely edited by more than one teacher, and every editor with
         // the capability must be able to load its details.
-        $context = !empty($record->contextid)
-            ? context::instance_by_id($record->contextid)
-            : context_system::instance();
+        $context = null;
+        if (!empty($record->contextid)) {
+            // The course the meeting was created in may since have been deleted.
+            $context = context::instance_by_id($record->contextid, IGNORE_MISSING) ?: null;
+        }
+        if (!$context) {
+            $context = context_system::instance();
+        }
         require_capability('tiny/teamsmeeting:add', $context);
 
         $resulturl = new moodle_url('/lib/editor/tiny/plugins/teamsmeeting/result.php', [
