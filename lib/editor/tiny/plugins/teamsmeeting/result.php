@@ -141,7 +141,13 @@ $headerattributes = [
     'class' => 'meetingcreatedheader',
     'style' => 'font-size: 20px; font-weight: 600; display: block; text-align: center;',
 ];
-$headermessage = html_writer::tag('span', get_string('iframe_meeting_created', 'tiny_teamsmeeting', $title), $headerattributes);
+// html_writer::tag() does not escape its contents and get_string() does not
+// escape its $a placeholder, so the title must be escaped before it is used.
+$headermessage = html_writer::tag(
+    'span',
+    get_string('iframe_meeting_created', 'tiny_teamsmeeting', s($title ?? '')),
+    $headerattributes
+);
 
 $content = $svg . $headermessage;
 
@@ -193,8 +199,9 @@ if (!empty($parsed['port'])) {
     $origin .= ':' . $parsed['port'];
 }
 
-$payload = json_encode(['action' => 'meetingUrl', 'url' => $meetinglink ?? '']);
-$encodedorigin = json_encode($origin);
+$jsonflags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
+$payload = json_encode(['action' => 'meetingUrl', 'url' => $meetinglink ?? ''], $jsonflags);
+$encodedorigin = json_encode($origin, $jsonflags);
 $scriptcontent = <<<JS
 (function() {
     var moodleOrigin = {$encodedorigin};
