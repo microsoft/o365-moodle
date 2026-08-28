@@ -27,6 +27,10 @@ require_once(__DIR__ . '/../../../../../config.php');
 
 require_login();
 
+// This script echoes its response directly rather than through $OUTPUT, so the
+// standard security headers (notably X-Frame-Options) must be sent explicitly.
+send_headers('text/html; charset=utf-8', false);
+
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $viewexisting = optional_param('viewexisting', 0, PARAM_INT);
 $meetinglink = optional_param('link', null, PARAM_URL);
