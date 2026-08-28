@@ -98,8 +98,9 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
             // when building the query string for the meetings app.
             'clientdomain' => $CFG->wwwroot,
             'localevalue' => (empty($SESSION->lang) ? $USER->lang : $SESSION->lang),
-            // A scoped token, never the session key, is handed to the external
-            // meetings app and validated when it calls back into result.php.
+            // A short-lived token bound to the current user (never the session
+            // key) is handed to the external meetings app and validated when it
+            // calls back into result.php.
             'msession' => token::generate(),
             'courseid' => $courseid,
         ];
